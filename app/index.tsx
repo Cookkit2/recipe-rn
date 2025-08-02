@@ -1,11 +1,15 @@
-import { useState } from "react";
-import { View } from "react-native";
+import { useEffect } from "react";
+import { View, FlatList } from "react-native";
 import { Button } from "~/components/ui/button";
-import { H1 } from "~/components/ui/typography";
+import { H1, P } from "~/components/ui/typography";
 import { PlusIcon } from "lucide-react-native";
+import { usePantryStore } from "~/store/pantry-store";
+import { PantryListItem } from "~/components/PantryListItem";
+import { dummyPantryItems } from "~/data/dummy-data";
 
 export default function Screen() {
-  const [items, setItems] = useState([]);
+  const pantryItems = dummyPantryItems;
+  // const { pantryItems } = usePantryStore();
 
   return (
     <View className="flex-1 p-safe">
@@ -20,6 +24,11 @@ export default function Screen() {
           <PlusIcon />
         </Button>
       </View>
+      <FlatList
+        data={pantryItems}
+        renderItem={({ item }) => <PantryListItem item={item} />}
+        keyExtractor={(item) => item.id.toString()}
+      />
     </View>
   );
 }

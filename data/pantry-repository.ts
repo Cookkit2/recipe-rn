@@ -1,60 +1,56 @@
-import { db } from "./db";
+import { storage } from "./db";
 import type { PantryItem } from "~/types/PantryItem";
 import { dummyPantryItems } from "./dummy-data";
+
+const PANTRY_KEY = "pantryItems";
+
+// Initialize with dummy data if no data exists
+if (!storage.contains(PANTRY_KEY)) {
+  storage.set(PANTRY_KEY, JSON.stringify(dummyPantryItems));
+}
 
 // Database operations for pantry items
 export const pantryRepository = {
   // Get all pantry items
-  getAll: async (): Promise<PantryItem[]> => {
-    return await db.pantryItems.toArray();
+  getAll: (): PantryItem[] => {
+    const items = storage.getString(PANTRY_KEY);
+    return items ? JSON.parse(items) : [];
   },
 
   // Add a new pantry item
-  add: async (item: PantryItem): Promise<void> => {
-    await db.pantryItems.add(item);
+  add: (item: PantryItem): void => {
+    const items = pantryRepository.getAll();
+    items.push(item);
+    storage.set(PANTRY_KEY, JSON.stringify(items));
   },
 
   // Update an existing pantry item
-  update: async (item: PantryItem): Promise<void> => {
-    console.log("updatePantryItem", item);
-    await db.pantryItems.put(item);
+  update: (item: PantryItem): void => {
+    let items = pantryRepository.getAll();
+    items = items.map((i) => (i.id === item.id ? item : i));
+    storage.set(PANTRY_KEY, JSON.stringify(items));
   },
 
   // Delete a pantry item by ID
-  delete: async (id: number): Promise<void> => {
-    await db.pantryItems.delete(id);
+  delete: (id: number): void => {
+    let items = pantryRepository.getAll();
+    items = items.filter((i) => i.id !== id);
+    storage.set(PANTRY_KEY, JSON.stringify(items));
   },
 
   // Seed database with dummy data
-  seedWithDummyData: async (): Promise<void> => {
-    const existingItems = await db.pantryItems.toArray();
-    if (existingItems.length === 0) {
-      await db.pantryItems.bulkAdd(dummyPantryItems);
-    }
+  seedWithDummyData: (): void => {
+    storage.set(PANTRY_KEY, JSON.stringify(dummyPantryItems));
   },
 
   // Get items by type
-  getByType: async (type: "fridge" | "cabinet"): Promise<PantryItem[]> => {
-    return await db.pantryItems.where("type").equals(type).toArray();
+  getByType: (type: "fridge" | "cabinet"): PantryItem[] => {
+    const items = pantryRepository.getAll();
+    return items.filter((i) => i.type === type);
   },
 
   // Clear all items
-  clear: async (): Promise<void> => {
-    await db.pantryItems.clear();
+  clear: (): void => {
+    storage.delete(PANTRY_KEY);
   },
 };
-
-// Legacy hook for backward compatibility - will be removed in future
-export default function usePantryItems() {
-  console.warn("usePantryItems is deprecated. Use usePantryStore instead.");
-  // This can be removed once all components are updated to use the store
-  return {
-    pantryItems: [],
-    fridgeItems: [],
-    cabinetItems: [],
-    loaded: false,
-    addPantryItem: async () => {},
-    updatePantryItem: async () => {},
-    deletePantryItem: async () => {},
-  };
-}

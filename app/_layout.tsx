@@ -1,5 +1,5 @@
 import "~/global.css";
-
+import React from "react";
 import {
   DarkTheme,
   DefaultTheme,
@@ -8,7 +8,6 @@ import {
 } from "@react-navigation/native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import * as React from "react";
 import { Appearance, Platform, View } from "react-native";
 import { NAV_THEME } from "~/lib/constants";
 import { useColorScheme } from "~/lib/useColorScheme";
@@ -16,6 +15,9 @@ import { PortalHost } from "@rn-primitives/portal";
 import { ThemeToggle } from "~/components/ThemeToggle";
 import { setAndroidNavigationBar } from "~/lib/android-navigation-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+
+import "react-native-reanimated";
+import "react-native-gesture-handler";
 
 const LIGHT_THEME: Theme = {
   ...DefaultTheme,

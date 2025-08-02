@@ -1,14 +1,3 @@
-import ChickenImg from "~/assets/images/chicken-breast.png";
-import GarlicImg from "@/images/garlic.png";
-import MilkImg from "@/images/milk.png";
-import OnionImg from "@/images/onion.png";
-import TomatoesImg from "@/images/tomato.png";
-import PotatoImg from "@/images/potato.png";
-
-import FlourImg from "@/images/cabinet/flour.png";
-import PastaImg from "@/images/cabinet/pasta.png";
-import RiceImg from "@/images/cabinet/rice.png";
-import SugarImg from "~/assets/images/cabinet/sugar.png";
 import type { PantryItem } from "~/types/PantryItem";
 
 const today = new Date();
@@ -22,7 +11,7 @@ export const dummyPantryItems: PantryItem[] = [
     quantity: "5 units",
     expiry_date: getDummyDate(3),
     category: "Vegetables",
-    image_url: TomatoesImg,
+    image_url: require("~/assets/images/tomato.png"),
     type: "fridge",
     x: 0,
     y: 0,
@@ -56,7 +45,7 @@ export const dummyPantryItems: PantryItem[] = [
     quantity: "900 g",
     expiry_date: getDummyDate(1),
     category: "Meat",
-    image_url: ChickenImg,
+    image_url: require("~/assets/images/chicken-breast.png"),
     type: "fridge",
     x: 0,
     y: 0,
@@ -71,7 +60,7 @@ export const dummyPantryItems: PantryItem[] = [
     quantity: "500 g",
     expiry_date: getDummyDate(365),
     category: "Grains",
-    image_url: PotatoImg,
+    image_url: require("~/assets/images/potato.png"),
     type: "fridge",
     x: 0,
     y: 0,
@@ -86,7 +75,7 @@ export const dummyPantryItems: PantryItem[] = [
     quantity: "500 g",
     expiry_date: getDummyDate(365),
     category: "Vegetables",
-    image_url: PotatoImg,
+    image_url: require("~/assets/images/potato.png"),
     type: "fridge",
     x: 0,
     y: 0,
@@ -101,7 +90,7 @@ export const dummyPantryItems: PantryItem[] = [
     quantity: "3 units",
     expiry_date: getDummyDate(10),
     category: "Vegetables",
-    image_url: OnionImg,
+    image_url: require("~/assets/images/onion.png"),
     type: "fridge",
     x: 0,
     y: 0,
@@ -116,7 +105,7 @@ export const dummyPantryItems: PantryItem[] = [
     quantity: "1 unit",
     expiry_date: getDummyDate(30),
     category: "Vegetables",
-    image_url: GarlicImg,
+    image_url: require("~/assets/images/garlic.png"),
     type: "fridge",
     x: 0,
     y: 0,
@@ -131,7 +120,7 @@ export const dummyPantryItems: PantryItem[] = [
     quantity: "3.8 L",
     expiry_date: getDummyDate(-2),
     category: "Dairy",
-    image_url: MilkImg,
+    image_url: require("~/assets/images/milk.png"),
     type: "fridge",
     x: 0,
     y: 0,
@@ -146,7 +135,7 @@ export const dummyPantryItems: PantryItem[] = [
     quantity: "1 kg",
     expiry_date: getDummyDate(-2),
     category: "Baking",
-    image_url: FlourImg,
+    image_url: require("~/assets/images/cabinet/flour.png"),
     type: "cabinet",
     x: 0,
     y: 0,
@@ -161,7 +150,7 @@ export const dummyPantryItems: PantryItem[] = [
     quantity: "500g",
     expiry_date: getDummyDate(-2),
     category: "Baking",
-    image_url: SugarImg,
+    image_url: require("~/assets/images/cabinet/sugar.png"),
     type: "cabinet",
     x: 0,
     y: 0,
@@ -176,7 +165,7 @@ export const dummyPantryItems: PantryItem[] = [
     quantity: "1 box",
     expiry_date: getDummyDate(-2),
     category: "Baking",
-    image_url: PastaImg,
+    image_url: require("~/assets/images/cabinet/pasta.png"),
     type: "cabinet",
     x: 0,
     y: 0,
@@ -191,7 +180,7 @@ export const dummyPantryItems: PantryItem[] = [
     quantity: "2 lbs",
     expiry_date: getDummyDate(-2),
     category: "Baking",
-    image_url: RiceImg,
+    image_url: require("~/assets/images/cabinet/rice.png"),
     type: "cabinet",
     x: 0,
     y: 0,

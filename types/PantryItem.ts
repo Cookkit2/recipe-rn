@@ -1,4 +1,4 @@
-import type { StaticImageData } from "next/image";
+import { ImageSourcePropType } from "react-native";
 
 export type PantryItem = {
   id: number;
@@ -7,7 +7,7 @@ export type PantryItem = {
   expiry_date?: Date;
   category: string;
   type: "fridge" | "cabinet";
-  image_url: StaticImageData;
+  image_url: ImageSourcePropType;
   x: number;
   y: number;
   scale: number;
