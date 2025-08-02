@@ -2,6 +2,7 @@
   "name": "my-app",
   "main": "index.js",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
     "dev": "expo start -c",
     "dev:web": "expo start -c --web",
@@ -11,6 +12,10 @@
     "web": "expo start -c --web",
     "clean": "rm -rf .expo node_modules",
     "postinstall": "npx tailwindcss -i ./global.css -o ./node_modules/.cache/nativewind/global.css",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
+    "lint:check": "eslint . --ext .js,.jsx,.ts,.tsx --max-warnings 0",
+    "lint:dev": "eslint . --ext .js,.jsx,.ts,.tsx --max-warnings 100",
     "test": "jest",
     "test:storage": "jest __tests__/storage",
     "test:watch": "jest --watch",
@@ -58,10 +63,22 @@
     "@testing-library/react-native": "^12.0.0",
     "@types/jest": "^29.5.14",
     "@types/react": "~19.0.14",
+    "@typescript-eslint/eslint-plugin": "^8.38.0",
+    "@typescript-eslint/parser": "^8.38.0",
+    "eslint": "^9.32.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-prettier": "^5.5.3",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-native": "^5.0.0",
     "jest": "^29.7.0",
     "jest-environment-node": "^29.7.0",
     "react-native-testing-library": "^6.0.0",
-    "typescript": "^5.8.3"
+    "react-test-renderer": "^19.0.0",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.38.0"
   },
   "private": true
 }

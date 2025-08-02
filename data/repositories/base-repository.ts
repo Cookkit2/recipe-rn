@@ -118,7 +118,7 @@ export abstract class BaseRepository<T> {
   /**
    * Count items that match a predicate
    */
-  countWhere(predicate: (item: T) => boolean): boolean {
+  countWhere(predicate: (item: T) => boolean): number {
     return this.getAll().filter(predicate).length;
   }
 
