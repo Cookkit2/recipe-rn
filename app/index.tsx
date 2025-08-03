@@ -1,34 +1,43 @@
-import { useEffect } from "react";
-import { View, FlatList } from "react-native";
-import { Button } from "~/components/ui/button";
-import { H1, P } from "~/components/ui/typography";
-import { PlusIcon } from "lucide-react-native";
-import { usePantryStore } from "~/store/pantry-store";
-import { PantryListItem } from "~/components/PantryListItem";
+import { FlatList, View } from "react-native";
+import { H1 } from "~/components/ui/typography";
 import { dummyPantryItems } from "~/data/dummy-data";
+import { PantryListItem } from "~/components/IngredientItem";
+import ToggleButtonGroup from "~/components/ToggleButtonGroup";
+import MenuDropdown from "~/components/MenuDropdown";
+import AddPantryItemModal from "~/components/AddPantryItemModal";
+import useItemTypeStore from "~/store/type-store";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function Screen() {
+  const { bottom: pb } = useSafeAreaInsets();
   const pantryItems = dummyPantryItems;
-  // const { pantryItems } = usePantryStore();
+
+  const { selectedItemType } = useItemTypeStore();
+
+  const filteredItems = pantryItems.filter((item) => {
+    if (selectedItemType === "all") return true;
+    return item.type === selectedItemType;
+  });
 
   return (
     <View className="flex-1 p-safe">
-      <View className="p-6 flex-row items-center justify-between mb-4">
+      <View className="p-6 pb-4 flex-row items-center mb-4 gap-3">
         <H1>Pantry</H1>
-        <Button
-          size="icon"
-          variant="secondary"
-          className="size-8 rounded-full"
-          onPress={() => {}}
-        >
-          <PlusIcon />
-        </Button>
+        <View className="flex-1" />
+        <AddPantryItemModal />
+        <MenuDropdown />
       </View>
-      <FlatList
-        data={pantryItems}
-        renderItem={({ item }) => <PantryListItem item={item} />}
-        keyExtractor={(item) => item.id.toString()}
-      />
+      <ToggleButtonGroup />
+      <View className="p-3">
+        <FlatList
+          numColumns={2}
+          contentContainerStyle={{ paddingBottom: 64 + pb }}
+          showsVerticalScrollIndicator={false}
+          data={filteredItems}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={PantryListItem}
+        />
+      </View>
     </View>
   );
 }

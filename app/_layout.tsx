@@ -3,8 +3,8 @@ import React from "react";
 import {
   DarkTheme,
   DefaultTheme,
-  Theme,
   ThemeProvider,
+  type Theme,
 } from "@react-navigation/native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -28,10 +28,7 @@ const DARK_THEME: Theme = {
   colors: NAV_THEME.dark,
 };
 
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
-} from "expo-router";
+export { ErrorBoundary } from "expo-router";
 
 const usePlatformSpecificSetup = Platform.select({
   web: useSetWebBackgroundClassName,
@@ -48,15 +45,14 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <StatusBar style={isDarkColorScheme ? "light" : "dark"} />
         <Stack>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen
-            name="index"
-            options={{
-              headerShown: false,
-            }}
-            // options={{
-            //   title: 'Starter Base',
-            //   headerRight: () => <ThemeToggle />,
-            // }}
+            name="(ingredient)/[ingredientId]"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="(ingredient)/create"
+            options={{ presentation: "modal" }}
           />
         </Stack>
         <PortalHost />

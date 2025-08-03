@@ -1,4 +1,7 @@
-import { ImageSourcePropType } from "react-native";
+import type { ImageSourcePropType } from "react-native";
+
+export const ITEM_TYPES = ["all", "fridge", "cabinet", "freezer"] as const;
+export type ItemType = (typeof ITEM_TYPES)[number];
 
 export type PantryItem = {
   id: number;
@@ -6,7 +9,7 @@ export type PantryItem = {
   quantity: string;
   expiry_date?: Date;
   category: string;
-  type: "fridge" | "cabinet";
+  type: Exclude<ItemType, "all">;
   image_url: ImageSourcePropType;
   x: number;
   y: number;
