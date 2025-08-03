@@ -2,7 +2,6 @@
   "name": "my-app",
   "main": "index.js",
   "version": "1.0.0",
-  "type": "module",
   "scripts": {
     "dev": "expo start -c",
     "dev:web": "expo start -c --web",
@@ -12,6 +11,7 @@
     "web": "expo start -c --web",
     "clean": "rm -rf .expo node_modules",
     "postinstall": "npx tailwindcss -i ./global.css -o ./node_modules/.cache/nativewind/global.css",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "lint:check": "eslint . --ext .js,.jsx,.ts,.tsx --max-warnings 0",

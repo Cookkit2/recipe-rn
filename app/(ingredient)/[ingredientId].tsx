@@ -52,12 +52,12 @@ export default function IngredientDetailsPage() {
             variant="secondary"
             className="absolute left-4 rounded-full"
             style={{ top: 16 + pt }}
+            onPress={() => router.back()}
           >
             <ArrowLeftIcon
               className="text-foreground"
               size={20}
               strokeWidth={2.618}
-              onPress={() => router.back()}
             />
           </Button>
 

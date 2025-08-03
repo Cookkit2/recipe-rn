@@ -93,16 +93,18 @@ function AnimatedToggleButton({
         <View
           className={cn(
             "flex-row items-center gap-1 rounded-full px-4 py-2",
-            isSelected ? "bg-primary" : "bg-white border border-gray-300"
+            isSelected ? "bg-primary" : "bg-background border border-border"
           )}
         >
           {React.cloneElement(icon, {
-            className: cn(isSelected ? "text-white" : "text-black"),
+            className: cn(
+              isSelected ? "text-primary-foreground" : "text-foreground"
+            ),
           })}
           <P
             className={cn(
               "text-sm font-medium",
-              isSelected ? "text-white" : "text-black"
+              isSelected ? "text-primary-foreground" : "text-foreground"
             )}
           >
             {label}
