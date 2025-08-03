@@ -1,6 +1,6 @@
 import { StorageFacade } from "~/data/storage/storage-facade";
 import { StorageFactory } from "~/data/storage/storage-factory";
-import { IStorage } from "~/data/storage/types";
+import { type IStorage } from "~/data/storage/types";
 
 // Create a complete mock storage object
 const createMockStorage = () => ({
