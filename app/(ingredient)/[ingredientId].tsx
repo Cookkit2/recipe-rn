@@ -23,7 +23,7 @@ export default function IngredientDetailsPage() {
   const [isFav, setIsFav] = useState(false);
 
   const item = dummyPantryItems.find(
-    (item) => item.id === parseInt(ingredientId)
+    (item) => item.id === parseInt(ingredientId, 10)
   ); // Fetch ingredient details based on ingredientId
 
   if (!item) {

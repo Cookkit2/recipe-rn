@@ -16,6 +16,7 @@ import {
   CabinetIcon,
 } from "~/lib/icons/PantryIcons";
 import { P } from "./ui/typography";
+import { cn } from "~/lib/utils";
 
 const TYPES: Array<{ type: ItemType; label: string; icon: JSX.Element }> = [
   {
@@ -90,17 +91,19 @@ function AnimatedToggleButton({
         onPress={onPress}
       >
         <View
-          className={`flex-row items-center gap-1 rounded-full px-4 py-2 ${
+          className={cn(
+            "flex-row items-center gap-1 rounded-full px-4 py-2",
             isSelected ? "bg-primary" : "bg-white border border-gray-300"
-          }`}
+          )}
         >
           {React.cloneElement(icon, {
-            className: isSelected ? "text-white" : "text-black",
+            className: cn(isSelected ? "text-white" : "text-black"),
           })}
           <P
-            className={`text-sm font-medium ${
+            className={cn(
+              "text-sm font-medium",
               isSelected ? "text-white" : "text-black"
-            }`}
+            )}
           >
             {label}
           </P>
