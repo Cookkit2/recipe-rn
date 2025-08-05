@@ -1,7 +1,7 @@
 import { FlatList, View } from "react-native";
 import { H1 } from "~/components/ui/typography";
 import { dummyPantryItems } from "~/data/dummy-data";
-import { PantryListItem } from "~/components/IngredientItem";
+import { IngredientItemCard } from "~/components/IngredientItemCard";
 import ToggleButtonGroup from "~/components/ToggleButtonGroup";
 import MenuDropdown from "~/components/MenuDropdown";
 import AddPantryItemModal from "~/components/AddPantryItemModal";
@@ -35,7 +35,9 @@ export default function Screen() {
           showsVerticalScrollIndicator={false}
           data={filteredItems}
           keyExtractor={(item) => item.id.toString()}
-          renderItem={PantryListItem}
+          renderItem={({ item }) => (
+            <IngredientItemCard key={item.id} item={item} />
+          )}
         />
       </View>
     </View>
