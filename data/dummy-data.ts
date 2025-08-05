@@ -189,4 +189,4 @@ export const dummyPantryItems: PantryItem[] = [
     updated_at: getDummyDate(0),
     steps_to_store: [],
   },
-];
+] as const;

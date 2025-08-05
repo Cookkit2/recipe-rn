@@ -1,8 +1,10 @@
+import React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-import * as React from "react";
 import { Pressable } from "react-native";
 import { TextClassContext } from "~/components/ui/text";
 import { cn } from "~/lib/utils";
+import Animated from "react-native-reanimated";
+import useOnPressScale from "~/hooks/animation/useOnPressScale";
 
 const buttonVariants = cva(
   "group flex items-center justify-center rounded-md web:ring-offset-background web:transition-colors web:focus-visible:outline-none web:focus-visible:ring-2 web:focus-visible:ring-ring web:focus-visible:ring-offset-2",
@@ -23,6 +25,7 @@ const buttonVariants = cva(
         sm: "h-9 rounded-md px-3",
         lg: "h-11 rounded-md px-8 native:h-14",
         icon: "h-10 w-10",
+        "icon-lg": "h-12 w-12",
         "icon-sm": "h-8 w-8",
       },
     },
@@ -52,6 +55,7 @@ const buttonTextVariants = cva(
         lg: "native:text-lg",
         icon: "",
         "icon-sm": "",
+        "icon-lg": "",
       },
     },
     defaultVariants: {
@@ -62,9 +66,20 @@ const buttonTextVariants = cva(
 );
 
 type ButtonProps = React.ComponentProps<typeof Pressable> &
-  VariantProps<typeof buttonVariants>;
+  VariantProps<typeof buttonVariants> & {
+    containerClassName?: string;
+  };
 
-function Button({ ref, className, variant, size, ...props }: ButtonProps) {
+function Button({
+  ref,
+  className,
+  variant,
+  size,
+  containerClassName,
+  ...props
+}: ButtonProps) {
+  const { animatedStyle, handlePressIn, handlePressOut } = useOnPressScale();
+
   return (
     <TextClassContext.Provider
       value={buttonTextVariants({
@@ -73,15 +88,19 @@ function Button({ ref, className, variant, size, ...props }: ButtonProps) {
         className: "web:pointer-events-none",
       })}
     >
-      <Pressable
-        className={cn(
-          props.disabled && "opacity-50 web:pointer-events-none",
-          buttonVariants({ variant, size, className })
-        )}
-        ref={ref}
-        role="button"
-        {...props}
-      />
+      <Animated.View style={animatedStyle} className={containerClassName}>
+        <Pressable
+          className={cn(
+            props.disabled && "opacity-50 web:pointer-events-none",
+            buttonVariants({ variant, size, className })
+          )}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          ref={ref}
+          role="button"
+          {...props}
+        />
+      </Animated.View>
     </TextClassContext.Provider>
   );
 }

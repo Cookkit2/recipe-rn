@@ -15,9 +15,7 @@ import { PortalHost } from "@rn-primitives/portal";
 import { ThemeToggle } from "~/components/ThemeToggle";
 import { setAndroidNavigationBar } from "~/lib/android-navigation-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-
-import "react-native-reanimated";
-import "react-native-gesture-handler";
+import { SheetProvider } from "react-native-sheet-transitions";
 
 const LIGHT_THEME: Theme = {
   ...DefaultTheme,
@@ -42,21 +40,27 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
-      <SafeAreaProvider>
-        <StatusBar style={isDarkColorScheme ? "light" : "dark"} />
-        <Stack>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="(ingredient)/[ingredientId]"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="(ingredient)/create"
-            options={{ presentation: "modal" }}
-          />
-        </Stack>
-        <PortalHost />
-      </SafeAreaProvider>
+      <SheetProvider>
+        <SafeAreaProvider>
+          <StatusBar style={isDarkColorScheme ? "light" : "dark"} />
+          <Stack>
+            <Stack.Screen name="(ingredient)/index" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="(ingredient)/[ingredientId]"
+              options={{
+                headerShown: false,
+                presentation: "transparentModal",
+                contentStyle: { backgroundColor: "transparent" },
+              }}
+            />
+            <Stack.Screen
+              name="(ingredient)/create"
+              options={{ presentation: "modal", headerShown: false }}
+            />
+          </Stack>
+          <PortalHost />
+        </SafeAreaProvider>
+      </SheetProvider>
     </ThemeProvider>
   );
 }
