@@ -102,7 +102,7 @@ export function SlidingNumber({
 }) {
   const absValue = Math.abs(value);
   const [integerPart, decimalPart] = absValue.toString().split(".");
-  const integerValue = parseInt(integerPart!, 10);
+  const integerValue = parseInt(integerPart ?? "0", 10);
 
   const paddedInteger =
     padStart && integerValue < 10 ? `0${integerPart}` : integerPart;
