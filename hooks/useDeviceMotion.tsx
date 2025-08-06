@@ -34,7 +34,9 @@ export function useDeviceMotion() {
         });
         setIsSubscribed(true);
       }
-    } catch {
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to subscribe to DeviceMotion:", error);
       // DeviceMotion failed to start
       setIsSubscribed(false);
     }

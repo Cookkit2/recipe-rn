@@ -7,13 +7,14 @@ import { useRouter } from "expo-router";
 import useOnPressScale from "~/hooks/animation/useOnPressScale";
 import { useParallax } from "~/hooks/animation/useParallax";
 
+const PARALLAX_CONFIG = { intensity: 1, maxOffset: 4 };
+
 export const IngredientItemCard = ({ item }: { item: PantryItem }) => {
   const router = useRouter();
   const { animatedStyle, handlePressIn, handlePressOut } = useOnPressScale();
-
   // Parallax effects for image container and image
-  const containerParallax = useParallax({ intensity: 1, maxOffset: 4 });
-  const imageParallax = useParallax({ intensity: 1, maxOffset: 4 });
+  const containerParallax = useParallax(PARALLAX_CONFIG);
+  const imageParallax = useParallax(PARALLAX_CONFIG);
 
   return (
     <Animated.View
