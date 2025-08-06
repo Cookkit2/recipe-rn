@@ -44,7 +44,10 @@ export default function RootLayout() {
         <SafeAreaProvider>
           <StatusBar style={isDarkColorScheme ? "light" : "dark"} />
           <Stack>
-            <Stack.Screen name="(ingredient)/index" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="(ingredient)/index"
+              options={{ headerShown: false }}
+            />
             <Stack.Screen
               name="(ingredient)/[ingredientId]"
               options={{
@@ -56,6 +59,14 @@ export default function RootLayout() {
             <Stack.Screen
               name="(ingredient)/create"
               options={{ presentation: "modal", headerShown: false }}
+            />
+            <Stack.Screen
+              name="recipes"
+              options={{
+                headerShown: false,
+                presentation: "transparentModal",
+                contentStyle: { backgroundColor: "transparent" },
+              }}
             />
           </Stack>
           <PortalHost />

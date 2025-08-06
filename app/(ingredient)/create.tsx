@@ -165,59 +165,61 @@ export default function CreateIngredient() {
           onStartShouldSetResponder={() => true}
           onResponderGrant={handleCameraTouch}
         >
-          <CameraView style={dynamicStyles.cameraView} facing={facing}>
-            {/* Header with date and instruction */}
-            <View className="absolute p-8 w-full flex justify-center items-center">
-              <P className="text-white text-center py-1">
-                Please place the object within the frame
-              </P>
-            </View>
+          {/* CameraView without children */}
+          <CameraView style={dynamicStyles.cameraView} facing={facing} />
 
-            {/* Back Button */}
-            <View className="absolute p-8 z-10">
-              <Button
-                size="icon-sm"
-                variant="secondary"
-                className="rounded-full"
-                onPress={() => router.back()}
-              >
-                <ArrowLeftIcon className="text-foreground" size={20} />
-              </Button>
-            </View>
+          {/* Overlay elements positioned absolutely on top of camera */}
+          {/* Header with date and instruction */}
+          <View className="absolute p-8 w-full flex justify-center items-center">
+            <P className="text-white text-center py-1">
+              Please place the object within the frame
+            </P>
+          </View>
 
-            {/* Scanning Frame Overlay - positioned based on touch */}
-            <View
-              className="absolute w-32 h-32"
-              style={{
-                left: framePosition.x,
-                top: framePosition.y,
-              }}
+          {/* Back Button */}
+          <View className="absolute p-8 z-10">
+            <Button
+              size="icon-sm"
+              variant="secondary"
+              className="rounded-full"
+              onPress={() => router.back()}
             >
-              {/* Top Left Corner */}
-              <View className="absolute top-0 left-0 w-6 h-6">
-                <View className="absolute top-0 left-0 w-6 h-1 bg-white" />
-                <View className="absolute top-0 left-0 w-1 h-6 bg-white" />
-              </View>
+              <ArrowLeftIcon className="text-foreground" size={20} />
+            </Button>
+          </View>
 
-              {/* Top Right Corner */}
-              <View className="absolute top-0 right-0 w-6 h-6">
-                <View className="absolute top-0 right-0 w-6 h-1 bg-white" />
-                <View className="absolute top-0 right-0 w-1 h-6 bg-white" />
-              </View>
-
-              {/* Bottom Left Corner */}
-              <View className="absolute bottom-0 left-0 w-6 h-6">
-                <View className="absolute bottom-0 left-0 w-6 h-1 bg-white" />
-                <View className="absolute bottom-0 left-0 w-1 h-6 bg-white" />
-              </View>
-
-              {/* Bottom Right Corner */}
-              <View className="absolute bottom-0 right-0 w-6 h-6">
-                <View className="absolute bottom-0 right-0 w-6 h-1 bg-white" />
-                <View className="absolute bottom-0 right-0 w-1 h-6 bg-white" />
-              </View>
+          {/* Scanning Frame Overlay - positioned based on touch */}
+          <View
+            className="absolute w-32 h-32"
+            style={{
+              left: framePosition.x,
+              top: framePosition.y,
+            }}
+          >
+            {/* Top Left Corner */}
+            <View className="absolute top-0 left-0 w-6 h-6">
+              <View className="absolute top-0 left-0 w-6 h-1 bg-white" />
+              <View className="absolute top-0 left-0 w-1 h-6 bg-white" />
             </View>
-          </CameraView>
+
+            {/* Top Right Corner */}
+            <View className="absolute top-0 right-0 w-6 h-6">
+              <View className="absolute top-0 right-0 w-6 h-1 bg-white" />
+              <View className="absolute top-0 right-0 w-1 h-6 bg-white" />
+            </View>
+
+            {/* Bottom Left Corner */}
+            <View className="absolute bottom-0 left-0 w-6 h-6">
+              <View className="absolute bottom-0 left-0 w-6 h-1 bg-white" />
+              <View className="absolute bottom-0 left-0 w-1 h-6 bg-white" />
+            </View>
+
+            {/* Bottom Right Corner */}
+            <View className="absolute bottom-0 right-0 w-6 h-6">
+              <View className="absolute bottom-0 right-0 w-6 h-1 bg-white" />
+              <View className="absolute bottom-0 right-0 w-1 h-6 bg-white" />
+            </View>
+          </View>
         </View>
 
         {/* Bottom Sheet */}
