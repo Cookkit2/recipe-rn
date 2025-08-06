@@ -1,14 +1,19 @@
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View, Platform } from "react-native";
 import Animated from "react-native-reanimated";
 import { AspectRatio } from "./ui/aspect-ratio";
 import { H4, P } from "./ui/typography";
 import type { PantryItem } from "~/types/PantryItem";
 import { useRouter } from "expo-router";
 import useOnPressScale from "~/hooks/animation/useOnPressScale";
+import { useParallax } from "~/hooks/animation/useParallax";
 
 export const IngredientItemCard = ({ item }: { item: PantryItem }) => {
   const router = useRouter();
   const { animatedStyle, handlePressIn, handlePressOut } = useOnPressScale();
+
+  // Parallax effects for image container and image
+  const containerParallax = useParallax({ intensity: 1, maxOffset: 4 });
+  const imageParallax = useParallax({ intensity: 1, maxOffset: 4 });
 
   return (
     <Animated.View
@@ -20,13 +25,16 @@ export const IngredientItemCard = ({ item }: { item: PantryItem }) => {
         onLongPress={handlePressIn}
         onPressOut={handlePressOut}
       >
-        <Animated.View sharedTransitionTag="pantry-item-image-container">
+        <Animated.View
+          sharedTransitionTag="pantry-item-image-container"
+          style={containerParallax.animatedStyle}
+        >
           <AspectRatio className="w-full relative rounded-2xl bg-muted flex items-center justify-center">
             <Animated.Image
               sharedTransitionTag="pantry-item-image"
               source={item.image_url}
               className="w-16 h-16"
-              style={styles.outlineImage}
+              style={[styles.outlineImage, imageParallax.animatedStyle]}
               resizeMode="contain"
             />
           </AspectRatio>
@@ -42,10 +50,14 @@ export const IngredientItemCard = ({ item }: { item: PantryItem }) => {
 
 const styles = StyleSheet.create({
   outlineImage: {
-    shadowColor: "white",
-    shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 5, // For Android
+    ...(Platform.OS === "ios" && {
+      shadowColor: "#ffffff",
+      shadowOffset: { width: 2, height: 2 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+    }),
+    ...(Platform.OS === "android" && {
+      elevation: 5,
+    }),
   },
 });
