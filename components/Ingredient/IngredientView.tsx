@@ -38,7 +38,6 @@ export default function IngredientView({
       intensity={85}
       tint="systemThickMaterialDark"
       className="flex-1 h-full w-full rounded-t-3xl overflow-hidden bg-background"
-      //   style={[{ marginTop: pt }]}
     >
       {/* App Bar Section */}
       <View
@@ -108,11 +107,12 @@ export default function IngredientView({
       <ScrollComponentToUse
         className="flex-1 px-6 py-8 bg-background rounded-t-3xl -mt-8"
         showsVerticalScrollIndicator={false}
+        style={{ borderCurve: "continuous" }}
       >
         {/* Header */}
         <Animated.Text
           entering={FadeIn}
-          className="web:scroll-m-20 text-4xl text-foreground font-extrabold tracking-tight lg:text-5xl web:select-text mb-2 font-bold text-center"
+          className="web:scroll-m-20 text-4xl text-foreground font-bold tracking-tight lg:text-5xl web:select-text mb-2 font-bold text-center"
         >
           {item.name}
         </Animated.Text>

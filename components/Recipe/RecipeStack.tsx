@@ -1,6 +1,11 @@
 import React, { useRef, useState } from "react";
-import { View, StyleSheet, Pressable } from "react-native";
-import Animated, { FadeInDown, useSharedValue } from "react-native-reanimated";
+import { View, StyleSheet } from "react-native";
+import Animated, {
+  Easing,
+  FadeInDown,
+  FadeInUp,
+  useSharedValue,
+} from "react-native-reanimated";
 import Carousel, {
   type ICarouselInstance,
 } from "react-native-reanimated-carousel";
@@ -8,15 +13,15 @@ import { Image } from "expo-image";
 import { window } from "~/constants/sizes";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { Recipe } from "~/data/dummy-recipes";
-import { H2, P } from "../ui/typography";
-import { useRouter } from "expo-router";
+import { H2, H4, P } from "../ui/typography";
+import { Link } from "expo-router";
+import { Button } from "../ui/button";
 
 export default function RecipeStack({ recipes }: { recipes: Recipe[] }) {
   const { top, bottom } = useSafeAreaInsets();
   const ref = useRef<ICarouselInstance>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const progress = useSharedValue<number>(0);
-  const router = useRouter();
 
   const PAGE_WIDTH = window.width;
   const PAGE_HEIGHT = window.height - top;
@@ -25,11 +30,13 @@ export default function RecipeStack({ recipes }: { recipes: Recipe[] }) {
 
   const allImages = recipes.map((recipe) => recipe.imageUrl);
 
+  const textAnim = (delayMs: number = 0) =>
+    FadeInDown.duration(300).easing(Easing.out(Easing.ease)).delay(delayMs);
+
   return (
-    <Pressable
+    <View
       className="absolute inset-0 flex items-center"
       style={{ top: top + 24 + 56, bottom: bottom + 16 }}
-      onPress={() => router.replace(`/recipes/${activeRecipe?.id}`)}
     >
       <View className="h-[65%] justify-center">
         <Carousel
@@ -60,12 +67,32 @@ export default function RecipeStack({ recipes }: { recipes: Recipe[] }) {
         />
       </View>
 
-      {/* Top overlay button placed last to ensure it renders above and captures touches */}
-      <View className="flex items-center pt-10 px-10 gap-2 w-full">
-        <H2 className="text-center">{activeRecipe?.title ?? ""}</H2>
-        <P className="text-center">{activeRecipe?.description ?? ""}</P>
+      {/* Top overlay content with staggered fade-in from below */}
+      <View className="flex flex-1 items-center pt-6 px-10 gap-2 w-full">
+        <Animated.View entering={textAnim(200)}>
+          <H2 className="text-center">{activeRecipe?.title ?? ""}</H2>
+        </Animated.View>
+        <Animated.View entering={textAnim(250)}>
+          <P className="text-center">{activeRecipe?.description ?? ""}</P>
+        </Animated.View>
       </View>
-    </Pressable>
+      <View className="flex flex-row gap-4 justify-center mt-10">
+        <Animated.View entering={textAnim(400)}>
+          <Link href={`/recipes/${activeRecipe?.id}`} replace asChild>
+            <Button size="lg" variant="secondary" className="rounded-full">
+              <H4 className="text-foreground text-center">Details</H4>
+            </Button>
+          </Link>
+        </Animated.View>
+        <Animated.View entering={textAnim(400)}>
+          <Link href={`/recipes/${activeRecipe?.id}/steps`} replace asChild>
+            <Button size="lg" variant="default" className="rounded-full">
+              <H4 className="text-background text-center">Cook</H4>
+            </Button>
+          </Link>
+        </Animated.View>
+      </View>
+    </View>
   );
 }
 
