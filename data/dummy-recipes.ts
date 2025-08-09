@@ -14,7 +14,7 @@ export interface Recipe {
   id: string;
   title: string;
   description: string;
-  imageUrl?: string; // Main image for the recipe
+  imageUrl: string; // Main image for the recipe
   prepTime?: string;
   cookTime?: string;
   servings?: number;

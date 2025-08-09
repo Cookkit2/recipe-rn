@@ -1,41 +1,248 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ScrollView, View, StyleSheet } from "react-native";
-import { AspectRatio } from "~/components/ui/aspect-ratio";
+import { View, Dimensions } from "react-native";
 import { dummyPantryItems } from "~/data/dummy-data";
-import Animated, { FadeIn } from "react-native-reanimated";
-import { H1, P } from "~/components/ui/typography";
-import { Button } from "~/components/ui/button";
-import {
-  ArrowLeftIcon,
-  MinusIcon,
-  PlusIcon,
-  StarIcon,
-} from "~/lib/icons/IngredientIcons";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useState } from "react";
-import { Separator } from "~/components/ui/separator";
-import { SlidingNumber } from "~/components/SlidingNumber";
-import { SheetScreen } from "react-native-sheet-transitions";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
+import { H1 } from "~/components/ui/typography";
+import { useCallback, useEffect, useRef } from "react";
+// import { SheetScreen } from "react-native-sheet-transitions";
 import * as Haptics from "expo-haptics";
-import { BlurView } from "expo-blur";
-import useImageColors from "~/hooks/useImageColors";
-import { LinearGradient } from "expo-linear-gradient";
+import { useRootScale } from "~/store/context/RootScaleContext";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import IngredientView from "~/components/Ingredient/IngredientView";
+
+const SCALE_FACTOR = 0.83;
+const DRAG_THRESHOLD = Math.min(Dimensions.get("window").height * 0.2, 150);
+const HORIZONTAL_DRAG_THRESHOLD = Math.min(
+  Dimensions.get("window").width * 0.51,
+  80
+);
+const DIRECTION_LOCK_ANGLE = 45; // Angle in degrees to determine horizontal vs vertical movement
+const ENABLE_HORIZONTAL_DRAG_CLOSE = true;
 
 export default function IngredientDetailsPage() {
-  const { top: pt } = useSafeAreaInsets();
-  const router = useRouter();
   const { ingredientId } = useLocalSearchParams<{ ingredientId: string }>();
+  const router = useRouter();
 
-  const [isFav, setIsFav] = useState(false);
+  const { setScale } = useRootScale();
+  const translateY = useSharedValue(0);
+  const isClosing = useRef(false);
+  const scrollOffset = useSharedValue(0);
+  const isDragging = useSharedValue(false);
+  const translateX = useSharedValue(0);
+  const initialGestureX = useSharedValue(0);
+  const initialGestureY = useSharedValue(0);
+  const isHorizontalGesture = useSharedValue(false);
+  const isScrolling = useSharedValue(false);
+  const blurIntensity = useSharedValue(20);
 
-  const [quantity, setQuantity] = useState(1);
+  const numericId =
+    typeof ingredientId === "string"
+      ? parseInt(ingredientId, 10)
+      : Array.isArray(ingredientId)
+        ? parseInt(ingredientId[0], 10)
+        : 0;
+  const item = dummyPantryItems.find((item) => item.id === numericId);
 
-  const item = dummyPantryItems.find(
-    (item) => item.id === parseInt(ingredientId, 10)
-  ); // Fetch ingredient details based on ingredientId
+  const handleHapticFeedback = useCallback(() => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    } catch (error) {
+      console.log("Haptics not available:", error);
+    }
+  }, []);
 
-  // const color = useImageColors(item?.image_url.toString());
+  const goBack = useCallback(() => {
+    if (!isClosing.current) {
+      isClosing.current = true;
+      handleHapticFeedback();
+      requestAnimationFrame(() => {
+        router.back();
+      });
+    }
+  }, [router, handleHapticFeedback]);
+
+  const handleScale = useCallback(
+    (newScale: number) => {
+      try {
+        setScale(newScale);
+      } catch (error) {
+        console.log("Scale error:", error);
+      }
+    },
+    [setScale]
+  );
+
+  const calculateGestureAngle = (x: number, y: number) => {
+    "worklet";
+    const angle = Math.abs(Math.atan2(y, x) * (180 / Math.PI));
+    return angle;
+  };
+
+  const panGesture = Gesture.Pan()
+    .onStart((event) => {
+      "worklet";
+      initialGestureX.value = event.x;
+      initialGestureY.value = event.y;
+      isHorizontalGesture.value = false;
+
+      if (scrollOffset.value <= 0) {
+        isDragging.value = true;
+      }
+    })
+    .onUpdate((event) => {
+      "worklet";
+      const dx = event.translationX;
+      const dy = event.translationY;
+      const angle = calculateGestureAngle(dx, dy);
+
+      if (
+        ENABLE_HORIZONTAL_DRAG_CLOSE &&
+        !isHorizontalGesture.value &&
+        !isScrolling.value
+      ) {
+        if (Math.abs(dx) > 10) {
+          if (angle < DIRECTION_LOCK_ANGLE) {
+            isHorizontalGesture.value = true;
+          }
+        }
+      }
+
+      if (ENABLE_HORIZONTAL_DRAG_CLOSE && isHorizontalGesture.value) {
+        translateX.value = dx;
+        translateY.value = dy;
+        blurIntensity.value = Math.max(0, 20 - Math.abs(dx) / 10);
+      } else if (scrollOffset.value <= 0 && isDragging.value) {
+        translateY.value = Math.max(0, dy);
+        blurIntensity.value = Math.max(0, 20 - dy / 20);
+      }
+    })
+    .onEnd((event) => {
+      "worklet";
+      isDragging.value = false;
+
+      if (ENABLE_HORIZONTAL_DRAG_CLOSE && isHorizontalGesture.value) {
+        const dx = event.translationX;
+        const dy = event.translationY;
+        const totalDistance = Math.sqrt(dx * dx + dy * dy);
+        const shouldClose = totalDistance > HORIZONTAL_DRAG_THRESHOLD;
+
+        if (shouldClose) {
+          const exitX = dx * 2;
+          const exitY = dy * 2;
+
+          translateX.value = withTiming(exitX, { duration: 300 });
+          translateY.value = withTiming(exitY, { duration: 300 });
+
+          runOnJS(handleScale)(1);
+          runOnJS(handleHapticFeedback)();
+          runOnJS(goBack)();
+        } else {
+          translateX.value = withSpring(0, {
+            damping: 15,
+            stiffness: 150,
+          });
+          translateY.value = withSpring(0, {
+            damping: 15,
+            stiffness: 150,
+          });
+          runOnJS(handleScale)(SCALE_FACTOR);
+        }
+      } else if (scrollOffset.value <= 0) {
+        const shouldClose = event.translationY > DRAG_THRESHOLD;
+
+        if (shouldClose) {
+          translateY.value = withTiming(event.translationY + 100, {
+            duration: 300,
+          });
+          runOnJS(handleScale)(1);
+          runOnJS(handleHapticFeedback)();
+          runOnJS(goBack)();
+        } else {
+          translateY.value = withSpring(0, {
+            damping: 15,
+            stiffness: 150,
+          });
+          runOnJS(handleScale)(SCALE_FACTOR);
+        }
+      }
+    })
+    .onFinalize(() => {
+      "worklet";
+      isDragging.value = false;
+      isHorizontalGesture.value = false;
+    });
+
+  const scrollGesture = Gesture.Native()
+    .onBegin(() => {
+      "worklet";
+      isScrolling.value = true;
+      if (!isDragging.value) {
+        translateY.value = 0;
+      }
+    })
+    .onEnd(() => {
+      "worklet";
+      isScrolling.value = false;
+    });
+
+  const composedGestures = Gesture.Simultaneous(panGesture, scrollGesture);
+
+  const ScrollComponent = useCallback(
+    (props: any) => {
+      return (
+        <GestureDetector gesture={composedGestures}>
+          <Animated.ScrollView
+            {...props}
+            onScroll={(event) => {
+              "worklet";
+              scrollOffset.value = event.nativeEvent.contentOffset.y;
+              if (!isDragging.value && translateY.value !== 0) {
+                translateY.value = 0;
+              }
+              props.onScroll?.(event);
+            }}
+            scrollEventThrottle={16}
+            // bounces={scrollOffset.value >= 0 && !isDragging.value}
+            bounces={false}
+          />
+        </GestureDetector>
+      );
+    },
+    [composedGestures, isDragging.value, scrollOffset, translateY]
+  );
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateY: translateY.value },
+      { translateX: translateX.value },
+    ],
+    opacity: withSpring(1),
+  }));
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      try {
+        setScale(SCALE_FACTOR);
+      } catch (error) {
+        console.log("Initial scale error:", error);
+      }
+    }, 0);
+
+    return () => {
+      clearTimeout(timeout);
+      try {
+        setScale(1);
+      } catch (error) {
+        console.log("Cleanup scale error:", error);
+      }
+    };
+  }, [setScale]);
 
   if (!item) {
     return (
@@ -46,143 +253,10 @@ export default function IngredientDetailsPage() {
   }
 
   return (
-    <GestureHandlerRootView>
-      <SheetScreen
-        onClose={() => {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          router.back();
-        }}
-        dragDirections={{
-          toBottom: true,
-          toLeft: true,
-          toRight: true,
-          toTop: false,
-        }}
-        customBackground={
-          <BlurView intensity={20} style={StyleSheet.absoluteFill} />
-        }
-        disableRootScale
-        // opacityOnGestureMove={true}
-        containerRadiusSync={true}
-        initialBorderRadius={24}
-        onCloseStart={() => {
-          // Warn user they can release to close
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-        }}
-      >
-        <View className="flex-1 bg-background">
-          {/* App Bar Section */}
-          <View
-            className="flex-row items-center justify-between px-6 pt-4 bg-muted"
-            style={{ paddingTop: pt }}
-          >
-            <Button
-              size="icon"
-              variant="secondary"
-              className="rounded-full"
-              onPress={() => router.back()}
-            >
-              <ArrowLeftIcon
-                className="text-foreground"
-                size={20}
-                strokeWidth={2.618}
-              />
-            </Button>
-
-            <Button
-              size="icon"
-              variant="secondary"
-              className="rounded-full"
-              onPress={() => setIsFav(!isFav)}
-            >
-              {isFav ? (
-                <StarIcon
-                  className="text-warning"
-                  fill="currentColor"
-                  size={20}
-                  strokeWidth={2.618}
-                />
-              ) : (
-                <StarIcon
-                  className="text-foreground"
-                  size={20}
-                  strokeWidth={2.618}
-                />
-              )}
-            </Button>
-          </View>
-
-          {/* Hero Image Section */}
-          <Animated.View sharedTransitionTag="pantry-item-image-container">
-            <AspectRatio
-              className="relative w-full bg-muted flex items-center justify-center rounded-b-2xl"
-              ratio={4 / 3}
-            >
-              <Animated.Image
-                sharedTransitionTag="pantry-item-image"
-                source={item.image_url}
-                className="w-32 h-32"
-                resizeMode="contain"
-                style={{ marginBottom: pt }}
-              />
-              {/* {color && (
-                <LinearGradient
-                  // Background Linear Gradient
-                  colors={[color, "transparent"]}
-                  className="absolute left-0 top-0 bottom-0"
-                />
-              )} */}
-            </AspectRatio>
-          </Animated.View>
-
-          {/* Content Section */}
-          <View className="flex-1 px-6 py-8">
-            {/* Header */}
-            <Animated.Text
-              entering={FadeIn}
-              className="web:scroll-m-20 text-4xl text-foreground font-extrabold tracking-tight lg:text-5xl web:select-text mb-2 font-bold text-center"
-            >
-              {item.name}
-            </Animated.Text>
-            {/* <H1 className="mb-2 font-bold text-center">{item.name}</H1> */}
-            <View className="flex-row items-center justify-center gap-2 mb-12">
-              <P className="text-muted-foreground">{item.type}</P>
-              <P className="text-muted-foreground">•</P>
-              <P className="text-muted-foreground">{item.category}</P>
-            </View>
-            <View className="flex-row items-center justify-center gap-4 mb-4">
-              <Button
-                size="icon"
-                variant="ghost"
-                className="rounded-full"
-                onPress={() => setQuantity(quantity - 1)}
-              >
-                <MinusIcon
-                  className="text-foreground"
-                  size={20}
-                  strokeWidth={2.618}
-                />
-              </Button>
-              <Separator orientation="vertical" />
-              <SlidingNumber value={quantity} />
-              {/* <H3 className="opacity-80">{item.quantity}</H3> */}
-              <Separator orientation="vertical" />
-              <Button
-                size="icon"
-                variant="ghost"
-                className="rounded-full"
-                onPress={() => setQuantity(quantity + 1)}
-              >
-                <PlusIcon
-                  className="text-foreground"
-                  size={20}
-                  strokeWidth={2.618}
-                />
-              </Button>
-            </View>
-          </View>
-        </View>
-      </SheetScreen>
-    </GestureHandlerRootView>
+    <View className="flex-1">
+      <Animated.View className="flex-1" style={animatedStyle}>
+        <IngredientView scrollComponent={ScrollComponent} ingredient={item} />
+      </Animated.View>
+    </View>
   );
 }

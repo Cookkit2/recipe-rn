@@ -1,4 +1,4 @@
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,7 +7,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import { P } from "./ui/typography";
+import { P } from "../ui/typography";
 import Animated, { FadeIn } from "react-native-reanimated";
 import {
   CircleUserIcon,

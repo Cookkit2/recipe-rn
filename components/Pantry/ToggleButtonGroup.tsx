@@ -1,6 +1,6 @@
 import React, { type JSX } from "react";
 import { View } from "react-native";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import useItemTypeStore from "~/store/type-store";
 import type { ItemType } from "~/types/PantryItem";
 import {
@@ -9,7 +9,7 @@ import {
   SnowflakeIcon,
   CabinetIcon,
 } from "~/lib/icons/PantryIcons";
-import { P } from "./ui/typography";
+import { P } from "../ui/typography";
 import { cn } from "~/lib/utils";
 
 const TYPES: Array<{ type: ItemType; label: string; icon: JSX.Element }> = [

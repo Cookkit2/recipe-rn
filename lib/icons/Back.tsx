@@ -1,4 +1,5 @@
-import { ArrowLeftIcon } from "lucide-react-native";
+import { ArrowLeftIcon, XIcon } from "lucide-react-native";
 import { iconWithClassName } from "./iconWithClassName";
 iconWithClassName(ArrowLeftIcon);
-export { ArrowLeftIcon };
+iconWithClassName(XIcon);
+export { ArrowLeftIcon, XIcon };

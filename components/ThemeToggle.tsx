@@ -1,7 +1,7 @@
 import { Pressable, View } from "react-native";
 import { setAndroidNavigationBar } from "~/lib/android-navigation-bar";
 import { MoonStarIcon, SunIcon } from "~/lib/icons/ThemeIcons";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { useColorScheme } from "~/hooks/useColorScheme";
 import { Button } from "./ui/button";
 
 export function ThemeToggle() {
@@ -21,7 +21,11 @@ export function ThemeToggle() {
       onPress={toggleColorScheme}
     >
       {isDarkColorScheme ? (
-        <MoonStarIcon className="text-foreground" size={20} strokeWidth={2.618} />
+        <MoonStarIcon
+          className="text-foreground"
+          size={20}
+          strokeWidth={2.618}
+        />
       ) : (
         <SunIcon className="text-foreground" size={20} strokeWidth={2.618} />
       )}

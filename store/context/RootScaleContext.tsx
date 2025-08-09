@@ -1,0 +1,42 @@
+import React, { createContext, useContext } from "react";
+import {
+  type SharedValue,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
+import { SPRING_CONFIG } from "~/constants/spring-config";
+
+interface RootScaleContextType {
+  scale: SharedValue<number>;
+  setScale: (value: number) => void;
+}
+
+const RootScaleContext = createContext<RootScaleContextType | null>(null);
+
+export function RootScaleProvider({ children }: { children: React.ReactNode }) {
+  const scale = useSharedValue(1);
+
+  const setScale = (value: number) => {
+    "worklet";
+    try {
+      scale.value = withSpring(value, SPRING_CONFIG);
+    } catch (error) {
+      console.warn("Scale animation error:", error);
+      scale.value = value;
+    }
+  };
+
+  return (
+    <RootScaleContext.Provider value={{ scale, setScale }}>
+      {children}
+    </RootScaleContext.Provider>
+  );
+}
+
+export const useRootScale = () => {
+  const context = useContext(RootScaleContext);
+  if (!context) {
+    throw new Error("useRootScale must be used within a RootScaleProvider");
+  }
+  return context;
+};

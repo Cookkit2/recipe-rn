@@ -31,6 +31,25 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      [
+        "expo-font",
+        {
+          "fonts": ["./assets/fonts/mullish.ttf"],
+          "android": {
+            "fonts": [
+              {
+                "fontFamily": "Mullish",
+                "fontDefinitions": [
+                  {
+                    "path": "./assets/fonts/mullish.ttf",
+                    "weight": 800
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
       "expo-router",
       [
         "expo-camera",
