@@ -1,14 +1,14 @@
 import { FlatList, View } from "react-native";
-import { H1, H4 } from "~/components/ui/typography";
+import { H1 } from "~/components/ui/typography";
 import { dummyPantryItems } from "~/data/dummy-data";
-import { IngredientItemCard } from "~/components/IngredientItemCard";
-import ToggleButtonGroup from "~/components/ToggleButtonGroup";
-import MenuDropdown from "~/components/MenuDropdown";
-import AddPantryItemModal from "~/components/AddPantryItemModal";
-import useItemTypeStore from "~/store/type-store";
+import { IngredientItemCard } from "~/components/Ingredient/IngredientItemCard";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Button } from "~/components/ui/button";
-import { Link } from "expo-router";
+import { ThemeToggle } from "~/components/ThemeToggle";
+import ToggleButtonGroup from "~/components/Pantry/ToggleButtonGroup";
+import MenuDropdown from "~/components/Pantry/MenuDropdown";
+import AddPantryItemModal from "~/components/Pantry/AddPantryItemModal";
+import useItemTypeStore from "~/store/type-store";
+import RecipeButton from "~/components/Pantry/RecipeButton";
 
 export default function Screen() {
   const { bottom: pb, top: pt } = useSafeAreaInsets();
@@ -28,18 +28,9 @@ export default function Screen() {
         <View className="flex-1" />
         <AddPantryItemModal />
         <MenuDropdown />
+        <ThemeToggle />
       </View>
       <ToggleButtonGroup />
-      {/* <Link href="/recipes" push asChild>
-        <Button
-          size="lg"
-          variant="default"
-          className="absolute mx-auto rounded-full"
-          style={{ bottom: 16 + pb }}
-        >
-          <H4 className="text-primary-foreground text-center">Let's Cook</H4>
-        </Button>
-      </Link> */}
       <View className="p-3">
         <FlatList
           numColumns={2}
@@ -52,6 +43,7 @@ export default function Screen() {
           )}
         />
       </View>
+      <RecipeButton />
     </View>
   );
 }

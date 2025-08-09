@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View, Platform } from "react-native";
 import Animated from "react-native-reanimated";
-import { AspectRatio } from "./ui/aspect-ratio";
-import { H4, P } from "./ui/typography";
+import { AspectRatio } from "../ui/aspect-ratio";
+import { H4, P } from "../ui/typography";
 import type { PantryItem } from "~/types/PantryItem";
 import { useRouter } from "expo-router";
 import useOnPressScale from "~/hooks/animation/useOnPressScale";
