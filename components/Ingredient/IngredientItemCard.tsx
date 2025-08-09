@@ -9,7 +9,13 @@ import { useParallax } from "~/hooks/animation/useParallax";
 
 const PARALLAX_CONFIG = { intensity: 1, maxOffset: 4 };
 
-export const IngredientItemCard = ({ item }: { item: PantryItem }) => {
+export const IngredientItemCard = ({
+  item,
+  index,
+}: {
+  item: PantryItem;
+  index: number;
+}) => {
   const router = useRouter();
   const { animatedStyle, handlePressIn, handlePressOut } = useOnPressScale();
   // Parallax effects for image container and image
@@ -28,9 +34,12 @@ export const IngredientItemCard = ({ item }: { item: PantryItem }) => {
       >
         <Animated.View
           sharedTransitionTag="pantry-item-image-container"
-          style={containerParallax.animatedStyle}
+          style={[containerParallax.animatedStyle]}
         >
-          <AspectRatio className="w-full relative rounded-2xl bg-muted flex items-center justify-center">
+          <AspectRatio
+            className="w-full relative rounded-3xl bg-muted flex items-center justify-center"
+            style={styles.container}
+          >
             <Animated.Image
               sharedTransitionTag="pantry-item-image"
               source={item.image_url}
@@ -60,5 +69,8 @@ const styles = StyleSheet.create({
     ...(Platform.OS === "android" && {
       elevation: 5,
     }),
+  },
+  container: {
+    borderCurve: "continuous",
   },
 });

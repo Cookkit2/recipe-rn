@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "~/components/ui/button";
 import { ChefHatIcon } from "~/lib/icons/RecipesIcon";
 import { H4 } from "../ui/typography";
+import TextShimmer from "../ui/TextShimmer";
 
 export default function RecipeButton() {
   const { bottom: pb } = useSafeAreaInsets();
@@ -16,14 +17,20 @@ export default function RecipeButton() {
         <Button
           size="lg"
           variant="default"
-          className="flex-row gap-4 rounded-full"
+          className="flex-row gap-2 rounded-full"
         >
           <ChefHatIcon
             className="text-background"
             size={20}
             strokeWidth={2.618}
           />
-          <H4 className="text-primary-foreground text-center">Let's Cook</H4>
+          <TextShimmer
+            className="text-primary-foreground text-center"
+            component={H4}
+          >
+            Let's Cook
+          </TextShimmer>
+          {/* <H4 className="text-primary-foreground text-center">Let's Cook</H4> */}
         </Button>
       </Link>
     </View>

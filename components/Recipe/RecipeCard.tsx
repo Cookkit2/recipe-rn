@@ -58,10 +58,10 @@ export default function RecipeCard({ recipe, index }: RecipeCardProps) {
             <Text className="text-xl font-bold text-gray-800 mb-2 leading-6">
               {recipe.title}
             </Text>
-            {recipe.cookTime && (
+            {(recipe.prepMinutes ?? 0) + (recipe.cookMinutes ?? 0) > 0 && (
               <View className="flex-row items-center">
                 <Text className="text-sm text-gray-600">
-                  🕒 {recipe.cookTime}
+                  🕒 {(recipe.prepMinutes ?? 0) + (recipe.cookMinutes ?? 0)} min
                 </Text>
               </View>
             )}

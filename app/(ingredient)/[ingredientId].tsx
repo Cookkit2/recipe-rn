@@ -253,10 +253,8 @@ export default function IngredientDetailsPage() {
   }
 
   return (
-    <View className="flex-1">
-      <Animated.View className="flex-1" style={animatedStyle}>
-        <IngredientView scrollComponent={ScrollComponent} ingredient={item} />
-      </Animated.View>
-    </View>
+    <Animated.View className="flex-1" style={[animatedStyle]}>
+      <IngredientView scrollComponent={ScrollComponent} ingredient={item} />
+    </Animated.View>
   );
 }

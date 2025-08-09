@@ -1,4 +1,11 @@
-import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import Animated, {
+  FadeIn,
+  FadeOut,
+  Keyframe,
+  RotateInUpLeft,
+  ZoomIn,
+  ZoomOut,
+} from "react-native-reanimated";
 import RecipeStack from "~/components/Recipe/RecipeStack";
 
 import { Pressable, View } from "react-native";
@@ -16,6 +23,11 @@ export default function RecipesPage() {
   const recipes = dummyRecipesData;
   const router = useRouter();
 
+  const FadeRotateIn = new Keyframe({
+    0: { opacity: 0, transform: [{ rotate: "-45deg" }] },
+    100: { opacity: 1, transform: [{ rotate: "0deg" }] },
+  }).duration(100);
+
   return (
     <>
       <AnimatedBlurView
@@ -24,9 +36,10 @@ export default function RecipesPage() {
         intensity={40}
         className="absolute inset-0"
       />
-
       <RecipeStack recipes={recipes} />
-      <View
+      <Animated.View
+        entering={ZoomIn.springify().delay(1000).duration(100)}
+        exiting={ZoomOut}
         pointerEvents="box-none"
         className="absolute inset-x-0 items-center"
         style={{ top: pt + 24 }}
@@ -39,7 +52,7 @@ export default function RecipesPage() {
         >
           <XIcon className="text-foreground" />
         </Button>
-      </View>
+      </Animated.View>
     </>
   );
 }

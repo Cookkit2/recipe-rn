@@ -15,8 +15,9 @@ export interface Recipe {
   title: string;
   description: string;
   imageUrl: string; // Main image for the recipe
-  prepTime?: string;
-  cookTime?: string;
+  prepMinutes?: number; // integer minutes
+  cookMinutes?: number; // integer minutes
+  difficultyStars?: number; // 1-3 or 1-5 scale
   servings?: number;
   ingredients: RecipeIngredient[];
   instructions: RecipeStep[]; // Changed from string[] to RecipeStep[]
@@ -33,8 +34,9 @@ export const dummyRecipesData: Recipe[] = [
       "With crispy edges, fudgy middles, and rich chocolate flavor, these homemade brownies will disappear in no time.",
     imageUrl:
       "https://images.unsplash.com/photo-1636743715220-d8f8dd900b87?q=80&w=3085&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    prepTime: "5 minutes",
-    cookTime: "40-45 minutes",
+    prepMinutes: 5,
+    cookMinutes: 45,
+    difficultyStars: 2,
     servings: 16,
     ingredients: [
       { name: "granulated sugar", quantity: "1 1/2 cups" },
@@ -102,8 +104,9 @@ export const dummyRecipesData: Recipe[] = [
       "A simple and delicious guacamole recipe that's perfect for any occasion.",
     imageUrl:
       "https://images.unsplash.com/photo-1508910238952-0dfebf373ecf?q=80&w=2336&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    prepTime: "10 minutes",
-    cookTime: "0 minutes",
+    prepMinutes: 10,
+    cookMinutes: 0,
+    difficultyStars: 1,
     servings: 4,
     ingredients: [
       { name: "ripe avocados", quantity: "3" },
@@ -147,8 +150,9 @@ export const dummyRecipesData: Recipe[] = [
       "A quick and healthy chicken stir-fry with fresh vegetables and a savory sauce.",
     imageUrl:
       "https://images.unsplash.com/photo-1621515554656-3da68ba128b1?q=80&w=3084&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    prepTime: "15 minutes",
-    cookTime: "10-12 minutes",
+    prepMinutes: 15,
+    cookMinutes: 12,
+    difficultyStars: 2,
     servings: 4,
     ingredients: [
       {
@@ -214,8 +218,9 @@ export const dummyRecipesData: Recipe[] = [
       "A classic Italian salad featuring fresh mozzarella, tomatoes, and basil.",
     imageUrl:
       "https://images.unsplash.com/photo-1529312266912-b33cfce2eefd?q=80&w=3087&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    prepTime: "10 minutes",
-    cookTime: "0 minutes",
+    prepMinutes: 10,
+    cookMinutes: 0,
+    difficultyStars: 1,
     servings: 4,
     ingredients: [
       {
@@ -266,8 +271,9 @@ export const dummyRecipesData: Recipe[] = [
       "A delicious and easy recipe for moist banana bread that's perfect for using up ripe bananas.",
     imageUrl:
       "https://images.unsplash.com/photo-1632931057819-4eefffa8e007?q=80&w=3087&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    prepTime: "15 minutes",
-    cookTime: "60-65 minutes",
+    prepMinutes: 15,
+    cookMinutes: 65,
+    difficultyStars: 3,
     servings: 12,
     ingredients: [
       { name: "ripe bananas", quantity: "3 large", notes: "mashed" },
@@ -333,8 +339,9 @@ export const dummyRecipesData: Recipe[] = [
       "A succulent and flavorful roast chicken seasoned with lemon and herbs, perfect for a family dinner.",
     imageUrl:
       "https://images.unsplash.com/photo-1597577652129-7ffad9d37ad4?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    prepTime: "20 minutes",
-    cookTime: "1 hour 15 minutes - 1 hour 30 minutes",
+    prepMinutes: 20,
+    cookMinutes: 90,
+    difficultyStars: 3,
     servings: 4,
     ingredients: [
       { name: "whole chicken", quantity: "1 (3-4 lbs)" },

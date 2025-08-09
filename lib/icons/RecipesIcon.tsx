@@ -1,4 +1,28 @@
-import { ChefHatIcon } from "lucide-react-native";
+import {
+  ChefHatIcon,
+  HeartIcon,
+  StarIcon,
+  ClockIcon,
+  FlameIcon,
+  AppleIcon,
+  WheatIcon,
+  DrumstickIcon,
+} from "lucide-react-native";
 import { iconWithClassName } from "./iconWithClassName";
 iconWithClassName(ChefHatIcon);
-export { ChefHatIcon };
+iconWithClassName(HeartIcon);
+iconWithClassName(StarIcon);
+iconWithClassName(FlameIcon);
+iconWithClassName(AppleIcon);
+iconWithClassName(WheatIcon);
+iconWithClassName(DrumstickIcon);
+export {
+  ChefHatIcon,
+  HeartIcon,
+  StarIcon,
+  ClockIcon,
+  FlameIcon,
+  AppleIcon,
+  WheatIcon,
+  DrumstickIcon,
+};

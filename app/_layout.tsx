@@ -100,15 +100,22 @@ function AnimatedStack() {
             options={{
               headerShown: false,
               animation: "none",
-              presentation: "transparentModal",
+              presentation: "containedTransparentModal",
               contentStyle: { backgroundColor: "transparent" },
             }}
           />
           <Stack.Screen
-            name="recipes/[recipeId]"
+            name="recipes/[recipeId]/index"
             options={{
               presentation: "card",
               headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="recipes/[recipeId]/steps"
+            options={{
+              presentation: "card",
+              // headerShown: false,
             }}
           />
           <Stack.Screen name="+not-found" />

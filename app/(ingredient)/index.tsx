@@ -1,5 +1,5 @@
 import { FlatList, View } from "react-native";
-import { H1 } from "~/components/ui/typography";
+import { H1, H4 } from "~/components/ui/typography";
 import { dummyPantryItems } from "~/data/dummy-data";
 import { IngredientItemCard } from "~/components/Ingredient/IngredientItemCard";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -38,9 +38,14 @@ export default function Screen() {
           showsVerticalScrollIndicator={false}
           data={filteredItems}
           keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <IngredientItemCard key={item.id} item={item} />
+          renderItem={({ item, index }) => (
+            <IngredientItemCard key={item.id} item={item} index={index} />
           )}
+          ListEmptyComponent={
+            <View className="py-16 items-center justify-center">
+              <H4 className="text-muted-foreground text-center">No items</H4>
+            </View>
+          }
         />
       </View>
       <RecipeButton />
