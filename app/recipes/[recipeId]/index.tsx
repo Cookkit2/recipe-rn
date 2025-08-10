@@ -20,7 +20,7 @@ import {
   DrumstickIcon,
   WheatIcon,
 } from "~/lib/icons/RecipesIcon";
-import { LeafIcon } from "~/lib/icons/Leaf";
+// import { LeafIcon } from "~/lib/icons/Leaf";
 import { OutlinedImage } from "~/components/ui/outlined-image";
 import { Separator } from "~/components/ui/separator";
 import { SlidingNumber } from "~/components/SlidingNumber";
