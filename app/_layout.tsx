@@ -55,13 +55,13 @@ function AnimatedStack() {
     };
   });
 
-  const router = useRouter();
-
-  useEffect(() => {
-    setTimeout(() => {
-      router.push("/recipes/homemade-brownies/steps");
-    }, 0);
-  }, [router]);
+  // For ease of dev, we can redirect to the steps page
+  // const router = useRouter();
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     router.push("/recipes/homemade-brownies/steps");
+  //   }, 0);
+  // }, [router]);
 
   return (
     <View className="flex-1 bg-background">

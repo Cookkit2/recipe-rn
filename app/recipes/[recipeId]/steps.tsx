@@ -1,40 +1,27 @@
 import React, { useMemo, useState } from "react";
-import { StyleSheet, View, Text, ScrollView } from "react-native";
+import { StyleSheet, View, Text } from "react-native";
 import type { ICarouselInstance } from "react-native-reanimated-carousel";
 import Carousel from "react-native-reanimated-carousel";
 import { window } from "~/constants/sizes";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Animated, {
-  FadeInDown,
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  interpolate,
-  Extrapolation,
-} from "react-native-reanimated";
+import { useSharedValue } from "react-native-reanimated";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   getRecipeById,
-  type Recipe,
   type RecipeIngredient,
   type RecipeStep,
 } from "~/data/dummy-recipes";
 import { Progress } from "~/components/ui/progress";
 import { ArrowLeftIcon, ArrowRightIcon, XIcon } from "~/lib/icons/Back";
 import { Button } from "~/components/ui/button";
-import { H1 } from "~/components/ui/typography";
-import { IngredientsContent } from "~/components/Steps/IngredientContent";
-import StepContent from "~/components/Steps/StepContent";
+import StepCard from "~/components/Steps/StepCard";
 
-interface StepPageData {
+export type StepPageData = {
   type: "ingredients" | "step";
   title: string;
   content: RecipeIngredient[] | RecipeStep;
   imageUrl?: string;
-}
-
-const SHADOW_COLOR = "#000000";
-const CARD_BACKGROUND_COLOR = "#ffffff";
+};
 
 export default function RecipeSteps() {
   const router = useRouter();
@@ -137,7 +124,6 @@ export default function RecipeSteps() {
           modeConfig={{
             snapDirection: "left",
             moveSize: PAGE_WIDTH * 1.5,
-            // stackInterval: 12,
             scaleInterval: 0.08,
             rotateZDeg: 8,
             opacityInterval: 0,
@@ -148,7 +134,7 @@ export default function RecipeSteps() {
             progress.value = absoluteProgress;
           }}
           renderItem={({ index, item, animationValue }) => (
-            <StepPageItem
+            <StepCard
               key={index}
               data={item}
               recipe={recipe}
@@ -185,112 +171,11 @@ export default function RecipeSteps() {
   );
 }
 
-const StepPageItem: React.FC<{
-  data: StepPageData;
-  recipe: Recipe;
-  index: number;
-  animationValue: Animated.SharedValue<number>;
-}> = ({ data, animationValue }) => {
-  const cardStyle = useAnimatedStyle(() => {
-    const rotate = interpolate(
-      animationValue.value,
-      [-1, 0, 1],
-      [-15, 0, 15],
-      Extrapolation.CLAMP
-    );
-
-    const scale = interpolate(
-      animationValue.value,
-      [-1, 0, 1],
-      [0.85, 1, 0.85],
-      Extrapolation.CLAMP
-    );
-
-    const translateY = interpolate(
-      animationValue.value,
-      [-1, 0, 1],
-      [50, 0, 50],
-      Extrapolation.CLAMP
-    );
-
-    return {
-      transform: [
-        { rotateZ: `${rotate}deg` },
-        { scale: withSpring(scale) },
-        { translateY: withSpring(translateY) },
-      ],
-    };
-  });
-
-  const shadowStyle = useAnimatedStyle(() => {
-    const shadowOpacity = interpolate(
-      animationValue.value,
-      [-1, 0, 1],
-      [0.1, 0.3, 0.1],
-      Extrapolation.CLAMP
-    );
-
-    return {
-      shadowOpacity: withSpring(shadowOpacity),
-    };
-  });
-
-  return (
-    <Animated.View
-      entering={FadeInDown.duration(300)}
-      style={[styles.cardContainer, styles.cardShadow, cardStyle, shadowStyle]}
-    >
-      {/* Content */}
-      <H1 className=" text-center mb-6 text-foreground">{data.title}</H1>
-
-      <View className="flex-1 w-full">
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
-          {data.type === "ingredients" ? (
-            <IngredientsContent
-              ingredients={data.content as RecipeIngredient[]}
-            />
-          ) : (
-            <StepContent step={data.content as RecipeStep} />
-          )}
-        </ScrollView>
-      </View>
-    </Animated.View>
-  );
-};
-
 const styles = StyleSheet.create({
   carousel: {
     width: "100%",
     height: "100%",
     alignItems: "center",
     justifyContent: "center",
-  },
-  cardContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    marginVertical: 48,
-    marginHorizontal: 32,
-    backgroundColor: CARD_BACKGROUND_COLOR,
-    borderRadius: 24,
-    padding: 20,
-    minHeight: window.height * 0.6,
-  },
-  scrollContent: {
-    paddingBottom: 20,
-    flexGrow: 1,
-  },
-  cardShadow: {
-    shadowColor: SHADOW_COLOR,
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 12,
   },
 });

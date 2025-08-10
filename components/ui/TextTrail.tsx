@@ -1,5 +1,4 @@
-import React from "react";
-import { Fragment } from "react";
+import React, { Fragment } from "react";
 import { MotiText } from "moti";
 import { H1 } from "~/components/ui/typography";
 import { EASE_IN_OUT_SMOOTH } from "~/components/ui/BlurFadeText";
