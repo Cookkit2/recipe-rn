@@ -6,7 +6,7 @@ import {
   ThemeProvider,
   type Theme,
 } from "@react-navigation/native";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Appearance, Platform, View, StyleSheet } from "react-native";
 import { NAV_THEME } from "~/lib/constants";
@@ -54,6 +54,14 @@ function AnimatedStack() {
       ],
     };
   });
+
+  // For ease of dev, we can redirect to the steps page
+  // const router = useRouter();
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     router.push("/recipes/homemade-brownies/steps");
+  //   }, 0);
+  // }, [router]);
 
   return (
     <View className="flex-1 bg-background">
@@ -115,7 +123,7 @@ function AnimatedStack() {
             name="recipes/[recipeId]/steps"
             options={{
               presentation: "card",
-              // headerShown: false,
+              headerShown: false,
             }}
           />
           <Stack.Screen name="+not-found" />
