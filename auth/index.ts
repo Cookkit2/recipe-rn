@@ -1,8 +1,18 @@
 // Main exports for the authentication module
-export * from "./types";
 export * from "./AuthStrategy";
 export * from "./AuthStore";
 export * from "./AuthContext";
+
+// Strategy implementations
+export { MockAuthStrategy } from "./MockAuthStrategy";
+export { SupabaseAuthStrategy } from "./SupabaseAuthStrategy";
+
+// Storage and client
+export {
+  AuthStorageManager,
+  createSupabaseStorageAdapter,
+} from "./storage-integration";
+export { supabase, supabaseConfig } from "./supabase-client";
 
 // Re-export commonly used items for convenience
 export { useAuth, useAuthState, useAuthActions } from "./AuthContext";
@@ -13,6 +23,6 @@ export type {
   AuthResult,
   SignInCredentials,
   SocialAuthConfig,
-  AuthProvider,
+  AuthProvider as AuthProviderType,
   AuthState,
 } from "./types";
