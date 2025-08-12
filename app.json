@@ -38,6 +38,19 @@
       "output": "static",
       "favicon": "./assets/favicon.png"
     },
+    "linking": {
+      "prefixes": ["recipe-app://"],
+      "config": {
+        "screens": {
+          "auth": {
+            "screens": {
+              "callback": "auth/callback",
+              "reset-password": "auth/reset-password"
+            }
+          }
+        }
+      }
+    },
     "plugins": [
       [
         "expo-font",

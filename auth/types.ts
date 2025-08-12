@@ -18,9 +18,9 @@ export interface SignInCredentials {
 
 export interface AuthResult {
   success: boolean;
-  user?: User;
-  error?: AuthError;
-  session?: AuthSession;
+  user?: User | null;
+  error?: AuthError | null;
+  session?: AuthSession | null;
 }
 
 export interface AuthError {
