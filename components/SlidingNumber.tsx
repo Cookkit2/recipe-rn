@@ -3,28 +3,26 @@ import { View, type LayoutChangeEvent } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
   type SharedValue,
+  withTiming,
 } from "react-native-reanimated";
 import { H4 } from "./ui/typography";
-
-const SPRING_CONFIG = {
-  stiffness: 280,
-  damping: 18,
-  mass: 0.3,
-};
+import { CURVES } from "~/constants/curves";
 
 function Digit({ value, place }: { value: number; place: number }) {
   const valueRoundedToPlace = Math.floor(value / place) % 10;
   const animatedValue = useSharedValue(valueRoundedToPlace);
 
   useEffect(() => {
-    animatedValue.value = withSpring(valueRoundedToPlace, SPRING_CONFIG);
+    animatedValue.value = withTiming(
+      valueRoundedToPlace,
+      CURVES["expressive.fast.spatial"]
+    );
   }, [animatedValue, valueRoundedToPlace]);
 
   return (
     <View className="relative overflow-hidden w-5 h-6">
-      <View className="invisible opacity-0">
+      <View className="opacity-0">
         <H4 className="text-center">0</H4>
       </View>
       {Array.from({ length: 10 }, (_, i) => (

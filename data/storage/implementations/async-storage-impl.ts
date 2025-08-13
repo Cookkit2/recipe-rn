@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { IStorage, StorageError, JSONSerializer } from "../types";
+import { type IStorage, StorageError, JSONSerializer } from "../types";
 
 export class AsyncStorageImpl implements IStorage {
   private serializer = new JSONSerializer();

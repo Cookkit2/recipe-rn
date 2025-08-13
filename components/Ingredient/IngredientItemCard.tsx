@@ -1,11 +1,12 @@
-import { Pressable, StyleSheet, View, Platform } from "react-native";
-import Animated from "react-native-reanimated";
+import { Pressable, StyleSheet, View } from "react-native";
+import Animated, { useSharedValue } from "react-native-reanimated";
 import { AspectRatio } from "../ui/aspect-ratio";
 import { H4, P } from "../ui/typography";
 import type { PantryItem } from "~/types/PantryItem";
 import { useRouter } from "expo-router";
 import useOnPressScale from "~/hooks/animation/useOnPressScale";
 import { useParallax } from "~/hooks/animation/useParallax";
+import OutlinedImage from "../ui/outlined-image";
 
 const PARALLAX_CONFIG = { intensity: 1, maxOffset: 4 };
 
@@ -24,7 +25,7 @@ export const IngredientItemCard = ({
 
   return (
     <Animated.View
-      style={animatedStyle}
+      style={[animatedStyle]}
       className="flex-1 max-w-[50%] flex-column items-start p-3"
     >
       <Pressable
@@ -40,12 +41,10 @@ export const IngredientItemCard = ({
             className="w-full relative rounded-3xl bg-muted flex items-center justify-center"
             style={styles.container}
           >
-            <Animated.Image
-              sharedTransitionTag="pantry-item-image"
+            <OutlinedImage
               source={item.image_url}
-              className="w-16 h-16"
-              style={[styles.outlineImage, imageParallax.animatedStyle]}
-              resizeMode="contain"
+              size={64}
+              style={[imageParallax.animatedStyle]}
             />
           </AspectRatio>
         </Animated.View>
@@ -59,17 +58,6 @@ export const IngredientItemCard = ({
 };
 
 const styles = StyleSheet.create({
-  outlineImage: {
-    ...(Platform.OS === "ios" && {
-      shadowColor: "#ffffff",
-      shadowOffset: { width: 2, height: 2 },
-      shadowOpacity: 1,
-      shadowRadius: 0,
-    }),
-    ...(Platform.OS === "android" && {
-      elevation: 5,
-    }),
-  },
   container: {
     borderCurve: "continuous",
   },

@@ -9,6 +9,7 @@ import MenuDropdown from "~/components/Pantry/MenuDropdown";
 import AddPantryItemModal from "~/components/Pantry/AddPantryItemModal";
 import useItemTypeStore from "~/store/type-store";
 import RecipeButton from "~/components/Pantry/RecipeButton";
+import { Redirect } from "expo-router";
 
 export default function Screen() {
   const { bottom: pb, top: pt } = useSafeAreaInsets();
@@ -19,10 +20,12 @@ export default function Screen() {
   const filteredItems = pantryItems.filter((item) => {
     if (selectedItemType === "all") return true;
     return item.type === selectedItemType;
-  });
+});
+
+  // return <Redirect href="/onboarding" />;
 
   return (
-    <View className="relative flex-1" style={{ paddingTop: pt }}>
+    <View className="relative flex-1 bg-background" style={{ paddingTop: pt }}>
       <View className="p-6 pb-4 flex-row items-center mb-4 gap-3">
         <H1>Pantry</H1>
         <View className="flex-1" />

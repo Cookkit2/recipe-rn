@@ -19,7 +19,7 @@ import {
 } from "~/lib/icons/CreateIngredientIcons";
 import { Button } from "~/components/ui/button";
 import { useColorScheme } from "~/hooks/useColorScheme";
-import { NAV_THEME } from "~/lib/constants";
+import { NAV_THEME } from "~/constants/colors";
 import { ArrowLeftIcon } from "~/lib/icons/Back";
 import { useRouter } from "expo-router";
 

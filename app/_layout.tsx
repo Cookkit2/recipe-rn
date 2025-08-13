@@ -6,13 +6,13 @@ import {
   ThemeProvider,
   type Theme,
 } from "@react-navigation/native";
-import { Stack, useRouter } from "expo-router";
+import { Redirect, Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Appearance, Platform, View, StyleSheet } from "react-native";
-import { NAV_THEME } from "~/lib/constants";
+import { Appearance, Platform, View } from "react-native";
+import { NAV_THEME } from "~/constants/colors";
 import { useColorScheme } from "~/hooks/useColorScheme";
 import { PortalHost } from "@rn-primitives/portal";
-import { ThemeToggle } from "~/components/ThemeToggle";
+// import { ThemeToggle } from "~/components/ThemeToggle";
 import { setAndroidNavigationBar } from "~/lib/android-navigation-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { SheetProvider } from "react-native-sheet-transitions";
@@ -25,6 +25,10 @@ import { BlurView } from "expo-blur";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { OverlayProvider } from "~/components/Overlay/OverlayContext";
 import { Image } from "expo-image";
+import * as SplashScreen from "expo-splash-screen";
+import { createMMKVStorage, storageFacade } from "~/data/storage";
+import { ONBOARDING_COMPLETED_KEY } from "~/constants/storage-keys";
+import { dummyRecipesData } from "~/data/dummy-recipes";
 
 const LIGHT_THEME: Theme = {
   ...DefaultTheme,
@@ -56,12 +60,12 @@ function AnimatedStack() {
   });
 
   // For ease of dev, we can redirect to the steps page
-  // const router = useRouter();
-  // useEffect(() => {
-  //   setTimeout(() => {
-  //     router.push("/recipes/homemade-brownies/steps");
-  //   }, 0);
-  // }, [router]);
+  const router = useRouter();
+  useEffect(() => {
+    setTimeout(() => {
+      router.push("/onboarding");
+    }, 0);
+  }, [router]);
 
   return (
     <View className="flex-1 bg-background">
@@ -77,6 +81,10 @@ function AnimatedStack() {
         style={[animatedStyle]}
       >
         <Stack>
+          <Stack.Screen
+            name="onboarding/index"
+            options={{ headerShown: false }}
+          />
           <Stack.Screen
             name="(ingredient)/index"
             options={{ headerShown: false }}
@@ -126,6 +134,20 @@ function AnimatedStack() {
               headerShown: false,
             }}
           />
+          <Stack.Screen
+            name="misc/terms"
+            options={{
+              headerShown: false,
+              presentation: "modal",
+            }}
+          />
+          <Stack.Screen
+            name="misc/privacy"
+            options={{
+              headerShown: false,
+              presentation: "modal",
+            }}
+          />
           <Stack.Screen name="+not-found" />
         </Stack>
       </Animated.View>
@@ -142,18 +164,50 @@ const usePlatformSpecificSetup = Platform.select({
 export default function RootLayout() {
   usePlatformSpecificSetup();
   const { isDarkColorScheme } = useColorScheme();
+  // const router = useRouter();
+  // const [appReady, setAppReady] = useState(false);
 
   useEffect(() => {
     Image.prefetch([
+      ...dummyRecipesData.map((recipe) => recipe.imageUrl),
       // Add your common image URLs here
       "path-to-netflix-icon.png",
       "path-to-netflix-outline.png",
     ]);
   }, []);
 
+  // useEffect(() => {
+  //   let mounted = true;
+  //   const init = async () => {
+  //     try {
+  //       await SplashScreen.preventAutoHideAsync();
+  //     } catch {
+  //       /* noop */
+  //     }
+  //     try {
+  //       createMMKVStorage({ id: "app" });
+  //       const completed = storageFacade.get<boolean>(ONBOARDING_COMPLETED_KEY);
+  //       if (!completed) {
+  //         router.replace("/onboarding");
+  //       }
+  //     } finally {
+  //       if (mounted) setAppReady(true);
+  //       try {
+  //         await SplashScreen.hideAsync();
+  //       } catch {
+  //         /* noop */
+  //       }
+  //     }
+  //   };
+  //   init();
+  //   return () => {
+  //     mounted = false;
+  //   };
+  // }, [router]);
+
   return (
     <GestureHandlerRootView className="flex-1 bg-black">
-      <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
+      {/* <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}> */}
         <SheetProvider>
           <RootScaleProvider>
             <SafeAreaProvider>
@@ -165,7 +219,7 @@ export default function RootLayout() {
             </SafeAreaProvider>
           </RootScaleProvider>
         </SheetProvider>
-      </ThemeProvider>
+      {/* </ThemeProvider> */}
     </GestureHandlerRootView>
   );
 }

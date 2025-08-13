@@ -98,6 +98,10 @@ function Button({
           onPressOut={handlePressOut}
           ref={ref}
           role="button"
+          style={(state) => [
+            typeof props.style === "function" ? props.style(state) : props.style,
+            { borderCurve: "continuous" }
+          ]}
           {...props}
         />
       </Animated.View>
