@@ -5,6 +5,7 @@ import { TextClassContext } from "~/components/ui/text";
 import { cn } from "~/lib/utils";
 import Animated from "react-native-reanimated";
 import useOnPressScale from "~/hooks/animation/useOnPressScale";
+import useDebounce from "~/hooks/useDebounce";
 
 const buttonVariants = cva(
   "group flex items-center justify-center rounded-md web:ring-offset-background web:transition-colors web:focus-visible:outline-none web:focus-visible:ring-2 web:focus-visible:ring-ring web:focus-visible:ring-offset-2",
@@ -68,6 +69,9 @@ const buttonTextVariants = cva(
 type ButtonProps = React.ComponentProps<typeof Pressable> &
   VariantProps<typeof buttonVariants> & {
     containerClassName?: string;
+    debounceDelay?: number;
+    enableDebounce?: boolean;
+    enableAnimation?: boolean;
   };
 
 function Button({
@@ -76,9 +80,21 @@ function Button({
   variant,
   size,
   containerClassName,
+  debounceDelay = 300,
+  enableDebounce = true,
+  onPress,
+  enableAnimation = true,
   ...props
 }: ButtonProps) {
   const { animatedStyle, handlePressIn, handlePressOut } = useOnPressScale();
+
+  // Apply debouncing to onPress if enabled
+  const debouncedOnPress = useDebounce(onPress || noop, {
+    delay: debounceDelay,
+    immediate: true,
+  });
+
+  const handlePress = enableDebounce ? debouncedOnPress : onPress || noop;
 
   return (
     <TextClassContext.Provider
@@ -94,16 +110,25 @@ function Button({
             props.disabled && "opacity-50 web:pointer-events-none",
             buttonVariants({ variant, size, className })
           )}
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
+          onPressIn={enableAnimation ? handlePressIn : undefined}
+          onPressOut={enableAnimation ? handlePressOut : undefined}
+          onPress={handlePress}
           ref={ref}
           role="button"
+          style={(state) => [
+            typeof props.style === "function"
+              ? props.style(state)
+              : props.style,
+            { borderCurve: "continuous" },
+          ]}
           {...props}
         />
       </Animated.View>
     </TextClassContext.Provider>
   );
 }
+
+const noop = () => {};
 
 export { Button, buttonTextVariants, buttonVariants };
 export type { ButtonProps };

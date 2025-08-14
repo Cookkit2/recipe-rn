@@ -15,6 +15,9 @@ function Card({
         "rounded-lg border border-border bg-card shadow-sm shadow-foreground/10",
         className
       )}
+      style={{
+        borderCurve: "continuous",
+      }}
       {...props}
     />
   );

@@ -60,7 +60,7 @@ export const dummyPantryItems: PantryItem[] = [
     quantity: "500 g",
     expiry_date: getDummyDate(365),
     category: "Grains",
-    image_url: require("~/assets/images/potato.png"),
+    image_url: require("~/assets/images/pasta.png"),
     type: "fridge",
     x: 0,
     y: 0,

@@ -1,48 +1,74 @@
 import { router } from "expo-router";
 
 import React, { useState } from "react";
-import { ScrollView, View } from "react-native";
-import Animated, { FadeIn } from "react-native-reanimated";
-import { SlidingNumber } from "~/components/SlidingNumber";
-import { AspectRatio } from "~/components/ui/aspect-ratio";
+import {
+  ScrollView,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from "react-native";
+import Animated, {
+  FadeIn,
+  interpolate,
+  useAnimatedStyle,
+  useScrollViewOffset,
+  type AnimatedRef,
+} from "react-native-reanimated";
 import { P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
-import { Separator } from "~/components/ui/separator";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { PantryItem } from "~/types/PantryItem";
-import { BlurView } from "expo-blur";
-import {
-  ArrowLeftIcon,
-  MinusIcon,
-  PlusIcon,
-  StarIcon,
-} from "~/lib/icons/IngredientIcons";
+import { ArrowLeftIcon, StarIcon } from "~/lib/icons/IngredientIcons";
+import OutlinedImage from "../ui/outlined-image";
+import IngredientQuantity from "./IngredientQuantity";
 
 interface IngredientViewProps {
-  scrollComponent: (props: any) => React.ReactElement;
+  ScrollComponent: (
+    props: React.ComponentProps<typeof ScrollView>
+  ) => React.ReactElement;
+  scrollRef: AnimatedRef<Animated.ScrollView>;
   ingredient: PantryItem; // Replace with actual ingredient type
 }
 
 export default function IngredientView({
-  scrollComponent,
+  ScrollComponent,
+  scrollRef,
   ingredient: item,
 }: IngredientViewProps) {
-  const ScrollComponentToUse = scrollComponent || ScrollView;
+  const scrollOffset = useScrollViewOffset(scrollRef);
   const { top: pt } = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const HEADER_HEIGHT = width;
 
   const [isFav, setIsFav] = useState(false);
-  const [quantity, setQuantity] = useState(1);
+
+  const headerAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          translateY: interpolate(
+            scrollOffset.value,
+            [-HEADER_HEIGHT, 0, HEADER_HEIGHT],
+            [-HEADER_HEIGHT / 2, 0, HEADER_HEIGHT * 0.75]
+          ),
+        },
+        {
+          scale: interpolate(
+            scrollOffset.value,
+            [-HEADER_HEIGHT, 0, HEADER_HEIGHT],
+            [2, 1, 1]
+          ),
+        },
+      ],
+    };
+  });
 
   return (
-    <BlurView
-      intensity={85}
-      tint="systemThickMaterialDark"
-      className="flex-1 h-full w-full rounded-t-3xl overflow-hidden bg-background"
-    >
+    <View className="relative flex-1 bg-background rounded-t-3xl overflow-hidden">
       {/* App Bar Section */}
       <View
-        className="flex-row items-center justify-between px-6 pt-4 bg-muted"
-        style={{ paddingTop: pt }}
+        className="absolute left-0 right-0 flex-row items-center justify-between px-6 pt-4 z-10"
+        style={{ top: pt }}
       >
         <Button
           size="icon"
@@ -80,79 +106,52 @@ export default function IngredientView({
         </Button>
       </View>
 
-      {/* Hero Image Section */}
-      <Animated.View sharedTransitionTag="pantry-item-image-container">
-        <AspectRatio
-          className="relative w-full bg-muted flex items-center justify-center rounded-b-2xl -mt-1"
-          ratio={4 / 3}
-        >
-          <Animated.Image
-            sharedTransitionTag="pantry-item-image"
-            source={item.image_url}
-            className="w-32 h-32"
-            resizeMode="contain"
-            style={{ marginBottom: pt }}
-          />
-          {/* {color && (
-                <LinearGradient
-                  // Background Linear Gradient
-                  colors={[color, "transparent"]}
-                  className="absolute left-0 top-0 bottom-0"
-                />
-              )} */}
-        </AspectRatio>
-      </Animated.View>
-
       {/* Content Section */}
-      <ScrollComponentToUse
-        className="flex-1 px-6 py-8 bg-background rounded-t-3xl -mt-8"
+      <ScrollComponent
+        // scrollEventThrottle={16}
+        className="h-full flex-1 bg-background"
         showsVerticalScrollIndicator={false}
-        style={{ borderCurve: "continuous" }}
       >
-        {/* Header */}
-        <Animated.Text
-          entering={FadeIn}
-          className="web:scroll-m-20 text-4xl text-foreground font-bold tracking-tight lg:text-5xl web:select-text mb-2 font-bold text-center"
+        {/* Hero Image Section */}
+        <Animated.View
+          sharedTransitionTag="pantry-item-image-container"
+          className="overflow-hidden flex items-center justify-center bg-muted"
+          style={[
+            {
+              height: HEADER_HEIGHT,
+            },
+            headerAnimatedStyle,
+          ]}
         >
-          {item.name}
-        </Animated.Text>
-        {/* <H1 className="mb-2 font-bold text-center">{item.name}</H1> */}
-        <View className="flex-row items-center justify-center gap-2 mb-12">
-          <P className="text-muted-foreground">{item.type}</P>
-          <P className="text-muted-foreground">•</P>
-          <P className="text-muted-foreground">{item.category}</P>
-        </View>
-        <View className="flex-row items-center justify-center gap-4 mb-4">
-          <Button
-            size="icon"
-            variant="ghost"
-            className="rounded-full"
-            onPress={() => setQuantity(quantity - 1)}
+          <OutlinedImage source={item.image_url} size={100} />
+        </Animated.View>
+
+        <View
+          className="flex-1 bg-background rounded-t-3xl -mt-8 px-6 py-8"
+          style={styles.borderCurve}
+        >
+          {/* Header */}
+          <Animated.Text
+            entering={FadeIn}
+            className="web:scroll-m-20 text-4xl text-foreground font-bold tracking-tight lg:text-5xl web:select-text mb-2 text-center"
           >
-            <MinusIcon
-              className="text-foreground"
-              size={20}
-              strokeWidth={2.618}
-            />
-          </Button>
-          <Separator orientation="vertical" />
-          <SlidingNumber value={quantity} />
-          {/* <H3 className="opacity-80">{item.quantity}</H3> */}
-          <Separator orientation="vertical" />
-          <Button
-            size="icon"
-            variant="ghost"
-            className="rounded-full"
-            onPress={() => setQuantity(quantity + 1)}
-          >
-            <PlusIcon
-              className="text-foreground"
-              size={20}
-              strokeWidth={2.618}
-            />
-          </Button>
+            {item.name}
+          </Animated.Text>
+          {/* <H1 className="mb-2 font-bold text-center">{item.name}</H1> */}
+          <View className="flex-row items-center justify-center gap-2 mb-12">
+            <P className="text-muted-foreground">{item.type}</P>
+            <P className="text-muted-foreground">•</P>
+            <P className="text-muted-foreground">{item.category}</P>
+          </View>
+          <IngredientQuantity />
         </View>
-      </ScrollComponentToUse>
-    </BlurView>
+      </ScrollComponent>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  borderCurve: {
+    borderCurve: "continuous",
+  },
+});

@@ -3,7 +3,9 @@ import {
   useAnimatedStyle,
   withSpring,
   withSequence,
+  runOnJS,
 } from "react-native-reanimated";
+import * as Haptics from "expo-haptics";
 
 const useOnPressScale = () => {
   const scale = useSharedValue(1);
@@ -14,7 +16,13 @@ const useOnPressScale = () => {
     };
   });
 
+  const triggerHapticFeedback = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
   const handlePressIn = () => {
+    "worklet";
+    runOnJS(triggerHapticFeedback)();
     scale.value = withSpring(0.95, {
       damping: 15,
       stiffness: 300,
@@ -22,6 +30,7 @@ const useOnPressScale = () => {
   };
 
   const handlePressOut = () => {
+    "worklet";
     scale.value = withSequence(
       withSpring(1.05, {
         damping: 15,

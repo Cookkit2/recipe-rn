@@ -1,3 +1,78 @@
+Background and Motivation
+
+- Colors aren’t showing correctly in the React Native app. Current Tailwind setup uses CSS variables (e.g., hsl(var(--background))) which don’t resolve on native. Components like `TextShimmer` also use `var(...)`, causing colors to fail.
+
+Key Challenges and Analysis
+
+- React Native doesn’t support CSS variables; `global.css` variable definitions only affect web.
+- Tailwind tokens mapped to CSS variables won’t work on native, so classes like `bg-background` resolve to undefined colors.
+- Need a theme strategy compatible with NativeWind: use concrete color values for tokens and `dark:` variants or derive colors via `useColorScheme`.
+
+High-Level Task Breakdown
+
+1) Patch `TextShimmer` to use theme-aware colors from `NAV_THEME` and `useColorScheme`, not `var(...)`. Success: visible shimmer with correct colors in light/dark.
+2) Replace CSS-var-based Tailwind tokens with concrete values and dark variants (e.g., `bg-background dark:bg-background-dark`). Success: `bg-background` shows in light; `dark:bg-background-dark` applies in dark.
+3) Audit components using `bg-background`, `text-foreground`, etc., and update classes to include dark variants where needed. Success: consistent theming across screens.
+4) Optional: Align `NAV_THEME` and Tailwind tokens in a single source to avoid drift. Success: one place to change theme.
+
+Project Status Board
+
+- [ ] 1) Fix `TextShimmer` to be theme-aware (no CSS vars)
+- [ ] 2) Update Tailwind tokens to concrete values + dark variants
+- [ ] 3) Sweep components for token usage and add dark variants
+- [ ] 4) Consolidate theme constants (optional)
+
+Current Status / Progress Tracking
+
+- Starting step 1: Adjust `TextShimmer` to use `NAV_THEME` and `useColorScheme` and verify animation + colors.
+
+Executor Feedback or Help Requests
+
+- After step 1, I’ll need a quick visual check to confirm the shimmer looks correct before changing global theme tokens.
+
+Lessons Learned
+
+- Avoid CSS variables in React Native; prefer direct color values or theme helpers.
+
+## Background and Motivation
+
+We need an onboarding experience that appears on first launch and is skipped thereafter. Persist completion in MMKV so we can gate routing on subsequent launches.
+
+## Key Challenges and Analysis
+
+- Keep routing simple with Expo Router while avoiding flashes or back navigation to onboarding.
+- Persist a boolean flag using the existing storage facade (MMKV default).
+- Build the screen with NativeWind so styling is consistent with the app.
+
+## High-Level Task Breakdown
+
+1. Add storage key constant `onboarding:completed`. Success: constant exported from `constants/storage-keys.ts`.
+2. Create `app/index.tsx` gate that checks the MMKV flag and redirects to `/onboarding` or `/recipes`. Success: immediate replace navigation with no visible flash.
+3. Build `app/onboarding.tsx` using NativeWind + `expo-linear-gradient`, with buttons: "Continue with Apple" and "Recover existing wallet". Pressing either sets the flag and routes to `/recipes`. Success: key is set and app lands on recipes.
+4. Register screens in `app/_layout.tsx` with headers hidden. Success: no RN headers shown; back cannot return to onboarding after completion when using replace.
+5. Optional: add a developer reset path or deep link to clear onboarding for testing. Success: can clear and revisit onboarding easily.
+
+## Project Status Board
+
+- [x] 1. Storage key constant
+- [x] 2. Index gate and redirect
+- [x] 3. Onboarding screen UI and actions
+- [x] 4. Register screens and hide headers
+- [ ] 5. Add a test-only reset helper or dev toggle (optional)
+
+## Current Status / Progress Tracking
+
+- Implemented steps 1–4. New files: `constants/storage-keys.ts`, `app/index.tsx`, `app/onboarding.tsx`. Updated `app/_layout.tsx` to register `index` and `onboarding` screens.
+- Lints: only pre-existing warnings in `_layout`; new files are clean.
+
+## Executor Feedback or Help Requests
+
+- Please run the app. On first launch you should see the onboarding screen. Tapping either button should navigate to `recipes` and set `onboarding:completed` in MMKV. Confirm look-and-feel vs. the provided mock; I can refine typography, icons, and gradient once approved.
+- If you want a developer toggle to reset onboarding, I can add a small helper to clear the key.
+
+## Lessons Learned
+
+- Expo Router `router.replace` avoids back navigation to onboarding once completed.
 ## Background and Motivation
 Recipes screen crashes when opening the Tinder-style carousel. Need to identify root cause and apply a minimal, safe fix.
 

@@ -218,7 +218,7 @@ export default function RecipeDetails() {
         <View className="flex-row gap-2 px-6 mt-2">
           {previewImages.map((src, index) => (
             <OutlinedImage
-              key={`ing-prev-${index}`}
+              key={`img-preview-${index}`}
               source={src}
               size={48}
               strokeColor="#ffffff"

@@ -1,10 +1,10 @@
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useCallback } from "react";
 import {
   type SharedValue,
   useSharedValue,
-  withSpring,
+  withTiming,
 } from "react-native-reanimated";
-import { SPRING_CONFIG } from "~/constants/spring-config";
+import { CURVES } from "~/constants/curves";
 
 interface RootScaleContextType {
   scale: SharedValue<number>;
@@ -16,15 +16,14 @@ const RootScaleContext = createContext<RootScaleContextType | null>(null);
 export function RootScaleProvider({ children }: { children: React.ReactNode }) {
   const scale = useSharedValue(1);
 
-  const setScale = (value: number) => {
-    "worklet";
+  const setScale = useCallback((value: number) => {
     try {
-      scale.value = withSpring(value, SPRING_CONFIG);
+      scale.value = withTiming(value, CURVES["expressive.slow.spatial"]);
     } catch (error) {
       console.warn("Scale animation error:", error);
       scale.value = value;
     }
-  };
+  }, [scale]);
 
   return (
     <RootScaleContext.Provider value={{ scale, setScale }}>

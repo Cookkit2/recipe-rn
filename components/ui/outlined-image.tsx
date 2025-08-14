@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  Image,
   StyleSheet,
   View,
   type ImageSourcePropType,
@@ -8,7 +7,7 @@ import {
   type ViewStyle,
   type ImageStyle,
 } from "react-native";
-import Animated from "react-native-reanimated";
+import { Image } from "expo-image";
 
 type OutlinedImageProps = {
   source: ImageSourcePropType;
@@ -17,8 +16,6 @@ type OutlinedImageProps = {
   strokeWidth?: number;
   style?: StyleProp<ViewStyle>;
   imageStyle?: StyleProp<ImageStyle>;
-  // Pass-through for Reanimated entering animation on the main image
-  entering?: any;
 };
 
 /**
@@ -32,7 +29,6 @@ export function OutlinedImage({
   strokeWidth = 2,
   style,
   imageStyle,
-  entering,
 }: OutlinedImageProps) {
   const offsets = React.useMemo(() => {
     const r = Math.max(1, Math.round(strokeWidth));
@@ -65,14 +61,13 @@ export function OutlinedImage({
             },
             imageStyle,
           ]}
-          resizeMode="contain"
+          contentFit="contain"
         />
       ))}
-      <Animated.Image
+      <Image
         source={source}
         style={[styles.abs, { width: size, height: size }, imageStyle]}
-        resizeMode="contain"
-        entering={entering}
+        contentFit="contain"
       />
     </View>
   );

@@ -22,7 +22,7 @@ export default function Screen() {
   });
 
   return (
-    <View className="relative flex-1" style={{ paddingTop: pt }}>
+    <View className="relative flex-1 bg-background" style={{ paddingTop: pt }}>
       <View className="p-6 pb-4 flex-row items-center mb-4 gap-3">
         <H1>Pantry</H1>
         <View className="flex-1" />

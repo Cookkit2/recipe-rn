@@ -1,21 +1,12 @@
 import "~/global.css";
 import React, { useEffect, useState } from "react";
-import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
-  type Theme,
-} from "@react-navigation/native";
-import { Stack, useRouter } from "expo-router";
+import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Appearance, Platform, View, StyleSheet } from "react-native";
-import { NAV_THEME } from "~/lib/constants";
+import { Appearance, Platform, View } from "react-native";
 import { useColorScheme } from "~/hooks/useColorScheme";
 import { PortalHost } from "@rn-primitives/portal";
-import { ThemeToggle } from "~/components/ThemeToggle";
 import { setAndroidNavigationBar } from "~/lib/android-navigation-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { SheetProvider } from "react-native-sheet-transitions";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import {
   RootScaleProvider,
@@ -25,15 +16,17 @@ import { BlurView } from "expo-blur";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { OverlayProvider } from "~/components/Overlay/OverlayContext";
 import { Image } from "expo-image";
+import { dummyRecipesData } from "~/data/dummy-recipes";
+import { Toaster } from "sonner-native";
 
-const LIGHT_THEME: Theme = {
-  ...DefaultTheme,
-  colors: NAV_THEME.light,
-};
-const DARK_THEME: Theme = {
-  ...DarkTheme,
-  colors: NAV_THEME.dark,
-};
+// const LIGHT_THEME: Theme = {
+//   ...DefaultTheme,
+//   colors: NAV_THEME.light,
+// };
+// const DARK_THEME: Theme = {
+//   ...DarkTheme,
+//   colors: NAV_THEME.dark,
+// };
 
 export { ErrorBoundary } from "expo-router";
 
@@ -59,7 +52,7 @@ function AnimatedStack() {
   // const router = useRouter();
   // useEffect(() => {
   //   setTimeout(() => {
-  //     router.push("/recipes/homemade-brownies/steps");
+  //     router.push("/profile");
   //   }, 0);
   // }, [router]);
 
@@ -68,7 +61,7 @@ function AnimatedStack() {
       {isModalActive && canBlur && (
         <BlurView
           intensity={50}
-          className="absolute inset-0 z-1"
+          className="absolute inset-0 z-[1]"
           tint={isDarkColorScheme ? "dark" : "light"}
         />
       )}
@@ -79,7 +72,9 @@ function AnimatedStack() {
         <Stack>
           <Stack.Screen
             name="(ingredient)/index"
-            options={{ headerShown: false }}
+            options={{
+              headerShown: false,
+            }}
           />
           <Stack.Screen
             name="(ingredient)/[ingredientId]"
@@ -126,6 +121,41 @@ function AnimatedStack() {
               headerShown: false,
             }}
           />
+          <Stack.Screen
+            name="profile/index"
+            options={{
+              presentation: "card",
+              headerShown: false,
+              // header: (props) => <Header title="Profile" />,
+            }}
+          />
+
+          <Stack.Screen
+            name="misc/terms"
+            options={{
+              headerShown: false,
+              presentation: "modal",
+            }}
+          />
+          <Stack.Screen
+            name="misc/privacy"
+            options={{
+              headerShown: false,
+              presentation: "modal",
+            }}
+          />
+          <Stack.Screen
+            name="onboarding/index"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="onboarding/step1"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="onboarding/step2"
+            options={{ headerShown: false }}
+          />
           <Stack.Screen name="+not-found" />
         </Stack>
       </Animated.View>
@@ -145,6 +175,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     Image.prefetch([
+      ...dummyRecipesData.map((recipe) => recipe.imageUrl),
       // Add your common image URLs here
       "path-to-netflix-icon.png",
       "path-to-netflix-outline.png",
@@ -152,20 +183,17 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <GestureHandlerRootView className="flex-1 bg-black">
-      <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
-        <SheetProvider>
-          <RootScaleProvider>
-            <SafeAreaProvider>
-              <OverlayProvider>
-                <StatusBar style={isDarkColorScheme ? "light" : "dark"} />
-                <AnimatedStack />
-                <PortalHost />
-              </OverlayProvider>
-            </SafeAreaProvider>
-          </RootScaleProvider>
-        </SheetProvider>
-      </ThemeProvider>
+    <GestureHandlerRootView className="flex-1 bg-background">
+      <RootScaleProvider>
+        <SafeAreaProvider>
+          <OverlayProvider>
+            <StatusBar style={isDarkColorScheme ? "light" : "dark"} />
+            <AnimatedStack />
+            <PortalHost />
+            <Toaster />
+          </OverlayProvider>
+        </SafeAreaProvider>
+      </RootScaleProvider>
     </GestureHandlerRootView>
   );
 }
