@@ -7,9 +7,9 @@ import React, {
   useState,
 } from "react";
 import { MotiView, MotiText, AnimatePresence } from "moti";
-import { View } from "react-native";
+import { View, type ViewStyle } from "react-native";
 import { cn } from "~/lib/utils";
-import { Text } from "./text";
+import { Text } from "../ui/text";
 
 export interface RotatingTextRef {
   next: () => void;
@@ -52,7 +52,7 @@ export interface RotatingTextProps {
   className?: string;
   splitLevelClassName?: string;
   elementLevelClassName?: string;
-  style?: any;
+  style?: ViewStyle;
   testID?: string;
 }
 
@@ -89,7 +89,7 @@ const RotatingText = forwardRef<RotatingTextRef, RotatingTextProps>(
     };
 
     const elements = useMemo(() => {
-      const currentText: string = texts[currentTextIndex];
+      const currentText: string = texts[currentTextIndex] || "";
       if (splitBy === "characters") {
         const words = currentText.split(" ");
         return words.map((word, i) => ({
@@ -221,9 +221,6 @@ const RotatingText = forwardRef<RotatingTextRef, RotatingTextProps>(
         style={style}
         testID={testID}
       >
-        {/* Screen reader text */}
-        <Text className="sr-only">{texts[currentTextIndex]}</Text>
-        
         <AnimatePresence exitBeforeEnter>
           <MotiView
             key={currentTextIndex}
@@ -237,7 +234,7 @@ const RotatingText = forwardRef<RotatingTextRef, RotatingTextProps>(
               const previousCharsCount = array
                 .slice(0, wordIndex)
                 .reduce((sum, word) => sum + word.characters.length, 0);
-              
+
               return (
                 <View
                   key={`word-${wordIndex}`}
@@ -250,7 +247,7 @@ const RotatingText = forwardRef<RotatingTextRef, RotatingTextProps>(
                       0
                     );
                     const delay = getStaggerDelay(globalIndex, totalChars);
-                    
+
                     return (
                       <MotiText
                         key={`char-${charIndex}`}
@@ -267,9 +264,7 @@ const RotatingText = forwardRef<RotatingTextRef, RotatingTextProps>(
                       </MotiText>
                     );
                   })}
-                  {wordObj.needsSpace && (
-                    <Text className=""> </Text>
-                  )}
+                  {wordObj.needsSpace && <Text className=""> </Text>}
                 </View>
               );
             })}
@@ -282,4 +277,3 @@ const RotatingText = forwardRef<RotatingTextRef, RotatingTextProps>(
 
 RotatingText.displayName = "RotatingText";
 export default RotatingText;
-

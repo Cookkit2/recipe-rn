@@ -1,4 +1,4 @@
-package com.recipe.recipe
+package com.cookkit.cookkit
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

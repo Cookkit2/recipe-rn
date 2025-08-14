@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.recipe.recipe'
+    namespace 'com.cookkit.cookkit'
     defaultConfig {
-        applicationId 'com.recipe.recipe'
+        applicationId 'com.cookkit.cookkit'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

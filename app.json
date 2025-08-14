@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "recipe",
-    "slug": "recipe",
+    "name": "Cookkit",
+    "slug": "cookkit",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "recipe",
+    "scheme": "cookkit",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -16,14 +16,14 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.recipe.recipe"
+      "bundleIdentifier": "com.cookkit.cookkit"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.recipe.recipe",
+      "package": "com.cookkit.cookkit",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
@@ -64,8 +64,8 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow Recipe to access your camera",
-          "microphonePermission": "Allow Recipe to access your microphone",
+          "cameraPermission": "Allow Cookkit to access your camera",
+          "microphonePermission": "Allow Cookkit to access your microphone",
           "recordAudioAndroid": true
         }
       ]

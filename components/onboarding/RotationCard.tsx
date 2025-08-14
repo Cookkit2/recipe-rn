@@ -8,6 +8,9 @@ import Animated, {
 import type { ViewStyle } from "react-native";
 import { cn } from "~/lib/utils";
 
+const SEED_INDEX_MULTIPLIER = 9301;
+const SEED_TOTAL_MULTIPLIER = 49297;
+
 const RotationCard = ({
   index,
   total,
@@ -63,7 +66,8 @@ export default RotationCard;
 
 const stableThumbRotation = (index: number, total: number): number => {
   // Simple seeded pseudo-random based on index + total for stability
-  const seed = (index + 1) * 9301 + total * 49297;
+  const seed =
+    (index + 1) * SEED_INDEX_MULTIPLIER + total * SEED_TOTAL_MULTIPLIER;
   const x = Math.sin(seed) * 10000;
   const rand = x - Math.floor(x);
   const deg = rand * 40 - 20; // -20..20
@@ -72,7 +76,8 @@ const stableThumbRotation = (index: number, total: number): number => {
 
 const stableThumbScale = (index: number, total: number): number => {
   // Simple seeded pseudo-random based on index + total for stability
-  const seed = (index + 1) * 9301 + total * 49297;
+  const seed =
+    (index + 1) * SEED_INDEX_MULTIPLIER + total * SEED_TOTAL_MULTIPLIER;
   const x = Math.sin(seed) * 10000;
   const rand = x - Math.floor(x);
   const scale = rand * 0.4 + 0.8; // 0.8..1.2

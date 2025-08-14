@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useCallback } from "react";
 import {
   type SharedValue,
   useSharedValue,
@@ -16,16 +16,14 @@ const RootScaleContext = createContext<RootScaleContextType | null>(null);
 export function RootScaleProvider({ children }: { children: React.ReactNode }) {
   const scale = useSharedValue(1);
 
-  const setScale = (value: number) => {
-    "worklet";
+  const setScale = useCallback((value: number) => {
     try {
       scale.value = withTiming(value, CURVES["expressive.slow.spatial"]);
-      // scale.value = withSpring(value, SPRINGS["spring.fast.spatial"]);
     } catch (error) {
       console.warn("Scale animation error:", error);
       scale.value = value;
     }
-  };
+  }, [scale]);
 
   return (
     <RootScaleContext.Provider value={{ scale, setScale }}>

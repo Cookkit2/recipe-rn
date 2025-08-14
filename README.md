@@ -1,6 +1,6 @@
-# Recipe RN
+# Cookkit RN
 
-A React Native recipe management app with comprehensive ESLint configuration for code quality.
+A React Native recipe management app, Cookkit with comprehensive ESLint configuration for code quality.
 
 ## Features
 

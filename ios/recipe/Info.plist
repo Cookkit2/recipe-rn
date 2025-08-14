@@ -7,7 +7,7 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>$(DEVELOPMENT_LANGUAGE)</string>
     <key>CFBundleDisplayName</key>
-    <string>recipe</string>
+    <string>Cookkit</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
@@ -27,8 +27,8 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>recipe</string>
-          <string>com.recipe.recipe</string>
+          <string>cookkit</string>
+          <string>com.cookkit.cookkit</string>
         </array>
       </dict>
     </array>
@@ -46,9 +46,9 @@
       <true/>
     </dict>
     <key>NSCameraUsageDescription</key>
-    <string>Allow Recipe to access your camera</string>
+    <string>Allow Cookkit to access your camera</string>
     <key>NSMicrophoneUsageDescription</key>
-    <string>Allow Recipe to access your microphone</string>
+    <string>Allow Cookkit to access your microphone</string>
     <key>NSMotionUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to access your device motion</string>
     <key>NSPhotoLibraryUsageDescription</key>

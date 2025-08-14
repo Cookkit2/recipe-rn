@@ -1,25 +1,22 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet} from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { storageFacade, createMMKVStorage } from "~/data/storage";
-import { ONBOARDING_COMPLETED_KEY } from "~/constants/storage-keys";
 import { Button } from "~/components/ui/button";
-import { H4, P } from "~/components/ui/typography";
+import { H1, H4, P } from "~/components/ui/typography";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import TextShimmer from "~/components/ui/TextShimmer";
 import { dummyPantryItems } from "~/data/dummy-data";
 import useColors from "~/hooks/useColor";
-import RotationCard from "~/components/onboarding/RotationCard";
+import RotationCard from "~/components/Onboarding/RotationCard";
 import OutlinedImage from "~/components/ui/outlined-image";
-import RotatingTextExample from "~/examples/RotatingTextExample";
 
 // Take first 10 items and assign different coordinates (0-100 scale)
 const previewImages = dummyPantryItems.slice(0, 10).map((item, index) => ({
   image: item.image_url,
   name: item.name,
-  x: [15, 75, 40, 85, 20, 60, 90, 10, 50, 80][index] || 50, // x coordinates 0-100
-  y: [20, 30, 70, 15, 60, 45, 80, 90, 25, 50][index] || 50, // y coordinates 0-100
+  x: [15, 75, 40, 85, 15, 60, 90, 10, 50, 80][index] || 50,
+  y: [20, 30, 75, 15, 60, 80, 80, 90, 25, 50][index] || 50,
 }));
 
 export default function OnboardingScreen() {
@@ -31,10 +28,6 @@ export default function OnboardingScreen() {
     height: 0,
   });
 
-  // useEffect(() => {
-  //   RNImage.prefetch(previewImages.map((item) => item.image));
-  // }, [containerDimensions]);
-
   const convertToAbsWrapper = (x: number, y: number) => {
     return convertToAbsolutePosition(
       x,
@@ -45,9 +38,7 @@ export default function OnboardingScreen() {
   };
 
   const complete = () => {
-    // createMMKVStorage({ id: "app" });
-    // storageFacade.set<boolean>(ONBOARDING_COMPLETED_KEY, true);
-    router.replace("/");
+    router.replace("/onboarding/step1");
   };
 
   return (
@@ -58,7 +49,7 @@ export default function OnboardingScreen() {
       />
 
       <View
-        className="flex flex-1 "
+        className="flex flex-1"
         style={{ paddingTop: top, paddingBottom: bottom }}
       >
         <View
@@ -88,6 +79,13 @@ export default function OnboardingScreen() {
                 </RotationCard>
               );
             })}
+          <View className="absolute inset-0 flex-1 justify-center">
+            <H1 className="text-center">Cookkit</H1>
+            <P className="mt-6 text-foreground/80 px-4 text-center">
+              Track your ingredients {"\n"}
+              and discover tailored recipes
+            </P>
+          </View>
         </View>
         <View className="px-6 pb-10">
           <Button
@@ -101,9 +99,12 @@ export default function OnboardingScreen() {
             </TextShimmer>
           </Button>
           <P className="text-center text-foreground/80 mt-8 px-10">
-            By using Recipe, you agree to our{" "}
+            By using Cookkit, you agree to our{"\n"}
             <Text
               className="underline"
+              accessibilityRole="link"
+              accessibilityLabel="Terms of Service"
+              accessibilityHint="Opens the Terms of Service page"
               onPress={() => router.push("/misc/terms")}
             >
               Terms of Service
@@ -111,6 +112,9 @@ export default function OnboardingScreen() {
             and{" "}
             <Text
               className="underline"
+              accessibilityRole="link"
+              accessibilityLabel="Privacy Policy"
+              accessibilityHint="Opens the Privacy Policy page"
               onPress={() => router.push("/misc/privacy")}
             >
               Privacy Policy

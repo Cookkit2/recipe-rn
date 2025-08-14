@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import { View, Pressable } from "react-native";
 import RotatingText, {
   type RotatingTextRef,
-} from "~/components/ui/RotatingText";
+} from "~/components/custom/rotating-text";
 import { Text } from "~/components/ui/text";
 
 export default function RotatingTextExample() {

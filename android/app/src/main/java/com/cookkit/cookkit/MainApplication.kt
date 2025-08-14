@@ -1,4 +1,4 @@
-package com.recipe.recipe
+package com.cookkit.cookkit
 import com.facebook.react.common.assets.ReactFontManager
 
 import android.app.Application

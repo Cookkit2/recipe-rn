@@ -44,7 +44,7 @@ export default function ToggleButtonGroup() {
         const isSelected = selectedItemType === type;
         return (
           <Button
-          key={type}
+            key={type}
             size="sm"
             className={cn(
               "flex-row items-center gap-1 rounded-full",

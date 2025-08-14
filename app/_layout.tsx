@@ -1,21 +1,12 @@
 import "~/global.css";
 import React, { useEffect, useState } from "react";
-import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
-  type Theme,
-} from "@react-navigation/native";
-import { Redirect, Stack, useRouter } from "expo-router";
+import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Appearance, Platform, View } from "react-native";
-import { NAV_THEME } from "~/constants/colors";
 import { useColorScheme } from "~/hooks/useColorScheme";
 import { PortalHost } from "@rn-primitives/portal";
-// import { ThemeToggle } from "~/components/ThemeToggle";
 import { setAndroidNavigationBar } from "~/lib/android-navigation-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { SheetProvider } from "react-native-sheet-transitions";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import {
   RootScaleProvider,
@@ -25,19 +16,17 @@ import { BlurView } from "expo-blur";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { OverlayProvider } from "~/components/Overlay/OverlayContext";
 import { Image } from "expo-image";
-import * as SplashScreen from "expo-splash-screen";
-import { createMMKVStorage, storageFacade } from "~/data/storage";
-import { ONBOARDING_COMPLETED_KEY } from "~/constants/storage-keys";
 import { dummyRecipesData } from "~/data/dummy-recipes";
+import { Toaster } from "sonner-native";
 
-const LIGHT_THEME: Theme = {
-  ...DefaultTheme,
-  colors: NAV_THEME.light,
-};
-const DARK_THEME: Theme = {
-  ...DarkTheme,
-  colors: NAV_THEME.dark,
-};
+// const LIGHT_THEME: Theme = {
+//   ...DefaultTheme,
+//   colors: NAV_THEME.light,
+// };
+// const DARK_THEME: Theme = {
+//   ...DarkTheme,
+//   colors: NAV_THEME.dark,
+// };
 
 export { ErrorBoundary } from "expo-router";
 
@@ -60,19 +49,19 @@ function AnimatedStack() {
   });
 
   // For ease of dev, we can redirect to the steps page
-  const router = useRouter();
-  useEffect(() => {
-    setTimeout(() => {
-      router.push("/onboarding");
-    }, 0);
-  }, [router]);
+  // const router = useRouter();
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     router.push("/profile");
+  //   }, 0);
+  // }, [router]);
 
   return (
     <View className="flex-1 bg-background">
       {isModalActive && canBlur && (
         <BlurView
           intensity={50}
-          className="absolute inset-0 z-1"
+          className="absolute inset-0 z-[1]"
           tint={isDarkColorScheme ? "dark" : "light"}
         />
       )}
@@ -82,12 +71,10 @@ function AnimatedStack() {
       >
         <Stack>
           <Stack.Screen
-            name="onboarding/index"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
             name="(ingredient)/index"
-            options={{ headerShown: false }}
+            options={{
+              headerShown: false,
+            }}
           />
           <Stack.Screen
             name="(ingredient)/[ingredientId]"
@@ -135,6 +122,15 @@ function AnimatedStack() {
             }}
           />
           <Stack.Screen
+            name="profile/index"
+            options={{
+              presentation: "card",
+              headerShown: false,
+              // header: (props) => <Header title="Profile" />,
+            }}
+          />
+
+          <Stack.Screen
             name="misc/terms"
             options={{
               headerShown: false,
@@ -147,6 +143,18 @@ function AnimatedStack() {
               headerShown: false,
               presentation: "modal",
             }}
+          />
+          <Stack.Screen
+            name="onboarding/index"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="onboarding/step1"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="onboarding/step2"
+            options={{ headerShown: false }}
           />
           <Stack.Screen name="+not-found" />
         </Stack>
@@ -164,8 +172,6 @@ const usePlatformSpecificSetup = Platform.select({
 export default function RootLayout() {
   usePlatformSpecificSetup();
   const { isDarkColorScheme } = useColorScheme();
-  // const router = useRouter();
-  // const [appReady, setAppReady] = useState(false);
 
   useEffect(() => {
     Image.prefetch([
@@ -176,50 +182,18 @@ export default function RootLayout() {
     ]);
   }, []);
 
-  // useEffect(() => {
-  //   let mounted = true;
-  //   const init = async () => {
-  //     try {
-  //       await SplashScreen.preventAutoHideAsync();
-  //     } catch {
-  //       /* noop */
-  //     }
-  //     try {
-  //       createMMKVStorage({ id: "app" });
-  //       const completed = storageFacade.get<boolean>(ONBOARDING_COMPLETED_KEY);
-  //       if (!completed) {
-  //         router.replace("/onboarding");
-  //       }
-  //     } finally {
-  //       if (mounted) setAppReady(true);
-  //       try {
-  //         await SplashScreen.hideAsync();
-  //       } catch {
-  //         /* noop */
-  //       }
-  //     }
-  //   };
-  //   init();
-  //   return () => {
-  //     mounted = false;
-  //   };
-  // }, [router]);
-
   return (
-    <GestureHandlerRootView className="flex-1 bg-black">
-      {/* <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}> */}
-        <SheetProvider>
-          <RootScaleProvider>
-            <SafeAreaProvider>
-              <OverlayProvider>
-                <StatusBar style={isDarkColorScheme ? "light" : "dark"} />
-                <AnimatedStack />
-                <PortalHost />
-              </OverlayProvider>
-            </SafeAreaProvider>
-          </RootScaleProvider>
-        </SheetProvider>
-      {/* </ThemeProvider> */}
+    <GestureHandlerRootView className="flex-1 bg-background">
+      <RootScaleProvider>
+        <SafeAreaProvider>
+          <OverlayProvider>
+            <StatusBar style={isDarkColorScheme ? "light" : "dark"} />
+            <AnimatedStack />
+            <PortalHost />
+            <Toaster />
+          </OverlayProvider>
+        </SafeAreaProvider>
+      </RootScaleProvider>
     </GestureHandlerRootView>
   );
 }
