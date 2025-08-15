@@ -2,7 +2,7 @@ import React from "react";
 import { View, StyleSheet, type TextProps } from "react-native";
 import { AnimatePresence, MotiText } from "moti";
 import { Easing } from "react-native-reanimated";
-import { cn } from "~/lib/utils";
+import { cn } from "~/lib/tw-merge";
 
 export const EASE_IN_OUT_SMOOTH = Easing.bezier(0.4, 0.0, 0.2, 1);
 export const EASE_OUT = Easing.out(Easing.cubic);

@@ -3,7 +3,7 @@ import { View, Image } from "react-native";
 import { MotiView } from "moti";
 import { Card, CardContent } from "~/components/ui/card";
 import { Text } from "~/components/ui/text";
-import type { Recipe } from "~/data/dummy-recipes";
+import type { Recipe } from "~/types/Recipe";
 
 interface RecipeCardProps {
   recipe: Recipe;

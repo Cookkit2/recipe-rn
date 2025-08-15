@@ -6,13 +6,10 @@ import { window } from "~/constants/sizes";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSharedValue } from "react-native-reanimated";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import {
-  getRecipeById,
-  type RecipeIngredient,
-  type RecipeStep,
-} from "~/data/dummy-recipes";
+import { getRecipeById } from "~/data/dummy-recipes";
+import type { RecipeIngredient, RecipeStep } from "~/types/Recipe";
 import { Progress } from "~/components/ui/progress";
-import { ArrowLeftIcon, ArrowRightIcon, XIcon } from "~/lib/icons/Back";
+import { ArrowLeftIcon, ArrowRightIcon, XIcon } from "lucide-nativewind";
 import { Button } from "~/components/ui/button";
 import StepCard from "~/components/Steps/StepCard";
 
@@ -147,7 +144,7 @@ export default function RecipeSteps() {
 
       {/* Navigation Buttons */}
       <View
-        className="flex-row justify-between items-center px-6 py-4 bg-background border-t border-gray-200"
+        className="flex-row justify-between items-center px-6 py-4 bg-background border-t border-border"
         style={{ paddingBottom: bottom + 16 }}
       >
         <Button

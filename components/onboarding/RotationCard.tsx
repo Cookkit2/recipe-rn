@@ -6,10 +6,11 @@ import Animated, {
   useAnimatedStyle,
 } from "react-native-reanimated";
 import type { ViewStyle } from "react-native";
-import { cn } from "~/lib/utils";
-
-const SEED_INDEX_MULTIPLIER = 9301;
-const SEED_TOTAL_MULTIPLIER = 49297;
+import { cn } from "~/lib/tw-merge";
+import {
+  SEED_INDEX_MULTIPLIER,
+  SEED_TOTAL_MULTIPLIER,
+} from "~/constants/seeds";
 
 const RotationCard = ({
   index,

@@ -60,6 +60,7 @@ export default [
         __dirname: "readonly",
         __filename: "readonly",
         ...globals.browser,
+        NodeJS: "readonly",
       },
     },
     plugins: {

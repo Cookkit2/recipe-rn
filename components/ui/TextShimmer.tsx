@@ -9,7 +9,7 @@ import Animated, {
   withTiming,
   withRepeat,
 } from "react-native-reanimated";
-import { cn } from "~/lib/utils";
+import { cn } from "~/lib/tw-merge";
 
 type TextShimmerProps = Omit<TextProps, "children"> & {
   children: string;

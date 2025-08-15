@@ -1,10 +1,9 @@
 import React, { useState } from "react";
 import { View } from "react-native";
 import { SlidingNumber } from "~/components/SlidingNumber";
-
 import { Separator } from "~/components/ui/separator";
 import { Button } from "../ui/button";
-import { MinusIcon, PlusIcon } from "~/lib/icons/IngredientIcons";
+import { MinusIcon, PlusIcon } from "lucide-nativewind";
 
 export default function IngredientQuantity() {
   const [quantity, setQuantity] = useState(1);
@@ -15,6 +14,7 @@ export default function IngredientQuantity() {
         size="icon"
         variant="ghost"
         className="rounded-full"
+        enableDebounce={false}
         onPress={() => setQuantity(quantity - 1)}
       >
         <MinusIcon className="text-foreground" size={20} strokeWidth={2.618} />
@@ -26,6 +26,7 @@ export default function IngredientQuantity() {
         size="icon"
         variant="ghost"
         className="rounded-full"
+        enableDebounce={false}
         onPress={() => setQuantity(quantity + 1)}
       >
         <PlusIcon className="text-foreground" size={20} strokeWidth={2.618} />

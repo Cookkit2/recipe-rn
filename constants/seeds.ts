@@ -1,0 +1,2 @@
+export const SEED_INDEX_MULTIPLIER = 9301;
+export const SEED_TOTAL_MULTIPLIER = 49297;

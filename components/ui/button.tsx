@@ -2,7 +2,7 @@ import React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Pressable } from "react-native";
 import { TextClassContext } from "~/components/ui/text";
-import { cn } from "~/lib/utils";
+import { cn } from "~/lib/tw-merge";
 import Animated from "react-native-reanimated";
 import useOnPressScale from "~/hooks/animation/useOnPressScale";
 import useDebounce from "~/hooks/useDebounce";
@@ -80,7 +80,7 @@ function Button({
   variant,
   size,
   containerClassName,
-  debounceDelay = 300,
+  debounceDelay = 10,
   enableDebounce = true,
   onPress,
   enableAnimation = true,
@@ -108,6 +108,7 @@ function Button({
         <Pressable
           className={cn(
             props.disabled && "opacity-50 web:pointer-events-none",
+            "border-continuous",
             buttonVariants({ variant, size, className })
           )}
           onPressIn={enableAnimation ? handlePressIn : undefined}
@@ -119,7 +120,6 @@ function Button({
             typeof props.style === "function"
               ? props.style(state)
               : props.style,
-            { borderCurve: "continuous" },
           ]}
           {...props}
         />

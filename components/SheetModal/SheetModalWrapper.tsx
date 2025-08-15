@@ -50,11 +50,9 @@ export default function SheetModalWrapper({
   const isScrolling = useSharedValue(false);
 
   const handleHapticFeedback = useCallback(() => {
-    try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    } catch (error) {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch((error) => {
       console.log("Haptics not available:", error);
-    }
+    });
   }, []);
 
   const goBack = useCallback(() => {
@@ -190,10 +188,7 @@ export default function SheetModalWrapper({
           <Animated.ScrollView
             {...props}
             ref={scrollRef}
-            onScroll={(event) => {
-              scrollHandler(event);
-              props.onScroll?.(event);
-            }}
+            onScroll={scrollHandler}
             scrollEventThrottle={16}
             bounces={false}
           />

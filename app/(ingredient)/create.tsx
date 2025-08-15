@@ -12,16 +12,16 @@ import {
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import * as ImagePicker from "expo-image-picker";
 import { H4, P } from "~/components/ui/typography";
-import {
-  CameraIcon,
-  ImagesIcon,
-  SwitchCameraIcon,
-} from "~/lib/icons/CreateIngredientIcons";
 import { Button } from "~/components/ui/button";
 import { useColorScheme } from "~/hooks/useColorScheme";
 import { NAV_THEME } from "~/constants/colors";
-import { ArrowLeftIcon } from "~/lib/icons/Back";
 import { useRouter } from "expo-router";
+import {
+  ArrowLeftIcon,
+  CameraIcon,
+  ImagesIcon,
+  SwitchCameraIcon,
+} from "lucide-nativewind";
 
 export default function CreateIngredient() {
   const [facing, setFacing] = useState<CameraType>("back");

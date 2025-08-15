@@ -7,11 +7,7 @@ import Animated, {
   withSpring,
   FadeInDown,
 } from "react-native-reanimated";
-import type {
-  Recipe,
-  RecipeIngredient,
-  RecipeStep,
-} from "~/data/dummy-recipes";
+import type { Recipe, RecipeIngredient, RecipeStep } from "~/types/Recipe";
 import { H1 } from "../ui/typography";
 import { IngredientsContent } from "./IngredientContent";
 import StepContent from "./StepContent";
@@ -71,7 +67,8 @@ const StepCard: React.FC<{
   return (
     <Animated.View
       entering={FadeInDown.duration(300)}
-      style={[styles.cardContainer, styles.cardShadow, cardStyle, shadowStyle]}
+      className="flex-1 justify-center items-center my-12 mx-8 bg-muted rounded-3xl p-5 shadow-md border-continuous"
+      style={[styles.cardContainer, cardStyle, shadowStyle]}
     >
       {/* Content */}
       <H1 className="text-center mb-6 text-foreground">{data.title}</H1>
@@ -96,33 +93,12 @@ const StepCard: React.FC<{
 
 export default StepCard;
 
-const SHADOW_COLOR = "#000000";
-const CARD_BACKGROUND_COLOR = "#ffffff";
-
 const styles = StyleSheet.create({
   cardContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    marginVertical: 48,
-    marginHorizontal: 32,
-    backgroundColor: CARD_BACKGROUND_COLOR,
-    borderRadius: 24,
-    padding: 20,
     minHeight: window.height * 0.6,
   },
   scrollContent: {
     paddingBottom: 20,
     flexGrow: 1,
-  },
-  cardShadow: {
-    shadowColor: SHADOW_COLOR,
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 12,
   },
 });

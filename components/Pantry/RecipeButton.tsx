@@ -2,7 +2,7 @@ import { Link } from "expo-router";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "~/components/ui/button";
-import { ChefHatIcon } from "~/lib/icons/RecipesIcon";
+import { ChefHatIcon } from "lucide-nativewind";
 import { H4 } from "../ui/typography";
 import TextShimmer from "../ui/TextShimmer";
 

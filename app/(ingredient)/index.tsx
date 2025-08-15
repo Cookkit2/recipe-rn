@@ -10,11 +10,11 @@ import AddPantryItemModal from "~/components/Pantry/AddPantryItemModal";
 import useItemTypeStore from "~/store/type-store";
 import RecipeButton from "~/components/Pantry/RecipeButton";
 
-export default function Screen() {
+export default function IngredientScreen() {
   const { bottom: pb, top: pt } = useSafeAreaInsets();
-  const pantryItems = dummyPantryItems;
-
   const { selectedItemType } = useItemTypeStore();
+
+  const pantryItems = dummyPantryItems;
 
   const filteredItems = pantryItems.filter((item) => {
     if (selectedItemType === "all") return true;
@@ -38,8 +38,8 @@ export default function Screen() {
           showsVerticalScrollIndicator={false}
           data={filteredItems}
           keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item, index }) => (
-            <IngredientItemCard key={item.id} item={item} index={index} />
+          renderItem={({ item }) => (
+            <IngredientItemCard key={item.id} item={item} />
           )}
           ListEmptyComponent={
             <View className="py-16 items-center justify-center">

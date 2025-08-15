@@ -9,11 +9,7 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { P } from "../ui/typography";
 import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
-import {
-  CircleUserIcon,
-  EllipsisIcon,
-  FileClockIcon,
-} from "~/lib/icons/HeaderIcons";
+import { CircleUserIcon, EllipsisIcon, FileClockIcon } from "lucide-nativewind";
 import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 
@@ -61,7 +57,7 @@ export default function MenuDropdown() {
           }}
           className="mt-2 w-32 native:w-40"
         >
-          <DropdownMenuItem onPress={() => router.push("/histories")}>
+          <DropdownMenuItem onPress={() => router.push("/onboarding")}>
             <P>Histories</P>
             <DropdownMenuShortcut>
               <FileClockIcon className="text-foreground" size={20} />

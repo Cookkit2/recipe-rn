@@ -1,7 +1,13 @@
 import React, { useMemo, useRef } from "react";
-import { Dimensions, FlatList, Pressable, View } from "react-native";
+import {
+  Dimensions,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  View,
+} from "react-native";
 import { Image } from "expo-image";
-import type { Recipe } from "~/data/dummy-recipes";
+import type { Recipe } from "~/types/Recipe";
 
 interface RecipeCarouselProps {
   recipes: Recipe[];
@@ -49,7 +55,7 @@ export default function RecipeCarousel({
         >
           <Image
             source={{ uri: item.imageUrl }}
-            style={{ width: "100%", height: Math.round(SCREEN_WIDTH * 0.9), borderRadius: 24 }}
+            style={styles.image}
             contentFit="cover"
             transition={200}
           />
@@ -59,4 +65,11 @@ export default function RecipeCarousel({
   );
 }
 
-
+const styles = StyleSheet.create({
+  image: {
+    width: "100%",
+    height: Math.round(SCREEN_WIDTH * 0.9),
+    borderRadius: 24,
+    borderCurve: "continuous",
+  },
+});

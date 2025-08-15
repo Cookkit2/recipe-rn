@@ -3,7 +3,6 @@ import { View, StyleSheet } from "react-native";
 import Animated, {
   Easing,
   FadeInDown,
-  FadeInUp,
   useSharedValue,
 } from "react-native-reanimated";
 import Carousel, {
@@ -12,7 +11,7 @@ import Carousel, {
 import { Image } from "expo-image";
 import { window } from "~/constants/sizes";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import type { Recipe } from "~/data/dummy-recipes";
+import type { Recipe } from "~/types/Recipe";
 import { H2, H4, P } from "../ui/typography";
 import { Link } from "expo-router";
 import { Button } from "../ui/button";
@@ -106,13 +105,12 @@ const Item: React.FC<{ img: string }> = ({ img }) => {
       className="flex-1 items-center justify-center"
     >
       <View
-        className="rounded-3xl justify-center items-center overflow-hidden bg-background shadow-current"
+        className="rounded-3xl justify-center items-center overflow-hidden bg-background shadow-md"
         style={[
           {
             width,
             height,
           },
-          styles.cardShadow,
         ]}
       >
         <Image source={{ uri: img }} contentFit="cover" style={styles.image} />
@@ -129,16 +127,5 @@ const styles = StyleSheet.create({
   image: {
     width: "100%",
     height: "100%",
-  },
-  cardShadow: {
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.46,
-    shadowRadius: 11.14,
-
-    elevation: 17,
   },
 });

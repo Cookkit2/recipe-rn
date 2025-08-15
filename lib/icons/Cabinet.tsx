@@ -1,17 +1,6 @@
-import {
-  AppleIcon,
-  RefrigeratorIcon,
-  SnowflakeIcon,
-  Icon,
-  type LucideProps,
-} from "lucide-react-native";
+import { Icon, type LucideProps } from "lucide-react-native";
 import { cabinetFiling } from "@lucide/lab";
-import { iconWithClassName } from "./iconWithClassName";
 import { cssInterop } from "nativewind";
-
-iconWithClassName(AppleIcon);
-iconWithClassName(RefrigeratorIcon);
-iconWithClassName(SnowflakeIcon);
 
 const CabinetIcon = (props: LucideProps) => (
   <Icon iconNode={cabinetFiling} {...props} />
@@ -28,4 +17,4 @@ cssInterop(CabinetIcon, {
   },
 });
 
-export { AppleIcon, RefrigeratorIcon, SnowflakeIcon, CabinetIcon };
+export { CabinetIcon };

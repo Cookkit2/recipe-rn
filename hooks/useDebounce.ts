@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef } from "react";
 
 interface UseDebounceOptions {
   delay?: number;
@@ -11,12 +11,15 @@ interface UseDebounceOptions {
  * @param options - Configuration options
  * @returns Debounced function
  */
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const useDebounce = <T extends (...args: any[]) => any>(
   callback: T,
   options: UseDebounceOptions = {}
 ): T => {
   const { delay = 300, immediate = true } = options;
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const callOnLeadingEdge = useRef(true);
 
   const debouncedCallback = useCallback(
@@ -37,7 +40,7 @@ const useDebounce = <T extends (...args: any[]) => any>(
       // Set new timeout
       timeoutRef.current = setTimeout(() => {
         callOnLeadingEdge.current = true;
-        
+
         // Call on trailing edge if immediate is false
         if (!immediate) {
           callback(...args);
