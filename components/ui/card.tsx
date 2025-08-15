@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Text, type TextProps, View, type ViewProps } from "react-native";
 import { TextClassContext } from "~/components/ui/text";
-import { cn } from "~/lib/utils";
+import { cn } from "~/lib/tw-merge";
 
 function Card({
   className,
@@ -12,12 +12,9 @@ function Card({
   return (
     <View
       className={cn(
-        "rounded-lg border border-border bg-card shadow-sm shadow-foreground/10",
+        "rounded-lg border-border bg-card shadow-sm shadow-foreground/10 border-continuous",
         className
       )}
-      style={{
-        borderCurve: "continuous",
-      }}
       {...props}
     />
   );

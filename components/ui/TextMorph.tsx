@@ -1,7 +1,7 @@
 import React, { useId, useMemo } from "react";
 import { Text as RNText, type TextProps } from "react-native";
 import { AnimatePresence, MotiText } from "moti";
-import { cn } from "~/lib/utils";
+import { cn } from "~/lib/tw-merge";
 
 export type TextMorphProps = Omit<TextProps, "children"> & {
   children: string;

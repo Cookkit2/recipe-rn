@@ -1,4 +1,5 @@
-import { IStorage, StorageConfig, StorageType, StorageError } from "./types";
+import type { IStorage, StorageConfig, StorageType } from "./types";
+import { StorageError } from "./types";
 import { MMKVStorage } from "./implementations/mmkv-storage";
 import { AsyncStorageImpl } from "./implementations/async-storage-impl";
 import { SQLiteStorage } from "./implementations/sqlite-storage";

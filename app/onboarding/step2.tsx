@@ -1,15 +1,12 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { View, StyleSheet } from "react-native";
-import React from "react";
+import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-import useColors from "~/hooks/useColor";
 import { Button } from "~/components/ui/button";
 import { H1, H4, P } from "~/components/ui/typography";
 import { Card } from "~/components/ui/card";
-import { ArrowLeftIcon } from "~/lib/icons/Back";
-import SafeAreaWrapper from "~/components/custom/safe-area-wrapper";
+import { ArrowLeftIcon } from "lucide-nativewind";
+import useColors from "~/hooks/useColor";
 
 export default function OnboardingStep2() {
   const router = useRouter();
@@ -47,12 +44,7 @@ export default function OnboardingStep2() {
         style={{ paddingTop: top, paddingBottom: bottom }}
       >
         <View className="flex-1 justify-center items-center"></View>
-        <Card
-          className="p-6 mx-6 rounded-3xl"
-          style={{
-            borderCurve: "continuous",
-          }}
-        >
+        <Card className="p-6 mx-6 rounded-3xl border-continuous">
           <H1 className="text-center">Cook Recipes</H1>
           <P className="mt-4 text-foreground/80 px-4 text-center">
             We'll find recipes that match your ingredients and show you how to

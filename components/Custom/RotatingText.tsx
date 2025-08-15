@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import { MotiView, MotiText, AnimatePresence } from "moti";
 import { View, type ViewStyle } from "react-native";
-import { cn } from "~/lib/utils";
+import { cn } from "~/lib/tw-merge";
 import { Text } from "../ui/text";
 
 export interface RotatingTextRef {

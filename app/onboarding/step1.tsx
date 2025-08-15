@@ -29,12 +29,7 @@ export default function OnboardingStep1() {
         style={{ paddingTop: top, paddingBottom: bottom }}
       >
         <View className="flex-1 justify-center items-center"></View>
-        <Card
-          className="p-6 mx-6 rounded-3xl"
-          style={{
-            borderCurve: "continuous",
-          }}
-        >
+        <Card className="p-6 mx-6 rounded-3xl border-continuous">
           <H1 className="text-center">Snap Ingredients</H1>
           <P className="mt-4 text-foreground/80 px-4 text-center">
             Take a photo of your grocery list and we'll keep your ingredients

@@ -1,6 +1,6 @@
-import type { RecipeRackItem } from "@/type/RecipeRackItem";
+import type { RecipeRackItem } from "~/types/RecipeRackItem";
 import { create } from "zustand";
-import { dummyRecipesData } from "@/lib/dummy-recipes";
+import { dummyRecipesData } from "~/data/dummy-recipes";
 
 interface RecipeRackStore {
   rackItems: RecipeRackItem[];
@@ -71,4 +71,4 @@ const useRecipeRackStore = create<RecipeRackStore>((set, get) => ({
   },
 }));
 
-export default useRecipeRackStore; 
+export default useRecipeRackStore;

@@ -13,7 +13,7 @@ import Animated, {
   useSharedValue,
   type SharedValue,
 } from "react-native-reanimated";
-import { cn } from "~/lib/utils";
+import { cn } from "~/lib/tw-merge";
 
 const MeasureElement = ({
   onLayout,

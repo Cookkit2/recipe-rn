@@ -3,10 +3,12 @@ import { useRouter } from "expo-router";
 import {
   ArrowUpRightIcon,
   BellIcon,
+  ChefHatIcon,
   ImagesIcon,
   InfoIcon,
   MailIcon,
   MessageSquareHeartIcon,
+  ReceiptIcon,
   SettingsIcon,
   StarIcon,
 } from "lucide-nativewind";
@@ -21,9 +23,7 @@ import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
 import { Separator } from "~/components/ui/separator";
 import { H1, H2, H4, P } from "~/components/ui/typography";
-import { ChefHatIcon } from "~/lib/icons/RecipesIcon";
-import { Receipt } from "~/lib/icons/Receipt";
-import Header from "~/components/common/Header";
+import Header from "~/components/Common/Header";
 
 const AVATAR_URL =
   "https://cdn.jsdelivr.net/gh/alohe/memojis@c6ea5d5e130d55fe6d0d34d564e4642392ddc42e/png/memo_3.png";
@@ -69,10 +69,7 @@ export default function ProfileScreen() {
       <View className="p-6 pb-4 flex-row items-center mb-4 gap-3">
         <H1>Profile</H1>
       </View>
-      <Card
-        className="mx-6 shadow-md shadow-foreground/10 rounded-3xl"
-        style={styles.borderCurve}
-      >
+      <Card className="mx-6 shadow-md shadow-foreground/10 rounded-3xl border-continuous">
         <CardContent className="flex-row py-6 gap-3">
           <View className="flex-1 gap-0 items-center">
             <Image
@@ -101,29 +98,20 @@ export default function ProfileScreen() {
         </CardContent>
       </Card>
       <View className="flex-row px-6 mt-6 gap-6 ">
-        <Card
-          className="flex-1 rounded-3xl shadow-md shadow-foreground/10 border-none"
-          style={styles.borderCurve}
-        >
+        <Card className="flex-1 rounded-3xl shadow-md shadow-foreground/10 border-none">
           <CardContent className="py-6 flex gap-3">
             <ChefHatIcon size={32} strokeWidth={1.618} />
             <P className="font-medium">Cooked Recipes</P>
           </CardContent>
         </Card>
-        <Card
-          className="flex-1 rounded-3xl shadow-md shadow-foreground/10 border-none"
-          style={styles.borderCurve}
-        >
+        <Card className="flex-1 rounded-3xl shadow-md shadow-foreground/10 border-none">
           <CardContent className="py-6 flex gap-3">
-            <Receipt size={32} strokeWidth={1.618} />
+            <ReceiptIcon size={32} strokeWidth={1.618} />
             <P className="font-medium ">Receipts</P>
           </CardContent>
         </Card>
       </View>
-      <Card
-        className="flex-1 mx-6 mt-6 rounded-3xl shadow-md shadow-foreground/10 border-none"
-        style={styles.borderCurve}
-      >
+      <Card className="flex-1 mx-6 mt-6 rounded-3xl shadow-md shadow-foreground/10 border-none">
         <CardContent className="py-6 flex gap-1">
           <View className="flex-row items-center">
             <H4 className="font-serif">Cookkit</H4>
@@ -142,10 +130,7 @@ export default function ProfileScreen() {
         <P className="text-foreground/60 font-urbanist-semibold px-6 mb-2">
           General
         </P>
-        <View
-          className="mx-6 rounded-2xl bg-muted/50 overflow-hidden"
-          style={styles.borderCurve}
-        >
+        <View className="mx-6 rounded-2xl bg-muted/50 overflow-hidden border-continuous">
           <CardContent className="flex p-0 py-2">
             <ListButton
               title="Preference"
@@ -170,10 +155,7 @@ export default function ProfileScreen() {
         <P className="text-foreground/60 font-urbanist-semibold px-6 mb-2">
           App
         </P>
-        <View
-          className="mx-6 rounded-2xl bg-muted/50 overflow-hidden"
-          style={styles.borderCurve}
-        >
+        <View className="mx-6 rounded-2xl bg-muted/50 overflow-hidden border-continuous">
           <CardContent className="flex p-0 py-2">
             <ListButton
               title="What's new"
@@ -193,10 +175,7 @@ export default function ProfileScreen() {
         <P className="text-foreground/60 font-urbanist-semibold px-6 mb-2">
           About
         </P>
-        <View
-          className="mx-6 rounded-2xl bg-muted/50 overflow-hidden"
-          style={styles.borderCurve}
-        >
+        <View className="mx-6 rounded-2xl bg-muted/50 overflow-hidden border-continuous">
           <CardContent className="flex p-0 py-2">
             <ListButton
               title="Do you like Cookkit?"
@@ -216,10 +195,7 @@ export default function ProfileScreen() {
         <P className="text-foreground/60 font-urbanist-semibold px-6 mb-2">
           Terms & Privacy
         </P>
-        <View
-          className="mx-6 rounded-2xl bg-muted/50 overflow-hidden"
-          style={styles.borderCurve}
-        >
+        <View className="mx-6 rounded-2xl bg-muted/50 overflow-hidden border-continuous">
           <CardContent className="flex p-0 py-2">
             <ListButton
               title="Terms of Service"
@@ -235,10 +211,7 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      <View className="mt-24">
-        
-
-      </View>
+      <View className="mt-24"></View>
 
       {/* <View className="px-6 my-12">
           <Button variant="destructive" className="w-full rounded-full">
@@ -280,8 +253,5 @@ const styles = StyleSheet.create({
   profileCard: {
     width: 120,
     height: 120,
-  },
-  borderCurve: {
-    borderCurve: "continuous",
   },
 });

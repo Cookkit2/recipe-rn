@@ -1,6 +1,5 @@
-import { Pressable, View } from "react-native";
 import { setAndroidNavigationBar } from "~/lib/android-navigation-bar";
-import { MoonStarIcon, SunIcon } from "~/lib/icons/ThemeIcons";
+import { MoonStarIcon, SunIcon } from "lucide-nativewind";
 import { useColorScheme } from "~/hooks/useColorScheme";
 import { Button } from "./ui/button";
 

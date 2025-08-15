@@ -3,14 +3,10 @@ import { View } from "react-native";
 import { Button } from "../ui/button";
 import useItemTypeStore from "~/store/type-store";
 import type { ItemType } from "~/types/PantryItem";
-import {
-  AppleIcon,
-  RefrigeratorIcon,
-  SnowflakeIcon,
-  CabinetIcon,
-} from "~/lib/icons/PantryIcons";
+import { AppleIcon, RefrigeratorIcon, SnowflakeIcon } from "lucide-nativewind";
+import { CabinetIcon } from "~/lib/icons/Cabinet";
 import { P } from "../ui/typography";
-import { cn } from "~/lib/utils";
+import { cn } from "~/lib/tw-merge";
 
 const TYPES: Array<{ type: ItemType; label: string; icon: JSX.Element }> = [
   {

@@ -1,16 +1,9 @@
 import { router } from "expo-router";
 
 import React, { useState } from "react";
-import {
-  ScrollView,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { ScrollView, useWindowDimensions, View } from "react-native";
 import Animated, {
   FadeIn,
-  interpolate,
-  useAnimatedStyle,
   useScrollViewOffset,
   type AnimatedRef,
 } from "react-native-reanimated";
@@ -18,9 +11,10 @@ import { P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { PantryItem } from "~/types/PantryItem";
-import { ArrowLeftIcon, StarIcon } from "~/lib/icons/IngredientIcons";
+import { ArrowLeftIcon, StarIcon } from "lucide-nativewind";
 import OutlinedImage from "../ui/outlined-image";
 import IngredientQuantity from "./IngredientQuantity";
+import useHeaderAnimatedStyle from "~/hooks/animation/useHeaderAnimatedStyle";
 
 interface IngredientViewProps {
   ScrollComponent: (
@@ -37,31 +31,10 @@ export default function IngredientView({
 }: IngredientViewProps) {
   const scrollOffset = useScrollViewOffset(scrollRef);
   const { top: pt } = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
-  const HEADER_HEIGHT = width;
+  const { width: windowWidth } = useWindowDimensions();
+  const headerAnimatedStyle = useHeaderAnimatedStyle(scrollOffset, windowWidth);
 
   const [isFav, setIsFav] = useState(false);
-
-  const headerAnimatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        {
-          translateY: interpolate(
-            scrollOffset.value,
-            [-HEADER_HEIGHT, 0, HEADER_HEIGHT],
-            [-HEADER_HEIGHT / 2, 0, HEADER_HEIGHT * 0.75]
-          ),
-        },
-        {
-          scale: interpolate(
-            scrollOffset.value,
-            [-HEADER_HEIGHT, 0, HEADER_HEIGHT],
-            [2, 1, 1]
-          ),
-        },
-      ],
-    };
-  });
 
   return (
     <View className="relative flex-1 bg-background rounded-t-3xl overflow-hidden">
@@ -118,7 +91,7 @@ export default function IngredientView({
           className="overflow-hidden flex items-center justify-center bg-muted"
           style={[
             {
-              height: HEADER_HEIGHT,
+              height: windowWidth,
             },
             headerAnimatedStyle,
           ]}
@@ -126,10 +99,7 @@ export default function IngredientView({
           <OutlinedImage source={item.image_url} size={100} />
         </Animated.View>
 
-        <View
-          className="flex-1 bg-background rounded-t-3xl -mt-8 px-6 py-8"
-          style={styles.borderCurve}
-        >
+        <View className="flex-1 bg-background rounded-t-3xl -mt-8 px-6 py-8 border-continuous">
           {/* Header */}
           <Animated.Text
             entering={FadeIn}
@@ -149,9 +119,3 @@ export default function IngredientView({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  borderCurve: {
-    borderCurve: "continuous",
-  },
-});

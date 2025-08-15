@@ -8,7 +8,7 @@ import Animated, {
   useDerivedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { cn } from '~/lib/utils';
+import { cn } from '~/lib/tw-merge';
 
 function Progress({
   className,
