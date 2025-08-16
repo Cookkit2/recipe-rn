@@ -7,30 +7,30 @@ import { H4 } from "../ui/typography";
 import TextShimmer from "../ui/TextShimmer";
 
 export default function RecipeButton() {
-  const { bottom: pb } = useSafeAreaInsets();
+  const { bottom } = useSafeAreaInsets();
   return (
     <View
       className="absolute left-0 right-0 flex-row justify-center"
-      style={{ bottom: 16 + pb }}
+      style={{ bottom: bottom + 8 }}
     >
       <Link href="/recipes" push asChild>
         <Button
           size="lg"
-          variant="default"
-          className="flex-row gap-2 rounded-full"
+          variant="secondary"
+          className="rounded-2xl border-continuous bg-foreground/80 shadow-lg"
         >
-          <ChefHatIcon
-            className="text-background"
-            size={20}
-            strokeWidth={2.618}
-          />
-          <TextShimmer
-            className="text-primary-foreground text-center"
-            component={H4}
-          >
-            Let's Cook
+          <TextShimmer className="flex-row items-center gap-2 justify-center">
+            <>
+              <ChefHatIcon
+                className="text-background"
+                size={18}
+                strokeWidth={3}
+              />
+              <H4 className="text-background font-urbanist font-semibold">
+                Let's Cook
+              </H4>
+            </>
           </TextShimmer>
-          {/* <H4 className="text-primary-foreground text-center">Let's Cook</H4> */}
         </Button>
       </Link>
     </View>

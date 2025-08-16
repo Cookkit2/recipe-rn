@@ -10,10 +10,15 @@ import OutlinedImage from "../ui/outlined-image";
 import { PARALLAX_CONFIG } from "~/constants/parallax";
 import useDebounce from "~/hooks/useDebounce";
 import * as Haptics from "expo-haptics";
+import useImageColors from "~/hooks/useImageColors";
+import useColors from "~/hooks/useColor";
 
 export const IngredientItemCard = ({ item }: { item: PantryItem }) => {
   const router = useRouter();
   const { animatedStyle, handlePressIn, handlePressOut } = useOnPressScale();
+
+  const color = useImageColors(item.image_url);
+  const colors = useColors();
 
   const containerParallax = useParallax(PARALLAX_CONFIG);
   const imageParallax = useParallax(PARALLAX_CONFIG);
@@ -37,7 +42,10 @@ export const IngredientItemCard = ({ item }: { item: PantryItem }) => {
           sharedTransitionTag="pantry-item-image-container"
           style={[containerParallax.animatedStyle]}
         >
-          <AspectRatio className="w-full relative rounded-3xl bg-muted flex items-center justify-center border-continuous">
+          <AspectRatio
+            className="w-full relative rounded-3xl flex items-center justify-center border-continuous"
+            style={{ backgroundColor: color || colors.muted }}
+          >
             <OutlinedImage
               source={item.image_url}
               size={64}
@@ -46,8 +54,12 @@ export const IngredientItemCard = ({ item }: { item: PantryItem }) => {
           </AspectRatio>
         </Animated.View>
         <View className="mt-2">
-          <H4 className="opacity-80 mb-[0.5]">{item.name}</H4>
-          <P className="text-muted-foreground">{item.quantity}</P>
+          <H4 className="opacity-80 mb-[0.5] font-urbanist-regular">
+            {item.name}
+          </H4>
+          <P className="text-muted-foreground font-urbanist-medium">
+            {item.quantity}
+          </P>
         </View>
       </Pressable>
     </Animated.View>

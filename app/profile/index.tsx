@@ -23,7 +23,7 @@ import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
 import { Separator } from "~/components/ui/separator";
 import { H1, H2, H4, P } from "~/components/ui/typography";
-import Header from "~/components/Common/Header";
+import Header from "~/components/Shared/Header";
 
 const AVATAR_URL =
   "https://cdn.jsdelivr.net/gh/alohe/memojis@c6ea5d5e130d55fe6d0d34d564e4642392ddc42e/png/memo_3.png";
@@ -47,7 +47,6 @@ export default function ProfileScreen() {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingBottom: bottom }}
       onScroll={scrollHandler}
-      scrollEventThrottle={16}
       stickyHeaderIndices={[0]}
     >
       <Header title="Profile" scrollY={localScrollY} />

@@ -31,7 +31,7 @@ export default function MenuDropdown() {
           <Button
             size="icon-sm"
             variant="default"
-            className="rounded-full"
+            className="bg-foreground rounded-full"
             onPress={handlePress}
           >
             <Animated.View
@@ -41,8 +41,8 @@ export default function MenuDropdown() {
             >
               <EllipsisIcon
                 className="text-background"
-                size={20}
-                strokeWidth={2.618}
+                size={18}
+                strokeWidth={3}
               />
             </Animated.View>
           </Button>

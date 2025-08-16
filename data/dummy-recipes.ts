@@ -2,122 +2,6 @@ import type { Recipe } from "~/types/Recipe";
 
 export const dummyRecipesData: Recipe[] = [
   {
-    id: "homemade-brownies",
-    title: "Best Homemade Brownies",
-    description:
-      "With crispy edges, fudgy middles, and rich chocolate flavor, these homemade brownies will disappear in no time.",
-    imageUrl:
-      "https://images.unsplash.com/photo-1636743715220-d8f8dd900b87?q=80&w=3085&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    prepMinutes: 5,
-    cookMinutes: 45,
-    difficultyStars: 2,
-    servings: 16,
-    ingredients: [
-      { name: "granulated sugar", quantity: "1 1/2 cups" },
-      { name: "all-purpose flour", quantity: "3/4 cup" },
-      {
-        name: "cocoa powder",
-        quantity: "2/3 cup",
-        notes:
-          "sifted if lumpy (e.g., Hershey's Special Dark Dutch-processed or Whole Foods' 365 Cocoa Powder)",
-      },
-      { name: "powdered sugar", quantity: "1/2 cup", notes: "sifted if lumpy" },
-      {
-        name: "dark chocolate chips",
-        quantity: "1/2 cup",
-        notes:
-          "good quality, e.g., Ghiradelli's 60% Cacao or Enjoy Life's Dark Chocolate Morsels",
-      },
-      { name: "sea salt", quantity: "3/4 teaspoons" },
-      { name: "large eggs", quantity: "2" },
-      { name: "canola oil or extra-virgin olive oil", quantity: "1/2 cup" },
-      { name: "water", quantity: "2 tablespoons" },
-      { name: "vanilla extract", quantity: "1/2 teaspoon" },
-    ],
-    instructions: [
-      {
-        stepNumber: 1,
-        description:
-          "Preheat the oven to 325°F (160°C). Lightly spray an 8x8 inch baking dish with cooking spray and line it with parchment paper. Spray the parchment paper.",
-        // imageUrl: "/placeholders/brownie-step1.jpg" // Example for step-specific image
-      },
-      {
-        stepNumber: 2,
-        description:
-          "In a medium bowl, combine the sugar, flour, cocoa powder, powdered sugar, chocolate chips, and salt.",
-      },
-      {
-        stepNumber: 3,
-        description:
-          "In a large bowl, whisk together the eggs, olive oil (or canola oil), water, and vanilla.",
-      },
-      {
-        stepNumber: 4,
-        description:
-          "Sprinkle the dry mixture over the wet one, and fold until just combined. The batter will be thick!",
-      },
-      {
-        stepNumber: 5,
-        description:
-          "Pour the batter into the prepared baking pan. Use a rubber spatula to spread it to all four sides of the pan and to smooth the top.",
-      },
-      {
-        stepNumber: 6,
-        description:
-          "Bake for 40 to 45 minutes, until a toothpick inserted comes out with a few crumbs attached. Allow the brownies to cool completely before slicing and serving.",
-      },
-    ],
-    sourceUrl: "https://www.loveandlemons.com/brownies-recipe/",
-    tags: ["dessert", "chocolate", "baking", "vegetarian"],
-    calories: 200, // Approximate, actual calculation needed if for real use
-  },
-  {
-    id: "classic-guacamole",
-    title: "Classic Guacamole",
-    description:
-      "A simple and delicious guacamole recipe that's perfect for any occasion.",
-    imageUrl:
-      "https://images.unsplash.com/photo-1508910238952-0dfebf373ecf?q=80&w=2336&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    prepMinutes: 10,
-    cookMinutes: 0,
-    difficultyStars: 1,
-    servings: 4,
-    ingredients: [
-      { name: "ripe avocados", quantity: "3" },
-      { name: "lime", quantity: "1", notes: "juiced" },
-      { name: "cilantro", quantity: "1/4 cup", notes: "chopped" },
-      { name: "red onion", quantity: "1/4 cup", notes: "finely chopped" },
-      { name: "jalapeño", quantity: "1", notes: "minced (optional)" },
-      { name: "salt", quantity: "1/2 teaspoon" },
-      { name: "cumin", quantity: "1/4 teaspoon" },
-    ],
-    instructions: [
-      {
-        stepNumber: 1,
-        description:
-          "Cut the avocados in half, remove the pits, and scoop the flesh into a medium bowl.",
-      },
-      {
-        stepNumber: 2,
-        description:
-          "Mash the avocado with a fork to your desired consistency (chunky or smooth).",
-      },
-      {
-        stepNumber: 3,
-        description:
-          "Add the lime juice, cilantro, red onion, jalapeño (if using), salt, and cumin. Stir to combine.",
-      },
-      {
-        stepNumber: 4,
-        description:
-          "Taste and adjust seasonings if necessary. Serve immediately with tortilla chips or your favorite dippers.",
-      },
-    ],
-    sourceUrl: "https://www.simplyrecipes.com/recipes/perfect_guacamole/",
-    tags: ["appetizer", "mexican", "vegan", "gluten-free"],
-    calories: 150,
-  },
-  {
     id: "chicken-stir-fry",
     title: "Easy Chicken Stir-Fry",
     description:
@@ -133,52 +17,102 @@ export const dummyRecipesData: Recipe[] = [
         name: "boneless, skinless chicken breasts",
         quantity: "1 lb",
         notes: "cut into 1-inch pieces",
+        relatedIngredientId: "2",
       },
-      { name: "soy sauce", quantity: "1/4 cup" },
-      { name: "honey", quantity: "2 tablespoons" },
-      { name: "sesame oil", quantity: "1 tablespoon" },
-      { name: "cornstarch", quantity: "1 tablespoon" },
-      { name: "olive oil", quantity: "1 tablespoon" },
-      { name: "broccoli florets", quantity: "2 cups" },
-      { name: "bell peppers", quantity: "1 cup", notes: "sliced (any color)" },
+      { name: "soy sauce", quantity: "1/4 cup", relatedIngredientId: "9" },
+      { name: "honey", quantity: "2 tablespoons", relatedIngredientId: "10" },
+      {
+        name: "sesame oil",
+        quantity: "1 tablespoon",
+        relatedIngredientId: "11",
+      },
+      {
+        name: "cornstarch",
+        quantity: "1 tablespoon",
+        relatedIngredientId: "12",
+      },
+      {
+        name: "olive oil",
+        quantity: "1 tablespoon",
+        relatedIngredientId: "13",
+      },
+      {
+        name: "broccoli florets",
+        quantity: "2 cups",
+        relatedIngredientId: "14",
+      },
+      {
+        name: "bell peppers",
+        quantity: "1 cup",
+        notes: "sliced (any color)",
+        relatedIngredientId: "15",
+      },
       {
         name: "carrots",
         quantity: "1 cup",
         notes: "julienned or thinly sliced",
+        relatedIngredientId: "16",
       },
-      { name: "garlic", quantity: "2 cloves", notes: "minced" },
-      { name: "ginger", quantity: "1 teaspoon", notes: "grated" },
-      { name: "cooked rice", quantity: "for serving" },
+      {
+        name: "garlic",
+        quantity: "2 cloves",
+        notes: "minced",
+        relatedIngredientId: "17",
+      },
+      {
+        name: "ginger",
+        quantity: "1 teaspoon",
+        notes: "grated",
+        relatedIngredientId: "18",
+      },
+      {
+        name: "cooked rice",
+        quantity: "for serving",
+        relatedIngredientId: "19",
+      },
     ],
     instructions: [
       {
-        stepNumber: 1,
+        step: 1,
+        title: "Make the Sauce",
         description:
-          "In a small bowl, whisk together soy sauce, honey, sesame oil, and cornstarch. Set aside.",
+          "In a **small bowl**, whisk together **soy sauce**, **honey**, **sesame oil**, and **cornstarch** until smooth. Make sure no **cornstarch lumps** remain. **Set aside**.",
+        relatedIngredientIds: ["1", "2"],
       },
       {
-        stepNumber: 2,
+        step: 2,
+        title: "Cook the Chicken",
         description:
-          "Heat olive oil in a large skillet or wok over medium-high heat. Add chicken and cook until browned and cooked through. Remove chicken from skillet and set aside.",
+          "Heat **15 mL olive oil** in a **large skillet or wok** over **medium-high heat**. Add **chicken** and cook for **5–7 minutes**, stirring occasionally, until **browned** and **fully cooked** (no pink in the center). Transfer chicken to a **plate** and **set aside**.",
+        relatedIngredientIds: ["3", "4"],
       },
       {
-        stepNumber: 3,
+        step: 3,
+        title: "Stir-fry the Vegetables",
         description:
-          "Add broccoli, bell peppers, and carrots to the skillet. Stir-fry for 3-5 minutes until tender-crisp.",
+          "In the **same skillet**, add **broccoli**, **bell peppers**, and **carrots**. Stir-fry for **3–5 minutes** until **tender-crisp** but still **bright in color**.",
+        relatedIngredientIds: ["5", "6"],
       },
       {
-        stepNumber: 4,
+        step: 4,
+        title: "Add Aromatics",
         description:
-          "Add garlic and ginger to the skillet and cook for 1 minute until fragrant.",
+          "Add **garlic** and **ginger** to the vegetables. Cook for **1 minute** until **fragrant**, being careful **not to burn** them.",
+        relatedIngredientIds: ["7", "8"],
       },
       {
-        stepNumber: 5,
+        step: 5,
+        title: "Combine Everything",
         description:
-          "Return chicken to the skillet. Pour the sauce over everything and cook, stirring constantly, until the sauce has thickened and coats the chicken and vegetables.",
+          "Return the **chicken** to the skillet. Pour the **prepared sauce** over everything. Cook, stirring constantly, for **2–3 minutes** until the **sauce thickens** and **coats the chicken and vegetables**.",
+        relatedIngredientIds: ["9", "10", "11"],
       },
       {
-        stepNumber: 6,
-        description: "Serve immediately over cooked rice.",
+        step: 6,
+        title: "Serve",
+        description:
+          "**Serve immediately** over **cooked rice**. Optionally **garnish** with **sesame seeds** or **chopped green onions**.",
+        relatedIngredientIds: [],
       },
     ],
     sourceUrl: "https://www.allrecipes.com/recipe/223382/chicken-stir-fry/",
@@ -201,110 +135,69 @@ export const dummyRecipesData: Recipe[] = [
         name: "ripe tomatoes",
         quantity: "2 large",
         notes: "sliced 1/4-inch thick",
+        relatedIngredientId: "1",
       },
       {
         name: "fresh mozzarella cheese",
         quantity: "8 oz",
         notes: "sliced 1/4-inch thick",
+        relatedIngredientId: "2",
       },
-      { name: "fresh basil leaves", quantity: "1/4 cup" },
-      { name: "extra-virgin olive oil", quantity: "2 tablespoons" },
-      { name: "balsamic glaze", quantity: "1 tablespoon (optional)" },
-      { name: "salt and freshly ground black pepper", quantity: "to taste" },
+      {
+        name: "fresh basil leaves",
+        quantity: "1/4 cup",
+        relatedIngredientId: "3",
+      },
+      {
+        name: "extra-virgin olive oil",
+        quantity: "2 tablespoons",
+        relatedIngredientId: "4",
+      },
+      {
+        name: "balsamic glaze",
+        quantity: "1 tablespoon (optional)",
+        relatedIngredientId: "5",
+      },
+      {
+        name: "salt and freshly ground black pepper",
+        quantity: "to taste",
+        relatedIngredientId: "6",
+      },
     ],
     instructions: [
       {
-        stepNumber: 1,
+        step: 1,
+        title: "Arrange the Ingredients",
         description:
-          "Arrange alternating slices of tomatoes and mozzarella on a platter.",
+          "Arrange alternating slices of **tomatoes** and **mozzarella** on a platter.",
+        relatedIngredientIds: ["1", "2"],
       },
       {
-        stepNumber: 2,
+        step: 2,
+        title: "Add Basil",
         description:
-          "Tuck fresh basil leaves in between the tomato and mozzarella slices.",
+          "Tuck **fresh basil leaves** in between the **tomato** and **mozzarella** slices.",
+        relatedIngredientIds: ["3"],
       },
       {
-        stepNumber: 3,
+        step: 3,
+        title: "Drizzle with Oil",
         description:
-          "Drizzle with extra-virgin olive oil and balsamic glaze (if using).",
+          "Drizzle with **extra-virgin olive oil** and **balsamic glaze** (if using).",
+        relatedIngredientIds: ["4", "5"],
       },
       {
-        stepNumber: 4,
-        description: "Season with salt and pepper to taste. Serve immediately.",
+        step: 4,
+        title: "Season and Serve",
+        description:
+          "Season with **salt** and **pepper** to taste. **Serve immediately**.",
+        relatedIngredientIds: ["6"],
       },
     ],
     sourceUrl:
       "https://www.foodnetwork.com/recipes/ina-garten/caprese-salad-recipe-1948534",
     tags: ["salad", "italian", "vegetarian", "gluten-free", "light meal"],
     calories: 280,
-  },
-  {
-    id: "banana-bread",
-    title: "Moist Banana Bread",
-    description:
-      "A delicious and easy recipe for moist banana bread that's perfect for using up ripe bananas.",
-    imageUrl:
-      "https://images.unsplash.com/photo-1632931057819-4eefffa8e007?q=80&w=3087&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    prepMinutes: 15,
-    cookMinutes: 65,
-    difficultyStars: 3,
-    servings: 12,
-    ingredients: [
-      { name: "ripe bananas", quantity: "3 large", notes: "mashed" },
-      { name: "all-purpose flour", quantity: "1 1/2 cups" },
-      { name: "baking soda", quantity: "1 teaspoon" },
-      { name: "salt", quantity: "1/2 teaspoon" },
-      { name: "ground cinnamon", quantity: "1/2 teaspoon" },
-      { name: "unsalted butter", quantity: "1/2 cup", notes: "melted" },
-      { name: "granulated sugar", quantity: "3/4 cup" },
-      { name: "large egg", quantity: "1" },
-      { name: "vanilla extract", quantity: "1 teaspoon" },
-      {
-        name: "walnuts or pecans",
-        quantity: "1/2 cup",
-        notes: "chopped (optional)",
-      },
-    ],
-    instructions: [
-      {
-        stepNumber: 1,
-        description:
-          "Preheat oven to 350°F (175°C). Grease and flour a 9x5 inch loaf pan.",
-      },
-      {
-        stepNumber: 2,
-        description:
-          "In a medium bowl, whisk together flour, baking soda, salt, and cinnamon.",
-      },
-      {
-        stepNumber: 3,
-        description:
-          "In a large bowl, combine mashed bananas, melted butter, sugar, egg, and vanilla extract. Mix well.",
-      },
-      {
-        stepNumber: 4,
-        description:
-          "Gradually add the dry ingredients to the wet ingredients, mixing until just combined. Do not overmix. Fold in nuts if using.",
-      },
-      {
-        stepNumber: 5,
-        description:
-          "Pour batter into the prepared loaf pan and spread evenly.",
-      },
-      {
-        stepNumber: 6,
-        description:
-          "Bake for 60-65 minutes, or until a toothpick inserted into the center comes out clean. If the top starts to brown too quickly, you can loosely tent it with aluminum foil.",
-      },
-      {
-        stepNumber: 7,
-        description:
-          "Let the banana bread cool in the pan for 10 minutes before transferring it to a wire rack to cool completely.",
-      },
-    ],
-    sourceUrl: "https://www.simplyrecipes.com/recipes/banana_bread/",
-    tags: ["baking", "dessert", "breakfast", "snack"],
-    calories: 250,
   },
   {
     id: "lemon-herb-roast-chicken",
@@ -318,55 +211,95 @@ export const dummyRecipesData: Recipe[] = [
     difficultyStars: 3,
     servings: 4,
     ingredients: [
-      { name: "whole chicken", quantity: "1 (3-4 lbs)" },
-      { name: "lemon", quantity: "1", notes: "halved" },
-      { name: "garlic", quantity: "4 cloves", notes: "smashed" },
-      { name: "fresh rosemary sprigs", quantity: "3-4" },
-      { name: "fresh thyme sprigs", quantity: "3-4" },
-      { name: "olive oil", quantity: "2 tablespoons" },
-      { name: "salt", quantity: "1 teaspoon" },
-      { name: "black pepper", quantity: "1/2 teaspoon" },
+      {
+        name: "whole chicken",
+        quantity: "1 (3-4 lbs)",
+        relatedIngredientId: "2",
+      },
+      {
+        name: "lemon",
+        quantity: "1",
+        notes: "halved",
+        relatedIngredientId: "3",
+      },
+      {
+        name: "garlic",
+        quantity: "4 cloves",
+        notes: "smashed",
+        relatedIngredientId: "4",
+      },
+      {
+        name: "fresh rosemary sprigs",
+        quantity: "3-4",
+        relatedIngredientId: "5",
+      },
+      { name: "fresh thyme sprigs", quantity: "3-4", relatedIngredientId: "6" },
+      {
+        name: "olive oil",
+        quantity: "2 tablespoons",
+        relatedIngredientId: "7",
+      },
+      { name: "salt", quantity: "1 teaspoon", relatedIngredientId: "8" },
+      {
+        name: "black pepper",
+        quantity: "1/2 teaspoon",
+        relatedIngredientId: "9",
+      },
       {
         name: "onion",
         quantity: "1",
         notes: "quartered (optional, for roasting pan)",
+        relatedIngredientId: "10",
       },
       {
         name: "carrots",
         quantity: "2",
         notes: "roughly chopped (optional, for roasting pan)",
+        relatedIngredientId: "11",
       },
     ],
     instructions: [
       {
-        stepNumber: 1,
+        step: 1,
+        title: "Preheat Oven",
         description:
-          "Preheat oven to 425°F (220°C). Remove giblets from chicken cavity and pat the chicken dry with paper towels.",
+          "Preheat oven to **425°F (220°C)**. Remove giblets from chicken cavity and pat the chicken dry with paper towels.",
+        relatedIngredientIds: ["1", "2"],
       },
       {
-        stepNumber: 2,
+        step: 2,
+        title: "Season the Chicken",
         description:
-          "Season the cavity of the chicken generously with salt and pepper. Stuff the cavity with lemon halves, smashed garlic cloves, rosemary sprigs, and thyme sprigs.",
+          "Season the cavity of the chicken generously with **salt** and **pepper**. Stuff the cavity with **lemon halves**, **smashed garlic cloves**, **rosemary sprigs**, and **thyme sprigs**.",
+        relatedIngredientIds: ["3", "4", "5", "6"],
       },
       {
-        stepNumber: 3,
+        step: 3,
+        title: "Rub with Oil",
         description:
-          "Rub the outside of the chicken with olive oil and season generously with salt and pepper.",
+          "Rub the outside of the chicken with **olive oil** and season generously with **salt** and **pepper**.",
+        relatedIngredientIds: ["7", "8"],
       },
       {
-        stepNumber: 4,
+        step: 4,
+        title: "Roast the Chicken",
         description:
-          "Place onion and carrots in the bottom of a roasting pan if desired. Place the chicken on top of the vegetables or directly in the pan.",
+          "Place **onion** and **carrots** in the bottom of a roasting pan if desired. Place the chicken on top of the vegetables or directly in the pan.",
+        relatedIngredientIds: ["9", "10"],
       },
       {
-        stepNumber: 5,
+        step: 5,
+        title: "Roast the Chicken",
         description:
           "Roast for 15 minutes at 425°F (220°C). Then, reduce the oven temperature to 375°F (190°C) and continue roasting for another 60-75 minutes, or until the internal temperature of the thickest part of the thigh reaches 165°F (74°C) and juices run clear.",
+        relatedIngredientIds: [],
       },
       {
-        stepNumber: 6,
+        step: 6,
+        title: "Rest the Chicken",
         description:
           "Let the chicken rest for 10-15 minutes before carving. This allows the juices to redistribute, resulting in a more tender chicken.",
+        relatedIngredientIds: [],
       },
     ],
     sourceUrl:

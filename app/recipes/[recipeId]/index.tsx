@@ -15,10 +15,10 @@ import { ClockIcon, StarIcon } from "lucide-nativewind";
 import { OutlinedImage } from "~/components/ui/outlined-image";
 import { Separator } from "~/components/ui/separator";
 import RotationCard from "~/components/Onboarding/RotationCard";
-import TopBar from "~/components/RecipeDetails/TopBar";
-import RecipeServing from "~/components/RecipeDetails/RecipeServing";
-import RecipeNutrition from "~/components/RecipeDetails/RecipeNutrition";
-import BottomActionBar from "~/components/RecipeDetails/BottomActionBar";
+import TopBar from "~/components/Recipe/Details/TopBar";
+import RecipeServing from "~/components/Recipe/Details/RecipeServing";
+import RecipeNutrition from "~/components/Recipe/Details/RecipeNutrition";
+import BottomActionBar from "~/components/Recipe/Details/BottomActionBar";
 import useHeaderAnimatedStyle from "~/hooks/animation/useHeaderAnimatedStyle";
 
 export default function RecipeDetails() {

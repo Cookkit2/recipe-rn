@@ -4,9 +4,10 @@ export const ITEM_TYPES = ["all", "fridge", "cabinet", "freezer"] as const;
 export type ItemType = (typeof ITEM_TYPES)[number];
 
 export type PantryItem = {
-  id: number;
+  id: string;
   name: string;
-  quantity: string;
+  quantity: number;
+  unit: string;
   expiry_date?: Date;
   category: string;
   type: Exclude<ItemType, "all">;

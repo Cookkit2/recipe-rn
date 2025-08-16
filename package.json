@@ -6,8 +6,8 @@
     "start": "expo start -c",
     "start:web": "expo start -c --web",
     "start:android": "expo start -c --android",
-    "android": "expo start -c --android",
-    "ios": "expo start -c --ios",
+    "android": "expo run android -c",
+    "ios": "expo run ios -c",
     "web": "expo start -c --web",
     "clean": "rm -rf .expo node_modules",
     "postinstall": "npx tailwindcss -i ./global.css -o ./node_modules/.cache/nativewind/global.css",
@@ -20,7 +20,8 @@
     "test:storage": "jest __tests__/storage",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:storage-coverage": "jest __tests__/storage --coverage"
+    "test:storage-coverage": "jest __tests__/storage --coverage",
+    "css-to-json": "bun scripts/css-to-json-converter-advanced.js --merge --backup global.css constants/colors.json"
   },
   "dependencies": {
     "@gorhom/bottom-sheet": "^5.1.8",
@@ -44,6 +45,7 @@
     "caniuse-lite": "^1.0.30001731",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
+    "date-fns": "^4.1.0",
     "expo": "^53.0.9",
     "expo-blur": "~14.1.5",
     "expo-camera": "~16.1.11",
@@ -79,7 +81,6 @@
     "react-native-sheet-transitions": "^0.1.2",
     "react-native-svg": "15.11.2",
     "react-native-web": "~0.20.0",
-    "rive-react-native": "^9.4.0",
     "sonner-native": "^0.21.0",
     "tailwind-merge": "^2.2.1",
     "tailwindcss": "^3.4.17",

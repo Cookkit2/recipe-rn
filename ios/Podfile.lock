@@ -1874,10 +1874,6 @@ PODS:
     - React-logger (= 0.79.5)
     - React-perflogger (= 0.79.5)
     - React-utils (= 0.79.5)
-  - rive-react-native (9.4.0):
-    - React-Core
-    - RiveRuntime (= 6.11.0)
-  - RiveRuntime (6.11.0)
   - RNCAsyncStorage (2.1.2):
     - DoubleConversion
     - glog
@@ -2313,7 +2309,6 @@ DEPENDENCIES:
   - ReactAppDependencyProvider (from `build/generated/ios`)
   - ReactCodegen (from `build/generated/ios`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
-  - rive-react-native (from `../node_modules/rive-react-native`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - "RNCMaskedView (from `../node_modules/@react-native-masked-view/masked-view`)"
   - "RNDateTimePicker (from `../node_modules/@react-native-community/datetimepicker`)"
@@ -2330,7 +2325,6 @@ SPEC REPOS:
     - libwebp
     - MMKV
     - MMKVCore
-    - RiveRuntime
     - SDWebImage
     - SDWebImageAVIFCoder
     - SDWebImageSVGCoder
@@ -2526,8 +2520,6 @@ EXTERNAL SOURCES:
     :path: build/generated/ios
   ReactCommon:
     :path: "../node_modules/react-native/ReactCommon"
-  rive-react-native:
-    :path: "../node_modules/rive-react-native"
   RNCAsyncStorage:
     :path: "../node_modules/@react-native-async-storage/async-storage"
   RNCMaskedView:
@@ -2644,8 +2636,6 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: c42e7abdd2228ae583bdabc3dcd8e5cda6bef944
   ReactCodegen: 4d001cd4fa72b876bbff500bbb3811e458bb3c72
   ReactCommon: 41137f7e87cf7fd1c041a7124dfa3d0d48aa43f3
-  rive-react-native: 11562d38c860578dca4ebdc677d03cbf332b0860
-  RiveRuntime: 9f45abc39a04c4b79caa602c20f16ff9f4d1d9cd
   RNCAsyncStorage: c1bbcf629d7206d1e19310827848b98d68a4cbaf
   RNCMaskedView: 3e8d6bf9764b519d077986413882959eafceffbc
   RNDateTimePicker: 792e57dd210f8af940812636708d43777f1f922b
