@@ -190,7 +190,7 @@ export default function SheetModalWrapper({
             ref={scrollRef}
             onScroll={scrollHandler}
             scrollEventThrottle={16}
-            bounces={false}
+            bounces={true}
           />
         </GestureDetector>
       );

@@ -1,31 +1,39 @@
 import { useEffect, useState } from "react";
+import type { ImageSourcePropType } from "react-native";
 import { getColors } from "react-native-image-colors";
 
-const useImageColors = (url: string | undefined) => {
-  const [color, setColor] = useState<string | null>(null);
+const useImageColors = (url: string | ImageSourcePropType | undefined) => {
+  const [imageColor, setImageColor] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchColors = async (url: string) => {
-      const color = await getColors(url, {
+    const fetchColors = async (url: string | ImageSourcePropType) => {
+      const color = await getColors(url.toString(), {
         cache: true,
-        key: url,
+        key: url.toString(),
       });
 
-      const temp =
-        color.platform === "android"
-          ? color.lightMuted
-          : color.platform === "ios"
-            ? color.background
-            : color.lightMuted;
+      console.log("color", color);
 
-      setColor(temp);
+      switch (color.platform) {
+        case "android":
+          setImageColor(color.vibrant);
+          break;
+        case "ios":
+          setImageColor(color.background);
+      }
     };
 
     if (url) {
-      fetchColors(url);
+      try {
+        // It is only available on native run
+        fetchColors(url);
+      } catch (error) {
+        console.error("Error fetching image colors", error);
+        // Fail silently
+      }
     }
   }, [url]);
 
-  return color;
+  return imageColor;
 };
 export default useImageColors;

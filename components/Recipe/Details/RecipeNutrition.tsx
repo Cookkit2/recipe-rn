@@ -1,6 +1,5 @@
 import React from "react";
 import { View } from "react-native";
-import { P } from "../../ui/typography";
 import {
   AppleIcon,
   DrumstickIcon,
@@ -8,6 +7,7 @@ import {
   WheatIcon,
 } from "lucide-nativewind";
 import type { Recipe } from "~/types/Recipe";
+import ListItem from "~/components/Shared/ListItem";
 
 export default function RecipeNutrition({ recipe }: { recipe: Recipe }) {
   const nutritionItems = [
@@ -37,28 +37,8 @@ export default function RecipeNutrition({ recipe }: { recipe: Recipe }) {
   return (
     <View className="gap-5">
       {nutritionItems.map((item) => (
-        <NutritionItem key={item.title} {...item} />
+        <ListItem key={item.title} {...item} />
       ))}
     </View>
   );
 }
-
-const NutritionItem = ({
-  icon,
-  title,
-  description,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}) => {
-  return (
-    <View className="flex-row gap-4">
-      {icon}
-      <View className="flex-1">
-        <P className="text-foreground font-semibold">{title}</P>
-        <P className="text-muted-foreground">{description} per serving</P>
-      </View>
-    </View>
-  );
-};

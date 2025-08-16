@@ -18,6 +18,9 @@ import { OverlayProvider } from "~/components/Overlay/OverlayContext";
 import { Image } from "expo-image";
 import { dummyRecipesData } from "~/data/dummy-recipes";
 import { Toaster } from "sonner-native";
+import * as SplashScreen from "expo-splash-screen";
+export { ErrorBoundary } from "expo-router";
+import { useFonts } from "expo-font";
 
 // const LIGHT_THEME: Theme = {
 //   ...DefaultTheme,
@@ -27,8 +30,6 @@ import { Toaster } from "sonner-native";
 //   ...DarkTheme,
 //   colors: NAV_THEME.dark,
 // };
-
-export { ErrorBoundary } from "expo-router";
 
 function AnimatedStack() {
   const { scale } = useRootScale();
@@ -49,12 +50,12 @@ function AnimatedStack() {
   });
 
   // For ease of dev, we can redirect to the steps page
-  const router = useRouter();
-  useEffect(() => {
-    setTimeout(() => {
-      router.push("/recipes/chicken-stir-fry/steps");
-    }, 0);
-  }, [router]);
+  // const router = useRouter();
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     router.push("/recipes/chicken-stir-fry/steps");
+  //   }, 0);
+  // }, [router]);
 
   return (
     <View className="flex-1 bg-background">
@@ -169,9 +170,32 @@ const usePlatformSpecificSetup = Platform.select({
   default: noop,
 });
 
+SplashScreen.preventAutoHideAsync();
+
 export default function RootLayout() {
   usePlatformSpecificSetup();
   const { isDarkColorScheme } = useColorScheme();
+
+  // Comment out this block in development build
+  // Font are loaded in app.json
+  const [loaded, error] = useFonts({
+    "bowlby-one": require("~/assets/fonts/BowlbyOne-Regular.ttf"),
+    "urbanist-thin": require("~/assets/fonts/Urbanist-Thin.ttf"),
+    "urbanist-extralight": require("~/assets/fonts/Urbanist-ExtraLight.ttf"),
+    "urbanist-light": require("~/assets/fonts/Urbanist-Light.ttf"),
+    "urbanist-regular": require("~/assets/fonts/Urbanist-Regular.ttf"),
+    "urbanist-medium": require("~/assets/fonts/Urbanist-Medium.ttf"),
+    "urbanist-semibold": require("~/assets/fonts/Urbanist-SemiBold.ttf"),
+    "urbanist-bold": require("~/assets/fonts/Urbanist-Bold.ttf"),
+    "urbanist-extrabold": require("~/assets/fonts/Urbanist-ExtraBold.ttf"),
+    "urbanist-black": require("~/assets/fonts/Urbanist-Black.ttf"),
+  });
+
+  useEffect(() => {
+    if (loaded || error) {
+      SplashScreen.hideAsync();
+    }
+  }, [loaded, error]);
 
   useEffect(() => {
     Image.prefetch([
@@ -181,6 +205,10 @@ export default function RootLayout() {
       "path-to-netflix-outline.png",
     ]);
   }, []);
+
+  if (!loaded && !error) {
+    return null;
+  }
 
   return (
     <GestureHandlerRootView className="flex-1 bg-background">

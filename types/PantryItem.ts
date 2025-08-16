@@ -6,7 +6,8 @@ export type ItemType = (typeof ITEM_TYPES)[number];
 export type PantryItem = {
   id: string;
   name: string;
-  quantity: string;
+  quantity: number;
+  unit: string;
   expiry_date?: Date;
   category: string;
   type: Exclude<ItemType, "all">;

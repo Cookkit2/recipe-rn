@@ -1,5 +1,10 @@
 import React, { useMemo } from "react";
-import { Text as RNText, View, type TextProps } from "react-native";
+import {
+  Text as RNText,
+  View,
+  type TextProps,
+  type ViewProps,
+} from "react-native";
 import MaskedView from "@react-native-masked-view/masked-view";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
@@ -10,14 +15,14 @@ import Animated, {
   withRepeat,
 } from "react-native-reanimated";
 import { cn } from "~/lib/tw-merge";
+import useColors from "~/hooks/useColor";
 
-type TextShimmerProps = Omit<TextProps, "children"> & {
-  children: string;
+type TextShimmerProps = Omit<ViewProps, "children"> & {
+  children: React.ReactNode;
   className?: string;
-  component?: React.ComponentType<TextProps>;
   durationSec?: number; // seconds
   spread?: number; // pixels per character multiplier
-  colors?: { base: string; highlight: string; background?: string };
+  colors?: { base: string; highlight: string };
 };
 
 /**
@@ -28,15 +33,23 @@ type TextShimmerProps = Omit<TextProps, "children"> & {
 export default function TextShimmer({
   children,
   className,
-  component,
   durationSec = 8,
   spread = 2,
-  colors = { base: "#a1a1aa", highlight: "#ffffff", background: "#0000" },
+  colors,
   ...props
 }: TextShimmerProps) {
-  const TextComponent = component ?? RNText;
+  const systemColors = useColors();
+
+  const currentColors = colors || {
+    base: systemColors.background,
+    highlight: systemColors.muted,
+  };
+
   const gradientWidth = useMemo(() => {
-    const width = Math.max(120, Math.floor(children.length * spread * 8));
+    const width = Math.max(
+      120,
+      Math.floor(String(children).length * spread * 8)
+    );
     // Ensure a minimum width to cover short strings and look smooth
     return width;
   }, [children, spread]);
@@ -65,20 +78,16 @@ export default function TextShimmer({
   return (
     <MaskedView
       maskElement={
-        <TextComponent {...props} className={cn("text-black", className)}>
+        <View {...props} className={cn(className)}>
           {children}
-        </TextComponent>
+        </View>
       }
     >
       <View pointerEvents="none">
         {/* Base color background to mimic bg-clip:text with base color */}
-        <TextComponent
-          {...props}
-          className={cn(className)}
-          style={[props.style, { color: colors.base }]}
-        >
+        <View {...props} className={cn(className)}>
           {children}
-        </TextComponent>
+        </View>
         {/* Moving highlight gradient */}
         <Animated.View
           className="absolute top-0 bottom-0"
@@ -92,11 +101,11 @@ export default function TextShimmer({
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             colors={[
-              colors.background ?? "#0000",
-              colors.highlight,
-              colors.background ?? "#0000",
+              "transparent", // Transparent start
+              currentColors.highlight,
+              "transparent", // Transparent end
             ]}
-            locations={[0.45, 0.5, 0.55]}
+            locations={[0.3, 0.5, 0.7]}
             // Make gradient tall enough so diagonal translation never leaves gaps
             style={{ width: gradientWidth * 2, height: gradientWidth * 2 }}
           />

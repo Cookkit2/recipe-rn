@@ -8,7 +8,8 @@ export const dummyPantryItems: PantryItem[] = [
   {
     id: "1",
     name: "Tomatoes",
-    quantity: "5 units",
+    quantity: 5,
+    unit: "units",
     expiry_date: getDummyDate(3),
     category: "Vegetables",
     image_url: require("~/assets/images/tomato.png"),
@@ -42,7 +43,8 @@ export const dummyPantryItems: PantryItem[] = [
   {
     id: "2",
     name: "Chicken Breast",
-    quantity: "900 g",
+    quantity: 900,
+    unit: "g",
     expiry_date: getDummyDate(1),
     category: "Meat",
     image_url: require("~/assets/images/chicken-breast.png"),
@@ -57,7 +59,8 @@ export const dummyPantryItems: PantryItem[] = [
   {
     id: "3",
     name: "Pasta",
-    quantity: "500 g",
+    quantity: 500,
+    unit: "g",
     expiry_date: getDummyDate(365),
     category: "Grains",
     image_url: require("~/assets/images/pasta.png"),
@@ -72,7 +75,8 @@ export const dummyPantryItems: PantryItem[] = [
   {
     id: "4",
     name: "Potato",
-    quantity: "500 g",
+    quantity: 500,
+    unit: "g",
     expiry_date: getDummyDate(365),
     category: "Vegetables",
     image_url: require("~/assets/images/potato.png"),
@@ -87,7 +91,8 @@ export const dummyPantryItems: PantryItem[] = [
   {
     id: "5",
     name: "Onions",
-    quantity: "3 units",
+    quantity: 3,
+    unit: "units",
     expiry_date: getDummyDate(10),
     category: "Vegetables",
     image_url: require("~/assets/images/onion.png"),
@@ -102,7 +107,8 @@ export const dummyPantryItems: PantryItem[] = [
   {
     id: "6",
     name: "Garlic",
-    quantity: "1 unit",
+    quantity: 1,
+    unit: "units",
     expiry_date: getDummyDate(30),
     category: "Vegetables",
     image_url: require("~/assets/images/garlic.png"),
@@ -117,7 +123,8 @@ export const dummyPantryItems: PantryItem[] = [
   {
     id: "7",
     name: "Milk",
-    quantity: "3.8 L",
+    quantity: 3.8,
+    unit: "L",
     expiry_date: getDummyDate(-2),
     category: "Dairy",
     image_url: require("~/assets/images/milk.png"),
@@ -132,7 +139,8 @@ export const dummyPantryItems: PantryItem[] = [
   {
     id: "8",
     name: "Flour",
-    quantity: "1 kg",
+    quantity: 1,
+    unit: "kg",
     expiry_date: getDummyDate(-2),
     category: "Baking",
     image_url: require("~/assets/images/cabinet/flour.png"),
@@ -147,7 +155,8 @@ export const dummyPantryItems: PantryItem[] = [
   {
     id: "9",
     name: "Sugar",
-    quantity: "500g",
+    quantity: 500,
+    unit: "g",
     expiry_date: getDummyDate(-2),
     category: "Baking",
     image_url: require("~/assets/images/cabinet/sugar.png"),
@@ -162,7 +171,8 @@ export const dummyPantryItems: PantryItem[] = [
   {
     id: "10",
     name: "Pasta",
-    quantity: "1 box",
+    quantity: 1,
+    unit: "box",
     expiry_date: getDummyDate(-2),
     category: "Baking",
     image_url: require("~/assets/images/cabinet/pasta.png"),
@@ -177,7 +187,8 @@ export const dummyPantryItems: PantryItem[] = [
   {
     id: "11",
     name: "Rice",
-    quantity: "2 lbs",
+    quantity: 2,
+    unit: "lbs",
     expiry_date: getDummyDate(-2),
     category: "Baking",
     image_url: require("~/assets/images/cabinet/rice.png"),

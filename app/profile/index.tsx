@@ -47,7 +47,6 @@ export default function ProfileScreen() {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingBottom: bottom }}
       onScroll={scrollHandler}
-      scrollEventThrottle={16}
       stickyHeaderIndices={[0]}
     >
       <Header title="Profile" scrollY={localScrollY} />

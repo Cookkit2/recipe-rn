@@ -23,7 +23,7 @@ function Digit({ value, place }: { value: number; place: number }) {
   return (
     <View className="relative overflow-hidden w-5 h-6">
       <View className="opacity-0">
-        <H4 className="text-center">0</H4>
+        <H4 className="text-center font-urbanist-medium">0</H4>
       </View>
       {Array.from({ length: 10 }, (_, i) => (
         <Number key={i} mv={animatedValue} number={i} />
@@ -84,7 +84,7 @@ function Number({ mv, number }: { mv: SharedValue<number>; number: number }) {
 
   return (
     <Animated.View style={animatedStyle}>
-      <H4 className="text-center">{number}</H4>
+      <H4 className="text-center font-urbanist-medium">{number}</H4>
     </Animated.View>
   );
 }
@@ -112,7 +112,7 @@ export function SlidingNumber({
 
   return (
     <View className="flex flex-row items-center justify-center">
-      {value < 0 && <H4 className="text-center">-</H4>}
+      {value < 0 && <H4 className="text-center font-urbanist-medium">-</H4>}
       {integerDigits?.map((_, index) => (
         <Digit
           key={`pos-${integerPlaces ? integerPlaces[index] : 0}`}
@@ -122,7 +122,9 @@ export function SlidingNumber({
       ))}
       {decimalPart && (
         <>
-          <H4 className="text-center">{decimalSeparator}</H4>
+          <H4 className="text-center font-urbanist-medium">
+            {decimalSeparator}
+          </H4>
           {decimalPart.split("").map((_, index) => (
             <Digit
               key={`decimal-${index}`}
