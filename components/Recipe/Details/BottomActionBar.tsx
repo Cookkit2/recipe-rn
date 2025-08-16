@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { View } from "react-native";
-import { Button } from "../ui/button";
-import { H4, P } from "../ui/typography";
+import { Button } from "../../ui/button";
+import { H4, P } from "../../ui/typography";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { Recipe } from "~/types/Recipe";

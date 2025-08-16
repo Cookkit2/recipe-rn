@@ -1,10 +1,10 @@
 import { MinusIcon, PlusIcon } from "lucide-nativewind";
 import React from "react";
 import { View } from "react-native";
-import { SlidingNumber } from "../SlidingNumber";
-import { H4 } from "../ui/typography";
-import { Button } from "../ui/button";
-import { Separator } from "../ui/separator";
+import { SlidingNumber } from "../../SlidingNumber";
+import { H4 } from "../../ui/typography";
+import { Button } from "../../ui/button";
+import { Separator } from "../../ui/separator";
 
 export default function RecipeServing({
   serving,

@@ -7,13 +7,8 @@ import SheetModalWrapper from "~/components/SheetModal/SheetModalWrapper";
 
 export default function IngredientDetailsPage() {
   const { ingredientId } = useLocalSearchParams<{ ingredientId: string }>();
-  const numericId =
-    typeof ingredientId === "string"
-      ? parseInt(ingredientId, 10)
-      : Array.isArray(ingredientId)
-        ? parseInt(ingredientId[0], 10)
-        : 0;
-  const item = dummyPantryItems.find((item) => item.id === numericId);
+
+  const item = dummyPantryItems.find((item) => item.id === ingredientId);
 
   if (!item) {
     return (

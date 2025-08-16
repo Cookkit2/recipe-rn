@@ -6,7 +6,7 @@ const getDummyDate = (daysOffset: number) =>
 
 export const dummyPantryItems: PantryItem[] = [
   {
-    id: 1,
+    id: "1",
     name: "Tomatoes",
     quantity: "5 units",
     expiry_date: getDummyDate(3),
@@ -40,7 +40,7 @@ export const dummyPantryItems: PantryItem[] = [
     ],
   },
   {
-    id: 2,
+    id: "2",
     name: "Chicken Breast",
     quantity: "900 g",
     expiry_date: getDummyDate(1),
@@ -55,7 +55,7 @@ export const dummyPantryItems: PantryItem[] = [
     steps_to_store: [],
   },
   {
-    id: 3,
+    id: "3",
     name: "Pasta",
     quantity: "500 g",
     expiry_date: getDummyDate(365),
@@ -70,7 +70,7 @@ export const dummyPantryItems: PantryItem[] = [
     steps_to_store: [],
   },
   {
-    id: 4,
+    id: "4",
     name: "Potato",
     quantity: "500 g",
     expiry_date: getDummyDate(365),
@@ -85,7 +85,7 @@ export const dummyPantryItems: PantryItem[] = [
     steps_to_store: [],
   },
   {
-    id: 5,
+    id: "5",
     name: "Onions",
     quantity: "3 units",
     expiry_date: getDummyDate(10),
@@ -100,7 +100,7 @@ export const dummyPantryItems: PantryItem[] = [
     steps_to_store: [],
   },
   {
-    id: 6,
+    id: "6",
     name: "Garlic",
     quantity: "1 unit",
     expiry_date: getDummyDate(30),
@@ -115,7 +115,7 @@ export const dummyPantryItems: PantryItem[] = [
     steps_to_store: [],
   },
   {
-    id: 7,
+    id: "7",
     name: "Milk",
     quantity: "3.8 L",
     expiry_date: getDummyDate(-2),
@@ -130,7 +130,7 @@ export const dummyPantryItems: PantryItem[] = [
     steps_to_store: [],
   },
   {
-    id: 8,
+    id: "8",
     name: "Flour",
     quantity: "1 kg",
     expiry_date: getDummyDate(-2),
@@ -145,7 +145,7 @@ export const dummyPantryItems: PantryItem[] = [
     steps_to_store: [],
   },
   {
-    id: 9,
+    id: "9",
     name: "Sugar",
     quantity: "500g",
     expiry_date: getDummyDate(-2),
@@ -160,7 +160,7 @@ export const dummyPantryItems: PantryItem[] = [
     steps_to_store: [],
   },
   {
-    id: 10,
+    id: "10",
     name: "Pasta",
     quantity: "1 box",
     expiry_date: getDummyDate(-2),
@@ -175,7 +175,7 @@ export const dummyPantryItems: PantryItem[] = [
     steps_to_store: [],
   },
   {
-    id: 11,
+    id: "11",
     name: "Rice",
     quantity: "2 lbs",
     expiry_date: getDummyDate(-2),

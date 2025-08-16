@@ -4,7 +4,7 @@ export const ITEM_TYPES = ["all", "fridge", "cabinet", "freezer"] as const;
 export type ItemType = (typeof ITEM_TYPES)[number];
 
 export type PantryItem = {
-  id: number;
+  id: string;
   name: string;
   quantity: string;
   expiry_date?: Date;

@@ -1,6 +1,6 @@
 import "~/global.css";
 import React, { useEffect, useState } from "react";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Appearance, Platform, View } from "react-native";
 import { useColorScheme } from "~/hooks/useColorScheme";
@@ -49,12 +49,12 @@ function AnimatedStack() {
   });
 
   // For ease of dev, we can redirect to the steps page
-  // const router = useRouter();
-  // useEffect(() => {
-  //   setTimeout(() => {
-  //     router.push("/profile");
-  //   }, 0);
-  // }, [router]);
+  const router = useRouter();
+  useEffect(() => {
+    setTimeout(() => {
+      router.push("/recipes/chicken-stir-fry/steps");
+    }, 0);
+  }, [router]);
 
   return (
     <View className="flex-1 bg-background">

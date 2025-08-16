@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View } from "react-native";
-import { Button } from "../ui/button";
+import { Button } from "../../ui/button";
 import { ArrowLeftIcon, HeartIcon } from "lucide-nativewind";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
