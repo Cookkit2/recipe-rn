@@ -13,7 +13,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.cookkit.cookkit"
@@ -39,6 +41,7 @@
         "expo-font",
         {
           "fonts": [
+            "./assets/fonts/BowlbyOne-Regular.ttf",
             "./assets/fonts/Urbanist-Thin.ttf",
             "./assets/fonts/Urbanist-ExtraLight.ttf",
             "./assets/fonts/Urbanist-Light.ttf",
@@ -76,7 +79,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "6f5078ee-39ba-406b-9c9f-5cbd12094d9f"
+        "projectId": "191bf781-c649-4520-84d0-461f5b5a8427"
       }
     }
   }
