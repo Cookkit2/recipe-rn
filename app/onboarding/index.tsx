@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import TextShimmer from "~/components/ui/TextShimmer";
 import { dummyPantryItems } from "~/data/dummy-data";
 import useColors from "~/hooks/useColor";
-import RotationCard from "~/components/Tutorial/RotationCard";
+import RotationCard from "~/components/Onboarding/RotationCard";
 import OutlinedImage from "~/components/ui/outlined-image";
 
 // Take first 10 items and assign different coordinates (0-100 scale)

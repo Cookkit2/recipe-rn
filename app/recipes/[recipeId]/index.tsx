@@ -14,7 +14,7 @@ import { ScrollView } from "react-native-gesture-handler";
 import { ClockIcon, StarIcon } from "lucide-nativewind";
 import { OutlinedImage } from "~/components/ui/outlined-image";
 import { Separator } from "~/components/ui/separator";
-import RotationCard from "~/components/Tutorial/RotationCard";
+import RotationCard from "~/components/Onboarding/RotationCard";
 import TopBar from "~/components/Recipe/Details/TopBar";
 import RecipeServing from "~/components/Recipe/Details/RecipeServing";
 import RecipeNutrition from "~/components/Recipe/Details/RecipeNutrition";
