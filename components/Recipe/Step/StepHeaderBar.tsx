@@ -16,8 +16,6 @@ export default function StepHeaderBar() {
     return (progress.value / stepPages.length) * 100;
   }, [progress.value, stepPages.length]);
 
-  console.log(progressPercentage);
-
   return (
     <View
       className="flex flex-row items-center gap-4 px-4"

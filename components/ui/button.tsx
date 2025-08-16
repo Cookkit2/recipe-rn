@@ -1,11 +1,16 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-import { Pressable, type Insets } from "react-native";
+import {
+  Pressable,
+  type GestureResponderEvent,
+  type Insets,
+} from "react-native";
 import { TextClassContext } from "~/components/ui/text";
 import { cn } from "~/lib/tw-merge";
 import Animated from "react-native-reanimated";
 import useOnPressScale from "~/hooks/animation/useOnPressScale";
 import useDebounce from "~/hooks/useDebounce";
+import * as Haptics from "expo-haptics";
 
 const buttonVariants = cva(
   "group flex items-center justify-center rounded-md web:ring-offset-background web:transition-colors web:focus-visible:outline-none web:focus-visible:ring-2 web:focus-visible:ring-ring web:focus-visible:ring-offset-2",
@@ -121,6 +126,14 @@ function Button({
       hitSlop = undefined;
   }
 
+  const onHapticsPress = useCallback(
+    (e: GestureResponderEvent) => {
+      handlePress(e);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    },
+    [handlePress]
+  );
+
   return (
     <TextClassContext.Provider
       value={buttonTextVariants({
@@ -138,7 +151,7 @@ function Button({
           )}
           onPressIn={enableAnimation ? handlePressIn : undefined}
           onPressOut={enableAnimation ? handlePressOut : undefined}
-          onPress={handlePress}
+          onPress={onHapticsPress}
           hitSlop={hitSlop}
           ref={ref}
           role="button"

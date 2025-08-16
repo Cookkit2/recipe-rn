@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { 
-  View, 
-  type LayoutChangeEvent, 
-  Modal, 
-  TextInput, 
+import {
+  View,
+  type LayoutChangeEvent,
+  Modal,
   Pressable,
-  Alert 
+  Alert,
 } from "react-native";
 import Animated, {
   useSharedValue,
@@ -139,7 +138,7 @@ export function SlidingNumber({
       Alert.alert("Invalid Input", "Please enter a valid number");
       return;
     }
-    
+
     if (onValueChange) {
       onValueChange(numValue);
     }
@@ -158,7 +157,7 @@ export function SlidingNumber({
         <Digit
           key={`pos-${integerPlaces ? integerPlaces[index] : 0}`}
           value={integerValue}
-          place={integerPlaces && integerPlaces[index] ? integerPlaces[index] : 1}
+          place={integerPlaces?.[index] ?? 1}
         />
       ))}
       {decimalPart && (
@@ -181,9 +180,7 @@ export function SlidingNumber({
   return (
     <>
       {editable && onValueChange ? (
-        <Pressable onPress={handlePress}>
-          {numberDisplay}
-        </Pressable>
+        <Pressable onPress={handlePress}>{numberDisplay}</Pressable>
       ) : (
         numberDisplay
       )}
@@ -199,7 +196,7 @@ export function SlidingNumber({
             <H4 className="mb-6 font-urbanist-bold text-foreground">
               Enter Quantity
             </H4>
-            
+
             <Input
               value={inputValue}
               onChangeText={setInputValue}
@@ -208,7 +205,7 @@ export function SlidingNumber({
               selectTextOnFocus={true}
               onSubmitEditing={handleSubmit}
             />
-            
+
             <View className="flex-row gap-3 mt-6 justify-end">
               <Button
                 variant="outline"
@@ -217,12 +214,11 @@ export function SlidingNumber({
               >
                 <P className="font-urbanist-semibold text-foreground">Cancel</P>
               </Button>
-              
-              <Button
-                className="w-full rounded-xl"
-                onPress={handleSubmit}
-              >
-                <P className="font-urbanist-semibold text-primary-foreground">Confirm</P>
+
+              <Button className="w-full rounded-xl" onPress={handleSubmit}>
+                <P className="font-urbanist-semibold text-primary-foreground">
+                  Confirm
+                </P>
               </Button>
             </View>
           </View>

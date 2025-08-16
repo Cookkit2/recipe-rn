@@ -1,7 +1,7 @@
 import React from "react";
 import { FlatList, View } from "react-native";
 import type { RecipeIngredient } from "~/types/Recipe";
-import { H1, H2, H4, P } from "../../ui/typography";
+import { H2, P } from "../../ui/typography";
 import OutlinedImage from "~/components/ui/outlined-image";
 import { dummyPantryItems } from "~/data/dummy-data";
 
@@ -32,7 +32,15 @@ const IngredientItem: React.FC<{
     (item) => item.id === ingredient.relatedIngredientId
   );
 
-  if (!currentIngredient) return null;
+  if (!currentIngredient) {
+    return (
+      <View className="flex-1 items-center justify-center p-2 my-4">
+        <P className="text-foreground text-sm">{ingredient.name}</P>
+        <P className="text-foreground text-sm">{ingredient.quantity}</P>
+        <P className="text-destructive text-xs">Ingredient data missing</P>
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 items-center justify-center p-2 my-4">

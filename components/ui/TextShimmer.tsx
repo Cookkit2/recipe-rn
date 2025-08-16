@@ -1,10 +1,5 @@
 import React, { useMemo } from "react";
-import {
-  Text as RNText,
-  View,
-  type TextProps,
-  type ViewProps,
-} from "react-native";
+import { View, type ViewProps } from "react-native";
 import MaskedView from "@react-native-masked-view/masked-view";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {

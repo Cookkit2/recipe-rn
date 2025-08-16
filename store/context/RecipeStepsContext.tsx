@@ -29,7 +29,7 @@ export function RecipeStepsProvider({
   children: React.ReactNode;
 }) {
   const [currentStep, setCurrentStep] = useState<number>(0);
-  const carouselRef = useRef<ICarouselInstance>(null);
+  const carouselRef = useRef<ICarouselInstance | null>(null);
   const progress = useSharedValue<number>(0);
 
   const goToNextStep = useCallback(() => {

@@ -7,12 +7,11 @@ const useImageColors = (url: string | ImageSourcePropType | undefined) => {
 
   useEffect(() => {
     const fetchColors = async (url: string | ImageSourcePropType) => {
-      const color = await getColors(url.toString(), {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const color = await getColors(url as any , {
         cache: true,
         key: url.toString(),
       });
-
-      console.log("color", color);
 
       switch (color.platform) {
         case "android":
