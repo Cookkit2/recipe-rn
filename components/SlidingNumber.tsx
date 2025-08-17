@@ -1,11 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  type LayoutChangeEvent,
-  Modal,
-  Pressable,
-  Alert,
-} from "react-native";
+import { View, type LayoutChangeEvent, Pressable, Alert } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -16,6 +10,7 @@ import { H4, P } from "./ui/typography";
 import { Button } from "./ui/button";
 import { CURVES } from "~/constants/curves";
 import { Input } from "./ui/input";
+import BaseModal from "./ui/modal";
 
 function Digit({ value, place }: { value: number; place: number }) {
   const valueRoundedToPlace = Math.floor(value / place) % 10;
@@ -110,7 +105,7 @@ export function SlidingNumber({
   onValueChange?: (newValue: number) => void;
   editable?: boolean;
 }) {
-  const [modalVisible, setModalVisible] = useState(false);
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [inputValue, setInputValue] = useState(value.toString());
 
   const absValue = Math.abs(value);
@@ -185,45 +180,38 @@ export function SlidingNumber({
         numberDisplay
       )}
 
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={handleCancel}
-      >
-        <View className="flex-1 justify-center items-center bg-black/50 px-4">
-          <View className="bg-background rounded-2xl p-6 w-full max-w-sm shadow-2xl border-continuous">
-            <H4 className="mb-6 font-urbanist-bold text-foreground">
-              Enter Quantity
-            </H4>
+      <BaseModal modalVisible={modalVisible} onCancel={handleCancel}>
+        <View className="bg-background rounded-2xl p-6 w-full max-w-sm shadow-2xl border-continuous">
+          <H4 className="mb-6 font-urbanist-bold text-foreground">
+            Enter Quantity
+          </H4>
 
-            <Input
-              value={inputValue}
-              onChangeText={setInputValue}
-              keyboardType="decimal-pad"
-              autoFocus={true}
-              selectTextOnFocus={true}
-              onSubmitEditing={handleSubmit}
-            />
+          <Input
+            value={inputValue}
+            onChangeText={setInputValue}
+            keyboardType="decimal-pad"
+            autoFocus={true}
+            selectTextOnFocus={true}
+            onSubmitEditing={handleSubmit}
+          />
 
-            <View className="flex-row gap-3 mt-6 justify-end">
-              <Button
-                variant="outline"
-                className="w-full rounded-xl"
-                onPress={handleCancel}
-              >
-                <P className="font-urbanist-semibold text-foreground">Cancel</P>
-              </Button>
+          <View className="flex-row gap-3 mt-6 justify-end">
+            <Button
+              variant="outline"
+              className="w-full rounded-xl"
+              onPress={handleCancel}
+            >
+              <P className="font-urbanist-semibold text-foreground">Cancel</P>
+            </Button>
 
-              <Button className="w-full rounded-xl" onPress={handleSubmit}>
-                <P className="font-urbanist-semibold text-primary-foreground">
-                  Confirm
-                </P>
-              </Button>
-            </View>
+            <Button className="w-full rounded-xl" onPress={handleSubmit}>
+              <P className="font-urbanist-semibold text-primary-foreground">
+                Confirm
+              </P>
+            </Button>
           </View>
         </View>
-      </Modal>
+      </BaseModal>
     </>
   );
 }

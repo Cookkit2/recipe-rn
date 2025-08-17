@@ -105,29 +105,33 @@ export default function IngredientView({
             </CardContent>
           </Card>
 
-          <Separator className="my-8" />
+          {item.steps_to_store.length > 0 && (
+            <>
+              <Separator className="my-8" />
 
-          <View className="gap-4">
-            <H4 className="font-bowlby-one text-foreground/80 leading-[1.6]">
-              Steps to store
-            </H4>
-            {item.steps_to_store.map((step, index) => (
-              <ListItem
-                key={step.id}
-                icon={
-                  <ShapeContainer
-                    width={28}
-                    height={28}
-                    color={colors.primary}
-                    index={index}
-                    text={index + 1 + ""}
+              <View className="gap-4">
+                <H4 className="font-bowlby-one text-foreground/80 leading-[1.6]">
+                  Steps to store
+                </H4>
+                {item.steps_to_store.map((step, index) => (
+                  <ListItem
+                    key={step.id}
+                    icon={
+                      <ShapeContainer
+                        width={28}
+                        height={28}
+                        color={colors.primary}
+                        index={index}
+                        text={index + 1 + ""}
+                      />
+                    }
+                    title={step.title}
+                    description={step.description}
                   />
-                }
-                title={step.title}
-                description={step.description}
-              />
-            ))}
-          </View>
+                ))}
+              </View>
+            </>
+          )}
         </View>
       </ScrollComponent>
     </View>

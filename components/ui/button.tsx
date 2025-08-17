@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import {
   Pressable,
@@ -11,6 +11,7 @@ import Animated from "react-native-reanimated";
 import useOnPressScale from "~/hooks/animation/useOnPressScale";
 import useDebounce from "~/hooks/useDebounce";
 import * as Haptics from "expo-haptics";
+import useOnPressRounded from "~/hooks/animation/useOnPressRounded";
 
 const buttonVariants = cva(
   "group flex items-center justify-center rounded-md web:ring-offset-background web:transition-colors web:focus-visible:outline-none web:focus-visible:ring-2 web:focus-visible:ring-ring web:focus-visible:ring-offset-2",
@@ -82,6 +83,8 @@ type ButtonProps = React.ComponentProps<typeof Pressable> &
     accessibilityRole?: string;
   };
 
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
 function Button({
   ref,
   className,
@@ -92,12 +95,11 @@ function Button({
   enableDebounce = true,
   onPress,
   enableAnimation = true,
-  accessibilityLabel,
-  accessibilityHint,
   accessibilityRole = "button",
   ...props
 }: ButtonProps) {
-  const { animatedStyle, handlePressIn, handlePressOut } = useOnPressScale();
+  const { animatedStyle, roundedStyle, onPressIn, onPressOut } =
+    useButtonAnimation({ enableAnimation });
 
   // Apply debouncing to onPress if enabled
   const debouncedOnPress = useDebounce(onPress || noop, {
@@ -105,34 +107,39 @@ function Button({
     immediate: true,
   });
 
-  const handlePress = enableDebounce ? debouncedOnPress : onPress || noop;
-
-  // Ensure minimum 44x44 touch target using hitSlop
-  let hitSlop: Insets | undefined;
-  switch (size) {
-    case "icon-sm":
-      hitSlop = { top: 6, bottom: 6, left: 6, right: 6 };
-      break;
-    case "icon":
-      hitSlop = { top: 2, bottom: 2, left: 2, right: 2 };
-      break;
-    case "default":
-      hitSlop = { top: 2, bottom: 2 };
-      break;
-    case "sm":
-      hitSlop = { top: 4, bottom: 4 };
-      break;
-    default:
-      hitSlop = undefined;
-  }
-
-  const onHapticsPress = useCallback(
+  const handlePress = useCallback(
     (e: GestureResponderEvent) => {
-      handlePress(e);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      if (enableDebounce) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        debouncedOnPress(e);
+      } else if (onPress) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        onPress(e);
+      }
     },
-    [handlePress]
+    [debouncedOnPress, enableDebounce, onPress]
   );
+  // Ensure minimum 44x44 touch target using hitSlop
+  const hitSlop = useMemo(() => {
+    let hitSlop: Insets | undefined;
+    switch (size) {
+      case "icon-sm":
+        hitSlop = { top: 6, bottom: 6, left: 6, right: 6 };
+        break;
+      case "icon":
+        hitSlop = { top: 2, bottom: 2, left: 2, right: 2 };
+        break;
+      case "default":
+        hitSlop = { top: 2, bottom: 2 };
+        break;
+      case "sm":
+        hitSlop = { top: 4, bottom: 4 };
+        break;
+      default:
+        hitSlop = undefined;
+    }
+    return hitSlop;
+  }, [size]);
 
   return (
     <TextClassContext.Provider
@@ -142,22 +149,24 @@ function Button({
         className: "web:pointer-events-none",
       })}
     >
-      <Animated.View style={animatedStyle} className={containerClassName}>
-        <Pressable
+      <Animated.View
+        style={animatedStyle}
+        className={cn(containerClassName, "overflow-hidden")}
+      >
+        <AnimatedPressable
           className={cn(
             props.disabled && "opacity-50 web:pointer-events-none",
             "border-continuous",
             buttonVariants({ variant, size, className })
           )}
-          onPressIn={enableAnimation ? handlePressIn : undefined}
-          onPressOut={enableAnimation ? handlePressOut : undefined}
-          onPress={onHapticsPress}
+          onPressIn={onPressIn}
+          onPressOut={onPressOut}
+          onPress={handlePress}
           hitSlop={hitSlop}
           ref={ref}
           role="button"
-          accessibilityLabel={accessibilityLabel}
-          accessibilityHint={accessibilityHint}
           accessibilityRole={accessibilityRole}
+          style={[props.style, roundedStyle]}
           {...props}
         />
       </Animated.View>
@@ -169,3 +178,38 @@ const noop = () => {};
 
 export { Button, buttonTextVariants, buttonVariants };
 export type { ButtonProps };
+
+const useButtonAnimation = ({
+  enableAnimation,
+}: {
+  enableAnimation: boolean;
+}) => {
+  const {
+    animatedStyle: scaleStyle,
+    handlePressIn: onScaleIn,
+    handlePressOut: onScaleOut,
+  } = useOnPressScale();
+
+  const {
+    animatedStyle: roundedStyle,
+    handlePressIn: onRoundedIn,
+    handlePressOut: onRoundedOut,
+  } = useOnPressRounded(12);
+
+  const onPressIn = useCallback(() => {
+    onScaleIn();
+    onRoundedIn();
+  }, [onScaleIn, onRoundedIn]);
+
+  const onPressOut = useCallback(() => {
+    onScaleOut();
+    onRoundedOut();
+  }, [onScaleOut, onRoundedOut]);
+
+  return {
+    animatedStyle: scaleStyle,
+    roundedStyle,
+    onPressIn: enableAnimation ? onPressIn : undefined,
+    onPressOut: enableAnimation ? onPressOut : undefined,
+  };
+};

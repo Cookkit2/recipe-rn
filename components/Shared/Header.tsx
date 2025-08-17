@@ -71,7 +71,7 @@ export default function Header({ title, scrollY }: HeaderProps) {
       <View className="flex-1" />
       <View className="overflow-hidden h-8 justify-center">
         <Animated.View style={titleAnimatedStyle}>
-          <H4>{title}</H4>
+          <H4 className="font-urbanist-semibold tracking-wide">{title}</H4>
         </Animated.View>
       </View>
       <View className="flex-1" />
