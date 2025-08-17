@@ -53,7 +53,8 @@ function AnimatedStack() {
   // const router = useRouter();
   // useEffect(() => {
   //   setTimeout(() => {
-  //     router.push("/recipes/chicken-stir-fry/steps");
+  //     router.push("/profile");
+  //     // router.push("/recipes/chicken-stir-fry/steps");
   //   }, 0);
   // }, [router]);
 

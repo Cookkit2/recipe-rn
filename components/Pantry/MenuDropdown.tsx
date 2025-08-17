@@ -8,21 +8,15 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { P } from "../ui/typography";
-import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 import { CircleUserIcon, EllipsisIcon, FileClockIcon } from "lucide-nativewind";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "expo-router";
 
 export default function MenuDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
-  const degree = useSharedValue(0);
 
   const handlePress = () => setIsOpen(!isOpen);
-
-  useEffect(() => {
-    degree.value = withTiming(isOpen ? 90 : 0, { duration: 200 });
-  }, [degree, isOpen]);
 
   return (
     <>
@@ -31,20 +25,14 @@ export default function MenuDropdown() {
           <Button
             size="icon-sm"
             variant="default"
-            className="bg-foreground rounded-full"
+            className="bg-foreground"
             onPress={handlePress}
           >
-            <Animated.View
-              style={{
-                transform: [{ rotate: `${degree.value}deg` }],
-              }}
-            >
-              <EllipsisIcon
-                className="text-background"
-                size={18}
-                strokeWidth={3}
-              />
-            </Animated.View>
+            <EllipsisIcon
+              className="text-background"
+              size={18}
+              strokeWidth={3}
+            />
           </Button>
         </DropdownMenuTrigger>
 

@@ -6,11 +6,11 @@
     "start": "expo start -c",
     "start:web": "expo start -c --web",
     "start:android": "expo start -c --android",
-    "android": "expo run android -c",
-    "ios": "expo run ios -c",
+    "android": "expo run android",
+    "ios": "expo run ios",
     "web": "expo start -c --web",
     "clean": "rm -rf .expo node_modules",
-    "postinstall": "npx tailwindcss -i ./global.css -o ./node_modules/.cache/nativewind/global.css",
+    "postinstall": "patch-package && npx tailwindcss -i ./global.css -o ./node_modules/.cache/nativewind/global.css",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@gorhom/bottom-sheet": "^5.1.8",
+    "@hookform/resolvers": "^5.2.1",
     "@lucide/lab": "^0.1.2",
     "@react-native-async-storage/async-storage": "2.1.2",
     "@react-native-community/datetimepicker": "8.4.1",
@@ -64,8 +65,10 @@
     "lucide-nativewind": "^0.536.0",
     "moti": "^0.30.0",
     "nativewind": "^4.1.23",
+    "patch-package": "^8.0.0",
     "react": "19.0.0",
     "react-dom": "19.0.0",
+    "react-hook-form": "^7.62.0",
     "react-native": "0.79.5",
     "react-native-context-menu-view": "^1.19.0",
     "react-native-gesture-handler": "~2.24.0",
@@ -84,7 +87,8 @@
     "sonner-native": "^0.21.0",
     "tailwind-merge": "^2.2.1",
     "tailwindcss": "^3.4.17",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^4.0.17"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",

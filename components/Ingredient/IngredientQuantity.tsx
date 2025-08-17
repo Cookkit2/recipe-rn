@@ -29,11 +29,13 @@ export default function IngredientQuantity({
       </Button>
       <Separator orientation="vertical" />
       <View className="flex-row gap-1">
-        <SlidingNumber 
-          value={quantity} 
-          onValueChange={(newValue) => setQuantity(Math.max(0, newValue))} 
+        <SlidingNumber
+          value={quantity}
+          onValueChange={(newValue) => setQuantity(Math.max(0, newValue))}
         />
-        <P className="text-foreground/80 pt-0.5">{unit}</P>
+        <P className="font-urbanist-semibold text-foreground/80 pt-0.5">
+          {unit}
+        </P>
       </View>
       <Separator orientation="vertical" />
       <Button
