@@ -8,10 +8,9 @@ import {
 import { TextClassContext } from "~/components/ui/text";
 import { cn } from "~/lib/tw-merge";
 import Animated from "react-native-reanimated";
-import useOnPressScale from "~/hooks/animation/useOnPressScale";
 import useDebounce from "~/hooks/useDebounce";
+import useButtonAnimation from "~/hooks/animation/useButtonAnimations";
 import * as Haptics from "expo-haptics";
-import useOnPressRounded from "~/hooks/animation/useOnPressRounded";
 
 const buttonVariants = cva(
   "group flex items-center justify-center rounded-md web:ring-offset-background web:transition-colors web:focus-visible:outline-none web:focus-visible:ring-2 web:focus-visible:ring-ring web:focus-visible:ring-offset-2",
@@ -99,7 +98,7 @@ function Button({
   ...props
 }: ButtonProps) {
   const { animatedStyle, roundedStyle, onPressIn, onPressOut } =
-    useButtonAnimation({ enableAnimation });
+    useButtonAnimation(enableAnimation);
 
   // Apply debouncing to onPress if enabled
   const debouncedOnPress = useDebounce(onPress || noop, {
@@ -178,38 +177,3 @@ const noop = () => {};
 
 export { Button, buttonTextVariants, buttonVariants };
 export type { ButtonProps };
-
-const useButtonAnimation = ({
-  enableAnimation,
-}: {
-  enableAnimation: boolean;
-}) => {
-  const {
-    animatedStyle: scaleStyle,
-    handlePressIn: onScaleIn,
-    handlePressOut: onScaleOut,
-  } = useOnPressScale();
-
-  const {
-    animatedStyle: roundedStyle,
-    handlePressIn: onRoundedIn,
-    handlePressOut: onRoundedOut,
-  } = useOnPressRounded(12);
-
-  const onPressIn = useCallback(() => {
-    onScaleIn();
-    onRoundedIn();
-  }, [onScaleIn, onRoundedIn]);
-
-  const onPressOut = useCallback(() => {
-    onScaleOut();
-    onRoundedOut();
-  }, [onScaleOut, onRoundedOut]);
-
-  return {
-    animatedStyle: scaleStyle,
-    roundedStyle,
-    onPressIn: enableAnimation ? onPressIn : undefined,
-    onPressOut: enableAnimation ? onPressOut : undefined,
-  };
-};

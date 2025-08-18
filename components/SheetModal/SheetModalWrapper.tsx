@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import React, { useCallback, useEffect, useRef } from "react";
-import { Dimensions, ScrollView } from "react-native";
+import { ScrollView } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   useSharedValue,
@@ -13,17 +13,15 @@ import Animated, {
   useAnimatedReaction,
   type AnimatedRef,
 } from "react-native-reanimated";
-import { useRootScale } from "~/store/context/RootScaleContext";
+import { useRootScale } from "~/store/RootScaleContext";
 import * as Haptics from "expo-haptics";
-
-const SCALE_FACTOR = 0.83;
-const DRAG_THRESHOLD = Math.min(Dimensions.get("window").height * 0.2, 150);
-const HORIZONTAL_DRAG_THRESHOLD = Math.min(
-  Dimensions.get("window").width * 0.51,
-  80
-);
-const DIRECTION_LOCK_ANGLE = 45; // Angle in degrees to determine horizontal vs vertical movement
-const ENABLE_HORIZONTAL_DRAG_CLOSE = true;
+import {
+  SCALE_FACTOR,
+  ENABLE_HORIZONTAL_DRAG_CLOSE,
+  DIRECTION_LOCK_ANGLE,
+  HORIZONTAL_DRAG_THRESHOLD,
+  DRAG_THRESHOLD,
+} from "~/constants/sheet-modal";
 
 export default function SheetModalWrapper({
   children,

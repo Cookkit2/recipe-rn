@@ -2,6 +2,7 @@ import React, { createContext, useContext, useCallback } from "react";
 import {
   type SharedValue,
   useSharedValue,
+  withSpring,
   withTiming,
 } from "react-native-reanimated";
 import { CURVES } from "~/constants/curves";
@@ -19,7 +20,11 @@ export function RootScaleProvider({ children }: { children: React.ReactNode }) {
   const setScale = useCallback(
     (value: number) => {
       try {
-        scale.value = withTiming(value, CURVES["expressive.default.spatial"]);
+        scale.value = withSpring(value, {
+          damping: 15,
+          stiffness: 150,
+          mass: 0.5,
+        });
       } catch (error) {
         console.warn("Scale animation error:", error);
         scale.value = value;

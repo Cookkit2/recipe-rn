@@ -1,19 +1,15 @@
-import Animated, {
-  FadeIn,
-  FadeOut,
-  ZoomIn,
-  ZoomOut,
-} from "react-native-reanimated";
+import Animated, { Easing, FadeIn, FadeOut } from "react-native-reanimated";
 import RecipeStack from "~/components/Recipe/RecipeStack";
 import { dummyRecipesData } from "~/data/dummy-recipes";
 import { useRouter } from "expo-router";
-import { BlurView } from "expo-blur";
 import { Button } from "~/components/ui/button";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { XIcon } from "lucide-nativewind";
-
-const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
-
+/**
+ *
+ * @deprecated
+ * Not in used anymore
+ */
 export default function RecipesPage() {
   const { top } = useSafeAreaInsets();
   const recipes = dummyRecipesData;
@@ -21,16 +17,10 @@ export default function RecipesPage() {
 
   return (
     <>
-      <AnimatedBlurView
-        entering={FadeIn.springify()}
-        exiting={FadeOut.springify()}
-        intensity={40}
-        className="absolute inset-0"
-      />
       <RecipeStack recipes={recipes} />
       <Animated.View
-        entering={ZoomIn.springify().delay(1000).duration(100)}
-        exiting={ZoomOut}
+        entering={FadeIn.easing(Easing.out(Easing.quad))}
+        exiting={FadeOut.easing(Easing.out(Easing.quad))}
         pointerEvents="box-none"
         className="absolute inset-x-0 items-center"
         style={{ top: top + 24 }}

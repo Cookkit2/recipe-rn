@@ -7,11 +7,12 @@ import { useColorScheme } from "~/hooks/useColorScheme";
 import { PortalHost } from "@rn-primitives/portal";
 import { setAndroidNavigationBar } from "~/lib/android-navigation-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import Animated, { useAnimatedStyle } from "react-native-reanimated";
-import {
-  RootScaleProvider,
-  useRootScale,
-} from "~/store/context/RootScaleContext";
+import Animated, {
+  FadeIn,
+  FadeOut,
+  useAnimatedStyle,
+} from "react-native-reanimated";
+import { RootScaleProvider, useRootScale } from "~/store/RootScaleContext";
 import { BlurView } from "expo-blur";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { OverlayProvider } from "~/components/Overlay/OverlayContext";
@@ -30,6 +31,8 @@ import { useFonts } from "expo-font";
 //   ...DarkTheme,
 //   colors: NAV_THEME.dark,
 // };
+
+const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 
 function AnimatedStack() {
   const { scale } = useRootScale();
@@ -53,7 +56,7 @@ function AnimatedStack() {
   // const router = useRouter();
   // useEffect(() => {
   //   setTimeout(() => {
-  //     router.push("/profile");
+  //     router.push("/recipes");
   //     // router.push("/recipes/chicken-stir-fry/steps");
   //   }, 0);
   // }, [router]);
@@ -61,7 +64,9 @@ function AnimatedStack() {
   return (
     <View className="flex-1 bg-background">
       {isModalActive && canBlur && (
-        <BlurView
+        <AnimatedBlurView
+          entering={FadeIn.springify().mass(0.5).damping(15).stiffness(150)}
+          exiting={FadeOut.springify().mass(0.5).damping(15).stiffness(150)}
           intensity={50}
           className="absolute inset-0 z-[1]"
           tint={isDarkColorScheme ? "dark" : "light"}
@@ -73,7 +78,7 @@ function AnimatedStack() {
       >
         <Stack>
           <Stack.Screen
-            name="(ingredient)/index"
+            name="index"
             options={{
               headerShown: false,
             }}
@@ -100,15 +105,14 @@ function AnimatedStack() {
             name="(ingredient)/create"
             options={{ presentation: "modal", headerShown: false }}
           />
-          <Stack.Screen
+          {/* <Stack.Screen
             name="recipes"
             options={{
               headerShown: false,
-              animation: "none",
-              presentation: "containedTransparentModal",
-              contentStyle: { backgroundColor: "transparent" },
+              presentation: "card",
+              animation: "fade",
             }}
-          />
+          /> */}
           <Stack.Screen
             name="recipes/[recipeId]/index"
             options={{

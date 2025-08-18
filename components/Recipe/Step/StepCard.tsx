@@ -11,7 +11,7 @@ import type { StepPageData } from "~/app/recipes/[recipeId]/steps";
 import { IngredientsContent } from "./IngredientContent";
 import StepContent from "./StepContent";
 import { window } from "~/constants/sizes";
-import { useRecipeSteps } from "~/store/context/RecipeStepsContext";
+import { useRecipeSteps } from "~/store/RecipeStepsContext";
 
 const StepCard: React.FC<{
   data: StepPageData;

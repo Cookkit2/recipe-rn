@@ -10,13 +10,12 @@ const useOnPressScale = () => {
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }]
+    transform: [{ scale: scale.value }],
   }));
 
   const handlePressIn = () => {
     "worklet";
     scale.value = withTiming(0.95, CURVES["expressive.fast.effects"]);
-
   };
 
   const handlePressOut = () => {

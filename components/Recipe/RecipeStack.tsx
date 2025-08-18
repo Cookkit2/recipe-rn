@@ -53,12 +53,6 @@ export default function RecipeStack({ recipes }: { recipes: Recipe[] }) {
             parallaxScrollingScale: 0.9,
             parallaxScrollingOffset: 50,
           }}
-          // modeConfig={{
-          //   snapDirection: "left",
-          //   stackInterval: 18,
-          //   rotateZDeg: 15,
-          // }}
-          // customConfig={() => ({ type: "positive", viewCount: 5 })}
           renderItem={({ index, item }) => <Item key={index} img={item} />}
           onProgressChange={progress}
           onScrollEnd={(index) => setActiveIndex(index)}

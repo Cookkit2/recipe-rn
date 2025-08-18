@@ -22,6 +22,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ShapeContainer from "../Shared/Shapes/ShapeContainer";
 import { Card, CardContent } from "../ui/card";
 import { format } from "date-fns";
+import useDeviceCornerRadius from "~/hooks/useDeviceCornerRadius";
 
 const AnimatedH1 = Animated.createAnimatedComponent(H1);
 
@@ -41,6 +42,7 @@ export default function IngredientView({
   const { bottom } = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
 
+  const borderRadius = useDeviceCornerRadius();
   const scrollOffset = useScrollViewOffset(scrollRef);
   const headerAnimatedStyle = useHeaderAnimatedStyle(scrollOffset, windowWidth);
   const color = useImageColors(item.image_url);
@@ -49,7 +51,10 @@ export default function IngredientView({
   const ingredientMeta = useMemo(() => getIngredientMeta(item), [item]);
 
   return (
-    <View className="relative flex-1 bg-background rounded-t-3xl overflow-hidden">
+    <View
+      className="relative flex-1 bg-background overflow-hidden"
+      style={{ borderRadius }}
+    >
       {/* App Bar Section */}
       <IngredientAppBar />
 
