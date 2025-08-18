@@ -1,6 +1,5 @@
 import React, { type JSX } from "react";
 import { Button } from "../ui/button";
-import useItemTypeStore from "~/store/type-store";
 import type { ItemType } from "~/types/PantryItem";
 import { AppleIcon, RefrigeratorIcon, SnowflakeIcon } from "lucide-nativewind";
 import { CabinetIcon } from "~/lib/icons/Cabinet";
@@ -9,9 +8,9 @@ import { cn } from "~/lib/tw-merge";
 import Animated, {
   useAnimatedStyle,
   withTiming,
-  type SharedValue,
 } from "react-native-reanimated";
 import { CURVES } from "~/constants/curves";
+import { usePantryStore } from "~/store/PantryContext";
 
 const TYPES: Array<{ type: ItemType; label: string; icon: JSX.Element }> = [
   {
@@ -52,15 +51,12 @@ const TYPES: Array<{ type: ItemType; label: string; icon: JSX.Element }> = [
   },
 ];
 
-export default function ToggleButtonGroup({
-  scrollY,
-}: {
-  scrollY: SharedValue<number>;
-}) {
-  const { selectedItemType, changeItemType } = useItemTypeStore();
+export default function IngredientCategoryButtonGroup() {
+  const { selectedItemType, changeItemType, ingredientScrollY, isRecipeOpen } =
+    usePantryStore();
 
   const borderAnimatedStyle = useAnimatedStyle(() => {
-    const isVisible = scrollY.value > 20;
+    const isVisible = ingredientScrollY.value > 20;
     const borderWidth = withTiming(
       isVisible ? 1 : 0,
       CURVES["expressive.fast.effects"]
@@ -68,10 +64,17 @@ export default function ToggleButtonGroup({
     return { borderBottomWidth: borderWidth };
   });
 
+  const sizeStyle = useAnimatedStyle(() => ({
+    paddingHorizontal: withTiming(
+      isRecipeOpen ? 16 : 24,
+      CURVES["expressive.default.spatial"]
+    ),
+  }));
+
   return (
     <Animated.View
-      className="flex flex-row gap-x-2 px-4 overflow-x-auto pb-3 border-border"
-      style={[borderAnimatedStyle]}
+      className="flex flex-row gap-x-2 overflow-x-auto pb-3 border-border"
+      style={[borderAnimatedStyle, sizeStyle]}
     >
       {TYPES.map(({ type, label, icon }) => {
         const isSelected = selectedItemType === type;

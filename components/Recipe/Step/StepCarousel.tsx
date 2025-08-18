@@ -2,7 +2,7 @@ import React from "react";
 import { StyleSheet, View } from "react-native";
 import Carousel from "react-native-reanimated-carousel";
 import StepCard from "~/components/Recipe/Step/StepCard";
-import { useRecipeSteps } from "~/store/context/RecipeStepsContext";
+import { useRecipeSteps } from "~/store/RecipeStepsContext";
 import { window } from "~/constants/sizes";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -12,7 +12,6 @@ export default function StepCarousel() {
 
   const PAGE_WIDTH = window.width;
   const PAGE_HEIGHT = window.height - top - bottom;
-
 
   return (
     <View className="flex-1">

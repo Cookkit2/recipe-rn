@@ -5,7 +5,6 @@ import { Button } from "../ui/button";
 import { ArrowLeftIcon, StarIcon } from "lucide-nativewind";
 import { useRouter } from "expo-router";
 import { cn } from "~/lib/tw-merge";
-import Rive from "rive-react-native";
 
 export default function IngredientAppBar() {
   const { top } = useSafeAreaInsets();
@@ -30,7 +29,7 @@ export default function IngredientAppBar() {
           strokeWidth={2.618}
         />
       </Button>
-      {/* <Button
+      <Button
         size="icon"
         variant="secondary"
         className="rounded-full"
@@ -50,14 +49,6 @@ export default function IngredientAppBar() {
           <StarIcon className="text-foreground" size={20} strokeWidth={2.618} />
         )}
       </Button>
-      <View className="w-11 h-11 bg-red-100">
-        <Rive
-          url="favourite"
-          artboardName="favourite"
-          stateMachineName="State Machine 1"
-          style={{ width: 48, height: 48 }}
-        />
-      </View> */}
     </View>
   );
 }

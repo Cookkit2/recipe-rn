@@ -5,7 +5,7 @@ import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "~/components/ui/button";
 import { Progress } from "~/components/ui/progress";
-import { useRecipeSteps } from "~/store/context/RecipeStepsContext";
+import { useRecipeSteps } from "~/store/RecipeStepsContext";
 
 export default function StepHeaderBar() {
   const { top } = useSafeAreaInsets();

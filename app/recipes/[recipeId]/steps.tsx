@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { getRecipeById } from "~/data/dummy-recipes";
-import { RecipeStepsProvider } from "~/store/context/RecipeStepsContext";
+import { RecipeStepsProvider } from "~/store/RecipeStepsContext";
 import type { RecipeIngredient, RecipeStep } from "~/types/Recipe";
 import StepBottomBar from "~/components/Recipe/Step/StepBottomBar";
 import StepCarousel from "~/components/Recipe/Step/StepCarousel";
