@@ -1,7 +1,7 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
 import Carousel from "react-native-reanimated-carousel";
 import StepCard from "~/components/Recipe/Step/StepCard";
+import { StyleSheet, View } from "react-native";
 import { useRecipeSteps } from "~/store/RecipeStepsContext";
 import { window } from "~/constants/sizes";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -34,7 +34,7 @@ export default function StepCarousel() {
         }}
         customConfig={() => ({ type: "positive", viewCount: 3 })}
         onSnapToItem={(index) => setCurrentStep(index)}
-        onProgressChange={(offsetProgress, absoluteProgress) => {
+        onProgressChange={(_, absoluteProgress) => {
           progress.value = absoluteProgress;
         }}
         renderItem={({ item, animationValue }) => (

@@ -10,9 +10,9 @@ import StepHeaderBar from "~/components/Recipe/Step/StepHeaderBar";
 import { H2 } from "~/components/ui/typography";
 
 export type StepPageData = {
-  type: "ingredients" | "step";
+  type: "ingredients" | "step" | "congratulations";
   step: number;
-  content: RecipeIngredient[] | RecipeStep;
+  content: RecipeIngredient[] | RecipeStep | null;
 };
 
 export default function RecipeSteps() {
@@ -41,6 +41,13 @@ export default function RecipeSteps() {
       });
     });
 
+    // Lastly push a congratulation page
+    pages.push({
+      type: "congratulations",
+      step: recipe.instructions.length + 1,
+      content: null,
+    });
+
     return pages;
   }, [recipe]);
 
@@ -53,7 +60,7 @@ export default function RecipeSteps() {
   }
 
   return (
-    <RecipeStepsProvider stepPages={stepPages}>
+    <RecipeStepsProvider stepPages={stepPages} recipe={recipe}>
       <View className="flex-1 bg-background">
         <StepHeaderBar />
         <StepCarousel />

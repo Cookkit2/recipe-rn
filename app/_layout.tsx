@@ -53,13 +53,13 @@ function AnimatedStack() {
   });
 
   // For ease of dev, we can redirect to the steps page
-  const router = useRouter();
-  useEffect(() => {
-    setTimeout(() => {
-      // router.push("/recipes");
-      router.push("/recipes/chicken-stir-fry");
-    }, 0);
-  }, [router]);
+  // const router = useRouter();
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     // router.push("/recipes");
+  //     router.push("/recipes/chicken-stir-fry/steps");
+  //   }, 0);
+  // }, [router]);
 
   return (
     <View className="flex-1 bg-background">
@@ -220,6 +220,7 @@ export default function RootLayout() {
       <RootScaleProvider>
         <SafeAreaProvider>
           <OverlayProvider>
+            <StatusBar animated />
             <AnimatedStack />
             <PortalHost />
             <Toaster />

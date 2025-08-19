@@ -9,9 +9,10 @@ import Animated, {
 import type { RecipeIngredient, RecipeStep } from "~/types/Recipe";
 import type { StepPageData } from "~/app/recipes/[recipeId]/steps";
 import { IngredientsContent } from "./IngredientContent";
-import StepContent from "./StepContent";
 import { window } from "~/constants/sizes";
 import { useRecipeSteps } from "~/store/RecipeStepsContext";
+import StepContent from "./StepContent";
+import CongratulationsContent from "./CongratulationsContent";
 
 const StepCard: React.FC<{
   data: StepPageData;
@@ -62,24 +63,38 @@ const StepCard: React.FC<{
     return { shadowOpacity: withSpring(shadowOpacity) };
   });
 
+  let content = null;
+
+  switch (data.type) {
+    case "ingredients":
+      content = (
+        <IngredientsContent
+          ingredients={data.content as RecipeIngredient[]}
+          totalSteps={stepPages.length}
+        />
+      );
+      break;
+    case "congratulations":
+      content = <CongratulationsContent />;
+      break;
+    case "step":
+      content = (
+        <StepContent
+          step={data.content as RecipeStep}
+          totalSteps={stepPages.length}
+        />
+      );
+      break;
+    default:
+  }
+
   return (
     <Animated.View className="flex-1 shadow-xl mx-8 my-16" style={shadowStyle}>
       <Animated.View
         className="flex-1 bg-muted rounded-3xl border-continuous"
-        style={[
-          {
-            minHeight: window.height * 0.6,
-          },
-          cardStyle,
-        ]}
+        style={[cardStyle, { minHeight: window.height * 0.6 }]}
       >
-        {data.type === "ingredients" ? (
-          <IngredientsContent
-            ingredients={data.content as RecipeIngredient[]}
-          />
-        ) : (
-          <StepContent step={data.content as RecipeStep} />
-        )}
+        {content}
       </Animated.View>
     </Animated.View>
   );

@@ -20,20 +20,20 @@ export const dummyRecipesData: Recipe[] = [
         relatedIngredientId: "2",
       },
       { name: "soy sauce", quantity: "1/4 cup", relatedIngredientId: "9" },
-      { name: "honey", quantity: "2 tablespoons", relatedIngredientId: "10" },
+      { name: "honey", quantity: "2 tbsp", relatedIngredientId: "10" },
       {
         name: "sesame oil",
-        quantity: "1 tablespoon",
+        quantity: "1 tbsp",
         relatedIngredientId: "11",
       },
       {
         name: "cornstarch",
-        quantity: "1 tablespoon",
+        quantity: "1 tbsp",
         relatedIngredientId: "12",
       },
       {
         name: "olive oil",
-        quantity: "1 tablespoon",
+        quantity: "1 tbsp",
         relatedIngredientId: "13",
       },
       {
@@ -150,12 +150,12 @@ export const dummyRecipesData: Recipe[] = [
       },
       {
         name: "extra-virgin olive oil",
-        quantity: "2 tablespoons",
+        quantity: "2 tbsp",
         relatedIngredientId: "4",
       },
       {
         name: "balsamic glaze",
-        quantity: "1 tablespoon (optional)",
+        quantity: "1 tbsp (optional)",
         relatedIngredientId: "5",
       },
       {
@@ -236,7 +236,7 @@ export const dummyRecipesData: Recipe[] = [
       { name: "fresh thyme sprigs", quantity: "3-4", relatedIngredientId: "6" },
       {
         name: "olive oil",
-        quantity: "2 tablespoons",
+        quantity: "2 tbsp",
         relatedIngredientId: "7",
       },
       { name: "salt", quantity: "1 teaspoon", relatedIngredientId: "8" },
