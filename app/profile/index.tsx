@@ -14,7 +14,9 @@ import {
 import React from "react";
 import { View } from "react-native";
 import Animated, {
+  useAnimatedRef,
   useAnimatedScrollHandler,
+  useScrollViewOffset,
   useSharedValue,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -28,25 +30,21 @@ export default function ProfileScreen() {
   const { bottom } = useSafeAreaInsets();
 
   const router = useRouter();
-  const localScrollY = useSharedValue(0);
-
-  const scrollHandler = useAnimatedScrollHandler({
-    onScroll: (event) => {
-      localScrollY.value = event.contentOffset.y;
-    },
-  });
+  const scrollRef = useAnimatedRef<Animated.ScrollView>();
+  const scrollOffset = useScrollViewOffset(scrollRef);
 
   return (
     <Animated.ScrollView
       className="bg-background"
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingBottom: bottom }}
-      onScroll={scrollHandler}
+      // onScroll={scrollHandler}
+      ref={scrollRef}
       stickyHeaderIndices={[0]}
     >
-      <Header title="Profile" scrollY={localScrollY} />
+      <Header title="Profile" scrollOffset={scrollOffset} />
       <View className="p-6 pb-4 flex-row items-center mb-4 gap-3">
-        <H1 className="font-bowlby-one leading-[1.6]">Profile</H1>
+        <H1 className="font-bowlby-one pt-2">Profile</H1>
       </View>
 
       <SetupProfileCard />

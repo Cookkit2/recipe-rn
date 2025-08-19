@@ -23,21 +23,20 @@ import Shape20 from "./Shape20";
 import Shape21 from "./Shape21";
 import { View } from "react-native";
 import { P } from "~/components/ui/typography";
+import { cn } from "~/lib/tw-merge";
 
 interface ShapeContainerProps extends SvgProps {
   index: number;
   text: string;
-  textComponent?: React.ComponentType<{ className?: string; children: React.ReactNode }>;
+  textClassname?: string;
 }
 
 export default function ShapeContainer({
   index,
-  textComponent,
   text,
+  textClassname,
   ...props
 }: ShapeContainerProps) {
-  const TextComponent = textComponent || P;
-
   let currentShape;
   switch (index) {
     case 0:
@@ -112,15 +111,20 @@ export default function ShapeContainer({
     <View
       className="relative"
       style={{
-        width: parseInt(props.width as string),
-        height: parseInt(props.height as string),
+        width: props.width as any,
+        height: props.height as any,
       }}
     >
       {currentShape}
       <View className="absolute inset-0 flex items-center justify-center">
-        <TextComponent className="text-primary-foreground font-bowlby-one text-center">
+        <P
+          className={cn(
+            "text-primary-foreground font-bowlby-one text-center",
+            textClassname
+          )}
+        >
           {text}
-        </TextComponent>
+        </P>
       </View>
     </View>
   );

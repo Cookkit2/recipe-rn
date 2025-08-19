@@ -39,12 +39,14 @@ export default function BottomActionBar({
         <View className="flex-row items-center justify-between">
           <View className="flex-col">
             <View className="flex-row items-center gap-2">
-              <P className="text-foreground font-semibold">
+              <P className="font-urbanist-medium text-foreground font-semibold">
                 {readyByLabel.label}
               </P>
-              <P className="text-muted-foreground">({readyByLabel.time})</P>
+              <P className="font-urbanist-regular text-muted-foreground">
+                ({readyByLabel.time})
+              </P>
             </View>
-            <P className="text-muted-foreground">
+            <P className="font-urbanist-regular text-muted-foreground">
               {serving} {serving === 1 ? "serving" : "servings"}
             </P>
           </View>
@@ -53,7 +55,7 @@ export default function BottomActionBar({
             className="rounded-full px-6"
             onPress={() => router.push(`/recipes/${recipe.id}/steps`)}
           >
-            <H4 className="text-background">Cook</H4>
+            <H4 className="font-urbanist-semibold text-background">Cook</H4>
           </Button>
         </View>
       </View>

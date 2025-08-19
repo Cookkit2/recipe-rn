@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 import { XIcon } from "lucide-nativewind";
-import React, { useMemo } from "react";
 import { View } from "react-native";
+import { useDerivedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "~/components/ui/button";
 import { Progress } from "~/components/ui/progress";
@@ -12,19 +12,19 @@ export default function StepHeaderBar() {
   const { progress, stepPages } = useRecipeSteps();
   const router = useRouter();
 
-  const progressPercentage = useMemo(() => {
-    return (progress.value / stepPages.length) * 100;
-  }, [progress.value, stepPages.length]);
+  const progressPercentage = useDerivedValue(() => {
+    return (progress.value / (stepPages.length - 1)) * 100;
+  });
 
   return (
     <View
       className="flex flex-row items-center gap-4 px-4"
       style={{ paddingTop: top + 8 }}
     >
-      <Progress value={progressPercentage} className="flex-1 h-6" />
+      <Progress animatedValue={progressPercentage} className="flex-1 h-6" />
       <Button
         size="icon"
-        variant="secondary"
+        variant="ghost"
         className="rounded-full"
         onPress={() => router.back()}
       >

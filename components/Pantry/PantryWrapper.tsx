@@ -185,10 +185,10 @@ export default function PantryWrapper() {
         }}
       >
         <Animated.View
-          className="flex-row items-center my-4 gap-3"
+          className="flex-row items-center my-5 gap-3"
           style={headerGroupStyle}
         >
-          <H1 className="font-bowlby-one leading-[1.6]">Pantry</H1>
+          <H1 className="font-bowlby-one pt-2">Pantry</H1>
           <View className="flex-1" />
           <AddPantryItemModal />
           <MenuDropdown />

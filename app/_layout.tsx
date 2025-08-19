@@ -56,8 +56,8 @@ function AnimatedStack() {
   // const router = useRouter();
   // useEffect(() => {
   //   setTimeout(() => {
-  //     router.push("/recipes");
-  //     // router.push("/recipes/chicken-stir-fry/steps");
+  //     // router.push("/recipes");
+  //     router.push("/recipes/chicken-stir-fry/steps");
   //   }, 0);
   // }, [router]);
 
@@ -220,7 +220,7 @@ export default function RootLayout() {
       <RootScaleProvider>
         <SafeAreaProvider>
           <OverlayProvider>
-            <StatusBar style={isDarkColorScheme ? "light" : "dark"} />
+            <StatusBar animated />
             <AnimatedStack />
             <PortalHost />
             <Toaster />
