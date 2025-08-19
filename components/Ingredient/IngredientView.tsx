@@ -1,7 +1,11 @@
-import React, { useMemo } from "react";
+import React, { use, useMemo } from "react";
 import { ScrollView, useWindowDimensions, View, Text } from "react-native";
 import Animated, {
+  Extrapolation,
   FadeIn,
+  interpolate,
+  useAnimatedRef,
+  useAnimatedStyle,
   useScrollViewOffset,
   type AnimatedRef,
 } from "react-native-reanimated";
@@ -48,6 +52,17 @@ export default function IngredientView({
   const color = useImageColors(item.image_url);
   const colors = useColors();
 
+  const opacityStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      scrollOffset.value,
+      [0, windowWidth * 0.3, windowWidth * 0.7],
+      [0, 0, 1],
+      Extrapolation.CLAMP
+    );
+
+    return { opacity };
+  });
+
   const ingredientMeta = useMemo(() => getIngredientMeta(item), [item]);
 
   return (
@@ -56,7 +71,11 @@ export default function IngredientView({
       style={{ borderRadius }}
     >
       {/* App Bar Section */}
-      <IngredientAppBar />
+      <IngredientAppBar
+        id={item.id}
+        scrollOffset={scrollOffset}
+        title={item.name}
+      />
 
       {/* Content Section */}
       <ScrollComponent
@@ -66,7 +85,7 @@ export default function IngredientView({
         {/* Hero Image Section */}
         <Animated.View
           sharedTransitionTag="pantry-item-image-container"
-          className="overflow-hidden flex items-center justify-center"
+          className="relative overflow-hidden flex items-center justify-center"
           style={[
             {
               height: windowWidth,
@@ -76,13 +95,17 @@ export default function IngredientView({
           ]}
         >
           <OutlinedImage source={item.image_url} size={100} strokeWidth={4} />
+          <Animated.View
+            style={[opacityStyle, { height: windowWidth }]}
+            className="absolute inset-0 bg-background w-full"
+          />
         </Animated.View>
 
         {/* Header */}
         <View className="flex-1 bg-background rounded-t-3xl -mt-8 px-6 pt-8 border-continuous shadow-sm">
           <AnimatedH1
             entering={FadeIn}
-            className="font-bowlby-one leading-[1.6] text-center"
+            className="font-bowlby-one pt-2 text-center"
           >
             {item.name}
           </AnimatedH1>
@@ -115,7 +138,7 @@ export default function IngredientView({
               <Separator className="my-8" />
 
               <View className="gap-4">
-                <H4 className="font-bowlby-one text-foreground/80 leading-[1.6]">
+                <H4 className="font-bowlby-one text-foreground/70">
                   Steps to store
                 </H4>
                 {item.steps_to_store.map((step, index) => (

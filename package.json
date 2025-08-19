@@ -30,6 +30,7 @@
     "@react-native-async-storage/async-storage": "2.1.2",
     "@react-native-community/datetimepicker": "8.4.1",
     "@react-native-masked-view/masked-view": "0.3.2",
+    "@react-native-menu/menu": "1.2.2",
     "@react-navigation/native": "^7.0.0",
     "@rn-primitives/aspect-ratio": "^1.2.0",
     "@rn-primitives/avatar": "~1.2.0",
@@ -61,7 +62,7 @@
     "expo-sensors": "~14.1.4",
     "expo-splash-screen": "~0.30.8",
     "expo-status-bar": "~2.2.3",
-    "expo-system-ui": "~5.0.7",
+    "expo-system-ui": "^5.0.10",
     "lucide-nativewind": "^0.536.0",
     "moti": "^0.30.0",
     "nativewind": "^4.1.23",
@@ -74,6 +75,8 @@
     "react-native-gesture-handler": "~2.24.0",
     "react-native-hold-menu": "^0.1.6",
     "react-native-image-colors": "^2.5.0",
+    "react-native-ios-context-menu": "3.1.0",
+    "react-native-ios-utilities": "5.1.2",
     "react-native-mmkv": "^2.12.2",
     "react-native-reanimated": "~3.17.4",
     "react-native-reanimated-carousel": "^4.0.3",
@@ -88,6 +91,7 @@
     "tailwind-merge": "^2.2.1",
     "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",
+    "zeego": "^3.0.6",
     "zod": "^4.0.17"
   },
   "devDependencies": {

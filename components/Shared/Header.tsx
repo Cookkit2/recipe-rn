@@ -14,19 +14,16 @@ import { CURVES } from "~/constants/curves";
 
 interface HeaderProps {
   title: string;
-  scrollY: SharedValue<number>;
+  scrollOffset: SharedValue<number>;
 }
 
-export default function Header({ title, scrollY }: HeaderProps) {
+export default function Header({ title, scrollOffset }: HeaderProps) {
   const { top } = useSafeAreaInsets();
   const router = useRouter();
 
   // Animated styles for the title
   const titleAnimatedStyle = useAnimatedStyle(() => {
-    const scrollValue = scrollY.value;
-
-    // Animate translateY and opacity based on scroll threshold
-    const isVisible = scrollValue > 60;
+    const isVisible = scrollOffset.value > 60;
 
     const translateY = withTiming(
       isVisible ? 0 : 5,
@@ -42,13 +39,13 @@ export default function Header({ title, scrollY }: HeaderProps) {
   });
 
   const borderAnimatedStyle = useAnimatedStyle(() => {
-    const scrollValue = scrollY.value;
-    const isVisible = scrollValue > 20;
-    const borderWidth = withTiming(
+    const isVisible = scrollOffset.value > 20;
+
+    const borderBottomWidth = withTiming(
       isVisible ? 1 : 0,
       CURVES["expressive.fast.effects"]
     );
-    return { borderBottomWidth: borderWidth };
+    return { borderBottomWidth };
   });
 
   return (

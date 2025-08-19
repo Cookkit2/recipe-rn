@@ -18,12 +18,16 @@ const RotationCard = ({
   className,
   style,
   children,
+  scaleEnabled = true,
+  rotationEnabled = true,
 }: {
   index: number;
   total: number;
   className?: string;
   style?: ViewStyle;
   children: React.ReactNode;
+  scaleEnabled?: boolean;
+  rotationEnabled?: boolean;
 }) => {
   const scale = useSharedValue(0);
   const rotation = useSharedValue(90);
@@ -32,7 +36,7 @@ const RotationCard = ({
     // Animate to final values with delay based on index
     scale.value = withDelay(
       index * 100 + 100,
-      withSpring(stableThumbScale(index, total), {
+      withSpring(scaleEnabled ? stableThumbScale(index, total) : 1, {
         stiffness: 300,
         damping: 10,
       })
@@ -40,12 +44,12 @@ const RotationCard = ({
 
     rotation.value = withDelay(
       index * 100 + 100,
-      withSpring(stableThumbRotation(index, total), {
+      withSpring(rotationEnabled ? stableThumbRotation(index, total) : 0, {
         stiffness: 300,
         damping: 10,
       })
     );
-  }, [index, total, scale, rotation]);
+  }, [index, total, scale, rotation, scaleEnabled, rotationEnabled]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
