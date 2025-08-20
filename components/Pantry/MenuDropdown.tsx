@@ -8,8 +8,11 @@ import {
   DropdownMenuRoot,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu-native";
+import { useRouter } from "expo-router";
 
 export default function MenuDropdown() {
+  const router = useRouter();
+
   return (
     <DropdownMenuRoot>
       <DropdownMenuTrigger>
@@ -30,7 +33,10 @@ export default function MenuDropdown() {
             <FileClockIcon className="text-foreground" size={20} />
           </DropdownMenuItemIcon>
         </DropdownMenuItem>
-        <DropdownMenuItem key="profile">
+        <DropdownMenuItem
+          key="profile"
+          onSelect={() => router.push("/profile")}
+        >
           <DropdownMenuItemTitle>Profile</DropdownMenuItemTitle>
           <DropdownMenuItemIcon
             ios={{
@@ -44,7 +50,10 @@ export default function MenuDropdown() {
         </DropdownMenuItem>
 
         {/* TODO: To be remove later */}
-        <DropdownMenuItem key="onboarding">
+        <DropdownMenuItem
+          key="onboarding"
+          onSelect={() => router.push("/onboarding")}
+        >
           <DropdownMenuItemTitle>Onboarding</DropdownMenuItemTitle>
         </DropdownMenuItem>
       </DropdownMenuContent>

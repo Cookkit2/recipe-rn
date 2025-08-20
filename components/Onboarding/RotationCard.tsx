@@ -4,6 +4,7 @@ import Animated, {
   withDelay,
   withSpring,
   useAnimatedStyle,
+  type SharedValue,
 } from "react-native-reanimated";
 import type { ViewStyle } from "react-native";
 import { cn } from "~/lib/tw-merge";
@@ -20,6 +21,7 @@ const RotationCard = ({
   children,
   scaleEnabled = true,
   rotationEnabled = true,
+  counterRotationValue,
 }: {
   index: number;
   total: number;
@@ -28,6 +30,7 @@ const RotationCard = ({
   children: React.ReactNode;
   scaleEnabled?: boolean;
   rotationEnabled?: boolean;
+  counterRotationValue?: SharedValue<number>;
 }) => {
   const scale = useSharedValue(0);
   const rotation = useSharedValue(90);
@@ -52,10 +55,14 @@ const RotationCard = ({
   }, [index, total, scale, rotation, scaleEnabled, rotationEnabled]);
 
   const animatedStyle = useAnimatedStyle(() => {
+    const counterRotation = counterRotationValue?.value ?? 0;
+    const totalRotation = rotationEnabled
+      ? rotation.value - counterRotation
+      : -counterRotation;
     return {
-      transform: [{ scale: scale.value }, { rotate: `${rotation.value}deg` }],
+      transform: [{ scale: scale.value }, { rotate: `${totalRotation}deg` }],
     };
-  });
+  }, [rotationEnabled]);
 
   return (
     <Animated.View
