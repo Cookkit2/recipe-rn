@@ -10,13 +10,14 @@ import { dummyPantryItems } from "~/data/dummy-data";
 import useColors from "~/hooks/useColor";
 import RotationCard from "~/components/Onboarding/RotationCard";
 import OutlinedImage from "~/components/ui/outlined-image";
+import { SparkleIcon } from "lucide-nativewind";
 
 // Take first 10 items and assign different coordinates (0-100 scale)
 const previewImages = dummyPantryItems.slice(0, 10).map((item, index) => ({
   image: item.image_url,
   name: item.name,
   x: [15, 75, 40, 85, 15, 60, 90, 10, 50, 80][index] || 50,
-  y: [20, 30, 75, 15, 60, 80, 80, 90, 25, 50][index] || 50,
+  y: [20, 30, 45, 15, 60, 66, 73, 90, 25, 50][index] || 50,
 }));
 
 export default function OnboardingScreen() {
@@ -38,7 +39,7 @@ export default function OnboardingScreen() {
   };
 
   const complete = () => {
-    router.replace("/onboarding/step1");
+    router.replace("/onboarding/tutorial");
   };
 
   return (
@@ -79,12 +80,35 @@ export default function OnboardingScreen() {
                 </RotationCard>
               );
             })}
-          <View className="absolute inset-0 flex-1 justify-center">
-            <H1 className="text-center">Cookkit</H1>
-            <P className="mt-6 text-foreground/80 px-4 text-center">
+          <View className="absolute inset-0 flex-1 justify-end">
+            <H1 className="text-5xl font-bowlby-one text-center pt-4 tracking-wider">
+              Cookkit
+            </H1>
+            <P className="font-urbanist-medium text-foreground/80 px-4 text-center text-xl">
               Track your ingredients {"\n"}
-              and discover tailored recipes
+              Discover tailored recipes
             </P>
+            <View className="relative flex-row items-center justify-center mt-1 gap-2 shadow-sm">
+              <P className="font-urbanist-bold text-foreground/70">
+                Powered by
+              </P>
+              <View className="rounded-full px-3 py-[2] overflow-hidden border-border border-2 flex-row gap-1 items-center">
+                <LinearGradient
+                  colors={[colors.primary, "#FF6F4B"]}
+                  start={[0.1, 0.4]}
+                  end={[0.8, 0.9]}
+                  style={StyleSheet.absoluteFill}
+                />
+                <P className="font-urbanist-extrabold text-primary-foreground">
+                  AI
+                </P>
+                <SparkleIcon
+                  size={14}
+                  color={colors.primaryForeground}
+                  fill="#FFFFFF"
+                />
+              </View>
+            </View>
           </View>
         </View>
         <View className="px-6 pb-10">
@@ -92,13 +116,15 @@ export default function OnboardingScreen() {
             size="lg"
             variant="default"
             onPress={complete}
-            className="mt-12 rounded-2xl"
+            className="mt-12 rounded-2xl bg-foreground"
           >
-            <TextShimmer className="text-center" component={H4}>
-              Continue
+            <TextShimmer className="text-center">
+              <H4 className="text-background font-urbanist font-semibold">
+                Continue
+              </H4>
             </TextShimmer>
           </Button>
-          <P className="text-center text-foreground/80 mt-8 px-10">
+          <P className="font-urbanist-regular text-center text-foreground/80 mt-8 px-10">
             By using Cookkit, you agree to our{"\n"}
             <Text
               className="underline"
@@ -119,7 +145,6 @@ export default function OnboardingScreen() {
             >
               Privacy Policy
             </Text>
-            .
           </P>
         </View>
       </View>

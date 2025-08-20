@@ -1,6 +1,6 @@
 import "~/global.css";
 import React, { useEffect, useState } from "react";
-import { Stack, useRouter } from "expo-router";
+import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Appearance, Platform, View } from "react-native";
 import { useColorScheme } from "~/hooks/useColorScheme";
@@ -56,8 +56,8 @@ function AnimatedStack() {
   // const router = useRouter();
   // useEffect(() => {
   //   setTimeout(() => {
-  //     // router.push("/recipes");
-  //     router.push("/recipes/chicken-stir-fry/steps");
+  //     router.push("/onboarding");
+  //     // router.push("/recipes/chicken-stir-fry/steps");
   //   }, 0);
   // }, [router]);
 
@@ -105,14 +105,6 @@ function AnimatedStack() {
             name="(ingredient)/create"
             options={{ presentation: "modal", headerShown: false }}
           />
-          {/* <Stack.Screen
-            name="recipes"
-            options={{
-              headerShown: false,
-              presentation: "card",
-              animation: "fade",
-            }}
-          /> */}
           <Stack.Screen
             name="recipes/[recipeId]/index"
             options={{
@@ -155,11 +147,7 @@ function AnimatedStack() {
             options={{ headerShown: false }}
           />
           <Stack.Screen
-            name="onboarding/step1"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="onboarding/step2"
+            name="onboarding/tutorial"
             options={{ headerShown: false }}
           />
           <Stack.Screen name="+not-found" />
@@ -179,7 +167,6 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   usePlatformSpecificSetup();
-  const { isDarkColorScheme } = useColorScheme();
 
   // Comment out this block in development build
   // Font are loaded in app.json
