@@ -13,6 +13,7 @@ import { useState, useEffect } from "react";
 import { databaseFacade, initializeDatabase } from "~/data/database";
 import type { PantryItem } from "~/types/PantryItem";
 import type { PantryItemModel } from "~/data/database/models/PantryItem";
+import { storageFacade } from "~/data/storage";
 
 export default function IngredientScreen() {
   const { bottom: pb, top: pt } = useSafeAreaInsets();
@@ -24,7 +25,6 @@ export default function IngredientScreen() {
   const [pantryItems, setPantryItems] = useState<PantryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDatabaseReady, setIsDatabaseReady] = useState(false);
-  const [useDatabase, setUseDatabase] = useState(false); // Toggle for testing
 
   // Initialize database and load data
   useEffect(() => {
@@ -35,12 +35,11 @@ export default function IngredientScreen() {
         console.log('✅ Database initialized successfully');
         setIsDatabaseReady(true);
         
-        if (useDatabase) {
-          await loadPantryItems();
-        } else {
-          // Use dummy data for comparison
-          setPantryItems(dummyPantryItems);
-        }
+        // Check if this is first run and migrate dummy data if needed
+        await initializeDataOnFirstRun();
+        
+        // Load data from database
+        await loadPantryItems();
       } catch (error) {
         console.error('❌ Database initialization failed:', error);
         // Fallback to dummy data
@@ -51,14 +50,39 @@ export default function IngredientScreen() {
     };
 
     initializeApp();
-  }, [useDatabase]);
+  }, []);
 
-  // Refresh UI based on current mode
-  const refreshUI = async () => {
-    if (useDatabase) {
-      await loadPantryItems();
-    } else {
-      setPantryItems(dummyPantryItems);
+  // Check if this is first run and migrate dummy data
+  const initializeDataOnFirstRun = async () => {
+    try {
+      const hasInitialized = await storageFacade.getAsync<boolean>('pantry_data_migrated');
+      
+      if (!hasInitialized) {
+        console.log('🔄 First run detected, migrating dummy data to database...');
+        const pantryRepo = databaseFacade.pantryItems;
+        
+        // Convert dummy data to database format and create records
+        for (const dummyItem of dummyPantryItems) {
+          await pantryRepo.create({
+            name: dummyItem.name,
+            quantity: dummyItem.quantity,
+            unit: dummyItem.unit || 'units',
+            category: dummyItem.category,
+            type: dummyItem.type,
+            image_url: typeof dummyItem.image_url === 'string' ? dummyItem.image_url : 'default.jpg',
+            x: dummyItem.x,
+            y: dummyItem.y,
+            scale: dummyItem.scale,
+            expiry_date: dummyItem.expiry_date,
+          });
+        }
+        
+        // Mark as migrated
+        await storageFacade.setAsync('pantry_data_migrated', true);
+        console.log(`✅ Migrated ${dummyPantryItems.length} items to database`);
+      }
+    } catch (error) {
+      console.error('❌ Failed to migrate dummy data:', error);
     }
   };
 
@@ -97,11 +121,6 @@ export default function IngredientScreen() {
     try {
       if (!databaseFacade.isInitialized) {
         console.error('Database not initialized');
-        return;
-      }
-
-      if (!useDatabase) {
-        console.warn('Not in database mode, cannot add test data');
         return;
       }
 
@@ -150,8 +169,8 @@ export default function IngredientScreen() {
 
       console.log(`✅ Added ${testItems.length} test items to database`);
       
-      // Force refresh the UI
-      await refreshUI();
+      // Refresh the UI
+      await loadPantryItems();
     } catch (error) {
       console.error('❌ Failed to add test data:', error);
     }
@@ -161,11 +180,6 @@ export default function IngredientScreen() {
     try {
       if (!databaseFacade.isInitialized) {
         console.error('Database not initialized');
-        return;
-      }
-
-      if (!useDatabase) {
-        console.warn('Not in database mode, cannot clear database');
         return;
       }
 
@@ -185,8 +199,11 @@ export default function IngredientScreen() {
       const remainingItems = await pantryRepo.findAll();
       console.log(`📋 Items remaining after deletion: ${remainingItems.length}`);
       
-      // Force refresh the UI
-      await refreshUI();
+      // Reset migration flag to re-populate with dummy data on next load
+      await storageFacade.setAsync('pantry_data_migrated', false);
+      
+      // Refresh the UI
+      await loadPantryItems();
     } catch (error) {
       console.error('❌ Failed to clear database:', error);
     }
@@ -210,15 +227,6 @@ export default function IngredientScreen() {
     <View className="relative flex-1 bg-background" style={{ paddingTop: pt }}>
       <View className="px-6 flex-row items-center my-4 gap-3">
         <H1 className="font-bowlby-one leading-[1.6]">Pantry</H1>
-        {/* Database Testing Toggle */}
-        <View className="bg-gray-100 px-2 py-1 rounded">
-          <H4 
-            className={`text-xs ${useDatabase ? 'text-green-600' : 'text-blue-600'}`}
-            onPress={() => setUseDatabase(!useDatabase)}
-          >
-            {useDatabase ? 'DB' : 'DUMMY'}
-          </H4>
-        </View>
         <View className="flex-1" />
         <AddPantryItemModal />
         <MenuDropdown />
@@ -229,12 +237,12 @@ export default function IngredientScreen() {
         <H4 className={`text-xs ${isDatabaseReady ? 'text-green-600' : 'text-red-600'}`}>
           DB: {isDatabaseReady ? '✅ Ready' : '❌ Not Ready'} | 
           Items: {pantryItems.length} | 
-          Source: {useDatabase ? 'Database' : 'Dummy Data'}
+          Source: Database
         </H4>
       </View>
 
       {/* Testing Buttons */}
-      {isDatabaseReady && useDatabase && (
+      {isDatabaseReady && (
         <View className="px-6 mb-2 flex-row gap-2">
           <View className="bg-blue-100 px-3 py-1 rounded">
             <H4 className="text-xs text-blue-600" onPress={populateTestData}>
@@ -243,7 +251,7 @@ export default function IngredientScreen() {
           </View>
           <View className="bg-red-100 px-3 py-1 rounded">
             <H4 className="text-xs text-red-600" onPress={clearDatabase}>
-              Clear DB
+              Clear & Reset
             </H4>
           </View>
         </View>

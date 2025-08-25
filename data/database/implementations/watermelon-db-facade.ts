@@ -22,6 +22,7 @@ import { modelClasses } from '../models';
 import { Database } from '@nozbe/watermelondb';
 import SQLiteAdapter from '@nozbe/watermelondb/adapters/sqlite';
 import { synchronize } from '@nozbe/watermelondb/sync';
+import { storageFacade } from '../../storage';
 
 export interface WatermelonDBConfig {
   name: string;
@@ -66,7 +67,31 @@ export class WatermelonDBFacade implements IDatabaseFacade {
       // });
 
       // For now, create a mock database that simulates WatermelonDB behavior
-      const mockRecords = new Map<string, any>();
+      // with persistent storage using the storage facade
+      const dbKey = `watermelon_db_${watermelonConfig.name}`;
+      let mockRecords = new Map<string, any>();
+      
+      // Load existing data from persistent storage
+      try {
+        const existingData = await storageFacade.getAsync<string>(dbKey);
+        if (existingData) {
+          const recordsArray = JSON.parse(existingData);
+          mockRecords = new Map(recordsArray.map((r: any) => [r.id, r]));
+          console.log(`📚 Loaded ${mockRecords.size} records from persistent storage`);
+        }
+      } catch (error) {
+        console.warn('Failed to load existing database records:', error);
+      }
+      
+      // Helper function to persist data
+      const persistData = async () => {
+        try {
+          const recordsArray = Array.from(mockRecords.values());
+          await storageFacade.setAsync(dbKey, JSON.stringify(recordsArray));
+        } catch (error) {
+          console.error('Failed to persist database records:', error);
+        }
+      };
       
       this.database = {
         adapter: {
@@ -123,6 +148,34 @@ export class WatermelonDBFacade implements IDatabaseFacade {
             if (!record || record._isDeleted) {
               throw new Error(`Record ${id} not found`);
             }
+            
+            // Ensure the record has the required methods (needed for records loaded from storage)
+            if (!record.update) {
+              record.update = async (updater: (r: any) => void) => {
+                updater(record);
+                record.updated_at = new Date();
+                mockRecords.set(id, record);
+                await persistData();
+                return record;
+              };
+            }
+            
+            if (!record.destroyPermanently) {
+              record.destroyPermanently = async () => {
+                mockRecords.delete(id);
+                await persistData();
+              };
+            }
+            
+            if (!record.observe) {
+              record.observe = () => ({
+                subscribe: (callback: any) => {
+                  setTimeout(() => callback(record), 0);
+                  return { unsubscribe: () => {} };
+                },
+              });
+            }
+            
             return record;
           },
           
@@ -148,12 +201,14 @@ export class WatermelonDBFacade implements IDatabaseFacade {
                 updater(record);
                 record.updated_at = new Date();
                 mockRecords.set(id, record);
+                await persistData(); // Persist changes
                 return record;
               },
               
               // Add delete method
               destroyPermanently: async () => {
                 mockRecords.delete(id);
+                await persistData(); // Persist changes
               },
               
               // Add observe method
@@ -167,13 +222,17 @@ export class WatermelonDBFacade implements IDatabaseFacade {
             
             callback(record);
             mockRecords.set(id, record);
+            await persistData(); // Persist changes
             return record;
           },
         }),
         
         // Add utility method for testing
         _getMockRecords: () => mockRecords,
-        _clearAllRecords: () => mockRecords.clear(),
+        _clearAllRecords: async () => {
+          mockRecords.clear();
+          await persistData(); // Persist changes
+        },
       };
 
       console.log(`WatermelonDB initialized with database: ${watermelonConfig.name}`);

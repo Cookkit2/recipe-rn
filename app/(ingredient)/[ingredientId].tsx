@@ -17,16 +17,7 @@ export default function IngredientDetailsPage() {
   useEffect(() => {
     const findIngredient = async () => {
       try {
-        // First try to find in dummy data (for dummy mode)
-        const dummyItem = dummyPantryItems.find((item) => item.id === ingredientId);
-        
-        if (dummyItem) {
-          setItem(dummyItem);
-          setIsLoading(false);
-          return;
-        }
-
-        // If not found in dummy data and database is available, search in database
+        // First check if database is available and search there
         if (databaseFacade.isInitialized) {
           console.log(`🔍 Searching for ingredient in database: ${ingredientId}`);
           const pantryRepo = databaseFacade.pantryItems;
@@ -43,14 +34,24 @@ export default function IngredientDetailsPage() {
             };
             console.log(`✅ Found ingredient in database: ${uiItem.name}`);
             setItem(uiItem);
-          } else {
-            console.log(`❌ Ingredient not found in database: ${ingredientId}`);
-            setItem(null);
+            setIsLoading(false);
+            return;
           }
-        } else {
-          console.log(`❌ Database not initialized, ingredient not found: ${ingredientId}`);
-          setItem(null);
         }
+
+        // Fallback: try to find in dummy data (for development/testing)
+        const dummyItem = dummyPantryItems.find((item) => item.id === ingredientId);
+        
+        if (dummyItem) {
+          console.log(`📋 Found ingredient in dummy data: ${dummyItem.name}`);
+          setItem(dummyItem);
+          setIsLoading(false);
+          return;
+        }
+
+        // Not found anywhere
+        console.log(`❌ Ingredient not found: ${ingredientId}`);
+        setItem(null);
       } catch (error) {
         console.error('❌ Error finding ingredient:', error);
         setItem(null);
