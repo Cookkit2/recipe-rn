@@ -1,4 +1,4 @@
-import { StorageConfig } from "./storage";
+import type { StorageConfig } from "./storage";
 
 /**
  * Storage configuration for different environments and use cases
