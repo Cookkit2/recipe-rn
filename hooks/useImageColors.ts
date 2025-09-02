@@ -15,7 +15,7 @@ const useImageColors = (url: string | ImageSourcePropType | undefined) => {
 
       switch (color.platform) {
         case "android":
-          setImageColor(color.vibrant);
+          setImageColor(color.dominant);
           break;
         case "ios":
           setImageColor(color.background);

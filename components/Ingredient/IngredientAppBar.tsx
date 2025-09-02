@@ -12,7 +12,7 @@ import Animated, {
   withTiming,
   type SharedValue,
 } from "react-native-reanimated";
-import { setStatusBarStyle } from "expo-status-bar";
+import { SystemBars } from "react-native-edge-to-edge";
 import { CURVES } from "~/constants/curves";
 import { H4 } from "../ui/typography";
 
@@ -33,7 +33,7 @@ export default function IngredientAppBar({
 
   // Function to update status bar style (needs to run on JS thread)
   const updateStatusBarStyle = (isLight: boolean) => {
-    setStatusBarStyle(isLight ? "light" : "dark", true);
+    SystemBars.setStyle(isLight ? "light" : "dark");
   };
 
   // Subscribe to scroll offset changes using Reanimated

@@ -1,9 +1,11 @@
 import { Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScreenCornerRadius } from "react-native-screen-corner-radius";
 
 const useDeviceCornerRadius = () => {
+  const insets = useSafeAreaInsets();
   if (Platform.OS === "android") {
-    return ScreenCornerRadius || 0;
+    return insets.top;
   }
 
   if (Platform.OS === "ios") {

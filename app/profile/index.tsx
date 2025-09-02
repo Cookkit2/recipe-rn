@@ -15,9 +15,7 @@ import React from "react";
 import { View } from "react-native";
 import Animated, {
   useAnimatedRef,
-  useAnimatedScrollHandler,
   useScrollViewOffset,
-  useSharedValue,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "~/components/ui/button";
@@ -25,6 +23,7 @@ import { Card, CardContent } from "~/components/ui/card";
 import { H1, H4, P } from "~/components/ui/typography";
 import Header from "~/components/Shared/Header";
 import SetupProfileCard from "~/components/Profile/SetupProfileCard";
+import ListButton from "~/components/Shared/ListButton";
 
 export default function ProfileScreen() {
   const { bottom } = useSafeAreaInsets();
@@ -50,7 +49,7 @@ export default function ProfileScreen() {
       <SetupProfileCard />
       {/* <ProfileCard /> */}
 
-      <View className="flex-row px-6 mt-6 gap-6 ">
+      {/* <View className="flex-row px-6 mt-6 gap-6 ">
         <Card className="flex-1 rounded-3xl shadow-md shadow-foreground/10 border-none">
           <CardContent className="py-6 flex gap-3">
             <ChefHatIcon size={32} strokeWidth={1.618} />
@@ -63,7 +62,7 @@ export default function ProfileScreen() {
             <P className="font-urbanist-medium">Receipts</P>
           </CardContent>
         </Card>
-      </View>
+      </View> */}
       <Card className="flex-1 mx-6 mt-6 rounded-3xl shadow-md shadow-foreground/10 border-none">
         <CardContent className="flex-row py-6 gap-3">
           <View className="flex-1 gap-1">
@@ -92,18 +91,18 @@ export default function ProfileScreen() {
         <View className="mx-6 rounded-2xl bg-muted/50 overflow-hidden border-continuous">
           <CardContent className="flex p-0 py-2">
             <ListButton
-              title="Preference"
-              icon={<SettingsIcon size={24} strokeWidth={2.2} />}
-              onPress={() => router.push("/profile/preference")}
+              title="Preferences"
+              icon={SettingsIcon}
+              onPress={() => router.push("/profile/preferences")}
             />
             <ListButton
               title="Notification"
-              icon={<BellIcon size={24} strokeWidth={2} />}
+              icon={BellIcon}
               onPress={() => router.push("/profile/notification")}
             />
             <ListButton
               title="Photo Access"
-              icon={<ImagesIcon size={24} strokeWidth={2} />}
+              icon={ImagesIcon}
               onPress={() => router.push("/profile/photo-access")}
             />
           </CardContent>
@@ -118,12 +117,12 @@ export default function ProfileScreen() {
           <CardContent className="flex p-0 py-2">
             <ListButton
               title="What's new"
-              icon={<StarIcon size={24} strokeWidth={2.2} />}
+              icon={StarIcon}
               onPress={() => router.push("/profile/preference")}
             />
             <ListButton
               title="Contact Us"
-              icon={<MailIcon size={24} strokeWidth={2} />}
+              icon={MailIcon}
               onPress={() => router.push("/profile/notification")}
             />
           </CardContent>
@@ -138,12 +137,12 @@ export default function ProfileScreen() {
           <CardContent className="flex p-0 py-2">
             <ListButton
               title="Do you like Cookkit?"
-              icon={<MessageSquareHeartIcon size={24} strokeWidth={2} />}
+              icon={MessageSquareHeartIcon}
               onPress={() => router.push("/profile/photo-access")}
             />
             <ListButton
               title="About"
-              icon={<InfoIcon size={24} strokeWidth={2} />}
+              icon={InfoIcon}
               onPress={() => router.push("/profile/photo-access")}
             />
           </CardContent>
@@ -182,28 +181,3 @@ export default function ProfileScreen() {
     </Animated.ScrollView>
   );
 }
-
-const ListButton = ({
-  title,
-  icon,
-  onPress,
-  external,
-}: {
-  title: string;
-  icon?: React.ReactNode;
-  onPress: () => void;
-  external?: boolean;
-}) => (
-  <Button
-    variant="ghost"
-    className="flex flex-row justify-start items-center gap-6 px-6"
-    size="lg"
-    onPress={onPress}
-    enableAnimation={false}
-  >
-    {icon}
-    <P className="text-lg font-urbanist-semibold">{title}</P>
-    <View className="flex-1" />
-    {external && <ArrowUpRightIcon size={18} strokeWidth={1.618} />}
-  </Button>
-);

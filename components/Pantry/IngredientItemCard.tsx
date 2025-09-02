@@ -55,7 +55,7 @@ export const IngredientItemCard = ({ item }: { item: PantryItem }) => {
           <OutlinedImage source={item.image_url} size={64} />
         </Animated.View>
         <View className="mt-2">
-          <H4 className="opacity-80 mb-[0.5] font-urbanist-regular">
+          <H4 className="opacity-80 mb-[0.5] font-urbanist-bold">
             {item.name}
           </H4>
           <P className="text-muted-foreground font-urbanist-medium">

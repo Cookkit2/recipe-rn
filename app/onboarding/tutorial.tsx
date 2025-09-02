@@ -27,7 +27,7 @@ const STEP_CONTENT = [
 
 const BUTTON_LABELS = ["Continue", "Continue", "Let's Start"];
 
-export default function OnboardingStep1() {
+export default function Tutorial() {
   const colors = useColors();
   const router = useRouter();
 

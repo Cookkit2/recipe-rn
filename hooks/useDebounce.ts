@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 interface UseDebounceOptions {
   delay?: number;
@@ -21,6 +21,19 @@ const useDebounce = <T extends (...args: any[]) => any>(
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const callOnLeadingEdge = useRef(true);
+  const isMounted = useRef(true);
+
+  // Track mount state and clear any pending timeout on unmount
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
+  }, []);
 
   const debouncedCallback = useCallback(
     (...args: Parameters<T>) => {
@@ -32,13 +45,14 @@ const useDebounce = <T extends (...args: any[]) => any>(
       }
 
       // Call immediately if it's the leading edge and immediate is true
-      if (callNow) {
+      if (callNow && isMounted.current) {
         callOnLeadingEdge.current = false;
         callback(...args);
       }
 
       // Set new timeout
       timeoutRef.current = setTimeout(() => {
+        if (!isMounted.current) return;
         callOnLeadingEdge.current = true;
 
         // Call on trailing edge if immediate is false

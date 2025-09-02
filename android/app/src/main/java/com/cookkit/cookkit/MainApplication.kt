@@ -43,8 +43,9 @@ class MainApplication : Application(), ReactApplication {
 
   override fun onCreate() {
     super.onCreate()
-    // @generated begin xml-fonts-init - expo prebuild (DO NOT MODIFY) sync-da39a3ee5e6b4b0d3255bfef95601890afd80709
-
+    // @generated begin xml-fonts-init - expo prebuild (DO NOT MODIFY) sync-52c46c687abf53acf3cd2e60c541598e174d00d6
+    ReactFontManager.getInstance().addCustomFont(this, "Bowlby One", R.font.xml_bowlby_one)
+    ReactFontManager.getInstance().addCustomFont(this, "Urbanist", R.font.xml_urbanist)
     // @generated end xml-fonts-init
     SoLoader.init(this, OpenSourceMergedSoMapping)
     if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
