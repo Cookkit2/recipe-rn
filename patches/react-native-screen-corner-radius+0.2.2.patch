@@ -1,0 +1,29 @@
+diff --git a/node_modules/react-native-screen-corner-radius/android/src/main/java/com/reactnativescreencornerradius/ScreenCornerRadiusModule.kt b/node_modules/react-native-screen-corner-radius/android/src/main/java/com/reactnativescreencornerradius/ScreenCornerRadiusModule.kt
+index 5a20d30..7205e73 100644
+--- a/node_modules/react-native-screen-corner-radius/android/src/main/java/com/reactnativescreencornerradius/ScreenCornerRadiusModule.kt
++++ b/node_modules/react-native-screen-corner-radius/android/src/main/java/com/reactnativescreencornerradius/ScreenCornerRadiusModule.kt
+@@ -18,8 +18,6 @@ class ScreenCornerRadiusModule(reactContext: ReactApplicationContext) :
+     return "ScreenCornerRadius"
+   }
+ 
+-  override fun hasConstants(): Boolean = true
+-
+   override fun getConstants(): MutableMap<String, Any?> {
+     val cornerRadius = getCornerRadius()
+ 
+diff --git a/node_modules/react-native-screen-corner-radius/index.d.ts b/node_modules/react-native-screen-corner-radius/index.d.ts
+new file mode 100644
+index 0000000..3980f4a
+--- /dev/null
++++ b/node_modules/react-native-screen-corner-radius/index.d.ts
+@@ -0,0 +1,10 @@
++declare module "react-native-screen-corner-radius" {
++  /**
++   * The current device's screen's corner radius. May also be `0` if the corner radius couldn't be detected.
++   */
++  export const ScreenCornerRadius: number;
++  /**
++   * `true` if the screen has rounded corners, `false` otherwise.
++   */
++  export const IsScreenRounded: boolean;
++}

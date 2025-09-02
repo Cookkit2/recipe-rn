@@ -13,8 +13,8 @@ import Animated, {
 import { CURVES } from "~/constants/curves";
 
 interface HeaderProps {
-  title: string;
-  scrollOffset: SharedValue<number>;
+  title?: string;
+  scrollOffset?: SharedValue<number>;
 }
 
 export default function Header({ title, scrollOffset }: HeaderProps) {
@@ -23,7 +23,7 @@ export default function Header({ title, scrollOffset }: HeaderProps) {
 
   // Animated styles for the title
   const titleAnimatedStyle = useAnimatedStyle(() => {
-    const isVisible = scrollOffset.value > 60;
+    const isVisible = (scrollOffset?.value ?? 0) > 60;
 
     const translateY = withTiming(
       isVisible ? 0 : 5,
@@ -39,7 +39,7 @@ export default function Header({ title, scrollOffset }: HeaderProps) {
   });
 
   const borderAnimatedStyle = useAnimatedStyle(() => {
-    const isVisible = scrollOffset.value > 20;
+    const isVisible = (scrollOffset?.value ?? 0) > 20;
 
     const borderBottomWidth = withTiming(
       isVisible ? 1 : 0,
@@ -66,11 +66,13 @@ export default function Header({ title, scrollOffset }: HeaderProps) {
         />
       </Button>
       <View className="flex-1" />
-      <View className="overflow-hidden h-8 justify-center">
-        <Animated.View style={titleAnimatedStyle}>
-          <H4 className="font-urbanist-semibold tracking-wide">{title}</H4>
-        </Animated.View>
-      </View>
+      {title && (
+        <View className="overflow-hidden h-8 justify-center">
+          <Animated.View style={titleAnimatedStyle}>
+            <H4 className="font-urbanist-semibold tracking-wide">{title}</H4>
+          </Animated.View>
+        </View>
+      )}
       <View className="flex-1" />
       <Button size="icon" variant="ghost" className="rounded-full" disabled>
         <ArrowLeftIcon className="text-background" size={1} />

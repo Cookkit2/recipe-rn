@@ -22,8 +22,8 @@ const previewImages = dummyPantryItems.slice(0, 10).map((item, index) => ({
 
 export default function OnboardingScreen() {
   const router = useRouter();
-  const { top, bottom } = useSafeAreaInsets();
   const colors = useColors();
+  const { top, bottom } = useSafeAreaInsets();
   const [containerDimensions, setContainerDimensions] = useState({
     width: 0,
     height: 0,

@@ -8,7 +8,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        "bowlby-one": ["BowlbyOne-Regular"],
+        "bowlby-one": ["Bowlby One"],
         "urbanist-thin": ["Urbanist-Thin"],
         "urbanist-extralight": ["Urbanist-ExtraLight"],
         "urbanist-light": ["Urbanist-Light"],

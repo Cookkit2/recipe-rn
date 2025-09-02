@@ -13,9 +13,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.cookkit.cookkit"
@@ -29,7 +27,8 @@
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
-      ]
+      ],
+      "parentTheme": "Default"
     },
     "web": {
       "bundler": "metro",
@@ -40,27 +39,74 @@
       [
         "expo-font",
         {
-          "fonts": [
-            "./assets/fonts/BowlbyOne-Regular.ttf",
-            "./assets/fonts/Urbanist-Thin.ttf",
-            "./assets/fonts/Urbanist-ExtraLight.ttf",
-            "./assets/fonts/Urbanist-Light.ttf",
-            "./assets/fonts/Urbanist-Regular.ttf",
-            "./assets/fonts/Urbanist-Medium.ttf",
-            "./assets/fonts/Urbanist-SemiBold.ttf",
-            "./assets/fonts/Urbanist-Bold.ttf",
-            "./assets/fonts/Urbanist-ExtraBold.ttf",
-            "./assets/fonts/Urbanist-Black.ttf",
-            "./assets/fonts/Urbanist-ThinItalic.ttf",
-            "./assets/fonts/Urbanist-ExtraLightItalic.ttf",
-            "./assets/fonts/Urbanist-LightItalic.ttf",
-            "./assets/fonts/Urbanist-Italic.ttf",
-            "./assets/fonts/Urbanist-MediumItalic.ttf",
-            "./assets/fonts/Urbanist-SemiBoldItalic.ttf",
-            "./assets/fonts/Urbanist-BoldItalic.ttf",
-            "./assets/fonts/Urbanist-ExtraBoldItalic.ttf",
-            "./assets/fonts/Urbanist-BlackItalic.ttf"
-          ]
+          "android": {
+            "fonts": [
+              {
+                "fontFamily": "Bowlby One",
+                "fontDefinitions": [
+                  {
+                    "path": "./assets/fonts/BowlbyOne-Regular.ttf",
+                    "weight": 400
+                  }
+                ]
+              },
+              {
+                "fontFamily": "Urbanist",
+                "fontDefinitions": [
+                  {
+                    "path": "./assets/fonts/Urbanist-Thin.ttf",
+                    "weight": 100
+                  },
+                  {
+                    "path": "./assets/fonts/Urbanist-ExtraLight.ttf",
+                    "weight": 200
+                  },
+                  {
+                    "path": "./assets/fonts/Urbanist-Light.ttf",
+                    "weight": 300
+                  },
+                  {
+                    "path": "./assets/fonts/Urbanist-Regular.ttf",
+                    "weight": 400
+                  },
+                  {
+                    "path": "./assets/fonts/Urbanist-Medium.ttf",
+                    "weight": 500
+                  },
+                  {
+                    "path": "./assets/fonts/Urbanist-SemiBold.ttf",
+                    "weight": 600
+                  },
+                  {
+                    "path": "./assets/fonts/Urbanist-Bold.ttf",
+                    "weight": 700
+                  },
+                  {
+                    "path": "./assets/fonts/Urbanist-ExtraBold.ttf",
+                    "weight": 800
+                  },
+                  {
+                    "path": "./assets/fonts/Urbanist-Black.ttf",
+                    "weight": 900
+                  }
+                ]
+              }
+            ]
+          },
+          "ios": {
+            "fonts": [
+              "./assets/fonts/BowlbyOne-Regular.ttf",
+              "./assets/fonts/Urbanist-Thin.ttf",
+              "./assets/fonts/Urbanist-ExtraLight.ttf",
+              "./assets/fonts/Urbanist-Light.ttf",
+              "./assets/fonts/Urbanist-Regular.ttf",
+              "./assets/fonts/Urbanist-Medium.ttf",
+              "./assets/fonts/Urbanist-SemiBold.ttf",
+              "./assets/fonts/Urbanist-Bold.ttf",
+              "./assets/fonts/Urbanist-ExtraBold.ttf",
+              "./assets/fonts/Urbanist-Black.ttf"
+            ]
+          }
         }
       ],
       "expo-router",

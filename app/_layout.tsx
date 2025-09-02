@@ -1,7 +1,6 @@
 import "~/global.css";
 import React, { useEffect, useState } from "react";
-import { Stack } from "expo-router";
-import { StatusBar } from "expo-status-bar";
+import { Stack, useRouter } from "expo-router";
 import { Appearance, Platform, View } from "react-native";
 import { useColorScheme } from "~/hooks/useColorScheme";
 import { PortalHost } from "@rn-primitives/portal";
@@ -19,9 +18,8 @@ import { OverlayProvider } from "~/components/Overlay/OverlayContext";
 import { Image } from "expo-image";
 import { dummyRecipesData } from "~/data/dummy-recipes";
 import { Toaster } from "sonner-native";
-import * as SplashScreen from "expo-splash-screen";
 export { ErrorBoundary } from "expo-router";
-import { useFonts } from "expo-font";
+import { SystemBars } from "react-native-edge-to-edge";
 
 // const LIGHT_THEME: Theme = {
 //   ...DefaultTheme,
@@ -56,7 +54,7 @@ function AnimatedStack() {
   // const router = useRouter();
   // useEffect(() => {
   //   setTimeout(() => {
-  //     router.push("/onboarding");
+  //     router.push("/onboarding-pref");
   //     // router.push("/recipes/chicken-stir-fry/steps");
   //   }, 0);
   // }, [router]);
@@ -77,12 +75,15 @@ function AnimatedStack() {
         style={[animatedStyle]}
       >
         <Stack>
+          {/* ======== PANTRY ======== */}
           <Stack.Screen
             name="index"
             options={{
               headerShown: false,
             }}
           />
+
+          {/* ======== INGREDIENT ======== */}
           <Stack.Screen
             name="(ingredient)/[ingredientId]"
             options={{
@@ -92,12 +93,16 @@ function AnimatedStack() {
             }}
             listeners={{
               focus: () => {
-                setIsModalActive(true);
-                setCanBlur(true);
+                if (Platform.OS === "ios") {
+                  setIsModalActive(true);
+                  setCanBlur(true);
+                }
               },
               beforeRemove: () => {
-                setIsModalActive(false);
-                setCanBlur(false);
+                if (Platform.OS === "ios") {
+                  setIsModalActive(false);
+                  setCanBlur(false);
+                }
               },
             }}
           />
@@ -105,43 +110,46 @@ function AnimatedStack() {
             name="(ingredient)/create"
             options={{ presentation: "modal", headerShown: false }}
           />
+
+          {/* ======== RECIPE ======== */}
           <Stack.Screen
             name="recipes/[recipeId]/index"
-            options={{
-              presentation: "card",
-              headerShown: false,
-            }}
+            options={{ presentation: "card", headerShown: false }}
           />
           <Stack.Screen
             name="recipes/[recipeId]/steps"
-            options={{
-              presentation: "card",
-              headerShown: false,
-            }}
-          />
-          <Stack.Screen
-            name="profile/index"
-            options={{
-              presentation: "card",
-              headerShown: false,
-              // header: (props) => <Header title="Profile" />,
-            }}
+            options={{ presentation: "card", headerShown: false }}
           />
 
+          {/* ======== PROFILE ======== */}
+          <Stack.Screen
+            name="profile/index"
+            options={{ presentation: "card", headerShown: false }}
+          />
+          <Stack.Screen
+            name="profile/preferences/index"
+            options={{ presentation: "card", headerShown: false }}
+          />
+          <Stack.Screen
+            name="profile/preferences/dietary-preference"
+            options={{ presentation: "card", headerShown: false }}
+          />
+          <Stack.Screen
+            name="profile/preferences/allergy"
+            options={{ presentation: "card", headerShown: false }}
+          />
+
+          {/* ======== MISCELLANOUS ======== */}
           <Stack.Screen
             name="misc/terms"
-            options={{
-              headerShown: false,
-              presentation: "modal",
-            }}
+            options={{ presentation: "modal", headerShown: false }}
           />
           <Stack.Screen
             name="misc/privacy"
-            options={{
-              headerShown: false,
-              presentation: "modal",
-            }}
+            options={{ presentation: "modal", headerShown: false }}
           />
+
+          {/* ======== ONBOARDING ======== */}
           <Stack.Screen
             name="onboarding/index"
             options={{ headerShown: false }}
@@ -150,6 +158,25 @@ function AnimatedStack() {
             name="onboarding/tutorial"
             options={{ headerShown: false }}
           />
+
+          {/* ======== ONBOARDING PREFERENCES ======== */}
+          <Stack.Screen
+            name="onboarding-pref/index"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="onboarding-pref/appliances"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="onboarding-pref/allergy"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="onboarding-pref/dietary-preference"
+            options={{ headerShown: false }}
+          />
+
           <Stack.Screen name="+not-found" />
         </Stack>
       </Animated.View>
@@ -163,31 +190,31 @@ const usePlatformSpecificSetup = Platform.select({
   default: noop,
 });
 
-SplashScreen.preventAutoHideAsync();
+// SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   usePlatformSpecificSetup();
 
   // Comment out this block in development build
   // Font are loaded in app.json
-  const [loaded, error] = useFonts({
-    "bowlby-one": require("~/assets/fonts/BowlbyOne-Regular.ttf"),
-    "urbanist-thin": require("~/assets/fonts/Urbanist-Thin.ttf"),
-    "urbanist-extralight": require("~/assets/fonts/Urbanist-ExtraLight.ttf"),
-    "urbanist-light": require("~/assets/fonts/Urbanist-Light.ttf"),
-    "urbanist-regular": require("~/assets/fonts/Urbanist-Regular.ttf"),
-    "urbanist-medium": require("~/assets/fonts/Urbanist-Medium.ttf"),
-    "urbanist-semibold": require("~/assets/fonts/Urbanist-SemiBold.ttf"),
-    "urbanist-bold": require("~/assets/fonts/Urbanist-Bold.ttf"),
-    "urbanist-extrabold": require("~/assets/fonts/Urbanist-ExtraBold.ttf"),
-    "urbanist-black": require("~/assets/fonts/Urbanist-Black.ttf"),
-  });
+  // const [loaded, error] = useFonts({
+  //   "bowlby-one": require("~/assets/fonts/BowlbyOne-Regular.ttf"),
+  //   "urbanist-thin": require("~/assets/fonts/Urbanist-Thin.ttf"),
+  //   "urbanist-extralight": require("~/assets/fonts/Urbanist-ExtraLight.ttf"),
+  //   "urbanist-light": require("~/assets/fonts/Urbanist-Light.ttf"),
+  //   "urbanist-regular": require("~/assets/fonts/Urbanist-Regular.ttf"),
+  //   "urbanist-medium": require("~/assets/fonts/Urbanist-Medium.ttf"),
+  //   "urbanist-semibold": require("~/assets/fonts/Urbanist-SemiBold.ttf"),
+  //   "urbanist-bold": require("~/assets/fonts/Urbanist-Bold.ttf"),
+  //   "urbanist-extrabold": require("~/assets/fonts/Urbanist-ExtraBold.ttf"),
+  //   "urbanist-black": require("~/assets/fonts/Urbanist-Black.ttf"),
+  // });
 
-  useEffect(() => {
-    if (loaded || error) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded, error]);
+  // useEffect(() => {
+  //   if (loaded || error) {
+  //     SplashScreen.hideAsync();
+  //   }
+  // }, [loaded, error]);
 
   useEffect(() => {
     Image.prefetch([
@@ -198,16 +225,16 @@ export default function RootLayout() {
     ]);
   }, []);
 
-  if (!loaded && !error) {
-    return null;
-  }
+  // if (!loaded && !error) {
+  //   return null;
+  // }
 
   return (
     <GestureHandlerRootView className="flex-1 bg-background">
       <RootScaleProvider>
         <SafeAreaProvider>
           <OverlayProvider>
-            <StatusBar animated />
+            <SystemBars style="auto" />
             <AnimatedStack />
             <PortalHost />
             <Toaster />
