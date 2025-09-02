@@ -13,17 +13,20 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.cookkit.cookkit"
+      "bundleIdentifier": "app.cookkit.cookkit",
+      "appStoreId": "0000000000"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.cookkit.cookkit",
+      "package": "app.cookkit.cookkit",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
@@ -117,7 +120,8 @@
           "microphonePermission": "Allow Cookkit to access your microphone",
           "recordAudioAndroid": true
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
