@@ -167,7 +167,7 @@ export default function RecipeDetails() {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            className="flex-row gap-2 mt-2 -mx-6 px-12"
+            className="flex-row gap-2 mt-2 -mx-6 px-12 overflow-visible"
           >
             {previewImages.map((src, index) => (
               <RotationCard

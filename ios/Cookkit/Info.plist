@@ -28,7 +28,7 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>cookkit</string>
-          <string>com.cookkit.cookkit</string>
+          <string>app.cookkit.cookkit</string>
         </array>
       </dict>
     </array>
@@ -59,6 +59,7 @@
     </array>
     <key>UIAppFonts</key>
     <array>
+      <string>BowlbyOne-Regular.ttf</string>
       <string>Urbanist-Thin.ttf</string>
       <string>Urbanist-ExtraLight.ttf</string>
       <string>Urbanist-Light.ttf</string>
@@ -68,16 +69,6 @@
       <string>Urbanist-Bold.ttf</string>
       <string>Urbanist-ExtraBold.ttf</string>
       <string>Urbanist-Black.ttf</string>
-      <string>Urbanist-ThinItalic.ttf</string>
-      <string>Urbanist-ExtraLightItalic.ttf</string>
-      <string>Urbanist-LightItalic.ttf</string>
-      <string>Urbanist-Italic.ttf</string>
-      <string>Urbanist-MediumItalic.ttf</string>
-      <string>Urbanist-SemiBoldItalic.ttf</string>
-      <string>Urbanist-BoldItalic.ttf</string>
-      <string>Urbanist-ExtraBoldItalic.ttf</string>
-      <string>Urbanist-BlackItalic.ttf</string>
-      <string>BowlbyOne-Regular.ttf</string>
     </array>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>
