@@ -15,6 +15,9 @@ prepare_react_native_project!
 
 target 'Cookkit' do
   use_expo_modules!
+  
+  # WatermelonDB dependency
+  pod 'simdjson', path: '../node_modules/@nozbe/simdjson', modular_headers: true
 
   if ENV['EXPO_USE_COMMUNITY_AUTOLINKING'] == '1'
     config_command = ['node', '-e', "process.argv=['', '', 'config'];require('@react-native-community/cli').run()"];
