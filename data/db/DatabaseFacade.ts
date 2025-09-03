@@ -1,8 +1,6 @@
 import { database } from "./database";
 import {
-  recipeRepository,
-  baseIngredientRepository,
-  stockRepository,
+  initializeRepositories,
   RecipeRepository,
   BaseIngredientRepository,
   StockRepository,
@@ -19,32 +17,60 @@ export class DatabaseFacade {
   public readonly stock: StockRepository;
 
   constructor() {
-    this.recipes = recipeRepository;
-    this.ingredients = baseIngredientRepository;
-    this.stock = stockRepository;
+    // Initialize repositories on first access
+    const repositories = initializeRepositories();
+    this.recipes = repositories.recipeRepository!;
+    this.ingredients = repositories.baseIngredientRepository!;
+    this.stock = repositories.stockRepository!;
+
+    console.log("🔍 DatabaseFacade constructor complete");
+    console.log("  - recipes initialized:", !!this.recipes);
+    console.log("  - ingredients initialized:", !!this.ingredients);
+    console.log("  - stock initialized:", !!this.stock);
   }
 
   // Database management methods
   async clearAllData(): Promise<void> {
-    await database.action(async () => {
-      const collections = [
-        "recipes",
-        "recipe_steps",
-        "recipe_ingredients",
-        "base_ingredients",
-        "ingredient_categories",
-        "ingredient_category_assignments",
-        "stock",
-        "steps_to_store",
-        "users",
-      ];
+    console.log("🧹 Clearing all database data...");
 
-      for (const collectionName of collections) {
+    if (!database) {
+      throw new Error("Database is not initialized");
+    }
+
+    // Alternative approach without using database.action
+    const collections = [
+      "recipes",
+      "recipe_steps",
+      "recipe_ingredients",
+      "base_ingredients",
+      "ingredient_categories",
+      "ingredient_category_assignments",
+      "stock",
+      "steps_to_store",
+      "users",
+    ];
+
+    for (const collectionName of collections) {
+      try {
+        console.log(`🗑️ Clearing ${collectionName}...`);
         const collection = database.collections.get(collectionName);
-        const records = await collection.query().fetch();
-        await Promise.all(records.map((record) => record.destroyPermanently()));
+        const allRecords = await collection.query().fetch();
+        console.log(`  Found ${allRecords.length} records to delete`);
+
+        // Delete records using database.write
+        if (allRecords.length > 0) {
+          await database.write(async () => {
+            await Promise.all(
+              allRecords.map((record) => record.destroyPermanently())
+            );
+          });
+        }
+
+        console.log(`✅ Cleared ${collectionName}`);
+      } catch (error) {
+        console.warn(`⚠️ Error clearing ${collectionName}:`, error);
       }
-    });
+    }
   }
 
   async getDatabaseStats(): Promise<{
@@ -210,7 +236,10 @@ export class DatabaseFacade {
         await this.recipes.createRecipeWithDetails(recipeData);
         success++;
       } catch (error) {
-        errors.push({ recipe: recipeData, error: error.message });
+        errors.push({
+          recipe: recipeData,
+          error: error instanceof Error ? error.message : String(error),
+        });
       }
     }
 
@@ -238,26 +267,49 @@ export class DatabaseFacade {
     };
   }
 
-  // Health check
-  async isHealthy(): Promise<boolean> {
-    try {
-      // Try to perform a simple query
-      await this.recipes.count();
-      return true;
-    } catch (error) {
-      console.error("Database health check failed:", error);
-      return false;
-    }
-  }
-
   // Get raw database instance (for advanced operations)
   getDatabase() {
     return database;
   }
+
+  // Health check method for debugging
+  async isHealthy(): Promise<boolean> {
+    try {
+      console.log("🔍 DatabaseFacade health check");
+      console.log("  - recipes:", !!this.recipes);
+      console.log("  - ingredients:", !!this.ingredients);
+      console.log("  - stock:", !!this.stock);
+
+      // Test basic database connectivity
+      const collections = database.collections;
+      console.log("  - database collections:", Object.keys(collections.map));
+
+      // Test if we can query the database
+      const recipeCount = await this.recipes.count();
+      console.log("  - recipe count:", recipeCount);
+
+      return true;
+    } catch (error) {
+      console.error("❌ Database health check failed:", error);
+      return false;
+    }
+  }
 }
 
-// Export a singleton instance
-export const databaseFacade = new DatabaseFacade();
+// Export a singleton instance with fallback
+console.log("🔍 Creating DatabaseFacade singleton...");
+
+export let databaseFacade: DatabaseFacade;
+
+try {
+  console.log("🔍 Initializing DatabaseFacade...");
+  databaseFacade = new DatabaseFacade();
+  console.log("✅ DatabaseFacade created successfully");
+} catch (error) {
+  console.error("❌ Failed to create DatabaseFacade:", error);
+  console.error("Error details:", error);
+  throw error;
+}
 
 // Export for type usage
 export default DatabaseFacade;

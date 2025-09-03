@@ -97,10 +97,10 @@ export class BaseIngredientRepository extends BaseRepository<BaseIngredient> {
       const ingredient = await this.findById(id);
       if (!ingredient) return null;
 
-      const assignments = await ingredient.categoryAssignments.fetch();
+      const assignments = await ingredient.categoryAssignments;
       const categories = await Promise.all(
         assignments.map(async (assignment) => {
-          const category = await assignment.category.fetch();
+          const category = await assignment.category;
           return category.name;
         })
       );
@@ -120,19 +120,20 @@ export class BaseIngredientRepository extends BaseRepository<BaseIngredient> {
     ingredientId: string,
     categoryIds: string[]
   ): Promise<void> {
-    await database.action(async () => {
+    await database.write(async () => {
       const assignmentsCollection =
         database.collections.get<IngredientCategoryAssignment>(
           "ingredient_category_assignments"
         );
 
       // Remove existing assignments
-      const existingAssignments = await assignmentsCollection
-        .query(Q.where("ingredient_id", ingredientId))
-        .fetch();
+      const existingAssignments = await assignmentsCollection.query().fetch();
+      const toRemove = existingAssignments.filter(
+        (a) => (a as any).ingredientId === ingredientId
+      );
 
       await Promise.all(
-        existingAssignments.map((assignment) => assignment.destroyPermanently())
+        toRemove.map((assignment) => assignment.destroyPermanently())
       );
 
       // Create new assignments
@@ -184,7 +185,7 @@ export class BaseIngredientRepository extends BaseRepository<BaseIngredient> {
     ingredientId: string,
     synonym: string
   ): Promise<BaseIngredient> {
-    return await database.action(async () => {
+    return await database.write(async () => {
       const ingredient = await this.collection.find(ingredientId);
       return await ingredient.update((r: any) => {
         const currentSynonyms = r.synonyms || [];
@@ -200,7 +201,7 @@ export class BaseIngredientRepository extends BaseRepository<BaseIngredient> {
     ingredientId: string,
     synonym: string
   ): Promise<BaseIngredient> {
-    return await database.action(async () => {
+    return await database.write(async () => {
       const ingredient = await this.collection.find(ingredientId);
       return await ingredient.update((r: any) => {
         r.synonyms = (r.synonyms || []).filter((s: string) => s !== synonym);

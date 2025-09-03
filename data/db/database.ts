@@ -57,11 +57,15 @@ const createAdapter = () => {
 // Create the database instance
 const adapter = createAdapter();
 
+console.log("🔍 Creating WatermelonDB database instance...");
+
 export const database = new Database({
   adapter,
   modelClasses,
-  actionsEnabled: true, // Enable database actions for better performance
+  // Note: Removed actionsEnabled as it may not be supported in this version
 });
+
+console.log("✅ WatermelonDB database created successfully");
 
 // Helper function to get collections
 export const collections = {
@@ -77,6 +81,8 @@ export const collections = {
   stepsToStore: database.collections.get("steps_to_store"),
   users: database.collections.get("users"),
 };
+
+console.log("✅ Database collections initialized");
 
 // Export database as default
 export default database;

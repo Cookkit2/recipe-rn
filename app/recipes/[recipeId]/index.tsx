@@ -1,6 +1,11 @@
 import { useLocalSearchParams } from "expo-router";
-import React, { useMemo, useState } from "react";
-import { View, StyleSheet, useWindowDimensions } from "react-native";
+import React, { useMemo, useState, useEffect } from "react";
+import {
+  View,
+  StyleSheet,
+  useWindowDimensions,
+  ActivityIndicator,
+} from "react-native";
 import Animated, {
   Extrapolation,
   FadeIn,
@@ -11,8 +16,8 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { H1, H4, P } from "~/components/ui/typography";
-import { dummyPantryItems } from "~/data/dummy-data";
-import { getRecipeById } from "~/data/dummy-recipes";
+import { useRecipeStore } from "~/store/RecipeContext";
+import { usePantryStore } from "~/store/PantryContext";
 import { ScrollView } from "react-native-gesture-handler";
 import { ClockIcon, StarIcon } from "lucide-nativewind";
 import { OutlinedImage } from "~/components/ui/outlined-image";
@@ -23,6 +28,7 @@ import RecipeServing from "~/components/Recipe/Details/RecipeServing";
 import RecipeNutrition from "~/components/Recipe/Details/RecipeNutrition";
 import BottomActionBar from "~/components/Recipe/Details/BottomActionBar";
 import useHeaderAnimatedStyle from "~/hooks/animation/useHeaderAnimatedStyle";
+import type { Recipe } from "~/types/Recipe";
 
 const AnimatedH1 = Animated.createAnimatedComponent(H1);
 
@@ -31,28 +37,53 @@ export default function RecipeDetails() {
   const { width: windowWidth } = useWindowDimensions();
   const { bottom } = useSafeAreaInsets();
 
+  const {
+    getRecipeById,
+    isLoading: recipeLoading,
+    error: recipeError,
+  } = useRecipeStore();
+  const { filteredPantryItems, isLoading: pantryLoading } = usePantryStore();
+
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const scrollOffset = useScrollViewOffset(scrollRef);
   const headerAnimatedStyle = useHeaderAnimatedStyle(scrollOffset, windowWidth);
 
   const [serving, setServing] = useState(1);
+  const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const recipe = useMemo(
-    () => (typeof recipeId === "string" ? getRecipeById(recipeId) : undefined),
-    [recipeId]
-  );
+  // Load recipe from database
+  useEffect(() => {
+    if (typeof recipeId === "string") {
+      const loadRecipe = async () => {
+        setIsLoading(true);
+        try {
+          const loadedRecipe = await getRecipeById(recipeId);
+          setRecipe(loadedRecipe);
+        } catch (err) {
+          console.error("Error loading recipe:", err);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      loadRecipe();
+    }
+  }, [recipeId, getRecipeById]);
 
   const totalMinutes = useMemo(() => {
     return (recipe?.prepMinutes ?? 0) + (recipe?.cookMinutes ?? 0);
   }, [recipe]);
 
   const previewImages = useMemo(() => {
-    const count = Math.min(recipe?.ingredients.length ?? 0);
-    const images = dummyPantryItems
+    if (!recipe?.ingredients.length) return [];
+
+    const count = Math.min(recipe.ingredients.length, 8); // Limit to reasonable number
+    const images = filteredPantryItems
       .map((item) => item.image_url)
+      .filter((url) => typeof url === "string")
       .slice(0, count);
-    return images;
-  }, [recipe?.ingredients.length]);
+    return images as string[];
+  }, [recipe?.ingredients.length, filteredPantryItems]);
 
   const opacityStyle = useAnimatedStyle(() => {
     const opacity = interpolate(
@@ -69,10 +100,33 @@ export default function RecipeDetails() {
     setServing(newServing);
   };
 
+  // Loading state
+  if (isLoading || recipeLoading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator size="large" />
+        <P className="mt-4 text-muted-foreground">Loading recipe...</P>
+      </View>
+    );
+  }
+
+  // Error state
+  if (recipeError) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background">
+        <P className="text-destructive text-center">{recipeError}</P>
+      </View>
+    );
+  }
+
+  // Recipe not found
   if (!recipe) {
     return (
-      <View className="flex-1">
-        <P>Recipe not found</P>
+      <View className="flex-1 items-center justify-center bg-background">
+        <H1 className="text-center">Recipe not found</H1>
+        <P className="mt-2 text-muted-foreground text-center">
+          The recipe you're looking for doesn't exist.
+        </P>
       </View>
     );
   }

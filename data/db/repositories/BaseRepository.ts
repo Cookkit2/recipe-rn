@@ -48,7 +48,7 @@ export abstract class BaseRepository<T extends Model> {
   }
 
   async create(data: Partial<T> & Record<string, any>): Promise<T> {
-    return await database.action(async () => {
+    return await database.write(async () => {
       return await this.collection.create((record: any) => {
         Object.keys(data).forEach((key) => {
           if (data[key] !== undefined) {
@@ -60,7 +60,7 @@ export abstract class BaseRepository<T extends Model> {
   }
 
   async update(id: string, data: Partial<T> & Record<string, any>): Promise<T> {
-    return await database.action(async () => {
+    return await database.write(async () => {
       const record = await this.collection.find(id);
       return await record.update((r: any) => {
         Object.keys(data).forEach((key) => {
@@ -73,16 +73,21 @@ export abstract class BaseRepository<T extends Model> {
   }
 
   async delete(id: string): Promise<void> {
-    await database.action(async () => {
+    await database.write(async () => {
       const record = await this.collection.find(id);
       await record.destroyPermanently();
     });
   }
 
   async deleteMany(ids: string[]): Promise<void> {
-    await database.action(async () => {
-      const records = await this.collection.query().where("id", ids).fetch();
-      await Promise.all(records.map((record) => record.destroyPermanently()));
+    await database.write(async () => {
+      const records = await this.collection.query().fetch();
+      const recordsToDelete = records.filter((record) =>
+        ids.includes(record.id)
+      );
+      await Promise.all(
+        recordsToDelete.map((record) => record.destroyPermanently())
+      );
     });
   }
 
