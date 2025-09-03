@@ -1,35 +1,72 @@
 import { IStorage, StorageError, JSONSerializer } from "../types";
+import { Database, Model } from "@nozbe/watermelondb";
+import { field, date, writer } from "@nozbe/watermelondb/decorators";
+import { appSchema, tableSchema } from "@nozbe/watermelondb";
+import SQLiteAdapter from "@nozbe/watermelondb/adapters/sqlite";
+import LokiJSAdapter from "@nozbe/watermelondb/adapters/lokijs";
+import { Platform } from "react-native";
+import { Q } from "@nozbe/watermelondb";
 
-// This is a placeholder implementation for WatermelonDB
-// You would need to install and configure WatermelonDB:
-// npm install @nozbe/watermelondb @nozbe/sqlite-adapter
+// KeyValue model for storing key-value pairs
+class KeyValue extends Model {
+  static table = "key_values";
+
+  @field("key") key!: string;
+  @field("value") value!: string;
+  @date("created_at") createdAt!: Date;
+  @date("updated_at") updatedAt!: Date;
+
+  @writer async updateValue(newValue: string): Promise<KeyValue> {
+    return this.update((record) => {
+      record.value = newValue;
+    });
+  }
+}
+
+// Schema for key-value storage
+const keyValueSchema = appSchema({
+  version: 1,
+  tables: [
+    tableSchema({
+      name: "key_values",
+      columns: [
+        { name: "key", type: "string", isIndexed: true },
+        { name: "value", type: "string" },
+        { name: "created_at", type: "number" },
+        { name: "updated_at", type: "number" },
+      ],
+    }),
+  ],
+});
 
 export class WatermelonStorage implements IStorage {
-  private database: any; // Replace with actual WatermelonDB Database type
+  private database: Database;
+  private collection: any;
   private serializer = new JSONSerializer();
 
   constructor(options?: { databaseName?: string }) {
-    // Initialize WatermelonDB
-    // This is a placeholder - implement based on WatermelonDB setup
-    throw new Error(
-      "WatermelonStorage requires implementation with WatermelonDB"
-    );
+    // Create adapter based on platform
+    const adapter =
+      Platform.OS === "web"
+        ? new LokiJSAdapter({
+            schema: keyValueSchema,
+            useWebWorker: false,
+            useIncrementalIndexedDB: true,
+            dbName: options?.databaseName || "watermelon_storage",
+          })
+        : new SQLiteAdapter({
+            schema: keyValueSchema,
+            dbName: options?.databaseName || "watermelon_storage",
+            jsi: true,
+          });
 
-    // Example initialization (pseudo-code):
-    // import { Database } from '@nozbe/watermelondb'
-    // import SQLiteAdapter from '@nozbe/watermelondb/adapters/sqlite'
-    // import { KeyValueModel } from './models/KeyValueModel'
-    //
-    // const adapter = new SQLiteAdapter({
-    //   dbName: options?.databaseName || 'storage',
-    //   schema: mySchema,
-    // });
-    //
-    // this.database = new Database({
-    //   adapter,
-    //   modelClasses: [KeyValueModel],
-    //   actionsEnabled: true,
-    // });
+    this.database = new Database({
+      adapter,
+      modelClasses: [KeyValue],
+      actionsEnabled: true,
+    });
+
+    this.collection = this.database.collections.get("key_values");
   }
 
   // Sync methods (not recommended for WatermelonDB)
@@ -78,14 +115,15 @@ export class WatermelonStorage implements IStorage {
   // Async methods
   async getAsync<T>(key: string): Promise<T | null> {
     try {
-      // Example WatermelonDB query (pseudo-code):
-      // const keyValueCollection = this.database.collections.get('key_values');
-      // const record = await keyValueCollection.find(key);
-      // return record ? this.serializer.deserialize<T>(record.value) : null;
+      const records = await this.collection.query(Q.where("key", key)).fetch();
 
-      throw new Error("WatermelonDB getAsync not implemented");
+      if (records.length === 0) {
+        return null;
+      }
+
+      return this.serializer.deserialize<T>(records[0].value);
     } catch (error) {
-      if (error.message.includes("not found")) {
+      if (error.message && error.message.includes("not found")) {
         return null;
       }
       throw new StorageError(
@@ -97,23 +135,24 @@ export class WatermelonStorage implements IStorage {
 
   async setAsync<T>(key: string, value: T): Promise<void> {
     try {
-      // Example WatermelonDB upsert (pseudo-code):
-      // await this.database.action(async () => {
-      //   const keyValueCollection = this.database.collections.get('key_values');
-      //   try {
-      //     const existing = await keyValueCollection.find(key);
-      //     await existing.update(record => {
-      //       record.value = this.serializer.serialize(value);
-      //     });
-      //   } catch {
-      //     await keyValueCollection.create(record => {
-      //       record.id = key;
-      //       record.value = this.serializer.serialize(value);
-      //     });
-      //   }
-      // });
+      await this.database.action(async () => {
+        const existing = await this.collection
+          .query(Q.where("key", key))
+          .fetch();
 
-      throw new Error("WatermelonDB setAsync not implemented");
+        const serializedValue = this.serializer.serialize(value);
+
+        if (existing.length > 0) {
+          // Update existing record
+          await existing[0].updateValue(serializedValue);
+        } else {
+          // Create new record
+          await this.collection.create((record: any) => {
+            record.key = key;
+            record.value = serializedValue;
+          });
+        }
+      });
     } catch (error) {
       throw new StorageError(
         `Failed to set key "${key}": ${error}`,
@@ -124,16 +163,17 @@ export class WatermelonStorage implements IStorage {
 
   async deleteAsync(key: string): Promise<void> {
     try {
-      // Example WatermelonDB delete (pseudo-code):
-      // await this.database.action(async () => {
-      //   const keyValueCollection = this.database.collections.get('key_values');
-      //   const record = await keyValueCollection.find(key);
-      //   await record.destroyPermanently();
-      // });
+      await this.database.action(async () => {
+        const records = await this.collection
+          .query(Q.where("key", key))
+          .fetch();
 
-      throw new Error("WatermelonDB deleteAsync not implemented");
+        if (records.length > 0) {
+          await records[0].destroyPermanently();
+        }
+      });
     } catch (error) {
-      if (error.message.includes("not found")) {
+      if (error.message && error.message.includes("not found")) {
         return; // Key doesn't exist, nothing to delete
       }
       throw new StorageError(
@@ -145,14 +185,12 @@ export class WatermelonStorage implements IStorage {
 
   async clearAsync(): Promise<void> {
     try {
-      // Example WatermelonDB clear (pseudo-code):
-      // await this.database.action(async () => {
-      //   const keyValueCollection = this.database.collections.get('key_values');
-      //   const allRecords = await keyValueCollection.query().fetch();
-      //   await Promise.all(allRecords.map(record => record.destroyPermanently()));
-      // });
-
-      throw new Error("WatermelonDB clearAsync not implemented");
+      await this.database.action(async () => {
+        const allRecords = await this.collection.query().fetch();
+        await Promise.all(
+          allRecords.map((record: any) => record.destroyPermanently())
+        );
+      });
     } catch (error) {
       throw new StorageError(`Failed to clear storage: ${error}`, "watermelon");
     }
@@ -160,12 +198,8 @@ export class WatermelonStorage implements IStorage {
 
   async getAllKeysAsync(): Promise<string[]> {
     try {
-      // Example WatermelonDB query (pseudo-code):
-      // const keyValueCollection = this.database.collections.get('key_values');
-      // const records = await keyValueCollection.query().fetch();
-      // return records.map(record => record.id);
-
-      throw new Error("WatermelonDB getAllKeysAsync not implemented");
+      const records = await this.collection.query().fetch();
+      return records.map((record: any) => record.key);
     } catch (error) {
       throw new StorageError(`Failed to get all keys: ${error}`, "watermelon");
     }
