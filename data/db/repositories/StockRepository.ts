@@ -81,7 +81,7 @@ export class StockRepository extends BaseRepository<Stock> {
       const stock = await this.findById(stockId);
       if (!stock) return null;
 
-      const ingredient = await stock.baseIngredient.fetch();
+      const ingredient = await stock.baseIngredient;
 
       return {
         stock,
@@ -99,7 +99,7 @@ export class StockRepository extends BaseRepository<Stock> {
 
     const results = await Promise.all(
       stockItems.map(async (stock) => {
-        const ingredient = await stock.baseIngredient.fetch();
+        const ingredient = await stock.baseIngredient;
         return { stock, ingredient };
       })
     );

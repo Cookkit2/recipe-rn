@@ -20,6 +20,9 @@ import { dummyRecipesData } from "~/data/dummy-recipes";
 import { Toaster } from "sonner-native";
 export { ErrorBoundary } from "expo-router";
 import { SystemBars } from "react-native-edge-to-edge";
+import { useFonts } from "expo-font";
+import { PantryProvider } from "~/store/PantryContext";
+import { RecipeProvider } from "~/store/RecipeContext";
 
 // const LIGHT_THEME: Theme = {
 //   ...DefaultTheme,
@@ -158,7 +161,6 @@ function AnimatedStack() {
             name="onboarding/tutorial"
             options={{ headerShown: false }}
           />
-
           {/* ======== ONBOARDING PREFERENCES ======== */}
           <Stack.Screen
             name="onboarding-pref/index"
@@ -176,7 +178,7 @@ function AnimatedStack() {
             name="onboarding-pref/dietary-preference"
             options={{ headerShown: false }}
           />
-
+          <Stack.Screen name="debug" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" />
         </Stack>
       </Animated.View>
@@ -233,12 +235,16 @@ export default function RootLayout() {
     <GestureHandlerRootView className="flex-1 bg-background">
       <RootScaleProvider>
         <SafeAreaProvider>
-          <OverlayProvider>
-            <SystemBars style="auto" />
-            <AnimatedStack />
-            <PortalHost />
-            <Toaster />
-          </OverlayProvider>
+          <PantryProvider>
+            <RecipeProvider>
+              <OverlayProvider>
+                <SystemBars style="auto" />
+                <AnimatedStack />
+                <PortalHost />
+                <Toaster />
+              </OverlayProvider>
+            </RecipeProvider>
+          </PantryProvider>
         </SafeAreaProvider>
       </RootScaleProvider>
     </GestureHandlerRootView>

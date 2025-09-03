@@ -99,8 +99,8 @@ export class RecipeRepository extends BaseRepository<Recipe> {
       if (!recipe) return null;
 
       const [steps, ingredients] = await Promise.all([
-        recipe.steps.fetch(),
-        recipe.ingredients.fetch(),
+        recipe.steps,
+        recipe.ingredients,
       ]);
 
       return {
@@ -118,7 +118,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
   async createRecipeWithDetails(
     data: CreateRecipeWithDetailsData
   ): Promise<Recipe> {
-    return await database.action(async () => {
+    return await database.write(async () => {
       // Create recipe
       const recipe = await this.collection.create((r: any) => {
         Object.keys(data.recipe).forEach((key) => {

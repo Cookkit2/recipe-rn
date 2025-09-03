@@ -5,21 +5,14 @@ import { StorageConfig } from "./storage";
  * You can easily switch between different storage implementations here
  */
 export const storageConfigs: Record<string, StorageConfig> = {
-  // Production configuration with MMKV
+  // Production configuration with AsyncStorage (Expo Go compatible)
   production: {
-    type: "mmkv",
-    options: {
-      id: "recipe-app-production",
-      // encryptionKey: process.env.STORAGE_ENCRYPTION_KEY, // Add encryption for production
-    },
+    type: "async-storage",
   },
 
-  // Development configuration
+  // Development configuration with AsyncStorage (Expo Go compatible)
   development: {
-    type: "mmkv",
-    options: {
-      id: "recipe-app-dev",
-    },
+    type: "async-storage",
   },
 
   // AsyncStorage fallback (for compatibility)
@@ -53,13 +46,9 @@ export const storageConfigs: Record<string, StorageConfig> = {
     },
   },
 
-  // Encrypted storage for sensitive data
+  // Encrypted storage fallback (using AsyncStorage in Expo Go)
   encrypted: {
-    type: "mmkv",
-    options: {
-      id: "recipe-app-encrypted",
-      encryptionKey: "your-super-secret-encryption-key-here",
-    },
+    type: "async-storage",
   },
 };
 
@@ -74,10 +63,10 @@ export function getStorageConfig(): StorageConfig {
   // - Device capabilities
 
   if (__DEV__) {
-    return storageConfigs.development;
+    return storageConfigs.development!;
   }
 
-  return storageConfigs.production;
+  return storageConfigs.production!;
 }
 
 /**

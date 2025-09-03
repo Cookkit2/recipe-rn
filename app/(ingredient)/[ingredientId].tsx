@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useLocalSearchParams } from "expo-router";
-import { Platform, View } from "react-native";
-import { dummyPantryItems } from "~/data/dummy-data";
-import { H1 } from "~/components/ui/typography";
+import { View, ActivityIndicator, Platform } from "react-native";
+import { H1, P } from "~/components/ui/typography";
+import { usePantryStore } from "~/store/PantryContext";
 import IngredientView from "~/components/Ingredient/IngredientView";
 import SheetModalWrapper from "~/components/SheetModal/SheetModalWrapper";
 import type { PantryItem } from "~/types/PantryItem";
@@ -10,13 +10,36 @@ import Animated, { useAnimatedRef } from "react-native-reanimated";
 
 export default function IngredientDetailsPage() {
   const { ingredientId } = useLocalSearchParams<{ ingredientId: string }>();
+  const { filteredPantryItems, isLoading, error } = usePantryStore();
 
-  const item = dummyPantryItems.find((item) => item.id === ingredientId);
+  const item = useMemo(() => {
+    return filteredPantryItems.find((item) => item.id === ingredientId);
+  }, [filteredPantryItems, ingredientId]);
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 items-center justify-center p-6">
+        <ActivityIndicator size="large" />
+        <P className="mt-4 text-muted-foreground">Loading ingredient...</P>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View className="flex-1 items-center justify-center p-6">
+        <P className="text-destructive text-center">{error}</P>
+      </View>
+    );
+  }
 
   if (!item) {
     return (
       <View className="flex-1 items-center justify-center p-6">
         <H1 className="text-center">Ingredient not found</H1>
+        <P className="mt-2 text-muted-foreground text-center">
+          The ingredient you're looking for doesn't exist.
+        </P>
       </View>
     );
   }

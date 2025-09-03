@@ -1,6 +1,6 @@
 import type { IStorage, StorageConfig, StorageType } from "./types";
 import { StorageError } from "./types";
-import { MMKVStorage } from "./implementations/mmkv-storage";
+// import { MMKVStorage } from "./implementations/mmkv-storage"; // Commented out for Expo Go compatibility
 import { AsyncStorageImpl } from "./implementations/async-storage-impl";
 import { SQLiteStorage } from "./implementations/sqlite-storage";
 import { WatermelonStorage } from "./implementations/watermelon-storage";
@@ -31,8 +31,8 @@ export class StorageFactory {
    */
   static getInstance(): IStorage {
     if (!this.instance) {
-      // Default to MMKV if no configuration is provided
-      return this.initialize({ type: "mmkv" });
+      // Default to AsyncStorage if no configuration is provided (Expo Go compatible)
+      return this.initialize({ type: "async-storage" });
     }
     return this.instance;
   }
@@ -58,7 +58,9 @@ export class StorageFactory {
   private static createStorage(config: StorageConfig): IStorage {
     switch (config.type) {
       case "mmkv":
-        return new MMKVStorage(config.options);
+        // MMKV not supported in Expo Go - fallback to AsyncStorage
+        console.warn("MMKV not supported in Expo Go, falling back to AsyncStorage");
+        return new AsyncStorageImpl();
 
       case "async-storage":
         return new AsyncStorageImpl();
@@ -139,10 +141,10 @@ export class StorageFactory {
 }
 
 // Convenience methods for common configurations
-export const createMMKVStorage = (options?: {
-  id?: string;
-  encryptionKey?: string;
-}) => StorageFactory.initialize({ type: "mmkv", options });
+// export const createMMKVStorage = (options?: {
+//   id?: string;
+//   encryptionKey?: string;
+// }) => StorageFactory.initialize({ type: "mmkv", options }); // Commented out for Expo Go compatibility
 
 export const createAsyncStorage = () =>
   StorageFactory.initialize({ type: "async-storage" });

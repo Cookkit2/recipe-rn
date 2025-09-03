@@ -21,7 +21,8 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:storage-coverage": "jest __tests__/storage --coverage",
-    "css-to-json": "bun scripts/css-to-json-converter-advanced.js --merge --backup global.css constants/colors.json"
+    "css-to-json": "bun scripts/css-to-json-converter-advanced.js --merge --backup global.css constants/colors.json",
+    "seed-db": "node scripts/seed-db.js"
   },
   "dependencies": {
     "@gorhom/bottom-sheet": "^5.1.8",
