@@ -1,5 +1,12 @@
-import React, { createContext, useContext, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useEffect } from "react";
+import type { ReactNode } from "react";
 import type { AuthStrategy } from "./AuthStrategy";
+import type {
+  SignInCredentials,
+  SocialAuthConfig,
+  LinkAccountCredentials,
+  AuthResult,
+} from "./types";
 import { useAuthStore, useAuthSelectors } from "./AuthStore";
 
 interface AuthContextValue {
@@ -16,16 +23,18 @@ interface AuthContextValue {
   canLinkAccount: ReturnType<typeof useAuthSelectors>["canLinkAccount"];
 
   // Actions
-  signInWithEmail: ReturnType<typeof useAuthStore>["signInWithEmail"];
-  signInWithProvider: ReturnType<typeof useAuthStore>["signInWithProvider"];
-  signInAnonymously: ReturnType<typeof useAuthStore>["signInAnonymously"];
-  signUpWithEmail: ReturnType<typeof useAuthStore>["signUpWithEmail"];
-  signOut: ReturnType<typeof useAuthStore>["signOut"];
-  refreshSession: ReturnType<typeof useAuthStore>["refreshSession"];
-  linkAnonymousAccount: ReturnType<typeof useAuthStore>["linkAnonymousAccount"];
-  resetPassword: ReturnType<typeof useAuthStore>["resetPassword"];
-  clearError: ReturnType<typeof useAuthStore>["clearError"];
-  validateSession: ReturnType<typeof useAuthStore>["validateSession"];
+  signInWithEmail: (credentials: SignInCredentials) => Promise<AuthResult>;
+  signInWithProvider: (config: SocialAuthConfig) => Promise<AuthResult>;
+  signInAnonymously: () => Promise<AuthResult>;
+  signUpWithEmail: (credentials: SignInCredentials) => Promise<AuthResult>;
+  signOut: () => Promise<AuthResult>;
+  refreshSession: () => Promise<AuthResult>;
+  linkAnonymousAccount: (
+    credentials: LinkAccountCredentials
+  ) => Promise<AuthResult>;
+  resetPassword: (email: string) => Promise<AuthResult>;
+  clearError: () => void;
+  validateSession: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -70,7 +79,7 @@ export function AuthProvider({
   useEffect(() => {
     if (!autoRefresh || !authSelectors.isAuthenticated) return;
 
-    let intervalId: NodeJS.Timeout;
+    let intervalId: ReturnType<typeof setInterval>;
 
     // Set up periodic session validation (every 15 minutes)
     intervalId = setInterval(

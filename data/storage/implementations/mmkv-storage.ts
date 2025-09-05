@@ -1,5 +1,6 @@
 import { MMKV } from "react-native-mmkv";
-import { IStorage, StorageError, JSONSerializer } from "../types";
+import type { IStorage } from "../types";
+import { StorageError, JSONSerializer } from "../types";
 
 export class MMKVStorage implements IStorage {
   private storage: MMKV;
@@ -19,7 +20,7 @@ export class MMKVStorage implements IStorage {
   get<T>(key: string): T | null {
     try {
       const value = this.storage.getString(key);
-      return value ? this.serializer.deserialize<T>(value) : null;
+      return value ? (this.serializer.deserialize(value) as T) : null;
     } catch (error) {
       throw new StorageError(`Failed to get key "${key}": ${error}`, "mmkv");
     }

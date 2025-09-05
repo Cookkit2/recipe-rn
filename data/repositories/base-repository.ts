@@ -58,8 +58,9 @@ export abstract class BaseRepository<T> {
     let updated = false;
 
     for (let i = 0; i < items.length; i++) {
-      if (predicate(items[i])) {
-        items[i] = updater(items[i]);
+      const item = items[i];
+      if (item && predicate(item)) {
+        items[i] = updater(item);
         updated = true;
       }
     }

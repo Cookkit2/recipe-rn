@@ -1,4 +1,5 @@
-import { IStorage, StorageError, JSONSerializer } from "../types";
+import type { IStorage } from "../types";
+import { StorageError, JSONSerializer } from "../types";
 import { Database, Model } from "@nozbe/watermelondb";
 import { field, date, writer } from "@nozbe/watermelondb/decorators";
 import { appSchema, tableSchema } from "@nozbe/watermelondb";
@@ -123,7 +124,7 @@ export class WatermelonStorage implements IStorage {
 
       return this.serializer.deserialize<T>(records[0].value);
     } catch (error) {
-      if (error.message && error.message.includes("not found")) {
+      if (error instanceof Error && error.message.includes("not found")) {
         return null;
       }
       throw new StorageError(
@@ -173,7 +174,7 @@ export class WatermelonStorage implements IStorage {
         }
       });
     } catch (error) {
-      if (error.message && error.message.includes("not found")) {
+      if (error instanceof Error && error.message.includes("not found")) {
         return; // Key doesn't exist, nothing to delete
       }
       throw new StorageError(

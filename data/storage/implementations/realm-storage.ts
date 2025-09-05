@@ -1,4 +1,5 @@
-import { IStorage, StorageError, JSONSerializer } from "../types";
+import type { IStorage } from "../types";
+import { StorageError, JSONSerializer } from "../types";
 
 // This is a placeholder implementation for RealmDB
 // You would need to install and configure Realm:

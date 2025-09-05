@@ -8,7 +8,10 @@ import type { AuthSession } from "./types";
  */
 export class AuthStorageManager {
   private static instance: AuthStorageManager | null = null;
-  private storage = StorageFactory.initialize(storageConfigs.encrypted);
+  private storage = StorageFactory.initialize(
+    // Use encrypted storage for auth; assert presence since config defines it
+    storageConfigs.encrypted as (typeof storageConfigs)["encrypted"]
+  );
 
   static getInstance(): AuthStorageManager {
     if (!AuthStorageManager.instance) {
@@ -31,17 +34,23 @@ export class AuthStorageManager {
    */
   async storeSession(session: AuthSession): Promise<void> {
     try {
-      this.storage.setString(this.KEYS.ACCESS_TOKEN, session.accessToken);
+      await this.storage?.setAsync(this.KEYS.ACCESS_TOKEN, session.accessToken);
 
       if (session.refreshToken) {
-        this.storage.setString(this.KEYS.REFRESH_TOKEN, session.refreshToken);
+        await this.storage?.setAsync(
+          this.KEYS.REFRESH_TOKEN,
+          session.refreshToken
+        );
       }
 
-      this.storage.setString(
+      await this.storage?.setAsync(
         this.KEYS.SESSION_EXPIRES_AT,
         session.expiresAt.toISOString()
       );
-      this.storage.setString(this.KEYS.SESSION_DATA, JSON.stringify(session));
+      await this.storage?.setAsync(
+        this.KEYS.SESSION_DATA,
+        JSON.stringify(session)
+      );
 
       console.log("Auth session stored securely");
     } catch (error) {
@@ -55,7 +64,9 @@ export class AuthStorageManager {
    */
   async getSession(): Promise<AuthSession | null> {
     try {
-      const sessionData = this.storage.getString(this.KEYS.SESSION_DATA);
+      const sessionData = await this.storage?.getAsync<string>(
+        this.KEYS.SESSION_DATA
+      );
 
       if (!sessionData) {
         return null;
@@ -83,7 +94,10 @@ export class AuthStorageManager {
    */
   async getAccessToken(): Promise<string | null> {
     try {
-      return this.storage.getString(this.KEYS.ACCESS_TOKEN);
+      const token = await this.storage?.getAsync<string>(
+        this.KEYS.ACCESS_TOKEN
+      );
+      return token || null;
     } catch (error) {
       console.error("Failed to retrieve access token:", error);
       return null;
@@ -95,7 +109,10 @@ export class AuthStorageManager {
    */
   async getRefreshToken(): Promise<string | null> {
     try {
-      return this.storage.getString(this.KEYS.REFRESH_TOKEN);
+      const token = await this.storage?.getAsync<string>(
+        this.KEYS.REFRESH_TOKEN
+      );
+      return token || null;
     } catch (error) {
       console.error("Failed to retrieve refresh token:", error);
       return null;
@@ -123,19 +140,24 @@ export class AuthStorageManager {
    */
   async updateAccessToken(accessToken: string, expiresAt: Date): Promise<void> {
     try {
-      this.storage.setString(this.KEYS.ACCESS_TOKEN, accessToken);
-      this.storage.setString(
+      await this.storage?.setAsync(this.KEYS.ACCESS_TOKEN, accessToken);
+      await this.storage?.setAsync(
         this.KEYS.SESSION_EXPIRES_AT,
         expiresAt.toISOString()
       );
 
       // Update session data if it exists
-      const sessionData = this.storage.getString(this.KEYS.SESSION_DATA);
+      const sessionData = await this.storage?.getAsync<string>(
+        this.KEYS.SESSION_DATA
+      );
       if (sessionData) {
         const session = JSON.parse(sessionData) as AuthSession;
         session.accessToken = accessToken;
         session.expiresAt = expiresAt;
-        this.storage.setString(this.KEYS.SESSION_DATA, JSON.stringify(session));
+        await this.storage?.setAsync(
+          this.KEYS.SESSION_DATA,
+          JSON.stringify(session)
+        );
       }
 
       console.log("Access token updated");
@@ -156,6 +178,32 @@ export class AuthStorageManager {
       return false;
     }
   }
+
+  // Expose limited string-based operations for adapter without leaking storage implementation
+  public getString(key: string): string | null {
+    return this.storage.getString(key);
+  }
+
+  public setString(key: string, value: string): void {
+    this.storage.setString(key, value);
+  }
+
+  public remove(key: string): void {
+    this.storage.delete(key);
+  }
+
+  // Async versions for better AsyncStorage compatibility
+  public async getStringAsync(key: string): Promise<string | null> {
+    return (await this.storage?.getAsync<string>(key)) || null;
+  }
+
+  public async setStringAsync(key: string, value: string): Promise<void> {
+    await this.storage?.setAsync(key, value);
+  }
+
+  public async removeAsync(key: string): Promise<void> {
+    await this.storage?.deleteAsync(key);
+  }
 }
 
 /**
@@ -166,26 +214,26 @@ export const createSupabaseStorageAdapter = () => {
   const authStorage = AuthStorageManager.getInstance();
 
   return {
-    getItem: (key: string) => {
+    getItem: async (key: string): Promise<string | null> => {
       try {
-        return authStorage.storage.getString(key);
+        return await authStorage.getStringAsync(key);
       } catch (error) {
         console.error(`Failed to get item ${key}:`, error);
         return null;
       }
     },
 
-    setItem: (key: string, value: string) => {
+    setItem: async (key: string, value: string): Promise<void> => {
       try {
-        authStorage.storage.setString(key, value);
+        await authStorage.setStringAsync(key, value);
       } catch (error) {
         console.error(`Failed to set item ${key}:`, error);
       }
     },
 
-    removeItem: (key: string) => {
+    removeItem: async (key: string): Promise<void> => {
       try {
-        authStorage.storage.delete(key);
+        await authStorage.removeAsync(key);
       } catch (error) {
         console.error(`Failed to remove item ${key}:`, error);
       }

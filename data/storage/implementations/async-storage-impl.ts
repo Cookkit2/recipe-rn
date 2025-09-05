@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { type IStorage, StorageError, JSONSerializer } from "../types";
+import type { IStorage } from "../types";
+import { StorageError, JSONSerializer } from "../types";
 
 export class AsyncStorageImpl implements IStorage {
   private serializer = new JSONSerializer();
@@ -51,7 +52,7 @@ export class AsyncStorageImpl implements IStorage {
   async getAsync<T>(key: string): Promise<T | null> {
     try {
       const value = await AsyncStorage.getItem(key);
-      return value ? this.serializer.deserialize<T>(value) : null;
+      return value ? (this.serializer.deserialize(value) as T) : null;
     } catch (error) {
       throw new StorageError(
         `Failed to get key "${key}": ${error}`,
@@ -95,7 +96,8 @@ export class AsyncStorageImpl implements IStorage {
 
   async getAllKeysAsync(): Promise<string[]> {
     try {
-      return await AsyncStorage.getAllKeys();
+      const keys = await AsyncStorage.getAllKeys();
+      return [...keys]; // Convert readonly array to mutable
     } catch (error) {
       throw new StorageError(
         `Failed to get all keys: ${error}`,
@@ -109,8 +111,8 @@ export class AsyncStorageImpl implements IStorage {
       const keyValuePairs = await AsyncStorage.multiGet(keys);
       const result: Record<string, T | null> = {};
 
-      keyValuePairs.forEach(([key, value]) => {
-        result[key] = value ? this.serializer.deserialize<T>(value) : null;
+      keyValuePairs.forEach(([key, value]: [string, string | null]) => {
+        result[key] = value ? (this.serializer.deserialize(value) as T) : null;
       });
 
       return result;
@@ -121,10 +123,9 @@ export class AsyncStorageImpl implements IStorage {
 
   async setBatchAsync<T>(data: Record<string, T>): Promise<void> {
     try {
-      const keyValuePairs = Object.entries(data).map(([key, value]) => [
-        key,
-        this.serializer.serialize(value),
-      ]);
+      const keyValuePairs: [string, string][] = Object.entries(data).map(
+        ([key, value]) => [key, this.serializer.serialize(value)]
+      );
       await AsyncStorage.multiSet(keyValuePairs);
     } catch (error) {
       throw new StorageError(`Failed to set batch: ${error}`, "async-storage");
