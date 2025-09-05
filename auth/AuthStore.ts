@@ -60,12 +60,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   // Set the authentication strategy
   setStrategy: (strategy: AuthStrategy) => {
     const state = get();
-
-    // Clean up previous strategy listeners if any
-    if (state.strategy) {
-      // Previous strategy cleanup would happen here if needed
-    }
-
+    
     // Set up auth state change listener
     strategy.onAuthStateChange((user) => {
       get()._setUser(user);
