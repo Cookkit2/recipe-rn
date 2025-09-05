@@ -1,17 +1,19 @@
-import { StorageConfig } from "./storage";
+import type { StorageConfig } from "./storage";
 
 /**
  * Storage configuration for different environments and use cases
  * You can easily switch between different storage implementations here
  */
 export const storageConfigs: Record<string, StorageConfig> = {
-  // Production configuration with AsyncStorage (Expo Go compatible)
+  // Production configuration with AsyncStorage
   production: {
+    type: "async-storage",
     type: "async-storage",
   },
 
   // Development configuration with AsyncStorage (Expo Go compatible)
   development: {
+    type: "async-storage",
     type: "async-storage",
   },
 
@@ -46,8 +48,9 @@ export const storageConfigs: Record<string, StorageConfig> = {
     },
   },
 
-  // Encrypted storage fallback (using AsyncStorage in Expo Go)
+  // Encrypted storage for sensitive data (using AsyncStorage for now)
   encrypted: {
+    type: "async-storage",
     type: "async-storage",
   },
 };
@@ -64,8 +67,10 @@ export function getStorageConfig(): StorageConfig {
 
   if (__DEV__) {
     return storageConfigs.development!;
+    return storageConfigs.development!;
   }
 
+  return storageConfigs.production!;
   return storageConfigs.production!;
 }
 

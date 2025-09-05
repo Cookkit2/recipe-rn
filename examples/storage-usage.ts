@@ -74,7 +74,7 @@ export function repositoryExample() {
     quantity: "6 pieces",
     category: "Fruit",
     type: "fridge",
-    image_url: "mocked-banana-image",
+    image_url: require("~/assets/images/image.png"),
     x: 100,
     y: 200,
     scale: 1,

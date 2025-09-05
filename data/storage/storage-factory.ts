@@ -1,6 +1,6 @@
 import type { IStorage, StorageConfig, StorageType } from "./types";
 import { StorageError } from "./types";
-// import { MMKVStorage } from "./implementations/mmkv-storage"; // Commented out for Expo Go compatibility
+import { MMKVStorage } from "./implementations/mmkv-storage";
 import { AsyncStorageImpl } from "./implementations/async-storage-impl";
 import { SQLiteStorage } from "./implementations/sqlite-storage";
 import { WatermelonStorage } from "./implementations/watermelon-storage";

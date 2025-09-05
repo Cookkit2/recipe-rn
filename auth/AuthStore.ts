@@ -37,6 +37,7 @@ interface AuthStore {
   initialize: () => Promise<void>;
   clearError: () => void;
   validateSession: () => Promise<boolean>;
+  forceSignOut: () => void; // Add force sign out method
 
   // Internal state management
   _setAuthState: (state: AuthState) => void;
@@ -256,6 +257,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   // Sign out
   signOut: async () => {
+    console.log("AuthStore.signOut() called");
     const { strategy } = get();
     if (!strategy) {
       // Allow sign out even without strategy to clear local state
@@ -270,6 +272,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
     try {
       const result = await strategy.signOut();
+      console.log("Strategy.signOut() completed:", result.success);
 
       // Clear local state regardless of strategy result
       get()._setUser(null);
@@ -278,6 +281,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
       return result;
     } catch (error) {
+      console.error("Error in AuthStore.signOut():", error);
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error occurred";
       get()._setError(errorMessage);
@@ -494,6 +498,18 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   clearError: () => {
     set({ error: null });
   },
+
+  // Force sign out (bypass strategy)
+  forceSignOut: () => {
+    console.log("Force sign out called - clearing all auth state");
+    get()._setUser(null);
+    get()._setSession(null);
+    get()._setAuthState("unauthenticated");
+    get()._setError(null);
+    get()._setLoading(false);
+  },
+
+  // Internal state management helpers
 
   // Internal state setters (private)
   _setAuthState: (authState: AuthState) => set({ authState }),

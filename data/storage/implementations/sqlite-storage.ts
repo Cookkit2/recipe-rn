@@ -1,4 +1,5 @@
-import { IStorage, StorageError, JSONSerializer } from "../types";
+import type { IStorage } from "../types";
+import { StorageError, JSONSerializer } from "../types";
 
 // This is a placeholder implementation for SQLite
 // You would need to install and configure a SQLite library like:
@@ -85,7 +86,7 @@ export class SQLiteStorage implements IStorage {
       const result = await this.executeQuery(query, [key]);
 
       if (result.rows.length > 0) {
-        return this.serializer.deserialize<T>(result.rows.item(0).value);
+        return this.serializer.deserialize(result.rows.item(0).value) as T;
       }
       return null;
     } catch (error) {
