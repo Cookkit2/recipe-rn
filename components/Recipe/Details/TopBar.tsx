@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Dimensions, useWindowDimensions, View } from "react-native";
+import { useWindowDimensions, View } from "react-native";
 import { Button } from "../../ui/button";
 import { ArrowLeftIcon, HeartIcon } from "lucide-nativewind";
 import { useRouter } from "expo-router";

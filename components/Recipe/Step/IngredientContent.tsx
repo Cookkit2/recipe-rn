@@ -34,7 +34,7 @@ export const IngredientsContent: React.FC<{
         <FlatList
           numColumns={3}
           className="flex-1 w-full max-w-sm"
-          contentContainerClassName="px-2 pb-4"
+          contentContainerClassName="pt-2 pb-6"
           showsVerticalScrollIndicator={false}
           data={ingredients}
           scrollEnabled={false}
@@ -65,7 +65,15 @@ const IngredientItem: React.FC<{
 
   return (
     <View className="flex-1 mb-3 px-1">
-      {!currentIngredient ? (
+      {currentIngredient?.image_url ? (
+        <View className="relative items-center justify-center">
+          <OutlinedImage
+            source={currentIngredient?.image_url}
+            size={56}
+            strokeWidth={2.618}
+          />
+        </View>
+      ) : (
         <View className="w-16 h-16 items-center justify-center self-center">
           <ShapeContainer
             index={index}
@@ -74,14 +82,6 @@ const IngredientItem: React.FC<{
             text="?"
             textClassname="text-3xl text-foreground/70 leading-[2]"
             color={colors.border}
-          />
-        </View>
-      ) : (
-        <View className="relative items-center justify-center">
-          <OutlinedImage
-            source={currentIngredient?.image_url}
-            size={56}
-            strokeWidth={2.618}
           />
         </View>
       )}

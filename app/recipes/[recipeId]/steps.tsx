@@ -1,13 +1,13 @@
-import React, { useMemo, useEffect, useState } from "react";
+import React, { useMemo } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { useRecipeStore } from "~/store/RecipeContext";
 import { RecipeStepsProvider } from "~/store/RecipeStepsContext";
-import type { Recipe, RecipeIngredient, RecipeStep } from "~/types/Recipe";
+import type { RecipeIngredient, RecipeStep } from "~/types/Recipe";
 import StepBottomBar from "~/components/Recipe/Step/StepBottomBar";
 import StepCarousel from "~/components/Recipe/Step/StepCarousel";
 import StepHeaderBar from "~/components/Recipe/Step/StepHeaderBar";
-import { H1, H2, P } from "~/components/ui/typography";
+import { H1, P } from "~/components/ui/typography";
+import { useRecipe } from "~/hooks/queries/useRecipeQueries";
 
 export type StepPageData = {
   type: "ingredients" | "step" | "congratulations";
@@ -17,32 +17,7 @@ export type StepPageData = {
 
 export default function RecipeSteps() {
   const { recipeId } = useLocalSearchParams<{ recipeId: string }>();
-  const {
-    getRecipeById,
-    isLoading: recipeLoading,
-    error: recipeError,
-  } = useRecipeStore();
-
-  const [recipe, setRecipe] = useState<Recipe | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Load recipe from database
-  useEffect(() => {
-    if (typeof recipeId === "string") {
-      const loadRecipe = async () => {
-        setIsLoading(true);
-        try {
-          const loadedRecipe = await getRecipeById(recipeId);
-          setRecipe(loadedRecipe);
-        } catch (err) {
-          console.error("Error loading recipe for steps:", err);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      loadRecipe();
-    }
-  }, [recipeId, getRecipeById]);
+  const { data: recipe, isLoading, error } = useRecipe(recipeId);
 
   const stepPages = useMemo((): StepPageData[] => {
     if (!recipe) return [];
@@ -74,7 +49,7 @@ export default function RecipeSteps() {
   }, [recipe]);
 
   // Loading state
-  if (isLoading || recipeLoading) {
+  if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
         <ActivityIndicator size="large" />
@@ -84,10 +59,10 @@ export default function RecipeSteps() {
   }
 
   // Error state
-  if (recipeError) {
+  if (error) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
-        <P className="text-destructive text-center">{recipeError}</P>
+        <P className="text-destructive text-center">{error.message}</P>
       </View>
     );
   }

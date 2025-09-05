@@ -10,8 +10,15 @@ import useImageColors from "~/hooks/useImageColors";
 import useColors from "~/hooks/useColor";
 import useButtonAnimation from "~/hooks/animation/useButtonAnimations";
 import { usePantryStore } from "~/store/PantryContext";
+import ShapeContainer from "../Shared/Shapes/ShapeContainer";
 
-export const IngredientItemCard = ({ item }: { item: PantryItem }) => {
+export const IngredientItemCard = ({
+  item,
+  index,
+}: {
+  item: PantryItem;
+  index: number;
+}) => {
   const router = useRouter();
   const { animatedStyle, roundedStyle, onPressIn, onPressOut } =
     useButtonAnimation(true, 24);
@@ -52,7 +59,18 @@ export const IngredientItemCard = ({ item }: { item: PantryItem }) => {
           className="w-full relative rounded-3xl flex items-center justify-center border-continuous aspect-square"
           style={[{ backgroundColor: color || colors.muted }, roundedStyle]}
         >
-          <OutlinedImage source={item.image_url} size={64} />
+          {item.image_url ? (
+            <OutlinedImage source={item.image_url} size={64} />
+          ) : (
+            <ShapeContainer
+              index={index}
+              width={64}
+              height={64}
+              text="?"
+              textClassname="text-3xl text-foreground/70 leading-[2]"
+              color={colors.border}
+            />
+          )}
         </Animated.View>
         <View className="mt-2">
           <H4 className="opacity-80 mb-[0.5] font-urbanist-bold">

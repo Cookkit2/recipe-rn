@@ -11,7 +11,7 @@ export type PantryItem = {
   expiry_date?: Date;
   category: string;
   type: Exclude<ItemType, "all">;
-  image_url: ImageSourcePropType;
+  image_url: ImageSourcePropType | string | undefined;
   x: number;
   y: number;
   scale: number;

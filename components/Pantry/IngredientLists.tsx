@@ -9,16 +9,17 @@ import { IngredientItemCard } from "./IngredientItemCard";
 import { View, ActivityIndicator } from "react-native";
 import { H4, P } from "../ui/typography";
 import { CURVES } from "~/constants/curves";
+import { usePantryItemsByType } from "~/hooks/queries/usePantryQueries";
 
 export default function IngredientLists() {
   const { bottom } = useSafeAreaInsets();
+  const { selectedItemType, ingredientScrollY, isRecipeOpen } =
+    usePantryStore();
   const {
-    filteredPantryItems,
-    ingredientScrollY,
-    isRecipeOpen,
+    data: filteredPantryItems = [],
     isLoading,
     error,
-  } = usePantryStore();
+  } = usePantryItemsByType(selectedItemType);
 
   const flatListStyle = useAnimatedStyle(() => {
     return {
@@ -31,17 +32,21 @@ export default function IngredientLists() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center py-16">
+      <View className="py-16 items-center justify-center">
         <ActivityIndicator size="small" />
-        <P className="mt-2 text-muted-foreground">Loading pantry items...</P>
+        <P className="text-muted-foreground text-center font-urbanist-regular text-sm mt-1">
+          Loading pantry items...
+        </P>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View className="flex-1 items-center justify-center py-16">
-        <P className="text-destructive text-center">{error}</P>
+      <View className="py-16 items-center justify-center">
+        <P className="text-muted-foreground text-center font-urbanist-regular text-sm">
+          {error.message}
+        </P>
       </View>
     );
   }
@@ -55,17 +60,19 @@ export default function IngredientLists() {
       showsVerticalScrollIndicator={false}
       data={filteredPantryItems}
       keyExtractor={(item) => item.id.toString()}
-      renderItem={({ item }) => (
-        <IngredientItemCard key={item.id} item={item} />
+      renderItem={({ item, index }) => (
+        <IngredientItemCard key={item.id} item={item} index={index} />
       )}
       onScroll={(e) =>
         (ingredientScrollY.value = e.nativeEvent.contentOffset.y)
       }
       ListEmptyComponent={
         <View className="py-16 items-center justify-center">
-          <H4 className="text-muted-foreground text-center">No items</H4>
-          <P className="text-muted-foreground text-center text-sm mt-1">
-            Add ingredients to your pantry to get started.
+          <H4 className="text-muted-foreground text-center font-urbanist-semibold">
+            Your pantry is empty
+          </H4>
+          <P className="text-muted-foreground text-center font-urbanist-regular text-sm mt-1">
+            Buy and add some groceries to your pantry
           </P>
         </View>
       }

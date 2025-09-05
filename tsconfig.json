@@ -12,6 +12,7 @@
     "incremental": true,
     "downlevelIteration": true,
     "noErrorTruncation": true,
+    "experimentalDecorators": true,
     "paths": {
       "~/*": ["*"]
     }
