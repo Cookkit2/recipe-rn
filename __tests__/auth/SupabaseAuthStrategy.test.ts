@@ -1,5 +1,6 @@
 import { SupabaseAuthStrategy } from "~/auth/SupabaseAuthStrategy";
 import { supabase } from "~/auth/supabase-client";
+import { APP_CONFIG } from "~/lib/constants";
 import type { SignInCredentials, SocialAuthConfig } from "~/auth/types";
 
 // Mock Supabase client
@@ -254,7 +255,7 @@ describe("SupabaseAuthStrategy", () => {
       expect(mockSupabase.auth.signInWithOAuth).toHaveBeenCalledWith({
         provider: "google",
         options: {
-          redirectTo: "recipe-app://auth/callback",
+          redirectTo: `${APP_CONFIG.DEEP_LINK_SCHEME}://${APP_CONFIG.DEEP_LINK_PATHS.AUTH_CALLBACK}`,
           scopes: "email profile",
         },
       });
@@ -532,7 +533,7 @@ describe("SupabaseAuthStrategy", () => {
       expect(mockSupabase.auth.resetPasswordForEmail).toHaveBeenCalledWith(
         "test@example.com",
         {
-          redirectTo: "recipe-app://auth/reset-password",
+          redirectTo: `${APP_CONFIG.DEEP_LINK_SCHEME}://${APP_CONFIG.DEEP_LINK_PATHS.RESET_PASSWORD}`,
         }
       );
     });
