@@ -29,7 +29,7 @@ export default function IngredientAppBar({
   const { top } = useSafeAreaInsets();
   const router = useRouter();
 
-  const [isFav, setIsFav] = useState(false);
+  // const [isFav, setIsFav] = useState(false);
 
   // Function to update status bar style (needs to run on JS thread)
   const updateStatusBarStyle = (isLight: boolean) => {
@@ -115,10 +115,11 @@ export default function IngredientAppBar({
       <Button
         size="icon"
         variant="secondary"
-        className="rounded-full"
-        onPress={() => setIsFav(!isFav)}
+        className="rounded-full opacity-0"
+        disabled
+        // onPress={() => setIsFav(!isFav)}
       >
-        {isFav ? (
+        {/* {isFav ? (
           <StarIcon
             className={cn(
               "text-warning color-yellow-500",
@@ -129,8 +130,8 @@ export default function IngredientAppBar({
             strokeWidth={2.618}
           />
         ) : (
-          <StarIcon className="text-foreground" size={20} strokeWidth={2.618} />
-        )}
+          )} */}
+        <StarIcon className="text-foreground" size={20} strokeWidth={2.618} />
       </Button>
     </Animated.View>
   );

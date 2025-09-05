@@ -20,9 +20,9 @@ import { dummyRecipesData } from "~/data/dummy-recipes";
 import { Toaster } from "sonner-native";
 export { ErrorBoundary } from "expo-router";
 import { SystemBars } from "react-native-edge-to-edge";
-import { useFonts } from "expo-font";
 import { PantryProvider } from "~/store/PantryContext";
 import { RecipeProvider } from "~/store/RecipeContext";
+import { QueryProvider } from "~/store/QueryProvider";
 
 // const LIGHT_THEME: Theme = {
 //   ...DefaultTheme,
@@ -197,27 +197,6 @@ const usePlatformSpecificSetup = Platform.select({
 export default function RootLayout() {
   usePlatformSpecificSetup();
 
-  // Comment out this block in development build
-  // Font are loaded in app.json
-  // const [loaded, error] = useFonts({
-  //   "bowlby-one": require("~/assets/fonts/BowlbyOne-Regular.ttf"),
-  //   "urbanist-thin": require("~/assets/fonts/Urbanist-Thin.ttf"),
-  //   "urbanist-extralight": require("~/assets/fonts/Urbanist-ExtraLight.ttf"),
-  //   "urbanist-light": require("~/assets/fonts/Urbanist-Light.ttf"),
-  //   "urbanist-regular": require("~/assets/fonts/Urbanist-Regular.ttf"),
-  //   "urbanist-medium": require("~/assets/fonts/Urbanist-Medium.ttf"),
-  //   "urbanist-semibold": require("~/assets/fonts/Urbanist-SemiBold.ttf"),
-  //   "urbanist-bold": require("~/assets/fonts/Urbanist-Bold.ttf"),
-  //   "urbanist-extrabold": require("~/assets/fonts/Urbanist-ExtraBold.ttf"),
-  //   "urbanist-black": require("~/assets/fonts/Urbanist-Black.ttf"),
-  // });
-
-  // useEffect(() => {
-  //   if (loaded || error) {
-  //     SplashScreen.hideAsync();
-  //   }
-  // }, [loaded, error]);
-
   useEffect(() => {
     Image.prefetch([
       ...dummyRecipesData.map((recipe) => recipe.imageUrl),
@@ -227,24 +206,22 @@ export default function RootLayout() {
     ]);
   }, []);
 
-  // if (!loaded && !error) {
-  //   return null;
-  // }
-
   return (
     <GestureHandlerRootView className="flex-1 bg-background">
       <RootScaleProvider>
         <SafeAreaProvider>
-          <PantryProvider>
-            <RecipeProvider>
-              <OverlayProvider>
-                <SystemBars style="auto" />
-                <AnimatedStack />
-                <PortalHost />
-                <Toaster />
-              </OverlayProvider>
-            </RecipeProvider>
-          </PantryProvider>
+          <QueryProvider>
+            <PantryProvider>
+              <RecipeProvider>
+                <OverlayProvider>
+                  <SystemBars style="auto" />
+                  <AnimatedStack />
+                  <PortalHost />
+                  <Toaster />
+                </OverlayProvider>
+              </RecipeProvider>
+            </PantryProvider>
+          </QueryProvider>
         </SafeAreaProvider>
       </RootScaleProvider>
     </GestureHandlerRootView>

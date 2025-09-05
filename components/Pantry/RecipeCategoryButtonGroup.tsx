@@ -52,14 +52,14 @@ export default function RecipeCategoryButtonGroup() {
       </Button>
       <Button
         variant="outline"
-        className="rounded-2xl border-continuous flex-row gap-2"
+        className="rounded-2xl border-continuous flex-row items-center gap-2"
       >
         <DicesIcon
           className="text-muted-foreground"
           size={18}
           strokeWidth={3}
         />
-        <P className="text-lg text-muted-foreground font-urbanist-semibold">
+        <P className="text-lg text-muted-foreground font-urbanist-semibold leading-snug">
           Choose for me!
         </P>
       </Button>
@@ -86,7 +86,7 @@ const SegmentedButton = ({
     <Button
       variant="default"
       className={cn(
-        "rounded-2xl border-continuous flex-row gap-2",
+        "rounded-2xl border-continuous flex-row gap-2 items-center",
         selectedRecipeTags.includes(tag) ? "bg-primary" : "bg-muted-foreground"
       )}
       onPress={() => {
@@ -97,7 +97,7 @@ const SegmentedButton = ({
       {icon}
       <P
         className={cn(
-          "text-lg font-urbanist-semibold",
+          "text-lg font-urbanist-semibold leading-snug",
           selectedRecipeTags.includes(tag)
             ? "text-primary-foreground"
             : "text-background"

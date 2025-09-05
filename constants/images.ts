@@ -6,7 +6,7 @@
 
 export const DEFAULT_IMAGES = {
   // Generic food placeholder
-  GENERIC_FOOD: require("~/assets/images/image.png"),
+  GENERIC_FOOD: require("~/assets/images/placeholder.png"),
 
   // Category-specific defaults
   CABINET: require("~/assets/images/cabinet.png"),
@@ -52,5 +52,5 @@ export function getPlaceholderImage(
     return DEFAULT_IMAGES.FRIDGE;
 
   // Default fallback
-  return DEFAULT_IMAGES.GENERIC_FOOD;
+  return "";
 }

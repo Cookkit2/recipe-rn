@@ -7,8 +7,8 @@ import { databaseFacade } from "~/data/db/DatabaseFacade";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { ArrowLeftIcon } from "lucide-nativewind";
-import { usePantryStore } from "~/store/PantryContext";
 import { useRecipeStore } from "~/store/RecipeContext";
+import { useRefreshPantryItems } from "~/hooks/queries/usePantryQueries";
 
 export default function DebugScreen() {
   const { top } = useSafeAreaInsets();
@@ -17,8 +17,8 @@ export default function DebugScreen() {
   const [stats, setStats] = useState<any>(null);
 
   // Get context refresh functions
-  const { refreshPantryItems } = usePantryStore();
-  const { refreshRecipes } = useRecipeStore();
+  const { refresh } = useRefreshPantryItems();
+  // const { refreshRecipes } = useRecipeStore();
 
   const runSeedDatabase = async () => {
     try {
@@ -29,7 +29,7 @@ export default function DebugScreen() {
 
       // ✨ REFRESH ALL CONTEXTS AFTER SEEDING
       console.log("🔄 Refreshing all contexts after seeding...");
-      await Promise.all([refreshPantryItems(), refreshRecipes()]);
+      // await Promise.all([refresh(), refreshRecipes()]);
       console.log("✅ Contexts refreshed successfully");
 
       Alert.alert(
@@ -51,7 +51,7 @@ export default function DebugScreen() {
       await addSampleData();
 
       // Refresh contexts after adding sample data
-      await Promise.all([refreshPantryItems(), refreshRecipes()]);
+      // await Promise.all([refresh(), refreshRecipes()]);
 
       Alert.alert("Success!", "Sample data added");
       await checkStats();
@@ -75,7 +75,7 @@ export default function DebugScreen() {
             await databaseFacade.clearAllData();
 
             // Refresh contexts after clearing data
-            await Promise.all([refreshPantryItems(), refreshRecipes()]);
+            // await Promise.all([refresh(), refreshRecipes()]);
 
             Alert.alert("Success!", "Database cleared");
             await checkStats();
@@ -121,7 +121,7 @@ export default function DebugScreen() {
       setIsLoading(true);
       console.log("🔄 Manually refreshing all contexts...");
 
-      await Promise.all([refreshPantryItems(), refreshRecipes()]);
+      // await Promise.all([refresh(), refreshRecipes()]);
 
       console.log("✅ All contexts refreshed successfully");
       Alert.alert(

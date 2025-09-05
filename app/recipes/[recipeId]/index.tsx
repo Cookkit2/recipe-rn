@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from "expo-router";
-import React, { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import {
   View,
   StyleSheet,
@@ -10,14 +10,12 @@ import Animated, {
   Extrapolation,
   FadeIn,
   interpolate,
-  useAnimatedRef,
+  useAnimatedScrollHandler,
   useAnimatedStyle,
-  useScrollViewOffset,
+  useSharedValue,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { H1, H4, P } from "~/components/ui/typography";
-import { useRecipeStore } from "~/store/RecipeContext";
-import { usePantryStore } from "~/store/PantryContext";
 import { ScrollView } from "react-native-gesture-handler";
 import { ClockIcon, StarIcon } from "lucide-nativewind";
 import { OutlinedImage } from "~/components/ui/outlined-image";
@@ -28,47 +26,29 @@ import RecipeServing from "~/components/Recipe/Details/RecipeServing";
 import RecipeNutrition from "~/components/Recipe/Details/RecipeNutrition";
 import BottomActionBar from "~/components/Recipe/Details/BottomActionBar";
 import useHeaderAnimatedStyle from "~/hooks/animation/useHeaderAnimatedStyle";
-import type { Recipe } from "~/types/Recipe";
+import { Image } from "expo-image";
+import { useRecipe } from "~/hooks/queries/useRecipeQueries";
+import { usePantryItemsByType } from "~/hooks/queries/usePantryQueries";
 
 const AnimatedH1 = Animated.createAnimatedComponent(H1);
+const AnimatedImage = Animated.createAnimatedComponent(Image);
 
 export default function RecipeDetails() {
+  const { bottom } = useSafeAreaInsets();
   const { recipeId } = useLocalSearchParams<{ recipeId: string }>();
   const { width: windowWidth } = useWindowDimensions();
-  const { bottom } = useSafeAreaInsets();
-
-  const {
-    getRecipeById,
-    isLoading: recipeLoading,
-    error: recipeError,
-  } = useRecipeStore();
-  const { filteredPantryItems, isLoading: pantryLoading } = usePantryStore();
-
-  const scrollRef = useAnimatedRef<Animated.ScrollView>();
-  const scrollOffset = useScrollViewOffset(scrollRef);
-  const headerAnimatedStyle = useHeaderAnimatedStyle(scrollOffset, windowWidth);
+  const { data: recipe, isLoading, error } = useRecipe(recipeId);
+  const { data: filteredPantryItems = [] } = usePantryItemsByType("all");
 
   const [serving, setServing] = useState(1);
-  const [recipe, setRecipe] = useState<Recipe | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
-  // Load recipe from database
-  useEffect(() => {
-    if (typeof recipeId === "string") {
-      const loadRecipe = async () => {
-        setIsLoading(true);
-        try {
-          const loadedRecipe = await getRecipeById(recipeId);
-          setRecipe(loadedRecipe);
-        } catch (err) {
-          console.error("Error loading recipe:", err);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      loadRecipe();
-    }
-  }, [recipeId, getRecipeById]);
+  const scrollOffset = useSharedValue(0);
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: ({ contentOffset }) => {
+      scrollOffset.value = contentOffset.y;
+    },
+  });
+  const headerAnimatedStyle = useHeaderAnimatedStyle(scrollOffset, windowWidth);
 
   const totalMinutes = useMemo(() => {
     return (recipe?.prepMinutes ?? 0) + (recipe?.cookMinutes ?? 0);
@@ -100,8 +80,7 @@ export default function RecipeDetails() {
     setServing(newServing);
   };
 
-  // Loading state
-  if (isLoading || recipeLoading) {
+  if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
         <ActivityIndicator size="large" />
@@ -111,10 +90,10 @@ export default function RecipeDetails() {
   }
 
   // Error state
-  if (recipeError) {
+  if (error) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
-        <P className="text-destructive text-center">{recipeError}</P>
+        <P className="text-destructive text-center">{error.message}</P>
       </View>
     );
   }
@@ -137,21 +116,18 @@ export default function RecipeDetails() {
       <TopBar id={recipeId} scrollOffset={scrollOffset} title={recipe.title} />
 
       {/* Content */}
-      <ScrollView
-        ref={scrollRef}
+      <Animated.ScrollView
+        // ref={scrollRef}
+        onScroll={scrollHandler}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: bottom + 96 }}
       >
         {/* Hero Image (extends into safe area) */}
         <Animated.View className="relative" style={[headerAnimatedStyle]}>
-          <Animated.Image
+          <AnimatedImage
             source={{ uri: recipe.imageUrl }}
-            style={[
-              styles.image,
-              {
-                height: windowWidth,
-              },
-            ]}
+            style={[styles.image, { height: windowWidth }]}
+            transition={100}
           />
           <Animated.View
             style={[opacityStyle, styles.gradient, { height: windowWidth }]}
@@ -250,7 +226,7 @@ export default function RecipeDetails() {
 
           <RecipeNutrition recipe={recipe} />
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
 
       {/* Bottom action bar */}
       <BottomActionBar recipe={recipe} serving={serving} />

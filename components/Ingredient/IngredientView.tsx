@@ -1,10 +1,9 @@
-import React, { use, useMemo } from "react";
+import React, { useMemo } from "react";
 import { ScrollView, useWindowDimensions, View, Text } from "react-native";
 import Animated, {
   Extrapolation,
   FadeIn,
   interpolate,
-  useAnimatedRef,
   useAnimatedStyle,
   useScrollViewOffset,
   type AnimatedRef,
@@ -94,7 +93,18 @@ export default function IngredientView({
             headerAnimatedStyle,
           ]}
         >
-          <OutlinedImage source={item.image_url} size={100} strokeWidth={4} />
+          {item.image_url ? (
+            <OutlinedImage source={item.image_url} size={100} strokeWidth={4} />
+          ) : (
+            <ShapeContainer
+              index={0}
+              width={100}
+              height={100}
+              text="?"
+              textClassname="text-3xl text-foreground/70 leading-[2]"
+              color={colors.border}
+            />
+          )}
           <Animated.View
             style={[opacityStyle, { height: windowWidth }]}
             className="absolute inset-0 bg-background w-full"

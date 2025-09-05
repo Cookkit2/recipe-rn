@@ -20,7 +20,8 @@ export default function RecipeServing({
         variant="ghost"
         className="rounded-full"
         enableDebounce={false}
-        onPress={() => setServing(serving - 1)}
+        disabled={serving <= 1}
+        onPress={() => serving > 1 && setServing(serving - 1)}
       >
         <MinusIcon className="text-foreground" size={20} strokeWidth={2.618} />
       </Button>

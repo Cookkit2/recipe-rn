@@ -10,7 +10,7 @@ import {
 import { Image } from "expo-image";
 
 type OutlinedImageProps = {
-  source: ImageSourcePropType;
+  source: ImageSourcePropType | string | undefined;
   size?: number;
   strokeColor?: string;
   strokeWidth?: number;
