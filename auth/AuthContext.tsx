@@ -66,14 +66,14 @@ export function AuthProvider({
   // Set the strategy on mount
   useEffect(() => {
     authStore.setStrategy(strategy);
-  }, [strategy]);
+  }, [authStore, strategy]);
 
   // Auto-initialize on mount
   useEffect(() => {
     if (autoInitialize && !authStore.isInitialized) {
       authStore.initialize();
     }
-  }, [autoInitialize, authStore.isInitialized]);
+  }, [autoInitialize, authStore]);
 
   // Auto-refresh session on app state change (when supported)
   useEffect(() => {
@@ -98,11 +98,7 @@ export function AuthProvider({
         clearInterval(intervalId);
       }
     };
-  }, [
-    autoRefresh,
-    authSelectors.isAuthenticated,
-    authSelectors.hasValidSession,
-  ]);
+  }, [autoRefresh, authSelectors, authStore]);
 
   const contextValue: AuthContextValue = {
     // State

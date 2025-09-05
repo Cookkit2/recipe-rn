@@ -38,8 +38,10 @@ export function getStorageConfig(): StorageConfig {
 
   if (__DEV__) {
     return storageConfigs.development!;
+    return storageConfigs.development!;
   }
 
+  return storageConfigs.production!;
   return storageConfigs.production!;
 }
 

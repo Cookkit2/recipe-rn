@@ -11,8 +11,6 @@ import {
 } from "~/components/ui/dropdown-menu-native";
 
 export default function MenuDropdown() {
-  const router = useRouter();
-
   return (
     <>
       <Button

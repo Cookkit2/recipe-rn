@@ -1,9 +1,5 @@
 import { BaseAuthStrategy } from "./AuthStrategy";
-<<<<<<< HEAD
 import type {
-=======
-import {
->>>>>>> 597adb3 (feat: Implement Supabase authentication strategy)
   User,
   AuthResult,
   SignInCredentials,
@@ -11,12 +7,7 @@ import {
   LinkAccountCredentials,
   AuthSession,
   AuthProvider,
-<<<<<<< HEAD
 } from "../types/AuthTypes";
-=======
-} from "./types";
-import { supabase } from "./supabase-client";
->>>>>>> 597adb3 (feat: Implement Supabase authentication strategy)
 import type {
   Session,
   User as SupabaseUser,
@@ -24,11 +15,8 @@ import type {
 } from "@supabase/supabase-js";
 import * as ExpoAuthSession from "expo-auth-session";
 import * as Linking from "expo-linking";
-<<<<<<< HEAD
 import { APP_CONFIG } from "~/lib/constants";
 import { supabase } from "~/lib/supabase/supabase-client";
-=======
->>>>>>> 597adb3 (feat: Implement Supabase authentication strategy)
 
 /**
  * Supabase authentication strategy implementation
@@ -236,17 +224,9 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
 
   async signInWithProvider(config: SocialAuthConfig): Promise<AuthResult> {
     try {
-<<<<<<< HEAD
       // Create redirect URL for OAuth flow based on app.json scheme
-      const scheme =
-        Linking.createURL("").split(":")[0] || APP_CONFIG.DEEP_LINK_SCHEME;
+      const scheme = Linking.createURL("").split(":")[0] || "recipe-app";
       const redirectUrl = ExpoAuthSession.makeRedirectUri({ scheme });
-=======
-      // Create redirect URL for OAuth flow
-      const redirectUrl = ExpoAuthSession.makeRedirectUri({
-        scheme: "recipe-app", // This should match your app.json scheme
-      });
->>>>>>> 597adb3 (feat: Implement Supabase authentication strategy)
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: config.provider as any, // Supabase provider names match ours
@@ -266,7 +246,6 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
         // Open the OAuth URL
         await Linking.openURL(data.url);
 
-<<<<<<< HEAD
         // Return success; the actual sign-in will complete via onAuthStateChange
         return { success: true };
       }
@@ -274,30 +253,6 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
       return { success: true };
     } catch (error: any) {
       return this.handleSupabaseError(error);
-=======
-        // Return a pending result - the actual sign-in will be handled
-        // by the auth state change listener when the user returns
-        return {
-          success: true,
-          user: null, // Will be set by auth listener
-          session: null,
-        };
-      }
-
-      return this.createErrorResult(
-        "OAUTH_FAILED",
-        "Failed to initiate OAuth flow",
-        true
-      );
-    } catch (error) {
-      console.error("Error in signInWithProvider:", error);
-      return this.createErrorResult(
-        "OAUTH_ERROR",
-        "An unexpected error occurred during social sign in",
-        true,
-        error
-      );
->>>>>>> 597adb3 (feat: Implement Supabase authentication strategy)
     }
   }
 
@@ -385,23 +340,13 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async signOut(): Promise<AuthResult> {
-<<<<<<< HEAD
-    console.log("SupabaseAuthStrategy.signOut() called");
     try {
       console.log("About to call supabase.auth.signOut()");
       const { error } = await supabase.auth.signOut();
       console.log("supabase.auth.signOut() completed, error:", error);
 
       if (error) {
-        console.log(
-          "Supabase signOut returned error, clearing local state anyway"
-        );
-=======
-    try {
-      const { error } = await supabase.auth.signOut();
-
-      if (error) {
->>>>>>> 597adb3 (feat: Implement Supabase authentication strategy)
+        console.log("Supabase signOut returned error, clearing local state anyway");
         // Still clear local state even if remote sign out failed
         this.currentUser = null;
         this.currentSession = null;
@@ -415,10 +360,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
         );
       }
 
-<<<<<<< HEAD
       console.log("Supabase signOut successful, clearing local state");
-=======
->>>>>>> 597adb3 (feat: Implement Supabase authentication strategy)
       // Clear local state
       this.currentUser = null;
       this.currentSession = null;
@@ -528,11 +470,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   async resetPassword(email: string): Promise<AuthResult> {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-<<<<<<< HEAD
         redirectTo: `${APP_CONFIG.DEEP_LINK_SCHEME}://${APP_CONFIG.DEEP_LINK_PATHS.RESET_PASSWORD}`,
-=======
-        redirectTo: `recipe-app://auth/reset-password`, // Deep link for password reset
->>>>>>> 597adb3 (feat: Implement Supabase authentication strategy)
       });
 
       if (error) {
