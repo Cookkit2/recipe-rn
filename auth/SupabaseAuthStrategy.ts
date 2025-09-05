@@ -16,6 +16,7 @@ import type {
 } from "@supabase/supabase-js";
 import * as ExpoAuthSession from "expo-auth-session";
 import * as Linking from "expo-linking";
+import { APP_CONFIG } from "~/lib/constants";
 
 /**
  * Supabase authentication strategy implementation
@@ -224,7 +225,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   async signInWithProvider(config: SocialAuthConfig): Promise<AuthResult> {
     try {
       // Create redirect URL for OAuth flow based on app.json scheme
-      const scheme = Linking.createURL("").split(":")[0] || "recipe-app";
+      const scheme = Linking.createURL("").split(":")[0] || APP_CONFIG.DEEP_LINK_SCHEME;
       const redirectUrl = ExpoAuthSession.makeRedirectUri({ scheme });
 
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -470,7 +471,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   async resetPassword(email: string): Promise<AuthResult> {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `recipe-app://auth/reset-password`, // Deep link for password reset
+        redirectTo: `${APP_CONFIG.DEEP_LINK_SCHEME}://${APP_CONFIG.DEEP_LINK_PATHS.RESET_PASSWORD}`,
       });
 
       if (error) {
