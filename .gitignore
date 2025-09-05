@@ -48,10 +48,6 @@ coverage/
 # Jest
 .jest/
 
-.env
-
-.github
-
 mcp.json
 
 .vscode/

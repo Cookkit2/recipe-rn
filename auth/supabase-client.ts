@@ -3,10 +3,15 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./supabase-types";
 import { createSupabaseStorageAdapter } from "./storage-integration";
 
-// Supabase configuration
-const SUPABASE_URL = "https://npeumniwtoipfvuqqqwl.supabase.co";
-const SUPABASE_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wZXVtbml3dG9pcGZ2dXFxcXdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MTY0OTcsImV4cCI6MjA3MDM5MjQ5N30.vKM4XWPsHgXRxtfIG3g4UxO0gQagIAIoMAF8nkp5yis";
+// Supabase configuration from environment variables
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  throw new Error(
+    "Missing Supabase environment variables. Please check your .env file and ensure EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY are set."
+  );
+}
 
 // Create Supabase client with proper configuration for React Native
 export const supabase = createClient<Database>(
