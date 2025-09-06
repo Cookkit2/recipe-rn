@@ -3,7 +3,7 @@ import { View } from "react-native";
 import { Stack } from "expo-router";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { BlurView } from "expo-blur";
-import { useRootScale } from "~/store/context/RootScaleContext";
+import { useRootScale } from "~/store/RootScaleContext";
 import { useColorScheme } from "~/hooks/useColorScheme";
 
 export default function AppLayout() {

@@ -12,7 +12,7 @@ import { Text } from "~/components/ui/text";
 import { Button } from "~/components/ui/button";
 import { AuthContainer, AuthCard, AuthInput } from "~/components/auth";
 import { useAuth } from "~/auth";
-import { ArrowLeft } from "lucide-react-native";
+import { ArrowLeftIcon } from "lucide-nativewind";
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState("");
@@ -138,7 +138,7 @@ export default function ForgotPasswordScreen() {
                 onPress={handleBackToSignIn}
                 className="flex-row items-center space-x-2 -mt-2"
               >
-                <ArrowLeft size={16} className="text-muted-foreground" />
+                <ArrowLeftIcon size={16} className="text-muted-foreground" />
                 <Text className="text-sm text-muted-foreground">
                   Back to Sign In
                 </Text>

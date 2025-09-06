@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, TextInput, Pressable } from "react-native";
 import { Text } from "~/components/ui/text";
 import { cn } from "~/lib/utils";
-import { Eye, EyeOff } from "lucide-react-native";
+import { EyeIcon, EyeOffIcon } from "lucide-nativewind";
 
 interface AuthInputProps {
   label: string;
@@ -75,9 +75,9 @@ export function AuthInput({
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             {isSecureTextVisible ? (
-              <EyeOff size={20} className="text-muted-foreground" />
+              <EyeOffIcon size={20} className="text-muted-foreground" />
             ) : (
-              <Eye size={20} className="text-muted-foreground" />
+              <EyeIcon size={20} className="text-muted-foreground" />
             )}
           </Pressable>
         )}
