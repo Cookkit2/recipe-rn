@@ -97,7 +97,7 @@ export class AsyncStorageImpl implements IStorage {
   async getAllKeysAsync(): Promise<string[]> {
     try {
       const keys = await AsyncStorage.getAllKeys();
-      return [...keys]; // Convert readonly array to mutable
+      return [...keys]; // Convert readonly to mutable array
     } catch (error) {
       throw new StorageError(
         `Failed to get all keys: ${error}`,
@@ -138,6 +138,50 @@ export class AsyncStorageImpl implements IStorage {
     } catch (error) {
       throw new StorageError(
         `Failed to delete batch: ${error}`,
+        "async-storage"
+      );
+    }
+  }
+
+  // Sync interface methods (fallback implementations)
+  getAllKeys(): string[] {
+    throw new Error(
+      "AsyncStorage requires async operations. Use getAllKeysAsync instead."
+    );
+  }
+
+  size(): number {
+    throw new Error(
+      "AsyncStorage requires async operations. Use getAllKeysAsync to get size."
+    );
+  }
+
+  getBatch<T>(keys: string[]): Record<string, T | null> {
+    throw new Error(
+      "AsyncStorage requires async operations. Use getBatchAsync instead."
+    );
+  }
+
+  setBatch<T>(data: Record<string, T>): void {
+    throw new Error(
+      "AsyncStorage requires async operations. Use setBatchAsync instead."
+    );
+  }
+
+  deleteBatch(keys: string[]): void {
+    throw new Error(
+      "AsyncStorage requires async operations. Use deleteBatchAsync instead."
+    );
+  }
+
+  // Additional async methods to match interface pattern
+  async sizeAsync(): Promise<number> {
+    try {
+      const keys = await this.getAllKeysAsync();
+      return keys.length;
+    } catch (error) {
+      throw new StorageError(
+        `Failed to get storage size: ${error}`,
         "async-storage"
       );
     }
