@@ -49,7 +49,7 @@ export class StorageFactory {
     return this.currentConfig;
   }
 
-  /**
+    /**
    * Create a storage instance based on the configuration
    */
   private static createStorage(config: StorageConfig): IStorage {
