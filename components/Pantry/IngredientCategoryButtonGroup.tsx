@@ -2,7 +2,6 @@ import React, { type JSX } from "react";
 import { Button } from "../ui/button";
 import type { ItemType } from "~/types/PantryItem";
 import { AppleIcon, RefrigeratorIcon, SnowflakeIcon } from "lucide-nativewind";
-import { CabinetIcon } from "~/lib/icons/Cabinet";
 import { P } from "../ui/typography";
 import { cn } from "~/lib/tw-merge";
 import Animated, {
@@ -11,6 +10,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { CURVES } from "~/constants/curves";
 import { usePantryStore } from "~/store/PantryContext";
+import CabinetIcon from "~/lib/icons/CabinetIcon";
 
 const TYPES: Array<{ type: ItemType; label: string; icon: JSX.Element }> = [
   {

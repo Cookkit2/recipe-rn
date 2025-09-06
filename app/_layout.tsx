@@ -23,6 +23,7 @@ import { SystemBars } from "react-native-edge-to-edge";
 import { PantryProvider } from "~/store/PantryContext";
 import { RecipeProvider } from "~/store/RecipeContext";
 import { QueryProvider } from "~/store/QueryProvider";
+import { AuthProvider, SupabaseAuthStrategy } from "~/auth";
 
 // const LIGHT_THEME: Theme = {
 //   ...DefaultTheme,
@@ -57,7 +58,7 @@ function AnimatedStack() {
   // const router = useRouter();
   // useEffect(() => {
   //   setTimeout(() => {
-  //     router.push("/onboarding-pref");
+  //     router.push("/subscription");
   //     // router.push("/recipes/chicken-stir-fry/steps");
   //   }, 0);
   // }, [router]);
@@ -88,7 +89,7 @@ function AnimatedStack() {
 
           {/* ======== INGREDIENT ======== */}
           <Stack.Screen
-            name="(ingredient)/[ingredientId]"
+            name="ingredient/[ingredientId]"
             options={{
               headerShown: false,
               presentation: "transparentModal",
@@ -110,7 +111,7 @@ function AnimatedStack() {
             }}
           />
           <Stack.Screen
-            name="(ingredient)/create"
+            name="ingredient/create"
             options={{ presentation: "modal", headerShown: false }}
           />
 
@@ -178,6 +179,13 @@ function AnimatedStack() {
             name="onboarding-pref/dietary-preference"
             options={{ headerShown: false }}
           />
+
+          {/* ======== SUBSCRIPTION ======== */}
+          <Stack.Screen
+            name="subscription/index"
+            options={{ presentation: "containedModal", headerShown: false }}
+          />
+
           <Stack.Screen name="debug" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" />
         </Stack>
@@ -210,18 +218,23 @@ export default function RootLayout() {
     <GestureHandlerRootView className="flex-1 bg-background">
       <RootScaleProvider>
         <SafeAreaProvider>
-          <QueryProvider>
-            <PantryProvider>
-              <RecipeProvider>
-                <OverlayProvider>
-                  <SystemBars style="auto" />
-                  <AnimatedStack />
-                  <PortalHost />
-                  <Toaster />
-                </OverlayProvider>
-              </RecipeProvider>
-            </PantryProvider>
-          </QueryProvider>
+          <AuthProvider
+            strategy={new SupabaseAuthStrategy()}
+            autoInitialize={true}
+          >
+            <QueryProvider>
+              <PantryProvider>
+                <RecipeProvider>
+                  <OverlayProvider>
+                    <SystemBars style="auto" />
+                    <AnimatedStack />
+                    <PortalHost />
+                    <Toaster />
+                  </OverlayProvider>
+                </RecipeProvider>
+              </PantryProvider>
+            </QueryProvider>
+          </AuthProvider>
         </SafeAreaProvider>
       </RootScaleProvider>
     </GestureHandlerRootView>

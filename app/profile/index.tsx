@@ -29,6 +29,7 @@ import SetupProfileCard from "~/components/Profile/SetupProfileCard";
 import ListButton from "~/components/Shared/ListButton";
 import { toast } from "sonner-native";
 import * as WebBrowser from "expo-web-browser";
+import { useAuth, useAuthStore } from "~/auth";
 
 const appName = Constants.expoConfig?.name ?? "Cookkit";
 const appVersion = Constants.expoConfig?.version ?? "unknown";
@@ -46,6 +47,23 @@ export default function ProfileScreen() {
   const scrollOffset = useScrollViewOffset(scrollRef);
 
   const body = useRef<string>("");
+
+  const { signOut, isAuthenticated, user } = useAuth();
+  const authStore = useAuthStore();
+
+  const handleSignOut = async () => {
+    authStore.forceSignOut();
+    router.replace("/(auth)/sign-in");
+
+    // Try remote sign out in background (don't await it)
+    signOut()
+      .then((result) => {
+        console.log("Background sign out completed:", result);
+      })
+      .catch((error) => {
+        console.log("Background sign out failed:", error);
+      });
+  };
 
   const handleContactUs = useCallback(async () => {
     try {
@@ -167,7 +185,11 @@ export default function ProfileScreen() {
               Get Pro to unlock all features
             </P>
           </View>
-          <Button variant="default" className="rounded-xl border-continuous">
+          <Button
+            variant="default"
+            className="rounded-xl border-continuous"
+            onPress={() => router.push("/subscription")}
+          >
             <P className="font-urbanist-semibold text-primary-foreground">
               Try for free
             </P>
@@ -275,13 +297,17 @@ export default function ProfileScreen() {
 
       <View className="mt-24"></View>
 
-      {/* <View className="px-6 my-12">
-          <Button variant="destructive" className="w-full rounded-full">
-            <P className="text-lg text-destructive-foreground font-urbanist-semibold">
-              Logout
-            </P>
-          </Button>
-        </View> */}
+      <View className="px-6 my-12">
+        <Button
+          variant="destructive"
+          className="w-full rounded-full"
+          onPress={handleSignOut}
+        >
+          <P className="text-lg text-destructive-foreground font-urbanist-semibold">
+            Logout
+          </P>
+        </Button>
+      </View>
     </Animated.ScrollView>
   );
 }
