@@ -34,20 +34,24 @@ export class AuthStorageManager {
    */
   async storeSession(session: AuthSession): Promise<void> {
     try {
-      await this.storage?.setAsync(this.KEYS.ACCESS_TOKEN, session.accessToken);
+      if (!this.storage.setAsync) {
+        throw new Error("Storage implementation does not support async operations");
+      }
+
+      await this.storage.setAsync(this.KEYS.ACCESS_TOKEN, session.accessToken);
 
       if (session.refreshToken) {
-        await this.storage?.setAsync(
+        await this.storage.setAsync(
           this.KEYS.REFRESH_TOKEN,
           session.refreshToken
         );
       }
 
-      await this.storage?.setAsync(
+      await this.storage.setAsync(
         this.KEYS.SESSION_EXPIRES_AT,
         session.expiresAt.toISOString()
       );
-      await this.storage?.setAsync(
+      await this.storage.setAsync(
         this.KEYS.SESSION_DATA,
         JSON.stringify(session)
       );
@@ -64,7 +68,11 @@ export class AuthStorageManager {
    */
   async getSession(): Promise<AuthSession | null> {
     try {
-      const sessionData = await this.storage?.getAsync<string>(
+      if (!this.storage.getAsync) {
+        throw new Error("Storage implementation does not support async operations");
+      }
+
+      const sessionData = await this.storage.getAsync<string>(
         this.KEYS.SESSION_DATA
       );
 
@@ -94,7 +102,11 @@ export class AuthStorageManager {
    */
   async getAccessToken(): Promise<string | null> {
     try {
-      const token = await this.storage?.getAsync<string>(
+      if (!this.storage.getAsync) {
+        throw new Error("Storage implementation does not support async operations");
+      }
+
+      const token = await this.storage.getAsync<string>(
         this.KEYS.ACCESS_TOKEN
       );
       return token || null;
@@ -109,7 +121,11 @@ export class AuthStorageManager {
    */
   async getRefreshToken(): Promise<string | null> {
     try {
-      const token = await this.storage?.getAsync<string>(
+      if (!this.storage.getAsync) {
+        throw new Error("Storage implementation does not support async operations");
+      }
+
+      const token = await this.storage.getAsync<string>(
         this.KEYS.REFRESH_TOKEN
       );
       return token || null;
@@ -140,21 +156,25 @@ export class AuthStorageManager {
    */
   async updateAccessToken(accessToken: string, expiresAt: Date): Promise<void> {
     try {
-      await this.storage?.setAsync(this.KEYS.ACCESS_TOKEN, accessToken);
-      await this.storage?.setAsync(
+      if (!this.storage.setAsync || !this.storage.getAsync) {
+        throw new Error("Storage implementation does not support async operations");
+      }
+
+      await this.storage.setAsync(this.KEYS.ACCESS_TOKEN, accessToken);
+      await this.storage.setAsync(
         this.KEYS.SESSION_EXPIRES_AT,
         expiresAt.toISOString()
       );
 
       // Update session data if it exists
-      const sessionData = await this.storage?.getAsync<string>(
+      const sessionData = await this.storage.getAsync<string>(
         this.KEYS.SESSION_DATA
       );
       if (sessionData) {
         const session = JSON.parse(sessionData) as AuthSession;
         session.accessToken = accessToken;
         session.expiresAt = expiresAt;
-        await this.storage?.setAsync(
+        await this.storage.setAsync(
           this.KEYS.SESSION_DATA,
           JSON.stringify(session)
         );
@@ -194,15 +214,24 @@ export class AuthStorageManager {
 
   // Async versions for better AsyncStorage compatibility
   public async getStringAsync(key: string): Promise<string | null> {
-    return (await this.storage?.getAsync<string>(key)) || null;
+    if (!this.storage.getAsync) {
+      throw new Error("Storage implementation does not support async operations");
+    }
+    return (await this.storage.getAsync<string>(key)) || null;
   }
 
   public async setStringAsync(key: string, value: string): Promise<void> {
-    await this.storage?.setAsync(key, value);
+    if (!this.storage.setAsync) {
+      throw new Error("Storage implementation does not support async operations");
+    }
+    await this.storage.setAsync(key, value);
   }
 
   public async removeAsync(key: string): Promise<void> {
-    await this.storage?.deleteAsync(key);
+    if (!this.storage.deleteAsync) {
+      throw new Error("Storage implementation does not support async operations");
+    }
+    await this.storage.deleteAsync(key);
   }
 }
 

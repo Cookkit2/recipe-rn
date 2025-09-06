@@ -79,10 +79,8 @@ export function AuthProvider({
   useEffect(() => {
     if (!autoRefresh || !authSelectors.isAuthenticated) return;
 
-    let intervalId: ReturnType<typeof setInterval>;
-
     // Set up periodic session validation (every 15 minutes)
-    intervalId = setInterval(
+    const intervalId = setInterval(
       async () => {
         if (authSelectors.isAuthenticated && authSelectors.hasValidSession) {
           const isValid = await authStore.validateSession();
