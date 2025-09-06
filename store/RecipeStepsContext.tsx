@@ -13,9 +13,9 @@ import {
   type SharedValue,
 } from "react-native-reanimated";
 import type { ICarouselInstance } from "react-native-reanimated-carousel";
-import type { StepPageData } from "~/app/recipes/[recipeId]/steps";
 import type { TextLoopRef } from "~/components/ui/TextLoop";
 import type { Recipe } from "~/types/Recipe";
+import type { StepPageData } from "~/app/recipes/[recipeId]/steps";
 
 interface RecipeStepsContextType {
   currentStep: number;

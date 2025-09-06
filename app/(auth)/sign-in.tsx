@@ -70,7 +70,7 @@ export default function SignInScreen() {
       });
 
       if (result.success) {
-        router.replace("/(app)/(ingredient)/");
+        router.replace("/");
       } else {
         Alert.alert(
           "Sign In Failed",
@@ -93,7 +93,7 @@ export default function SignInScreen() {
       });
 
       if (result.success) {
-        router.replace("/(app)/(ingredient)/");
+        router.replace("/");
       } else {
         Alert.alert(
           "Sign In Failed",
@@ -113,7 +113,7 @@ export default function SignInScreen() {
       const result = await auth.signInAnonymously();
 
       if (result.success) {
-        router.replace("/(app)/(ingredient)/");
+        router.replace("/");
       } else {
         Alert.alert("Error", result.error?.message || "Guest sign in failed");
       }

@@ -34,7 +34,7 @@ export const IngredientItemCard = ({
     }
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.push(`/${item.id}`);
+    router.push(`/ingredient/${item.id}`);
   });
 
   return (

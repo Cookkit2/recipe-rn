@@ -17,7 +17,6 @@ import useImageColors from "~/hooks/useImageColors";
 import useColors from "~/hooks/useColor";
 import IngredientAppBar from "./IngredientAppBar";
 import { RefrigeratorIcon, SnowflakeIcon } from "lucide-nativewind";
-import { CabinetIcon } from "~/lib/icons/Cabinet";
 import { titleCase } from "~/utils/text-formatter";
 import { Separator } from "../ui/separator";
 import ListItem from "../Shared/ListItem";
@@ -26,6 +25,7 @@ import ShapeContainer from "../Shared/Shapes/ShapeContainer";
 import { Card, CardContent } from "../ui/card";
 import { format } from "date-fns";
 import useDeviceCornerRadius from "~/hooks/useDeviceCornerRadius";
+import CabinetIcon from "~/lib/icons/CabinetIcon";
 
 const AnimatedH1 = Animated.createAnimatedComponent(H1);
 

@@ -135,7 +135,7 @@ export default function SignUpScreen() {
       if (result.success) {
         if (result.session) {
           // User is immediately signed in
-          router.replace("/(app)/(ingredient)/");
+          router.replace("/");
         } else {
           // Email confirmation required
           Alert.alert(
@@ -171,7 +171,7 @@ export default function SignUpScreen() {
       });
 
       if (result.success) {
-        router.replace("/(ingredient)/");
+        router.replace("/");
       } else {
         Alert.alert(
           "Sign Up Failed",
@@ -232,7 +232,9 @@ export default function SignUpScreen() {
                         Password strength:
                       </Text>
                       <Text
-                        className={`text-xs font-medium ${getPasswordStrengthColor(passwordStrength)}`}
+                        className={`text-xs font-medium ${getPasswordStrengthColor(
+                          passwordStrength
+                        )}`}
                       >
                         {getPasswordStrengthText(passwordStrength)}
                       </Text>
@@ -246,8 +248,8 @@ export default function SignUpScreen() {
                               ? level <= 2
                                 ? "bg-red-500"
                                 : level <= 3
-                                  ? "bg-yellow-500"
-                                  : "bg-green-500"
+                                ? "bg-yellow-500"
+                                : "bg-green-500"
                               : "bg-gray-200"
                           }`}
                         />
