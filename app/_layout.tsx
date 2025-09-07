@@ -57,10 +57,12 @@ function AnimatedStack() {
   // For ease of dev, we can redirect to the steps page
   // const router = useRouter();
   // useEffect(() => {
-  //   setTimeout(() => {
-  //     router.push("/subscription");
-  //     // router.push("/recipes/chicken-stir-fry/steps");
-  //   }, 0);
+  //   if (__DEV__) {
+  //     setTimeout(() => {
+  //       router.push("/subscription");
+  //       // router.push("/recipes/chicken-stir-fry/steps");
+  //     }, 0);
+  //   }
   // }, [router]);
 
   return (

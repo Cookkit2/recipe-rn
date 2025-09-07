@@ -12,7 +12,7 @@ import {
   StarIcon,
 } from "lucide-nativewind";
 import React, { useCallback, useRef } from "react";
-import { View, Linking, Platform } from "react-native";
+import { View, Platform, Linking } from "react-native";
 import * as StoreReview from "expo-store-review";
 import Constants from "expo-constants";
 import Purchases from "react-native-purchases";
@@ -178,11 +178,13 @@ export default function ProfileScreen() {
             <View className="flex-row items-center">
               <H4 className="font-urbanist-bold">Cookkit</H4>
               <View className="rounded-full bg-primary/10 px-3 ml-2">
-                <P className="text-primary font-urbanist-medium">Pro</P>
+                <P className="text-sm text-primary font-urbanist-medium">
+                  Trial
+                </P>
               </View>
             </View>
             <P className="text-sm text-foreground/80 font-urbanist-medium">
-              Get Pro to unlock all features
+              Your trial ends in 21 days.
             </P>
           </View>
           <Button
@@ -191,7 +193,7 @@ export default function ProfileScreen() {
             onPress={() => router.push("/subscription")}
           >
             <P className="font-urbanist-semibold text-primary-foreground">
-              Try for free
+              Subscribe
             </P>
           </Button>
         </CardContent>
