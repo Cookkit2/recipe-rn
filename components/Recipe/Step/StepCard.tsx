@@ -1,27 +1,57 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { Pressable } from "react-native";
 import Animated, {
   useAnimatedStyle,
   interpolate,
   Extrapolation,
   withSpring,
+  useSharedValue,
+  withTiming,
+  withDelay,
   type SharedValue,
+  Easing,
 } from "react-native-reanimated";
 import type { RecipeIngredient, RecipeStep } from "~/types/Recipe";
 import type { StepPageData } from "~/app/recipes/[recipeId]/steps";
 import { IngredientsContent } from "./IngredientContent";
-import { window } from "~/constants/sizes";
 import { useRecipeSteps } from "~/store/RecipeStepsContext";
 import StepContent from "./StepContent";
 import CongratulationsContent from "./CongratulationsContent";
+import { CURVES } from "~/constants/curves";
 
 const StepCard: React.FC<{
+  index: number;
   data: StepPageData;
   animationValue: SharedValue<number>;
-}> = ({ data, animationValue }) => {
+}> = ({ data, animationValue, index }) => {
   const { stepPages } = useRecipeSteps();
   const leftLength = stepPages.length - 1;
 
+  // Falling animation values
+  const fallAnimationProgress = useSharedValue(0);
+  const randomRotation = useSharedValue(-3 + Math.random() * 6); // Small random rotation for final position
+  const pressScale = useSharedValue(1); // Press scale animation
+
+  useEffect(() => {
+    // Start the falling animation with a delay based on index
+    fallAnimationProgress.value = withDelay(
+      index * 200, // Stagger the animation
+      withTiming(1, { duration: 800, easing: Easing.out(Easing.cubic) })
+    );
+  }, [fallAnimationProgress, index]);
+
+  // Press handlers
+  const handlePressIn = () => {
+    pressScale.value = withTiming(1.02, CURVES["expressive.fast.effects"]);
+    randomRotation.value = withTiming(0, CURVES["expressive.fast.effects"]);
+  };
+
+  const handlePressOut = () => {
+    pressScale.value = withTiming(1, CURVES["expressive.fast.effects"]);
+  };
+
   const cardStyle = useAnimatedStyle(() => {
+    // Existing card rotation and scaling based on stack position
     const rotate = interpolate(
       animationValue.value,
       [0, leftLength],
@@ -43,11 +73,26 @@ const StepCard: React.FC<{
       Extrapolation.CLAMP
     );
 
+    // Falling animation
+    const fallY = interpolate(
+      fallAnimationProgress.value,
+      [0, 1],
+      [-1500, 0], // Start from above the screen
+      Extrapolation.CLAMP
+    );
+
+    const fallScale = interpolate(
+      fallAnimationProgress.value,
+      [0, 0.8, 1],
+      [1.2, 0.95, 1], // Slight bounce effect
+      Extrapolation.CLAMP
+    );
+
     return {
       transform: [
-        { rotateZ: `${rotate}deg` },
-        { scale: withSpring(scale) },
-        { translateY: withSpring(translateY) },
+        { rotateZ: `${rotate + randomRotation.value}deg` }, // Stack rotation + random rotation
+        { scale: withSpring(scale * fallScale * pressScale.value) },
+        { translateY: withSpring(translateY + fallY) },
       ],
     };
   });
@@ -90,12 +135,18 @@ const StepCard: React.FC<{
 
   return (
     <Animated.View className="flex-1 shadow-xl mx-8 my-16" style={shadowStyle}>
-      <Animated.View
-        className="flex-1 bg-muted rounded-3xl border-continuous"
-        style={[cardStyle, { minHeight: window.height * 0.6 }]}
+      <Pressable
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        className="flex-1"
       >
-        {content}
-      </Animated.View>
+        <Animated.View
+          className="flex-1 bg-muted rounded-3xl border-continuous"
+          style={[cardStyle]}
+        >
+          {content}
+        </Animated.View>
+      </Pressable>
     </Animated.View>
   );
 };

@@ -1,5 +1,11 @@
 import React from "react";
-import { FlatList, View, StyleSheet, ScrollView } from "react-native";
+import {
+  FlatList,
+  View,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+} from "react-native";
 import type { RecipeIngredient } from "~/types/Recipe";
 import { H2, P } from "../../ui/typography";
 import OutlinedImage from "~/components/ui/outlined-image";
@@ -8,6 +14,9 @@ import { LinearGradient } from "expo-linear-gradient";
 import useColors from "~/hooks/useColor";
 import { sentenceCase, titleCase } from "~/utils/text-formatter";
 import ShapeContainer from "~/components/Shared/Shapes/ShapeContainer";
+import { useRouter } from "expo-router";
+import useOnPressScale from "~/hooks/animation/useOnPressScale";
+import Animated from "react-native-reanimated";
 
 export const IngredientsContent: React.FC<{
   ingredients: RecipeIngredient[];
@@ -53,18 +62,28 @@ export const IngredientsContent: React.FC<{
   );
 };
 
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
 const IngredientItem: React.FC<{
   ingredient: RecipeIngredient;
   index: number;
 }> = ({ ingredient, index }) => {
   const colors = useColors();
+  const router = useRouter();
+  const { animatedStyle, handlePressIn, handlePressOut } = useOnPressScale();
 
   const currentIngredient = dummyPantryItems.find(
     (item) => item.id === ingredient.relatedIngredientId
   );
 
   return (
-    <View className="flex-1 mb-3 px-1">
+    <AnimatedPressable
+      onPress={() => router.push(`/ingredient/${currentIngredient?.id}`)}
+      className="flex-1 mb-3 px-1"
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      style={animatedStyle}
+    >
       {currentIngredient?.image_url ? (
         <View className="relative items-center justify-center">
           <OutlinedImage
@@ -95,6 +114,6 @@ const IngredientItem: React.FC<{
       <P className="text-foreground text-xs tracking-wider font-urbanist-bold text-center mt-0.5">
         {sentenceCase(ingredient.quantity)}
       </P>
-    </View>
+    </AnimatedPressable>
   );
 };

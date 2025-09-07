@@ -37,9 +37,10 @@ export default function StepCarousel() {
         onProgressChange={(_, absoluteProgress) => {
           progress.value = absoluteProgress;
         }}
-        renderItem={({ item, animationValue }) => (
+        renderItem={({ item, animationValue, index }) => (
           <StepCard
             key={item.step}
+            index={index}
             data={item}
             animationValue={animationValue}
           />

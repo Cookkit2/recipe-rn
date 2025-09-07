@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { View, ActivityIndicator, Platform } from "react-native";
 import { H1, P } from "~/components/ui/typography";
 import IngredientView from "~/components/Ingredient/IngredientView";
@@ -7,9 +7,11 @@ import SheetModalWrapper from "~/components/SheetModal/SheetModalWrapper";
 import type { PantryItem } from "~/types/PantryItem";
 import Animated, { useAnimatedRef } from "react-native-reanimated";
 import { usePantryItemsByType } from "~/hooks/queries/usePantryQueries";
+import { Button } from "~/components/ui/button";
 
 export default function IngredientDetailsPage() {
   const { ingredientId } = useLocalSearchParams<{ ingredientId: string }>();
+  const router = useRouter();
   const {
     data: filteredPantryItems = [],
     isLoading,
@@ -40,10 +42,15 @@ export default function IngredientDetailsPage() {
   if (!item) {
     return (
       <View className="flex-1 items-center justify-center p-6">
-        <H1 className="text-center">Ingredient not found</H1>
-        <P className="mt-2 text-muted-foreground text-center">
+        <H1 className="text-center font-urbanist-black">
+          Ingredient not found
+        </H1>
+        <P className="mt-2 text-muted-foreground text-center font-urbanist">
           The ingredient you're looking for doesn't exist.
         </P>
+        <Button variant="ghost" className="mt-6" onPress={() => router.back()}>
+          <P className="text-center font-urbanist">Go Back</P>
+        </Button>
       </View>
     );
   }
