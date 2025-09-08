@@ -17,9 +17,11 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "app.cookkit.cookkit",
-      "appStoreId": "0000000000"
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -29,27 +31,15 @@
       "package": "app.cookkit.cookkit",
       "permissions": [
         "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
-      ],
-      "parentTheme": "Default"
+      ]
     },
     "web": {
       "bundler": "metro",
       "output": "static",
       "favicon": "./assets/favicon.png"
-    },
-    "linking": {
-      "prefixes": ["recipe-app://"],
-      "config": {
-        "screens": {
-          "auth": {
-            "screens": {
-              "callback": "auth/callback",
-              "reset-password": "auth/reset-password"
-            }
-          }
-        }
-      }
     },
     "plugins": [
       [
@@ -134,7 +124,8 @@
           "recordAudioAndroid": true
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      "react-native-edge-to-edge"
     ],
     "experiments": {
       "typedRoutes": true
@@ -144,6 +135,10 @@
       "eas": {
         "projectId": "191bf781-c649-4520-84d0-461f5b5a8427"
       }
+    },
+    "runtimeVersion": "1.0.0",
+    "updates": {
+      "url": "https://u.expo.dev/191bf781-c649-4520-84d0-461f5b5a8427"
     }
   }
 }
