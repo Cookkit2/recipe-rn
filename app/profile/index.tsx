@@ -264,7 +264,7 @@ export default function ProfileScreen() {
             <ListButton
               title="About"
               icon={InfoIcon}
-              onPress={() => handleOpenLink("https://www.cookkit.app/about")}
+              onPress={() => handleOpenLink("https://www.cookkit.app/")}
               external
             />
           </CardContent>

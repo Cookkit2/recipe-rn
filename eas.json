@@ -4,9 +4,28 @@
   },
   "build": {
     "development": {
+      "developmentClient": true,
+      "environment": "development",
+      "distribution": "internal",
       "ios": {
         "simulator": true
       }
+    },
+    "preview": {
+      "distribution": "internal",
+      "environment": "preview",
+      "ios": {
+        "simulator": false
+      }
+    },
+    "production": {
+      "environment": "production",
+      "ios": {
+        "simulator": false
+      }
     }
+  },
+  "submit": {
+    "production": {}
   }
 }

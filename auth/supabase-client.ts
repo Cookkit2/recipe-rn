@@ -1,11 +1,17 @@
 import { createClient } from "@supabase/supabase-js";
-// @ts-ignore: If type declarations are missing, ignore for now
 import type { Database } from "./supabase-types";
 import { createSupabaseStorageAdapter } from "./storage-integration";
+import Constants from "expo-constants";
 
 // Supabase configuration from environment variables
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+// Try multiple sources: process.env, Constants.expoConfig.extra
+const SUPABASE_URL =
+  process.env.EXPO_PUBLIC_SUPABASE_URL ||
+  Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_URL;
+
+const SUPABASE_ANON_KEY =
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
+  Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   throw new Error(
