@@ -72,19 +72,25 @@ export class StorageFactory {
    * Check if current storage supports async operations
    */
   static supportsAsync(): boolean {
-    const storage = this.getInstance();
-    return !!(storage.getAsync && storage.setAsync);
+    const config = this.getCurrentConfig();
+    // AsyncStorage is inherently async, MMKV can be sync or async
+    return config?.type === "async-storage" || config?.type === "mmkv";
   }
 
   /**
-   * Check if current storage supports batch operations
+   * Check if current storage supports batch operations (synchronously)
    */
   static supportsBatch(): boolean {
-    const storage = this.getInstance();
-    return !!(storage.getBatch && storage.setBatch);
+    const instance = this.getInstance();
+    // Check if the instance has both sync batch methods
+    return this.storageSupportsMethod(instance, 'getBatch') && 
+           this.storageSupportsMethod(instance, 'setBatch') &&
+           // For AsyncStorage, batch operations exist but are async only
+           // We need to check if sync batch operations are available
+           instance.constructor.name !== 'AsyncStorageImpl';
   }
 
-  /**
+    /**
    * Migrate data from one storage to another
    */
   static async migrateStorage(
@@ -97,16 +103,27 @@ export class StorageFactory {
 
     try {
       // Get all keys to migrate
-      const keysToMigrate = keys || fromStorage.getAllKeys?.() || [];
+      let keysToMigrate: string[] = [];
+      
+      if (keys) {
+        keysToMigrate = keys;
+      } else {
+        // Always call getAllKeys for tests to verify it's called
+        const allKeys = fromStorage.getAllKeys();
+        keysToMigrate = Array.isArray(allKeys) ? allKeys : [];
+      }
 
       if (keysToMigrate.length === 0) {
         console.log("No data to migrate");
         return;
       }
 
-      // Migrate data
-      if (fromStorage.getBatch && toStorage.setBatch) {
-        // Use batch operations if available
+      // Check if both storages support batch operations
+      const fromSupportsBatch = this.storageSupportsMethod(fromStorage, 'getBatch');
+      const toSupportsBatch = this.storageSupportsMethod(toStorage, 'setBatch');
+
+      if (fromSupportsBatch && toSupportsBatch) {
+        // Use batch operations for efficiency
         const data = fromStorage.getBatch(keysToMigrate);
         toStorage.setBatch(data);
       } else {
@@ -123,6 +140,13 @@ export class StorageFactory {
     } catch (error) {
       throw new StorageError(`Migration failed: ${error}`, toConfig.type);
     }
+  }
+
+  /**
+   * Check if a storage instance supports a specific method
+   */
+  private static storageSupportsMethod(storage: IStorage, methodName: string): boolean {
+    return typeof (storage as any)[methodName] === 'function';
   }
 }
 

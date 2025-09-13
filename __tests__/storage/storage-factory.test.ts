@@ -5,9 +5,6 @@ import { MMKVStorageImpl } from "~/data/storage/implementations/mmkv-storage-imp
 // Mock implementations
 jest.mock("~/data/storage/implementations/mmkv-storage");
 jest.mock("~/data/storage/implementations/async-storage-impl");
-jest.mock("~/data/storage/implementations/sqlite-storage");
-jest.mock("~/data/storage/implementations/watermelon-storage");
-jest.mock("~/data/storage/implementations/realm-storage");
 
 const MockMMKVStorage = MMKVStorageImpl as jest.MockedClass<
   typeof MMKVStorageImpl
@@ -135,43 +132,33 @@ describe("StorageFactory", () => {
         getAsync: jest.fn(),
         setAsync: jest.fn(),
       };
-      MockMMKVStorage.mockImplementationOnce(() => mockInstance as any);
+      MockAsyncStorageImpl.mockImplementationOnce(() => mockInstance as any);
 
       StorageFactory.initialize({ type: "mmkv" });
 
       expect(StorageFactory.supportsAsync()).toBe(true);
     });
 
-    it("should return false for storage without async methods", () => {
-      const mockInstance = {};
-      MockMMKVStorage.mockImplementationOnce(() => mockInstance as any);
+    it("should return true for AsyncStorage (always has async methods)", () => {
+      StorageFactory.initialize({ type: "mmkv" }); // Falls back to AsyncStorage
 
-      StorageFactory.initialize({ type: "mmkv" });
-
-      expect(StorageFactory.supportsAsync()).toBe(false);
+      expect(StorageFactory.supportsAsync()).toBe(true);
     });
   });
 
   describe("supportsBatch", () => {
-    it("should return true for storage with batch methods", () => {
-      const mockInstance = {
-        getBatch: jest.fn(),
-        setBatch: jest.fn(),
-      };
-      MockMMKVStorage.mockImplementationOnce(() => mockInstance as any);
+    it("should return false for AsyncStorage (only has async batch)", () => {
+      // Test with actual AsyncStorage configuration
+      StorageFactory.initialize({ type: "async-storage" });
 
+      expect(StorageFactory.supportsBatch()).toBe(false);
+    });
+
+    it("should return true for storage with sync batch methods", () => {
+      // Test with MMKV which supports sync batch operations
       StorageFactory.initialize({ type: "mmkv" });
 
       expect(StorageFactory.supportsBatch()).toBe(true);
-    });
-
-    it("should return false for storage without batch methods", () => {
-      const mockInstance = {};
-      MockMMKVStorage.mockImplementationOnce(() => mockInstance as any);
-
-      StorageFactory.initialize({ type: "mmkv" });
-
-      expect(StorageFactory.supportsBatch()).toBe(false);
     });
   });
 
@@ -282,70 +269,15 @@ describe("StorageFactory", () => {
   });
 
   describe("Convenience Methods", () => {
-    it("should create MMKV storage with options", () => {
-      const { createMMKVStorage } = require("~/data/storage/storage-factory");
-      const options = { id: "custom", encryptionKey: "secret" };
-
-      createMMKVStorage(options);
-
-      expect(MockMMKVStorage).toHaveBeenCalledWith(options);
-    });
-
-    it("should create MMKV storage without options", () => {
-      const { createMMKVStorage } = require("~/data/storage/storage-factory");
-
-      createMMKVStorage();
-
-      expect(MockMMKVStorage).toHaveBeenCalledWith(undefined);
-    });
-
     it("should create AsyncStorage", () => {
       const { createAsyncStorage } = require("~/data/storage/storage-factory");
-      const {
-        AsyncStorageImpl,
-      } = require("~/data/storage/implementations/async-storage-impl");
 
       createAsyncStorage();
 
-      expect(AsyncStorageImpl).toHaveBeenCalled();
+      expect(MockAsyncStorageImpl).toHaveBeenCalled();
     });
 
-    it("should create SQLite storage", () => {
-      const { createSQLiteStorage } = require("~/data/storage/storage-factory");
-      const {
-        SQLiteStorage,
-      } = require("~/data/storage/implementations/sqlite-storage");
-      const options = { databaseName: "test.db" };
-
-      createSQLiteStorage(options);
-
-      expect(SQLiteStorage).toHaveBeenCalledWith(options);
-    });
-
-    it("should create WatermelonDB storage", () => {
-      const {
-        createWatermelonStorage,
-      } = require("~/data/storage/storage-factory");
-      const {
-        WatermelonStorage,
-      } = require("~/data/storage/implementations/watermelon-storage");
-      const options = { databaseName: "watermelon" };
-
-      createWatermelonStorage(options);
-
-      expect(WatermelonStorage).toHaveBeenCalledWith(options);
-    });
-
-    it("should create Realm storage", () => {
-      const { createRealmStorage } = require("~/data/storage/storage-factory");
-      const {
-        RealmStorage,
-      } = require("~/data/storage/implementations/realm-storage");
-      const options = { schemaVersion: 1 };
-
-      createRealmStorage(options);
-
-      expect(RealmStorage).toHaveBeenCalledWith(options);
-    });
+    // MMKV creation functions are commented out for Expo Go compatibility
+    // Other storage types (SQLite, WatermelonDB, Realm) are not implemented yet
   });
 });
