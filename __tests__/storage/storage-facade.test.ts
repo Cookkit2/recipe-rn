@@ -101,69 +101,84 @@ describe("StorageFacade", () => {
     });
   });
 
-  describe("Async Operations", () => {
-    it("should use async methods when available", async () => {
+  describe("Unified API with useAsync", () => {
+    it("should use async methods when useAsync=true and available", async () => {
       const expectedValue = { test: "async data" };
-      mockStorage.getAsync!.mockResolvedValue(expectedValue);
+      mockStorage.getAsync = jest.fn().mockResolvedValue(expectedValue);
 
-      const result = await facade.getAsync("key");
+      const result = await facade.get("key", true);
 
       expect(mockStorage.getAsync).toHaveBeenCalledWith("key");
       expect(result).toBe(expectedValue);
     });
 
-    it("should fallback to sync methods when async not available", async () => {
+    it("should fallback to sync methods when useAsync=true but async not available", async () => {
       mockStorage.getAsync = undefined;
       const expectedValue = { test: "sync data" };
       mockStorage.get.mockReturnValue(expectedValue);
 
-      const result = await facade.getAsync("key");
+      const result = await facade.get("key", true);
 
       expect(mockStorage.get).toHaveBeenCalledWith("key");
       expect(result).toBe(expectedValue);
     });
 
-    it("should use async setAsync when available", async () => {
-      const value = { test: "async data" };
+    it("should use sync methods when useAsync=false", () => {
+      const expectedValue = { test: "sync data" };
+      mockStorage.get.mockReturnValue(expectedValue);
 
-      await facade.setAsync("key", value);
+      const result = facade.get("key", false);
+
+      expect(mockStorage.get).toHaveBeenCalledWith("key");
+      expect(result).toBe(expectedValue);
+    });
+
+    it("should use async set when useAsync=true and available", async () => {
+      const value = { test: "async data" };
+      mockStorage.setAsync = jest.fn().mockResolvedValue(undefined);
+
+      await facade.set("key", value, true);
 
       expect(mockStorage.setAsync).toHaveBeenCalledWith("key", value);
     });
 
-    it("should fallback to sync set when setAsync not available", async () => {
+    it("should fallback to sync set when useAsync=true but setAsync not available", async () => {
       mockStorage.setAsync = undefined;
       const value = { test: "sync data" };
 
-      await facade.setAsync("key", value);
+      await facade.set("key", value, true);
 
       expect(mockStorage.set).toHaveBeenCalledWith("key", value);
     });
 
-    it("should use async deleteAsync when available", async () => {
-      await facade.deleteAsync("key");
+    it("should use async delete when useAsync=true and available", async () => {
+      mockStorage.deleteAsync = jest.fn().mockResolvedValue(undefined);
+
+      await facade.delete("key", true);
 
       expect(mockStorage.deleteAsync).toHaveBeenCalledWith("key");
     });
 
-    it("should fallback to sync delete when deleteAsync not available", async () => {
+    it("should fallback to sync delete when useAsync=true but deleteAsync not available", async () => {
       mockStorage.deleteAsync = undefined;
 
-      await facade.deleteAsync("key");
+      await facade.delete("key", true);
 
       expect(mockStorage.delete).toHaveBeenCalledWith("key");
     });
 
-    it("should use async clearAsync when available", async () => {
-      await facade.clearAsync();
+    it("should use async clear when useAsync=true and available", async () => {
+      mockStorage.clearAsync = jest.fn().mockResolvedValue(undefined);
+
+      await facade.clear(true);
 
       expect(mockStorage.clearAsync).toHaveBeenCalledWith();
     });
 
-    it("should fallback to sync clear when clearAsync not available", async () => {
+    it("should fallback to sync clear when useAsync=true but clearAsync not available", async () => {
       mockStorage.clearAsync = undefined;
 
-      await facade.clearAsync();
+      await facade.clear(true);
 
       expect(mockStorage.clear).toHaveBeenCalledWith();
     });
@@ -431,6 +446,7 @@ describe("StorageFacade", () => {
         supportsAsync: true,
         supportsBatch: true,
         keys: ["key1", "key2"],
+        isAsync: false,
       });
     });
 
@@ -457,9 +473,9 @@ describe("StorageFacade", () => {
 
     it("should propagate async errors", async () => {
       const error = new Error("Async storage error");
-      mockStorage.getAsync!.mockRejectedValue(error);
+      mockStorage.getAsync = jest.fn().mockRejectedValue(error);
 
-      await expect(facade.getAsync("key")).rejects.toThrow(
+      await expect(facade.get("key", true)).rejects.toThrow(
         "Async storage error"
       );
     });

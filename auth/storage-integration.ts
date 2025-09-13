@@ -1,6 +1,6 @@
+import { storageConfigs } from "~/data/storage/storage-config";
 import { StorageFactory } from "../data/storage";
-import { storageConfigs } from "../data/storage-config";
-import type { AuthSession } from "./types";
+import type { AuthSession } from "~/types/AuthTypes";
 
 /**
  * Secure storage integration for authentication tokens
@@ -34,22 +34,25 @@ export class AuthStorageManager {
    */
   async storeSession(session: AuthSession): Promise<void> {
     try {
-      await this.storage?.setAsync(this.KEYS.ACCESS_TOKEN, session.accessToken);
+      await this.storage.set(this.KEYS.ACCESS_TOKEN, session.accessToken, true);
 
       if (session.refreshToken) {
-        await this.storage?.setAsync(
+        await this.storage.set(
           this.KEYS.REFRESH_TOKEN,
-          session.refreshToken
+          session.refreshToken,
+          true
         );
       }
 
-      await this.storage?.setAsync(
+      await this.storage.set(
         this.KEYS.SESSION_EXPIRES_AT,
-        session.expiresAt.toISOString()
+        session.expiresAt.toISOString(),
+        true
       );
-      await this.storage?.setAsync(
+      await this.storage.set(
         this.KEYS.SESSION_DATA,
-        JSON.stringify(session)
+        JSON.stringify(session),
+        true
       );
 
       console.log("Auth session stored securely");
@@ -64,8 +67,9 @@ export class AuthStorageManager {
    */
   async getSession(): Promise<AuthSession | null> {
     try {
-      const sessionData = await this.storage?.getAsync<string>(
-        this.KEYS.SESSION_DATA
+      const sessionData = await this.storage.get<string>(
+        this.KEYS.SESSION_DATA,
+        true
       );
 
       if (!sessionData) {
@@ -94,8 +98,9 @@ export class AuthStorageManager {
    */
   async getAccessToken(): Promise<string | null> {
     try {
-      const token = await this.storage?.getAsync<string>(
-        this.KEYS.ACCESS_TOKEN
+      const token = await this.storage.get<string>(
+        this.KEYS.ACCESS_TOKEN,
+        true
       );
       return token || null;
     } catch (error) {
@@ -109,8 +114,9 @@ export class AuthStorageManager {
    */
   async getRefreshToken(): Promise<string | null> {
     try {
-      const token = await this.storage?.getAsync<string>(
-        this.KEYS.REFRESH_TOKEN
+      const token = await this.storage.get<string>(
+        this.KEYS.REFRESH_TOKEN,
+        true
       );
       return token || null;
     } catch (error) {
@@ -140,23 +146,26 @@ export class AuthStorageManager {
    */
   async updateAccessToken(accessToken: string, expiresAt: Date): Promise<void> {
     try {
-      await this.storage?.setAsync(this.KEYS.ACCESS_TOKEN, accessToken);
-      await this.storage?.setAsync(
+      await this.storage.set(this.KEYS.ACCESS_TOKEN, accessToken, true);
+      await this.storage.set(
         this.KEYS.SESSION_EXPIRES_AT,
-        expiresAt.toISOString()
+        expiresAt.toISOString(),
+        true
       );
 
       // Update session data if it exists
-      const sessionData = await this.storage?.getAsync<string>(
-        this.KEYS.SESSION_DATA
+      const sessionData = await this.storage.get<string>(
+        this.KEYS.SESSION_DATA,
+        true
       );
       if (sessionData) {
         const session = JSON.parse(sessionData) as AuthSession;
         session.accessToken = accessToken;
         session.expiresAt = expiresAt;
-        await this.storage?.setAsync(
+        await this.storage.set(
           this.KEYS.SESSION_DATA,
-          JSON.stringify(session)
+          JSON.stringify(session),
+          true
         );
       }
 
@@ -194,15 +203,15 @@ export class AuthStorageManager {
 
   // Async versions for better AsyncStorage compatibility
   public async getStringAsync(key: string): Promise<string | null> {
-    return (await this.storage?.getAsync<string>(key)) || null;
+    return (await this.storage.get<string>(key, true)) || null;
   }
 
   public async setStringAsync(key: string, value: string): Promise<void> {
-    await this.storage?.setAsync(key, value);
+    await this.storage.set(key, value, true);
   }
 
   public async removeAsync(key: string): Promise<void> {
-    await this.storage?.deleteAsync(key);
+    await this.storage.delete(key, true);
   }
 }
 
