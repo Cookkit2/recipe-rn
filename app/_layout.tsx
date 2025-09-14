@@ -24,6 +24,7 @@ import { PantryProvider } from "~/store/PantryContext";
 import { RecipeProvider } from "~/store/RecipeContext";
 import { QueryProvider } from "~/store/QueryProvider";
 import { AuthProvider, SupabaseAuthStrategy } from "~/auth";
+import { CameraProvider } from "~/store/CameraContext";
 
 // const LIGHT_THEME: Theme = {
 //   ...DefaultTheme,
@@ -59,7 +60,9 @@ function AnimatedStack() {
   // useEffect(() => {
   //   if (__DEV__) {
   //     setTimeout(() => {
-  //       router.push("/subscription");
+  //       // router.push("/ingredient/create");
+  //       // router.push("/ingredient/webview");
+  //       router.push("/ingredient/confirmation");
   //       // router.push("/recipes/chicken-stir-fry/steps");
   //     }, 0);
   //   }
@@ -114,7 +117,14 @@ function AnimatedStack() {
           />
           <Stack.Screen
             name="ingredient/create"
-            options={{ presentation: "modal", headerShown: false }}
+            options={{
+              presentation: "card",
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="ingredient/confirmation"
+            options={{ presentation: "card", headerShown: false }}
           />
 
           {/* ======== RECIPE ======== */}
@@ -228,10 +238,12 @@ export default function RootLayout() {
               <PantryProvider>
                 <RecipeProvider>
                   <OverlayProvider>
-                    <SystemBars style="auto" />
-                    <AnimatedStack />
-                    <PortalHost />
-                    <Toaster />
+                    <CameraProvider>
+                      <SystemBars style="auto" />
+                      <AnimatedStack />
+                      <PortalHost />
+                      <Toaster />
+                    </CameraProvider>
                   </OverlayProvider>
                 </RecipeProvider>
               </PantryProvider>

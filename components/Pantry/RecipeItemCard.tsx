@@ -42,7 +42,7 @@ const RecipeItemCard = ({ recipe }: { recipe: Recipe }) => {
           />
         </Animated.View>
         <View className="mt-2">
-          <H4 className="text-background opacity-80 mb-[0.5] font-urbanist-regular">
+          <H4 className="text-white/90 opacity-80 mb-[0.5] font-urbanist-regular">
             {recipe.title}
           </H4>
           <View className="flex-row items-center">

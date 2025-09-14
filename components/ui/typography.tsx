@@ -4,24 +4,26 @@ import { Platform, Text as RNText } from 'react-native';
 import { cn } from '~/lib/tw-merge';
 
 type TypographyProps = React.ComponentProps<typeof RNText> & {
-  ref?: React.RefObject<RNText>;
   asChild?: boolean;
 };
 
-function H1({ className, asChild = false, ...props }: TypographyProps) {
-  const Component = asChild ? Slot.Text : RNText;
-  return (
-    <Component
-      role='heading'
-      aria-level='1'
-      className={cn(
-        'web:scroll-m-20 text-4xl text-foreground font-extrabold tracking-tight lg:text-5xl web:select-text',
-        className
-      )}
-      {...props}
-    />
-  );
-}
+const H1 = React.forwardRef<RNText, TypographyProps>(
+  ({ className, asChild = false, ...props }, ref) => {
+    const Component = asChild ? Slot.Text : RNText;
+    return (
+      <Component
+        ref={ref}
+        role='heading'
+        aria-level='1'
+        className={cn(
+          'web:scroll-m-20 text-4xl text-foreground font-extrabold tracking-tight lg:text-5xl web:select-text',
+          className
+        )}
+        {...props}
+      />
+    );
+  }
+);
 
 function H2({ className, asChild = false, ...props }: TypographyProps) {
   const Component = asChild ? Slot.Text : RNText;
