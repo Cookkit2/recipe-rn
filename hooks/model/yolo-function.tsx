@@ -13,6 +13,9 @@ export function postprocessOutputsYolo(
   inputSize: [number, number] = MODEL_INPUT_SIZE,
   confThreshold: number = 0.25
 ): Detection[] {
+  if (!outputs || outputs.length === 0) {
+    return [];
+  }
   // YOLO v8/v11 outputs are typically [84, 8400]
   // where 84 = 4 (bbox) + 80 (classes)
 
@@ -25,58 +28,106 @@ export function postprocessOutputsYolo(
   const outputHeight = 84;
   const outputWidth = 8400;
 
-  // For YOLO v8/v11 format: transpose from [84, 8400] to [8400, 84]
-  const transposed: number[][] = [];
-  for (let i = 0; i < outputWidth; i++) {
-    const detection: number[] = [];
-    for (let j = 0; j < outputHeight; j++) {
-      detection.push(output?.[j * outputWidth + i] ?? 0);
-    }
-    transposed.push(detection);
-  }
+  // REMOVE HERE
+  // // For YOLO v8/v11 format: transpose from [84, 8400] to [8400, 84]
+  // const transposed: number[][] = [];
+  // for (let i = 0; i < outputWidth; i++) {
+  //   const detection: number[] = [];
+  //   for (let j = 0; j < outputHeight; j++) {
+  //     detection.push(output?.[j * outputWidth + i] ?? 0);
+  //   }
+  //   transposed.push(detection);
+  // }
 
+  // // Scale factors for converting back to original image size
+  // const scaleX = originalShape[1] / inputSize[0]; // width scale
+  // const scaleY = originalShape[0] / inputSize[1]; // height scale
+
+  // // Process each detection
+  // for (const detection of transposed) {
+  //   if (detection.length >= 84) {
+  //     // YOLO v8/v11 format: 4 bbox + 80 classes
+  //     const [xCenter, yCenter, width, height] = detection.slice(0, 4);
+
+  //     if (!xCenter || !yCenter || !width || !height) {
+  //       continue;
+  //     }
+
+  //     const classScores = detection.slice(4); // 80 class scores
+
+  //     // Find the class with highest score
+  //     const maxClassScore = Math.max(...classScores);
+
+  //     if (maxClassScore > confThreshold) {
+  //       const classId = classScores.indexOf(maxClassScore);
+
+  //       // Convert from normalized coordinates to pixel coordinates
+  //       // YOLO outputs are in normalized format [0, 1]
+  //       const xCenterPixel = xCenter * inputSize[0] * scaleX;
+  //       const yCenterPixel = yCenter * inputSize[1] * scaleY;
+  //       const widthPixel = width * inputSize[0] * scaleX;
+  //       const heightPixel = height * inputSize[1] * scaleY;
+
+  //       // Convert from center format to corner format
+  //       const x1 = xCenterPixel - widthPixel / 2;
+  //       const y1 = yCenterPixel - heightPixel / 2;
+  //       const x2 = xCenterPixel + widthPixel / 2;
+  //       const y2 = yCenterPixel + heightPixel / 2;
+
+  //       detections.push({
+  //         bbox: [x1, y1, x2, y2],
+  //         confidence: maxClassScore,
+  //         classId: classId,
+  //         className: CLASS_NAMES[classId] ?? "",
+  //       });
+  //     }
+  //   }
+  // }
+
+  // UNTIL HERE
+
+  // Instead of transposing, process each detection directly from the flat output array
   // Scale factors for converting back to original image size
   const scaleX = originalShape[1] / inputSize[0]; // width scale
   const scaleY = originalShape[0] / inputSize[1]; // height scale
-
-  // Process each detection
-  for (const detection of transposed) {
-    if (detection.length >= 84) {
-      // YOLO v8/v11 format: 4 bbox + 80 classes
-      const [xCenter, yCenter, width, height] = detection.slice(0, 4);
-
-      if (!xCenter || !yCenter || !width || !height) {
-        continue;
-      }
-
-      const classScores = detection.slice(4); // 80 class scores
-
-      // Find the class with highest score
-      const maxClassScore = Math.max(...classScores);
-
-      if (maxClassScore > confThreshold) {
-        const classId = classScores.indexOf(maxClassScore);
-
-        // Convert from normalized coordinates to pixel coordinates
-        // YOLO outputs are in normalized format [0, 1]
-        const xCenterPixel = xCenter * inputSize[0] * scaleX;
-        const yCenterPixel = yCenter * inputSize[1] * scaleY;
-        const widthPixel = width * inputSize[0] * scaleX;
-        const heightPixel = height * inputSize[1] * scaleY;
-
-        // Convert from center format to corner format
-        const x1 = xCenterPixel - widthPixel / 2;
-        const y1 = yCenterPixel - heightPixel / 2;
-        const x2 = xCenterPixel + widthPixel / 2;
-        const y2 = yCenterPixel + heightPixel / 2;
-
-        detections.push({
-          bbox: [x1, y1, x2, y2],
-          confidence: maxClassScore,
-          classId: classId,
-          className: CLASS_NAMES[classId] ?? "",
-        });
-      }
+  // Process each detection directly from the flat output array
+  for (let i = 0; i < outputWidth; i++) {
+    // Each detection is 84 values: [x, y, w, h, ...class scores]
+    // const base = i;
+    // Extract bbox
+    const xCenter = output?.[0 * outputWidth + i] ?? 0;
+    const yCenter = output?.[1 * outputWidth + i] ?? 0;
+    const width = output?.[2 * outputWidth + i] ?? 0;
+    const height = output?.[3 * outputWidth + i] ?? 0;
+    if (!xCenter || !yCenter || !width || !height) {
+      continue;
+    }
+    // Extract class scores
+    const classScores: number[] = [];
+    for (let c = 4; c < outputHeight; c++) {
+      classScores.push(output?.[c * outputWidth + i] ?? 0);
+    }
+    // Find the class with highest score
+    const maxClassScore = Math.max(...classScores);
+    if (maxClassScore > confThreshold) {
+      const classId = classScores.indexOf(maxClassScore);
+      // Convert from normalized coordinates to pixel coordinates
+      // YOLO outputs are in normalized format [0, 1]
+      const xCenterPixel = xCenter * inputSize[0] * scaleX;
+      const yCenterPixel = yCenter * inputSize[1] * scaleY;
+      const widthPixel = width * inputSize[0] * scaleX;
+      const heightPixel = height * inputSize[1] * scaleY;
+      // Convert from center format to corner format
+      const x1 = xCenterPixel - widthPixel / 2;
+      const y1 = yCenterPixel - heightPixel / 2;
+      const x2 = xCenterPixel + widthPixel / 2;
+      const y2 = yCenterPixel + heightPixel / 2;
+      detections.push({
+        bbox: [x1, y1, x2, y2],
+        confidence: maxClassScore,
+        classId: classId,
+        className: CLASS_NAMES[classId] ?? "",
+      });
     }
   }
 

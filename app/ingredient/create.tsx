@@ -39,11 +39,8 @@ import {
 import useOnPressScale from "~/hooks/animation/useOnPressScale";
 import Animated, {
   BounceIn,
-  BounceOut,
-  Easing,
   FadeOut,
   LinearTransition,
-  useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
@@ -68,6 +65,7 @@ import { titleCase } from "~/utils/text-formatter";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const THUMBNAIL_SIZE = 32;
+const CAMERA_RESOLUTION = { width: 3024, height: 4032 };
 
 export type SegmentedImage = Prettify<
   Omit<PantryItemConfirmation, "id" | "image_url"> & {
@@ -101,8 +99,8 @@ export default function CreateIngredient() {
     useCameraStore();
 
   const format = useCameraFormat(device, [
-    { photoResolution: { width: 3024, height: 4032 } },
-    { videoResolution: { width: 3024, height: 4032 } },
+    { photoResolution: CAMERA_RESOLUTION },
+    { videoResolution: CAMERA_RESOLUTION },
   ]);
 
   const imageBackgroundColor = useImageColors(capturedImage ?? undefined);
@@ -172,8 +170,8 @@ export default function CreateIngredient() {
 
     // Normalize the frame position to the image size
     const normalizedFramePosition = {
-      x: (framePosition.x / width) * 3024,
-      y: (framePosition.y / width / 3) * 4 * 3024,
+      x: (framePosition.x / width) * CAMERA_RESOLUTION.width,
+      y: (framePosition.y / ((width * 4) / 3)) * CAMERA_RESOLUTION.height,
     };
 
     // Process the photo for segmentation
