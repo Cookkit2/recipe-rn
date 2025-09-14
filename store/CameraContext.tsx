@@ -1,6 +1,5 @@
 import React, { createContext, useCallback, useContext, useState } from "react";
 import type { PantryItemConfirmation } from "~/types/PantryItem";
-import type { YOLOResult } from "~/utils/yolo-segmentation";
 import { useWindowDimensions } from "react-native";
 
 interface CameraContextType {
@@ -10,8 +9,8 @@ interface CameraContextType {
     height: number;
   } | null;
   updatePhotoSize: (photoSize: { width: number; height: number }) => void;
-  yoloResults: YOLOResult | null;
-  setYoloResults: (yoloResults: YOLOResult | null) => void;
+  // yoloResults: YOLOResult | null;
+  // setYoloResults: (yoloResults: YOLOResult | null) => void;
   processPantryItems: PantryItemConfirmation[];
   addProcessPantryItems: (item: PantryItemConfirmation) => void;
   updateProcessPantryItems: (item: PantryItemConfirmation) => void;
@@ -26,7 +25,7 @@ export function CameraProvider({ children }: { children: React.ReactNode }) {
     width: number;
     height: number;
   } | null>(null);
-  const [yoloResults, setYoloResults] = useState<YOLOResult | null>(null);
+  // const [yoloResults, setYoloResults] = useState<YOLOResult | null>(null);
   const [processPantryItems, setProcessPantryItems] = useState<
     PantryItemConfirmation[]
   >([
@@ -76,8 +75,8 @@ export function CameraProvider({ children }: { children: React.ReactNode }) {
       value={{
         photoSize,
         updatePhotoSize,
-        yoloResults,
-        setYoloResults,
+        // yoloResults,
+        // setYoloResults,
         processPantryItems,
         addProcessPantryItems,
         updateProcessPantryItems,
