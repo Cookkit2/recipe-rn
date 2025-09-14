@@ -8,7 +8,7 @@ module.exports = function (api) {
       "nativewind/babel",
     ],
     plugins: [
-      ["@babel/plugin-proposal-decorators", { version: "2023-11" }],
+      ["@babel/plugin-proposal-decorators", { legacy: true }],
       [
         "module-resolver",
         {
