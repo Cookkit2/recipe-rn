@@ -47,9 +47,8 @@ export default function PantryPage() {
     collapsedHeight,
   } = usePantryStore();
 
-  const workletsContext = Worklets.defaultContext;
-
   useEffect(() => {
+    const workletsContext = Worklets.defaultContext;
     const loadModel = async () => {
       await workletsContext.runAsync(() => {
         "worklet";
@@ -57,7 +56,7 @@ export default function PantryPage() {
       });
     };
     loadModel();
-  });
+  }, []);
 
   // Pan gesture handler
   const panGesture = Gesture.Pan()
