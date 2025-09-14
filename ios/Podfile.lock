@@ -420,11 +420,11 @@ PODS:
   - onnxruntime-react-native (1.22.0):
     - onnxruntime-c
     - React-Core
-  - PurchasesHybridCommon (17.3.0):
-    - RevenueCat (= 5.36.0)
-  - PurchasesHybridCommonUI (17.3.0):
-    - PurchasesHybridCommon (= 17.3.0)
-    - RevenueCatUI (= 5.36.0)
+  - PurchasesHybridCommon (17.6.0):
+    - RevenueCat (= 5.38.2)
+  - PurchasesHybridCommonUI (17.6.0):
+    - PurchasesHybridCommon (= 17.6.0)
+    - RevenueCatUI (= 5.38.2)
   - RCT-Folly (2024.11.18.00):
     - boost
     - DoubleConversion
@@ -2403,9 +2403,9 @@ PODS:
     - React-logger (= 0.79.5)
     - React-perflogger (= 0.79.5)
     - React-utils (= 0.79.5)
-  - RevenueCat (5.36.0)
-  - RevenueCatUI (5.36.0):
-    - RevenueCat (= 5.36.0)
+  - RevenueCat (5.38.2)
+  - RevenueCatUI (5.38.2):
+    - RevenueCat (= 5.38.2)
   - RNCAsyncStorage (2.1.2):
     - DoubleConversion
     - glog
@@ -2502,11 +2502,11 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNPaywalls (9.3.0):
-    - PurchasesHybridCommonUI (= 17.3.0)
+  - RNPaywalls (9.4.2):
+    - PurchasesHybridCommonUI (= 17.6.0)
     - React-Core
-  - RNPurchases (9.3.0):
-    - PurchasesHybridCommon (= 17.3.0)
+  - RNPurchases (9.4.2):
+    - PurchasesHybridCommon (= 17.6.0)
     - React-Core
   - RNReanimated (3.17.5):
     - DoubleConversion
@@ -3286,8 +3286,8 @@ SPEC CHECKSUMS:
   MMKVCore: 6d5cc1bacce539f4c974985dfe646fb65a5d27d2
   onnxruntime-c: 7f778680e96145956c0a31945f260321eed2611a
   onnxruntime-react-native: fc8c8349f1cc9bf6123f5e4f91cdc270a75f1e81
-  PurchasesHybridCommon: 61759dbf7a02b085e4904d8def867d6a89252cb0
-  PurchasesHybridCommonUI: 7247559e065f074856efc201099e3e69f46fc33a
+  PurchasesHybridCommon: 3e27aec7bccba3d3d34cd66a7033ba9b268caa5e
+  PurchasesHybridCommonUI: 0d6940f80d2bcbce81a2904a8328e1b38dcda94e
   RCT-Folly: 36fe2295e44b10d831836cc0d1daec5f8abcf809
   RCTDeprecation: 5f638f65935e273753b1f31a365db6a8d6dc53b5
   RCTRequired: 8b46a520ea9071e2bc47d474aa9ca31b4a935bd8
@@ -3364,14 +3364,14 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: c42e7abdd2228ae583bdabc3dcd8e5cda6bef944
   ReactCodegen: 4d001cd4fa72b876bbff500bbb3811e458bb3c72
   ReactCommon: 41137f7e87cf7fd1c041a7124dfa3d0d48aa43f3
-  RevenueCat: 1b6e3f4582356a549048dac2cd21410cad67d51b
-  RevenueCatUI: ad521e495d6b7be1b16ee444a3bdeac8ac271316
+  RevenueCat: f6b7c7e55f548a2bf304a3abbed0cc2447364427
+  RevenueCatUI: 19681d899df72efe37f073ad1cd55e84877673da
   RNCAsyncStorage: c1bbcf629d7206d1e19310827848b98d68a4cbaf
   RNCMaskedView: 3e8d6bf9764b519d077986413882959eafceffbc
   RNDateTimePicker: 792e57dd210f8af940812636708d43777f1f922b
   RNGestureHandler: ccf4105b125002bd88e39d2a1f2b7e6001bcdf34
-  RNPaywalls: bcc137095e31fc1355c6503c75f0adcc5af88e30
-  RNPurchases: afcd2131734f6a024a3035e75dfa93f5d1aa8fc5
+  RNPaywalls: 3691aef0d51568f1cb1697334929b544ce8b8a11
+  RNPurchases: 06f3af43ac937efa83b66a86ff2241fcee44e3bb
   RNReanimated: 8b24b49fc13fce9a6e1729ccff645a63d2b7a6d1
   RNScreens: c2e3cc506212228c607b4785b315205e28acbf0f
   RNSharedElement: 3fd05877bd6bc95f71b332801bf4356ca69ab7f6
