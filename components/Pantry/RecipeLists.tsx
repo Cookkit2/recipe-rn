@@ -48,10 +48,10 @@ export default function RecipeLists() {
       renderItem={({ item }) => <RecipeItemCard key={item.id} recipe={item} />}
       ListEmptyComponent={
         <View className="py-16 items-center justify-center">
-          <H4 className="text-muted-foreground text-center">
+          <H4 className="text-muted-foreground font-urbanist-semibold text-center">
             No recipes found
           </H4>
-          <P className="text-muted-foreground text-center text-sm mt-1">
+          <P className="text-muted-foreground font-urbanist-regular text-center text-sm mt-1">
             Try adjusting your filters or add some ingredients
           </P>
         </View>

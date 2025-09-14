@@ -1,5 +1,11 @@
-import { CameraView, type CameraType, useCameraPermissions } from "expo-camera";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCameraPermissions } from "expo-camera";
+import {
+  Camera,
+  useCameraDevice,
+  useCameraFormat,
+  type CameraPosition,
+} from "react-native-vision-camera";
+import { startTransition, useEffect, useRef, useState } from "react";
 import {
   StyleSheet,
   View,
@@ -7,58 +13,115 @@ import {
   Linking,
   Platform,
   Pressable,
-  Dimensions,
+  useWindowDimensions,
+  ActivityIndicator,
 } from "react-native";
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import FocusingAreaIndicator from "~/components/Camera/FocusingAreaIndicator";
 import * as ImagePicker from "expo-image-picker";
 import { H4, P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
-import { useColorScheme } from "~/hooks/useColorScheme";
-import { NAV_THEME } from "~/constants/colors";
 import { useRouter } from "expo-router";
 import {
-  ArrowLeftIcon,
   CameraIcon,
+  CheckIcon,
   ImagesIcon,
-  SwitchCameraIcon,
+  RefreshCcwIcon,
+  XIcon,
 } from "lucide-nativewind";
+import { Image } from "expo-image";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SystemBars } from "react-native-edge-to-edge";
+import {
+  segmentStaticImage,
+  trimTransparentBorders,
+  resizeImagePreserveAlpha,
+} from "~/hooks/model/useSegmentModel";
+import useOnPressScale from "~/hooks/animation/useOnPressScale";
+import Animated, {
+  BounceIn,
+  BounceOut,
+  Easing,
+  FadeOut,
+  LinearTransition,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+import { toast } from "sonner-native";
+import { CURVES } from "~/constants/curves";
+import { useCameraStore } from "~/store/CameraContext";
+import {
+  type SkImage,
+  Image as SkiaImage,
+  Canvas,
+  useImage,
+  Fill,
+} from "@shopify/react-native-skia";
+import * as FileSystem from "expo-file-system";
+import type { PantryItemConfirmation } from "~/types/PantryItem";
+import type { Prettify } from "~/utils/type-prettier";
+import useImageColors from "~/hooks/useImageColors";
+import useColors from "~/hooks/useColor";
+import * as Haptics from "expo-haptics";
+import uuid from "react-native-uuid";
+import { titleCase } from "~/utils/text-formatter";
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+const THUMBNAIL_SIZE = 32;
+
+export type SegmentedImage = Prettify<
+  Omit<PantryItemConfirmation, "id" | "image_url"> & {
+    skImage: SkImage;
+  }
+>;
 
 export default function CreateIngredient() {
-  const [facing, setFacing] = useState<CameraType>("back");
+  const router = useRouter();
+  const { bottom, top } = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const { animatedStyle, handlePressIn, handlePressOut } = useOnPressScale();
+
+  const camera = useRef<Camera>(null);
+
+  const [facing, setFacing] = useState<CameraPosition>("back");
   const [permission, requestPermission] = useCameraPermissions();
   const [hasAskedPermission, setHasAskedPermission] = useState(false);
-  const { colorScheme } = useColorScheme();
-  const router = useRouter();
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const capturedImageSk = useImage(capturedImage);
 
-  // Get screen dimensions
-  const screenWidth = Dimensions.get("window").width;
-  const screenHeight = Dimensions.get("window").height;
+  const [isSegmentingImage, setIsSegmentingImage] = useState(false);
+  const [segmentedImage, setSegmentedImage] = useState<SegmentedImage | null>(
+    null
+  );
 
-  // Frame position state - default to center of screen
-  const [framePosition, setFramePosition] = useState({
-    x: screenWidth / 2 - 64, // Center horizontally (minus half frame width)
-    y: screenHeight / 2 - 64, // Center vertically (minus half frame height)
-  });
+  const device = useCameraDevice(facing);
+  const isCameraAvailable = !!device;
 
-  // Bottom sheet ref
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const { processPantryItems, addProcessPantryItems, framePosition } =
+    useCameraStore();
 
-  // Dynamic styles based on theme
-  const dynamicStyles = StyleSheet.create({
-    bottomSheetBackground: {
-      backgroundColor: NAV_THEME[colorScheme].card,
-      borderTopLeftRadius: 16,
-      borderTopRightRadius: 16,
-    },
-    bottomSheetIndicator: {
-      backgroundColor: NAV_THEME[colorScheme].primary,
-      width: 40,
-      height: 4,
-    },
-    cameraView: {
-      flex: 1,
-    },
-  });
+  const format = useCameraFormat(device, [
+    { photoResolution: { width: 3024, height: 4032 } },
+    { videoResolution: { width: 3024, height: 4032 } },
+  ]);
+
+  const imageBackgroundColor = useImageColors(capturedImage ?? undefined);
+  const colors = useColors();
+
+  const capturedImageOpacityValue = useSharedValue(0);
+  const greyBackgroundOpacityValue = useSharedValue(0);
+
+  useEffect(() => {
+    // Push a new system bar style when the screen mounts
+    const entry = SystemBars.pushStackEntry({
+      style: "light",
+    });
+
+    // Pop it back when leaving (to restore previous settings)
+    return () => {
+      SystemBars.popStackEntry(entry);
+    };
+  }, []);
 
   useEffect(() => {
     if (!permission && !hasAskedPermission) {
@@ -69,42 +132,148 @@ export default function CreateIngredient() {
 
   // Camera and gallery functions
   const takePicture = async () => {
-    // TODO: Implement camera capture
-    // console.log('Taking picture...');
-  };
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-  const pickFromGallery = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
+    if (camera.current) {
+      try {
+        const photo = await camera.current.takePhoto();
 
-    if (!result.canceled) {
-      // TODO: Handle selected image
-      // Image selected successfully
+        if (photo?.path) {
+          processImage(photo.path);
+        }
+      } catch (error) {
+        console.error("Error taking picture:", error);
+        toast.error("Error taking picture");
+      }
     }
   };
 
-  const handleSheetChanges = useCallback((_index: number) => {
-    // Bottom sheet changed to index: _index
-  }, []);
+  const pickFromGallery = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets?.[0]) {
+        const selectedImage = result.assets[0];
+        processImage(selectedImage.uri);
+      }
+    } catch (error) {
+      console.error("Error picking from gallery:", error);
+      toast.error("Error picking from gallery");
+    }
+  };
+
+  const processImage = async (imagePath: string) => {
+    setIsSegmentingImage(true);
+    setCapturedImage(imagePath);
+    capturedImageOpacityValue.value = 1;
+
+    // Normalize the frame position to the image size
+    const normalizedFramePosition = {
+      x: (framePosition.x / width) * 3024,
+      y: (framePosition.y / width / 3) * 4 * 3024,
+    };
+
+    // Process the photo for segmentation
+    const segmentedImage = await segmentStaticImage(
+      imagePath,
+      normalizedFramePosition
+    );
+
+    if (!segmentedImage) return;
+    setSegmentedImage(segmentedImage);
+
+    setIsSegmentingImage(false);
+    setTimeout(() => {
+      capturedImageOpacityValue.value = withTiming(
+        0,
+        CURVES["expressive.fast.effects"]
+      );
+    }, 200);
+    setTimeout(() => {
+      greyBackgroundOpacityValue.value = withTiming(
+        1,
+        CURVES["expressive.fast.effects"]
+      );
+    }, 100);
+  };
+
+  const confirmSegmentedImage = () => {
+    if (!segmentedImage) return;
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+    const filename = `masked-${Date.now()}.png`;
+    const outPath = `${FileSystem.cacheDirectory || ""}${filename}`;
+
+    setSegmentedImage(null);
+    setCapturedImage(null);
+    greyBackgroundOpacityValue.value = withTiming(
+      0,
+      CURVES["expressive.fast.effects"]
+    );
+
+    // Write to cache asynchronously for better performance
+    startTransition(async () => {
+      const { finalImage: trimmedImage } = trimTransparentBorders(
+        segmentedImage.skImage,
+        2
+      );
+
+      // Downscale to ~350px width to reduce file size, keep alpha
+      const { base64: resizedBase64 } = resizeImagePreserveAlpha(
+        trimmedImage,
+        300
+      );
+
+      await FileSystem.writeAsStringAsync(outPath, resizedBase64 ?? "", {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      addProcessPantryItems({
+        id: uuid.v4().toString(),
+        image_url: outPath,
+        name: titleCase(segmentedImage.name),
+        quantity: segmentedImage.quantity,
+        unit: segmentedImage.unit,
+      });
+    });
+  };
+
+  const cancelSegmentedImage = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+
+    setSegmentedImage(null);
+    setCapturedImage(null);
+    greyBackgroundOpacityValue.value = withTiming(
+      0,
+      CURVES["expressive.fast.effects"]
+    );
+  };
 
   function toggleCameraFacing() {
     setFacing((current) => (current === "back" ? "front" : "back"));
   }
 
-  // Handle touch on camera view to move frame
-  const handleCameraTouch = (event: {
-    nativeEvent: { pageX: number; pageY: number };
-  }) => {
-    const { pageX, pageY } = event.nativeEvent;
-    setFramePosition({ x: pageX - 64, y: pageY - 64 }); // Center the 128x128 frame on touch point
+  const onConfirm = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    try {
+      router.push("/ingredient/confirmation", {});
+    } catch (error) {
+      console.error("Error confirming:", error);
+      toast.error("Error confirming");
+    }
   };
 
+  const onBack = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.back();
+  };
+
+  // Camera permissions are still loading.
   if (!permission) {
-    // Camera permissions are still loading.
     return <View className="flex-1 bg-black" />;
   }
 
@@ -157,111 +326,195 @@ export default function CreateIngredient() {
   }
 
   return (
-    <View className="flex-1">
-      <View
-        style={dynamicStyles.cameraView}
-        onStartShouldSetResponder={() => true}
-        onResponderGrant={handleCameraTouch}
-      >
-        {/* CameraView without children */}
-        <CameraView style={dynamicStyles.cameraView} facing={facing} />
-
-        {/* Overlay elements positioned absolutely on top of camera */}
-        {/* Header with date and instruction */}
-        <View className="absolute p-8 w-full flex justify-center items-center">
-          <P className="text-white text-center py-1">
-            Please place the object within the frame
-          </P>
-        </View>
-
-        {/* Back Button */}
-        <View className="absolute p-8 z-10">
-          <Button
-            size="icon-sm"
-            variant="secondary"
-            className="rounded-full"
-            onPress={() => router.back()}
-          >
-            <ArrowLeftIcon className="text-foreground" size={20} />
-          </Button>
-        </View>
-
-        {/* Scanning Frame Overlay - positioned based on touch */}
-        <View
-          className="absolute w-32 h-32"
-          style={{
-            left: framePosition.x,
-            top: framePosition.y,
-          }}
+    <View
+      className="flex-1 bg-black"
+      style={{ paddingTop: top, paddingBottom: bottom }}
+    >
+      {/* HEADER */}
+      <View className="w-full flex flex-row justify-between items-center py-4">
+        <Animated.FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerClassName="flex-1 pl-4"
+          fadingEdgeLength={10}
+          data={processPantryItems}
+          itemLayoutAnimation={LinearTransition.springify()
+            .damping(15)
+            .mass(1)
+            .stiffness(150)
+            .overshootClamping(0)}
+          renderItem={({ item }) => (
+            <AnimatedPressable
+              key={item.id}
+              entering={BounceIn.springify()
+                .damping(15)
+                .mass(1)
+                .stiffness(150)
+                .overshootClamping(0)}
+              onPress={onConfirm}
+              className="ml-3"
+            >
+              <Image
+                source={item.image_url}
+                style={[{ width: THUMBNAIL_SIZE, height: THUMBNAIL_SIZE }]}
+                contentFit="contain"
+                contentPosition="center"
+              />
+            </AnimatedPressable>
+          )}
+        />
+        <Button
+          size="icon-sm"
+          variant="ghost"
+          className="rounded-full mx-4"
+          onPress={onBack}
         >
-          {/* Top Left Corner */}
-          <View className="absolute top-0 left-0 w-6 h-6">
-            <View className="absolute top-0 left-0 w-6 h-1 bg-white" />
-            <View className="absolute top-0 left-0 w-1 h-6 bg-white" />
-          </View>
-
-          {/* Top Right Corner */}
-          <View className="absolute top-0 right-0 w-6 h-6">
-            <View className="absolute top-0 right-0 w-6 h-1 bg-white" />
-            <View className="absolute top-0 right-0 w-1 h-6 bg-white" />
-          </View>
-
-          {/* Bottom Left Corner */}
-          <View className="absolute bottom-0 left-0 w-6 h-6">
-            <View className="absolute bottom-0 left-0 w-6 h-1 bg-white" />
-            <View className="absolute bottom-0 left-0 w-1 h-6 bg-white" />
-          </View>
-
-          {/* Bottom Right Corner */}
-          <View className="absolute bottom-0 right-0 w-6 h-6">
-            <View className="absolute bottom-0 right-0 w-6 h-1 bg-white" />
-            <View className="absolute bottom-0 right-0 w-1 h-6 bg-white" />
-          </View>
-        </View>
+          <XIcon className="text-white" size={20} />
+        </Button>
       </View>
 
-      {/* Bottom Sheet */}
-      <BottomSheet
-        ref={bottomSheetRef}
-        index={0}
-        snapPoints={["20%", "100%"]}
-        onChange={handleSheetChanges}
-        backgroundStyle={dynamicStyles.bottomSheetBackground}
-        handleIndicatorStyle={dynamicStyles.bottomSheetIndicator}
-        enableDynamicSizing={false}
-      >
-        <BottomSheetView className="flex-1 p-6">
-          <View className="flex flex-row justify-between items-center px-3">
-            {/* Flip Camera Button */}
-            <Button
-              size="icon-lg"
-              variant="secondary"
-              className="rounded-full"
-              onPress={toggleCameraFacing}
-            >
-              <SwitchCameraIcon className="text-foreground" size={20} />
-            </Button>
-
-            {/* Camera Shutter Button */}
-            <Pressable
-              className="w-20 h-20 rounded-full bg-white justify-center items-center border-4 border-gray-300"
-              onPress={takePicture}
-            >
-              <View className="w-15 h-15 rounded-full bg-white border-2 border-gray-400" />
-            </Pressable>
-
-            {/* Gallery Button */}
-            <Button
-              size="icon-lg"
-              variant="secondary"
-              className="rounded-full"
-              onPress={pickFromGallery}
-            >
-              <ImagesIcon className="text-foreground" size={20} />
-            </Button>
+      <View className="relative w-full aspect-[3/4] z-[1]">
+        {isCameraAvailable ? (
+          <Camera
+            ref={camera}
+            photo
+            style={[StyleSheet.absoluteFill]}
+            photoQualityBalance="speed"
+            device={device!}
+            format={format}
+            enableZoomGesture
+            enableDepthData={false}
+            isActive={capturedImage || segmentedImage ? false : true}
+          />
+        ) : (
+          <View className="absolute inset-0 items-center justify-center bg-black">
+            <CameraIcon className="text-white/60" size={56} />
+            <H4 className="text-white mt-4 font-urbanist-bold">
+              No Camera Available
+            </H4>
+            <P className="text-gray-300 mt-2 px-8 text-center font-urbanist-regular">
+              This device doesn't have an available camera. You can still pick
+              an image from your gallery.
+            </P>
           </View>
-        </BottomSheetView>
-      </BottomSheet>
+        )}
+
+        <Canvas
+          style={[
+            StyleSheet.absoluteFill,
+            { width: width, height: (width / 3) * 4 },
+          ]}
+        >
+          <Fill
+            color={imageBackgroundColor || colors.muted}
+            opacity={greyBackgroundOpacityValue}
+          />
+          <SkiaImage
+            image={capturedImageSk}
+            x={0}
+            y={0}
+            opacity={capturedImageOpacityValue}
+            width={width}
+            height={(width / 3) * 4}
+            fit="contain"
+          />
+          {segmentedImage && (
+            <SkiaImage
+              image={segmentedImage?.skImage}
+              x={0}
+              y={0}
+              width={width}
+              height={(width / 3) * 4}
+              fit="contain"
+            />
+          )}
+        </Canvas>
+
+        <View className="absolute bottom-16 left-0 right-0 flex-row items-center justify-center">
+          {segmentedImage?.name && (
+            <Animated.View
+              className="rounded-full bg-primary shadow-sm px-4 pt-2 pb-[3]"
+              entering={BounceIn.springify()
+                .damping(15)
+                .mass(1)
+                .stiffness(150)
+                .overshootClamping(0)}
+              exiting={FadeOut.duration(200)}
+            >
+              <H4 className="font-bowlby-one text-primary-foreground">
+                {segmentedImage.name}
+              </H4>
+            </Animated.View>
+          )}
+        </View>
+
+        {isCameraAvailable && !capturedImageSk && (
+          <FocusingAreaIndicator cameraRef={camera} />
+        )}
+      </View>
+
+      {segmentedImage ? (
+        <View className="flex flex-row justify-center items-center px-8 pt-8 gap-8">
+          <Button
+            size="icon-lg"
+            variant="ghost"
+            className="rounded-full active:bg-white/10"
+            onPress={cancelSegmentedImage}
+          >
+            <XIcon className="text-white/80" size={24} />
+          </Button>
+
+          <AnimatedPressable
+            className="w-20 h-20 rounded-full bg-white justify-center items-center border-4 border-gray-300"
+            onPress={confirmSegmentedImage}
+            onPressIn={handlePressIn}
+            onPressOut={handlePressOut}
+            style={animatedStyle}
+          >
+            <CheckIcon className="text-black" size={24} />
+          </AnimatedPressable>
+        </View>
+      ) : (
+        <View className="flex flex-row justify-between items-center px-8 pt-8">
+          {/* Gallery Button */}
+          <Button
+            size="icon-lg"
+            variant="ghost"
+            className="rounded-full active:bg-white/10"
+            onPress={pickFromGallery}
+            disabled={isSegmentingImage}
+          >
+            <ImagesIcon className="text-white/80" size={24} />
+          </Button>
+
+          {/* Camera Shutter Button */}
+          <AnimatedPressable
+            className="w-20 h-20 rounded-full bg-white justify-center items-center border-4 border-gray-300"
+            onPress={takePicture}
+            onPressIn={handlePressIn}
+            onPressOut={handlePressOut}
+            style={animatedStyle}
+            disabled={!isCameraAvailable || isSegmentingImage}
+          >
+            {isSegmentingImage ? (
+              <ActivityIndicator size="small" className="text-black" />
+            ) : (
+              <View className="w-15 h-15 rounded-full bg-white border-2 border-gray-400" />
+            )}
+          </AnimatedPressable>
+
+          {/* Flip Camera Button */}
+          <Button
+            size="icon-lg"
+            variant="ghost"
+            className="rounded-full active:bg-white/10"
+            onPress={toggleCameraFacing}
+            disabled={!isCameraAvailable || isSegmentingImage}
+          >
+            <RefreshCcwIcon className="text-white/80" size={24} />
+          </Button>
+        </View>
+      )}
     </View>
   );
 }

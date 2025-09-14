@@ -77,7 +77,7 @@ export const IngredientItemCard = ({
             {item.name}
           </H4>
           <P className="text-muted-foreground font-urbanist-medium">
-            {item.quantity}
+            {item.quantity} {item.unit}
           </P>
         </View>
       </Pressable>

@@ -2,7 +2,7 @@ import { Pressable, View, Dimensions } from "react-native";
 import { H1 } from "~/components/ui/typography";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MenuDropdown from "~/components/Pantry/MenuDropdown";
-import AddPantryItemModal from "~/components/Pantry/AddPantryItemModal";
+import AddPantryItem from "~/components/Pantry/AddPantryItem";
 import RecipeButton from "~/components/Pantry/RecipeButton";
 import Animated, {
   Easing,
@@ -21,6 +21,9 @@ import { EXPANDED_HEIGHT, SNAP_THRESHOLD } from "~/constants/pantry";
 import { usePantryStore } from "~/store/PantryContext";
 import IngredientCategoryButtonGroup from "~/components/Pantry/IngredientCategoryButtonGroup";
 import IngredientLists from "~/components/Pantry/IngredientLists";
+import { useEffect } from "react";
+import allModel from "~/hooks/model/allModel";
+import { Worklets } from "react-native-worklets-core";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -43,6 +46,18 @@ export default function PantryPage() {
     isGestureActive,
     collapsedHeight,
   } = usePantryStore();
+
+  const workletsContext = Worklets.defaultContext;
+
+  useEffect(() => {
+    const loadModel = async () => {
+      await workletsContext.runAsync(() => {
+        "worklet";
+        allModel.preload();
+      });
+    };
+    loadModel();
+  });
 
   // Pan gesture handler
   const panGesture = Gesture.Pan()
@@ -190,7 +205,7 @@ export default function PantryPage() {
         >
           <H1 className="font-bowlby-one pt-2">Pantry</H1>
           <View className="flex-1" />
-          <AddPantryItemModal />
+          <AddPantryItem />
           <MenuDropdown />
         </Animated.View>
         <IngredientCategoryButtonGroup />

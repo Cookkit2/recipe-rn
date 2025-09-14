@@ -20,6 +20,14 @@ export type PantryItem = {
   steps_to_store: StepsToStore[];
 };
 
+export type PantryItemConfirmation = {
+  id: string;
+  name: string;
+  quantity: number;
+  unit: string;
+  image_url: ImageSourcePropType | string | undefined;
+};
+
 type StepsToStore = {
   id: number;
   title: string;
