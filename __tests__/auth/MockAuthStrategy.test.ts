@@ -1,5 +1,5 @@
 import { MockAuthStrategy } from "~/auth/MockAuthStrategy";
-import type { SignInCredentials, SocialAuthConfig } from "~/auth/types";
+import type { SignInCredentials, SocialAuthConfig } from "~/types/AuthTypes";
 
 describe("MockAuthStrategy", () => {
   let mockAuth: MockAuthStrategy;

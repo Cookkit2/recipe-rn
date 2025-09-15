@@ -6,7 +6,7 @@ import type {
   SocialAuthConfig,
   LinkAccountCredentials,
   AuthResult,
-} from "./types";
+} from "../types/AuthTypes";
 import { useAuthStore, useAuthSelectors } from "./AuthStore";
 
 interface AuthContextValue {

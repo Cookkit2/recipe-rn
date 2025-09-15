@@ -1,7 +1,7 @@
 import { SupabaseAuthStrategy } from "~/auth/SupabaseAuthStrategy";
 import { supabase } from "~/auth/supabase-client";
 import { APP_CONFIG } from "~/lib/constants";
-import type { SignInCredentials, SocialAuthConfig } from "~/auth/types";
+import type { SignInCredentials, SocialAuthConfig } from "~/types/AuthTypes";
 
 // Mock Supabase client
 jest.mock("~/auth/supabase-client", () => ({

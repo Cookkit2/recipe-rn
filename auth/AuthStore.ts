@@ -7,7 +7,7 @@ import type {
   LinkAccountCredentials,
   AuthState,
   AuthSession,
-} from "./types";
+} from "../types/AuthTypes";
 import type { AuthStrategy } from "./AuthStrategy";
 
 interface AuthStore {
