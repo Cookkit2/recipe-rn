@@ -21,11 +21,18 @@ export type PantryItem = {
 };
 
 export type PantryItemConfirmation = {
-  id: string;
   name: string;
   quantity: number;
   unit: string;
   image_url: ImageSourcePropType | string | undefined;
+};
+
+export type BaseIngredient = {
+  days_to_expire: number;
+  id: string;
+  name: string;
+  steps_to_store_id: string | null;
+  storage_type: Exclude<ItemType, "all">;
 };
 
 type StepsToStore = {

@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 import { Button } from "~/components/ui/button";
 import { PlusIcon } from "lucide-nativewind";
-import { ActivityIndicator } from "react-native";
+import { ActivityIndicator, InteractionManager } from "react-native";
 import { useState } from "react";
 import allModel from "~/hooks/model/allModel";
 
@@ -9,16 +9,27 @@ export default function AddPantryItem() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  const navigateToCreateIngredient = async () => {
+  const navigateToCreateIngredient = () => {
     if (allModel.isLoaded()) {
       router.push("/ingredient/create");
       return;
     }
 
     setIsLoading(true);
-    await allModel.get();
-    router.push("/ingredient/create");
-    setIsLoading(false);
+    
+    // Use InteractionManager to ensure UI updates before heavy model loading
+    InteractionManager.runAfterInteractions(async () => {
+      try {
+        await allModel.get();
+        router.push("/ingredient/create");
+      } catch (error) {
+        console.error("Failed to load model:", error);
+        // Still navigate even if model loading fails
+        router.push("/ingredient/create");
+      } finally {
+        setIsLoading(false);
+      }
+    });
   };
 
   return (

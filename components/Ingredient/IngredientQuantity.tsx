@@ -23,10 +23,7 @@ export default function IngredientQuantity({
 
   return (
     <View
-      className={cn(
-        "flex-row items-center justify-center gap-4 mb-4",
-        className
-      )}
+      className={cn("flex-row items-center justify-center gap-4", className)}
     >
       <Button
         size={size === "default" ? "icon" : "icon-sm"}

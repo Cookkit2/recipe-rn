@@ -45,7 +45,7 @@ export class BaseIngredientRepository extends BaseRepository<BaseIngredient> {
       ];
 
       if (ingredientIds.length > 0) {
-        query = query.where("id", Q.oneOf(ingredientIds));
+        query = query.extend(Q.where("id", Q.oneOf(ingredientIds)));
       } else {
         // No ingredients in these categories
         return [];
@@ -61,10 +61,10 @@ export class BaseIngredientRepository extends BaseRepository<BaseIngredient> {
 
     // Apply pagination
     if (options.offset) {
-      query = query.skip(options.offset);
+      query = query.extend(Q.skip(options.offset));
     }
     if (options.limit) {
-      query = query.take(options.limit);
+      query = query.extend(Q.take(options.limit));
     }
 
     return await query.fetch();
@@ -99,7 +99,10 @@ export class BaseIngredientRepository extends BaseRepository<BaseIngredient> {
       const ingredient = await this.findById(id);
       if (!ingredient) return null;
 
-      const assignments = await ingredient.categoryAssignments;
+      const assignments = await ingredient.categoryAssignments?.query().fetch();
+
+      if (!assignments) return null;
+      
       const categories = await Promise.all(
         assignments.map(async (assignment) => {
           const category = await assignment.category;

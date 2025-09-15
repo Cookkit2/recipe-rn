@@ -42,32 +42,34 @@ export class RecipeRepository extends BaseRepository<Recipe> {
     // Filter by tags
     if (options.tags && options.tags.length > 0) {
       const tagConditions = options.tags.map((tag) =>
-        Q.like("tags", `%"${tag}"%`)
+        Q.where("tags", Q.like(`%"${tag}"%`))
       );
-      query = query.where(Q.or(...tagConditions));
+      query = query.extend(Q.or(...tagConditions));
     }
 
     // Filter by prep time
     if (options.maxPrepTime) {
-      query = query.where("prep_minutes", Q.lte(options.maxPrepTime));
+      query = query.extend(Q.where("prep_minutes", Q.lte(options.maxPrepTime)));
     }
 
     // Filter by cook time
     if (options.maxCookTime) {
-      query = query.where("cook_minutes", Q.lte(options.maxCookTime));
+      query = query.extend(Q.where("cook_minutes", Q.lte(options.maxCookTime)));
     }
 
     // Filter by difficulty
     if (options.maxDifficulty) {
-      query = query.where("difficulty_stars", Q.lte(options.maxDifficulty));
+      query = query.extend(
+        Q.where("difficulty_stars", Q.lte(options.maxDifficulty))
+      );
     }
 
     // Filter by servings
     if (options.minServings) {
-      query = query.where("servings", Q.gte(options.minServings));
+      query = query.extend(Q.where("servings", Q.gte(options.minServings)));
     }
     if (options.maxServings) {
-      query = query.where("servings", Q.lte(options.maxServings));
+      query = query.extend(Q.where("servings", Q.lte(options.maxServings)));
     }
 
     // Apply sorting
@@ -79,10 +81,10 @@ export class RecipeRepository extends BaseRepository<Recipe> {
 
     // Apply pagination
     if (options.offset) {
-      query = query.skip(options.offset);
+      query = query.extend(Q.skip(options.offset));
     }
     if (options.limit) {
-      query = query.take(options.limit);
+      query = query.extend(Q.take(options.limit));
     }
 
     return await query.fetch();
@@ -120,10 +122,11 @@ export class RecipeRepository extends BaseRepository<Recipe> {
   ): Promise<Recipe> {
     return await database.write(async () => {
       // Create recipe
-      const recipe = await this.collection.create((r: any) => {
-        Object.keys(data.recipe).forEach((key) => {
-          if (data.recipe[key as keyof RecipeData] !== undefined) {
-            r[key] = data.recipe[key as keyof RecipeData];
+      const recipe = await this.collection.create((r) => {
+        (Object.keys(data.recipe) as Array<keyof RecipeData>).forEach((key) => {
+          const value = data.recipe[key];
+          if (value !== undefined) {
+            (r as any)[key] = value;
           }
         });
       });
@@ -170,7 +173,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
     tag: string,
     options: SearchOptions = {}
   ): Promise<Recipe[]> {
-    let query = this.collection.query(Q.like("tags", `%"${tag}"%`));
+    let query = this.collection.query(Q.where("tags", Q.like(`%"${tag}"%`)));
 
     query = this.applySorting(
       query,
@@ -179,10 +182,10 @@ export class RecipeRepository extends BaseRepository<Recipe> {
     );
 
     if (options.offset) {
-      query = query.skip(options.offset);
+      query = query.extend(Q.skip(options.offset));
     }
     if (options.limit) {
-      query = query.take(options.limit);
+      query = query.extend(Q.take(options.limit));
     }
 
     return await query.fetch();
@@ -204,8 +207,8 @@ export class RecipeRepository extends BaseRepository<Recipe> {
   async getPopularRecipes(limit: number = 10): Promise<Recipe[]> {
     return await this.collection
       .query()
-      .sortBy("created_at", Q.desc)
-      .take(limit)
+      .extend(Q.sortBy("created_at", Q.desc))
+      .extend(Q.take(limit))
       .fetch();
   }
 

@@ -2,47 +2,6 @@ import { databaseFacade } from "~/data/db/DatabaseFacade";
 import type { Recipe as DbRecipe } from "~/data/db/models";
 import type { Recipe } from "~/types/Recipe";
 
-// Helper function to convert database recipe to UI Recipe format
-const convertDbRecipeToUIRecipe = async (
-  dbRecipe: DbRecipe
-): Promise<Recipe> => {
-  const recipeDetails = await databaseFacade.recipes.getRecipeWithDetails(
-    dbRecipe.id
-  );
-
-  if (!recipeDetails) {
-    throw new Error("Failed to load recipe details");
-  }
-
-  const { recipe, steps, ingredients } = recipeDetails;
-
-  return {
-    id: recipe.id,
-    title: recipe.title,
-    description: recipe.description,
-    imageUrl: recipe.imageUrl || "",
-    prepMinutes: recipe.prepMinutes,
-    cookMinutes: recipe.cookMinutes,
-    difficultyStars: recipe.difficultyStars,
-    servings: recipe.servings,
-    sourceUrl: recipe.sourceUrl,
-    calories: recipe.calories,
-    tags: recipe.tags,
-    ingredients: ingredients.map((ing) => ({
-      name: ing.name,
-      relatedIngredientId: ing.baseIngredientId,
-      quantity: ing.quantity,
-      notes: ing.notes,
-    })),
-    instructions: steps.map((step) => ({
-      step: step.step,
-      title: step.title,
-      description: step.description,
-      relatedIngredientIds: [], // TODO: Map from database if needed
-    })),
-  };
-};
-
 /**
  * Pure API functions for recipe operations
  * These functions only handle database interactions and data transformation
@@ -215,10 +174,12 @@ export const recipeApi = {
       );
 
       const partiallyCanMake = await Promise.all(
-        availability.partiallyCanMake.map(async (item) => ({
-          recipe: await convertDbRecipeToUIRecipe(item.recipe),
-          completionPercentage: item.completionPercentage,
-        }))
+        availability.partiallyCanMake.map(async (item) => {
+          return {
+            recipe: await convertDbRecipeToUIRecipe(item.recipe),
+            completionPercentage: item.completionPercentage,
+          };
+        })
       );
 
       return { canMake, partiallyCanMake };
@@ -247,4 +208,45 @@ export const recipeApi = {
       return { missingIngredients: [], availableIngredients: [] };
     }
   },
+};
+
+// Helper function to convert database recipe to UI Recipe format
+const convertDbRecipeToUIRecipe = async (
+  dbRecipe: DbRecipe
+): Promise<Recipe> => {
+  const recipeDetails = await databaseFacade.recipes.getRecipeWithDetails(
+    dbRecipe.id
+  );
+
+  if (!recipeDetails) {
+    throw new Error("Failed to load recipe details");
+  }
+
+  const { recipe, steps, ingredients } = recipeDetails;
+
+  return {
+    id: recipe.id,
+    title: recipe.title,
+    description: recipe.description,
+    imageUrl: recipe.imageUrl || "",
+    prepMinutes: recipe.prepMinutes,
+    cookMinutes: recipe.cookMinutes,
+    difficultyStars: recipe.difficultyStars,
+    servings: recipe.servings,
+    sourceUrl: recipe.sourceUrl,
+    calories: recipe.calories,
+    tags: recipe.tags,
+    ingredients: ingredients.map((ing) => ({
+      name: ing.name,
+      relatedIngredientId: ing.baseIngredientId,
+      quantity: ing.quantity,
+      notes: ing.notes,
+    })),
+    instructions: steps.map((step) => ({
+      step: step.step,
+      title: step.title,
+      description: step.description,
+      relatedIngredientIds: [], // TODO: Map from database if needed
+    })),
+  };
 };

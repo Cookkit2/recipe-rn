@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { View, ActivityIndicator, Platform } from "react-native";
 import { H1, P } from "~/components/ui/typography";
@@ -8,6 +8,7 @@ import type { PantryItem } from "~/types/PantryItem";
 import Animated, { useAnimatedRef } from "react-native-reanimated";
 import { usePantryItemsByType } from "~/hooks/queries/usePantryQueries";
 import { Button } from "~/components/ui/button";
+import { SystemBars } from "react-native-edge-to-edge";
 
 export default function IngredientDetailsPage() {
   const { ingredientId } = useLocalSearchParams<{ ingredientId: string }>();
@@ -21,6 +22,16 @@ export default function IngredientDetailsPage() {
   const item = useMemo(() => {
     return filteredPantryItems.find((item) => item.id === ingredientId);
   }, [filteredPantryItems, ingredientId]);
+
+  useEffect(() => {
+    // Push a new system bar style when the screen mounts
+    const entry = SystemBars.pushStackEntry({
+      style: "light",
+    });
+
+    // Pop it back when leaving (to restore previous settings)
+    return () => SystemBars.popStackEntry(entry);
+  }, []);
 
   if (isLoading) {
     return (

@@ -21,9 +21,6 @@ import { EXPANDED_HEIGHT, SNAP_THRESHOLD } from "~/constants/pantry";
 import { usePantryStore } from "~/store/PantryContext";
 import IngredientCategoryButtonGroup from "~/components/Pantry/IngredientCategoryButtonGroup";
 import IngredientLists from "~/components/Pantry/IngredientLists";
-import { useEffect } from "react";
-import allModel from "~/hooks/model/allModel";
-import { Worklets } from "react-native-worklets-core";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -46,17 +43,6 @@ export default function PantryPage() {
     isGestureActive,
     collapsedHeight,
   } = usePantryStore();
-
-  useEffect(() => {
-    const workletsContext = Worklets.defaultContext;
-    const loadModel = async () => {
-      await workletsContext.runAsync(() => {
-        "worklet";
-        allModel.preload();
-      });
-    };
-    loadModel();
-  }, []);
 
   // Pan gesture handler
   const panGesture = Gesture.Pan()

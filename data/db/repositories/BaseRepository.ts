@@ -1,4 +1,4 @@
-import { Model, Query, Collection } from "@nozbe/watermelondb";
+import { Model, Query, Collection, Q } from "@nozbe/watermelondb";
 import { database } from "../database";
 
 export interface PaginationOptions {
@@ -32,11 +32,11 @@ export abstract class BaseRepository<T extends Model> {
     let query = this.collection.query();
 
     if (options.limit) {
-      query = query.take(options.limit);
+      query = query.extend(Q.take(options.limit));
     }
 
     if (options.offset) {
-      query = query.skip(options.offset);
+      query = query.extend(Q.skip(options.offset));
     }
 
     return await query.fetch();
@@ -97,33 +97,33 @@ export abstract class BaseRepository<T extends Model> {
     searchTerm: string,
     searchFields: string[]
   ): Query<T> {
-    if (!searchTerm.trim()) return query;
+    if (!searchTerm?.trim() || searchFields.length === 0) {
+      return query;
+    }
 
-    // Build OR condition for multiple fields
-    const conditions = searchFields.map((field) =>
-      require("@nozbe/watermelondb/QueryDescription").like(
-        field,
-        `%${searchTerm}%`
-      )
+    const sanitizedTerm = `%${searchTerm.replace(/[%_]/g, "\\$&")}%`;
+
+    const conditions = searchFields.map(
+      (field) => Q.where(field, Q.like(sanitizedTerm)) // <-- 2. Use Q.where and Q.like
     );
 
-    return query.where(
-      require("@nozbe/watermelondb/QueryDescription").or(...conditions)
-    );
+    return query.extend(Q.or(...conditions));
   }
 
+  /**
+   * Applies sorting to a query. The .sortBy method directly accepts 'asc' or 'desc'.
+   */
   protected applySorting(
     query: Query<T>,
     sortBy?: string,
-    sortOrder: "asc" | "desc" = "desc"
+    sortOrder: "asc" | "desc" = "asc" // Defaulting to 'asc' is common
   ): Query<T> {
-    if (!sortBy) return query;
+    // The return type is correct!
+    if (!sortBy) {
+      return query;
+    }
 
-    return sortOrder === "asc"
-      ? query.sortBy(sortBy)
-      : query.sortBy(
-          sortBy,
-          require("@nozbe/watermelondb/QueryDescription").desc
-        );
+    // 4. This is much simpler. The sortBy method takes the sort order as a string.
+    return query.extend(Q.sortBy(sortBy, sortOrder));
   }
 }

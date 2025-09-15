@@ -1,10 +1,12 @@
 import { Model } from "@nozbe/watermelondb";
 import { field, date, writer } from "@nozbe/watermelondb/decorators";
 
+type PreferenceValue = string | number | boolean | null;
+type Preferences = Record<string, PreferenceValue>;
 export interface UserData {
   username: string;
   role: string;
-  preferences?: Record<string, any>;
+  preferences?: Preferences;
 }
 
 export default class User extends Model {
@@ -18,22 +20,26 @@ export default class User extends Model {
   @date("updated_at") updatedAt!: Date;
 
   // Computed property for preferences
-  get preferences(): Record<string, any> {
+  get preferences(): Preferences {
     return this._preferences ? JSON.parse(this._preferences) : {};
   }
 
-  set preferences(value: Record<string, any>) {
+  set preferences(value: Preferences) {
     this._preferences = JSON.stringify(value);
   }
 
   // Helper method to get a specific preference
-  getPreference<T>(key: string, defaultValue: T): T {
+  getPreference<T extends PreferenceValue>(key: string, defaultValue: T): T {
     const prefs = this.preferences;
-    return prefs[key] !== undefined ? prefs[key] : defaultValue;
+    const value = prefs[key];
+    return (value !== undefined ? value : defaultValue) as T;
   }
 
   // Helper method to set a specific preference
-  @writer async setPreference(key: string, value: any): Promise<User> {
+  @writer async setPreference(
+    key: string,
+    value: PreferenceValue
+  ): Promise<User> {
     return this.update((user) => {
       const prefs = user.preferences;
       prefs[key] = value;

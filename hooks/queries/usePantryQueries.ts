@@ -73,6 +73,25 @@ export function useAddPantryItem() {
 }
 
 /**
+ * Mutation hook to add an array of pantry items
+ */
+export function useAddPantryItems() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: pantryApi.addPantryItems,
+    onSuccess: () => {
+      // Invalidate all pantry queries to refetch data
+      queryClient.invalidateQueries({
+        queryKey: pantryQueryKeys.all,
+      });
+    },
+  });
+}
+
+
+
+/**
  * Mutation hook to update a pantry item
  */
 export function useUpdatePantryItem() {

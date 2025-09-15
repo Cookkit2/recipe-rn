@@ -1,6 +1,7 @@
-import { Model } from "@nozbe/watermelondb";
+import { Collection, Model } from "@nozbe/watermelondb";
 import { field, date, children, writer } from "@nozbe/watermelondb/decorators";
 import type { Associations } from "@nozbe/watermelondb/Model";
+import type IngredientCategoryAssignment from "./IngredientCategoryAssignment";
 
 export interface IngredientCategoryData {
   name: string;
@@ -17,7 +18,8 @@ export default class IngredientCategory extends Model {
 
   @field("name") name!: string;
 
-  @children("ingredient_category_assignments") ingredientAssignments: any; // Collection<IngredientCategoryAssignment>
+  @children("ingredient_category_assignments")
+  ingredientAssignments?: Collection<IngredientCategoryAssignment>;
 
   @date("created_at") createdAt!: Date;
   @date("updated_at") updatedAt!: Date;

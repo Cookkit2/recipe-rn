@@ -1,5 +1,4 @@
 // Import repository classes
-import { BaseRepository } from "./BaseRepository";
 import { RecipeRepository } from "./RecipeRepository";
 import { BaseIngredientRepository } from "./BaseIngredientRepository";
 import { StockRepository } from "./StockRepository";

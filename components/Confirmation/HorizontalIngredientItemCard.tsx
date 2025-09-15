@@ -3,22 +3,25 @@ import { View } from "react-native";
 import useColors from "~/hooks/useColor";
 import useImageColors from "~/hooks/useImageColors";
 import { useCameraStore } from "~/store/CameraContext";
-import { type PantryItemConfirmation } from "~/types/PantryItem";
+import { type PantryItem } from "~/types/PantryItem";
 import IngredientQuantity from "../Ingredient/IngredientQuantity";
 import EditableTitle from "../Shared/EditableTitle";
 import OutlinedImage from "../ui/outlined-image";
+import { Button } from "../ui/button";
+import { Trash2Icon } from "lucide-nativewind";
 
 export default function HorizontalIngredientItemCard({
   item,
   onBeginTitleEditing,
   onEndTitleEditing,
 }: {
-  item: PantryItemConfirmation;
+  item: PantryItem;
   onBeginTitleEditing: () => void;
   onEndTitleEditing: () => void;
 }) {
   const { image_url, name, quantity, unit } = item;
-  const { updateProcessPantryItems } = useCameraStore();
+  const { updateProcessPantryItems, deleteProcessPantryItems } =
+    useCameraStore();
 
   const color = useImageColors(image_url);
   const colors = useColors();
@@ -49,12 +52,26 @@ export default function HorizontalIngredientItemCard({
           onEndEditing={onEndTitleEditing}
         />
         <View className="flex-1" />
-        <IngredientQuantity
-          size="sm"
-          initialQuantity={quantity}
-          initialUnit={unit}
-          className="justify-start gap-1"
-        />
+        <View className="flex-row justify-between">
+          <IngredientQuantity
+            size="sm"
+            initialQuantity={quantity}
+            initialUnit={unit}
+            className="justify-start gap-1"
+          />
+          <Button
+            size="icon"
+            variant="ghost"
+            className="rounded-full"
+            onPress={() => deleteProcessPantryItems(item.id)}
+          >
+            <Trash2Icon
+              className="text-destructive"
+              size={20}
+              strokeWidth={2.618}
+            />
+          </Button>
+        </View>
       </View>
     </View>
   );
