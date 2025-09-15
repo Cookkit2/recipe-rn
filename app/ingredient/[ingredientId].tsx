@@ -30,7 +30,9 @@ export default function IngredientDetailsPage() {
     });
 
     // Pop it back when leaving (to restore previous settings)
-    return () => SystemBars.popStackEntry(entry);
+    return () => {
+      setTimeout(() => SystemBars.popStackEntry(entry), 0);
+    };
   }, []);
 
   if (isLoading) {

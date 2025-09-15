@@ -10,7 +10,7 @@ import {
 } from "@shopify/react-native-skia";
 import { postprocessOutputsYolo } from "./yolo-function";
 import allModel from "./allModel";
-import type { SegmentedImage } from "~/app/ingredient/create";
+import type { SegmentedImage } from "~/app/ingredient/(create)/create";
 
 // const SEG_MODEL_INPUT_SIZE = 256;
 const VEGE_MODEL_INPUT_SIZE = 512;

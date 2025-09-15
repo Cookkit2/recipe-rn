@@ -8,7 +8,7 @@ import { useWindowDimensions } from "react-native";
 import { useBaseIngredients } from "~/hooks/supabase-queries/useBaseIngredients";
 import uuid from "react-native-uuid";
 
-interface CameraContextType {
+interface CreateIngredientContextType {
   // UI State only
   photoSize: {
     width: number;
@@ -23,9 +23,14 @@ interface CameraContextType {
   updateFramePosition: (framePosition: { x: number; y: number }) => void;
 }
 
-const CameraContext = createContext<CameraContextType | null>(null);
+const CreateIngredientContext =
+  createContext<CreateIngredientContextType | null>(null);
 
-export function CameraProvider({ children }: { children: React.ReactNode }) {
+export function CreateIngredientProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { data: baseIngredients } = useBaseIngredients();
 
   const [photoSize, setPhotoSize] = useState<{
@@ -126,7 +131,7 @@ export function CameraProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <CameraContext.Provider
+    <CreateIngredientContext.Provider
       value={{
         photoSize,
         updatePhotoSize,
@@ -139,12 +144,12 @@ export function CameraProvider({ children }: { children: React.ReactNode }) {
       }}
     >
       {children}
-    </CameraContext.Provider>
+    </CreateIngredientContext.Provider>
   );
 }
 
-export const useCameraStore = () => {
-  const context = useContext(CameraContext);
+export const useCreateIngredientStore = () => {
+  const context = useContext(CreateIngredientContext);
   if (!context) {
     throw new Error("useCameraStore must be used within a CameraProvider");
   }
