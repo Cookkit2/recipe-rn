@@ -134,7 +134,11 @@ export default function IngredientAppBar({
         className="rounded-full"
         onPress={onDelete}
       >
-        <Trash2Icon className="text-foreground" size={20} strokeWidth={2.618} />
+        <Trash2Icon
+          className="text-destructive"
+          size={20}
+          strokeWidth={2.618}
+        />
       </Button>
     </Animated.View>
   );

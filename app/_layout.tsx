@@ -1,6 +1,6 @@
 import "~/global.css";
 import React, { useEffect, useState } from "react";
-import { Stack, useRouter } from "expo-router";
+import { Stack } from "expo-router";
 import { Appearance, Platform, View } from "react-native";
 import { useColorScheme } from "~/hooks/useColorScheme";
 import { PortalHost } from "@rn-primitives/portal";
@@ -14,17 +14,13 @@ import Animated, {
 import { RootScaleProvider, useRootScale } from "~/store/RootScaleContext";
 import { BlurView } from "expo-blur";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { OverlayProvider } from "~/components/Overlay/OverlayContext";
 import { Image } from "expo-image";
 import { dummyRecipesData } from "~/data/dummy/dummy-recipes";
 import { Toaster } from "sonner-native";
 export { ErrorBoundary } from "expo-router";
 import { SystemBars } from "react-native-edge-to-edge";
-import { PantryProvider } from "~/store/PantryContext";
-import { RecipeProvider } from "~/store/RecipeContext";
 import { QueryProvider } from "~/store/QueryProvider";
 import { AuthProvider, SupabaseAuthStrategy } from "~/auth";
-import { CameraProvider } from "~/store/CameraContext";
 import { useModelPreloader } from "~/hooks/model/useModelPreloader";
 
 // const LIGHT_THEME: Theme = {
@@ -117,11 +113,8 @@ function AnimatedStack() {
             }}
           />
           <Stack.Screen
-            name="ingredient/create"
-            options={{
-              presentation: "card",
-              headerShown: false,
-            }}
+            name="ingredient/(create)"
+            options={{ presentation: "card", headerShown: false }}
           />
           <Stack.Screen
             name="ingredient/confirmation"
@@ -227,37 +220,29 @@ export default function RootLayout() {
     ]);
   }, []);
 
-  useModelPreloader({
-    delay: 150,
-    priority: "low",
-    onLoadComplete: () => {
-      if (__DEV__) console.log("Models ready for use!");
-    },
-  });
+  // useModelPreloader({
+  //   delay: 200,
+  //   priority: "low",
+  //   // onLoadComplete: () => {
+  //   //   if (__DEV__) console.log("Models ready for use!");
+  //   // },
+  // });
 
   return (
     <GestureHandlerRootView className="flex-1 bg-background">
       <RootScaleProvider>
         <SafeAreaProvider>
-          <AuthProvider
-            strategy={new SupabaseAuthStrategy()}
-            autoInitialize={true}
-          >
-            <QueryProvider>
-              <PantryProvider>
-                <RecipeProvider>
-                  <OverlayProvider>
-                    <CameraProvider>
-                      <SystemBars style="auto" />
-                      <AnimatedStack />
-                      <PortalHost />
-                      <Toaster />
-                    </CameraProvider>
-                  </OverlayProvider>
-                </RecipeProvider>
-              </PantryProvider>
-            </QueryProvider>
-          </AuthProvider>
+          <QueryProvider>
+            <AuthProvider
+              strategy={new SupabaseAuthStrategy()}
+              autoInitialize={true}
+            >
+              <SystemBars style="auto" />
+              <AnimatedStack />
+              <PortalHost />
+              <Toaster />
+            </AuthProvider>
+          </QueryProvider>
         </SafeAreaProvider>
       </RootScaleProvider>
     </GestureHandlerRootView>

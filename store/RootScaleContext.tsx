@@ -3,9 +3,7 @@ import {
   type SharedValue,
   useSharedValue,
   withSpring,
-  withTiming,
 } from "react-native-reanimated";
-import { CURVES } from "~/constants/curves";
 
 interface RootScaleContextType {
   scale: SharedValue<number>;

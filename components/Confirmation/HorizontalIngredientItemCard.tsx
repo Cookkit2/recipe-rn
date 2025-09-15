@@ -2,7 +2,7 @@ import React from "react";
 import { View } from "react-native";
 import useColors from "~/hooks/useColor";
 import useImageColors from "~/hooks/useImageColors";
-import { useCameraStore } from "~/store/CameraContext";
+import { useCreateIngredientStore } from "~/store/CreateIngredientContext";
 import { type PantryItem } from "~/types/PantryItem";
 import IngredientQuantity from "../Ingredient/IngredientQuantity";
 import EditableTitle from "../Shared/EditableTitle";
@@ -21,7 +21,7 @@ export default function HorizontalIngredientItemCard({
 }) {
   const { image_url, name, quantity, unit } = item;
   const { updateProcessPantryItems, deleteProcessPantryItems } =
-    useCameraStore();
+    useCreateIngredientStore();
 
   const color = useImageColors(image_url);
   const colors = useColors();

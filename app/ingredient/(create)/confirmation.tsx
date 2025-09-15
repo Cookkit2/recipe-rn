@@ -10,7 +10,7 @@ import Animated, {
   useScrollViewOffset,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useCameraStore } from "~/store/CameraContext";
+import { useCreateIngredientStore } from "~/store/CreateIngredientContext";
 import Header from "~/components/Shared/Header";
 import { H1, H4 } from "~/components/ui/typography";
 import HorizontalIngredientItemCard from "~/components/Confirmation/HorizontalIngredientItemCard";
@@ -20,18 +20,17 @@ import { SystemBars } from "react-native-edge-to-edge";
 import { useAddPantryItems } from "~/hooks/queries/usePantryQueries";
 import { useRouter } from "expo-router";
 import { toast } from "sonner-native";
-import { Trash2Icon } from "lucide-nativewind";
 
 export default function ConfirmationPage() {
   const { bottom } = useSafeAreaInsets();
-  const { processPantryItems } = useCameraStore();
+  const { processPantryItems } = useCreateIngredientStore();
   const router = useRouter();
   const addPantryItems = useAddPantryItems();
 
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const scrollOffset = useScrollViewOffset(scrollRef);
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     // Push a new system bar style when the screen mounts
@@ -109,7 +108,6 @@ export default function ConfirmationPage() {
             </H4>
           </TextShimmer>
         </Button>
-       
       </View>
     </View>
   );

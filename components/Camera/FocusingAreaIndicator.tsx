@@ -1,7 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import type { Camera, Point } from "react-native-vision-camera";
-import { useCameraStore } from "~/store/CameraContext";
+import { useCreateIngredientStore } from "~/store/CreateIngredientContext";
 
 interface FocusingAreaIndicatorProps {
   cameraRef: React.RefObject<Camera | null>;
@@ -10,7 +10,7 @@ interface FocusingAreaIndicatorProps {
 export default function FocusingAreaIndicator({
   cameraRef,
 }: FocusingAreaIndicatorProps) {
-  const { framePosition, updateFramePosition } = useCameraStore();
+  const { framePosition, updateFramePosition } = useCreateIngredientStore();
 
   // Frame position state - default to center of screen
 

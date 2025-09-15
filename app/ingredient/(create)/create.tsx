@@ -46,7 +46,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { toast } from "sonner-native";
 import { CURVES } from "~/constants/curves";
-import { useCameraStore } from "~/store/CameraContext";
+import { useCreateIngredientStore } from "~/store/CreateIngredientContext";
 import {
   type SkImage,
   Image as SkiaImage,
@@ -60,7 +60,6 @@ import type { Prettify } from "~/utils/type-prettier";
 import useImageColors from "~/hooks/useImageColors";
 import useColors from "~/hooks/useColor";
 import * as Haptics from "expo-haptics";
-import uuid from "react-native-uuid";
 import { titleCase } from "~/utils/text-formatter";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -96,7 +95,7 @@ export default function CreateIngredient() {
   const isCameraAvailable = !!device;
 
   const { processPantryItems, addProcessPantryItems, framePosition } =
-    useCameraStore();
+    useCreateIngredientStore();
 
   const format = useCameraFormat(device, [
     { photoResolution: CAMERA_RESOLUTION },
