@@ -7,7 +7,7 @@ import type {
   AuthSession,
   SocialAuthConfig,
   LinkAccountCredentials,
-} from "~/auth/types";
+} from "~/types/AuthTypes";
 
 describe("Auth Types", () => {
   describe("User type", () => {

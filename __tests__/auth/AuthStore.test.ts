@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react-native";
 import { useAuthStore, useAuthSelectors } from "~/auth/AuthStore";
 import { MockAuthStrategy } from "~/auth/MockAuthStrategy";
-import type { SignInCredentials } from "~/auth/types";
+import type { SignInCredentials } from "~/types/AuthTypes";
 
 describe("AuthStore", () => {
   let mockStrategy: MockAuthStrategy;

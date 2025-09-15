@@ -1,6 +1,6 @@
 import { StorageFactory } from "../data/storage";
 import { storageConfigs } from "../data/storage-config";
-import type { AuthSession } from "./types";
+import type { AuthSession } from "../types/AuthTypes";
 
 /**
  * Secure storage integration for authentication tokens

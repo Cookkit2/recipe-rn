@@ -13,6 +13,7 @@
 		33358F2123A74B36A9366C22 /* Urbanist-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2BFF60C1063A4174957BEB30 /* Urbanist-Medium.ttf */; };
 		335DAE86A94A47C19E3DAC18 /* Urbanist-ExtraLight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2116C83617F04AD7BC5799CE /* Urbanist-ExtraLight.ttf */; };
 		350B7D4FC6684BB090EBA692 /* Urbanist-Thin.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F88EE65D4FFC48A0ACCEAC69 /* Urbanist-Thin.ttf */; };
+		3A56D93D2E77C54000A0162E /* Products.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 3A56D93C2E77C54000A0162E /* Products.storekit */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
 		4F1852D6B9344E22A312342F /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 70358441409B4205B42B8367 /* CoreML.framework */; };
 		687DD921FB3D4EBF9A7FFA31 /* Urbanist-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DE49CD0289CD453D9BB94F67 /* Urbanist-ExtraBold.ttf */; };
@@ -35,6 +36,7 @@
 		2116C83617F04AD7BC5799CE /* Urbanist-ExtraLight.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Urbanist-ExtraLight.ttf"; path = "../assets/fonts/Urbanist-ExtraLight.ttf"; sourceTree = "<group>"; };
 		234D639CF3B043CB85F473AD /* Urbanist-Black.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Urbanist-Black.ttf"; path = "../assets/fonts/Urbanist-Black.ttf"; sourceTree = "<group>"; };
 		2BFF60C1063A4174957BEB30 /* Urbanist-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Urbanist-Medium.ttf"; path = "../assets/fonts/Urbanist-Medium.ttf"; sourceTree = "<group>"; };
+		3A56D93C2E77C54000A0162E /* Products.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Products.storekit; sourceTree = "<group>"; };
 		52B3B5798916478A8CAA7FE5 /* Urbanist-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Urbanist-Bold.ttf"; path = "../assets/fonts/Urbanist-Bold.ttf"; sourceTree = "<group>"; };
 		70358441409B4205B42B8367 /* CoreML.framework */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = wrapper.framework; name = CoreML.framework; path = System/Library/Frameworks/CoreML.framework; sourceTree = SDKROOT; };
 		753D31EEA2866C3A0935150C /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = Cookkit/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -135,6 +137,7 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				3A56D93C2E77C54000A0162E /* Products.storekit */,
 				13B07FAE1A68108700A75B9A /* Cookkit */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
@@ -247,6 +250,7 @@
 				9ED1B72635644A8EBA1C966C /* Urbanist-Bold.ttf in Resources */,
 				687DD921FB3D4EBF9A7FFA31 /* Urbanist-ExtraBold.ttf in Resources */,
 				DE5B5BDE0462418FA99060FE /* Urbanist-Black.ttf in Resources */,
+				3A56D93D2E77C54000A0162E /* Products.storekit in Resources */,
 				290654FE8D388D695175E4A6 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -526,10 +530,7 @@
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -584,10 +585,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;

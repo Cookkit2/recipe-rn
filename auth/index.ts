@@ -11,8 +11,7 @@ export { SupabaseAuthStrategy } from "./SupabaseAuthStrategy";
 export {
   AuthStorageManager,
   createSupabaseStorageAdapter,
-} from "./storage-integration";
-export { supabase, supabaseConfig } from "./supabase-client";
+} from "./StorageIntegration";
 
 // Re-export commonly used items for convenience
 export { useAuth, useAuthState, useAuthActions } from "./AuthContext";
@@ -25,4 +24,4 @@ export type {
   SocialAuthConfig,
   AuthProvider as AuthProviderType,
   AuthState,
-} from "./types";
+} from "../types/AuthTypes";

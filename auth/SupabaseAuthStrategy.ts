@@ -7,8 +7,7 @@ import type {
   LinkAccountCredentials,
   AuthSession,
   AuthProvider,
-} from "./types";
-import { supabase } from "./supabase-client";
+} from "../types/AuthTypes";
 import type {
   Session,
   User as SupabaseUser,
@@ -17,6 +16,7 @@ import type {
 import * as ExpoAuthSession from "expo-auth-session";
 import * as Linking from "expo-linking";
 import { APP_CONFIG } from "~/lib/constants";
+import { supabase } from "~/lib/supabase/supabase-client";
 
 /**
  * Supabase authentication strategy implementation
@@ -225,7 +225,8 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   async signInWithProvider(config: SocialAuthConfig): Promise<AuthResult> {
     try {
       // Create redirect URL for OAuth flow based on app.json scheme
-      const scheme = Linking.createURL("").split(":")[0] || APP_CONFIG.DEEP_LINK_SCHEME;
+      const scheme =
+        Linking.createURL("").split(":")[0] || APP_CONFIG.DEEP_LINK_SCHEME;
       const redirectUrl = ExpoAuthSession.makeRedirectUri({ scheme });
 
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -347,7 +348,9 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
       console.log("supabase.auth.signOut() completed, error:", error);
 
       if (error) {
-        console.log("Supabase signOut returned error, clearing local state anyway");
+        console.log(
+          "Supabase signOut returned error, clearing local state anyway"
+        );
         // Still clear local state even if remote sign out failed
         this.currentUser = null;
         this.currentSession = null;
