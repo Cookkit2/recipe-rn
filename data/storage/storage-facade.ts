@@ -1,4 +1,4 @@
-import type { IStorage } from "./types";
+import type { IStorage } from "./storage-types";
 import { StorageFactory } from "./storage-factory";
 
 /**

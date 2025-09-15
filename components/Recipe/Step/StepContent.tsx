@@ -6,7 +6,7 @@ import ShapeContainer from "~/components/Shared/Shapes/ShapeContainer";
 import HighlightedText from "~/components/Shared/HighlightedText";
 import useColors from "~/hooks/useColor";
 import { LinearGradient } from "expo-linear-gradient";
-import { dummyPantryItems } from "~/data/dummy-data";
+import { dummyPantryItems } from "~/data/dummy/dummy-data";
 import OutlinedImage from "~/components/ui/outlined-image";
 import RotationCard from "~/components/Onboarding/RotationCard";
 import {

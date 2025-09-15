@@ -2,39 +2,6 @@ import { databaseFacade } from "~/data/db/DatabaseFacade";
 import type { Stock } from "~/data/db/models";
 import type { ItemType, PantryItem } from "~/types/PantryItem";
 
-// Helper function to convert Stock + BaseIngredient to PantryItem
-const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
-  // Get base ingredient for future use if needed
-  await stock.baseIngredient;
-
-  // Map database category to ItemType
-  const mapCategoryToType = (category?: string): Exclude<ItemType, "all"> => {
-    if (!category) return "fridge";
-    const lowerCategory = category.toLowerCase();
-    if (lowerCategory.includes("cabinet") || lowerCategory.includes("pantry"))
-      return "cabinet";
-    if (lowerCategory.includes("freezer")) return "freezer";
-    return "fridge"; // default
-  };
-
-  return {
-    id: stock.id,
-    name: stock.name,
-    quantity: stock.quantity,
-    unit: stock.unit,
-    expiry_date: stock.expiryDate || undefined,
-    category: stock.category || "Other",
-    type: mapCategoryToType(stock.category),
-    image_url: stock.imageUrl,
-    x: stock.x || 0,
-    y: stock.y || 0,
-    scale: stock.scale || 1,
-    created_at: stock.createdAt,
-    updated_at: stock.updatedAt,
-    steps_to_store: [], // TODO: Load from StepsToStore model
-  };
-};
-
 /**
  * Pure API functions for pantry operations
  * These functions only handle database interactions and data transformation
@@ -44,21 +11,21 @@ export const pantryApi = {
    * Fetch all pantry items from database
    */
   async fetchAllPantryItems(): Promise<PantryItem[]> {
-    if (!databaseFacade) {
-      throw new Error("DatabaseFacade is undefined - import failed");
-    }
+    // if (!databaseFacade) {
+    //   throw new Error("DatabaseFacade is undefined - import failed");
+    // }
 
-    if (!databaseFacade.stock) {
-      throw new Error(
-        `databaseFacade.stock is undefined. DatabaseFacade: ${!!databaseFacade}`
-      );
-    }
+    // if (!databaseFacade.stock) {
+    //   throw new Error(
+    //     `databaseFacade.stock is undefined. DatabaseFacade: ${!!databaseFacade}`
+    //   );
+    // }
 
-    // Run health check
-    const isHealthy = await databaseFacade.isHealthy();
-    if (!isHealthy) {
-      throw new Error("Database health check failed");
-    }
+    // // Run health check
+    // const isHealthy = await databaseFacade.isHealthy();
+    // if (!isHealthy) {
+    //   throw new Error("Database health check failed");
+    // }
 
     const stockItems = await databaseFacade.stock.findAll();
 
@@ -176,4 +143,37 @@ export const pantryApi = {
       return new Date(item.expiry_date) <= cutoffDate;
     });
   },
+};
+
+// Helper function to convert Stock + BaseIngredient to PantryItem
+const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
+  // Get base ingredient for future use if needed
+  await stock.baseIngredient;
+
+  // Map database category to ItemType
+  const mapCategoryToType = (category?: string): Exclude<ItemType, "all"> => {
+    if (!category) return "fridge";
+    const lowerCategory = category.toLowerCase();
+    if (lowerCategory.includes("cabinet") || lowerCategory.includes("pantry"))
+      return "cabinet";
+    if (lowerCategory.includes("freezer")) return "freezer";
+    return "fridge"; // default
+  };
+
+  return {
+    id: stock.id,
+    name: stock.name,
+    quantity: stock.quantity,
+    unit: stock.unit,
+    expiry_date: stock.expiryDate || undefined,
+    category: stock.category || "Other",
+    type: mapCategoryToType(stock.category),
+    image_url: stock.imageUrl,
+    x: stock.x || 0,
+    y: stock.y || 0,
+    scale: stock.scale || 1,
+    created_at: stock.createdAt,
+    updated_at: stock.updatedAt,
+    steps_to_store: [], // TODO: Load from StepsToStore model
+  };
 };

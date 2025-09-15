@@ -1,6 +1,6 @@
-import { storage } from "../db";
 import type { RecipeRackItem } from "~/types/RecipeRackItem";
 import { BaseRepository } from "./base-repository";
+import { storageFacade } from "../storage";
 
 const RECIPE_RACK_KEY = "recipeRackItems";
 
@@ -9,7 +9,7 @@ const RECIPE_RACK_KEY = "recipeRackItems";
  */
 class RecipeRepository extends BaseRepository<RecipeRackItem> {
   constructor() {
-    super(RECIPE_RACK_KEY, storage);
+    super(RECIPE_RACK_KEY, storageFacade);
   }
 
   /**

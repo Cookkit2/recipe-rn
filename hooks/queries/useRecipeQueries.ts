@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { recipeApi } from "~/hooks/api/recipeApi";
 import { recipeQueryKeys } from "./recipeQueryKeys";
 import type { Recipe } from "~/types/Recipe";
+import { recipeApi } from "~/data/api/recipeApi";
 
 /**
  * Hook to fetch all recipes

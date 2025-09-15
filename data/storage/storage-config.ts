@@ -1,4 +1,4 @@
-import type { StorageConfig } from "./storage";
+import type { StorageConfig } from ".";
 
 /**
  * Storage configuration for different environments and use cases
@@ -8,12 +8,10 @@ export const storageConfigs: Record<string, StorageConfig> = {
   // Production configuration with AsyncStorage
   production: {
     type: "async-storage",
-    type: "async-storage",
   },
 
   // Development configuration with AsyncStorage (Expo Go compatible)
   development: {
-    type: "async-storage",
     type: "async-storage",
   },
 
@@ -22,35 +20,8 @@ export const storageConfigs: Record<string, StorageConfig> = {
     type: "async-storage",
   },
 
-  // SQLite for complex queries (when you need it)
-  sqlite: {
-    type: "sqlite",
-    options: {
-      databaseName: "recipe-app.db",
-      tableName: "app_storage",
-    },
-  },
-
-  // WatermelonDB for advanced use cases
-  watermelon: {
-    type: "watermelon",
-    options: {
-      databaseName: "recipe-app-watermelon",
-    },
-  },
-
-  // Realm for object database needs
-  realm: {
-    type: "realm",
-    options: {
-      schemaVersion: 1,
-      path: "recipe-app.realm",
-    },
-  },
-
   // Encrypted storage for sensitive data (using AsyncStorage for now)
   encrypted: {
-    type: "async-storage",
     type: "async-storage",
   },
 };
@@ -67,10 +38,8 @@ export function getStorageConfig(): StorageConfig {
 
   if (__DEV__) {
     return storageConfigs.development!;
-    return storageConfigs.development!;
   }
 
-  return storageConfigs.production!;
   return storageConfigs.production!;
 }
 

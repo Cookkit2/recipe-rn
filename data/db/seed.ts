@@ -6,8 +6,8 @@
  */
 
 import { databaseFacade } from "./DatabaseFacade";
-import { dummyPantryItems } from "../dummy-data";
-import { dummyRecipesData } from "../dummy-recipes";
+import { dummyPantryItems } from "../dummy/dummy-data";
+import { dummyRecipesData } from "../dummy/dummy-recipes";
 
 export async function seedDatabase() {
   console.log("🌱 Starting database seeding...");

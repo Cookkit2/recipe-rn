@@ -16,7 +16,7 @@ import { StorageFactory, storageFacade } from "~/data/storage";
 import { BaseRepository } from "~/data/repositories/base-repository";
 import type { PantryItem } from "~/types/PantryItem";
 import type { RecipeRackItem } from "~/types/RecipeRackItem";
-import { dummyPantryItems } from "~/data/dummy-data";
+import { dummyPantryItems } from "~/data/dummy/dummy-data";
 
 // Create test repository classes that extend BaseRepository
 class TestPantryRepository extends BaseRepository<PantryItem> {

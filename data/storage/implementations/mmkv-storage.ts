@@ -1,6 +1,6 @@
 import { MMKV } from "react-native-mmkv";
-import type { IStorage } from "../types";
-import { StorageError, JSONSerializer } from "../types";
+import type { IStorage } from "../storage-types";
+import { StorageError, JSONSerializer } from "../storage-types";
 
 export class MMKVStorage implements IStorage {
   private storage: MMKV;

@@ -6,25 +6,6 @@
  * 2. Structured Database (WatermelonDB) - for recipes, ingredients, and complex relational data
  */
 
-// === KEY-VALUE STORAGE SYSTEM ===
-// Export storage facade and related functionality
-export * from "./storage";
-
-// === STRUCTURED DATABASE SYSTEM (WatermelonDB) ===
-// Export database facade and all related functionality
-export * from "./db";
-
-// === LEGACY/EXISTING DATA UTILITIES ===
-// Export existing data utilities for backward compatibility
-export * from "./data-utils";
-export * from "./dummy-data";
-export * from "./dummy-recipes";
-
-// Re-export legacy repositories if needed
-export * from "./repositories/base-repository";
-export * from "./repositories/recipe-repository";
-export * from "./pantry-repository";
-
 // === CONVENIENCE EXPORTS ===
 // Make it easy to access the main interfaces
 export { storageFacade as storage } from "./storage";

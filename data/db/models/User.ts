@@ -27,7 +27,7 @@ export default class User extends Model {
   }
 
   // Helper method to get a specific preference
-  getPreference<T>(key: string, defaultValue?: T): T {
+  getPreference<T>(key: string, defaultValue: T): T {
     const prefs = this.preferences;
     return prefs[key] !== undefined ? prefs[key] : defaultValue;
   }

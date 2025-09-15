@@ -9,7 +9,7 @@ import {
 import type { RecipeIngredient } from "~/types/Recipe";
 import { H2, P } from "../../ui/typography";
 import OutlinedImage from "~/components/ui/outlined-image";
-import { dummyPantryItems } from "~/data/dummy-data";
+import { dummyPantryItems } from "~/data/dummy/dummy-data";
 import { LinearGradient } from "expo-linear-gradient";
 import useColors from "~/hooks/useColor";
 import { sentenceCase, titleCase } from "~/utils/text-formatter";

@@ -8,12 +8,8 @@ export {
   createWatermelonStorage,
   createRealmStorage,
 } from "./storage-factory";
-export type { IStorage, StorageConfig, StorageType } from "./types";
-export { StorageError, JSONSerializer } from "./types";
+export type { IStorage, StorageConfig, StorageType } from "./storage-types";
+export { StorageError, JSONSerializer } from "./storage-types";
 
 // Implementation exports (for advanced usage)
-// export { MMKVStorage } from "./implementations/mmkv-storage"; // Commented out for Expo Go compatibility
 export { AsyncStorageImpl } from "./implementations/async-storage-impl";
-export { SQLiteStorage } from "./implementations/sqlite-storage";
-export { WatermelonStorage } from "./implementations/watermelon-storage";
-export { RealmStorage } from "./implementations/realm-storage";

@@ -10,9 +10,9 @@ import {
   storageFacade,
   type StorageConfig,
 } from "~/data/storage";
-import { pantryRepository } from "~/data/pantry-repository";
+import { pantryRepository } from "~/data/repositories/pantry-repository";
 import { recipeRepository } from "~/data/repositories/recipe-repository";
-import { getStorageConfig } from "~/data/storage-config";
+import { getStorageConfig } from "~/data/storage/storage-config";
 import type { PantryItem } from "~/types/PantryItem";
 
 // ===== BASIC USAGE =====
@@ -71,7 +71,8 @@ export function repositoryExample() {
   // Add a new item with auto-generated ID
   const newItem = pantryRepository.addWithAutoId({
     name: "Fresh Bananas",
-    quantity: "6 pieces",
+    quantity: 6,
+    unit: "pieces",
     category: "Fruit",
     type: "fridge",
     image_url: require("~/assets/images/image.png"),
@@ -103,7 +104,8 @@ export function repositoryExample() {
   if (newItem) {
     pantryRepository.update({
       ...newItem,
-      quantity: "4 pieces", // Updated quantity
+      quantity: 4,
+      unit: "pieces", // Updated quantity
     });
   }
 

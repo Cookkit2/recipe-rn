@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./supabase-types";
-import { createSupabaseStorageAdapter } from "./storage-integration";
 import Constants from "expo-constants";
+import { createSupabaseStorageAdapter } from "~/auth/StorageIntegration";
 
 // Supabase configuration from environment variables
 // Try multiple sources: process.env, Constants.expoConfig.extra

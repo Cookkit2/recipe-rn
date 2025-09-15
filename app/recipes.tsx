@@ -1,6 +1,6 @@
 import Animated, { Easing, FadeIn, FadeOut } from "react-native-reanimated";
 import RecipeStack from "~/components/Recipe/RecipeStack";
-import { dummyRecipesData } from "~/data/dummy-recipes";
+import { dummyRecipesData } from "~/data/dummy/dummy-recipes";
 import { useRouter } from "expo-router";
 import { Button } from "~/components/ui/button";
 import { useSafeAreaInsets } from "react-native-safe-area-context";

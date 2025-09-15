@@ -1,6 +1,6 @@
 import type { RecipeRackItem } from "~/types/RecipeRackItem";
 import { create } from "zustand";
-import { dummyRecipesData } from "~/data/dummy-recipes";
+import { dummyRecipesData } from "~/data/dummy/dummy-recipes";
 
 interface RecipeRackStore {
   rackItems: RecipeRackItem[];

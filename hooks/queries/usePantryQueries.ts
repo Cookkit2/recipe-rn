@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { pantryApi } from "~/hooks/api/pantryApi";
 import { pantryQueryKeys } from "./pantryQueryKeys";
 import type { ItemType, PantryItem } from "~/types/PantryItem";
+import { pantryApi } from "~/data/api/pantryApi";
 
 /**
  * Hook to fetch all pantry items
