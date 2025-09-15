@@ -1,6 +1,10 @@
-import { Model } from "@nozbe/watermelondb";
+import { Collection, Model } from "@nozbe/watermelondb";
 import { field, date, children, writer } from "@nozbe/watermelondb/decorators";
 import type { Associations } from "@nozbe/watermelondb/Model";
+import type RecipeIngredient from "./RecipeIngredient";
+import type Stock from "./Stock";
+import type StepsToStore from "./StepsToStore";
+import type IngredientCategoryAssignment from "./IngredientCategoryAssignment";
 
 export interface BaseIngredientData {
   name: string;
@@ -22,10 +26,10 @@ export default class BaseIngredient extends Model {
   @field("name") name!: string;
   @field("synonyms") _synonyms?: string; // JSON string
 
-  @children("recipe_ingredients") recipeIngredients: any; // Collection<RecipeIngredient>
-  @children("stock") stockItems: any; // Collection<Stock>
-  @children("steps_to_store") storageSteps: any; // Collection<StepsToStore>
-  @children("ingredient_category_assignments") categoryAssignments: any; // Collection<IngredientCategoryAssignment>
+  @children("recipe_ingredients") recipeIngredients?: Collection<RecipeIngredient>; // 
+  @children("stock") stockItems?: Collection<Stock>; // Collection<Stock>
+  @children("steps_to_store") storageSteps?: Collection<StepsToStore>; // Collection<StepsToStore>
+  @children("ingredient_category_assignments") categoryAssignments?: Collection<IngredientCategoryAssignment>; // Collection<IngredientCategoryAssignment>
 
   @date("created_at") createdAt!: Date;
   @date("updated_at") updatedAt!: Date;

@@ -13,7 +13,7 @@ jest.mock("react-native-mmkv", () => ({
 }));
 
 import { StorageFactory, storageFacade } from "~/data/storage";
-import { BaseRepository } from "~/data/repositories/base-repository";
+import { BaseRepository } from "~/data/old-repositories/base-repository";
 import type { PantryItem } from "~/types/PantryItem";
 import type { RecipeRackItem } from "~/types/RecipeRackItem";
 import { dummyPantryItems } from "~/data/dummy/dummy-data";

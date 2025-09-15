@@ -1,6 +1,8 @@
-import { Model } from "@nozbe/watermelondb";
+import { Collection, Model } from "@nozbe/watermelondb";
 import { field, date, children, writer } from "@nozbe/watermelondb/decorators";
 import type { Associations } from "@nozbe/watermelondb/Model";
+import type RecipeStep from "./RecipeStep";
+import type RecipeIngredient from "./RecipeIngredient";
 
 export interface RecipeData {
   title: string;
@@ -33,8 +35,8 @@ export default class Recipe extends Model {
   @field("calories") calories?: number;
   @field("tags") _tags?: string; // JSON string
 
-  @children("recipe_steps") steps: any; // Collection<RecipeStep>
-  @children("recipe_ingredients") ingredients: any; // Collection<RecipeIngredient>
+  @children("recipe_steps") steps!: Collection<RecipeStep>;
+  @children("recipe_ingredients") ingredients!: Collection<RecipeIngredient>;
 
   @date("created_at") createdAt!: Date;
   @date("updated_at") updatedAt!: Date;

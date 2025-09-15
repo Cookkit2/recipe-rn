@@ -11,22 +11,6 @@ export const pantryApi = {
    * Fetch all pantry items from database
    */
   async fetchAllPantryItems(): Promise<PantryItem[]> {
-    // if (!databaseFacade) {
-    //   throw new Error("DatabaseFacade is undefined - import failed");
-    // }
-
-    // if (!databaseFacade.stock) {
-    //   throw new Error(
-    //     `databaseFacade.stock is undefined. DatabaseFacade: ${!!databaseFacade}`
-    //   );
-    // }
-
-    // // Run health check
-    // const isHealthy = await databaseFacade.isHealthy();
-    // if (!isHealthy) {
-    //   throw new Error("Database health check failed");
-    // }
-
     const stockItems = await databaseFacade.stock.findAll();
 
     const pantryItemsConverted = await Promise.all(
@@ -66,6 +50,54 @@ export const pantryApi = {
     });
 
     return convertStockToPantryItem(stockItem);
+  },
+
+  /**
+   * Add an array of new pantry items
+   */
+  async addPantryItems(
+    items: Omit<PantryItem, "id" | "created_at" | "updated_at">[]
+  ): Promise<PantryItem[]> {
+    const ingredientIdCache = new Map<string, string>();
+
+    const createdItems = await Promise.all(
+      items.map(async (item) => {
+        // Find or create base ingredient (with simple in-memory cache per batch)
+        let baseIngredientId = ingredientIdCache.get(item.name);
+        if (!baseIngredientId) {
+          let baseIngredient = await databaseFacade.ingredients.findByName(
+            item.name
+          );
+          if (!baseIngredient) {
+            baseIngredient = await databaseFacade.ingredients.create({
+              name: item.name,
+              synonyms: [],
+            });
+          }
+          baseIngredientId = baseIngredient.id;
+          ingredientIdCache.set(item.name, baseIngredientId);
+        }
+
+        // Create stock item
+        const stockItem = await databaseFacade.stock.create({
+          baseIngredientId,
+          name: item.name,
+          quantity: item.quantity,
+          unit: item.unit,
+          expiryDate: item.expiry_date,
+          category: item.category,
+          imageUrl:
+            typeof item.image_url === "string" ? item.image_url : undefined,
+          x: item.x,
+          y: item.y,
+          scale: item.scale,
+        });
+
+        return await convertStockToPantryItem(stockItem);
+      })
+    );
+
+    return createdItems;
   },
 
   /**
@@ -147,9 +179,6 @@ export const pantryApi = {
 
 // Helper function to convert Stock + BaseIngredient to PantryItem
 const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
-  // Get base ingredient for future use if needed
-  await stock.baseIngredient;
-
   // Map database category to ItemType
   const mapCategoryToType = (category?: string): Exclude<ItemType, "all"> => {
     if (!category) return "fridge";

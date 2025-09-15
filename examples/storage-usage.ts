@@ -10,8 +10,8 @@ import {
   storageFacade,
   type StorageConfig,
 } from "~/data/storage";
-import { pantryRepository } from "~/data/repositories/pantry-repository";
-import { recipeRepository } from "~/data/repositories/recipe-repository";
+import { pantryRepository } from "~/data/old-repositories/pantry-repository";
+import { recipeRepository } from "~/data/old-repositories/recipe-repository";
 import { getStorageConfig } from "~/data/storage/storage-config";
 import type { PantryItem } from "~/types/PantryItem";
 

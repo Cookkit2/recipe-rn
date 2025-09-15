@@ -2,7 +2,6 @@ import { Q } from "@nozbe/watermelondb";
 import Stock, { type StockData } from "../models/Stock";
 import BaseIngredient from "../models/BaseIngredient";
 import { BaseRepository, type SearchOptions } from "./BaseRepository";
-import { database } from "../database";
 
 export interface StockSearchOptions extends SearchOptions {
   category?: string;
@@ -32,12 +31,14 @@ export class StockRepository extends BaseRepository<Stock> {
 
     // Filter by category
     if (options.category) {
-      query = query.where("category", Q.eq(options.category));
+      query = query.extend(Q.where("category", Q.eq(options.category)));
     }
 
     // Filter by ingredient
     if (options.ingredientId) {
-      query = query.where("base_ingredient_id", Q.eq(options.ingredientId));
+      query = query.extend(
+        Q.where("base_ingredient_id", Q.eq(options.ingredientId))
+      );
     }
 
     // Apply sorting
@@ -49,10 +50,10 @@ export class StockRepository extends BaseRepository<Stock> {
 
     // Apply pagination
     if (options.offset) {
-      query = query.skip(options.offset);
+      query = query.extend(Q.skip(options.offset));
     }
     if (options.limit) {
-      query = query.take(options.limit);
+      query = query.extend(Q.take(options.limit));
     }
 
     let items = await query.fetch();

@@ -230,10 +230,9 @@ export default function CreateIngredient() {
       });
 
       addProcessPantryItems({
-        id: uuid.v4().toString(),
-        image_url: outPath,
         name: titleCase(segmentedImage.name),
         quantity: segmentedImage.quantity,
+        image_url: outPath,
         unit: segmentedImage.unit,
       });
     });

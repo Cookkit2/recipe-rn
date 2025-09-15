@@ -94,7 +94,7 @@ export default function IngredientView({
           ]}
         >
           {item.image_url ? (
-            <OutlinedImage source={item.image_url} size={100} strokeWidth={4} />
+            <OutlinedImage source={item.image_url} size={120} strokeWidth={4} />
           ) : (
             <ShapeContainer
               index={0}
@@ -123,6 +123,7 @@ export default function IngredientView({
             {ingredientMeta}
           </View>
           <IngredientQuantity
+            className="mb-4"
             initialQuantity={item.quantity}
             initialUnit={item.unit}
           />
@@ -216,19 +217,19 @@ function getIngredientMeta(item: PantryItem) {
         {" " + titleCase(item.type)}
       </P>
     );
-    meta.push(
-      <P key="separator" className="text-foreground/70 font-urbanist-medium">
-        {"  •  "}
-      </P>
-    );
+    // meta.push(
+    //   <P key="separator" className="text-foreground/70 font-urbanist-medium">
+    //     {"  •  "}
+    //   </P>
+    // );
   }
 
-  if (item.category) {
-    meta.push(
-      <P key="category" className="text-foreground/70 font-urbanist-medium">
-        {item.category}
-      </P>
-    );
-  }
+  // if (item.category) {
+  //   meta.push(
+  //     <P key="category" className="text-foreground/70 font-urbanist-medium">
+  //       {item.category}
+  //     </P>
+  //   );
+  // }
   return meta;
 }

@@ -1,4 +1,5 @@
 import { database } from "./database";
+import type { BaseIngredient, Recipe, Stock } from "./models";
 import {
   initializeRepositories,
   RecipeRepository,
@@ -99,9 +100,9 @@ export class DatabaseFacade {
 
   // Utility methods for common operations
   async searchEverything(searchTerm: string): Promise<{
-    recipes: any[];
-    ingredients: any[];
-    stockItems: any[];
+    recipes: Recipe[];
+    ingredients: BaseIngredient[];
+    stockItems: Stock[];
   }> {
     const [recipes, ingredients, stockItems] = await Promise.all([
       this.recipes.searchRecipes({ searchTerm, limit: 10 }),
@@ -118,12 +119,12 @@ export class DatabaseFacade {
 
   // Check what recipes can be made with current stock
   async getAvailableRecipes(): Promise<{
-    canMake: any[];
-    partiallyCanMake: any[];
+    canMake: Recipe[];
+    partiallyCanMake: { recipe: Recipe; completionPercentage: number }[];
   }> {
     const allRecipes = await this.recipes.findAll();
-    const canMake: any[] = [];
-    const partiallyCanMake: any[] = [];
+    const canMake: Recipe[] = [];
+    const partiallyCanMake: { recipe: Recipe; completionPercentage: number }[] = [];
 
     for (const recipe of allRecipes) {
       try {
@@ -148,8 +149,8 @@ export class DatabaseFacade {
         } else if (availableCount > 0) {
           partiallyCanMake.push({
             recipe,
-            availableIngredients: availableCount,
-            totalIngredients: totalCount,
+            // availableIngredients: availableCount,
+            // totalIngredients: totalCount,
             completionPercentage: Math.round(
               (availableCount / totalCount) * 100
             ),
@@ -226,14 +227,14 @@ export class DatabaseFacade {
 
   // Batch operations
   async importRecipes(
-    recipesData: any[]
+    recipesData: Recipe[]
   ): Promise<{ success: number; errors: any[] }> {
     let success = 0;
-    const errors: any[] = [];
+    const errors = [];
 
     for (const recipeData of recipesData) {
       try {
-        await this.recipes.createRecipeWithDetails(recipeData);
+        await this.recipes.createRecipeWithDetails({ recipe: recipeData });
         success++;
       } catch (error) {
         errors.push({

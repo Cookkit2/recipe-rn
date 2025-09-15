@@ -1,4 +1,5 @@
 import {
+  Extrapolation,
   interpolate,
   useAnimatedStyle,
   type SharedValue,
@@ -15,14 +16,15 @@ export default function useHeaderAnimatedStyle(
           translateY: interpolate(
             scrollOffset.value,
             [-windowWidth, 0, windowWidth],
-            [-windowWidth / 2, 0, windowWidth * 0.75]
+            [-windowWidth / 2, 0, windowWidth * 0.75],
           ),
         },
         {
           scale: interpolate(
             scrollOffset.value,
             [-windowWidth, 0, windowWidth],
-            [2, 1, 1]
+            [2, 1, 1],
+            Extrapolation.CLAMP
           ),
         },
       ],

@@ -25,6 +25,7 @@ import { RecipeProvider } from "~/store/RecipeContext";
 import { QueryProvider } from "~/store/QueryProvider";
 import { AuthProvider, SupabaseAuthStrategy } from "~/auth";
 import { CameraProvider } from "~/store/CameraContext";
+import { useModelPreloader } from "~/hooks/model/useModelPreloader";
 
 // const LIGHT_THEME: Theme = {
 //   ...DefaultTheme,
@@ -225,6 +226,14 @@ export default function RootLayout() {
       "path-to-netflix-outline.png",
     ]);
   }, []);
+
+  useModelPreloader({
+    delay: 150,
+    priority: "low",
+    onLoadComplete: () => {
+      if (__DEV__) console.log("Models ready for use!");
+    },
+  });
 
   return (
     <GestureHandlerRootView className="flex-1 bg-background">

@@ -1,10 +1,8 @@
-import React, { useState } from "react";
-import { useWindowDimensions, View } from "react-native";
+import { Alert, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "../ui/button";
-import { ArrowLeftIcon, StarIcon } from "lucide-nativewind";
+import { ArrowLeftIcon, Trash2Icon } from "lucide-nativewind";
 import { useRouter } from "expo-router";
-import { cn } from "~/lib/tw-merge";
 import Animated, {
   runOnJS,
   useAnimatedReaction,
@@ -15,6 +13,8 @@ import Animated, {
 import { SystemBars } from "react-native-edge-to-edge";
 import { CURVES } from "~/constants/curves";
 import { H4 } from "../ui/typography";
+import { useDeletePantryItem } from "~/hooks/queries/usePantryQueries";
+import * as Haptics from "expo-haptics";
 
 export default function IngredientAppBar({
   id,
@@ -28,8 +28,7 @@ export default function IngredientAppBar({
   const { width } = useWindowDimensions();
   const { top } = useSafeAreaInsets();
   const router = useRouter();
-
-  // const [isFav, setIsFav] = useState(false);
+  const deletePantryItem = useDeletePantryItem();
 
   // Function to update status bar style (needs to run on JS thread)
   const updateStatusBarStyle = (isLight: boolean) => {
@@ -86,6 +85,23 @@ export default function IngredientAppBar({
     return { opacity };
   });
 
+  const onDelete = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+
+    Alert.alert("Delete", `Are you sure you want to delete this ${title}?`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          deletePantryItem.mutate(id);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          router.back();
+        },
+      },
+    ]);
+  };
+
   return (
     <Animated.View
       className="absolute top-0 left-0 right-0 flex-row items-center justify-between px-6 py-2 z-[1] border-border"
@@ -115,23 +131,10 @@ export default function IngredientAppBar({
       <Button
         size="icon"
         variant="secondary"
-        className="rounded-full opacity-0"
-        disabled
-        // onPress={() => setIsFav(!isFav)}
+        className="rounded-full"
+        onPress={onDelete}
       >
-        {/* {isFav ? (
-          <StarIcon
-            className={cn(
-              "text-warning color-yellow-500",
-              isFav && "text-yellow-500"
-            )}
-            fill="yellow"
-            size={20}
-            strokeWidth={2.618}
-          />
-        ) : (
-          )} */}
-        <StarIcon className="text-foreground" size={20} strokeWidth={2.618} />
+        <Trash2Icon className="text-foreground" size={20} strokeWidth={2.618} />
       </Button>
     </Animated.View>
   );

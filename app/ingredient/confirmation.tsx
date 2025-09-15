@@ -1,5 +1,10 @@
-import React, { useEffect } from "react";
-import { View, Keyboard, TouchableWithoutFeedback } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Keyboard,
+  TouchableWithoutFeedback,
+  ActivityIndicator,
+} from "react-native";
 import Animated, {
   useAnimatedRef,
   useScrollViewOffset,
@@ -12,14 +17,21 @@ import HorizontalIngredientItemCard from "~/components/Confirmation/HorizontalIn
 import { Button } from "~/components/ui/button";
 import TextShimmer from "~/components/ui/TextShimmer";
 import { SystemBars } from "react-native-edge-to-edge";
+import { useAddPantryItems } from "~/hooks/queries/usePantryQueries";
+import { useRouter } from "expo-router";
+import { toast } from "sonner-native";
+import { Trash2Icon } from "lucide-nativewind";
 
 export default function ConfirmationPage() {
   const { bottom } = useSafeAreaInsets();
   const { processPantryItems } = useCameraStore();
+  const router = useRouter();
+  const addPantryItems = useAddPantryItems();
 
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const scrollOffset = useScrollViewOffset(scrollRef);
-  
+
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Push a new system bar style when the screen mounts
@@ -28,13 +40,21 @@ export default function ConfirmationPage() {
     });
 
     // Pop it back when leaving (to restore previous settings)
-    return () => {
-      SystemBars.popStackEntry(entry);
-    };
+    return () => SystemBars.popStackEntry(entry);
   }, []);
 
-  const onSaveAllRecipe = () => {
-    // TODO: Implement save all recipe logic
+  const onSaveAllRecipe = async () => {
+    setIsLoading(true);
+    try {
+      addPantryItems.mutate(processPantryItems);
+      router.dismissTo("/");
+      SystemBars.setStyle("auto");
+    } catch (error) {
+      console.error("Error saving all recipe:", error);
+      toast.error("Error saving all recipe");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -80,13 +100,16 @@ export default function ConfirmationPage() {
           variant="secondary"
           className="rounded-2xl border-continuous bg-foreground/80"
           onPress={onSaveAllRecipe}
+          disabled={isLoading}
         >
           <TextShimmer className="flex-row items-center gap-2 justify-center">
+            {isLoading && <ActivityIndicator />}
             <H4 className="text-background font-urbanist font-semibold">
               Save
             </H4>
           </TextShimmer>
         </Button>
+       
       </View>
     </View>
   );

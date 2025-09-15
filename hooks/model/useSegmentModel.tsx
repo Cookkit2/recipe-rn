@@ -13,7 +13,7 @@ import allModel from "./allModel";
 import type { SegmentedImage } from "~/app/ingredient/create";
 
 // const SEG_MODEL_INPUT_SIZE = 256;
-const VEGE_MODEL_INPUT_SIZE = 640;
+const VEGE_MODEL_INPUT_SIZE = 512;
 // const VEGE_MODEL_INPUT_SIZE = 512;
 const MAGIC_TOUCH_MODEL_INPUT_SIZE = 512;
 
@@ -157,10 +157,7 @@ const snapShotImage = (image: SkImage, imageSize: number) => {
   return pixelData;
 };
 
-const preprocessImage = (
-  image: SkImage,
-  imageSize: number
-) => {
+const preprocessImage = (image: SkImage, imageSize: number) => {
   "worklet";
   // Create offscreen surface at target size and draw scaled image
   const surface = Skia.Surface.MakeOffscreen(imageSize, imageSize);
@@ -336,25 +333,25 @@ export const preprocessMagicTouchInput = (
 //   }
 // };
 
-const expandBbox = (
-  bbox: [number, number, number, number],
-  imageWidth: number,
-  imageHeight: number,
-  paddingRatio: number = 0.15
-): [number, number, number, number] => {
-  const [x1, y1, x2, y2] = bbox;
-  const width = Math.max(1, x2 - x1);
-  const height = Math.max(1, y2 - y1);
-  const padX = Math.max(4, Math.round(width * paddingRatio));
-  const padY = Math.max(4, Math.round(height * paddingRatio));
+// const expandBbox = (
+//   bbox: [number, number, number, number],
+//   imageWidth: number,
+//   imageHeight: number,
+//   paddingRatio: number = 0.15
+// ): [number, number, number, number] => {
+//   const [x1, y1, x2, y2] = bbox;
+//   const width = Math.max(1, x2 - x1);
+//   const height = Math.max(1, y2 - y1);
+//   const padX = Math.max(4, Math.round(width * paddingRatio));
+//   const padY = Math.max(4, Math.round(height * paddingRatio));
 
-  const nx1 = Math.max(0, Math.floor(x1 - padX));
-  const ny1 = Math.max(0, Math.floor(y1 - padY));
-  const nx2 = Math.min(imageWidth, Math.ceil(x2 + padX));
-  const ny2 = Math.min(imageHeight, Math.ceil(y2 + padY));
+//   const nx1 = Math.max(0, Math.floor(x1 - padX));
+//   const ny1 = Math.max(0, Math.floor(y1 - padY));
+//   const nx2 = Math.min(imageWidth, Math.ceil(x2 + padX));
+//   const ny2 = Math.min(imageHeight, Math.ceil(y2 + padY));
 
-  return [nx1, ny1, nx2, ny2];
-};
+//   return [nx1, ny1, nx2, ny2];
+// };
 
 // const applyBboxAndCrop = (
 //   image: SkImage,

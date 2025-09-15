@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from "expo-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   View,
   StyleSheet,
@@ -29,6 +29,7 @@ import useHeaderAnimatedStyle from "~/hooks/animation/useHeaderAnimatedStyle";
 import { Image } from "expo-image";
 import { useRecipe } from "~/hooks/queries/useRecipeQueries";
 import { usePantryItemsByType } from "~/hooks/queries/usePantryQueries";
+import { SystemBars } from "react-native-edge-to-edge";
 
 const AnimatedH1 = Animated.createAnimatedComponent(H1);
 const AnimatedImage = Animated.createAnimatedComponent(Image);
@@ -79,6 +80,16 @@ export default function RecipeDetails() {
   const updateServing = (newServing: number) => {
     setServing(newServing);
   };
+
+  useEffect(() => {
+    // Push a new system bar style when the screen mounts
+    const entry = SystemBars.pushStackEntry({
+      style: "light",
+    });
+
+    // Pop it back when leaving (to restore previous settings)
+    return () => SystemBars.popStackEntry(entry);
+  }, []);
 
   if (isLoading) {
     return (
