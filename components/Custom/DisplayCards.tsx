@@ -7,7 +7,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
-import { dummyPantryItems } from "~/data/dummy-data";
+import { dummyPantryItems } from "~/data/dummy/dummy-data";
 import OutlinedImage from "../ui/outlined-image";
 import RotationCard from "../Onboarding/RotationCard";
 

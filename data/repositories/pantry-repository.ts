@@ -1,7 +1,8 @@
-import { storage } from "./db";
 import type { PantryItem } from "~/types/PantryItem";
-import { dummyPantryItems } from "./dummy-data";
-import { BaseRepository } from "./repositories/base-repository";
+import { dummyPantryItems } from "../dummy/dummy-data";
+import { BaseRepository } from "./base-repository";
+import { storageFacade } from "../storage";
+import uuid from "react-native-uuid";
 
 const PANTRY_KEY = "pantryItems";
 
@@ -10,14 +11,14 @@ const PANTRY_KEY = "pantryItems";
  */
 class PantryRepository extends BaseRepository<PantryItem> {
   constructor() {
-    super(PANTRY_KEY, storage);
+    super(PANTRY_KEY, storageFacade);
     this.initializeIfEmpty(dummyPantryItems);
   }
 
   /**
    * Get pantry item by ID
    */
-  getById(id: number): PantryItem | null {
+  getById(id: string): PantryItem | null {
     return this.findFirst((item) => item.id === id);
   }
 
@@ -34,7 +35,7 @@ class PantryRepository extends BaseRepository<PantryItem> {
   /**
    * Delete a pantry item by ID
    */
-  delete(id: number): boolean {
+  delete(id: string): boolean {
     return this.deleteWhere((item) => item.id === id) > 0;
   }
 
@@ -107,15 +108,11 @@ class PantryRepository extends BaseRepository<PantryItem> {
   addWithAutoId(
     itemData: Omit<PantryItem, "id" | "created_at" | "updated_at">
   ): PantryItem {
-    const existingItems = this.getAll();
-    const maxId =
-      existingItems.length > 0
-        ? Math.max(...existingItems.map((item) => item.id))
-        : 0;
+    const newId = uuid.v4() as string;
 
     const newItem: PantryItem = {
       ...itemData,
-      id: maxId + 1,
+      id: newId,
       created_at: new Date(),
       updated_at: new Date(),
     };
@@ -140,7 +137,7 @@ class PantryRepository extends BaseRepository<PantryItem> {
   /**
    * Delete items by IDs
    */
-  deleteMany(ids: number[]): number {
+  deleteMany(ids: string[]): number {
     return this.deleteWhere((item) => ids.includes(item.id));
   }
 }

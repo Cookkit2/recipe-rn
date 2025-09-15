@@ -1,10 +1,7 @@
-import type { IStorage, StorageConfig, StorageType } from "./types";
-import { StorageError } from "./types";
+import type { IStorage, StorageConfig, StorageType } from "./storage-types";
+import { StorageError } from "./storage-types";
 import { MMKVStorage } from "./implementations/mmkv-storage";
 import { AsyncStorageImpl } from "./implementations/async-storage-impl";
-import { SQLiteStorage } from "./implementations/sqlite-storage";
-import { WatermelonStorage } from "./implementations/watermelon-storage";
-import { RealmStorage } from "./implementations/realm-storage";
 
 export class StorageFactory {
   private static instance: IStorage | null = null;
@@ -59,20 +56,13 @@ export class StorageFactory {
     switch (config.type) {
       case "mmkv":
         // MMKV not supported in Expo Go - fallback to AsyncStorage
-        console.warn("MMKV not supported in Expo Go, falling back to AsyncStorage");
+        console.warn(
+          "MMKV not supported in Expo Go, falling back to AsyncStorage"
+        );
         return new AsyncStorageImpl();
 
       case "async-storage":
         return new AsyncStorageImpl();
-
-      case "sqlite":
-        return new SQLiteStorage(config.options);
-
-      case "watermelon":
-        return new WatermelonStorage(config.options);
-
-      case "realm":
-        return new RealmStorage(config.options);
 
       default:
         throw new StorageError(

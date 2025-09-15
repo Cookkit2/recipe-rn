@@ -6,7 +6,7 @@ import { Button } from "~/components/ui/button";
 import { H1, H4, P } from "~/components/ui/typography";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import TextShimmer from "~/components/ui/TextShimmer";
-import { dummyPantryItems } from "~/data/dummy-data";
+import { dummyPantryItems } from "~/data/dummy/dummy-data";
 import useColors from "~/hooks/useColor";
 import RotationCard from "~/components/Onboarding/RotationCard";
 import OutlinedImage from "~/components/ui/outlined-image";

@@ -1,4 +1,4 @@
-import { StorageError, JSONSerializer } from "~/data/storage/types";
+import { StorageError, JSONSerializer } from "~/data/storage/storage-types";
 
 describe("Storage Types", () => {
   describe("StorageError", () => {

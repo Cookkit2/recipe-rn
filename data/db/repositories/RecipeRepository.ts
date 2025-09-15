@@ -1,10 +1,10 @@
 import { Q } from "@nozbe/watermelondb";
-import Recipe, { RecipeData } from "../models/Recipe";
-import RecipeStep, { RecipeStepData } from "../models/RecipeStep";
+import Recipe, { type RecipeData } from "../models/Recipe";
+import RecipeStep, { type RecipeStepData } from "../models/RecipeStep";
 import RecipeIngredient, {
-  RecipeIngredientData,
+  type RecipeIngredientData,
 } from "../models/RecipeIngredient";
-import { BaseRepository, SearchOptions } from "./BaseRepository";
+import { BaseRepository, type SearchOptions } from "./BaseRepository";
 import { database } from "../database";
 
 export interface RecipeSearchOptions extends SearchOptions {

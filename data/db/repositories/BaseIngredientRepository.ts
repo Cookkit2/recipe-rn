@@ -1,7 +1,9 @@
 import { Q } from "@nozbe/watermelondb";
-import BaseIngredient, { BaseIngredientData } from "../models/BaseIngredient";
+import BaseIngredient, {
+  type BaseIngredientData,
+} from "../models/BaseIngredient";
 import IngredientCategoryAssignment from "../models/IngredientCategoryAssignment";
-import { BaseRepository, SearchOptions } from "./BaseRepository";
+import { BaseRepository, type SearchOptions } from "./BaseRepository";
 import { database } from "../database";
 
 export interface IngredientSearchOptions extends SearchOptions {

@@ -16,7 +16,7 @@ import { BlurView } from "expo-blur";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { OverlayProvider } from "~/components/Overlay/OverlayContext";
 import { Image } from "expo-image";
-import { dummyRecipesData } from "~/data/dummy-recipes";
+import { dummyRecipesData } from "~/data/dummy/dummy-recipes";
 import { Toaster } from "sonner-native";
 export { ErrorBoundary } from "expo-router";
 import { SystemBars } from "react-native-edge-to-edge";

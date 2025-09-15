@@ -1,6 +1,6 @@
 import { Marquee } from "../Marque";
 import { View } from "react-native";
-import { dummyPantryItems } from "~/data/dummy-data";
+import { dummyPantryItems } from "~/data/dummy/dummy-data";
 import OutlinedImage from "../ui/outlined-image";
 import { H1, P } from "../ui/typography";
 import RotationCard from "./RotationCard";

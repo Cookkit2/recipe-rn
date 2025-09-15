@@ -1,7 +1,7 @@
 import { Q } from "@nozbe/watermelondb";
-import Stock, { StockData } from "../models/Stock";
+import Stock, { type StockData } from "../models/Stock";
 import BaseIngredient from "../models/BaseIngredient";
-import { BaseRepository, SearchOptions } from "./BaseRepository";
+import { BaseRepository, type SearchOptions } from "./BaseRepository";
 import { database } from "../database";
 
 export interface StockSearchOptions extends SearchOptions {

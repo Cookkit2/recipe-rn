@@ -1,5 +1,5 @@
 import { MMKVStorage } from "~/data/storage/implementations/mmkv-storage";
-import { StorageError } from "~/data/storage/types";
+import { StorageError } from "~/data/storage/storage-types";
 
 // Mock MMKV
 const mockMMKV = {

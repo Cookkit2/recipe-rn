@@ -1,5 +1,5 @@
 import { StorageFactory } from "~/data/storage/storage-factory";
-import { StorageError } from "~/data/storage/types";
+import { StorageError } from "~/data/storage/storage-types";
 import { MMKVStorage } from "~/data/storage/implementations/mmkv-storage";
 
 // Mock implementations
