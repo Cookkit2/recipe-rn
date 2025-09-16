@@ -105,7 +105,7 @@ export const segmentStaticImage = async (
           name: topDetection?.className ?? "Unknown",
           quantity: quantity,
           unit: unit,
-          // base64: magicMaskOutputs.base64,
+          background_color: undefined,
           skImage: magicMaskOutputs.finalImage,
         };
       }
@@ -115,7 +115,7 @@ export const segmentStaticImage = async (
       name: "Unknown",
       quantity: 1,
       unit: "units",
-      // base64: skImage.encodeToBase64(ImageFormat.PNG, 85),
+      background_color: undefined,
       skImage: skImage,
     };
   } catch (error) {

@@ -10,7 +10,8 @@ export function usePantryItems() {
   return useQuery({
     queryKey: pantryQueryKeys.items(),
     queryFn: pantryApi.fetchAllPantryItems,
-    staleTime: 2 * 60 * 1000, // 2 minutes - pantry data changes frequently
+    // staleTime: 2 * 60 * 1000, // 2 minutes - pantry data changes frequently
+    staleTime: 1,
   });
 }
 
@@ -20,15 +21,15 @@ export function usePantryItems() {
 export function usePantryItemsByType(type: ItemType) {
   const { data: allItems, ...rest } = usePantryItems();
 
-  const filteredItems =
-    allItems?.filter((item) => {
-      if (type === "all") return true;
-      return item.type === type;
-    }) || [];
+  if (type === "all")
+    return {
+      ...rest,
+      data: allItems ?? [],
+    };
 
   return {
     ...rest,
-    data: filteredItems,
+    data: allItems?.filter((item) => item.type === type) ?? [],
   };
 }
 
@@ -88,8 +89,6 @@ export function useAddPantryItems() {
     },
   });
 }
-
-
 
 /**
  * Mutation hook to update a pantry item

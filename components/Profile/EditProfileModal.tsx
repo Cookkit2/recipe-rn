@@ -1,5 +1,12 @@
 import React from "react";
-import { View, Text, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  KeyboardAvoidingView,
+  Platform,
+  Modal,
+} from "react-native";
 import { EyeIcon, EyeOffIcon } from "lucide-nativewind";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

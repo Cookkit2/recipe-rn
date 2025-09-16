@@ -1,5 +1,6 @@
 import { Model, Query, Collection, Q } from "@nozbe/watermelondb";
 import { database } from "../database";
+import { sanitizeSearchTerm } from "~/utils/input-sanitization";
 
 export interface PaginationOptions {
   limit?: number;
@@ -47,9 +48,9 @@ export abstract class BaseRepository<T extends Model> {
     return results;
   }
 
-  async create(data: Partial<T> & Record<string, any>): Promise<T> {
+  async create(data: Partial<T> & Record<string, unknown>): Promise<T> {
     return await database.write(async () => {
-      return await this.collection.create((record: any) => {
+      return await this.collection.create((record: T) => {
         Object.keys(data).forEach((key) => {
           if (data[key] !== undefined) {
             record[key] = data[key];
@@ -59,10 +60,13 @@ export abstract class BaseRepository<T extends Model> {
     });
   }
 
-  async update(id: string, data: Partial<T> & Record<string, any>): Promise<T> {
+  async update(
+    id: string,
+    data: Partial<T> & Record<string, unknown>
+  ): Promise<T> {
     return await database.write(async () => {
       const record = await this.collection.find(id);
-      return await record.update((r: any) => {
+      return await record.update((r: T) => {
         Object.keys(data).forEach((key) => {
           if (data[key] !== undefined) {
             r[key] = data[key];
@@ -101,13 +105,28 @@ export abstract class BaseRepository<T extends Model> {
       return query;
     }
 
-    const sanitizedTerm = `%${searchTerm.replace(/[%_]/g, "\\$&")}%`;
+    // Comprehensive sanitization for search terms
+    const sanitizedTerm = this.sanitizeSearchTerm(searchTerm);
 
-    const conditions = searchFields.map(
-      (field) => Q.where(field, Q.like(sanitizedTerm)) // <-- 2. Use Q.where and Q.like
+    const conditions = searchFields.map((field) =>
+      Q.where(field, Q.like(sanitizedTerm))
     );
 
     return query.extend(Q.or(...conditions));
+  }
+
+  /**
+   * Sanitizes search terms to prevent SQL injection and handle special characters
+   * @param searchTerm - The raw search term from user input
+   * @returns Sanitized search term safe for database queries
+   */
+  private sanitizeSearchTerm(searchTerm: string): string {
+    // Use the utility function for consistent sanitization
+    return sanitizeSearchTerm(searchTerm, {
+      maxLength: 100,
+      allowHtml: false,
+      allowSpecialChars: true,
+    });
   }
 
   /**

@@ -27,14 +27,14 @@ export const DEFAULT_IMAGES = {
  */
 export function getPlaceholderImage(
   ingredientName?: string,
-  category?: string
+  type?: string
 ) {
-  if (!ingredientName && !category) {
+  if (!ingredientName && !type) {
     return DEFAULT_IMAGES.GENERIC_FOOD;
   }
 
   const name = ingredientName?.toLowerCase() || "";
-  const cat = category?.toLowerCase() || "";
+  const cat = type?.toLowerCase() || "";
 
   // Match by ingredient name first
   if (name.includes("tomato")) return DEFAULT_IMAGES.TOMATO;

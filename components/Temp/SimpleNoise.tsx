@@ -27,6 +27,8 @@ Better rank ordering method by Stefan Gustavson in 2012.
  SOFTWARE.
  */
 
+/* eslint-disable */
+
 // these #__PURE__ comments help uglifyjs with dead code removal
 //
 const F2 = /*#__PURE__*/ 0.5 * (Math.sqrt(3.0) - 1.0);

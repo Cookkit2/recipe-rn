@@ -11,11 +11,11 @@ import {
   SettingsIcon,
   StarIcon,
 } from "lucide-nativewind";
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { View, Platform, Linking } from "react-native";
 import * as StoreReview from "expo-store-review";
 import Constants from "expo-constants";
-import Purchases from "react-native-purchases";
+import Purchases, { LOG_LEVEL } from "react-native-purchases";
 import Animated, {
   useAnimatedRef,
   useScrollViewOffset,
@@ -30,6 +30,8 @@ import ListButton from "~/components/Shared/ListButton";
 import { toast } from "sonner-native";
 import * as WebBrowser from "expo-web-browser";
 import { useAuth, useAuthStore } from "~/auth";
+import { presentPaywall } from "~/utils/subscription-utils";
+import ProfileCard from "~/components/Profile/ProfileCard";
 
 const appName = Constants.expoConfig?.name ?? "Cookkit";
 const appVersion = Constants.expoConfig?.version ?? "unknown";
@@ -38,6 +40,10 @@ const osVersion = String(Platform.Version ?? "");
 
 const subject = `${appName} Feedback`;
 const email = "cookkit01@gmail.com";
+
+const revenuecatProjectAppleApiKey =
+  process.env.EXPO_PUBLIC_REVENUECAT_PROJECT_APPLE_API_KEY ||
+  Constants.expoConfig?.extra?.EXPO_PUBLIC_REVENUECAT_PROJECT_APPLE_API_KEY;
 
 export default function ProfileScreen() {
   const { bottom } = useSafeAreaInsets();
@@ -50,6 +56,22 @@ export default function ProfileScreen() {
 
   const { signOut, isAuthenticated, user } = useAuth();
   const authStore = useAuthStore();
+
+  // TODO: Configure paywall
+  useEffect(() => {
+    Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
+
+    if (Platform.OS === "ios" && revenuecatProjectAppleApiKey) {
+      Purchases.configure({
+        apiKey: revenuecatProjectAppleApiKey,
+      });
+    }
+    // else if (Platform.OS === "android" && revenuecatProjectGoogleApiKey) {
+    //   Purchases.configure({
+    //     apiKey: revenuecatProjectGoogleApiKey,
+    //   });
+    // }
+  }, []);
 
   const handleSignOut = async () => {
     authStore.forceSignOut();
@@ -155,8 +177,7 @@ export default function ProfileScreen() {
         <H1 className="font-bowlby-one pt-2">Profile</H1>
       </View>
 
-      <SetupProfileCard />
-      {/* <ProfileCard /> */}
+      {isAuthenticated ? <ProfileCard /> : <SetupProfileCard />}
 
       {/* <View className="flex-row px-6 mt-6 gap-6 ">
         <Card className="flex-1 rounded-3xl shadow-md shadow-foreground/10 border-none">
@@ -190,7 +211,7 @@ export default function ProfileScreen() {
           <Button
             variant="default"
             className="rounded-xl border-continuous"
-            onPress={() => router.push("/subscription")}
+            onPress={() => presentPaywall()}
           >
             <P className="font-urbanist-semibold text-primary-foreground">
               Subscribe

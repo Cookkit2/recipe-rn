@@ -24,7 +24,7 @@ import {
   withTiming,
 } from "react-native-reanimated";
 
-import { createNoise2D, createNoise3D } from "../../components/Temp/SimpleNoise";
+import { createNoise2D, createNoise3D } from "~/components/Temp/SimpleNoise";
 
 const pad = 6;
 const deflate = (rct: SkRect, amount: number) => {
@@ -213,4 +213,4 @@ export default function Puzzle2() {
       </Canvas>
     </GestureDetector>
   );
-};
+}

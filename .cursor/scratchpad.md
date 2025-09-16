@@ -37,6 +37,8 @@ We need strongly-typed Supabase entities in the app to improve type-safety, DX, 
 
 - Executor implemented `addPantryItems` with per-batch ingredient caching and parallel creation. File lint passes. Awaiting Planner review and confirmation before writing tests.
 
+- **URGENT**: iOS build failing with locked database error. Executor handling build issue resolution.
+
 ## Executor Feedback or Help Requests
 - For pantry bulk add, recommend adding tests covering:
   - Multiple items sharing the same ingredient name use one base ingredient

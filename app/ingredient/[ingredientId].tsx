@@ -2,15 +2,15 @@ import React, { useEffect, useMemo } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { View, ActivityIndicator, Platform } from "react-native";
 import { H1, P } from "~/components/ui/typography";
-import IngredientView from "~/components/Ingredient/IngredientView";
+import IngredientWrapper from "~/components/Ingredient/IngredientWrapper";
 import SheetModalWrapper from "~/components/SheetModal/SheetModalWrapper";
-import type { PantryItem } from "~/types/PantryItem";
 import Animated, { useAnimatedRef } from "react-native-reanimated";
 import { usePantryItemsByType } from "~/hooks/queries/usePantryQueries";
 import { Button } from "~/components/ui/button";
 import { SystemBars } from "react-native-edge-to-edge";
+import { IngredientDetailProvider } from "~/store/IngredientDetailContext";
 
-export default function IngredientDetailsPage() {
+export default function IngredientPage() {
   const { ingredientId } = useLocalSearchParams<{ ingredientId: string }>();
   const router = useRouter();
   const {
@@ -68,15 +68,14 @@ export default function IngredientDetailsPage() {
     );
   }
 
-  if (Platform.OS === "ios") {
-    return <WithSheetModal item={item} />;
-  }
-
-  // Default to non-sheet modal page
-  return <DefaultIngredientView item={item} />;
+  return (
+    <IngredientDetailProvider item={item}>
+      {Platform.OS === "ios" ? <WithSheetModal /> : <DefaultIngredientView />}
+    </IngredientDetailProvider>
+  );
 }
 
-const DefaultIngredientView = ({ item }: { item: PantryItem }) => {
+const DefaultIngredientView = () => {
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
 
   const ScrollComponent = (
@@ -84,23 +83,21 @@ const DefaultIngredientView = ({ item }: { item: PantryItem }) => {
   ) => <Animated.ScrollView {...props} ref={scrollRef} />;
 
   return (
-    <IngredientView
+    <IngredientWrapper
       ScrollComponent={ScrollComponent}
       scrollRef={scrollRef}
-      ingredient={item}
     />
   );
 };
 
-const WithSheetModal = ({ item }: { item: PantryItem }) => {
+const WithSheetModal = () => {
   return (
     <SheetModalWrapper>
       {({ ScrollComponent, scrollRef }) => {
         return (
-          <IngredientView
+          <IngredientWrapper
             ScrollComponent={ScrollComponent}
             scrollRef={scrollRef}
-            ingredient={item}
           />
         );
       }}

@@ -16,7 +16,7 @@ export default function IngredientLists() {
   const { selectedItemType, ingredientScrollY, isRecipeOpen } =
     usePantryStore();
   const {
-    data: filteredPantryItems = [],
+    data: filteredPantryItems,
     isLoading,
     error,
   } = usePantryItemsByType(selectedItemType);
@@ -63,16 +63,18 @@ export default function IngredientLists() {
       renderItem={({ item, index }) => (
         <IngredientItemCard key={item.id} item={item} index={index} />
       )}
-      onScroll={(e) =>
-        (ingredientScrollY.value = e.nativeEvent.contentOffset.y)
-      }
+      onScroll={(e) => {
+        ingredientScrollY.value = e.nativeEvent.contentOffset.y;
+      }}
       ListEmptyComponent={
         <View className="py-16 items-center justify-center">
           <H4 className="text-muted-foreground text-center font-urbanist-semibold">
-            Your pantry is empty
+            Your {selectedItemType === "all" ? "pantry" : selectedItemType} is
+            empty
           </H4>
           <P className="text-muted-foreground text-center font-urbanist-regular text-sm mt-1">
-            Buy and add some groceries to your pantry
+            Buy and add some groceries to your{" "}
+            {selectedItemType === "all" ? "pantry" : selectedItemType}
           </P>
         </View>
       }
