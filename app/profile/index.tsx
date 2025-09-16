@@ -32,6 +32,11 @@ import * as WebBrowser from "expo-web-browser";
 import { useAuth, useAuthStore } from "~/auth";
 import { presentPaywall } from "~/utils/subscription-utils";
 import ProfileCard from "~/components/Profile/ProfileCard";
+import { storage } from "~/data";
+import {
+  ONBOARDING_COMPLETED_KEY,
+  PREFERENCE_COMPLETED_KEY,
+} from "~/constants/storage-keys";
 
 const appName = Constants.expoConfig?.name ?? "Cookkit";
 const appVersion = Constants.expoConfig?.version ?? "unknown";
@@ -171,10 +176,11 @@ export default function ProfileScreen() {
       ref={scrollRef}
       stickyHeaderIndices={[0]}
     >
-      <Header title="Profile" scrollOffset={scrollOffset} />
-      <View className="p-6 pb-4 flex-row items-center mb-4 gap-3">
+      <Header scrollOffset={scrollOffset} />
+      {/* <View className="p-6 pb-4 flex-row items-center mb-4 gap-3">
         <H1 className="font-bowlby-one pt-2">Profile</H1>
-      </View>
+      </View> */}
+      <View className="pb-4" />
 
       {isAuthenticated ? <ProfileCard /> : <SetupProfileCard />}
 
@@ -315,6 +321,22 @@ export default function ProfileScreen() {
             />
           </CardContent>
         </View>
+      </View>
+      <View>
+        <Button
+          onPress={() => {
+            storage.delete(ONBOARDING_COMPLETED_KEY);
+          }}
+        >
+          <P>Clear onboarding key</P>
+        </Button>
+        <Button
+          onPress={() => {
+            storage.delete(PREFERENCE_COMPLETED_KEY);
+          }}
+        >
+          <P>Clear preference key</P>
+        </Button>
       </View>
 
       <View className="mt-24"></View>
