@@ -24,7 +24,7 @@ function Digit({ value, place }: { value: number; place: number }) {
   }, [animatedValue, valueRoundedToPlace]);
 
   return (
-    <View className="relative overflow-hidden w-5 h-6">
+    <View className="relative overflow-hidden w-3">
       <View className="opacity-0">
         <H4 className="text-center font-urbanist-medium">0</H4>
       </View>

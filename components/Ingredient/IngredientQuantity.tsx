@@ -6,6 +6,7 @@ import { H4 } from "~/components/ui/typography";
 import { MinusIcon, PlusIcon } from "lucide-nativewind";
 import { cn } from "~/lib/tw-merge";
 import { UNIT_OPTIONS } from "~/constants/ingredient-units";
+import { storage } from "~/data";
 
 export default function IngredientQuantity({
   quantity,
@@ -22,9 +23,11 @@ export default function IngredientQuantity({
   className?: string;
   size?: "default" | "sm";
 }) {
+  const currentUnit = (storage.get("unit") || "si") as "si" | "imperial";
+
   const showUnitPicker = () => {
     const buttons = [
-      ...UNIT_OPTIONS["SI"].map((option) => ({
+      ...UNIT_OPTIONS[currentUnit].map((option) => ({
         text: option.label,
         onPress: () => updateUnit(option.value),
       })),
@@ -56,7 +59,7 @@ export default function IngredientQuantity({
           value={quantity}
           onValueChange={(newValue) => updateQuantity(Math.max(0, newValue))}
         />
-        <Pressable onPress={showUnitPicker}>
+        <Pressable onPress={showUnitPicker} className="min-w-[24px]">
           <H4 className="text-center font-urbanist-medium">{unit}</H4>
         </Pressable>
       </View>

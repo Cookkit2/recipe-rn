@@ -13,6 +13,7 @@ import {
   FanIcon,
 } from "lucide-nativewind";
 import { toggleFromArray } from "~/utils/array-helper";
+import { storage } from "~/data";
 
 type Appliance =
   | "stovetop"
@@ -23,10 +24,16 @@ type Appliance =
   | "blender";
 
 export default function AppliancesSection() {
-  // Appliances
-  const [appliances, setAppliances] = useState<Appliance[]>([]);
+  const [appliances, setAppliances] = useState<Appliance[]>(
+    (String(storage.get("appliances")).split(",") as Appliance[]) || []
+  );
+
   const handleToggleAppliance = useCallback((appliance: Appliance) => {
-    setAppliances((prev) => toggleFromArray(prev, appliance));
+    setAppliances((prev) => {
+      const currentAppliances = toggleFromArray(prev, appliance);
+      storage.set("appliances", currentAppliances.join(","));
+      return currentAppliances;
+    });
   }, []);
 
   return (

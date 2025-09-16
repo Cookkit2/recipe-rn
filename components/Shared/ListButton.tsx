@@ -31,7 +31,13 @@ export default function ListButton({
       {icon && <Icon className="color-foreground" size={24} strokeWidth={2} />}
       <P className="text-lg font-urbanist-semibold">{title}</P>
       <View className="flex-1" />
-      {external && <ArrowUpRightIcon size={18} strokeWidth={1.618} />}
+      {external && (
+        <ArrowUpRightIcon
+          className="text-foreground"
+          size={18}
+          strokeWidth={1.618}
+        />
+      )}
     </Button>
   );
 }

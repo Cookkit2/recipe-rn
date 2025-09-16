@@ -13,6 +13,7 @@ import {
 } from "lucide-nativewind";
 import { toggleFromArray } from "~/utils/array-helper";
 import type { GroupButton } from "../Shared/SegmentedButtons";
+import { storage } from "~/data";
 
 // NOTE: State-only for now. TODO: persist to storage later.
 type Allergen = "milk" | "eggs" | "nuts" | "fish" | "shellfish" | "wheat";
@@ -27,12 +28,26 @@ const ALLERGEN_OPTIONS: GroupButton<Allergen>[] = [
 ];
 
 export default function AllergySection() {
-  const [allergens, setAllergens] = useState<Allergen[]>([]);
-  const [otherAllergens, setOtherAllergens] = useState<string>("");
+  const [allergens, setAllergens] = useState<Allergen[]>(
+    (String(storage.get("allergens")).split(",") as Allergen[]) || []
+  );
+  const [otherAllergens, setOtherAllergens] = useState<string>(
+    storage.get("otherAllergens") || ""
+  );
 
   const handleToggleAllergens = useCallback((allergen: Allergen) => {
-    setAllergens((prev) => toggleFromArray(prev, allergen));
+    setAllergens((prev) => {
+      const currentAllergens = toggleFromArray(prev, allergen);
+      storage.set("allergens", currentAllergens.join(","));
+      return currentAllergens;
+    });
   }, []);
+
+  const updateOtherAllergens = useCallback((text: string) => {
+    setOtherAllergens(text);
+    storage.set("otherAllergens", text);
+  }, []);
+
   return (
     <Card className="mx-6 mt-4 border-none shadow-none">
       <CardContent className="py-6 gap-3 bg-muted/50 rounded-3xl">
@@ -50,7 +65,7 @@ export default function AllergySection() {
           </P>
           <TextInput
             value={otherAllergens}
-            onChangeText={setOtherAllergens}
+            onChangeText={updateOtherAllergens}
             placeholder="e.g., sesame, wheat, soy, mustard, celery, lupin, sulphites"
             className="rounded-2xl border-continuous border-border px-4 py-3 text-foreground bg-background font-urbanist-regular"
             placeholderTextColor={Platform.select({

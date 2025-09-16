@@ -4,6 +4,7 @@ import { Card, CardContent } from "../ui/card";
 import { H4 } from "../ui/typography";
 import { MoonIcon, SaladIcon, VeganIcon, FishIcon } from "lucide-nativewind";
 import { StarNorthIcon } from "~/lib/icons/StarNorth";
+import { storage } from "~/data";
 
 // NOTE: State-only for now. TODO: persist to storage later.
 type Diet = "halal" | "kosher" | "vegetarian" | "vegan" | "pescatarian";
@@ -17,11 +18,15 @@ const DIET_OPTIONS: GroupButton<Diet>[] = [
 ];
 
 export default function DietarySection() {
-  const [diet, setDiet] = useState<Diet | undefined>(undefined);
+  const [diet, setDiet] = useState<Diet | undefined>(
+    storage.get("diet") || undefined
+  );
 
   const handleToggleDiet = useCallback((diet: Diet) => {
     setDiet(diet);
+    storage.set("diet", diet);
   }, []);
+
   return (
     <Card className="mx-6 mt-4 border-none shadow-none">
       <CardContent className="py-6 gap-3 bg-muted/50 rounded-3xl">

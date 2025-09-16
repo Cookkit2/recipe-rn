@@ -33,16 +33,14 @@ export interface StorageConfig {
   options?: Record<string, any>;
 }
 
-export type StorageType =
-  | "mmkv"
-  | "sqlite"
-  | "watermelon"
-  | "realm"
-  | "async-storage";
+export type StorageType = "mmkv" | "async-storage";
 
 // Error types
 export class StorageError extends Error {
-  constructor(message: string, public readonly storageType: StorageType) {
+  constructor(
+    message: string,
+    public readonly storageType: StorageType
+  ) {
     super(message);
     this.name = "StorageError";
   }

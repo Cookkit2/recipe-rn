@@ -11,7 +11,7 @@ import {
   SettingsIcon,
   StarIcon,
 } from "lucide-nativewind";
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect } from "react";
 import { View, Platform, Linking } from "react-native";
 import * as StoreReview from "expo-store-review";
 import Constants from "expo-constants";
@@ -52,9 +52,7 @@ export default function ProfileScreen() {
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const scrollOffset = useScrollViewOffset(scrollRef);
 
-  const body = useRef<string>("");
-
-  const { signOut, isAuthenticated, user } = useAuth();
+  const { signOut, isAuthenticated } = useAuth();
   const authStore = useAuthStore();
 
   // TODO: Configure paywall
@@ -98,6 +96,7 @@ export default function ProfileScreen() {
         "",
         "[Describe your issue here]",
         "",
+        "",
         "— More Info —",
         `App Name: ${appName}`,
         `Version: ${appVersion}`,
@@ -109,10 +108,10 @@ export default function ProfileScreen() {
         "Sent from my device",
       ].filter(Boolean) as string[];
 
-      body.current = lines.join("\n");
-
       // Try with full mailto URL first
-      const fullUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}`;
+      const fullUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
+        lines.join("\n")
+      )}`;
 
       // Check if we can open mailto URLs
       const canOpenMailto = await Linking.canOpenURL("mailto:");
@@ -321,15 +320,17 @@ export default function ProfileScreen() {
       <View className="mt-24"></View>
 
       <View className="px-6 my-12">
-        <Button
-          variant="destructive"
-          className="w-full rounded-full"
-          onPress={handleSignOut}
-        >
-          <P className="text-lg text-destructive-foreground font-urbanist-semibold">
-            Logout
-          </P>
-        </Button>
+        {isAuthenticated && (
+          <Button
+            variant="destructive"
+            className="w-full rounded-full"
+            onPress={handleSignOut}
+          >
+            <P className="text-lg text-destructive-foreground font-urbanist-semibold">
+              Logout
+            </P>
+          </Button>
+        )}
       </View>
     </Animated.ScrollView>
   );

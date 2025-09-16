@@ -1,6 +1,6 @@
 import { StorageFactory } from "~/data/storage/storage-factory";
 import { StorageError } from "~/data/storage/storage-types";
-import { MMKVStorage } from "~/data/storage/implementations/mmkv-storage";
+import { MMKVStorageImpl } from "~/data/storage/implementations/mmkv-storage-impl";
 
 // Mock implementations
 jest.mock("~/data/storage/implementations/mmkv-storage");
@@ -9,7 +9,9 @@ jest.mock("~/data/storage/implementations/sqlite-storage");
 jest.mock("~/data/storage/implementations/watermelon-storage");
 jest.mock("~/data/storage/implementations/realm-storage");
 
-const MockMMKVStorage = MMKVStorage as jest.MockedClass<typeof MMKVStorage>;
+const MockMMKVStorage = MMKVStorageImpl as jest.MockedClass<
+  typeof MMKVStorageImpl
+>;
 
 describe("StorageFactory", () => {
   beforeEach(() => {
@@ -26,7 +28,7 @@ describe("StorageFactory", () => {
       const instance = StorageFactory.initialize(config);
 
       expect(MockMMKVStorage).toHaveBeenCalledWith({ id: "test" });
-      expect(instance).toBeInstanceOf(MMKVStorage);
+      expect(instance).toBeInstanceOf(MMKVStorageImpl);
     });
 
     it("should initialize with AsyncStorage", () => {
@@ -38,50 +40,6 @@ describe("StorageFactory", () => {
       StorageFactory.initialize(config);
 
       expect(AsyncStorageImpl).toHaveBeenCalled();
-    });
-
-    it("should initialize with SQLite", () => {
-      const {
-        SQLiteStorage,
-      } = require("~/data/storage/implementations/sqlite-storage");
-      const config = {
-        type: "sqlite" as const,
-        options: { databaseName: "test.db" },
-      };
-
-      StorageFactory.initialize(config);
-
-      expect(SQLiteStorage).toHaveBeenCalledWith({ databaseName: "test.db" });
-    });
-
-    it("should initialize with WatermelonDB", () => {
-      const {
-        WatermelonStorage,
-      } = require("~/data/storage/implementations/watermelon-storage");
-      const config = {
-        type: "watermelon" as const,
-        options: { databaseName: "watermelon" },
-      };
-
-      StorageFactory.initialize(config);
-
-      expect(WatermelonStorage).toHaveBeenCalledWith({
-        databaseName: "watermelon",
-      });
-    });
-
-    it("should initialize with Realm", () => {
-      const {
-        RealmStorage,
-      } = require("~/data/storage/implementations/realm-storage");
-      const config = {
-        type: "realm" as const,
-        options: { schemaVersion: 1 },
-      };
-
-      StorageFactory.initialize(config);
-
-      expect(RealmStorage).toHaveBeenCalledWith({ schemaVersion: 1 });
     });
 
     it("should throw error for unsupported storage type", () => {
@@ -129,7 +87,7 @@ describe("StorageFactory", () => {
       const instance = StorageFactory.getInstance();
 
       expect(MockMMKVStorage).toHaveBeenCalled();
-      expect(instance).toBeInstanceOf(MMKVStorage);
+      expect(instance).toBeInstanceOf(MMKVStorageImpl);
     });
   });
 

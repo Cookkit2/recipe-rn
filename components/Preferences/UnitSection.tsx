@@ -3,20 +3,54 @@ import { View } from "react-native";
 import SegmentedButtons, { type GroupButton } from "../Shared/SegmentedButtons";
 import { Card, CardContent } from "../ui/card";
 import { H4, P } from "../ui/typography";
+import { database, storage } from "~/data";
+import { toast } from "sonner-native";
+import TextShimmer from "../ui/TextShimmer";
+import { useRefreshPantryItems } from "~/hooks/queries/usePantryQueries";
+import { useRefreshRecipes } from "~/hooks/queries/useRecipeQueries";
 
 type UnitSystem = "si" | "imperial";
 
 export default function UnitSection() {
-  const [unit, setUnit] = useState<UnitSystem>("si");
-  const handleSelectUnit = useCallback((value: UnitSystem) => {
-    setUnit(value);
-  }, []);
+  const [unit, setUnit] = useState<UnitSystem>(storage.get("unit") || "si");
+  // const [isLoading, setIsLoading] = useState(false);
+  const { refresh: refreshPantry } = useRefreshPantryItems();
+  const { refresh: refreshRecipe } = useRefreshRecipes();
+
+  const handleSelectUnit = useCallback(
+    async (value: UnitSystem) => {
+      // setIsLoading(true);
+      const previousUnit = unit;
+      try {
+        setUnit(value);
+        storage.set("unit", value);
+        await database.convertUnits(value);
+        refreshPantry();
+        refreshRecipe();
+      } catch (error) {
+        console.error("Error converting units:", error);
+        toast.error("Failed to convert units");
+        setUnit(previousUnit);
+        storage.set("unit", previousUnit);
+      } finally {
+        // setIsLoading(false);
+      }
+    },
+    [refreshPantry, refreshRecipe, unit]
+  );
 
   return (
     <Card className="mx-6 mt-4 border-none shadow-none">
       <CardContent className="py-6 gap-3 bg-muted/50 rounded-3xl">
         <View className="gap-1">
-          <H4 className="font-urbanist-bold">Units</H4>
+          <View className="flex-row items-center justify-between gap-2">
+            <H4 className="font-urbanist-bold">Units</H4>
+            {/* {isLoading && (
+              <TextShimmer>
+                <P className="text-sm text-muted-foreground">Converting...</P>
+              </TextShimmer>
+            )} */}
+          </View>
           <P className="font-urbanist-regular text-muted-foreground">
             Choose your preferred measurement system
           </P>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { FlatList, Pressable } from "react-native";
 import Animated from "react-native-reanimated";
 import useButtonAnimation from "~/hooks/animation/useButtonAnimations";
@@ -19,25 +19,55 @@ export default function GridButtons<T>({
   value,
   onValueChange,
 }: SegmentedButtonsProps<T>) {
+  const renderItem = useCallback(
+    ({ item }: { item: GroupButton<T> }) => (
+      <GroupButton
+        item={item}
+        selected={value.includes(item.value)}
+        onPress={() => onValueChange(item.value)}
+      />
+    ),
+    [value, onValueChange]
+  );
+
+  const keyExtractor = useCallback(
+    (item: GroupButton<T>, index: number) => `group-button-${index}`,
+    []
+  );
+
+  const getItemLayout = useCallback(
+    (_: ArrayLike<GroupButton<T>> | null | undefined, index: number) => {
+      const itemHeight = 80; // Approximate height per item
+      const numColumns = 3;
+      const row = Math.floor(index / numColumns);
+
+      return {
+        length: itemHeight,
+        offset: row * itemHeight,
+        index,
+      };
+    },
+    []
+  );
+
   return (
     <FlatList
       numColumns={3}
       scrollEnabled={false}
       className="mt-2"
       data={buttons}
-      renderItem={({ item, index }) => (
-        <GroupButton
-          key={index}
-          item={item}
-          selected={value.includes(item.value)}
-          onPress={() => onValueChange(item.value)}
-        />
-      )}
+      renderItem={renderItem}
+      keyExtractor={keyExtractor}
+      getItemLayout={getItemLayout}
+      removeClippedSubviews={true}
+      maxToRenderPerBatch={6}
+      initialNumToRender={6}
+      windowSize={3}
     />
   );
 }
 
-function GroupButton<T>({
+const GroupButton = React.memo(function GroupButton<T>({
   item,
   selected,
   onPress,
@@ -77,4 +107,4 @@ function GroupButton<T>({
       </P>
     </AnimatedPressable>
   );
-}
+});
