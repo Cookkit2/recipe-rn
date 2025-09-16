@@ -232,6 +232,7 @@ export default function CreateIngredient() {
         name: titleCase(segmentedImage.name),
         quantity: segmentedImage.quantity,
         image_url: outPath,
+        background_color: imageBackgroundColor || colors.muted,
         unit: segmentedImage.unit,
       });
     });

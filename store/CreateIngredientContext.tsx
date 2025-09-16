@@ -1,4 +1,10 @@
-import React, { createContext, useCallback, useContext, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useRef,
+  useState,
+} from "react";
 import type {
   ItemType,
   PantryItem,
@@ -6,7 +12,6 @@ import type {
 } from "~/types/PantryItem";
 import { useWindowDimensions } from "react-native";
 import { useBaseIngredients } from "~/hooks/supabase-queries/useBaseIngredients";
-import uuid from "react-native-uuid";
 
 interface CreateIngredientContextType {
   // UI State only
@@ -32,20 +37,15 @@ export function CreateIngredientProvider({
   children: React.ReactNode;
 }) {
   const { data: baseIngredients } = useBaseIngredients();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [photoSize, setPhotoSize] = useState<{
     width: number;
     height: number;
   } | null>(null);
-  const [processPantryItems, setProcessPantryItems] = useState<PantryItem[]>([
-    // {
-    //   id: "1",
-    //   name: "Tomato",
-    //   quantity: 1,
-    //   unit: "pcs",
-    //   image_url: require("~/assets/images/tomato.png"),
-    // }
-  ]);
+  const [processPantryItems, setProcessPantryItems] = useState<PantryItem[]>(
+    []
+  );
   const { width, height } = useWindowDimensions();
   const [framePosition, setFramePosition] = useState({
     x: width / 2 - 48, // Center horizontally (minus half frame width: 96px / 2 = 48px)
@@ -69,7 +69,8 @@ export function CreateIngredientProvider({
   const addProcessPantryItems = useCallback(
     (item: PantryItemConfirmation) => {
       const baseIngredient = baseIngredients?.find(
-        (ingredient) => ingredient.name === item.name
+        (ingredient) =>
+          ingredient.name.toLowerCase() === item.name.toLowerCase()
       );
 
       if (baseIngredient) {
@@ -78,11 +79,12 @@ export function CreateIngredientProvider({
         );
 
         const currentNewItem: PantryItem = {
-          id: uuid.v4(),
+          id: Date.now().toString(), // Temporary ID until saved to DB
           name: item.name,
           quantity: item.quantity,
           unit: item.unit,
           image_url: item.image_url,
+          background_color: item.background_color,
           expiry_date: expiryDate,
           category: "",
           type: baseIngredient.storage_type as Exclude<ItemType, "all">,
@@ -99,11 +101,12 @@ export function CreateIngredientProvider({
         const expiryDate = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000);
 
         const currentNewItem: PantryItem = {
-          id: uuid.v4(),
+          id: Date.now().toString(), // Temporary ID until saved to DB
           name: item.name,
           quantity: item.quantity,
           unit: item.unit,
           image_url: item.image_url,
+          background_color: item.background_color,
           expiry_date: expiryDate,
           category: "",
           type: "cabinet",
@@ -120,11 +123,48 @@ export function CreateIngredientProvider({
     [baseIngredients]
   );
 
-  const updateProcessPantryItems = useCallback((currentItem: PantryItem) => {
-    setProcessPantryItems((prev) =>
-      prev.map((item) => (item.id === currentItem.id ? currentItem : item))
-    );
-  }, []);
+  const updateProcessPantryItems = useCallback(
+    (currentItem: PantryItem) => {
+      setProcessPantryItems((prev) =>
+        prev.map((item) => (item.id === currentItem.id ? currentItem : item))
+      );
+
+      // Clear existing timeout if user triggers another update
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      // Compare again with the base ingredient to fetch other details
+      // set a timeout and debounce for 200ms
+      timeoutRef.current = setTimeout(() => {
+        const baseIngredient = baseIngredients?.find(
+          (ingredient) =>
+            ingredient.name.toLowerCase() === currentItem.name.toLowerCase()
+        );
+        if (baseIngredient) {
+          const expiryDate = new Date(
+            Date.now() + baseIngredient.days_to_expire * 24 * 60 * 60 * 1000
+          );
+
+          // Update the item with new details
+          setProcessPantryItems((prev) =>
+            prev.map((item) => {
+              if (item.id === currentItem.id) {
+                return {
+                  ...item,
+                  expiry_date: expiryDate,
+                  type: baseIngredient.storage_type as Exclude<ItemType, "all">,
+                };
+              }
+              return item;
+            })
+          );
+        }
+        timeoutRef.current = null;
+      }, 200);
+    },
+    [baseIngredients]
+  );
 
   const deleteProcessPantryItems = useCallback((id: string) => {
     setProcessPantryItems((prev) => prev.filter((item) => item.id !== id));
@@ -151,7 +191,7 @@ export function CreateIngredientProvider({
 export const useCreateIngredientStore = () => {
   const context = useContext(CreateIngredientContext);
   if (!context) {
-    throw new Error("useCameraStore must be used within a CameraProvider");
+    throw new Error("useCreateIngredientStore must be used within a CreateIngredientProvider");
   }
   return context;
 };

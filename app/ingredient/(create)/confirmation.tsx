@@ -45,7 +45,10 @@ export default function ConfirmationPage() {
   const onSaveAllRecipe = async () => {
     setIsLoading(true);
     try {
-      addPantryItems.mutate(processPantryItems);
+      console.log("processPantryItems", processPantryItems);
+
+      const result = await addPantryItems.mutateAsync(processPantryItems);
+      console.log("result", result);
       router.dismissTo("/");
       SystemBars.setStyle("auto");
     } catch (error) {
@@ -80,12 +83,7 @@ export default function ConfirmationPage() {
             data={processPantryItems}
             // data={processedImages}
             renderItem={({ item }) => (
-              <HorizontalIngredientItemCard
-                key={item.id}
-                item={item}
-                onBeginTitleEditing={() => {}}
-                onEndTitleEditing={() => {}}
-              />
+              <HorizontalIngredientItemCard key={item.id} item={item} />
             )}
           />
         </Animated.ScrollView>
@@ -99,7 +97,7 @@ export default function ConfirmationPage() {
           variant="secondary"
           className="rounded-2xl border-continuous bg-foreground/80"
           onPress={onSaveAllRecipe}
-          disabled={isLoading}
+          disabled={isLoading || processPantryItems.length === 0}
         >
           <TextShimmer className="flex-row items-center gap-2 justify-center">
             {isLoading && <ActivityIndicator />}

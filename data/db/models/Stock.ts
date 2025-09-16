@@ -9,8 +9,9 @@ export interface StockData {
   quantity: number;
   unit: string;
   expiryDate?: Date;
-  category?: string;
+  type?: string;
   imageUrl?: string;
+  backgroundColor?: string;
   x?: number;
   y?: number;
   scale?: number;
@@ -27,8 +28,9 @@ export default class Stock extends Model {
   @field("quantity") quantity!: number;
   @field("unit") unit!: string;
   @field("expiry_date") _expiryDate?: number; // timestamp
-  @field("category") category?: string;
+  @field("type") type?: string;
   @field("image_url") imageUrl?: string;
+  @field("background_color") backgroundColor?: string;
   @field("x") x?: number;
   @field("y") y?: number;
   @field("scale") scale?: number;
@@ -71,8 +73,10 @@ export default class Stock extends Model {
       if (data.quantity !== undefined) stock.quantity = data.quantity;
       if (data.unit !== undefined) stock.unit = data.unit;
       if (data.expiryDate !== undefined) stock.expiryDate = data.expiryDate;
-      if (data.category !== undefined) stock.category = data.category;
+      if (data.type !== undefined) stock.type = data.type;
       if (data.imageUrl !== undefined) stock.imageUrl = data.imageUrl;
+      if (data.backgroundColor !== undefined)
+        stock.backgroundColor = data.backgroundColor;
       if (data.x !== undefined) stock.x = data.x;
       if (data.y !== undefined) stock.y = data.y;
       if (data.scale !== undefined) stock.scale = data.scale;

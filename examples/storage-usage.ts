@@ -75,6 +75,7 @@ export function repositoryExample() {
     unit: "pieces",
     category: "Fruit",
     type: "fridge",
+    background_color: "#FFE135",
     image_url: require("~/assets/images/image.png"),
     x: 100,
     y: 200,

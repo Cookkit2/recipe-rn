@@ -6,7 +6,6 @@ import { useRouter } from "expo-router";
 import OutlinedImage from "../ui/outlined-image";
 import useDebounce from "~/hooks/useDebounce";
 import * as Haptics from "expo-haptics";
-import useImageColors from "~/hooks/useImageColors";
 import useColors from "~/hooks/useColor";
 import useButtonAnimation from "~/hooks/animation/useButtonAnimations";
 import { usePantryStore } from "~/store/PantryContext";
@@ -20,12 +19,11 @@ export const IngredientItemCard = ({
   index: number;
 }) => {
   const router = useRouter();
+  const colors = useColors();
+
   const { animatedStyle, roundedStyle, onPressIn, onPressOut } =
     useButtonAnimation(true, 24);
   const { isRecipeOpen, updateRecipeOpen } = usePantryStore();
-
-  const color = useImageColors(item.image_url);
-  const colors = useColors();
 
   const debouncedPress = useDebounce(() => {
     if (isRecipeOpen) {
@@ -57,7 +55,10 @@ export const IngredientItemCard = ({
       >
         <Animated.View
           className="w-full relative rounded-3xl flex items-center justify-center border-continuous aspect-square"
-          style={[{ backgroundColor: color || colors.muted }, roundedStyle]}
+          style={[
+            { backgroundColor: item.background_color || colors.muted },
+            roundedStyle,
+          ]}
         >
           {item.image_url ? (
             <OutlinedImage source={item.image_url} size={64} />

@@ -42,6 +42,7 @@ export async function seedDatabase() {
           quantity: item.quantity,
           unit: item.unit,
           expiryDate: item.expiry_date,
+          type: item.type,
           category: item.category,
           imageUrl:
             typeof item.image_url === "string" ? item.image_url : undefined,
@@ -133,6 +134,7 @@ export async function addSampleData() {
       quantity: 5,
       unit: "pieces",
       expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+      type: "fridge",
       category: "Vegetables",
     });
 

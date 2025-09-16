@@ -90,8 +90,9 @@ export default appSchema({
         { name: "quantity", type: "number" },
         { name: "unit", type: "string" },
         { name: "expiry_date", type: "number", isOptional: true }, // timestamp
-        { name: "category", type: "string", isOptional: true },
+        { name: "type", type: "string", isOptional: true },
         { name: "image_url", type: "string", isOptional: true },
+        { name: "background_color", type: "string", isOptional: true },
         { name: "x", type: "number", isOptional: true },
         { name: "y", type: "number", isOptional: true },
         { name: "scale", type: "number", isOptional: true },

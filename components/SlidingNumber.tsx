@@ -193,6 +193,7 @@ export function SlidingNumber({
             autoFocus={true}
             selectTextOnFocus={true}
             onSubmitEditing={handleSubmit}
+            className="text-foreground"
           />
 
           <View className="flex-row gap-3 mt-6 justify-end">

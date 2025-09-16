@@ -1,7 +1,5 @@
-import React, { type JSX } from "react";
+import React from "react";
 import { Button } from "../ui/button";
-import type { ItemType } from "~/types/PantryItem";
-import { AppleIcon, RefrigeratorIcon, SnowflakeIcon } from "lucide-nativewind";
 import { P } from "../ui/typography";
 import { cn } from "~/lib/tw-merge";
 import Animated, {
@@ -10,58 +8,20 @@ import Animated, {
 } from "react-native-reanimated";
 import { CURVES } from "~/constants/curves";
 import { usePantryStore } from "~/store/PantryContext";
-import CabinetIcon from "~/lib/icons/CabinetIcon";
-
-const TYPES: Array<{ type: ItemType; label: string; icon: JSX.Element }> = [
-  {
-    type: "all",
-    label: "All",
-    icon: (
-      <AppleIcon className="text-foreground" size={16} strokeWidth={2.618} />
-    ),
-  },
-  {
-    type: "fridge",
-    label: "Fridge",
-    icon: (
-      <RefrigeratorIcon
-        className="text-foreground"
-        size={16}
-        strokeWidth={2.618}
-      />
-    ),
-  },
-  {
-    type: "cabinet",
-    label: "Cabinet",
-    icon: (
-      <CabinetIcon className="text-foreground" size={16} strokeWidth={2.618} />
-    ),
-  },
-  {
-    type: "freezer",
-    label: "Freezer",
-    icon: (
-      <SnowflakeIcon
-        className="text-foreground"
-        size={16}
-        strokeWidth={2.618}
-      />
-    ),
-  },
-];
+import { PANTRY_ITEM_TYPES } from "~/constants/pantry-item-type";
+import useColors from "~/hooks/useColor";
 
 export default function IngredientCategoryButtonGroup() {
+  const colors = useColors();
   const { selectedItemType, changeItemType, ingredientScrollY, isRecipeOpen } =
     usePantryStore();
 
   const borderAnimatedStyle = useAnimatedStyle(() => {
-    const isVisible = ingredientScrollY.value > 20;
-    const borderWidth = withTiming(
-      isVisible ? 1 : 0,
+    const borderColor = withTiming(
+      ingredientScrollY.value > 16 ? colors.border : colors.background,
       CURVES["expressive.fast.effects"]
     );
-    return { borderBottomWidth: borderWidth };
+    return { borderBottomColor: borderColor, borderBottomWidth: 1 };
   });
 
   const sizeStyle = useAnimatedStyle(() => ({
@@ -73,10 +33,10 @@ export default function IngredientCategoryButtonGroup() {
 
   return (
     <Animated.View
-      className="flex flex-row gap-x-2 overflow-x-auto pb-3 border-border"
+      className="flex flex-row gap-x-2 overflow-x-auto pb-3"
       style={[borderAnimatedStyle, sizeStyle]}
     >
-      {TYPES.map(({ type, label, icon }) => {
+      {PANTRY_ITEM_TYPES.map(({ type, label, icon }) => {
         const isSelected = selectedItemType === type;
         return (
           <Button

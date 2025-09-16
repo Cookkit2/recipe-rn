@@ -1,6 +1,6 @@
 import "~/global.css";
 import React, { useEffect, useState } from "react";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { Appearance, Platform, View } from "react-native";
 import { useColorScheme } from "~/hooks/useColorScheme";
 import { PortalHost } from "@rn-primitives/portal";
@@ -21,16 +21,7 @@ export { ErrorBoundary } from "expo-router";
 import { SystemBars } from "react-native-edge-to-edge";
 import { QueryProvider } from "~/store/QueryProvider";
 import { AuthProvider, SupabaseAuthStrategy } from "~/auth";
-import { useModelPreloader } from "~/hooks/model/useModelPreloader";
-
-// const LIGHT_THEME: Theme = {
-//   ...DefaultTheme,
-//   colors: NAV_THEME.light,
-// };
-// const DARK_THEME: Theme = {
-//   ...DarkTheme,
-//   colors: NAV_THEME.dark,
-// };
+import { KeyboardProvider } from "react-native-keyboard-controller";
 
 const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 
@@ -57,9 +48,9 @@ function AnimatedStack() {
   // useEffect(() => {
   //   if (__DEV__) {
   //     setTimeout(() => {
-  //       // router.push("/ingredient/create");
+  //       router.push("/ingredient/create");
   //       // router.push("/ingredient/webview");
-  //       router.push("/ingredient/confirmation");
+  //       // router.push("/ingredient/confirmation");
   //       // router.push("/recipes/chicken-stir-fry/steps");
   //     }, 0);
   //   }
@@ -114,10 +105,6 @@ function AnimatedStack() {
           />
           <Stack.Screen
             name="ingredient/(create)"
-            options={{ presentation: "card", headerShown: false }}
-          />
-          <Stack.Screen
-            name="ingredient/confirmation"
             options={{ presentation: "card", headerShown: false }}
           />
 
@@ -211,12 +198,10 @@ const usePlatformSpecificSetup = Platform.select({
 export default function RootLayout() {
   usePlatformSpecificSetup();
 
+  // TODO: fetch all recipes images
   useEffect(() => {
     Image.prefetch([
       ...dummyRecipesData.map((recipe) => recipe.imageUrl),
-      // Add your common image URLs here
-      "path-to-netflix-icon.png",
-      "path-to-netflix-outline.png",
     ]);
   }, []);
 
@@ -237,10 +222,12 @@ export default function RootLayout() {
               strategy={new SupabaseAuthStrategy()}
               autoInitialize={true}
             >
-              <SystemBars style="auto" />
-              <AnimatedStack />
-              <PortalHost />
-              <Toaster />
+              <KeyboardProvider>
+                <SystemBars style="auto" />
+                <AnimatedStack />
+                <PortalHost />
+                <Toaster />
+              </KeyboardProvider>
             </AuthProvider>
           </QueryProvider>
         </SafeAreaProvider>

@@ -7,7 +7,6 @@ import { databaseFacade } from "~/data/db/DatabaseFacade";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { ArrowLeftIcon } from "lucide-nativewind";
-import { useRecipeStore } from "~/store/RecipeContext";
 import { useRefreshPantryItems } from "~/hooks/queries/usePantryQueries";
 
 export default function DebugScreen() {

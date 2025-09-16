@@ -12,6 +12,7 @@ export type PantryItem = {
   category: string;
   type: Exclude<ItemType, "all">;
   image_url: ImageSourcePropType | string | undefined;
+  background_color: string | undefined;
   x: number;
   y: number;
   scale: number;
@@ -24,6 +25,7 @@ export type PantryItemConfirmation = {
   name: string;
   quantity: number;
   unit: string;
+  background_color: string | undefined;
   image_url: ImageSourcePropType | string | undefined;
 };
 

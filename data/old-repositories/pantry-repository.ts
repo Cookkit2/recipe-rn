@@ -2,7 +2,6 @@ import type { PantryItem } from "~/types/PantryItem";
 import { dummyPantryItems } from "../dummy/dummy-data";
 import { BaseRepository } from "./base-repository";
 import { storageFacade } from "../storage";
-import uuid from "react-native-uuid";
 
 const PANTRY_KEY = "pantryItems";
 
@@ -108,7 +107,7 @@ class PantryRepository extends BaseRepository<PantryItem> {
   addWithAutoId(
     itemData: Omit<PantryItem, "id" | "created_at" | "updated_at">
   ): PantryItem {
-    const newId = uuid.v4() as string;
+    const newId = Date.now().toString();
 
     const newItem: PantryItem = {
       ...itemData,

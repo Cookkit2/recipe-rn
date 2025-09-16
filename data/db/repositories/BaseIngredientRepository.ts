@@ -102,14 +102,11 @@ export class BaseIngredientRepository extends BaseRepository<BaseIngredient> {
       const assignments = await ingredient.categoryAssignments?.query().fetch();
 
       if (!assignments) return null;
-      
-      const categories = await Promise.all(
-        assignments.map(async (assignment) => {
-          const category = await assignment.category;
-          return category.name;
-        })
-      );
 
+      const categories = assignments.map(
+        (assignment) => assignment.category.name
+      );
+      
       return {
         ingredient,
         categories,

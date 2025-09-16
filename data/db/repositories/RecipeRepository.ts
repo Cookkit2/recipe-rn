@@ -100,9 +100,23 @@ export class RecipeRepository extends BaseRepository<Recipe> {
       const recipe = await this.findById(id);
       if (!recipe) return null;
 
+      // Add defensive checks to ensure the recipe has the expected properties
+      if (!recipe.steps || typeof recipe.steps.query !== "function") {
+        // Fallback: query collections directly
+        return await this.getRecipeWithDetailsDirectQuery(id);
+      }
+
+      if (
+        !recipe.ingredients ||
+        typeof recipe.ingredients.query !== "function"
+      ) {
+        // Fallback: query collections directly
+        return await this.getRecipeWithDetailsDirectQuery(id);
+      }
+
       const [steps, ingredients] = await Promise.all([
-        recipe.steps,
-        recipe.ingredients,
+        recipe.steps.query().fetch(),
+        recipe.ingredients.query().fetch(),
       ]);
 
       return {
@@ -111,7 +125,37 @@ export class RecipeRepository extends BaseRepository<Recipe> {
         ingredients,
       };
     } catch (error) {
-      console.error("Error fetching recipe details:", error);
+      // Fallback: try direct query approach
+      return await this.getRecipeWithDetailsDirectQuery(id);
+    }
+  }
+
+  // Alternative method using direct collection queries
+  private async getRecipeWithDetailsDirectQuery(id: string): Promise<{
+    recipe: Recipe;
+    steps: RecipeStep[];
+    ingredients: RecipeIngredient[];
+  } | null> {
+    try {
+      const recipe = await this.findById(id);
+      if (!recipe) return null;
+
+      const stepsCollection =
+        database.collections.get<RecipeStep>("recipe_steps");
+      const ingredientsCollection =
+        database.collections.get<RecipeIngredient>("recipe_ingredients");
+
+      const [steps, ingredients] = await Promise.all([
+        stepsCollection.query(Q.where("recipe_id", id)).fetch(),
+        ingredientsCollection.query(Q.where("recipe_id", id)).fetch(),
+      ]);
+
+      return {
+        recipe,
+        steps: steps.sort((a, b) => a.step - b.step),
+        ingredients,
+      };
+    } catch (error) {
       return null;
     }
   }

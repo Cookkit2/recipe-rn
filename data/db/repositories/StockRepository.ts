@@ -4,7 +4,7 @@ import BaseIngredient from "../models/BaseIngredient";
 import { BaseRepository, type SearchOptions } from "./BaseRepository";
 
 export interface StockSearchOptions extends SearchOptions {
-  category?: string;
+  type?: string;
   isExpired?: boolean;
   isExpiringSoon?: boolean;
   ingredientId?: string;
@@ -29,9 +29,9 @@ export class StockRepository extends BaseRepository<Stock> {
       query = this.buildSearchQuery(query, options.searchTerm, ["name"]);
     }
 
-    // Filter by category
-    if (options.category) {
-      query = query.extend(Q.where("category", Q.eq(options.category)));
+    // Filter by type
+    if (options.type) {
+      query = query.extend(Q.where("type", Q.eq(options.type)));
     }
 
     // Filter by ingredient
@@ -133,9 +133,9 @@ export class StockRepository extends BaseRepository<Stock> {
       .fetch();
   }
 
-  // Get stock by category
-  async getStockByCategory(category: string): Promise<Stock[]> {
-    return await this.collection.query(Q.where("category", category)).fetch();
+  // Get stock by type
+  async getStockByType(type: string): Promise<Stock[]> {
+    return await this.collection.query(Q.where("type", type)).fetch();
   }
 
   // Get all categories
@@ -144,8 +144,8 @@ export class StockRepository extends BaseRepository<Stock> {
     const categories = new Set<string>();
 
     items.forEach((item) => {
-      if (item.category) {
-        categories.add(item.category);
+      if (item.type) {
+        categories.add(item.type);
       }
     });
 

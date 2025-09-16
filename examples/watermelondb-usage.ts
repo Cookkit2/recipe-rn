@@ -38,7 +38,7 @@ export async function demonstrateWatermelonDB() {
       quantity: 5,
       unit: "pieces",
       expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
-      category: "Vegetables",
+      type: "fridge",
     } as StockData);
     console.log(
       "Added stock item:",

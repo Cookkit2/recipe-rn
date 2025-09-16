@@ -1,7 +1,8 @@
 import React from "react";
-import { Modal, Pressable } from "react-native";
+import { Modal, Platform, Pressable } from "react-native";
 import { BlurView } from "expo-blur";
 import { useColorScheme } from "~/hooks/useColorScheme";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 
 export default function BaseModal({
   modalVisible,
@@ -26,17 +27,22 @@ export default function BaseModal({
         className="absolute inset-0 z-[1]"
         tint={isDarkColorScheme ? "dark" : "light"}
       />
-      <Pressable
-        className="flex-1 justify-center items-center bg-black/50 px-4 z-[2]"
-        onPress={onCancel}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        className="flex-1 z-[2]"
       >
         <Pressable
-          onPress={(e) => e.stopPropagation()}
-          className="w-full max-w-sm flex items-center"
+          className="flex-1 justify-center items-center bg-black/50 px-4 z-[2]"
+          onPress={onCancel}
         >
-          {children}
+          <Pressable
+            onPress={(e) => e.stopPropagation()}
+            className="w-full max-w-sm flex items-center"
+          >
+            {children}
+          </Pressable>
         </Pressable>
-      </Pressable>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

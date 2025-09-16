@@ -3,28 +3,22 @@ import type { ImageSourcePropType } from "react-native";
 import useColors from "./useColor";
 import { getColors } from "react-native-image-colors";
 
+// Try to import the native module with fallback
+// let getColors: any = null;
+// try {
+//   const imageColors = require("react-native-image-colors");
+//   getColors = imageColors.getColors;
+// } catch (error) {
+//   console.warn("react-native-image-colors not available, using fallback");
+//   getColors = null;
+// }
+
 const useImageColors = (url: string | ImageSourcePropType | undefined) => {
   const colors = useColors();
   const [imageColor, setImageColor] = useState<string>(colors.muted);
 
   useEffect(() => {
     const fetchColors = async (url: string | ImageSourcePropType) => {
-      if (!getColors) {
-        // Fallback to default colors based on item type or random
-        const fallbackColors = [
-          "#FF6B6B",
-          "#4ECDC4",
-          "#45B7D1",
-          "#96CEB4",
-          "#FFEAA7",
-        ];
-        const randomColor =
-          fallbackColors[Math.floor(Math.random() * fallbackColors.length)] ||
-          "#4ECDC4";
-        setImageColor(randomColor);
-        return;
-      }
-
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const color = await getColors(url as any, {

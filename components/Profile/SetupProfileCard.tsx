@@ -5,7 +5,7 @@ import { H4, P } from "../ui/typography";
 import { Button } from "../ui/button";
 import EditProfileModal from "./EditProfileModal";
 
-export default function ProfileCard() {
+export default function SetupProfileCard() {
   const [modalVisible, setModalVisible] = useState(false);
 
   return (
