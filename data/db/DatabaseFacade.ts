@@ -6,6 +6,24 @@ import {
   BaseIngredientRepository,
   StockRepository,
 } from "./repositories";
+import {
+  convertToUnitSystem,
+  roundToReasonablePrecision,
+} from "~/utils/unit-converter";
+
+interface MissingIngredientInfo {
+  name: string;
+  quantity: string;
+  notes?: string;
+  baseIngredientId: string;
+}
+
+interface AvailableIngredientInfo {
+  name: string;
+  quantity: string;
+  stockQuantity: number;
+  unit: string;
+}
 
 /**
  * Database Facade - Main interface for all structured database operations
@@ -117,6 +135,106 @@ export class DatabaseFacade {
     };
   }
 
+  async convertUnits(toUnitSystem: "si" | "imperial"): Promise<void> {
+    /**
+     * Converts all stock item quantities + units to the requested system.
+     * - Skips items whose unit is unknown / non-convertible (e.g. count units)
+     * - Only writes when quantity or unit actually changes (to reduce churn)
+     * - Rounds results with roundToReasonablePrecision (3 dp) to avoid drift
+     * - Logs a concise progress report at the end
+     *
+     * Edge cases handled:
+     *  - Missing or NaN quantity: item skipped automatically by converter
+     *  - Unknown units: left unchanged
+     *  - Count style units (unit / pcs / count): left unchanged
+     *  - Extremely small floating differences (< 0.001): treated as no-op
+     */
+    console.log(`🔄 Converting all stock units to ${toUnitSystem} system...`);
+
+    try {
+      // Get all stock items
+      const allStockItems = await this.stock.findAll();
+      console.log(`📦 Found ${allStockItems.length} stock items to convert`);
+
+      if (allStockItems.length === 0) {
+        console.log("ℹ️ No stock items to convert");
+        return;
+      }
+
+      let convertedCount = 0;
+      let skippedCount = 0;
+      let errorCount = 0;
+
+      // Process items one by one - use repository update instead of model update
+      for (const stockItem of allStockItems) {
+        try {
+          console.log(
+            `🔍 Processing: ${stockItem.name} - ${stockItem.quantity} ${stockItem.unit}`
+          );
+
+          // Convert the unit
+          const converted = convertToUnitSystem(
+            stockItem.quantity,
+            stockItem.unit,
+            toUnitSystem
+          );
+
+          console.log(
+            `🔄 Conversion result: ${converted.quantity} ${converted.unit}`
+          );
+
+          // Check if conversion would make any change
+          const quantityChanged =
+            Math.abs(converted.quantity - stockItem.quantity) > 0.001;
+          const unitChanged = converted.unit !== stockItem.unit;
+
+          if (quantityChanged || unitChanged) {
+            console.log(
+              `📝 Updating: ${stockItem.quantity} ${stockItem.unit} → ${converted.quantity} ${converted.unit}`
+            );
+
+            // Use repository update method instead of model update method
+            await this.stock.update(stockItem.id, {
+              quantity: roundToReasonablePrecision(converted.quantity),
+              unit: converted.unit,
+            });
+
+            // Verify the update worked
+            const updatedItem = await this.stock.findById(stockItem.id);
+            if (updatedItem) {
+              console.log(
+                `✅ Verified update: ${updatedItem.name} is now ${updatedItem.quantity} ${updatedItem.unit}`
+              );
+            } else {
+              console.log(`⚠️ Could not verify update for ${stockItem.name}`);
+            }
+
+            convertedCount++;
+          } else {
+            console.log(
+              `⏭️ Skipped ${stockItem.name}: already in correct format`
+            );
+            skippedCount++;
+          }
+        } catch (error) {
+          console.warn(
+            `⚠️ Failed to convert stock item ${stockItem.name} (${stockItem.id}):`,
+            error
+          );
+          errorCount++;
+        }
+      }
+
+      console.log(`🎉 Unit conversion complete!`);
+      console.log(`  - Converted: ${convertedCount} items`);
+      console.log(`  - Skipped: ${skippedCount} items`);
+      console.log(`  - Errors: ${errorCount} items`);
+    } catch (error) {
+      console.error(`❌ Error during unit conversion:`, error);
+      throw error;
+    }
+  }
+
   // Check what recipes can be made with current stock
   async getAvailableRecipes(): Promise<{
     canMake: Recipe[];
@@ -124,7 +242,8 @@ export class DatabaseFacade {
   }> {
     const allRecipes = await this.recipes.findAll();
     const canMake: Recipe[] = [];
-    const partiallyCanMake: { recipe: Recipe; completionPercentage: number }[] = [];
+    const partiallyCanMake: { recipe: Recipe; completionPercentage: number }[] =
+      [];
 
     for (const recipe of allRecipes) {
       try {
@@ -189,8 +308,8 @@ export class DatabaseFacade {
       return { missingIngredients: [], availableIngredients: [] };
     }
 
-    const missingIngredients: any[] = [];
-    const availableIngredients: any[] = [];
+    const missingIngredients: MissingIngredientInfo[] = [];
+    const availableIngredients: AvailableIngredientInfo[] = [];
 
     for (const ingredient of recipeDetails.ingredients) {
       const stockItems = await this.stock.getStockByIngredient(

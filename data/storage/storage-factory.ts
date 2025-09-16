@@ -1,6 +1,6 @@
 import type { IStorage, StorageConfig, StorageType } from "./storage-types";
 import { StorageError } from "./storage-types";
-import { MMKVStorage } from "./implementations/mmkv-storage";
+import { MMKVStorageImpl } from "./implementations/mmkv-storage-impl";
 import { AsyncStorageImpl } from "./implementations/async-storage-impl";
 
 export class StorageFactory {
@@ -55,11 +55,7 @@ export class StorageFactory {
   private static createStorage(config: StorageConfig): IStorage {
     switch (config.type) {
       case "mmkv":
-        // MMKV not supported in Expo Go - fallback to AsyncStorage
-        console.warn(
-          "MMKV not supported in Expo Go, falling back to AsyncStorage"
-        );
-        return new AsyncStorageImpl();
+        return new MMKVStorageImpl();
 
       case "async-storage":
         return new AsyncStorageImpl();
@@ -131,23 +127,10 @@ export class StorageFactory {
 }
 
 // Convenience methods for common configurations
-// export const createMMKVStorage = (options?: {
-//   id?: string;
-//   encryptionKey?: string;
-// }) => StorageFactory.initialize({ type: "mmkv", options }); // Commented out for Expo Go compatibility
+export const createMMKVStorage = (options?: {
+  id?: string;
+  encryptionKey?: string;
+}) => StorageFactory.initialize({ type: "mmkv", options });
 
 export const createAsyncStorage = () =>
   StorageFactory.initialize({ type: "async-storage" });
-
-export const createSQLiteStorage = (options?: {
-  databaseName?: string;
-  tableName?: string;
-}) => StorageFactory.initialize({ type: "sqlite", options });
-
-export const createWatermelonStorage = (options?: { databaseName?: string }) =>
-  StorageFactory.initialize({ type: "watermelon", options });
-
-export const createRealmStorage = (options?: {
-  schemaVersion?: number;
-  path?: string;
-}) => StorageFactory.initialize({ type: "realm", options });

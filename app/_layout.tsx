@@ -22,6 +22,7 @@ import { SystemBars } from "react-native-edge-to-edge";
 import { QueryProvider } from "~/store/QueryProvider";
 import { AuthProvider, SupabaseAuthStrategy } from "~/auth";
 import { KeyboardProvider } from "react-native-keyboard-controller";
+import { createMMKVStorage } from "~/data/storage";
 
 const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 
@@ -48,7 +49,7 @@ function AnimatedStack() {
   // useEffect(() => {
   //   if (__DEV__) {
   //     setTimeout(() => {
-  //       router.push("/ingredient/create");
+  //       router.push("/profile/preferences");
   //       // router.push("/ingredient/webview");
   //       // router.push("/ingredient/confirmation");
   //       // router.push("/recipes/chicken-stir-fry/steps");
@@ -200,9 +201,8 @@ export default function RootLayout() {
 
   // TODO: fetch all recipes images
   useEffect(() => {
-    Image.prefetch([
-      ...dummyRecipesData.map((recipe) => recipe.imageUrl),
-    ]);
+    Image.prefetch([...dummyRecipesData.map((recipe) => recipe.imageUrl)]);
+    createMMKVStorage(); // Initialize MMKV storage
   }, []);
 
   // useModelPreloader({

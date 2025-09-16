@@ -1,12 +1,5 @@
 import React from "react";
-import {
-  View,
-  Text,
-  Pressable,
-  KeyboardAvoidingView,
-  Platform,
-  Modal,
-} from "react-native";
+import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import { EyeIcon, EyeOffIcon } from "lucide-nativewind";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,6 +9,9 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import UploadPictureIcon from "./UploadPictureIcon";
 import BaseModal from "../ui/modal";
+import { useAuthActions } from "~/auth";
+import { storage } from "~/data";
+import { toast } from "sonner-native";
 
 // Zod validation schema
 const profileSchema = z.object({
@@ -41,6 +37,8 @@ export default function EditProfileModal({
 }) {
   const [showPassword, setShowPassword] = React.useState(false);
   const [profileImage, setProfileImage] = React.useState<string | null>(null);
+  const [isSigningUp, setIsSigningUp] = React.useState(false);
+  const { signUpWithEmail } = useAuthActions();
 
   const {
     control,
@@ -64,13 +62,30 @@ export default function EditProfileModal({
     // Add your image handling logic here
   };
 
-  const onSubmit = (data: ProfileFormData) => {
-    // TODO: Handle form submission here
-    // eslint-disable-next-line no-console
-    console.log("Form data:", data);
-    // eslint-disable-next-line no-console
-    console.log("Profile image:", profileImage);
-    // You can access: data.name, data.email, data.password, profileName, profileImage
+  const onSubmit = async (data: ProfileFormData) => {
+    if (isSigningUp) return; // Prevent multiple submissions
+    setIsSigningUp(true);
+
+    try {
+      const result = await signUpWithEmail({
+        email: data.email,
+        password: data.password,
+      });
+
+      console.log("Sign Up Result:", result);
+
+      if (result.success) {
+        storage.set("profileName", data.name);
+        storage.set("profileImage", profileImage);
+        onCancel();
+      } else if (result.error) {
+        toast.error(result.error.message || "Sign up failed");
+      }
+    } catch (error) {
+      console.error("Sign Up Error:", error);
+    } finally {
+      setIsSigningUp(false);
+    }
   };
 
   return (
@@ -170,9 +185,11 @@ export default function EditProfileModal({
         </P>
 
         <Button
-          className="min-w-full mt-4 rounded-2xl bg-foreground"
+          className="min-w-full mt-4 rounded-2xl bg-foreground flex-row justify-center items-center gap-2"
           onPress={handleSubmit(onSubmit)}
+          disabled={isSigningUp}
         >
+          {isSigningUp && <ActivityIndicator size="small" />}
           <P className="font-urbanist-semibold text-background">Confirm</P>
         </Button>
       </View>

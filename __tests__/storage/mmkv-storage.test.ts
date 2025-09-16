@@ -1,4 +1,4 @@
-import { MMKVStorage } from "~/data/storage/implementations/mmkv-storage";
+import { MMKVStorageImpl } from "~/data/storage/implementations/mmkv-storage-impl";
 import { StorageError } from "~/data/storage/storage-types";
 
 // Mock MMKV
@@ -16,7 +16,7 @@ jest.mock("react-native-mmkv", () => ({
 }));
 
 describe("MMKVStorage", () => {
-  let storage: MMKVStorage;
+  let storage: MMKVStorageImpl;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -28,7 +28,7 @@ describe("MMKVStorage", () => {
     mockMMKV.clearAll.mockImplementation(() => {});
     mockMMKV.getAllKeys.mockImplementation(() => []);
 
-    storage = new MMKVStorage();
+    storage = new MMKVStorageImpl();
   });
 
   describe("Initialization", () => {
@@ -44,7 +44,7 @@ describe("MMKVStorage", () => {
       const { MMKV } = require("react-native-mmkv");
       jest.clearAllMocks();
 
-      new MMKVStorage({ id: "custom", encryptionKey: "secret" });
+      new MMKVStorageImpl({ id: "custom", encryptionKey: "secret" });
 
       expect(MMKV).toHaveBeenCalledWith({
         id: "custom",
@@ -61,8 +61,8 @@ describe("MMKVStorage", () => {
         throw new Error("MMKV init failed");
       });
 
-      expect(() => new MMKVStorage()).toThrow(StorageError);
-      expect(() => new MMKVStorage()).toThrow("Failed to initialize MMKV");
+      expect(() => new MMKVStorageImpl()).toThrow(StorageError);
+      expect(() => new MMKVStorageImpl()).toThrow("Failed to initialize MMKV");
     });
   });
 

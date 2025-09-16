@@ -7,12 +7,12 @@ import type { StorageConfig } from ".";
 export const storageConfigs: Record<string, StorageConfig> = {
   // Production configuration with AsyncStorage
   production: {
-    type: "async-storage",
+    type: "mmkv",
   },
 
   // Development configuration with AsyncStorage (Expo Go compatible)
   development: {
-    type: "async-storage",
+    type: "mmkv",
   },
 
   // AsyncStorage fallback (for compatibility)
