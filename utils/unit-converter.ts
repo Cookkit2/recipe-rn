@@ -220,19 +220,3 @@ export function convertToUnitSystem(
     unit: targetUnit,
   };
 }
-
-// Quick sanity self-test (only in dev env) - can be removed or guarded by NODE_ENV
-if (process.env.NODE_ENV === "development") {
-  const sample = [
-    convertToUnitSystem(1000, "g", "imperial"),
-    convertToUnitSystem(2, "kg", "imperial"),
-    convertToUnitSystem(16, "oz", "si"),
-    convertToUnitSystem(1, "lb", "si"),
-    convertToUnitSystem(500, "ml", "imperial"),
-    convertToUnitSystem(2, "l", "imperial"),
-    convertToUnitSystem(32, "fl_oz", "si"),
-    convertToUnitSystem(1, "qt", "si"),
-  ];
-  // eslint-disable-next-line no-console
-  console.log("[unit-converter] sample conversions", sample);
-}

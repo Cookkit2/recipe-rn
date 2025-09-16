@@ -5,6 +5,7 @@ import { H4 } from "../ui/typography";
 import { MoonIcon, SaladIcon, VeganIcon, FishIcon } from "lucide-nativewind";
 import { StarNorthIcon } from "~/lib/icons/StarNorth";
 import { storage } from "~/data";
+import { PREF_DIET_KEY } from "~/constants/storage-keys";
 
 // NOTE: State-only for now. TODO: persist to storage later.
 type Diet = "halal" | "kosher" | "vegetarian" | "vegan" | "pescatarian";
@@ -19,12 +20,12 @@ const DIET_OPTIONS: GroupButton<Diet>[] = [
 
 export default function DietarySection() {
   const [diet, setDiet] = useState<Diet | undefined>(
-    storage.get("diet") || undefined
+    storage.get(PREF_DIET_KEY) || undefined
   );
 
   const handleToggleDiet = useCallback((diet: Diet) => {
     setDiet(diet);
-    storage.set("diet", diet);
+    storage.set(PREF_DIET_KEY, diet);
   }, []);
 
   return (

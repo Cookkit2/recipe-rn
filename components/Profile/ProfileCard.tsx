@@ -5,6 +5,7 @@ import { Image } from "expo-image";
 import { Separator } from "../ui/separator";
 import { H2, H4, P } from "../ui/typography";
 import { database, storage } from "~/data";
+import { PROFILE_IMAGE_KEY, PROFILE_NAME_KEY } from "~/constants/storage-keys";
 
 export default function ProfileCard() {
   const [ingredients, setIngredients] = React.useState(0);
@@ -30,12 +31,12 @@ export default function ProfileCard() {
             style={styles.profileCard}
           >
             <Image
-              source={{ uri: storage.get("profileImage") || undefined }}
+              source={{ uri: storage.get(PROFILE_IMAGE_KEY) || undefined }}
               style={styles.profileCard}
             />
           </View>
           <H2 className="font-urbanist-semibold text-center">
-            {storage.get("profileName")}
+            {storage.get(PROFILE_NAME_KEY)}
           </H2>
         </View>
         <View className="px-4 justify-center">

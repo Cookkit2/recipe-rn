@@ -210,7 +210,9 @@ export class DatabaseFacade {
         }
       }
 
-      console.log(`  - Errors: ${errorCount} items`);
+      console.log(
+        `✅ Conversion summary: ${convertedCount} converted, ${skippedCount} skipped, ${errorCount} errors`
+      );
     } catch (error) {
       console.error(`❌ Error during unit conversion:`, error);
     }

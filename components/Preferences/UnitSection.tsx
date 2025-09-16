@@ -4,6 +4,7 @@ import SegmentedButtons, { type GroupButton } from "../Shared/SegmentedButtons";
 import { Card, CardContent } from "../ui/card";
 import { H4, P } from "../ui/typography";
 import { database, storage } from "~/data";
+import { PREF_UNIT_SYSTEM_KEY } from "~/constants/storage-keys";
 import { toast } from "sonner-native";
 import TextShimmer from "../ui/TextShimmer";
 import { useRefreshPantryItems } from "~/hooks/queries/usePantryQueries";
@@ -12,7 +13,9 @@ import { useRefreshRecipes } from "~/hooks/queries/useRecipeQueries";
 type UnitSystem = "si" | "imperial";
 
 export default function UnitSection() {
-  const [unit, setUnit] = useState<UnitSystem>(storage.get("unit") || "si");
+  const [unit, setUnit] = useState<UnitSystem>(
+    storage.get(PREF_UNIT_SYSTEM_KEY) || "si"
+  );
   // const [isLoading, setIsLoading] = useState(false);
   const { refresh: refreshPantry } = useRefreshPantryItems();
   const { refresh: refreshRecipe } = useRefreshRecipes();
@@ -23,7 +26,7 @@ export default function UnitSection() {
       const previousUnit = unit;
       try {
         setUnit(value);
-        storage.set("unit", value);
+        storage.set(PREF_UNIT_SYSTEM_KEY, value);
         await database.convertUnits(value);
         refreshPantry();
         refreshRecipe();
@@ -31,7 +34,7 @@ export default function UnitSection() {
         console.error("Error converting units:", error);
         toast.error("Failed to convert units");
         setUnit(previousUnit);
-        storage.set("unit", previousUnit);
+        storage.set(PREF_UNIT_SYSTEM_KEY, previousUnit);
       } finally {
         // setIsLoading(false);
       }

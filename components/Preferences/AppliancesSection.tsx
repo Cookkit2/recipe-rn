@@ -14,6 +14,7 @@ import {
 } from "lucide-nativewind";
 import { toggleFromArray } from "~/utils/array-helper";
 import { storage } from "~/data";
+import { PREF_APPLIANCES_KEY } from "~/constants/storage-keys";
 
 type Appliance =
   | "stovetop"
@@ -26,7 +27,7 @@ type Appliance =
 export default function AppliancesSection() {
   const [appliances, setAppliances] = useState<Appliance[]>(
     (() => {
-      const stored = storage.get("appliances");
+      const stored = storage.get(PREF_APPLIANCES_KEY);
       if (typeof stored !== "string" || !stored) return [];
       return stored.split(",") as Appliance[];
     })()
@@ -35,7 +36,7 @@ export default function AppliancesSection() {
   const handleToggleAppliance = useCallback((appliance: Appliance) => {
     setAppliances((prev) => {
       const currentAppliances = toggleFromArray(prev, appliance);
-      storage.set("appliances", currentAppliances.join(","));
+      storage.set(PREF_APPLIANCES_KEY, currentAppliances.join(","));
       return currentAppliances;
     });
   }, []);
