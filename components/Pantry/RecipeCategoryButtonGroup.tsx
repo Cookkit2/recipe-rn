@@ -9,32 +9,35 @@ import {
 import { Button } from "../ui/button";
 import { P } from "../ui/typography";
 import { ScrollView } from "react-native";
-import { cn } from "~/lib/tw-merge";
 import { usePantryStore } from "~/store/PantryContext";
 import { useRecipeStore } from "~/store/RecipeContext";
+import { useLightColors } from "~/hooks/useColor";
 
-const RECIPE_TAGS = [
+const RECIPE_TAGS: {
+  label: string;
+  icon: React.JSX.Element;
+  tag: string;
+}[] = [
   {
     label: "Meals",
-    icon: <SoupIcon className="text-background" size={18} strokeWidth={3} />,
+    icon: <SoupIcon size={18} strokeWidth={3} />,
     tag: "meals",
   },
   {
     label: "Desserts",
-    icon: (
-      <IceCreamConeIcon className="text-background" size={18} strokeWidth={3} />
-    ),
+    icon: <IceCreamConeIcon size={18} strokeWidth={3} />,
     tag: "desserts",
   },
   {
     label: "Drinks",
-    icon: <MartiniIcon className="text-background" size={18} strokeWidth={3} />,
+    icon: <MartiniIcon size={18} strokeWidth={3} />,
     tag: "drinks",
   },
 ];
 
 export default function RecipeCategoryButtonGroup() {
   const { updateRecipeOpen: updateSelection } = usePantryStore();
+  const lightColors = useLightColors();
 
   return (
     <ScrollView
@@ -44,22 +47,26 @@ export default function RecipeCategoryButtonGroup() {
     >
       <Button
         size="icon"
-        variant="secondary"
-        className="bg-foreground/80 h-12 w-12"
+        variant="ghost"
+        className="h-12 w-12"
         onPress={() => updateSelection(false)}
       >
-        <XIcon className="text-background/80" />
+        <XIcon className="text-white/80" />
       </Button>
       <Button
         variant="outline"
         className="rounded-2xl border-continuous flex-row items-center gap-2"
+        style={{ backgroundColor: lightColors.background }}
       >
         <DicesIcon
-          className="text-muted-foreground"
+          style={{ outlineColor: lightColors.mutedForeground }}
           size={18}
           strokeWidth={3}
         />
-        <P className="text-lg text-muted-foreground font-urbanist-semibold leading-snug">
+        <P
+          className="text-lg text-muted-foreground font-urbanist-semibold leading-snug"
+          style={{ color: lightColors.mutedForeground }}
+        >
           Choose for me!
         </P>
       </Button>
@@ -76,32 +83,41 @@ const SegmentedButton = ({
   tag,
 }: {
   label: string;
-  icon: React.ReactNode;
+  icon: React.JSX.Element;
   tag: string;
 }) => {
   const { snapToExpanded } = usePantryStore();
   const { selectedRecipeTags, updateRecipeTag } = useRecipeStore();
+  const lightColors = useLightColors();
 
   return (
     <Button
       variant="default"
-      className={cn(
-        "rounded-2xl border-continuous flex-row gap-2 items-center",
-        selectedRecipeTags.includes(tag) ? "bg-primary" : "bg-muted-foreground"
-      )}
+      className={"rounded-2xl border-continuous flex-row gap-2 items-center"}
+      style={{
+        backgroundColor: selectedRecipeTags.includes(tag)
+          ? lightColors.primary
+          : lightColors.mutedForeground,
+      }}
       onPress={() => {
         updateRecipeTag(tag);
         startTransition(() => snapToExpanded());
       }}
     >
-      {icon}
+      {React.cloneElement(icon, {
+        style: {
+          color: selectedRecipeTags.includes(tag)
+            ? lightColors.primaryForeground
+            : lightColors.background,
+        },
+      })}
       <P
-        className={cn(
-          "text-lg font-urbanist-semibold leading-snug",
-          selectedRecipeTags.includes(tag)
-            ? "text-primary-foreground"
-            : "text-background"
-        )}
+        className={"text-lg font-urbanist-semibold leading-snug"}
+        style={{
+          color: selectedRecipeTags.includes(tag)
+            ? lightColors.primaryForeground
+            : lightColors.background,
+        }}
       >
         {label}
       </P>

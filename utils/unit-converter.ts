@@ -96,14 +96,6 @@ const UNIT_MAP: Record<string, UnitDef> = {
     fromBase: (v) => v / ML_IN_FL_OZ,
     prefer: { toSI: "ml" },
   },
-  oz_fl: {
-    system: "imperial",
-    base: "ml",
-    dimension: "volume",
-    toBase: (v) => v * ML_IN_FL_OZ,
-    fromBase: (v) => v / ML_IN_FL_OZ,
-    prefer: { toSI: "ml" },
-  }, // alias
   qt: {
     system: "imperial",
     base: "ml",
@@ -121,14 +113,6 @@ const UNIT_MAP: Record<string, UnitDef> = {
     prefer: { toSI: "l" },
   },
   gallon: {
-    system: "imperial",
-    base: "ml",
-    dimension: "volume",
-    toBase: (v) => v * GAL_IN_L * 1000,
-    fromBase: (v) => v / (GAL_IN_L * 1000),
-    prefer: { toSI: "l" },
-  },
-  gallons: {
     system: "imperial",
     base: "ml",
     dimension: "volume",

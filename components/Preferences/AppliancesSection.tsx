@@ -25,7 +25,11 @@ type Appliance =
 
 export default function AppliancesSection() {
   const [appliances, setAppliances] = useState<Appliance[]>(
-    (String(storage.get("appliances")).split(",") as Appliance[]) || []
+    (() => {
+      const stored = storage.get("appliances");
+      if (typeof stored !== "string" || !stored) return [];
+      return stored.split(",") as Appliance[];
+    })()
   );
 
   const handleToggleAppliance = useCallback((appliance: Appliance) => {

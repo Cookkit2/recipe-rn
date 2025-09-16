@@ -149,7 +149,6 @@ export class DatabaseFacade {
      *  - Count style units (unit / pcs / count): left unchanged
      *  - Extremely small floating differences (< 0.001): treated as no-op
      */
-    console.log(`🔄 Converting all stock units to ${toUnitSystem} system...`);
 
     try {
       // Get all stock items
@@ -189,25 +188,11 @@ export class DatabaseFacade {
           const unitChanged = converted.unit !== stockItem.unit;
 
           if (quantityChanged || unitChanged) {
-            console.log(
-              `📝 Updating: ${stockItem.quantity} ${stockItem.unit} → ${converted.quantity} ${converted.unit}`
-            );
-
             // Use repository update method instead of model update method
             await this.stock.update(stockItem.id, {
               quantity: roundToReasonablePrecision(converted.quantity),
               unit: converted.unit,
             });
-
-            // Verify the update worked
-            const updatedItem = await this.stock.findById(stockItem.id);
-            if (updatedItem) {
-              console.log(
-                `✅ Verified update: ${updatedItem.name} is now ${updatedItem.quantity} ${updatedItem.unit}`
-              );
-            } else {
-              console.log(`⚠️ Could not verify update for ${stockItem.name}`);
-            }
 
             convertedCount++;
           } else {
@@ -225,13 +210,9 @@ export class DatabaseFacade {
         }
       }
 
-      console.log(`🎉 Unit conversion complete!`);
-      console.log(`  - Converted: ${convertedCount} items`);
-      console.log(`  - Skipped: ${skippedCount} items`);
       console.log(`  - Errors: ${errorCount} items`);
     } catch (error) {
       console.error(`❌ Error during unit conversion:`, error);
-      throw error;
     }
   }
 
