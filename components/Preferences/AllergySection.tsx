@@ -29,7 +29,11 @@ const ALLERGEN_OPTIONS: GroupButton<Allergen>[] = [
 
 export default function AllergySection() {
   const [allergens, setAllergens] = useState<Allergen[]>(
-    (String(storage.get("allergens")).split(",") as Allergen[]) || []
+    (() => {
+      const stored = storage.get("allergens");
+      if (typeof stored !== "string" || !stored) return [];
+      return stored.split(",") as Allergen[];
+    })()
   );
   const [otherAllergens, setOtherAllergens] = useState<string>(
     storage.get("otherAllergens") || ""
