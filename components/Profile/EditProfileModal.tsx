@@ -12,6 +12,7 @@ import BaseModal from "../ui/modal";
 import { useAuthActions } from "~/auth";
 import { storage } from "~/data";
 import { toast } from "sonner-native";
+import { PROFILE_IMAGE_KEY, PROFILE_NAME_KEY } from "~/constants/storage-keys";
 
 // Zod validation schema
 const profileSchema = z.object({
@@ -75,8 +76,8 @@ export default function EditProfileModal({
       console.log("Sign Up Result:", result);
 
       if (result.success) {
-        storage.set("profileName", data.name);
-        storage.set("profileImage", profileImage);
+        storage.set(PROFILE_NAME_KEY, data.name);
+        storage.set(PROFILE_IMAGE_KEY, profileImage);
         onCancel();
       } else if (result.error) {
         toast.error(result.error.message || "Sign up failed");

@@ -15,20 +15,16 @@ const useOnPressScale = () => {
   }));
 
   const handlePressIn = () => {
-    runOnUI(() => {
-      "worklet";
-      scale.value = withTiming(0.95, CURVES["expressive.fast.effects"]);
-    })();
+    "worklet";
+    scale.value = withTiming(0.95, CURVES["expressive.fast.effects"]);
   };
 
   const handlePressOut = () => {
-    runOnUI(() => {
-      "worklet";
-      scale.value = withSequence(
-        withTiming(1.05, CURVES["expressive.fast.effects"]),
-        withTiming(1, CURVES["expressive.fast.effects"])
-      );
-    })();
+    "worklet";
+    scale.value = withSequence(
+      withTiming(1.05, CURVES["expressive.fast.effects"]),
+      withTiming(1, CURVES["expressive.fast.effects"])
+    );
   };
 
   return { animatedStyle, handlePressIn, handlePressOut };

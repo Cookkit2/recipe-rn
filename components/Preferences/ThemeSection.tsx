@@ -2,6 +2,7 @@ import React, { useCallback, useState } from "react";
 import { View } from "react-native";
 import { Card, CardContent } from "~/components/ui/card";
 import { storage } from "~/data";
+import { PREF_COLOR_SCHEME_KEY } from "~/constants/storage-keys";
 import { useColorScheme } from "~/hooks/useColorScheme";
 import { setAndroidNavigationBar } from "~/lib/android-navigation-bar";
 import { H4 } from "../ui/typography";
@@ -31,7 +32,7 @@ const THEME_BUTTONS: GroupButton<Theme>[] = [
 
 export default function ThemeSection() {
   const [currentTheme, setCurrentTheme] = useState<Theme>(
-    storage.get("color-scheme") || "system"
+    storage.get(PREF_COLOR_SCHEME_KEY) || "system"
   );
 
   const { isDarkColorScheme, setColorScheme } = useColorScheme();
@@ -41,7 +42,7 @@ export default function ThemeSection() {
       // Only set the scheme here; update system UI in an effect after mount.
       setCurrentTheme(scheme);
       setColorScheme(scheme);
-      storage.set("color-scheme", scheme);
+      storage.set(PREF_COLOR_SCHEME_KEY, scheme);
       setAndroidNavigationBar(isDarkColorScheme ? "light" : "dark");
     },
     [isDarkColorScheme, setColorScheme]

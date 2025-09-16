@@ -15,23 +15,16 @@ const useOnPressRounded = (rounded = 12) => {
   }));
 
   const handlePressIn = () => {
-    runOnUI(() => {
-      "worklet";
-      borderRadius.value = withTiming(
-        rounded * 2,
-        CURVES["expressive.fast.effects"]
-      );
-    })();
+    "worklet";
+    borderRadius.value = withTiming(
+      rounded * 2,
+      CURVES["expressive.fast.effects"]
+    );
   };
 
   const handlePressOut = () => {
-    runOnUI(() => {
-      "worklet";
-      borderRadius.value = withTiming(
-        rounded,
-        CURVES["expressive.fast.effects"]
-      );
-    })();
+    "worklet";
+    borderRadius.value = withTiming(rounded, CURVES["expressive.fast.effects"]);
   };
 
   return { animatedStyle, handlePressIn, handlePressOut };

@@ -14,13 +14,12 @@ import SubscriptionTerms from "~/components/Subscription/SubscriptionTerms";
 import { Image } from "expo-image";
 
 // Constants for trial management
-const TRIAL_START_KEY = TRIAL_START_DATE_KEY;
 const TRIAL_DURATION_DAYS = 30; // 1 month trial
 
 // Trial utility functions
 const getTrialStartDate = async (): Promise<Date | null> => {
   try {
-    const startDateStr = await AsyncStorage.getItem(TRIAL_START_KEY);
+    const startDateStr = await AsyncStorage.getItem(TRIAL_START_DATE_KEY);
     return startDateStr ? new Date(startDateStr) : null;
   } catch {
     return null;
@@ -29,7 +28,7 @@ const getTrialStartDate = async (): Promise<Date | null> => {
 
 const setTrialStartDate = async (date: Date): Promise<void> => {
   try {
-    await AsyncStorage.setItem(TRIAL_START_KEY, date.toISOString());
+    await AsyncStorage.setItem(TRIAL_START_DATE_KEY, date.toISOString());
   } catch {
     // Silently fail - trial will still work without persistence
   }
@@ -49,7 +48,7 @@ const calculateDaysRemaining = (startDate: Date): number => {
 // Utility function for development/testing
 const resetTrial = async (): Promise<void> => {
   try {
-    await AsyncStorage.removeItem(TRIAL_START_KEY);
+    await AsyncStorage.removeItem(TRIAL_START_DATE_KEY);
   } catch {
     // Silently fail
   }

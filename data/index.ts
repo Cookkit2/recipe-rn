@@ -16,10 +16,11 @@ export { databaseFacade as database } from "./db";
 
 // Key-Value Storage Usage:
 import { storage } from '@/data'
+import { USER_PREFERENCE_KEY } from "~/constants/storage-keys";
 
 // Store simple key-value data
-await storage.setAsync('user_preference', { theme: 'dark' })
-const preference = await storage.getAsync('user_preference')
+await storage.setAsync(USER_PREFERENCE_KEY, { theme: 'dark' })
+const preference = await storage.getAsync(USER_PREFERENCE_KEY)
 
 // Structured Database Usage:
 import { database } from '@/data'

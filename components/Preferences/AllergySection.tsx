@@ -14,6 +14,10 @@ import {
 import { toggleFromArray } from "~/utils/array-helper";
 import type { GroupButton } from "../Shared/SegmentedButtons";
 import { storage } from "~/data";
+import {
+  PREF_ALLERGENS_KEY,
+  PREF_OTHER_ALLERGENS_KEY,
+} from "~/constants/storage-keys";
 
 // NOTE: State-only for now. TODO: persist to storage later.
 type Allergen = "milk" | "eggs" | "nuts" | "fish" | "shellfish" | "wheat";
@@ -30,26 +34,26 @@ const ALLERGEN_OPTIONS: GroupButton<Allergen>[] = [
 export default function AllergySection() {
   const [allergens, setAllergens] = useState<Allergen[]>(
     (() => {
-      const stored = storage.get("allergens");
+      const stored = storage.get(PREF_ALLERGENS_KEY);
       if (typeof stored !== "string" || !stored) return [];
       return stored.split(",") as Allergen[];
     })()
   );
   const [otherAllergens, setOtherAllergens] = useState<string>(
-    storage.get("otherAllergens") || ""
+    storage.get(PREF_OTHER_ALLERGENS_KEY) || ""
   );
 
   const handleToggleAllergens = useCallback((allergen: Allergen) => {
     setAllergens((prev) => {
       const currentAllergens = toggleFromArray(prev, allergen);
-      storage.set("allergens", currentAllergens.join(","));
+      storage.set(PREF_ALLERGENS_KEY, currentAllergens.join(","));
       return currentAllergens;
     });
   }, []);
 
   const updateOtherAllergens = useCallback((text: string) => {
     setOtherAllergens(text);
-    storage.set("otherAllergens", text);
+    storage.set(PREF_OTHER_ALLERGENS_KEY, text);
   }, []);
 
   return (

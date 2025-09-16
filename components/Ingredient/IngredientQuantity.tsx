@@ -7,6 +7,7 @@ import { MinusIcon, PlusIcon } from "lucide-nativewind";
 import { cn } from "~/lib/tw-merge";
 import { UNIT_OPTIONS } from "~/constants/ingredient-units";
 import { storage } from "~/data";
+import { PREF_UNIT_SYSTEM_KEY } from "~/constants/storage-keys";
 
 export default function IngredientQuantity({
   quantity,
@@ -23,7 +24,9 @@ export default function IngredientQuantity({
   className?: string;
   size?: "default" | "sm";
 }) {
-  const currentUnit = (storage.get("unit") || "si") as "si" | "imperial";
+  const currentUnit = (storage.get(PREF_UNIT_SYSTEM_KEY) || "si") as
+    | "si"
+    | "imperial";
 
   const showUnitPicker = () => {
     const buttons = [
