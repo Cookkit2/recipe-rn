@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -11,6 +11,8 @@ import useColors from "~/hooks/useColor";
 import RotationCard from "~/components/Onboarding/RotationCard";
 import OutlinedImage from "~/components/ui/outlined-image";
 import { SparkleIcon } from "lucide-nativewind";
+import { storage } from "~/data";
+import { ONBOARDING_COMPLETED_KEY } from "~/constants/storage-keys";
 
 // Take first 10 items and assign different coordinates (0-100 scale)
 const previewImages = dummyPantryItems.slice(0, 10).map((item, index) => ({
@@ -28,6 +30,14 @@ export default function OnboardingScreen() {
     width: 0,
     height: 0,
   });
+
+  // If onboarding already completed, skip this screen
+  useEffect(() => {
+    const completed = storage.get<boolean>(ONBOARDING_COMPLETED_KEY);
+    if (completed) {
+      router.replace("/");
+    }
+  }, [router]);
 
   const convertToAbsWrapper = (x: number, y: number) => {
     return convertToAbsolutePosition(

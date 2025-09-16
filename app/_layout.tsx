@@ -1,6 +1,6 @@
 import "~/global.css";
-import React, { useEffect, useState } from "react";
-import { Stack, useRouter } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
+import { Stack, useRouter, usePathname } from "expo-router";
 import { Appearance, Platform, View } from "react-native";
 import { useColorScheme } from "~/hooks/useColorScheme";
 import { PortalHost } from "@rn-primitives/portal";
@@ -23,6 +23,8 @@ import { QueryProvider } from "~/store/QueryProvider";
 import { AuthProvider, SupabaseAuthStrategy } from "~/auth";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { createMMKVStorage } from "~/data/storage";
+import { storage } from "~/data";
+import { ONBOARDING_COMPLETED_KEY } from "~/constants/storage-keys";
 
 const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 
@@ -45,17 +47,22 @@ function AnimatedStack() {
   });
 
   // For ease of dev, we can redirect to the steps page
-  // const router = useRouter();
-  // useEffect(() => {
-  //   if (__DEV__) {
-  //     setTimeout(() => {
-  //       router.push("/profile/preferences");
-  //       // router.push("/ingredient/webview");
-  //       // router.push("/ingredient/confirmation");
-  //       // router.push("/recipes/chicken-stir-fry/steps");
-  //     }, 0);
-  //   }
-  // }, [router]);
+  const router = useRouter();
+  useEffect(() => {
+    if (__DEV__) {
+      setTimeout(() => {
+        const completed = storage.get<boolean>(ONBOARDING_COMPLETED_KEY);
+        console.log("Onboarding completed:", completed);
+        if (completed !== true) {
+          router.replace("/onboarding");
+        }
+        // router.push("/profile/preferences");
+        // router.push("/ingredient/webview");
+        // router.push("/ingredient/confirmation");
+        // router.push("/recipes/chicken-stir-fry/steps");
+      }, 0);
+    }
+  }, [router]);
 
   return (
     <View className="flex-1 bg-background">

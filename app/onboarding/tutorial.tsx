@@ -1,6 +1,6 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { View, StyleSheet } from "react-native";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import useColors from "~/hooks/useColor";
 import { Button } from "~/components/ui/button";
@@ -15,6 +15,8 @@ import Animated, {
 import { CURVES } from "~/constants/curves";
 import DisplayCards from "~/components/Custom/DisplayCards";
 import { useRouter } from "expo-router";
+import { storage } from "~/data";
+import { ONBOARDING_COMPLETED_KEY } from "~/constants/storage-keys";
 
 // Step data extracted for easier maintenance / localization
 const STEP_TITLES = ["Snap Groceries", "Manage Ingredients", "Cook Recipes"];
@@ -39,6 +41,14 @@ export default function Tutorial() {
   const [currentStep, setCurrentStep] = useState(1);
   const TOTAL_STEPS = STEP_TITLES.length;
 
+  useEffect(() => {
+    const completed = storage.get<boolean>(ONBOARDING_COMPLETED_KEY);
+    if (completed) {
+      router.replace("/");
+      return;
+    }
+  }, [router]);
+
   const onBack = () => {
     setCurrentStep((prev) => {
       if (prev <= 1) return 1; // already at first step
@@ -61,8 +71,8 @@ export default function Tutorial() {
       return prev + 1;
     });
     if (currentStep === 3) {
-      // Completed onboarding, go to camera screen
-      // TODO: implement camera screen to snap ingredients
+      // Completed onboarding - persist flag and route to main app
+      storage.set(ONBOARDING_COMPLETED_KEY, true);
       router.replace("/");
     }
   };
