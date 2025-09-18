@@ -9,6 +9,68 @@ import { databaseFacade } from "./DatabaseFacade";
 import { dummyPantryItems } from "../dummy/dummy-data";
 import { dummyRecipesData } from "../dummy/dummy-recipes";
 
+/**
+ * Map recipe ingredient names to pantry ingredient names
+ * This helps match similar ingredients with different naming conventions
+ */
+function mapIngredientName(recipeName: string, pantryNames: string[]): string {
+  const lower = recipeName.toLowerCase();
+
+  // Direct mapping rules
+  const mappings: Record<string, string> = {
+    "boneless, skinless chicken breasts": "Chicken Breast",
+    "boneless chicken breast": "Chicken Breast",
+    "chicken breast": "Chicken Breast",
+    "ripe tomatoes": "Tomatoes",
+    "fresh tomatoes": "Tomatoes",
+    tomato: "Tomatoes",
+    "whole chicken": "Chicken Breast", // fallback
+    "garlic cloves": "Garlic",
+    garlic: "Garlic",
+    onion: "Onions",
+    "yellow onion": "Onions",
+    "white onion": "Onions",
+    pasta: "Pasta",
+    "cooked rice": "Rice",
+    rice: "Rice",
+    potatoes: "Potato",
+    potato: "Potato",
+    "soy sauce": "Soy sauce",
+    "light soy sauce": "Soy sauce",
+    "olive oil": "Olive oil",
+    "extra-virgin olive oil": "Olive oil",
+    "bell peppers": "Bell pepper",
+    "red bell pepper": "Bell pepper",
+    "green bell pepper": "Bell pepper",
+    "fresh ginger": "Ginger",
+    "ginger root": "Ginger",
+    "bacon strips": "Bacon",
+    "bacon slices": "Bacon",
+    "lemon juice": "Lemon",
+    "fresh lemon": "Lemon",
+    avocados: "Avocado",
+    "fresh avocado": "Avocado",
+  };
+
+  // Check direct mappings first
+  if (mappings[lower]) {
+    return mappings[lower];
+  }
+
+  // Try partial matching - if recipe ingredient contains a pantry ingredient name
+  for (const pantryName of pantryNames) {
+    if (
+      lower.includes(pantryName.toLowerCase()) ||
+      pantryName.toLowerCase().includes(lower)
+    ) {
+      return pantryName;
+    }
+  }
+
+  // If no match found, return the original name (will create new ingredient)
+  return recipeName;
+}
+
 export async function seedDatabase() {
   console.log("🌱 Starting database seeding...");
 
@@ -55,18 +117,28 @@ export async function seedDatabase() {
 
     // Seed recipes with ingredients and steps
     console.log("👨‍🍳 Seeding recipes...");
+    const pantryNames = Array.from(baseIngredients.keys());
+
     for (const recipe of dummyRecipesData) {
       // Create base ingredients for recipe ingredients
       const recipeIngredients = [];
       for (const ingredient of recipe.ingredients) {
-        let baseIngredient = baseIngredients.get(ingredient.name);
+        // Try to map recipe ingredient name to existing pantry ingredient
+        const mappedName = mapIngredientName(ingredient.name, pantryNames);
+        let baseIngredient = baseIngredients.get(mappedName);
 
         if (!baseIngredient) {
-          baseIngredient = await databaseFacade.ingredients.create({
-            name: ingredient.name,
-            synonyms: [],
-          });
-          baseIngredients.set(ingredient.name, baseIngredient);
+          // If mapping didn't work, try original name
+          baseIngredient = baseIngredients.get(ingredient.name);
+
+          if (!baseIngredient) {
+            // Create new ingredient if no match found
+            baseIngredient = await databaseFacade.ingredients.create({
+              name: ingredient.name,
+              synonyms: mappedName !== ingredient.name ? [mappedName] : [],
+            });
+            baseIngredients.set(ingredient.name, baseIngredient);
+          }
         }
 
         recipeIngredients.push({

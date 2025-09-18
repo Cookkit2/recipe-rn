@@ -37,7 +37,14 @@ const RECIPE_TAGS: {
 
 export default function RecipeCategoryButtonGroup() {
   const { updateRecipeOpen: updateSelection } = usePantryStore();
+  const { selectedRecipeTags, showRecommendations, setShowRecommendations } =
+    useRecipeStore();
   const lightColors = useLightColors();
+
+  const handleChooseForMe = () => {
+    // Clear selected tags and show recommendations
+    setShowRecommendations(true);
+  };
 
   return (
     <ScrollView
@@ -56,16 +63,29 @@ export default function RecipeCategoryButtonGroup() {
       <Button
         variant="outline"
         className="rounded-2xl border-continuous flex-row items-center gap-2"
-        style={{ backgroundColor: lightColors.background }}
+        style={{
+          backgroundColor: showRecommendations
+            ? lightColors.primary
+            : lightColors.background,
+        }}
+        onPress={handleChooseForMe}
       >
         <DicesIcon
-          style={{ outlineColor: lightColors.mutedForeground }}
+          color={
+            showRecommendations
+              ? lightColors.primaryForeground
+              : lightColors.mutedForeground
+          }
           size={18}
           strokeWidth={3}
         />
         <P
-          className="text-lg text-muted-foreground font-urbanist-semibold leading-snug"
-          style={{ color: lightColors.mutedForeground }}
+          className="text-lg font-urbanist-semibold leading-snug"
+          style={{
+            color: showRecommendations
+              ? lightColors.primaryForeground
+              : lightColors.mutedForeground,
+          }}
         >
           Choose for me!
         </P>
@@ -87,7 +107,8 @@ const SegmentedButton = ({
   tag: string;
 }) => {
   const { snapToExpanded } = usePantryStore();
-  const { selectedRecipeTags, updateRecipeTag } = useRecipeStore();
+  const { selectedRecipeTags, updateRecipeTag, setShowRecommendations } =
+    useRecipeStore();
   const lightColors = useLightColors();
 
   return (
@@ -101,6 +122,7 @@ const SegmentedButton = ({
       }}
       onPress={() => {
         updateRecipeTag(tag);
+        setShowRecommendations(false); // Reset recommendations when selecting tags
         startTransition(() => snapToExpanded());
       }}
     >

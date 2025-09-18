@@ -4,6 +4,8 @@ interface RecipeContextType {
   // UI State only
   selectedRecipeTags: string[];
   updateRecipeTag: (tag: string | string[]) => void;
+  showRecommendations: boolean;
+  setShowRecommendations: (show: boolean) => void;
 }
 
 const RecipeContext = createContext<RecipeContextType | null>(null);
@@ -11,6 +13,8 @@ const RecipeContext = createContext<RecipeContextType | null>(null);
 export function RecipeProvider({ children }: { children: React.ReactNode }) {
   // UI State - only what the context should manage
   const [selectedRecipeTags, setSelectedRecipeTags] = useState<string[]>([]);
+  const [showRecommendations, setShowRecommendations] =
+    useState<boolean>(false);
 
   // UI callbacks
   const updateRecipeTag = useCallback((tag: string | string[]) => {
@@ -44,6 +48,8 @@ export function RecipeProvider({ children }: { children: React.ReactNode }) {
       value={{
         selectedRecipeTags,
         updateRecipeTag,
+        showRecommendations,
+        setShowRecommendations,
       }}
     >
       {children}

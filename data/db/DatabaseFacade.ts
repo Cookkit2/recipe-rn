@@ -218,57 +218,97 @@ export class DatabaseFacade {
     }
   }
 
-  // Check what recipes can be made with current stock
+  // Check what recipes can be made with current stock - Optimized version
   async getAvailableRecipes(): Promise<{
     canMake: Recipe[];
     partiallyCanMake: { recipe: Recipe; completionPercentage: number }[];
   }> {
-    const allRecipes = await this.recipes.findAll();
-    const canMake: Recipe[] = [];
-    const partiallyCanMake: { recipe: Recipe; completionPercentage: number }[] =
-      [];
+    try {
+      console.log("🔍 Getting available recipes (optimized)...");
 
-    for (const recipe of allRecipes) {
-      try {
-        const recipeDetails = await this.recipes.getRecipeWithDetails(
-          recipe.id
+      // Get all stock items upfront to create a lookup map
+      const allStock = await this.stock.findAll();
+      const availableIngredientIds = new Set(
+        allStock
+          .filter((stock) => stock.quantity > 0)
+          .map((stock) => stock.baseIngredientId)
+      );
+
+      console.log(
+        `📦 Found ${availableIngredientIds.size} available ingredient types in stock`
+      );
+
+      // Get all recipes and their details in batches
+      const allRecipes = await this.recipes.findAll();
+      console.log(`📖 Processing ${allRecipes.length} recipes`);
+
+      const canMake: Recipe[] = [];
+      const partiallyCanMake: {
+        recipe: Recipe;
+        completionPercentage: number;
+      }[] = [];
+
+      // Process recipes in batches to avoid overwhelming the database
+      const batchSize = 10;
+      for (let i = 0; i < allRecipes.length; i += batchSize) {
+        const recipeBatch = allRecipes.slice(i, i + batchSize);
+
+        // Get recipe details for the batch
+        const batchDetailsPromises = recipeBatch.map((recipe) =>
+          this.recipes.getRecipeWithDetails(recipe.id)
         );
-        if (!recipeDetails) continue;
 
-        const ingredientChecks = await Promise.all(
-          recipeDetails.ingredients.map(async (ingredient) => {
-            return await this.stock.isIngredientInStock(
-              ingredient.baseIngredientId
+        const batchDetails = await Promise.all(batchDetailsPromises);
+
+        // Process each recipe in the batch
+        for (let j = 0; j < recipeBatch.length; j++) {
+          const recipe = recipeBatch[j];
+          const recipeDetails = batchDetails[j];
+
+          if (!recipeDetails || !recipeDetails.ingredients.length) continue;
+
+          // Check ingredient availability using the pre-built set (O(1) lookup)
+          let availableCount = 0;
+          for (const ingredient of recipeDetails.ingredients) {
+            console.log("recipe name", recipe?.title);
+            console.log(
+              `Need ingredient in stock: ${ingredient.name}, count needed: ${ingredient.quantity}`
             );
-          })
-        );
+            if (availableIngredientIds.has(ingredient.baseIngredientId)) {
+              console.log(`Found ingredient in stock: ${ingredient.name}`);
+              availableCount++;
+            }
+          }
 
-        const availableCount = ingredientChecks.filter(Boolean).length;
-        const totalCount = ingredientChecks.length;
+          const totalCount = recipeDetails.ingredients.length;
 
-        if (availableCount === totalCount && totalCount > 0) {
-          canMake.push(recipe);
-        } else if (availableCount > 0) {
-          partiallyCanMake.push({
-            recipe,
-            // availableIngredients: availableCount,
-            // totalIngredients: totalCount,
-            completionPercentage: Math.round(
-              (availableCount / totalCount) * 100
-            ),
-          });
+          if (availableCount === totalCount && totalCount > 0) {
+            canMake.push(recipe!);
+          } else if (availableCount > 0) {
+            partiallyCanMake.push({
+              recipe: recipe!,
+              completionPercentage: Math.round(
+                (availableCount / totalCount) * 100
+              ),
+            });
+          }
         }
-      } catch (error) {
-        console.warn(`Error checking recipe ${recipe.id}:`, error);
       }
-    }
 
-    return {
-      canMake,
-      partiallyCanMake: partiallyCanMake.sort(
-        (a, b) => b.completionPercentage - a.completionPercentage
-      ),
-    };
+      console.log(
+        `✅ Found ${canMake.length} complete recipes, ${partiallyCanMake.length} partial recipes`
+      );
+
+      return {
+        canMake,
+        partiallyCanMake: partiallyCanMake.sort(
+          (a, b) => b.completionPercentage - a.completionPercentage
+        ),
+      };
+    } catch (error) {
+      console.error("❌ Error in getAvailableRecipes:", error);
+      return { canMake: [], partiallyCanMake: [] };
+    }
   }
 
   // Get shopping list for a recipe
