@@ -28,7 +28,7 @@ export default function DebugScreen() {
 
       // ✨ REFRESH ALL CONTEXTS AFTER SEEDING
       console.log("🔄 Refreshing all contexts after seeding...");
-      // await Promise.all([refresh(), refreshRecipes()]);
+      await Promise.all([refresh()]);
       console.log("✅ Contexts refreshed successfully");
 
       Alert.alert(
@@ -50,7 +50,7 @@ export default function DebugScreen() {
       await addSampleData();
 
       // Refresh contexts after adding sample data
-      // await Promise.all([refresh(), refreshRecipes()]);
+      await Promise.all([refresh()]);
 
       Alert.alert("Success!", "Sample data added");
       await checkStats();
@@ -74,7 +74,7 @@ export default function DebugScreen() {
             await databaseFacade.clearAllData();
 
             // Refresh contexts after clearing data
-            // await Promise.all([refresh(), refreshRecipes()]);
+            await Promise.all([refresh()]);
 
             Alert.alert("Success!", "Database cleared");
             await checkStats();
@@ -120,7 +120,7 @@ export default function DebugScreen() {
       setIsLoading(true);
       console.log("🔄 Manually refreshing all contexts...");
 
-      // await Promise.all([refresh(), refreshRecipes()]);
+      await Promise.all([refresh()]);
 
       console.log("✅ All contexts refreshed successfully");
       Alert.alert(
