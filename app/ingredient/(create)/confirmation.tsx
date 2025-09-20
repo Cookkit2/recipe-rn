@@ -81,7 +81,6 @@ export default function ConfirmationPage() {
             contentContainerStyle={{ paddingBottom: 64 + bottom }}
             showsVerticalScrollIndicator={false}
             data={processPantryItems}
-            // data={processedImages}
             renderItem={({ item }) => (
               <HorizontalIngredientItemCard key={item.id} item={item} />
             )}

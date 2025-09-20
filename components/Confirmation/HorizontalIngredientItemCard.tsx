@@ -22,10 +22,6 @@ export default function HorizontalIngredientItemCard({
 
   const colors = useColors();
 
-  const onEditImagePress = () => {
-    router.push(`/ingredient/edit-image/${item.id}`);
-  };
-
   const updateTitle = (text: string) => {
     if (!item) return;
     //clone another object of same id
@@ -35,13 +31,12 @@ export default function HorizontalIngredientItemCard({
 
   return (
     <View className="flex-1 flex-row items-start gap-4 p-3">
-      <Pressable
+      <View
         className="w-36 relative rounded-3xl flex items-center justify-center border-continuous aspect-square"
         style={[{ backgroundColor: item.background_color || colors.muted }]}
-        onPress={onEditImagePress}
       >
         <OutlinedImage source={image_url} size={64} />
-      </Pressable>
+      </View>
       <View className="mt-2 flex-1 flex-column">
         <EditableTitle
           value={name}

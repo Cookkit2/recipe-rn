@@ -13,7 +13,7 @@ import allModel from "./allModel";
 import type { SegmentedImage } from "~/app/ingredient/(create)/create";
 
 // const SEG_MODEL_INPUT_SIZE = 256;
-const VEGE_MODEL_INPUT_SIZE = 512;
+const VEGE_MODEL_INPUT_SIZE = 640;
 // const VEGE_MODEL_INPUT_SIZE = 512;
 const MAGIC_TOUCH_MODEL_INPUT_SIZE = 512;
 

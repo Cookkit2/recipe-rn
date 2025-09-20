@@ -12,7 +12,7 @@ import Animated, {
   Easing,
 } from "react-native-reanimated";
 import type { RecipeIngredient, RecipeStep } from "~/types/Recipe";
-import type { StepPageData } from "~/app/recipes/[recipeId]/steps";
+import type { StepPageData } from "~/app/[recipeId]/steps";
 import { IngredientsContent } from "./IngredientContent";
 import { useRecipeSteps } from "~/store/RecipeStepsContext";
 import StepContent from "./StepContent";
