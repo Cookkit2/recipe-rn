@@ -131,8 +131,6 @@ export function postprocessOutputsYolo(
     }
   }
 
-  console.log("detections", detections);
-
   // Apply NMS to filter out overlapping detections
   const results = applyNMS(detections);
 
