@@ -9,10 +9,18 @@ import Animated, {
 } from "react-native-reanimated";
 import { CURVES } from "~/constants/curves";
 import { usePantryStore } from "~/store/PantryContext";
+import { storage } from "~/data";
+import { PREFERENCE_COMPLETED_KEY } from "~/constants/storage-keys";
+import { useRouter } from "expo-router";
+import { useState } from "react";
 
 export default function RecipeButton() {
   const { bottom } = useSafeAreaInsets();
+  const router = useRouter();
   const { isRecipeOpen, updateRecipeOpen } = usePantryStore();
+  const [isFirstTime, setIsFirstTime] = useState(
+    storage.get(PREFERENCE_COMPLETED_KEY) !== true
+  );
 
   const recipeButtonStyle = useAnimatedStyle(() => ({
     transform: [
@@ -25,6 +33,16 @@ export default function RecipeButton() {
     ],
   }));
 
+  const onRecipeButtonPress = () => {
+    if (isFirstTime) {
+      // If preferences not set, navigate to preferences screen
+      router.push("/preferences");
+      setIsFirstTime(false);
+      return;
+    }
+    updateRecipeOpen(!isRecipeOpen);
+  };
+
   return (
     <Animated.View
       className="absolute left-0 right-0 flex-row justify-center"
@@ -34,7 +52,7 @@ export default function RecipeButton() {
         size="lg"
         variant="secondary"
         className="rounded-2xl border-continuous bg-foreground/80"
-        onPress={() => updateRecipeOpen(!isRecipeOpen)}
+        onPress={onRecipeButtonPress}
       >
         <TextShimmer className="flex-row items-center gap-2 justify-center">
           <>

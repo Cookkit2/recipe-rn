@@ -24,6 +24,7 @@ import { toast } from "sonner-native";
 export default function ConfirmationPage() {
   const { bottom } = useSafeAreaInsets();
   const { processPantryItems } = useCreateIngredientStore();
+
   const router = useRouter();
   const addPantryItems = useAddPantryItems();
 

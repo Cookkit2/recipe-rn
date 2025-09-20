@@ -182,7 +182,7 @@ export default function ProfileScreen() {
       </View> */}
       <View className="pb-4" />
 
-      {isAuthenticated ? <ProfileCard /> : <SetupProfileCard />}
+      {/* {isAuthenticated ? <ProfileCard /> : <SetupProfileCard />} */}
 
       {/* <View className="flex-row px-6 mt-6 gap-6 ">
         <Card className="flex-1 rounded-3xl shadow-md shadow-foreground/10 border-none">
