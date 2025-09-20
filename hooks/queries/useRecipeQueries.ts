@@ -58,6 +58,21 @@ export function useAvailableRecipes() {
 }
 
 /**
+ * Hook to get smart recipe recommendations
+ */
+export function useRecipeRecommendations(options?: {
+  maxRecommendations?: number;
+  preferCompleteable?: boolean;
+  categories?: string[];
+}) {
+  return useQuery({
+    queryKey: recipeQueryKeys.recommendations(options),
+    queryFn: () => recipeApi.getRecipeRecommendations(options),
+    staleTime: 2 * 60 * 1000, // 2 minutes - recommendations can be a bit more stable
+  });
+}
+
+/**
  * Hook to get shopping list for a recipe
  */
 export function useShoppingList(recipeId: string) {

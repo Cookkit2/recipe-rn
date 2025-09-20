@@ -27,6 +27,13 @@ export const recipeQueryKeys = {
   // Available recipes (what can be made with current pantry)
   available: () => [...recipeQueryKeys.all, "available"] as const,
 
+  // Recipe recommendations based on pantry
+  recommendations: (options?: {
+    maxRecommendations?: number;
+    preferCompleteable?: boolean;
+    categories?: string[];
+  }) => [...recipeQueryKeys.all, "recommendations", options] as const,
+
   // Shopping list for a specific recipe
   shoppingList: (recipeId: string) =>
     [...recipeQueryKeys.all, "shopping-list", recipeId] as const,

@@ -36,8 +36,16 @@ const RECIPE_TAGS: {
 ];
 
 export default function RecipeCategoryButtonGroup() {
-  const { updateRecipeOpen: updateSelection } = usePantryStore();
+  const { updateRecipeOpen: updateSelection, snapToExpanded } =
+    usePantryStore();
+  const { selectedRecipeTags, showRecommendations, enableRecommendations } =
+    useRecipeStore();
   const lightColors = useLightColors();
+
+  const handleChooseForMe = () => {
+    enableRecommendations();
+    startTransition(() => snapToExpanded());
+  };
 
   return (
     <ScrollView
@@ -56,16 +64,29 @@ export default function RecipeCategoryButtonGroup() {
       <Button
         variant="outline"
         className="rounded-2xl border-continuous flex-row items-center gap-2"
-        style={{ backgroundColor: lightColors.background }}
+        style={{
+          backgroundColor: showRecommendations
+            ? lightColors.primary
+            : lightColors.background,
+        }}
+        onPress={handleChooseForMe}
       >
         <DicesIcon
-          style={{ outlineColor: lightColors.mutedForeground }}
+          color={
+            showRecommendations
+              ? lightColors.primaryForeground
+              : lightColors.mutedForeground
+          }
           size={18}
           strokeWidth={3}
         />
         <P
-          className="text-lg text-muted-foreground font-urbanist-semibold leading-snug"
-          style={{ color: lightColors.mutedForeground }}
+          className="text-lg font-urbanist-semibold leading-snug"
+          style={{
+            color: showRecommendations
+              ? lightColors.primaryForeground
+              : lightColors.mutedForeground,
+          }}
         >
           Choose for me!
         </P>

@@ -208,6 +208,97 @@ export const recipeApi = {
       return { missingIngredients: [], availableIngredients: [] };
     }
   },
+
+  /**
+   * Get smart recipe recommendations based on pantry availability
+   */
+  async getRecipeRecommendations(options?: {
+    maxRecommendations?: number;
+    preferCompleteable?: boolean;
+    categories?: string[];
+  }): Promise<{
+    canMakeRecommendations: Recipe[];
+    partialRecommendations: Array<{
+      recipe: Recipe;
+      completionPercentage: number;
+    }>;
+  }> {
+    try {
+      const {
+        maxRecommendations = 5,
+        preferCompleteable = true,
+        categories,
+      } = options || {};
+      const availability = await databaseFacade.getAvailableRecipes();
+
+      // Filter by categories if specified
+      let canMake = availability.canMake;
+      let partiallyCanMake = availability.partiallyCanMake;
+
+      if (categories && categories.length > 0) {
+        canMake = canMake.filter((recipe) =>
+          recipe.tags?.some((tag) => categories.includes(tag))
+        );
+        partiallyCanMake = partiallyCanMake.filter((item) =>
+          item.recipe.tags?.some((tag) => categories.includes(tag))
+        );
+      }
+
+      // Smart recommendation algorithm - works with database Recipe models
+      const scoreDbRecipe = (recipe: DbRecipe) => {
+        let score = 0;
+
+        // Prefer easier recipes (lower difficulty = higher score)
+        score += (6 - (recipe.difficultyStars || 3)) * 10;
+
+        // Prefer shorter prep/cook time
+        const totalTime = (recipe.prepMinutes || 0) + (recipe.cookMinutes || 0);
+        score += Math.max(0, 120 - totalTime) / 10; // Max bonus for recipes under 2 hours
+
+        // Random factor for variety
+        score += Math.random() * 20;
+
+        return score;
+      };
+
+      // Sort and limit recommendations
+      const sortedCanMake = canMake
+        .sort((a, b) => scoreDbRecipe(b) - scoreDbRecipe(a))
+        .slice(
+          0,
+          preferCompleteable
+            ? maxRecommendations
+            : Math.ceil(maxRecommendations * 0.6)
+        );
+
+      const sortedPartial = partiallyCanMake
+        .sort((a, b) => {
+          // Sort by completion percentage first, then by recipe score
+          const completionDiff =
+            b.completionPercentage - a.completionPercentage;
+          if (completionDiff !== 0) return completionDiff;
+          return scoreDbRecipe(b.recipe) - scoreDbRecipe(a.recipe);
+        })
+        .slice(0, maxRecommendations - sortedCanMake.length);
+
+      // Convert to UI format
+      const canMakeRecommendations = await Promise.all(
+        sortedCanMake.map(convertDbRecipeToUIRecipe)
+      );
+
+      const partialRecommendations = await Promise.all(
+        sortedPartial.map(async (item) => ({
+          recipe: await convertDbRecipeToUIRecipe(item.recipe),
+          completionPercentage: item.completionPercentage,
+        }))
+      );
+
+      return { canMakeRecommendations, partialRecommendations };
+    } catch (error) {
+      console.error("Error getting recipe recommendations:", error);
+      return { canMakeRecommendations: [], partialRecommendations: [] };
+    }
+  },
 };
 
 // Helper function to convert database recipe to UI Recipe format
