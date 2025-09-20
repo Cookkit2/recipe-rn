@@ -8,10 +8,12 @@ import type { AuthSession } from "~/types/AuthTypes";
  */
 export class AuthStorageManager {
   private static instance: AuthStorageManager | null = null;
-  private storage = StorageFactory.initialize(
-    // Use encrypted storage for auth; assert presence since config defines it
-    storageConfigs.encrypted as (typeof storageConfigs)["encrypted"]
-  );
+  private storage = (() => {
+    if (!storageConfigs.encrypted) {
+      throw new Error("Encrypted storage configuration is missing.");
+    }
+    return StorageFactory.initialize(storageConfigs.encrypted);
+  })();
 
   static getInstance(): AuthStorageManager {
     if (!AuthStorageManager.instance) {
