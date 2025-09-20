@@ -4,7 +4,7 @@ import {
 } from "react-native-fast-tflite";
 
 type AllModels = {
-  vegeModel: TensorflowModel;
+  // vegeModel: TensorflowModel;
   magicTouchModel: TensorflowModel;
 };
 
@@ -25,15 +25,15 @@ class AllModelSingleton {
     if (this.loadPromise) return this.loadPromise;
 
     this.loadPromise = (async () => {
-      const [vegeModel, magicTouchModel] = await Promise.all([
-        loadTensorflowModel(require("~/assets/model/veges.tflite"), "core-ml"),
+      const [magicTouchModel] = await Promise.all([
+        // loadTensorflowModel(require("~/assets/model/veges.tflite"), "core-ml"),
         loadTensorflowModel(
           require("~/assets/model/magic_touch.tflite"),
           "default"
         ),
       ]);
 
-      this.models = { vegeModel, magicTouchModel };
+      this.models = { magicTouchModel };
       return this.models;
     })();
 

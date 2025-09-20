@@ -2,7 +2,7 @@ export const UNIT_OPTIONS = {
   si: [
     { label: "kilogram", value: "kg" },
     { label: "gram", value: "g" },
-    { label: "litre", value: "l" },
+    { label: "litre", value: "L" },
     { label: "millilitre", value: "ml" },
     { label: "unit", value: "unit" },
   ],

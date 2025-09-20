@@ -35,7 +35,7 @@ import {
   segmentStaticImage,
   trimTransparentBorders,
   resizeImagePreserveAlpha,
-} from "~/hooks/model/useSegmentModel";
+} from "~/hooks/model/segmentModel";
 import useOnPressScale from "~/hooks/animation/useOnPressScale";
 import Animated, {
   BounceIn,
@@ -61,6 +61,9 @@ import useImageColors from "~/hooks/useImageColors";
 import useColors from "~/hooks/useColor";
 import * as Haptics from "expo-haptics";
 import { titleCase } from "~/utils/text-formatter";
+import { loadImageIntoSkia } from "~/hooks/model/processImage";
+import { classifyStaticImage } from "~/hooks/model/classifyModel";
+import { useAsyncEffect } from "~/utils/use-async-effect";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const THUMBNAIL_SIZE = 32;
@@ -84,7 +87,7 @@ export default function CreateIngredient() {
   const [permission, requestPermission] = useCameraPermissions();
   const [hasAskedPermission, setHasAskedPermission] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const capturedImageSk = useImage(capturedImage);
+  const [capturedImageSk, setCapturedImageSk] = useState<SkImage | null>(null);
 
   const [isSegmentingImage, setIsSegmentingImage] = useState(false);
   const [segmentedImage, setSegmentedImage] = useState<SegmentedImage | null>(
@@ -101,9 +104,6 @@ export default function CreateIngredient() {
     { photoResolution: CAMERA_RESOLUTION },
     { videoResolution: CAMERA_RESOLUTION },
   ]);
-
-  const imageBackgroundColor = useImageColors(capturedImage ?? undefined);
-  const colors = useColors();
 
   const capturedImageOpacityValue = useSharedValue(0);
   const greyBackgroundOpacityValue = useSharedValue(0);
@@ -126,6 +126,16 @@ export default function CreateIngredient() {
       setHasAskedPermission(true);
     }
   }, [permission, requestPermission, hasAskedPermission]);
+
+  useAsyncEffect(
+    async () => {
+      if (!capturedImageSk) return;
+      const content = await classifyStaticImage(capturedImageSk);
+      setSegmentedImage((prev) => (prev ? { ...prev, ...content } : null));
+    },
+    async () => {},
+    [capturedImageSk]
+  );
 
   // Camera and gallery functions
   const takePicture = async () => {
@@ -173,14 +183,29 @@ export default function CreateIngredient() {
       y: (framePosition.y / ((width * 4) / 3)) * CAMERA_RESOLUTION.height,
     };
 
+    const skImage = await loadImageIntoSkia(imagePath);
+    setCapturedImageSk(skImage);
+
+    if (!skImage) {
+      setIsSegmentingImage(false);
+      toast.error("Failed to load image");
+      return;
+    }
+
     // Process the photo for segmentation
     const segmentedImage = await segmentStaticImage(
-      imagePath,
+      skImage,
       normalizedFramePosition
     );
 
-    if (!segmentedImage) return;
-    setSegmentedImage(segmentedImage);
+    const result: SegmentedImage = {
+      ...segmentedImage,
+      name: "",
+      quantity: 1,
+      unit: "unit",
+    };
+
+    setSegmentedImage(result);
 
     setIsSegmentingImage(false);
     setTimeout(() => {
@@ -204,12 +229,7 @@ export default function CreateIngredient() {
     const filename = `masked-${Date.now()}.png`;
     const outPath = `${FileSystem.cacheDirectory || ""}${filename}`;
 
-    setSegmentedImage(null);
-    setCapturedImage(null);
-    greyBackgroundOpacityValue.value = withTiming(
-      0,
-      CURVES["expressive.fast.effects"]
-    );
+    resetImage();
 
     // Write to cache asynchronously for better performance
     startTransition(async () => {
@@ -232,17 +252,22 @@ export default function CreateIngredient() {
         name: titleCase(segmentedImage.name),
         quantity: segmentedImage.quantity,
         image_url: outPath,
-        background_color: imageBackgroundColor || colors.muted,
+        background_color: segmentedImage.background_color,
         unit: segmentedImage.unit,
       });
     });
   };
 
   const cancelSegmentedImage = () => {
+    resetImage();
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+  };
 
+  const resetImage = () => {
     setSegmentedImage(null);
     setCapturedImage(null);
+    setCapturedImageSk(null);
+
     greyBackgroundOpacityValue.value = withTiming(
       0,
       CURVES["expressive.fast.effects"]
@@ -255,9 +280,8 @@ export default function CreateIngredient() {
 
   const onConfirm = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
     try {
-      router.push("/ingredient/confirmation", {});
+      router.push("/ingredient/confirmation");
     } catch (error) {
       console.error("Error confirming:", error);
       toast.error("Error confirming");
@@ -329,6 +353,11 @@ export default function CreateIngredient() {
     >
       {/* HEADER */}
       <View className="w-full flex flex-row justify-between items-center py-4">
+        {processPantryItems.length === 0 && (
+          <P className="text-white pl-4 font-urbanist-regular">
+            Place the item in the frame
+          </P>
+        )}
         <Animated.FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -403,7 +432,7 @@ export default function CreateIngredient() {
           ]}
         >
           <Fill
-            color={imageBackgroundColor || colors.muted}
+            color={segmentedImage?.background_color}
             opacity={greyBackgroundOpacityValue}
           />
           <SkiaImage
@@ -467,8 +496,13 @@ export default function CreateIngredient() {
             onPressIn={handlePressIn}
             onPressOut={handlePressOut}
             style={animatedStyle}
+            disabled={segmentedImage.name.trim() === ""}
           >
-            <CheckIcon className="text-black" size={24} />
+            {segmentedImage.name.trim() === "" ? (
+              <ActivityIndicator size="small" className="text-black" />
+            ) : (
+              <CheckIcon className="text-black" size={24} />
+            )}
           </AnimatedPressable>
         </View>
       ) : (
