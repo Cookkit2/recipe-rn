@@ -212,14 +212,6 @@ export default function RootLayout() {
     createMMKVStorage(); // Initialize MMKV storage
   }, []);
 
-  // useModelPreloader({
-  //   delay: 200,
-  //   priority: "low",
-  //   // onLoadComplete: () => {
-  //   //   if (__DEV__) console.log("Models ready for use!");
-  //   // },
-  // });
-
   return (
     <GestureHandlerRootView className="flex-1 bg-background">
       <RootScaleProvider>

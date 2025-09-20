@@ -15,7 +15,7 @@ import {
 import type { ICarouselInstance } from "react-native-reanimated-carousel";
 import type { TextLoopRef } from "~/components/ui/TextLoop";
 import type { Recipe } from "~/types/Recipe";
-import type { StepPageData } from "~/app/recipes/[recipeId]/steps";
+import type { StepPageData } from "~/app/[recipeId]/steps";
 
 interface RecipeStepsContextType {
   currentStep: number;

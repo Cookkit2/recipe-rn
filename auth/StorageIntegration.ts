@@ -41,29 +41,23 @@ export class AuthStorageManager {
    */
   async storeSession(session: AuthSession): Promise<void> {
     try {
-      if (!this.storage.setAsync) {
+      if (!this.storage.set) {
         throw new Error(
           "Storage implementation does not support async operations"
         );
       }
 
-      await this.storage.setAsync(this.KEYS.ACCESS_TOKEN, session.accessToken);
+      this.storage.set(this.KEYS.ACCESS_TOKEN, session.accessToken);
 
       if (session.refreshToken) {
-        await this.storage.setAsync(
-          this.KEYS.REFRESH_TOKEN,
-          session.refreshToken
-        );
+        this.storage.set(this.KEYS.REFRESH_TOKEN, session.refreshToken);
       }
 
-      await this.storage.setAsync(
+      this.storage.set(
         this.KEYS.SESSION_EXPIRES_AT,
         session.expiresAt.toISOString()
       );
-      await this.storage.setAsync(
-        this.KEYS.SESSION_DATA,
-        JSON.stringify(session)
-      );
+      this.storage.set(this.KEYS.SESSION_DATA, JSON.stringify(session));
 
       console.log("Auth session stored securely");
     } catch (error) {
@@ -77,15 +71,13 @@ export class AuthStorageManager {
    */
   async getSession(): Promise<AuthSession | null> {
     try {
-      if (!this.storage.getAsync) {
+      if (!this.storage.get) {
         throw new Error(
           "Storage implementation does not support async operations"
         );
       }
 
-      const sessionData = await this.storage.getAsync<string>(
-        this.KEYS.SESSION_DATA
-      );
+      const sessionData = this.storage.get<string>(this.KEYS.SESSION_DATA);
 
       if (!sessionData) {
         return null;
@@ -113,13 +105,13 @@ export class AuthStorageManager {
    */
   async getAccessToken(): Promise<string | null> {
     try {
-      if (!this.storage.getAsync) {
+      if (!this.storage.get) {
         throw new Error(
           "Storage implementation does not support async operations"
         );
       }
 
-      const token = await this.storage.getAsync<string>(this.KEYS.ACCESS_TOKEN);
+      const token = this.storage.get<string>(this.KEYS.ACCESS_TOKEN);
       return token || null;
     } catch (error) {
       console.error("Failed to retrieve access token:", error);
@@ -132,15 +124,13 @@ export class AuthStorageManager {
    */
   async getRefreshToken(): Promise<string | null> {
     try {
-      if (!this.storage.getAsync) {
+      if (!this.storage.get) {
         throw new Error(
           "Storage implementation does not support async operations"
         );
       }
 
-      const token = await this.storage.getAsync<string>(
-        this.KEYS.REFRESH_TOKEN
-      );
+      const token = this.storage.get<string>(this.KEYS.REFRESH_TOKEN);
       return token || null;
     } catch (error) {
       console.error("Failed to retrieve refresh token:", error);
@@ -169,30 +159,22 @@ export class AuthStorageManager {
    */
   async updateAccessToken(accessToken: string, expiresAt: Date): Promise<void> {
     try {
-      if (!this.storage.setAsync || !this.storage.getAsync) {
+      if (!this.storage.set || !this.storage.get) {
         throw new Error(
           "Storage implementation does not support async operations"
         );
       }
 
-      await this.storage.setAsync(this.KEYS.ACCESS_TOKEN, accessToken);
-      await this.storage.setAsync(
-        this.KEYS.SESSION_EXPIRES_AT,
-        expiresAt.toISOString()
-      );
+      this.storage.set(this.KEYS.ACCESS_TOKEN, accessToken);
+      this.storage.set(this.KEYS.SESSION_EXPIRES_AT, expiresAt.toISOString());
 
       // Update session data if it exists
-      const sessionData = await this.storage.getAsync<string>(
-        this.KEYS.SESSION_DATA
-      );
+      const sessionData = this.storage.get<string>(this.KEYS.SESSION_DATA);
       if (sessionData) {
         const session = JSON.parse(sessionData) as AuthSession;
         session.accessToken = accessToken;
         session.expiresAt = expiresAt;
-        await this.storage.setAsync(
-          this.KEYS.SESSION_DATA,
-          JSON.stringify(session)
-        );
+        this.storage.set(this.KEYS.SESSION_DATA, JSON.stringify(session));
       }
 
       console.log("Access token updated");
@@ -229,30 +211,30 @@ export class AuthStorageManager {
 
   // Async versions for better AsyncStorage compatibility
   public async getStringAsync(key: string): Promise<string | null> {
-    if (!this.storage.getAsync) {
+    if (!this.storage.get) {
       throw new Error(
         "Storage implementation does not support async operations"
       );
     }
-    return (await this.storage.getAsync<string>(key)) || null;
+    return this.storage.get<string>(key) || null;
   }
 
   public async setStringAsync(key: string, value: string): Promise<void> {
-    if (!this.storage.setAsync) {
+    if (!this.storage.set) {
       throw new Error(
         "Storage implementation does not support async operations"
       );
     }
-    await this.storage.setAsync(key, value);
+    this.storage.set(key, value);
   }
 
   public async removeAsync(key: string): Promise<void> {
-    if (!this.storage.deleteAsync) {
+    if (!this.storage.delete) {
       throw new Error(
         "Storage implementation does not support async operations"
       );
     }
-    await this.storage.deleteAsync(key);
+    this.storage.delete(key);
   }
 }
 
