@@ -163,6 +163,10 @@ function AnimatedStack() {
             name="onboarding/tutorial"
             options={{ headerShown: false }}
           />
+          <Stack.Screen
+            name="preferences/index"
+            options={{ presentation: "modal", headerShown: false }}
+          />
           {/* ======== ONBOARDING PREFERENCES ======== */}
           <Stack.Screen
             name="onboarding-pref/index"
