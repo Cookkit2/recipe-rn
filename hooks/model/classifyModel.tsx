@@ -82,7 +82,7 @@ const postProcessGeminiResponse = (responseText: string) => {
   // Split by , and trim whitespace
   const parts = responseText.split(",").map((part) => part.trim());
   if (parts.length < 3) {
-    throw new Error("Invalid response format");
+    throw new Error(`Invalid response format: ${responseText}`);
   }
 
   const name = titleCase(parts[0] || "") || "Unknown";
