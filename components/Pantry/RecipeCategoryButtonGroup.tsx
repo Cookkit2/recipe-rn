@@ -36,14 +36,15 @@ const RECIPE_TAGS: {
 ];
 
 export default function RecipeCategoryButtonGroup() {
-  const { updateRecipeOpen: updateSelection } = usePantryStore();
-  const { selectedRecipeTags, showRecommendations, setShowRecommendations } =
+  const { updateRecipeOpen: updateSelection, snapToExpanded } =
+    usePantryStore();
+  const { selectedRecipeTags, showRecommendations, enableRecommendations } =
     useRecipeStore();
   const lightColors = useLightColors();
 
   const handleChooseForMe = () => {
-    // Clear selected tags and show recommendations
-    setShowRecommendations(true);
+    enableRecommendations();
+    startTransition(() => snapToExpanded());
   };
 
   return (
@@ -107,8 +108,7 @@ const SegmentedButton = ({
   tag: string;
 }) => {
   const { snapToExpanded } = usePantryStore();
-  const { selectedRecipeTags, updateRecipeTag, setShowRecommendations } =
-    useRecipeStore();
+  const { selectedRecipeTags, updateRecipeTag } = useRecipeStore();
   const lightColors = useLightColors();
 
   return (
@@ -122,7 +122,6 @@ const SegmentedButton = ({
       }}
       onPress={() => {
         updateRecipeTag(tag);
-        setShowRecommendations(false); // Reset recommendations when selecting tags
         startTransition(() => snapToExpanded());
       }}
     >

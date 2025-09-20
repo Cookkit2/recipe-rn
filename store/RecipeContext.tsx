@@ -6,6 +6,7 @@ interface RecipeContextType {
   updateRecipeTag: (tag: string | string[]) => void;
   showRecommendations: boolean;
   setShowRecommendations: (show: boolean) => void;
+  enableRecommendations: () => void;
 }
 
 const RecipeContext = createContext<RecipeContextType | null>(null);
@@ -18,6 +19,9 @@ export function RecipeProvider({ children }: { children: React.ReactNode }) {
 
   // UI callbacks
   const updateRecipeTag = useCallback((tag: string | string[]) => {
+    // When updating recipe tags, disable recommendations
+    setShowRecommendations(false);
+
     if (Array.isArray(tag)) {
       setSelectedRecipeTags((prev) => {
         const newTags = new Set(prev);
@@ -43,6 +47,13 @@ export function RecipeProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // New method to handle recommendations with proper state management
+  const enableRecommendations = useCallback(() => {
+    // When enabling recommendations, clear selected tags and show recommendations
+    setSelectedRecipeTags([]);
+    setShowRecommendations(true);
+  }, []);
+
   return (
     <RecipeContext.Provider
       value={{
@@ -50,6 +61,7 @@ export function RecipeProvider({ children }: { children: React.ReactNode }) {
         updateRecipeTag,
         showRecommendations,
         setShowRecommendations,
+        enableRecommendations,
       }}
     >
       {children}
