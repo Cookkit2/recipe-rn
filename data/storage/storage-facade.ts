@@ -21,14 +21,14 @@ export class StorageFacade implements IStorage {
    * Check if the underlying storage supports a specific method
    */
   private supportsMethod(methodName: string): boolean {
-    return typeof (this.storage as any)[methodName] === 'function';
+    return typeof (this.storage as any)[methodName] === "function";
   }
 
   /**
    * Internal async getter - handles method detection and fallbacks
    */
   private async _getAsync<T>(key: string): Promise<T | null> {
-    if (this.supportsMethod('getAsync')) {
+    if (this.supportsMethod("getAsync")) {
       const asyncStorage = this.storage as any;
       return asyncStorage.getAsync(key) as Promise<T | null>;
     }
@@ -40,7 +40,7 @@ export class StorageFacade implements IStorage {
    * Internal async setter - handles method detection and fallbacks
    */
   private async _setAsync<T>(key: string, value: T): Promise<void> {
-    if (this.supportsMethod('setAsync')) {
+    if (this.supportsMethod("setAsync")) {
       return (this.storage as any).setAsync(key, value);
     }
     // Fallback to sync operation
@@ -52,7 +52,7 @@ export class StorageFacade implements IStorage {
    * Internal async deleter - handles method detection and fallbacks
    */
   private async _deleteAsync(key: string): Promise<void> {
-    if (this.supportsMethod('deleteAsync')) {
+    if (this.supportsMethod("deleteAsync")) {
       return (this.storage as any).deleteAsync(key);
     }
     // Fallback to sync operation
@@ -64,7 +64,7 @@ export class StorageFacade implements IStorage {
    * Internal async clear - handles method detection and fallbacks
    */
   private async _clearAsync(): Promise<void> {
-    if (this.supportsMethod('clearAsync')) {
+    if (this.supportsMethod("clearAsync")) {
       return (this.storage as any).clearAsync();
     }
     // Fallback to sync operation
@@ -94,7 +94,7 @@ export class StorageFacade implements IStorage {
         "AsyncStorage requires async operations. Use get(key, true) instead."
       );
     }
-    
+
     return this.storage.get<T>(key);
   }
 
@@ -138,12 +138,6 @@ export class StorageFacade implements IStorage {
       return this._deleteAsync(key);
     }
 
-    if (this.isAsyncStorage()) {
-      throw new Error(
-        "AsyncStorage requires async operations. Use delete(key, true) instead."
-      );
-    }
-
     this.storage.delete(key);
   }
 
@@ -159,7 +153,7 @@ export class StorageFacade implements IStorage {
     const shouldUseAsync = useAsync ?? this.isAsyncStorage();
 
     if (shouldUseAsync) {
-      return this._getAsync<any>(key).then(value => value !== null);
+      return this._getAsync<any>(key).then((value) => value !== null);
     }
 
     if (this.isAsyncStorage()) {
@@ -202,7 +196,10 @@ export class StorageFacade implements IStorage {
   getString(key: string): string | null;
   getString(key: string, useAsync: false): string | null;
   getString(key: string, useAsync: true): Promise<string | null>;
-  getString(key: string, useAsync?: boolean): string | null | Promise<string | null> {
+  getString(
+    key: string,
+    useAsync?: boolean
+  ): string | null | Promise<string | null> {
     const shouldUseAsync = useAsync ?? this.isAsyncStorage();
 
     if (shouldUseAsync) {
@@ -227,7 +224,11 @@ export class StorageFacade implements IStorage {
   setString(key: string, value: string): void;
   setString(key: string, value: string, useAsync: false): void;
   setString(key: string, value: string, useAsync: true): Promise<void>;
-  setString(key: string, value: string, useAsync?: boolean): void | Promise<void> {
+  setString(
+    key: string,
+    value: string,
+    useAsync?: boolean
+  ): void | Promise<void> {
     const shouldUseAsync = useAsync ?? this.isAsyncStorage();
 
     if (shouldUseAsync) {
@@ -252,8 +253,14 @@ export class StorageFacade implements IStorage {
    */
   getBatch<T>(keys: string[]): Record<string, T | null>;
   getBatch<T>(keys: string[], useAsync: false): Record<string, T | null>;
-  getBatch<T>(keys: string[], useAsync: true): Promise<Record<string, T | null>>;
-  getBatch<T>(keys: string[], useAsync?: boolean): Record<string, T | null> | Promise<Record<string, T | null>> {
+  getBatch<T>(
+    keys: string[],
+    useAsync: true
+  ): Promise<Record<string, T | null>>;
+  getBatch<T>(
+    keys: string[],
+    useAsync?: boolean
+  ): Record<string, T | null> | Promise<Record<string, T | null>> {
     const shouldUseAsync = useAsync ?? this.isAsyncStorage();
 
     if (shouldUseAsync) {
@@ -266,11 +273,11 @@ export class StorageFacade implements IStorage {
       );
     }
 
-    if (this.supportsMethod('getBatch')) {
+    if (this.supportsMethod("getBatch")) {
       const asyncStorage = this.storage as any;
       return asyncStorage.getBatch(keys) as Record<string, T | null>;
     }
-    
+
     // Fallback to individual operations
     const result: Record<string, T | null> = {};
     for (const key of keys) {
@@ -287,7 +294,10 @@ export class StorageFacade implements IStorage {
   setBatch<T>(data: Record<string, T>): void;
   setBatch<T>(data: Record<string, T>, useAsync: false): void;
   setBatch<T>(data: Record<string, T>, useAsync: true): Promise<void>;
-  setBatch<T>(data: Record<string, T>, useAsync?: boolean): void | Promise<void> {
+  setBatch<T>(
+    data: Record<string, T>,
+    useAsync?: boolean
+  ): void | Promise<void> {
     const shouldUseAsync = useAsync ?? this.isAsyncStorage();
 
     if (shouldUseAsync) {
@@ -300,7 +310,7 @@ export class StorageFacade implements IStorage {
       );
     }
 
-    if (this.supportsMethod('setBatch')) {
+    if (this.supportsMethod("setBatch")) {
       (this.storage as any).setBatch(data);
     } else {
       // Fallback to individual operations
@@ -331,7 +341,7 @@ export class StorageFacade implements IStorage {
       );
     }
 
-    if (this.supportsMethod('deleteBatch')) {
+    if (this.supportsMethod("deleteBatch")) {
       (this.storage as any).deleteBatch(keys);
     } else {
       // Fallback to individual operations
@@ -391,12 +401,16 @@ export class StorageFacade implements IStorage {
 
   // ===== INTERNAL ASYNC BATCH/METADATA HELPERS =====
 
-  private async _getBatchAsync<T>(keys: string[]): Promise<Record<string, T | null>> {
-    if (this.supportsMethod('getBatchAsync')) {
+  private async _getBatchAsync<T>(
+    keys: string[]
+  ): Promise<Record<string, T | null>> {
+    if (this.supportsMethod("getBatchAsync")) {
       const asyncStorage = this.storage as any;
-      return asyncStorage.getBatchAsync(keys) as Promise<Record<string, T | null>>;
+      return asyncStorage.getBatchAsync(keys) as Promise<
+        Record<string, T | null>
+      >;
     }
-    
+
     // Fallback - use async operations if available
     const result: Record<string, T | null> = {};
     for (const key of keys) {
@@ -406,10 +420,10 @@ export class StorageFacade implements IStorage {
   }
 
   private async _setBatchAsync<T>(data: Record<string, T>): Promise<void> {
-    if (this.supportsMethod('setBatchAsync')) {
+    if (this.supportsMethod("setBatchAsync")) {
       return (this.storage as any).setBatchAsync(data);
     }
-    
+
     // Fallback - use async operations if available
     for (const [key, value] of Object.entries(data)) {
       await this._setAsync(key, value);
@@ -417,10 +431,10 @@ export class StorageFacade implements IStorage {
   }
 
   private async _deleteBatchAsync(keys: string[]): Promise<void> {
-    if (this.supportsMethod('deleteBatchAsync')) {
+    if (this.supportsMethod("deleteBatchAsync")) {
       return (this.storage as any).deleteBatchAsync(keys);
     }
-    
+
     // Fallback - use async operations if available
     for (const key of keys) {
       await this._deleteAsync(key);
@@ -428,7 +442,7 @@ export class StorageFacade implements IStorage {
   }
 
   private async _getAllKeysAsync(): Promise<string[]> {
-    if (this.supportsMethod('getAllKeysAsync')) {
+    if (this.supportsMethod("getAllKeysAsync")) {
       return (this.storage as any).getAllKeysAsync();
     }
     // Fallback to sync operation
@@ -436,7 +450,7 @@ export class StorageFacade implements IStorage {
   }
 
   private async _sizeAsync(): Promise<number> {
-    if (this.supportsMethod('sizeAsync')) {
+    if (this.supportsMethod("sizeAsync")) {
       return (this.storage as any).sizeAsync();
     }
     // Fallback - calculate from keys
@@ -466,7 +480,7 @@ export class StorageFacade implements IStorage {
     const shouldUseAsync = useAsync ?? this.isAsyncStorage();
 
     if (shouldUseAsync) {
-      return this._sizeAsync().then(size => size === 0);
+      return this._sizeAsync().then((size) => size === 0);
     }
 
     return this.size(false) === 0;
@@ -478,14 +492,17 @@ export class StorageFacade implements IStorage {
   getMultiple<T>(keys: string[]): (T | null)[];
   getMultiple<T>(keys: string[], useAsync: false): (T | null)[];
   getMultiple<T>(keys: string[], useAsync: true): Promise<(T | null)[]>;
-  getMultiple<T>(keys: string[], useAsync?: boolean): (T | null)[] | Promise<(T | null)[]> {
+  getMultiple<T>(
+    keys: string[],
+    useAsync?: boolean
+  ): (T | null)[] | Promise<(T | null)[]> {
     const shouldUseAsync = useAsync ?? this.isAsyncStorage();
 
     if (shouldUseAsync) {
-      return Promise.all(keys.map(key => this._getAsync<T>(key)));
+      return Promise.all(keys.map((key) => this._getAsync<T>(key)));
     }
 
-    return keys.map(key => this.get<T>(key, false));
+    return keys.map((key) => this.get<T>(key, false));
   }
 
   /**
@@ -494,7 +511,10 @@ export class StorageFacade implements IStorage {
   setMultiple<T>(entries: Array<[string, T]>): void;
   setMultiple<T>(entries: Array<[string, T]>, useAsync: false): void;
   setMultiple<T>(entries: Array<[string, T]>, useAsync: true): Promise<void>;
-  setMultiple<T>(entries: Array<[string, T]>, useAsync?: boolean): void | Promise<void> {
+  setMultiple<T>(
+    entries: Array<[string, T]>,
+    useAsync?: boolean
+  ): void | Promise<void> {
     const data: Record<string, T> = {};
     for (const [key, value] of entries) {
       data[key] = value;
@@ -508,11 +528,15 @@ export class StorageFacade implements IStorage {
   update<T>(key: string, value: T): boolean;
   update<T>(key: string, value: T, useAsync: false): boolean;
   update<T>(key: string, value: T, useAsync: true): Promise<boolean>;
-  update<T>(key: string, value: T, useAsync?: boolean): boolean | Promise<boolean> {
+  update<T>(
+    key: string,
+    value: T,
+    useAsync?: boolean
+  ): boolean | Promise<boolean> {
     const shouldUseAsync = useAsync ?? this.isAsyncStorage();
 
     if (shouldUseAsync) {
-      return this._getAsync<T>(key).then(existing => {
+      return this._getAsync<T>(key).then((existing) => {
         if (existing !== null) {
           return this._setAsync(key, value).then(() => true);
         }
@@ -533,11 +557,17 @@ export class StorageFacade implements IStorage {
   getWithDefault<T>(key: string, defaultValue: T): T;
   getWithDefault<T>(key: string, defaultValue: T, useAsync: false): T;
   getWithDefault<T>(key: string, defaultValue: T, useAsync: true): Promise<T>;
-  getWithDefault<T>(key: string, defaultValue: T, useAsync?: boolean): T | Promise<T> {
+  getWithDefault<T>(
+    key: string,
+    defaultValue: T,
+    useAsync?: boolean
+  ): T | Promise<T> {
     const shouldUseAsync = useAsync ?? this.isAsyncStorage();
 
     if (shouldUseAsync) {
-      return this._getAsync<T>(key).then(value => value !== null ? value : defaultValue);
+      return this._getAsync<T>(key).then((value) =>
+        value !== null ? value : defaultValue
+      );
     }
 
     const value = this.get<T>(key, false);
@@ -550,11 +580,15 @@ export class StorageFacade implements IStorage {
   setIfNotExists<T>(key: string, value: T): boolean;
   setIfNotExists<T>(key: string, value: T, useAsync: false): boolean;
   setIfNotExists<T>(key: string, value: T, useAsync: true): Promise<boolean>;
-  setIfNotExists<T>(key: string, value: T, useAsync?: boolean): boolean | Promise<boolean> {
+  setIfNotExists<T>(
+    key: string,
+    value: T,
+    useAsync?: boolean
+  ): boolean | Promise<boolean> {
     const shouldUseAsync = useAsync ?? this.isAsyncStorage();
 
     if (shouldUseAsync) {
-      return this._getAsync<T>(key).then(existing => {
+      return this._getAsync<T>(key).then((existing) => {
         if (existing === null) {
           return this._setAsync(key, value).then(() => true);
         }
@@ -575,14 +609,16 @@ export class StorageFacade implements IStorage {
   getInfo() {
     const config = StorageFactory.getCurrentConfig();
     const isAsync = this.isAsyncStorage();
-    
+
     return {
       type: config?.type || "unknown",
       isAsync,
       size: isAsync ? "Use size(true) for async storage" : this.size(false),
       supportsAsync: StorageFactory.supportsAsync(),
       supportsBatch: StorageFactory.supportsBatch(),
-      keys: isAsync ? "Use getAllKeys(true) for async storage" : this.getAllKeys(false),
+      keys: isAsync
+        ? "Use getAllKeys(true) for async storage"
+        : this.getAllKeys(false),
     };
   }
 }

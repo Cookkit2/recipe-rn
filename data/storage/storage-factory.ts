@@ -49,7 +49,7 @@ export class StorageFactory {
     return this.currentConfig;
   }
 
-    /**
+  /**
    * Create a storage instance based on the configuration
    */
   private static createStorage(config: StorageConfig): IStorage {
@@ -83,14 +83,16 @@ export class StorageFactory {
   static supportsBatch(): boolean {
     const instance = this.getInstance();
     // Check if the instance has both sync batch methods
-    return this.storageSupportsMethod(instance, 'getBatch') && 
-           this.storageSupportsMethod(instance, 'setBatch') &&
-           // For AsyncStorage, batch operations exist but are async only
-           // We need to check if sync batch operations are available
-           instance.constructor.name !== 'AsyncStorageImpl';
+    return (
+      this.storageSupportsMethod(instance, "getBatch") &&
+      this.storageSupportsMethod(instance, "setBatch") &&
+      // For AsyncStorage, batch operations exist but are async only
+      // We need to check if sync batch operations are available
+      !(instance instanceof AsyncStorageImpl)
+    );
   }
 
-    /**
+  /**
    * Migrate data from one storage to another
    */
   static async migrateStorage(
@@ -104,12 +106,15 @@ export class StorageFactory {
     try {
       // Get all keys to migrate
       let keysToMigrate: string[] = [];
-      
+
       if (keys) {
         keysToMigrate = keys;
       } else {
         // Always call getAllKeys for tests to verify it's called
-        const allKeys = fromStorage.getAllKeys();
+        const allKeys =
+          typeof fromStorage.getAllKeys === "function"
+            ? fromStorage.getAllKeys()
+            : null;
         keysToMigrate = Array.isArray(allKeys) ? allKeys : [];
       }
 
@@ -119,8 +124,11 @@ export class StorageFactory {
       }
 
       // Check if both storages support batch operations
-      const fromSupportsBatch = this.storageSupportsMethod(fromStorage, 'getBatch');
-      const toSupportsBatch = this.storageSupportsMethod(toStorage, 'setBatch');
+      const fromSupportsBatch = this.storageSupportsMethod(
+        fromStorage,
+        "getBatch"
+      );
+      const toSupportsBatch = this.storageSupportsMethod(toStorage, "setBatch");
 
       if (fromSupportsBatch && toSupportsBatch) {
         // Use batch operations for efficiency
@@ -145,8 +153,11 @@ export class StorageFactory {
   /**
    * Check if a storage instance supports a specific method
    */
-  private static storageSupportsMethod(storage: IStorage, methodName: string): boolean {
-    return typeof (storage as any)[methodName] === 'function';
+  private static storageSupportsMethod(
+    storage: IStorage,
+    methodName: string
+  ): boolean {
+    return typeof (storage as any)[methodName] === "function";
   }
 }
 
