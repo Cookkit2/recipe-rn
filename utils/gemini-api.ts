@@ -2,9 +2,8 @@ import Constants from "expo-constants";
 
 const API_KEY =
   process.env.EXPO_PUBLIC_GEMINI_API_KEY ||
-  process.env.GEMINI_API_KEY ||
-  Constants.expoConfig?.extra?.EXPO_PUBLIC_GEMINI_API_KEY ||
-  Constants.expoConfig?.extra?.GEMINI_API_KEY;
+  Constants.expoConfig?.extra?.EXPO_PUBLIC_GEMINI_API_KEY;
+
 const BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 
 interface GeminiResponse {
@@ -53,6 +52,10 @@ export class GeminiAPI {
     model: string = "gemini-2.0-flash",
     body: string
   ): Promise<string> {
+    if (!API_KEY) {
+      throw new Error("Gemini API key is not set");
+    }
+
     const response = await fetch(
       `${BASE_URL}/models/${model}:generateContent`,
       {
