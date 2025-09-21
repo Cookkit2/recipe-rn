@@ -231,6 +231,8 @@ export const recipeApi = {
       } = options || {};
       const availability = await databaseFacade.getAvailableRecipes();
 
+      console.log("Availability:", availability);
+
       // Filter by categories if specified
       let canMake = availability.canMake;
       let partiallyCanMake = availability.partiallyCanMake;

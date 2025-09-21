@@ -8,6 +8,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { ArrowLeftIcon } from "lucide-nativewind";
 import { useRefreshPantryItems } from "~/hooks/queries/usePantryQueries";
+import { storage } from "~/data";
+import {
+  ONBOARDING_COMPLETED_KEY,
+  PREFERENCE_COMPLETED_KEY,
+  RECIPE_COOKED_KEY,
+} from "~/constants/storage-keys";
 
 export default function DebugScreen() {
   const { top } = useSafeAreaInsets();
@@ -169,7 +175,7 @@ export default function DebugScreen() {
         )}
 
         {/* Action Buttons */}
-        <View className="space-y-4">
+        <View className="gap-1">
           <Button
             onPress={runSeedDatabase}
             disabled={isLoading}
@@ -227,6 +233,28 @@ export default function DebugScreen() {
             <P className="text-destructive-foreground font-medium">
               🧹 Clear All Data
             </P>
+          </Button>
+
+          <Button
+            onPress={() => {
+              storage.delete(ONBOARDING_COMPLETED_KEY);
+            }}
+          >
+            <P>Clear onboarding key</P>
+          </Button>
+          <Button
+            onPress={() => {
+              storage.delete(PREFERENCE_COMPLETED_KEY);
+            }}
+          >
+            <P>Clear preference key</P>
+          </Button>
+          <Button
+            onPress={() => {
+              storage.delete(RECIPE_COOKED_KEY);
+            }}
+          >
+            <P>Clear recipe cooked key</P>
           </Button>
         </View>
 

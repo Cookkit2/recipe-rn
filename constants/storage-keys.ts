@@ -1,6 +1,10 @@
 export const ONBOARDING_COMPLETED_KEY = "onboarding:completed";
 export const PREFERENCE_COMPLETED_KEY = "preference:completed";
 
+// Use to track if the user has cooked a recipe
+// If he cooked and hvnt subscribed, show paywall
+export const RECIPE_COOKED_KEY = "recipe:cooked";
+
 // SUBSCRIPTION
 export const TRIAL_START_DATE_KEY = "trial:start_date";
 export const SUBSCRIPTION_STATUS_KEY = "subscription:status";

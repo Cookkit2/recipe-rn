@@ -56,6 +56,8 @@ export default function RecipeDetails() {
   }, [recipe]);
 
   const previewImages = useMemo(() => {
+    console.log("Recipe ingredients:", recipe?.ingredients);
+    console.log("Recipe filteredPantryItems:", filteredPantryItems);
     if (!recipe?.ingredients.length) return [];
 
     const count = Math.min(recipe.ingredients.length, 8); // Limit to reasonable number

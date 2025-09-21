@@ -29,14 +29,10 @@ import SetupProfileCard from "~/components/Profile/SetupProfileCard";
 import ListButton from "~/components/Shared/ListButton";
 import { toast } from "sonner-native";
 import * as WebBrowser from "expo-web-browser";
-import { useAuth, useAuthStore } from "~/auth";
+// import { useAuth, useAuthStore } from "~/auth";
 import { presentPaywall } from "~/utils/subscription-utils";
 import ProfileCard from "~/components/Profile/ProfileCard";
-import { storage } from "~/data";
-import {
-  ONBOARDING_COMPLETED_KEY,
-  PREFERENCE_COMPLETED_KEY,
-} from "~/constants/storage-keys";
+import SubscriptionCard from "~/components/Profile/SubscriptionCard";
 
 const appName = Constants.expoConfig?.name ?? "Cookkit";
 const appVersion = Constants.expoConfig?.version ?? "unknown";
@@ -46,49 +42,29 @@ const osVersion = String(Platform.Version ?? "");
 const subject = `${appName} Feedback`;
 const email = "cookkit01@gmail.com";
 
-const revenuecatProjectAppleApiKey =
-  process.env.EXPO_PUBLIC_REVENUECAT_PROJECT_APPLE_API_KEY ||
-  Constants.expoConfig?.extra?.EXPO_PUBLIC_REVENUECAT_PROJECT_APPLE_API_KEY;
-
 export default function ProfileScreen() {
-  const { bottom } = useSafeAreaInsets();
+  const { top, bottom } = useSafeAreaInsets();
 
   const router = useRouter();
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const scrollOffset = useScrollViewOffset(scrollRef);
 
-  const { signOut, isAuthenticated } = useAuth();
-  const authStore = useAuthStore();
+  // const { signOut, isAuthenticated } = useAuth();
+  // const authStore = useAuthStore();
 
-  // TODO: Configure paywall
-  useEffect(() => {
-    Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
+  // const handleSignOut = async () => {
+  //   authStore.forceSignOut();
+  //   router.replace("/(auth)/sign-in");
 
-    if (Platform.OS === "ios" && revenuecatProjectAppleApiKey) {
-      Purchases.configure({
-        apiKey: revenuecatProjectAppleApiKey,
-      });
-    }
-    // else if (Platform.OS === "android" && revenuecatProjectGoogleApiKey) {
-    //   Purchases.configure({
-    //     apiKey: revenuecatProjectGoogleApiKey,
-    //   });
-    // }
-  }, []);
-
-  const handleSignOut = async () => {
-    authStore.forceSignOut();
-    router.replace("/(auth)/sign-in");
-
-    // Try remote sign out in background (don't await it)
-    signOut()
-      .then((result) => {
-        console.log("Background sign out completed:", result);
-      })
-      .catch((error) => {
-        console.log("Background sign out failed:", error);
-      });
-  };
+  //   // Try remote sign out in background (don't await it)
+  //   signOut()
+  //     .then((result) => {
+  //       console.log("Background sign out completed:", result);
+  //     })
+  //     .catch((error) => {
+  //       console.log("Background sign out failed:", error);
+  //     });
+  // };
 
   const handleContactUs = useCallback(async () => {
     try {
@@ -198,32 +174,8 @@ export default function ProfileScreen() {
           </CardContent>
         </Card>
       </View> */}
-      <Card className="flex-1 mx-6 mt-6 rounded-3xl shadow-md shadow-foreground/10 border-none">
-        <CardContent className="flex-row py-6 gap-3">
-          <View className="flex-1 gap-1">
-            <View className="flex-row items-center">
-              <H4 className="font-urbanist-bold">Cookkit</H4>
-              <View className="rounded-full bg-primary/10 px-3 ml-2">
-                <P className="text-sm text-primary font-urbanist-medium">
-                  Trial
-                </P>
-              </View>
-            </View>
-            <P className="text-sm text-foreground/80 font-urbanist-medium">
-              Your trial ends in 21 days.
-            </P>
-          </View>
-          <Button
-            variant="default"
-            className="rounded-xl border-continuous"
-            onPress={() => presentPaywall()}
-          >
-            <P className="font-urbanist-semibold text-primary-foreground">
-              Subscribe
-            </P>
-          </Button>
-        </CardContent>
-      </Card>
+
+      <SubscriptionCard />
 
       <View className="mt-12">
         <P className="text-foreground/60 font-urbanist-semibold px-6 mb-2">
@@ -322,26 +274,10 @@ export default function ProfileScreen() {
           </CardContent>
         </View>
       </View>
-      <View>
-        <Button
-          onPress={() => {
-            storage.delete(ONBOARDING_COMPLETED_KEY);
-          }}
-        >
-          <P>Clear onboarding key</P>
-        </Button>
-        <Button
-          onPress={() => {
-            storage.delete(PREFERENCE_COMPLETED_KEY);
-          }}
-        >
-          <P>Clear preference key</P>
-        </Button>
-      </View>
 
       <View className="mt-24"></View>
 
-      <View className="px-6 my-12">
+      {/* <View className="px-6 my-12">
         {isAuthenticated && (
           <Button
             variant="destructive"
@@ -353,7 +289,7 @@ export default function ProfileScreen() {
             </P>
           </Button>
         )}
-      </View>
+      </View> */}
     </Animated.ScrollView>
   );
 }

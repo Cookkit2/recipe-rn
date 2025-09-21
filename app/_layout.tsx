@@ -25,6 +25,12 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { createMMKVStorage } from "~/data/storage";
 import { storage } from "~/data";
 import { ONBOARDING_COMPLETED_KEY } from "~/constants/storage-keys";
+import Purchases, { LOG_LEVEL } from "react-native-purchases";
+import Constants from "expo-constants";
+
+const revenuecatProjectAppleApiKey =
+  process.env.EXPO_PUBLIC_REVENUECAT_PROJECT_APPLE_API_KEY ||
+  Constants.expoConfig?.extra?.EXPO_PUBLIC_REVENUECAT_PROJECT_APPLE_API_KEY;
 
 const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 
@@ -54,12 +60,9 @@ function AnimatedStack() {
         const completed = storage.get<boolean>(ONBOARDING_COMPLETED_KEY);
         console.log("Onboarding completed:", completed);
         if (completed !== true) {
+          console.log("Redirecting to onboarding...");
           router.replace("/onboarding");
         }
-        // router.push("/profile/preferences");
-        // router.push("/ingredient/webview");
-        // router.push("/ingredient/confirmation");
-        // router.push("/recipes/chicken-stir-fry/steps");
       }, 0);
     }
   }, [router]);
@@ -216,22 +219,38 @@ export default function RootLayout() {
     createMMKVStorage(); // Initialize MMKV storage
   }, []);
 
+  // TODO: Configure paywall
+  useEffect(() => {
+    Purchases.setLogLevel(LOG_LEVEL.ERROR);
+
+    if (Platform.OS === "ios" && revenuecatProjectAppleApiKey) {
+      Purchases.configure({
+        apiKey: revenuecatProjectAppleApiKey,
+      });
+    }
+    // else if (Platform.OS === "android" && revenuecatProjectGoogleApiKey) {
+    //   Purchases.configure({
+    //     apiKey: revenuecatProjectGoogleApiKey,
+    //   });
+    // }
+  }, []);
+
   return (
     <GestureHandlerRootView className="flex-1 bg-background">
       <RootScaleProvider>
         <SafeAreaProvider>
           <QueryProvider>
-            <AuthProvider
+            {/* <AuthProvider
               strategy={new SupabaseAuthStrategy()}
               autoInitialize={true}
-            >
-              <KeyboardProvider>
-                <SystemBars style="auto" />
-                <AnimatedStack />
-                <PortalHost />
-                <Toaster />
-              </KeyboardProvider>
-            </AuthProvider>
+            > */}
+            <KeyboardProvider>
+              <SystemBars style="auto" />
+              <AnimatedStack />
+              <PortalHost />
+              <Toaster />
+            </KeyboardProvider>
+            {/* </AuthProvider> */}
           </QueryProvider>
         </SafeAreaProvider>
       </RootScaleProvider>

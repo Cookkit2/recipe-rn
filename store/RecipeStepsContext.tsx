@@ -15,7 +15,9 @@ import {
 import type { ICarouselInstance } from "react-native-reanimated-carousel";
 import type { TextLoopRef } from "~/components/ui/TextLoop";
 import type { Recipe } from "~/types/Recipe";
-import type { StepPageData } from "~/app/[recipeId]/steps";
+import type { StepPageData } from "~/app/recipes/[recipeId]/steps";
+import { storage } from "~/data";
+import { RECIPE_COOKED_KEY } from "~/constants/storage-keys";
 
 interface RecipeStepsContextType {
   currentStep: number;
@@ -59,6 +61,7 @@ export function RecipeStepsProvider({
 
   const updateEndTime = useCallback(() => {
     setEndTime(Date.now());
+    storage.set(RECIPE_COOKED_KEY, true);
   }, []);
 
   useAnimatedReaction(

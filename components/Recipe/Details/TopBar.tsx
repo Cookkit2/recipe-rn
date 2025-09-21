@@ -116,8 +116,8 @@ export default function TopBar({
       <Button
         size="icon"
         variant="secondary"
-        className="rounded-full"
-        onPress={toggleRecipeFavourite}
+        className="rounded-full opacity-0"
+        // onPress={toggleRecipeFavourite}
       >
         <HeartIcon
           className={isFav ? "text-red-500" : "text-foreground"}

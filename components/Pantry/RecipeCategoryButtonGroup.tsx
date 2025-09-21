@@ -38,12 +38,10 @@ const RECIPE_TAGS: {
 export default function RecipeCategoryButtonGroup() {
   const { updateRecipeOpen: updateSelection, snapToExpanded } =
     usePantryStore();
-  const { selectedRecipeTags, showRecommendations, enableRecommendations } =
-    useRecipeStore();
+  const { selectedRecipeTags } = useRecipeStore();
   const lightColors = useLightColors();
 
   const handleChooseForMe = () => {
-    enableRecommendations();
     startTransition(() => snapToExpanded());
   };
 
@@ -65,27 +63,19 @@ export default function RecipeCategoryButtonGroup() {
         variant="outline"
         className="rounded-2xl border-continuous flex-row items-center gap-2"
         style={{
-          backgroundColor: showRecommendations
-            ? lightColors.primary
-            : lightColors.background,
+          backgroundColor: lightColors.primary,
         }}
         onPress={handleChooseForMe}
       >
         <DicesIcon
-          color={
-            showRecommendations
-              ? lightColors.primaryForeground
-              : lightColors.mutedForeground
-          }
+          color={lightColors.primaryForeground}
           size={18}
           strokeWidth={3}
         />
         <P
           className="text-lg font-urbanist-semibold leading-snug"
           style={{
-            color: showRecommendations
-              ? lightColors.primaryForeground
-              : lightColors.mutedForeground,
+            color: lightColors.primaryForeground,
           }}
         >
           Choose for me!
