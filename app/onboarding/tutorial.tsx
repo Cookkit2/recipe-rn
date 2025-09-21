@@ -17,6 +17,7 @@ import DisplayCards from "~/components/Custom/DisplayCards";
 import { useRouter } from "expo-router";
 import { storage } from "~/data";
 import { ONBOARDING_COMPLETED_KEY } from "~/constants/storage-keys";
+import RevenueCatUI from "react-native-purchases-ui";
 
 // Step data extracted for easier maintenance / localization
 const STEP_TITLES = ["Snap Groceries", "Manage Ingredients", "Cook Recipes"];
@@ -60,7 +61,7 @@ export default function Tutorial() {
     });
   };
 
-  const onNext = () => {
+  const onNext = async () => {
     setCurrentStep((prev) => {
       if (prev >= TOTAL_STEPS) {
         return prev;
@@ -73,7 +74,7 @@ export default function Tutorial() {
     if (currentStep === 3) {
       // Completed onboarding - persist flag and route to main app
       storage.set(ONBOARDING_COMPLETED_KEY, true);
-      router.replace("/");
+      router.replace("/ingredient/create");
     }
   };
 

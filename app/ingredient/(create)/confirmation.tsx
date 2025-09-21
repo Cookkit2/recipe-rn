@@ -20,6 +20,8 @@ import { SystemBars } from "react-native-edge-to-edge";
 import { useAddPantryItems } from "~/hooks/queries/usePantryQueries";
 import { useRouter } from "expo-router";
 import { toast } from "sonner-native";
+import RevenueCatUI from "react-native-purchases-ui";
+import { presentPaywallIfNeeded } from "~/utils/subscription-utils";
 
 export default function ConfirmationPage() {
   const { bottom } = useSafeAreaInsets();
@@ -44,7 +46,14 @@ export default function ConfirmationPage() {
   }, []);
 
   const onSaveAllRecipe = async () => {
-    setIsLoading(true);
+    // setIsLoading(true);
+    const isPurchased = await presentPaywallIfNeeded();
+
+    if (!isPurchased) {
+      toast.error("You need to subscribe to save ingredients.");
+      return;
+    }
+
     try {
       console.log("processPantryItems", processPantryItems);
 
@@ -55,9 +64,10 @@ export default function ConfirmationPage() {
     } catch (error) {
       console.error("Error saving all recipe:", error);
       toast.error("Error saving all recipe");
-    } finally {
-      setIsLoading(false);
     }
+    // finally {
+    //   setIsLoading(false);
+    // }
   };
 
   return (

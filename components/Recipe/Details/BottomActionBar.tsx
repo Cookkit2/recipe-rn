@@ -5,6 +5,9 @@ import { H4, P } from "../../ui/typography";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { Recipe } from "~/types/Recipe";
+import { storage } from "~/data";
+import { RECIPE_COOKED_KEY } from "~/constants/storage-keys";
+import { presentPaywallIfNeeded } from "~/utils/subscription-utils";
 
 export default function BottomActionBar({
   recipe,
@@ -15,6 +18,7 @@ export default function BottomActionBar({
 }) {
   const router = useRouter();
   const { bottom } = useSafeAreaInsets();
+  const isRecipeCooked = storage.get(RECIPE_COOKED_KEY) === true;
 
   const readyByLabel = useMemo(() => {
     if (!recipe) return { label: "Ready by —", time: "" };
@@ -29,6 +33,20 @@ export default function BottomActionBar({
       time: rel,
     };
   }, [recipe]);
+
+  const navigateToCookingSteps = async () => {
+    if (!isRecipeCooked) {
+      router.push(`/recipes/${recipe.id}/steps`);
+      return;
+    }
+
+    // User have tried to cook a recipe
+    // Present paywall if not subscribed
+    const isPurchased = await presentPaywallIfNeeded();
+    if (isPurchased) {
+      router.push(`/recipes/${recipe.id}/steps`);
+    }
+  };
 
   return (
     <View
@@ -53,7 +71,7 @@ export default function BottomActionBar({
           <Button
             size="lg"
             className="rounded-full px-6"
-            onPress={() => router.push(`/recipes/${recipe.id}/steps`)}
+            onPress={navigateToCookingSteps}
           >
             <H4 className="font-urbanist-semibold text-background">Cook</H4>
           </Button>

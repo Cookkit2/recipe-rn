@@ -64,6 +64,9 @@ import { titleCase } from "~/utils/text-formatter";
 import { loadImageIntoSkia } from "~/hooks/model/processImage";
 import { classifyStaticImage } from "~/hooks/model/classifyModel";
 import { useAsyncEffect } from "~/utils/use-async-effect";
+import { storage } from "~/data";
+import { RECIPE_COOKED_KEY } from "~/constants/storage-keys";
+import { presentPaywallIfNeeded } from "~/utils/subscription-utils";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const THUMBNAIL_SIZE = 32;
@@ -96,6 +99,7 @@ export default function CreateIngredient() {
 
   const device = useCameraDevice(facing);
   const isCameraAvailable = !!device;
+  const isRecipeCooked = storage.get(RECIPE_COOKED_KEY) === true;
 
   const { processPantryItems, addProcessPantryItems, framePosition } =
     useCreateIngredientStore();
@@ -141,6 +145,13 @@ export default function CreateIngredient() {
   const takePicture = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
+    if (isRecipeCooked) {
+      const isPurchased = await presentPaywallIfNeeded();
+      if (!isPurchased) {
+        return;
+      }
+    }
+
     if (camera.current) {
       try {
         const photo = await camera.current.takePhoto();
@@ -156,6 +167,15 @@ export default function CreateIngredient() {
   };
 
   const pickFromGallery = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    if (isRecipeCooked) {
+      const isPurchased = await presentPaywallIfNeeded();
+      if (!isPurchased) {
+        return;
+      }
+    }
+
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],

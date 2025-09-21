@@ -35,7 +35,7 @@ export default function PreferenceScreen() {
       <UnitSection />
 
       {/* Appliances */}
-      <AppliancesSection />
+      {/* <AppliancesSection /> */}
 
       {/* Navigation to Diet and Allergy screens */}
       <View className="flex mx-6 mt-4 p-0 py-2 rounded-2xl bg-muted/50 overflow-hidden border-continuous">

@@ -1,16 +1,12 @@
-import React, { useMemo } from "react";
 import RecipeItemCard from "./RecipeItemCard";
+import { useMemo } from "react";
 import { Animated, View, ActivityIndicator } from "react-native";
 import { useRecipeStore } from "~/store/RecipeContext";
 import { H4, P } from "../ui/typography";
-import {
-  useRecipes,
-  useRecipeRecommendations,
-} from "~/hooks/queries/useRecipeQueries";
+import { useRecipeRecommendations } from "~/hooks/queries/useRecipeQueries";
 
 export default function RecipeLists() {
-  const { selectedRecipeTags, showRecommendations } = useRecipeStore();
-  const { data: recipes = [], isLoading, error } = useRecipes();
+  const { selectedRecipeTags } = useRecipeStore();
   const {
     data: recommendations,
     isLoading: recommendationsLoading,
@@ -18,12 +14,12 @@ export default function RecipeLists() {
   } = useRecipeRecommendations({
     categories: selectedRecipeTags.length > 0 ? selectedRecipeTags : undefined,
     maxRecommendations: 8,
-    preferCompleteable: true,
+    preferCompleteable: false,
   });
 
   // Determine which recipes to show
   const recipesToShow = useMemo(() => {
-    if (showRecommendations && recommendations) {
+    if (recommendations) {
       // Combine can make and partial recommendations
       const allRecommendations = [
         ...recommendations.canMakeRecommendations,
@@ -31,38 +27,23 @@ export default function RecipeLists() {
       ];
       return allRecommendations;
     }
+  }, [recommendations]);
 
-    // Regular filtered recipes based on selected tags
-    return recipes.filter((recipe) =>
-      selectedRecipeTags.length > 0
-        ? recipe.tags?.some((tag) => selectedRecipeTags.includes(tag))
-        : true
-    );
-  }, [showRecommendations, recommendations, recipes, selectedRecipeTags]);
-
-  // Handle loading states
-  const isDataLoading = showRecommendations
-    ? recommendationsLoading
-    : isLoading;
-  const dataError = showRecommendations ? recommendationsError : error;
-
-  if (isDataLoading) {
+  if (recommendationsLoading) {
     return (
       <View className="py-16 items-center justify-center">
         <ActivityIndicator size="small" />
-        <P className="mt-2 text-muted-foreground">
-          {showRecommendations
-            ? "Finding perfect recipes for you..."
-            : "Loading recipes..."}
-        </P>
+        <P className="mt-2 text-muted-foreground">Loading recipes...</P>
       </View>
     );
   }
 
-  if (dataError) {
+  if (recommendationsError) {
     return (
       <View className="py-16 items-center justify-center">
-        <P className="text-destructive text-center">{dataError.message}</P>
+        <P className="text-destructive text-center">
+          {recommendationsError.message}
+        </P>
       </View>
     );
   }
@@ -79,12 +60,12 @@ export default function RecipeLists() {
       ListEmptyComponent={
         <View className="py-16 items-center justify-center">
           <H4 className="text-muted-foreground font-urbanist-semibold text-center">
-            {showRecommendations
+            {recommendations
               ? "No recipes can be made right now"
               : "No recipes found"}
           </H4>
           <P className="text-muted-foreground font-urbanist-regular text-center text-sm mt-1">
-            {showRecommendations
+            {recommendations
               ? "Try adding more ingredients to your pantry"
               : "Try adjusting your filters or add some ingredients"}
           </P>

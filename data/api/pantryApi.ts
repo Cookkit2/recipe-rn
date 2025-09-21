@@ -23,7 +23,6 @@ export const pantryApi = {
       console.log("Stock count in database:", stockCount);
 
       const stockItems = await databaseFacade.stock.findAll();
-      console.log("stockItems fetched:", stockItems.length, stockItems);
 
       if (stockItems.length === 0) {
         console.warn("⚠️ No stock items found in database");

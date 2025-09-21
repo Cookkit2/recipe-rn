@@ -13,6 +13,8 @@ import OutlinedImage from "~/components/ui/outlined-image";
 import { SparkleIcon } from "lucide-nativewind";
 import { storage } from "~/data";
 import { ONBOARDING_COMPLETED_KEY } from "~/constants/storage-keys";
+import * as WebBrowser from "expo-web-browser";
+import { toast } from "sonner-native";
 
 // Take first 10 items and assign different coordinates (0-100 scale)
 const previewImages = dummyPantryItems.slice(0, 10).map((item, index) => ({
@@ -50,6 +52,14 @@ export default function OnboardingScreen() {
 
   const complete = () => {
     router.replace("/onboarding/tutorial");
+  };
+
+  const handleOpenLink = async (url: string) => {
+    try {
+      await WebBrowser.openBrowserAsync(url);
+    } catch {
+      toast.error(`Failed to open the link`);
+    }
   };
 
   return (
@@ -141,7 +151,9 @@ export default function OnboardingScreen() {
               accessibilityRole="link"
               accessibilityLabel="Terms of Service"
               accessibilityHint="Opens the Terms of Service page"
-              onPress={() => router.push("/misc/terms")}
+              onPress={() =>
+                handleOpenLink("https://www.cookkit.app/terms-and-conditions")
+              }
             >
               Terms of Service
             </Text>{" "}
@@ -151,7 +163,9 @@ export default function OnboardingScreen() {
               accessibilityRole="link"
               accessibilityLabel="Privacy Policy"
               accessibilityHint="Opens the Privacy Policy page"
-              onPress={() => router.push("/misc/privacy")}
+              onPress={() =>
+                handleOpenLink("https://www.cookkit.app/privacy-policy")
+              }
             >
               Privacy Policy
             </Text>

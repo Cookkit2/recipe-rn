@@ -8,6 +8,63 @@
 import { databaseFacade } from "./DatabaseFacade";
 import { dummyPantryItems } from "../dummy/dummy-data";
 import { dummyRecipesData } from "../dummy/dummy-recipes";
+import * as FileSystem from "expo-file-system";
+import { Asset } from "expo-asset";
+import type { ImageSourcePropType } from "react-native";
+
+/**
+ * Save an image asset to the file system and return the path
+ * @param imageAsset - The asset from require() statement, string URL, or undefined
+ * @returns Promise<string> - The file path where the image was saved, or empty string if failed
+ */
+async function saveImageAsset(
+  imageAsset: ImageSourcePropType | string | undefined
+): Promise<string> {
+  try {
+    // If undefined, return empty string
+    if (!imageAsset) {
+      return "";
+    }
+
+    // If it's already a string (URL), return it as is
+    if (typeof imageAsset === "string") {
+      return imageAsset;
+    }
+
+    // Handle object-style ImageSourcePropType
+    if (
+      typeof imageAsset === "object" &&
+      "uri" in imageAsset &&
+      imageAsset.uri
+    ) {
+      return imageAsset.uri;
+    }
+
+    // If it's a number (require() result) or module-style asset, resolve it
+    const asset = Asset.fromModule(imageAsset as number);
+    await asset.downloadAsync();
+
+    if (!asset.localUri) {
+      throw new Error("Failed to download asset");
+    }
+
+    // Create a filename based on the asset name or hash
+    const filename = asset.name || `asset_${Date.now()}.png`;
+    const destinationPath = `${FileSystem.cacheDirectory}${filename}`;
+
+    // Copy the asset to cache directory
+    await FileSystem.copyAsync({
+      from: asset.localUri,
+      to: destinationPath,
+    });
+
+    return destinationPath;
+  } catch (error) {
+    console.error("Error saving image asset:", error);
+    // Return a fallback empty string if saving fails
+    return "";
+  }
+}
 
 /**
  * Map recipe ingredient names to pantry ingredient names
@@ -97,6 +154,8 @@ export async function seedDatabase() {
     console.log("📦 Seeding stock items...");
     for (const item of dummyPantryItems) {
       const baseIngredient = baseIngredients.get(item.name);
+      // Save the image from asset into file system and return the path
+      const imagePath = await saveImageAsset(item.image_url);
       if (baseIngredient) {
         await databaseFacade.stock.create({
           baseIngredientId: baseIngredient.id,
@@ -106,8 +165,7 @@ export async function seedDatabase() {
           expiryDate: item.expiry_date,
           type: item.type,
           category: item.category,
-          imageUrl:
-            typeof item.image_url === "string" ? item.image_url : undefined,
+          imageUrl: imagePath, // Use the saved file path instead of the original asset
           x: item.x,
           y: item.y,
           scale: item.scale,
@@ -119,60 +177,60 @@ export async function seedDatabase() {
     console.log("👨‍🍳 Seeding recipes...");
     const pantryNames = Array.from(baseIngredients.keys());
 
-    for (const recipe of dummyRecipesData) {
-      // Create base ingredients for recipe ingredients
-      const recipeIngredients = [];
-      for (const ingredient of recipe.ingredients) {
-        // Try to map recipe ingredient name to existing pantry ingredient
-        const mappedName = mapIngredientName(ingredient.name, pantryNames);
-        let baseIngredient = baseIngredients.get(mappedName);
+    // for (const recipe of dummyRecipesData) {
+    //   // Create base ingredients for recipe ingredients
+    //   const recipeIngredients = [];
+    //   for (const ingredient of recipe.ingredients) {
+    //     // Try to map recipe ingredient name to existing pantry ingredient
+    //     const mappedName = mapIngredientName(ingredient.name, pantryNames);
+    //     let baseIngredient = baseIngredients.get(mappedName);
 
-        if (!baseIngredient) {
-          // If mapping didn't work, try original name
-          baseIngredient = baseIngredients.get(ingredient.name);
+    //     if (!baseIngredient) {
+    //       // If mapping didn't work, try original name
+    //       baseIngredient = baseIngredients.get(ingredient.name);
 
-          if (!baseIngredient) {
-            // Create new ingredient if no match found
-            baseIngredient = await databaseFacade.ingredients.create({
-              name: ingredient.name,
-              synonyms: mappedName !== ingredient.name ? [mappedName] : [],
-            });
-            baseIngredients.set(ingredient.name, baseIngredient);
-          }
-        }
+    //       if (!baseIngredient) {
+    //         // Create new ingredient if no match found
+    //         baseIngredient = await databaseFacade.ingredients.create({
+    //           name: ingredient.name,
+    //           synonyms: mappedName !== ingredient.name ? [mappedName] : [],
+    //         });
+    //         baseIngredients.set(ingredient.name, baseIngredient);
+    //       }
+    //     }
 
-        recipeIngredients.push({
-          recipeId: "", // Will be set automatically
-          baseIngredientId: baseIngredient.id,
-          name: ingredient.name,
-          quantity: ingredient.quantity,
-          notes: ingredient.notes,
-        });
-      }
+    //     recipeIngredients.push({
+    //       recipeId: "", // Will be set automatically
+    //       baseIngredientId: baseIngredient.id,
+    //       name: ingredient.name,
+    //       quantity: ingredient.quantity,
+    //       notes: ingredient.notes,
+    //     });
+    //   }
 
-      // Create recipe with all details
-      await databaseFacade.recipes.createRecipeWithDetails({
-        recipe: {
-          title: recipe.title,
-          description: recipe.description,
-          imageUrl: recipe.imageUrl,
-          prepMinutes: recipe.prepMinutes || 0,
-          cookMinutes: recipe.cookMinutes || 0,
-          difficultyStars: recipe.difficultyStars || 1,
-          servings: recipe.servings || 1,
-          sourceUrl: recipe.sourceUrl,
-          calories: recipe.calories,
-          tags: recipe.tags,
-        },
-        steps: recipe.instructions.map((step) => ({
-          step: step.step,
-          title: step.title,
-          description: step.description,
-          recipeId: "", // Will be set automatically
-        })),
-        ingredients: recipeIngredients,
-      });
-    }
+    //   // Create recipe with all details
+    //   await databaseFacade.recipes.createRecipeWithDetails({
+    //     recipe: {
+    //       title: recipe.title,
+    //       description: recipe.description,
+    //       imageUrl: recipe.imageUrl,
+    //       prepMinutes: recipe.prepMinutes || 0,
+    //       cookMinutes: recipe.cookMinutes || 0,
+    //       difficultyStars: recipe.difficultyStars || 1,
+    //       servings: recipe.servings || 1,
+    //       sourceUrl: recipe.sourceUrl,
+    //       calories: recipe.calories,
+    //       tags: recipe.tags,
+    //     },
+    //     steps: recipe.instructions.map((step) => ({
+    //       step: step.step,
+    //       title: step.title,
+    //       description: step.description,
+    //       recipeId: "", // Will be set automatically
+    //     })),
+    //     ingredients: recipeIngredients,
+    //   });
+    // }
 
     // Get final stats
     const stats = await databaseFacade.getDatabaseStats();

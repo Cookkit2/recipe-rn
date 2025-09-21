@@ -6,6 +6,11 @@ import RecipeIngredient, {
 } from "../models/RecipeIngredient";
 import { BaseRepository, type SearchOptions } from "./BaseRepository";
 import { database } from "../database";
+import {
+  recipeApi,
+  type SupabaseRecipeWithDetails,
+} from "~/data/supabase-api/RecipeApi";
+import type { Tables } from "~/lib/supabase/supabase-types";
 
 export interface RecipeSearchOptions extends SearchOptions {
   tags?: string[];
@@ -23,8 +28,26 @@ export interface CreateRecipeWithDetailsData {
 }
 
 export class RecipeRepository extends BaseRepository<Recipe> {
+  private isInitialized = false;
+
   constructor() {
     super("recipes");
+  }
+
+  // Initialize repository and sync recipes from Supabase
+  async initialize(): Promise<void> {
+    if (this.isInitialized) return;
+
+    try {
+      // Sync from Supabase on start
+      await this.syncFromSupabase();
+
+      this.isInitialized = true;
+    } catch (error) {
+      // Don't throw error during initialization to prevent app crashes
+      // The app can still function with local-only recipes
+      this.isInitialized = true;
+    }
   }
 
   // Search recipes with advanced filters
@@ -165,50 +188,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
     data: CreateRecipeWithDetailsData
   ): Promise<Recipe> {
     return await database.write(async () => {
-      // Create recipe
-      const recipe = await this.collection.create((r) => {
-        (Object.keys(data.recipe) as Array<keyof RecipeData>).forEach((key) => {
-          const value = data.recipe[key];
-          if (value !== undefined) {
-            (r as any)[key] = value;
-          }
-        });
-      });
-
-      // Create steps if provided
-      if (data.steps && data.steps.length > 0) {
-        const stepsCollection =
-          database.collections.get<RecipeStep>("recipe_steps");
-        await Promise.all(
-          data.steps.map((stepData) =>
-            stepsCollection.create((step: any) => {
-              step.step = stepData.step;
-              step.title = stepData.title;
-              step.description = stepData.description;
-              step.recipeId = recipe.id;
-            })
-          )
-        );
-      }
-
-      // Create ingredients if provided
-      if (data.ingredients && data.ingredients.length > 0) {
-        const ingredientsCollection =
-          database.collections.get<RecipeIngredient>("recipe_ingredients");
-        await Promise.all(
-          data.ingredients.map((ingredientData) =>
-            ingredientsCollection.create((ingredient: any) => {
-              ingredient.recipeId = recipe.id;
-              ingredient.baseIngredientId = ingredientData.baseIngredientId;
-              ingredient.name = ingredientData.name;
-              ingredient.quantity = ingredientData.quantity;
-              ingredient.notes = ingredientData.notes;
-            })
-          )
-        );
-      }
-
-      return recipe;
+      return await this.createRecipeWithDetailsRaw(data);
     });
   }
 
@@ -264,5 +244,177 @@ export class RecipeRepository extends BaseRepository<Recipe> {
     return recipes.filter(
       (recipe) => recipe.prepMinutes + recipe.cookMinutes <= maxTotalMinutes
     );
+  }
+
+  // Sync recipes from Supabase
+  async syncFromSupabase(limit: number = 50): Promise<void> {
+    try {
+      const recipesWithDetails = await recipeApi.getRecipesWithDetails(limit);
+      console.log(
+        `Syncing ${recipesWithDetails.length} recipes from Supabase...`
+      );
+
+      // Check if we have recipes to sync
+      if (recipesWithDetails.length === 0) {
+        console.log("No recipes found to sync from Supabase");
+        return;
+      }
+
+      console.log(`First recipe: ${recipesWithDetails[0]?.recipe.title}`);
+
+      // Get all existing recipe IDs to check for duplicates
+      const existingRecipeIds = new Set<string>();
+      const existingRecipes = await this.collection.query().fetch();
+      existingRecipes.forEach((recipe) => existingRecipeIds.add(recipe.id));
+
+      // Filter out recipes that already exist
+      const newRecipes = recipesWithDetails.filter(
+        (supabaseRecipe) => !existingRecipeIds.has(supabaseRecipe.recipe.id)
+      );
+
+      console.log(
+        `Found ${newRecipes.length} new recipes to sync (${recipesWithDetails.length - newRecipes.length} already exist)`
+      );
+
+      // Process only new recipes
+      for (const supabaseRecipe of newRecipes) {
+        try {
+          await database.write(async () => {
+            const localRecipe = await this.syncSingleRecipe(supabaseRecipe);
+            // console.log(`Synced recipe: ${localRecipe.title}`);
+          });
+        } catch (error) {
+          console.error(
+            `Failed to sync recipe ${supabaseRecipe.recipe.title}:`,
+            error
+          );
+        }
+      }
+
+      // Verify sync worked
+      const localCount = await this.count();
+      console.log(`Local database now has ${localCount} recipes`);
+    } catch (error) {
+      console.error("Error syncing from Supabase:", error);
+      throw error;
+    }
+  }
+
+  // Helper method to transform and sync a single recipe (must be called within a database.write transaction)
+  private async syncSingleRecipe(
+    supabaseRecipe: SupabaseRecipeWithDetails
+  ): Promise<Recipe> {
+    // Since we've already filtered out existing recipes, just create the new one
+    return await this.createRecipeWithDetailsRaw({
+      recipe: this.transformSupabaseRecipe(supabaseRecipe.recipe),
+      steps: supabaseRecipe.steps.map((step) =>
+        this.transformSupabaseStep(step)
+      ),
+      ingredients: supabaseRecipe.ingredients.map((ingredient) =>
+        this.transformSupabaseIngredient(ingredient)
+      ),
+    });
+  }
+
+  // Create recipe with steps and ingredients without database.write wrapper (for use within transactions)
+  private async createRecipeWithDetailsRaw(
+    data: CreateRecipeWithDetailsData & { recipe: RecipeData & { id?: string } }
+  ): Promise<Recipe> {
+    // Create recipe
+    const recipe = await this.collection.create((r) => {
+      // Set the ID if provided (for Supabase sync)
+      if (data.recipe.id) {
+        r._raw.id = data.recipe.id;
+      }
+      r.title = data.recipe.title;
+      r.description = data.recipe.description;
+      if (data.recipe.imageUrl) r.imageUrl = data.recipe.imageUrl;
+      r.prepMinutes = data.recipe.prepMinutes;
+      r.cookMinutes = data.recipe.cookMinutes;
+      r.difficultyStars = data.recipe.difficultyStars;
+      r.servings = data.recipe.servings;
+      if (data.recipe.sourceUrl) r.sourceUrl = data.recipe.sourceUrl;
+      if (data.recipe.calories) r.calories = data.recipe.calories;
+      if (data.recipe.tags) r.tags = data.recipe.tags;
+    });
+
+    // Create steps if provided
+    if (data.steps && data.steps.length > 0) {
+      const stepsCollection =
+        database.collections.get<RecipeStep>("recipe_steps");
+      await Promise.all(
+        data.steps.map((stepData) =>
+          stepsCollection.create((step) => {
+            step.step = stepData.step;
+            step.title = stepData.title;
+            step.description = stepData.description;
+            step.recipeId = recipe.id; // Use the new recipe's ID
+          })
+        )
+      );
+    }
+
+    // Create ingredients if provided
+    if (data.ingredients && data.ingredients.length > 0) {
+      const ingredientsCollection =
+        database.collections.get<RecipeIngredient>("recipe_ingredients");
+      await Promise.all(
+        data.ingredients.map((ingredientData) =>
+          ingredientsCollection.create((ingredient) => {
+            ingredient.recipeId = recipe.id; // Use the new recipe's ID
+            ingredient.baseIngredientId = ingredientData.baseIngredientId;
+            ingredient.name = ingredientData.name;
+            ingredient.quantity = ingredientData.quantity;
+            ingredient.notes = ingredientData.notes;
+          })
+        )
+      );
+    }
+
+    return recipe;
+  }
+
+  // Transform Supabase recipe to local format
+  private transformSupabaseRecipe(
+    supabaseRecipe: Tables<"recipe">
+  ): RecipeData & { id: string } {
+    return {
+      id: supabaseRecipe.id, // Preserve the Supabase ID
+      title: supabaseRecipe.title,
+      description: supabaseRecipe.description || "",
+      imageUrl: supabaseRecipe.image_url || undefined,
+      prepMinutes: supabaseRecipe.prep_minutes || 0,
+      cookMinutes: supabaseRecipe.cook_minutes || 0,
+      difficultyStars: supabaseRecipe.difficulty_stars || 1,
+      servings: supabaseRecipe.servings || 1,
+      sourceUrl: supabaseRecipe.source_url || undefined,
+      calories: supabaseRecipe.calories || undefined,
+      tags: supabaseRecipe.tags || [],
+    };
+  }
+
+  // Transform Supabase recipe step to local format
+  private transformSupabaseStep(
+    supabaseStep: Tables<"recipe_step">
+  ): RecipeStepData {
+    return {
+      step: supabaseStep.step,
+      title: supabaseStep.title || "",
+      description: supabaseStep.description || "",
+      recipeId: supabaseStep.recipe_id,
+    };
+  }
+
+  // Transform Supabase recipe ingredient to local format
+  private transformSupabaseIngredient(
+    supabaseIngredient: Tables<"pivot_recipe_ingredient">
+  ): RecipeIngredientData {
+    return {
+      recipeId: supabaseIngredient.recipe_id,
+      baseIngredientId: supabaseIngredient.base_ingredient_id,
+      name: supabaseIngredient.name || "",
+      quantity: supabaseIngredient.quantity || "",
+      notes: supabaseIngredient.notes || undefined,
+    };
   }
 }

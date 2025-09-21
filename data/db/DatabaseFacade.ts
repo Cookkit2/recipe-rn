@@ -31,21 +31,28 @@ interface AvailableIngredientInfo {
  */
 export class DatabaseFacade {
   // Repository instances
-  public readonly recipes: RecipeRepository;
-  public readonly ingredients: BaseIngredientRepository;
-  public readonly stock: StockRepository;
+  public recipes: RecipeRepository;
+  public ingredients: BaseIngredientRepository;
+  public stock: StockRepository;
 
   constructor() {
-    // Initialize repositories on first access
+    // Initialize repositories synchronously first
     const repositories = initializeRepositories();
     this.recipes = repositories.recipeRepository!;
     this.ingredients = repositories.baseIngredientRepository!;
     this.stock = repositories.stockRepository!;
 
-    console.log("🔍 DatabaseFacade constructor complete");
-    console.log("  - recipes initialized:", !!this.recipes);
-    console.log("  - ingredients initialized:", !!this.ingredients);
-    console.log("  - stock initialized:", !!this.stock);
+    // Then initialize async features in the background
+    this.initializeAsync();
+  }
+
+  private async initializeAsync() {
+    try {
+      // Initialize recipe repository to sync from Supabase
+      await this.recipes.initialize();
+    } catch (error) {
+      // Silent fail for initialization to prevent app crashes
+    }
   }
 
   // Database management methods

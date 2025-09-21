@@ -17,6 +17,7 @@ const RecipeItemCard = ({ recipe }: { recipe: Recipe }) => {
 
   const debouncedPress = useDebounce(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    console.log("Navigating to recipe:", recipe.id);
     router.push(`/recipes/${recipe.id}`);
   });
 
@@ -50,10 +51,10 @@ const RecipeItemCard = ({ recipe }: { recipe: Recipe }) => {
               {(recipe.cookMinutes ?? 0) + (recipe.prepMinutes ?? 0)} min
             </P>
             <View className="flex-1" />
-            <P className="text-muted-foreground font-urbanist-medium">
+            {/* <P className="text-muted-foreground font-urbanist-medium">
               {recipe.difficultyStars}{" "}
             </P>
-            <StarIcon size={14} className="text-yellow-400" />
+            <StarIcon size={14} className="text-yellow-400" /> */}
           </View>
         </View>
       </Pressable>
