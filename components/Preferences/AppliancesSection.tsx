@@ -1,9 +1,9 @@
 import React, { useCallback, useState } from "react";
 import { View } from "react-native";
-import GridButtons from "../Shared/GridButtons";
-import { Card, CardContent } from "../ui/card";
-import { H4, P } from "../ui/typography";
-import type { GroupButton } from "../Shared/SegmentedButtons";
+import GridButtons from "~/components/Shared/GridButtons";
+import { Card, CardContent } from "~/components/ui/card";
+import { H4, P } from "~/components/ui/typography";
+import type { GroupButton } from "~/components/Shared/SegmentedButtons";
 import {
   CookingPotIcon,
   PlugIcon,

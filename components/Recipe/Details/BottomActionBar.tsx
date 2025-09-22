@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { View } from "react-native";
-import { Button } from "../../ui/button";
-import { H4, P } from "../../ui/typography";
+import { Button } from "~/components//ui/button";
+import { H4, P } from "~/components//ui/typography";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { Recipe } from "~/types/Recipe";
@@ -73,7 +73,7 @@ export default function BottomActionBar({
             className="rounded-full px-6"
             onPress={navigateToCookingSteps}
           >
-            <H4 className="font-urbanist-semibold text-background">Cook</H4>
+            <H4 className="font-urbanist-semibold text-primary-foreground">Cook</H4>
           </Button>
         </View>
       </View>

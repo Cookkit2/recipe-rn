@@ -1,6 +1,6 @@
 import React from "react";
 import { Alert, Pressable, View } from "react-native";
-import { P } from "../ui/typography";
+import { P } from "~/components/ui/typography";
 import { useIngredientDetailStore } from "~/store/IngredientDetailContext";
 import { titleCase } from "~/utils/text-formatter";
 import {

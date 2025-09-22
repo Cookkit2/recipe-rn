@@ -6,12 +6,15 @@ import {
   SoupIcon,
   XIcon,
 } from "lucide-nativewind";
-import { Button } from "../ui/button";
-import { P } from "../ui/typography";
+import { Button } from "~/components/ui/button";
+import { P } from "~/components/ui/typography";
 import { ScrollView } from "react-native";
 import { usePantryStore } from "~/store/PantryContext";
 import { useRecipeStore } from "~/store/RecipeContext";
 import { useLightColors } from "~/hooks/useColor";
+import { useRandomRecipeRecommendation } from "~/hooks/queries/useRecipeQueries";
+import { useRouter } from "expo-router";
+import { toast } from "sonner-native";
 
 const RECIPE_TAGS: {
   label: string;
@@ -19,30 +22,57 @@ const RECIPE_TAGS: {
   tag: string;
 }[] = [
   {
-    label: "Meals",
+    label: "Meal",
     icon: <SoupIcon size={18} strokeWidth={3} />,
-    tag: "meals",
+    tag: "meal",
   },
   {
-    label: "Desserts",
+    label: "Dessert",
     icon: <IceCreamConeIcon size={18} strokeWidth={3} />,
-    tag: "desserts",
+    tag: "dessert",
   },
   {
-    label: "Drinks",
+    label: "Drink",
     icon: <MartiniIcon size={18} strokeWidth={3} />,
-    tag: "drinks",
+    tag: "drink",
   },
 ];
 
 export default function RecipeCategoryButtonGroup() {
-  const { updateRecipeOpen: updateSelection, snapToExpanded } =
-    usePantryStore();
+  const { updateRecipeOpen: updateSelection } = usePantryStore();
   const { selectedRecipeTags } = useRecipeStore();
   const lightColors = useLightColors();
+  const router = useRouter();
+
+  // Hook for getting random recipe recommendations
+  const { getRandomRecipe, hasRecipes, isLoading } =
+    useRandomRecipeRecommendation({
+      categories:
+        selectedRecipeTags.length > 0 ? selectedRecipeTags : undefined,
+      maxRecommendations: 20,
+      respectDietaryPreferences: true,
+    });
 
   const handleChooseForMe = () => {
-    startTransition(() => snapToExpanded());
+    if (isLoading) {
+      toast.warning("Loading recipes, please wait...");
+      return;
+    }
+
+    if (!hasRecipes) {
+      toast.warning("No recipes available. Try adding more ingredients!");
+      return;
+    }
+
+    const randomRecipe = getRandomRecipe();
+    if (randomRecipe) {
+      // Close the recipe selection panel
+      updateSelection(false);
+      // Navigate to the random recipe
+      router.push(`/recipes/${randomRecipe.id}`);
+    } else {
+      toast.error("Something went wrong finding a recipe. Please try again.");
+    }
   };
 
   return (
@@ -66,6 +96,7 @@ export default function RecipeCategoryButtonGroup() {
           backgroundColor: lightColors.primary,
         }}
         onPress={handleChooseForMe}
+        disabled={isLoading || !hasRecipes}
       >
         <DicesIcon
           color={lightColors.primaryForeground}
@@ -78,7 +109,7 @@ export default function RecipeCategoryButtonGroup() {
             color: lightColors.primaryForeground,
           }}
         >
-          Choose for me!
+          {isLoading ? "Loading..." : "Choose for me!"}
         </P>
       </Button>
       {RECIPE_TAGS.map(({ label, icon, tag }) => (

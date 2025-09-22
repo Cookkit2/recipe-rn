@@ -34,7 +34,7 @@ export const recipeApi = {
   /**
    * Get a single recipe with all its details (steps and ingredients)
    */
-  getRecipeWithDetails: async (
+  getRecipeWithDetailsSupabase: async (
     recipeId: string
   ): Promise<SupabaseRecipeWithDetails | null> => {
     // Fetch recipe details
@@ -64,17 +64,21 @@ export const recipeApi = {
 
     if (ingredientsError) throw ingredientsError;
 
-    return {
+    const currentRecipe = {
       recipe,
       steps: steps || [],
       ingredients: ingredients || [],
     };
+
+    console.log("Fetched recipe with details:", currentRecipe);
+
+    return currentRecipe;
   },
 
   /**
    * Get multiple recipes with their details
    */
-  getRecipesWithDetails: async (
+  getRecipesWithDetailsSupabase: async (
     limit: number = 50
   ): Promise<SupabaseRecipeWithDetails[]> => {
     // First get the newest recipes
@@ -83,7 +87,7 @@ export const recipeApi = {
     // Then fetch details for each recipe
     const recipesWithDetails = await Promise.all(
       recipes.map(async (recipe) => {
-        const details = await recipeApi.getRecipeWithDetails(recipe.id);
+        const details = await recipeApi.getRecipeWithDetailsSupabase(recipe.id);
         return details!; // We know it exists since we just fetched it
       })
     );

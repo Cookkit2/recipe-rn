@@ -1,5 +1,5 @@
 import { storageConfigs } from "~/data/storage/storage-config";
-import { StorageFactory } from "../data/storage";
+import { StorageFactory } from "~/data/storage";
 import type { AuthSession } from "~/types/AuthTypes";
 
 /**

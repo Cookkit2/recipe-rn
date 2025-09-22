@@ -1,6 +1,6 @@
 import { Alert, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Button } from "../ui/button";
+import { Button } from "~/components/ui/button";
 import { ArrowLeftIcon, Trash2Icon } from "lucide-nativewind";
 import { useRouter } from "expo-router";
 import Animated, {
@@ -12,7 +12,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { SystemBars } from "react-native-edge-to-edge";
 import { CURVES } from "~/constants/curves";
-import { H4 } from "../ui/typography";
+import { H4 } from "~/components/ui/typography";
 import { useDeletePantryItem } from "~/hooks/queries/usePantryQueries";
 import * as Haptics from "expo-haptics";
 

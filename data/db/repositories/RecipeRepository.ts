@@ -153,6 +153,28 @@ export class RecipeRepository extends BaseRepository<Recipe> {
     }
   }
 
+  async clearAllRecipes(): Promise<void> {
+    await database.write(async () => {
+      const allRecipes = await this.collection.query().fetch();
+      await Promise.all(
+        allRecipes.map((recipe) => recipe.destroyPermanently())
+      );
+
+      // Also clear related steps and ingredients
+      const stepsCollection =
+        database.collections.get<RecipeStep>("recipe_steps");
+      const allSteps = await stepsCollection.query().fetch();
+      await Promise.all(allSteps.map((step) => step.destroyPermanently()));
+
+      const ingredientsCollection =
+        database.collections.get<RecipeIngredient>("recipe_ingredients");
+      const allIngredients = await ingredientsCollection.query().fetch();
+      await Promise.all(
+        allIngredients.map((ingredient) => ingredient.destroyPermanently())
+      );
+    });
+  }
+
   // Alternative method using direct collection queries
   private async getRecipeWithDetailsDirectQuery(id: string): Promise<{
     recipe: Recipe;
@@ -249,10 +271,12 @@ export class RecipeRepository extends BaseRepository<Recipe> {
   // Sync recipes from Supabase
   async syncFromSupabase(limit: number = 50): Promise<void> {
     try {
-      const recipesWithDetails = await recipeApi.getRecipesWithDetails(limit);
+      const recipesWithDetails =
+        await recipeApi.getRecipesWithDetailsSupabase(limit);
       console.log(
         `Syncing ${recipesWithDetails.length} recipes from Supabase...`
       );
+      console.log("First recipe preview:", recipesWithDetails[0]?.ingredients);
 
       // Check if we have recipes to sync
       if (recipesWithDetails.length === 0) {
@@ -262,30 +286,52 @@ export class RecipeRepository extends BaseRepository<Recipe> {
 
       console.log(`First recipe: ${recipesWithDetails[0]?.recipe.title}`);
 
-      // Get all existing recipe IDs to check for duplicates
+      // Get all existing recipe IDs to check for updates vs new recipes
       const existingRecipeIds = new Set<string>();
       const existingRecipes = await this.collection.query().fetch();
       existingRecipes.forEach((recipe) => existingRecipeIds.add(recipe.id));
 
-      // Filter out recipes that already exist
-      const newRecipes = recipesWithDetails.filter(
-        (supabaseRecipe) => !existingRecipeIds.has(supabaseRecipe.recipe.id)
-      );
+      // Separate new recipes from existing ones
+      const newRecipes: SupabaseRecipeWithDetails[] = [];
+      const existingRecipesToUpdate: SupabaseRecipeWithDetails[] = [];
+
+      recipesWithDetails.forEach((supabaseRecipe) => {
+        if (existingRecipeIds.has(supabaseRecipe.recipe.id)) {
+          existingRecipesToUpdate.push(supabaseRecipe);
+        } else {
+          newRecipes.push(supabaseRecipe);
+        }
+      });
 
       console.log(
-        `Found ${newRecipes.length} new recipes to sync (${recipesWithDetails.length - newRecipes.length} already exist)`
+        `Found ${newRecipes.length} new recipes and ${existingRecipesToUpdate.length} existing recipes to update`
       );
 
-      // Process only new recipes
+      // Process new recipes
       for (const supabaseRecipe of newRecipes) {
         try {
           await database.write(async () => {
-            const localRecipe = await this.syncSingleRecipe(supabaseRecipe);
-            // console.log(`Synced recipe: ${localRecipe.title}`);
+            await this.syncSingleRecipe(supabaseRecipe);
+            // console.log(`Created new recipe: ${localRecipe.title}`);
           });
         } catch (error) {
           console.error(
-            `Failed to sync recipe ${supabaseRecipe.recipe.title}:`,
+            `Failed to create recipe ${supabaseRecipe.recipe.title}:`,
+            error
+          );
+        }
+      }
+
+      // Process existing recipes (update them)
+      for (const supabaseRecipe of existingRecipesToUpdate) {
+        try {
+          await database.write(async () => {
+            await this.updateExistingRecipe(supabaseRecipe);
+            // console.log(`Updated existing recipe: ${supabaseRecipe.recipe.title}`);
+          });
+        } catch (error) {
+          console.error(
+            `Failed to update recipe ${supabaseRecipe.recipe.title}:`,
             error
           );
         }
@@ -314,6 +360,90 @@ export class RecipeRepository extends BaseRepository<Recipe> {
         this.transformSupabaseIngredient(ingredient)
       ),
     });
+  }
+
+  // Helper method to update an existing recipe with Supabase data (must be called within a database.write transaction)
+  private async updateExistingRecipe(
+    supabaseRecipe: SupabaseRecipeWithDetails
+  ): Promise<void> {
+    const recipeId = supabaseRecipe.recipe.id;
+
+    // Update the main recipe record
+    const existingRecipe = await this.collection.find(recipeId);
+    await existingRecipe.update((recipe) => {
+      const transformedRecipe = this.transformSupabaseRecipe(
+        supabaseRecipe.recipe
+      );
+      recipe.title = transformedRecipe.title;
+      recipe.description = transformedRecipe.description;
+      if (transformedRecipe.imageUrl)
+        recipe.imageUrl = transformedRecipe.imageUrl;
+      recipe.prepMinutes = transformedRecipe.prepMinutes;
+      recipe.cookMinutes = transformedRecipe.cookMinutes;
+      recipe.difficultyStars = transformedRecipe.difficultyStars;
+      recipe.servings = transformedRecipe.servings;
+      if (transformedRecipe.sourceUrl)
+        recipe.sourceUrl = transformedRecipe.sourceUrl;
+      if (transformedRecipe.calories)
+        recipe.calories = transformedRecipe.calories;
+      if (transformedRecipe.tags) recipe.tags = transformedRecipe.tags;
+    });
+
+    // Update steps - delete existing and create new ones
+    const stepsCollection =
+      database.collections.get<RecipeStep>("recipe_steps");
+    const existingSteps = await stepsCollection
+      .query(Q.where("recipe_id", recipeId))
+      .fetch();
+
+    // Delete existing steps
+    await Promise.all(existingSteps.map((step) => step.destroyPermanently()));
+
+    // Create new steps
+    if (supabaseRecipe.steps && supabaseRecipe.steps.length > 0) {
+      await Promise.all(
+        supabaseRecipe.steps.map((stepData) =>
+          stepsCollection.create((step) => {
+            const transformedStep = this.transformSupabaseStep(stepData);
+            step.step = transformedStep.step;
+            step.title = transformedStep.title;
+            step.description = transformedStep.description;
+            step.recipeId = recipeId;
+          })
+        )
+      );
+    }
+
+    // Update ingredients - delete existing and create new ones
+    const ingredientsCollection =
+      database.collections.get<RecipeIngredient>("recipe_ingredients");
+    const existingIngredients = await ingredientsCollection
+      .query(Q.where("recipe_id", recipeId))
+      .fetch();
+
+    // Delete existing ingredients
+    await Promise.all(
+      existingIngredients.map((ingredient) => ingredient.destroyPermanently())
+    );
+
+    // Create new ingredients
+    if (supabaseRecipe.ingredients && supabaseRecipe.ingredients.length > 0) {
+      await Promise.all(
+        supabaseRecipe.ingredients.map((ingredientData) =>
+          ingredientsCollection.create((ingredient) => {
+            const transformedIngredient =
+              this.transformSupabaseIngredient(ingredientData);
+            ingredient.recipeId = recipeId;
+            ingredient.baseIngredientId =
+              transformedIngredient.baseIngredientId;
+            ingredient.name = transformedIngredient.name;
+            ingredient.quantity = transformedIngredient.quantity;
+            ingredient.unit = transformedIngredient.unit;
+            ingredient.notes = transformedIngredient.notes;
+          })
+        )
+      );
+    }
   }
 
   // Create recipe with steps and ingredients without database.write wrapper (for use within transactions)
@@ -365,6 +495,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
             ingredient.baseIngredientId = ingredientData.baseIngredientId;
             ingredient.name = ingredientData.name;
             ingredient.quantity = ingredientData.quantity;
+            ingredient.unit = ingredientData.unit;
             ingredient.notes = ingredientData.notes;
           })
         )
@@ -413,7 +544,8 @@ export class RecipeRepository extends BaseRepository<Recipe> {
       recipeId: supabaseIngredient.recipe_id,
       baseIngredientId: supabaseIngredient.base_ingredient_id,
       name: supabaseIngredient.name || "",
-      quantity: supabaseIngredient.quantity || "",
+      quantity: supabaseIngredient.quantity || 1,
+      unit: supabaseIngredient.unit || "unit",
       notes: supabaseIngredient.notes || undefined,
     };
   }

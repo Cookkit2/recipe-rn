@@ -5,7 +5,7 @@ import type {
   SocialAuthConfig,
   LinkAccountCredentials,
   AuthSession,
-} from "../types/AuthTypes";
+} from "~/types/AuthTypes";
 
 /**
  * Abstract authentication strategy interface

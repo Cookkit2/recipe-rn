@@ -12,9 +12,9 @@ import { Image } from "expo-image";
 import { window } from "~/constants/sizes";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { Recipe } from "~/types/Recipe";
-import { H2, H4, P } from "../ui/typography";
+import { H2, H4, P } from "~/components/ui/typography";
 import { Link } from "expo-router";
-import { Button } from "../ui/button";
+import { Button } from "~/components/ui/button";
 
 export default function RecipeStack({ recipes }: { recipes: Recipe[] }) {
   const { top, bottom } = useSafeAreaInsets();

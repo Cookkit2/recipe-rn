@@ -1,6 +1,6 @@
 import React from "react";
-import { Button } from "../ui/button";
-import { P } from "../ui/typography";
+import { Button } from "~/components/ui/button";
+import { P } from "~/components/ui/typography";
 import { View } from "react-native";
 import {
   ArrowUpRightIcon,

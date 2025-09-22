@@ -1,4 +1,4 @@
-import { Button } from "../ui/button";
+import { Button } from "~/components/ui/button";
 import { EllipsisIcon, FileClockIcon, BugIcon } from "lucide-nativewind";
 import { Link, router, useRouter } from "expo-router";
 import {

@@ -1,5 +1,5 @@
 // import { View } from "react-native";
-// import { useDeviceMotion } from "../hooks/useDeviceMotion";
+// import { useDeviceMotion } from "~/hooks/useDeviceMotion";
 // import { H4, P } from "./ui/typography";
 
 // export default function Gyro() {

@@ -121,11 +121,7 @@ function AnimatedStack() {
 
           {/* ======== RECIPE ======== */}
           <Stack.Screen
-            name="recipes/[recipeId]/index"
-            options={{ presentation: "card", headerShown: false }}
-          />
-          <Stack.Screen
-            name="recipes/[recipeId]/steps"
+            name="recipes/[recipeId]"
             options={{ presentation: "card", headerShown: false }}
           />
 

@@ -13,16 +13,18 @@ import {
 
 interface MissingIngredientInfo {
   name: string;
-  quantity: string;
+  quantity: number;
+  unit: string;
   notes?: string;
   baseIngredientId: string;
 }
 
 interface AvailableIngredientInfo {
   name: string;
-  quantity: string;
-  stockQuantity: number;
+  quantity: number;
   unit: string;
+  stockQuantity: number;
+  stockUnit: string;
 }
 
 /**
@@ -241,8 +243,30 @@ export class DatabaseFacade {
           .map((stock) => stock.baseIngredientId)
       );
 
+      // Also create a name-based lookup for ingredient matching
+      const availableIngredientNames = new Set(
+        allStock
+          .filter((stock) => stock.quantity > 0)
+          .map((stock) => stock.name.toLowerCase().trim())
+      );
+
       console.log(
         `📦 Found ${availableIngredientIds.size} available ingredient types in stock`
+      );
+
+      // Debug: Log all stock items
+      console.log(
+        "📦 All stock items:",
+        allStock.map(
+          (s) =>
+            `${s.name}: ${s.quantity} (ingredientId: ${s.baseIngredientId})`
+        )
+      );
+
+      // Debug: Log available ingredient IDs
+      console.log(
+        "🔍 Available ingredient IDs:",
+        Array.from(availableIngredientIds)
       );
 
       // Get all recipes and their details in batches
@@ -279,11 +303,48 @@ export class DatabaseFacade {
           for (const ingredient of recipeDetails.ingredients) {
             console.log("recipe name", recipe?.title);
             console.log(
-              `Need ingredient in stock: ${ingredient.name}, count needed: ${ingredient.quantity}`
+              `Need ingredient in stock: ${ingredient.name}, count needed: ${ingredient.quantity}, baseIngredientId: ${ingredient.baseIngredientId}`
             );
-            if (availableIngredientIds.has(ingredient.baseIngredientId)) {
-              console.log(`Found ingredient in stock: ${ingredient.name}`);
+
+            // Check by baseIngredientId first (preferred method)
+            const foundById = availableIngredientIds.has(
+              ingredient.baseIngredientId
+            );
+
+            // Also check by name (fallback method) - normalize names for matching
+            const normalizeIngredientName = (name: string) => {
+              return name
+                .toLowerCase()
+                .trim()
+                .replace(/s$/, "") // Remove plural 's'
+                .replace(/es$/, "") // Remove plural 'es'
+                .replace(/ies$/, "y"); // Replace 'ies' with 'y'
+            };
+
+            const normalizedRecipeName = normalizeIngredientName(
+              ingredient.name
+            );
+            const foundByName = Array.from(availableIngredientNames).some(
+              (stockName) => {
+                const normalizedStockName = normalizeIngredientName(stockName);
+                return (
+                  normalizedStockName === normalizedRecipeName ||
+                  stockName === ingredient.name.toLowerCase().trim() ||
+                  normalizedStockName.includes(normalizedRecipeName) ||
+                  normalizedRecipeName.includes(normalizedStockName)
+                );
+              }
+            );
+
+            if (foundById || foundByName) {
+              // console.log(
+              //   `Found ingredient in stock: ${ingredient.name} (matched by ${foundById ? "ID" : "name"})`
+              // );
               availableCount++;
+            } else {
+              // console.log(
+              //   `❌ NOT FOUND - ${ingredient.name} (baseIngredientId: ${ingredient.baseIngredientId}) not in available stock`
+              // );
             }
           }
 
@@ -322,15 +383,17 @@ export class DatabaseFacade {
   async getShoppingListForRecipe(recipeId: string): Promise<{
     missingIngredients: Array<{
       name: string;
-      quantity: string;
+      quantity: number;
+      unit: string;
       notes?: string;
       baseIngredientId: string;
     }>;
     availableIngredients: Array<{
       name: string;
-      quantity: string;
-      stockQuantity: number;
+      quantity: number;
       unit: string;
+      stockQuantity: number;
+      stockUnit: string;
     }>;
   }> {
     const recipeDetails = await this.recipes.getRecipeWithDetails(recipeId);
@@ -354,6 +417,7 @@ export class DatabaseFacade {
         missingIngredients.push({
           name: ingredient.name,
           quantity: ingredient.quantity,
+          unit: ingredient.unit,
           notes: ingredient.notes,
           baseIngredientId: ingredient.baseIngredientId,
         });
@@ -362,8 +426,9 @@ export class DatabaseFacade {
         availableIngredients.push({
           name: ingredient.name,
           quantity: ingredient.quantity,
+          unit: ingredient.unit,
           stockQuantity: totalStock,
-          unit: firstStockItem?.unit || "",
+          stockUnit: firstStockItem?.unit || "",
         });
       }
     }
@@ -377,7 +442,10 @@ export class DatabaseFacade {
   // Batch operations
   async importRecipes(
     recipesData: Recipe[]
-  ): Promise<{ success: number; errors: any[] }> {
+  ): Promise<{
+    success: number;
+    errors: Array<{ recipe: Recipe; error: string }>;
+  }> {
     let success = 0;
     const errors = [];
 
@@ -397,9 +465,9 @@ export class DatabaseFacade {
   }
 
   async exportAllData(): Promise<{
-    recipes: any[];
-    ingredients: any[];
-    stock: any[];
+    recipes: unknown[];
+    ingredients: unknown[];
+    stock: unknown[];
     categories: string[];
   }> {
     const [recipes, ingredients, stockItems, categories] = await Promise.all([
@@ -425,41 +493,23 @@ export class DatabaseFacade {
   // Health check method for debugging
   async isHealthy(): Promise<boolean> {
     try {
-      console.log("🔍 DatabaseFacade health check");
-      console.log("  - recipes:", !!this.recipes);
-      console.log("  - ingredients:", !!this.ingredients);
-      console.log("  - stock:", !!this.stock);
-
-      // Test basic database connectivity
-      const collections = database.collections;
-      console.log("  - database collections:", Object.keys(collections.map));
+      // Test basic database connectivity and repositories
+      if (!this.recipes || !this.ingredients || !this.stock) {
+        return false;
+      }
 
       // Test if we can query the database
       const recipeCount = await this.recipes.count();
-      console.log("  - recipe count:", recipeCount);
 
-      return true;
-    } catch (error) {
-      console.error("❌ Database health check failed:", error);
+      return recipeCount >= 0; // Should return a number
+    } catch {
       return false;
     }
   }
 }
 
-// Export a singleton instance with fallback
-console.log("🔍 Creating DatabaseFacade singleton...");
-
-export let databaseFacade: DatabaseFacade;
-
-try {
-  console.log("🔍 Initializing DatabaseFacade...");
-  databaseFacade = new DatabaseFacade();
-  console.log("✅ DatabaseFacade created successfully");
-} catch (error) {
-  console.error("❌ Failed to create DatabaseFacade:", error);
-  console.error("Error details:", error);
-  throw error;
-}
+// Export a singleton instance
+export const databaseFacade = new DatabaseFacade();
 
 // Export for type usage
 export default DatabaseFacade;

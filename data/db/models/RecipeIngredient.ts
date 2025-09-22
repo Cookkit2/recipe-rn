@@ -8,7 +8,8 @@ export interface RecipeIngredientData {
   recipeId: string;
   baseIngredientId: string;
   name: string;
-  quantity: string;
+  quantity: number;
+  unit: string;
   notes?: string;
 }
 
@@ -22,7 +23,8 @@ export default class RecipeIngredient extends Model {
   @field("recipe_id") recipeId!: string;
   @field("base_ingredient_id") baseIngredientId!: string;
   @field("name") name!: string; // Display name for this recipe context
-  @field("quantity") quantity!: string;
+  @field("quantity") quantity!: number;
+  @field("unit") unit!: string;
   @field("notes") notes?: string;
 
   @relation("recipes", "recipe_id") recipe!: Recipe;
@@ -42,6 +44,7 @@ export default class RecipeIngredient extends Model {
         ingredient.baseIngredientId = data.baseIngredientId;
       if (data.name !== undefined) ingredient.name = data.name;
       if (data.quantity !== undefined) ingredient.quantity = data.quantity;
+      if (data.unit !== undefined) ingredient.unit = data.unit;
       if (data.notes !== undefined) ingredient.notes = data.notes;
     });
   }

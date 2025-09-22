@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 import { Linking, Platform, Pressable, View } from "react-native";
-import { P } from "../ui/typography";
+import { P } from "~/components/ui/typography";
 import { Link } from "expo-router";
 import Purchases from "react-native-purchases";
 import { toast } from "sonner-native";

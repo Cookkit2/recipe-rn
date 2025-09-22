@@ -1,6 +1,6 @@
-import { StorageFactory } from "../data/storage";
-import { storageConfigs } from "../data/storage/storage-config";
-import type { AuthSession } from "../types/AuthTypes";
+import { StorageFactory } from "~/data/storage";
+import { storageConfigs } from "~/data/storage/storage-config";
+import type { AuthSession } from "~/types/AuthTypes";
 import {
   AUTH_ACCESS_TOKEN_KEY,
   AUTH_REFRESH_TOKEN_KEY,

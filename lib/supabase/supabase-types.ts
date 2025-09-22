@@ -132,7 +132,8 @@ export type Database = {
           id: string;
           name: string | null;
           notes: string | null;
-          quantity: string | null;
+          quantity: number | null;
+          unit: string | null;
           recipe_id: string;
         };
         Insert: {
@@ -140,7 +141,8 @@ export type Database = {
           id?: string;
           name?: string | null;
           notes?: string | null;
-          quantity?: string | null;
+          quantity?: number | null;
+          unit?: string | null;
           recipe_id: string;
         };
         Update: {
@@ -148,7 +150,8 @@ export type Database = {
           id?: string;
           name?: string | null;
           notes?: string | null;
-          quantity?: string | null;
+          quantity?: number | null;
+          unit?: string | null;
           recipe_id?: string;
         };
         Relationships: [

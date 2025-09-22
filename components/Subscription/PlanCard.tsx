@@ -3,7 +3,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { Pressable, View } from "react-native";
-import { P, H3, H4 } from "../ui/typography";
+import { P, H3, H4 } from "~/components/ui/typography";
 import type { SubscriptionPlan } from "./PlanList";
 import { cn } from "~/lib/tw-merge";
 import useOnPressScale from "~/hooks/animation/useOnPressScale";

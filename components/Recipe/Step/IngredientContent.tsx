@@ -7,16 +7,17 @@ import {
   Pressable,
 } from "react-native";
 import type { RecipeIngredient } from "~/types/Recipe";
-import { H2, P } from "../../ui/typography";
+import { H2, P } from "~/components/ui/typography";
 import OutlinedImage from "~/components/ui/outlined-image";
 import { dummyPantryItems } from "~/data/dummy/dummy-data";
 import { LinearGradient } from "expo-linear-gradient";
 import useColors from "~/hooks/useColor";
-import { sentenceCase, titleCase } from "~/utils/text-formatter";
+import { titleCase } from "~/utils/text-formatter";
 import ShapeContainer from "~/components/Shared/Shapes/ShapeContainer";
 import { useRouter } from "expo-router";
 import useOnPressScale from "~/hooks/animation/useOnPressScale";
 import Animated from "react-native-reanimated";
+import { useRecipeDetailStore } from "~/store/RecipeDetailContext";
 
 export const IngredientsContent: React.FC<{
   ingredients: RecipeIngredient[];
@@ -68,6 +69,7 @@ const IngredientItem: React.FC<{
   ingredient: RecipeIngredient;
   index: number;
 }> = ({ ingredient, index }) => {
+  const { servings } = useRecipeDetailStore();
   const colors = useColors();
   const router = useRouter();
   const { animatedStyle, handlePressIn, handlePressOut } = useOnPressScale();
@@ -112,7 +114,7 @@ const IngredientItem: React.FC<{
       </P>
 
       <P className="text-foreground text-xs tracking-wider font-urbanist-bold text-center mt-0.5">
-        {sentenceCase(ingredient.quantity)}
+        {ingredient.quantity * servings} {ingredient.unit}
       </P>
     </AnimatedPressable>
   );

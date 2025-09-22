@@ -1,7 +1,8 @@
 export interface RecipeIngredient {
   name: string;
   relatedIngredientId: string;
-  quantity: string;
+  quantity: number;
+  unit: string;
   notes?: string;
 }
 

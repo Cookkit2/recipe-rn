@@ -5,9 +5,9 @@ import { storage } from "~/data";
 import { PREF_COLOR_SCHEME_KEY } from "~/constants/storage-keys";
 import { useColorScheme } from "~/hooks/useColorScheme";
 import { setAndroidNavigationBar } from "~/lib/android-navigation-bar";
-import { H4 } from "../ui/typography";
-import type { GroupButton } from "../Shared/SegmentedButtons";
-import SegmentedButtons from "../Shared/SegmentedButtons";
+import { H4 } from "~/components/ui/typography";
+import type { GroupButton } from "~/components/Shared/SegmentedButtons";
+import SegmentedButtons from "~/components/Shared/SegmentedButtons";
 import { MonitorIcon, MoonIcon, SunIcon } from "lucide-nativewind";
 
 type Theme = "light" | "dark" | "system";

@@ -7,8 +7,8 @@ import Animated, {
 } from "react-native-reanimated";
 import useHeaderAnimatedStyle from "~/hooks/animation/useHeaderAnimatedStyle";
 import useColors from "~/hooks/useColor";
-import ShapeContainer from "../Shared/Shapes/ShapeContainer";
-import OutlinedImage from "../ui/outlined-image";
+import ShapeContainer from "~/components/Shared/Shapes/ShapeContainer";
+import OutlinedImage from "~/components/ui/outlined-image";
 import { useIngredientDetailStore } from "~/store/IngredientDetailContext";
 
 const HeroImage = ({ scrollOffset }: { scrollOffset: SharedValue<number> }) => {

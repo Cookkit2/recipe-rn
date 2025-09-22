@@ -15,59 +15,80 @@ export const dummyRecipesData: Recipe[] = [
     ingredients: [
       {
         name: "boneless, skinless chicken breasts",
-        quantity: "1 lb",
+        quantity: 1,
+        unit: "lb",
         notes: "cut into 1-inch pieces",
         relatedIngredientId: "2",
       },
-      { name: "soy sauce", quantity: "1/4 cup", relatedIngredientId: "9" },
-      { name: "honey", quantity: "2 tbsp", relatedIngredientId: "10" },
+      {
+        name: "soy sauce",
+        quantity: 0.25,
+        unit: "cup",
+        relatedIngredientId: "9",
+      },
+      {
+        name: "honey",
+        quantity: 2,
+        unit: "tbsp",
+        relatedIngredientId: "10",
+      },
       {
         name: "sesame oil",
-        quantity: "1 tbsp",
+        quantity: 1,
+        unit: "tbsp",
         relatedIngredientId: "11",
       },
       {
         name: "cornstarch",
-        quantity: "1 tbsp",
+        quantity: 1,
+        unit: "tbsp",
         relatedIngredientId: "12",
       },
       {
         name: "olive oil",
-        quantity: "1 tbsp",
+        quantity: 1,
+        unit: "tbsp",
         relatedIngredientId: "13",
       },
       {
         name: "broccoli florets",
-        quantity: "2 cups",
+        quantity: 2,
+        unit: "cups",
         relatedIngredientId: "14",
       },
       {
         name: "bell peppers",
-        quantity: "1 cup",
+        quantity: 1,
+        unit: "cup",
         notes: "sliced (any color)",
         relatedIngredientId: "15",
       },
       {
         name: "carrots",
-        quantity: "1 cup",
+        quantity: 1,
+        unit: "cup",
         notes: "julienned or thinly sliced",
         relatedIngredientId: "16",
       },
       {
         name: "garlic",
-        quantity: "2 cloves",
+        quantity: 2,
+        unit: "cloves",
         notes: "minced",
         relatedIngredientId: "17",
       },
       {
         name: "ginger",
-        quantity: "1 teaspoon",
+        quantity: 1,
+        unit: "teaspoon",
         notes: "grated",
         relatedIngredientId: "18",
       },
       {
         name: "cooked rice",
-        quantity: "for serving",
+        quantity: 1,
+        unit: "serving",
+        notes: "for serving",
         relatedIngredientId: "19",
       },
     ],
@@ -133,34 +154,42 @@ export const dummyRecipesData: Recipe[] = [
     ingredients: [
       {
         name: "ripe tomatoes",
-        quantity: "2 large",
+        quantity: 2,
+        unit: "large",
         notes: "sliced 1/4-inch thick",
         relatedIngredientId: "1",
       },
       {
         name: "fresh mozzarella cheese",
-        quantity: "8 oz",
+        quantity: 8,
+        unit: "oz",
         notes: "sliced 1/4-inch thick",
         relatedIngredientId: "2",
       },
       {
         name: "fresh basil leaves",
-        quantity: "1/4 cup",
+        quantity: 0.25,
+        unit: "cup",
         relatedIngredientId: "3",
       },
       {
         name: "extra-virgin olive oil",
-        quantity: "2 tbsp",
+        quantity: 2,
+        unit: "tbsp",
         relatedIngredientId: "4",
       },
       {
         name: "balsamic glaze",
-        quantity: "1 tbsp (optional)",
+        quantity: 1,
+        unit: "tbsp",
+        notes: "optional",
         relatedIngredientId: "5",
       },
       {
         name: "salt and freshly ground black pepper",
-        quantity: "to taste",
+        quantity: 1,
+        unit: "pinch",
+        notes: "to taste",
         relatedIngredientId: "6",
       },
     ],
@@ -199,114 +228,115 @@ export const dummyRecipesData: Recipe[] = [
     tags: ["salad", "italian", "vegetarian", "gluten-free", "light meal"],
     calories: 280,
   },
-  {
-    id: "lemon-herb-roast-chicken",
-    title: "Lemon Herb Roast Chicken",
-    description:
-      "A succulent and flavorful roast chicken seasoned with lemon and herbs, perfect for a family dinner.",
-    imageUrl:
-      "https://images.unsplash.com/photo-1597577652129-7ffad9d37ad4?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    prepMinutes: 20,
-    cookMinutes: 90,
-    difficultyStars: 3,
-    servings: 4,
-    ingredients: [
-      {
-        name: "whole chicken",
-        quantity: "1 (3-4 lbs)",
-        relatedIngredientId: "2",
-      },
-      {
-        name: "lemon",
-        quantity: "1",
-        notes: "halved",
-        relatedIngredientId: "3",
-      },
-      {
-        name: "garlic",
-        quantity: "4 cloves",
-        notes: "smashed",
-        relatedIngredientId: "4",
-      },
-      {
-        name: "fresh rosemary sprigs",
-        quantity: "3-4",
-        relatedIngredientId: "5",
-      },
-      { name: "fresh thyme sprigs", quantity: "3-4", relatedIngredientId: "6" },
-      {
-        name: "olive oil",
-        quantity: "2 tbsp",
-        relatedIngredientId: "7",
-      },
-      { name: "salt", quantity: "1 teaspoon", relatedIngredientId: "8" },
-      {
-        name: "black pepper",
-        quantity: "1/2 teaspoon",
-        relatedIngredientId: "9",
-      },
-      {
-        name: "onion",
-        quantity: "1",
-        notes: "quartered (optional, for roasting pan)",
-        relatedIngredientId: "10",
-      },
-      {
-        name: "carrots",
-        quantity: "2",
-        notes: "roughly chopped (optional, for roasting pan)",
-        relatedIngredientId: "11",
-      },
-    ],
-    instructions: [
-      {
-        step: 1,
-        title: "Preheat Oven",
-        description:
-          "Preheat oven to **425°F (220°C)**. Remove giblets from chicken cavity and pat the chicken dry with paper towels.",
-        relatedIngredientIds: ["1", "2"],
-      },
-      {
-        step: 2,
-        title: "Season the Chicken",
-        description:
-          "Season the cavity of the chicken generously with **salt** and **pepper**. Stuff the cavity with **lemon halves**, **smashed garlic cloves**, **rosemary sprigs**, and **thyme sprigs**.",
-        relatedIngredientIds: ["3", "4", "5", "6"],
-      },
-      {
-        step: 3,
-        title: "Rub with Oil",
-        description:
-          "Rub the outside of the chicken with **olive oil** and season generously with **salt** and **pepper**.",
-        relatedIngredientIds: ["7", "8"],
-      },
-      {
-        step: 4,
-        title: "Roast the Chicken",
-        description:
-          "Place **onion** and **carrots** in the bottom of a roasting pan if desired. Place the chicken on top of the vegetables or directly in the pan.",
-        relatedIngredientIds: ["9", "10"],
-      },
-      {
-        step: 5,
-        title: "Roast the Chicken",
-        description:
-          "Roast for 15 minutes at 425°F (220°C). Then, reduce the oven temperature to 375°F (190°C) and continue roasting for another 60-75 minutes, or until the internal temperature of the thickest part of the thigh reaches 165°F (74°C) and juices run clear.",
-        relatedIngredientIds: [],
-      },
-      {
-        step: 6,
-        title: "Rest the Chicken",
-        description:
-          "Let the chicken rest for 10-15 minutes before carving. This allows the juices to redistribute, resulting in a more tender chicken.",
-        relatedIngredientIds: [],
-      },
-    ],
-    sourceUrl:
-      "https://www.inspiredtaste.net/23801/easy-whole-roast-chicken-recipe/",
-    tags: ["main course", "poultry", "roast", "comfort food", "gluten-free"],
-    calories: 450,
-  },
+  // {
+  //   id: "lemon-herb-roast-chicken",
+  //   title: "Lemon Herb Roast Chicken",
+  //   description:
+  //     "A succulent and flavorful roast chicken seasoned with lemon and herbs, perfect for a family dinner.",
+  //   imageUrl:
+  //     "https://images.unsplash.com/photo-1597577652129-7ffad9d37ad4?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+  //   prepMinutes: 20,
+  //   cookMinutes: 90,
+  //   difficultyStars: 3,
+  //   servings: 4,
+  //   ingredients: [
+  //     {
+  //       name: "whole chicken",
+  //       quantity: "1 (3-4 lbs)",
+
+  //       relatedIngredientId: "2",
+  //     },
+  //     {
+  //       name: "lemon",
+  //       quantity: "1",
+  //       notes: "halved",
+  //       relatedIngredientId: "3",
+  //     },
+  //     {
+  //       name: "garlic",
+  //       quantity: "4 cloves",
+  //       notes: "smashed",
+  //       relatedIngredientId: "4",
+  //     },
+  //     {
+  //       name: "fresh rosemary sprigs",
+  //       quantity: "3-4",
+  //       relatedIngredientId: "5",
+  //     },
+  //     { name: "fresh thyme sprigs", quantity: "3-4", relatedIngredientId: "6" },
+  //     {
+  //       name: "olive oil",
+  //       quantity: "2 tbsp",
+  //       relatedIngredientId: "7",
+  //     },
+  //     { name: "salt", quantity: "1 teaspoon", relatedIngredientId: "8" },
+  //     {
+  //       name: "black pepper",
+  //       quantity: "1/2 teaspoon",
+  //       relatedIngredientId: "9",
+  //     },
+  //     {
+  //       name: "onion",
+  //       quantity: "1",
+  //       notes: "quartered (optional, for roasting pan)",
+  //       relatedIngredientId: "10",
+  //     },
+  //     {
+  //       name: "carrots",
+  //       quantity: "2",
+  //       notes: "roughly chopped (optional, for roasting pan)",
+  //       relatedIngredientId: "11",
+  //     },
+  //   ],
+  //   instructions: [
+  //     {
+  //       step: 1,
+  //       title: "Preheat Oven",
+  //       description:
+  //         "Preheat oven to **425°F (220°C)**. Remove giblets from chicken cavity and pat the chicken dry with paper towels.",
+  //       relatedIngredientIds: ["1", "2"],
+  //     },
+  //     {
+  //       step: 2,
+  //       title: "Season the Chicken",
+  //       description:
+  //         "Season the cavity of the chicken generously with **salt** and **pepper**. Stuff the cavity with **lemon halves**, **smashed garlic cloves**, **rosemary sprigs**, and **thyme sprigs**.",
+  //       relatedIngredientIds: ["3", "4", "5", "6"],
+  //     },
+  //     {
+  //       step: 3,
+  //       title: "Rub with Oil",
+  //       description:
+  //         "Rub the outside of the chicken with **olive oil** and season generously with **salt** and **pepper**.",
+  //       relatedIngredientIds: ["7", "8"],
+  //     },
+  //     {
+  //       step: 4,
+  //       title: "Roast the Chicken",
+  //       description:
+  //         "Place **onion** and **carrots** in the bottom of a roasting pan if desired. Place the chicken on top of the vegetables or directly in the pan.",
+  //       relatedIngredientIds: ["9", "10"],
+  //     },
+  //     {
+  //       step: 5,
+  //       title: "Roast the Chicken",
+  //       description:
+  //         "Roast for 15 minutes at 425°F (220°C). Then, reduce the oven temperature to 375°F (190°C) and continue roasting for another 60-75 minutes, or until the internal temperature of the thickest part of the thigh reaches 165°F (74°C) and juices run clear.",
+  //       relatedIngredientIds: [],
+  //     },
+  //     {
+  //       step: 6,
+  //       title: "Rest the Chicken",
+  //       description:
+  //         "Let the chicken rest for 10-15 minutes before carving. This allows the juices to redistribute, resulting in a more tender chicken.",
+  //       relatedIngredientIds: [],
+  //     },
+  //   ],
+  //   sourceUrl:
+  //     "https://www.inspiredtaste.net/23801/easy-whole-roast-chicken-recipe/",
+  //   tags: ["main course", "poultry", "roast", "comfort food", "gluten-free"],
+  //   calories: 450,
+  // },
 ] as const;
 
 // Helper function to get a recipe by ID
