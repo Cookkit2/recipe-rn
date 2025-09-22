@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   FlatList,
   View,
@@ -9,15 +9,16 @@ import {
 import type { RecipeIngredient } from "~/types/Recipe";
 import { H2, P } from "~/components/ui/typography";
 import OutlinedImage from "~/components/ui/outlined-image";
-import { dummyPantryItems } from "~/data/dummy/dummy-data";
 import { LinearGradient } from "expo-linear-gradient";
 import useColors from "~/hooks/useColor";
 import { titleCase } from "~/utils/text-formatter";
 import ShapeContainer from "~/components/Shared/Shapes/ShapeContainer";
+import { isIngredientMatch } from "~/utils/ingredient-matching";
 import { useRouter } from "expo-router";
 import useOnPressScale from "~/hooks/animation/useOnPressScale";
 import Animated from "react-native-reanimated";
 import { useRecipeDetailStore } from "~/store/RecipeDetailContext";
+import { usePantryItemsByType } from "~/hooks/queries/usePantryQueries";
 
 export const IngredientsContent: React.FC<{
   ingredients: RecipeIngredient[];
@@ -73,10 +74,16 @@ const IngredientItem: React.FC<{
   const colors = useColors();
   const router = useRouter();
   const { animatedStyle, handlePressIn, handlePressOut } = useOnPressScale();
+  const { data: filteredPantryItems = [] } = usePantryItemsByType("all");
 
-  const currentIngredient = dummyPantryItems.find(
-    (item) => item.id === ingredient.relatedIngredientId
-  );
+  const currentIngredient = useMemo(() => {
+    // Find pantry item that matches this ingredient by name (same logic as index page)
+    return filteredPantryItems.find((pantryItem) =>
+      isIngredientMatch(pantryItem.name, ingredient.name)
+    );
+  }, [filteredPantryItems, ingredient.name]);
+
+  const previewImage = currentIngredient?.image_url;
 
   return (
     <AnimatedPressable
@@ -86,13 +93,9 @@ const IngredientItem: React.FC<{
       onPressOut={handlePressOut}
       style={animatedStyle}
     >
-      {currentIngredient?.image_url ? (
+      {previewImage ? (
         <View className="relative items-center justify-center">
-          <OutlinedImage
-            source={currentIngredient?.image_url}
-            size={56}
-            strokeWidth={2.618}
-          />
+          <OutlinedImage source={previewImage} size={56} strokeWidth={2.618} />
         </View>
       ) : (
         <View className="w-16 h-16 items-center justify-center self-center">
