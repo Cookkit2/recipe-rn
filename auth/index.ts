@@ -24,4 +24,4 @@ export type {
   SocialAuthConfig,
   AuthProvider as AuthProviderType,
   AuthState,
-} from "../types/AuthTypes";
+} from "~/types/AuthTypes";

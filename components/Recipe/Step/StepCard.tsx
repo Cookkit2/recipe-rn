@@ -117,7 +117,7 @@ const StepCard: React.FC<{
           ingredients={data.content as RecipeIngredient[]}
           totalSteps={stepPages.length}
         />
-      );
+    );
       break;
     case "congratulations":
       content = <CongratulationsContent />;

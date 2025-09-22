@@ -1,12 +1,11 @@
 import React, { useCallback, useState } from "react";
 import { View } from "react-native";
-import SegmentedButtons, { type GroupButton } from "../Shared/SegmentedButtons";
-import { Card, CardContent } from "../ui/card";
-import { H4, P } from "../ui/typography";
+import SegmentedButtons, { type GroupButton } from "~/components/Shared/SegmentedButtons";
+import { Card, CardContent } from "~/components/ui/card";
+import { H4, P } from "~/components/ui/typography";
 import { database, storage } from "~/data";
 import { PREF_UNIT_SYSTEM_KEY } from "~/constants/storage-keys";
 import { toast } from "sonner-native";
-import TextShimmer from "../ui/TextShimmer";
 import { useRefreshPantryItems } from "~/hooks/queries/usePantryQueries";
 import { useRefreshRecipes } from "~/hooks/queries/useRecipeQueries";
 

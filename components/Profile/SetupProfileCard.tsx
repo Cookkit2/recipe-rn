@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Card, CardContent } from "../ui/card";
+import { Card, CardContent } from "~/components/ui/card";
 import { View } from "react-native";
-import { H4, P } from "../ui/typography";
-import { Button } from "../ui/button";
+import { H4, P } from "~/components/ui/typography";
+import { Button } from "~/components/ui/button";
 import EditProfileModal from "./EditProfileModal";
 
 export default function SetupProfileCard() {

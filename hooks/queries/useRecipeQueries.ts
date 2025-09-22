@@ -64,12 +64,56 @@ export function useRecipeRecommendations(options?: {
   maxRecommendations?: number;
   preferCompleteable?: boolean;
   categories?: string[];
+  respectDietaryPreferences?: boolean;
 }) {
   return useQuery({
     queryKey: recipeQueryKeys.recommendations(options),
     queryFn: () => recipeApi.getRecipeRecommendations(options),
     staleTime: 2 * 60 * 1000, // 2 minutes - recommendations can be a bit more stable
   });
+}
+
+/**
+ * Hook to get a random recipe recommendation ("Choose for me" functionality)
+ */
+export function useRandomRecipeRecommendation(options?: {
+  maxRecommendations?: number;
+  preferCompleteable?: boolean;
+  categories?: string[];
+  respectDietaryPreferences?: boolean;
+}) {
+  const recommendationsQuery = useRecipeRecommendations({
+    ...options,
+    maxRecommendations: options?.maxRecommendations || 20, // Get more recipes for better randomness
+  });
+
+  const getRandomRecipe = () => {
+    if (!recommendationsQuery.data) return null;
+
+    // Combine all available recipes
+    const allRecommendations = [
+      ...recommendationsQuery.data.canMakeRecommendations,
+      ...recommendationsQuery.data.partialRecommendations.map(
+        (item) => item.recipe
+      ),
+    ];
+
+    if (allRecommendations.length === 0) return null;
+
+    // Return a random recipe
+    const randomIndex = Math.floor(Math.random() * allRecommendations.length);
+    return allRecommendations[randomIndex];
+  };
+
+  return {
+    ...recommendationsQuery,
+    getRandomRecipe,
+    hasRecipes: recommendationsQuery.data
+      ? recommendationsQuery.data.canMakeRecommendations.length +
+          recommendationsQuery.data.partialRecommendations.length >
+        0
+      : false,
+  };
 }
 
 /**

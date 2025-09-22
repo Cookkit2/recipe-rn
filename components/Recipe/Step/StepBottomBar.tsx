@@ -4,10 +4,12 @@ import { Button } from "~/components/ui/button";
 import { H4 } from "~/components/ui/typography";
 import { useRecipeSteps } from "~/store/RecipeStepsContext";
 import TextLoop from "~/components/ui/TextLoop";
+import { useRecipeDetailStore } from "~/store/RecipeDetailContext";
 
 export default function StepBottomBar() {
   const { bottom } = useSafeAreaInsets();
   const { goToNextStep, loopRef } = useRecipeSteps();
+  const { servings } = useRecipeDetailStore();
 
   return (
     <View
@@ -16,7 +18,7 @@ export default function StepBottomBar() {
     >
       <Button
         size="lg"
-        onPress={goToNextStep}
+        onPress={() => goToNextStep(servings)}
         className="bg-foreground/80 min-w-full"
       >
         <TextLoop ref={loopRef} trigger={false}>

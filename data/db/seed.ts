@@ -6,8 +6,8 @@
  */
 
 import { databaseFacade } from "./DatabaseFacade";
-import { dummyPantryItems } from "../dummy/dummy-data";
-import { dummyRecipesData } from "../dummy/dummy-recipes";
+import { dummyPantryItems } from "~/data/dummy/dummy-data";
+import { dummyRecipesData } from "~/data/dummy/dummy-recipes";
 import * as FileSystem from "expo-file-system";
 import { Asset } from "expo-asset";
 import type { ImageSourcePropType } from "react-native";
@@ -298,7 +298,8 @@ export async function addSampleData() {
           recipeId: "",
           baseIngredientId: tomato.id,
           name: "Fresh Tomatoes",
-          quantity: "2 medium",
+          quantity: 2,
+          unit: "units",
           notes: "Use ripe tomatoes for best flavor",
         },
       ],

@@ -1,9 +1,9 @@
 import React, { useEffect } from "react";
-import { Card, CardContent } from "../ui/card";
+import { Card, CardContent } from "~/components/ui/card";
 import { View, StyleSheet } from "react-native";
 import { Image } from "expo-image";
-import { Separator } from "../ui/separator";
-import { H2, H4, P } from "../ui/typography";
+import { Separator } from "~/components/ui/separator";
+import { H2, H4, P } from "~/components/ui/typography";
 import { database, storage } from "~/data";
 import { PROFILE_IMAGE_KEY, PROFILE_NAME_KEY } from "~/constants/storage-keys";
 

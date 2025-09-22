@@ -14,6 +14,7 @@ import {
   PREFERENCE_COMPLETED_KEY,
   RECIPE_COOKED_KEY,
 } from "~/constants/storage-keys";
+import { recipeRepository } from "~/data/db";
 
 export default function DebugScreen() {
   const { top } = useSafeAreaInsets();
@@ -142,6 +143,36 @@ export default function DebugScreen() {
     }
   };
 
+  const clearRecipe = async () => {
+    Alert.alert(
+      "Clear Recipes",
+      "This will delete ALL recipes. Are you sure?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Clear Recipes",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setIsLoading(true);
+              await databaseFacade.recipes.clearAllRecipes();
+
+              // Refresh contexts after clearing data
+              await Promise.all([refresh()]);
+
+              Alert.alert("Success!", "All recipes cleared");
+              await checkStats();
+            } catch (error) {
+              Alert.alert("Error", "Failed to clear recipes");
+            } finally {
+              setIsLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   React.useEffect(() => {
     checkStats();
   }, []);
@@ -222,6 +253,17 @@ export default function DebugScreen() {
             className="w-full"
           >
             <P className="text-foreground font-medium">📊 Refresh Stats</P>
+          </Button>
+
+          <Button
+            onPress={clearRecipe}
+            disabled={isLoading}
+            variant="destructive"
+            className="w-full"
+          >
+            <P className="text-destructive-foreground font-medium">
+              🧹 Clear Recipe
+            </P>
           </Button>
 
           <Button

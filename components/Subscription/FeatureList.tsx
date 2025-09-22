@@ -1,5 +1,5 @@
 import React from "react";
-import { H3, H4, P } from "../ui/typography";
+import { H3, H4, P } from "~/components/ui/typography";
 import { View } from "react-native";
 import {
   BookOpenIcon,

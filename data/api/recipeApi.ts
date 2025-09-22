@@ -1,6 +1,160 @@
 import { databaseFacade } from "~/data/db/DatabaseFacade";
 import type { Recipe as DbRecipe } from "~/data/db/models";
 import type { Recipe } from "~/types/Recipe";
+import { storage } from "~/data";
+import {
+  PREF_DIET_KEY,
+  PREF_ALLERGENS_KEY,
+  PREF_OTHER_ALLERGENS_KEY,
+} from "~/constants/storage-keys";
+import { isIngredientMatch } from "~/utils/ingredient-matching";
+
+// Types for dietary preferences and allergens
+type Diet = "halal" | "kosher" | "vegetarian" | "vegan" | "pescatarian";
+type Allergen = "milk" | "eggs" | "nuts" | "fish" | "shellfish" | "wheat";
+
+/**
+ * Check if a recipe is suitable based on user's dietary preferences and allergens
+ */
+const isRecipeSuitableForUser = async (recipe: Recipe): Promise<boolean> => {
+  // Get user preferences from storage
+  const userDiet = storage.get(PREF_DIET_KEY) as Diet | undefined;
+  const userAllergens = (() => {
+    const stored = storage.get(PREF_ALLERGENS_KEY);
+    if (typeof stored !== "string" || !stored) return [];
+    return stored.split(",") as Allergen[];
+  })();
+  const otherAllergens = (() => {
+    const stored = storage.get(PREF_OTHER_ALLERGENS_KEY) as string | undefined;
+    if (!stored) return [];
+    return stored
+      .split(",")
+      .map((a: string) => a.trim())
+      .filter((a: string) => a.length > 0);
+  })();
+
+  // Check dietary preferences (must match)
+  if (userDiet) {
+    const recipeTags = recipe.tags?.map((tag) => tag.toLowerCase()) || [];
+
+    // If user has a dietary preference, recipe must have matching tag
+    if (!recipeTags.includes(userDiet.toLowerCase())) {
+      return false;
+    }
+  }
+
+  // Check allergens (must NOT contain any allergens user is allergic to)
+  const allUserAllergens = [...userAllergens, ...otherAllergens];
+
+  if (allUserAllergens.length > 0) {
+    // Check recipe ingredients for allergens
+    for (const ingredient of recipe.ingredients) {
+      const ingredientName = ingredient.name.toLowerCase();
+
+      // Check against main allergens
+      for (const allergen of userAllergens) {
+        if (containsAllergen(ingredientName, allergen)) {
+          return false;
+        }
+      }
+
+      // Check against other allergens using ingredient matching
+      for (const allergen of otherAllergens) {
+        if (isIngredientMatch(ingredientName, allergen.toLowerCase())) {
+          return false;
+        }
+      }
+    }
+
+    // Also check recipe tags for allergen mentions
+    const recipeTags = recipe.tags?.map((tag) => tag.toLowerCase()) || [];
+    for (const allergen of allUserAllergens) {
+      if (recipeTags.some((tag) => tag.includes(allergen.toLowerCase()))) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+};
+
+/**
+ * Check if an ingredient contains a specific allergen
+ */
+const containsAllergen = (
+  ingredientName: string,
+  allergen: Allergen
+): boolean => {
+  const ingredient = ingredientName.toLowerCase();
+
+  switch (allergen) {
+    case "milk":
+      return (
+        ingredient.includes("milk") ||
+        ingredient.includes("dairy") ||
+        ingredient.includes("cheese") ||
+        ingredient.includes("butter") ||
+        ingredient.includes("cream") ||
+        ingredient.includes("yogurt") ||
+        ingredient.includes("lactose")
+      );
+
+    case "eggs":
+      return (
+        ingredient.includes("egg") ||
+        ingredient.includes("mayonnaise") ||
+        ingredient.includes("mayo")
+      );
+
+    case "nuts":
+      return (
+        ingredient.includes("nut") ||
+        ingredient.includes("almond") ||
+        ingredient.includes("walnut") ||
+        ingredient.includes("pecan") ||
+        ingredient.includes("cashew") ||
+        ingredient.includes("pistachio") ||
+        ingredient.includes("hazelnut") ||
+        ingredient.includes("macadamia")
+      );
+
+    case "fish":
+      return (
+        ingredient.includes("fish") ||
+        ingredient.includes("salmon") ||
+        ingredient.includes("tuna") ||
+        ingredient.includes("cod") ||
+        ingredient.includes("anchovy") ||
+        ingredient.includes("sardine")
+      );
+
+    case "shellfish":
+      return (
+        ingredient.includes("shellfish") ||
+        ingredient.includes("shrimp") ||
+        ingredient.includes("crab") ||
+        ingredient.includes("lobster") ||
+        ingredient.includes("prawn") ||
+        ingredient.includes("scallop") ||
+        ingredient.includes("oyster") ||
+        ingredient.includes("mussel")
+      );
+
+    case "wheat":
+      return (
+        ingredient.includes("wheat") ||
+        ingredient.includes("flour") ||
+        ingredient.includes("gluten") ||
+        ingredient.includes("bread") ||
+        ingredient.includes("pasta") ||
+        ingredient.includes("noodle") ||
+        ingredient.includes("soy sauce")
+      ); // often contains wheat
+
+    default:
+      return false;
+  }
+};
 
 /**
  * Pure API functions for recipe operations
@@ -41,7 +195,11 @@ export const recipeApi = {
       const dbRecipe = await databaseFacade.recipes.findById(id);
       if (!dbRecipe) return null;
 
-      return await convertDbRecipeToUIRecipe(dbRecipe);
+      const recipe = await convertDbRecipeToUIRecipe(dbRecipe);
+
+      console.log("Found recipe in DB:", recipe.ingredients);
+
+      return recipe;
     } catch (error) {
       console.error("Error getting recipe by id:", error);
       // Error getting recipe by id
@@ -106,6 +264,7 @@ export const recipeApi = {
         baseIngredientId: ing.relatedIngredientId,
         name: ing.name,
         quantity: ing.quantity,
+        unit: ing.unit,
         notes: ing.notes,
       })),
     });
@@ -183,8 +342,7 @@ export const recipeApi = {
       );
 
       return { canMake, partiallyCanMake };
-    } catch (error) {
-      console.error("Error getting available recipes:", error);
+    } catch {
       // Error getting available recipes
       return { canMake: [], partiallyCanMake: [] };
     }
@@ -196,26 +354,34 @@ export const recipeApi = {
   async getShoppingListForRecipe(recipeId: string): Promise<{
     missingIngredients: Array<{
       name: string;
-      quantity: string;
+      quantity: number;
+      unit: string;
       notes?: string;
+      baseIngredientId: string;
     }>;
-    availableIngredients: Array<{ name: string; quantity: string }>;
+    availableIngredients: Array<{
+      name: string;
+      quantity: number;
+      unit: string;
+      stockQuantity: number;
+      stockUnit: string;
+    }>;
   }> {
     try {
       return await databaseFacade.getShoppingListForRecipe(recipeId);
-    } catch (error) {
-      console.error("Error getting shopping list:", error);
+    } catch {
       return { missingIngredients: [], availableIngredients: [] };
     }
   },
 
   /**
-   * Get smart recipe recommendations based on pantry availability
+   * Get smart recipe recommendations based on pantry availability and user dietary preferences
    */
   async getRecipeRecommendations(options?: {
     maxRecommendations?: number;
     preferCompleteable?: boolean;
     categories?: string[];
+    respectDietaryPreferences?: boolean;
   }): Promise<{
     canMakeRecommendations: Recipe[];
     partialRecommendations: Array<{
@@ -228,10 +394,9 @@ export const recipeApi = {
         maxRecommendations = 5,
         preferCompleteable = true,
         categories,
+        respectDietaryPreferences = true,
       } = options || {};
       const availability = await databaseFacade.getAvailableRecipes();
-
-      console.log("Availability:", availability);
 
       // Filter by categories if specified
       let canMake = availability.canMake;
@@ -246,8 +411,42 @@ export const recipeApi = {
         );
       }
 
-      // Smart recommendation algorithm - works with database Recipe models
-      const scoreDbRecipe = (recipe: DbRecipe) => {
+      // Convert to UI format first so we can apply dietary filtering
+      const canMakeUI = await Promise.all(
+        canMake.map(convertDbRecipeToUIRecipe)
+      );
+      const partiallyCanMakeUI = await Promise.all(
+        partiallyCanMake.map(async (item) => ({
+          recipe: await convertDbRecipeToUIRecipe(item.recipe),
+          completionPercentage: item.completionPercentage,
+        }))
+      );
+
+      // Apply dietary filtering if enabled
+      let filteredCanMake = canMakeUI;
+      let filteredPartiallyCanMake = partiallyCanMakeUI;
+
+      if (respectDietaryPreferences) {
+        filteredCanMake = [];
+        filteredPartiallyCanMake = [];
+
+        // Filter canMake recipes
+        for (const recipe of canMakeUI) {
+          if (await isRecipeSuitableForUser(recipe)) {
+            filteredCanMake.push(recipe);
+          }
+        }
+
+        // Filter partiallyCanMake recipes
+        for (const item of partiallyCanMakeUI) {
+          if (await isRecipeSuitableForUser(item.recipe)) {
+            filteredPartiallyCanMake.push(item);
+          }
+        }
+      }
+
+      // Smart recommendation algorithm - works with UI Recipe models
+      const scoreUIRecipe = (recipe: Recipe) => {
         let score = 0;
 
         // Prefer easier recipes (lower difficulty = higher score)
@@ -257,6 +456,19 @@ export const recipeApi = {
         const totalTime = (recipe.prepMinutes || 0) + (recipe.cookMinutes || 0);
         score += Math.max(0, 120 - totalTime) / 10; // Max bonus for recipes under 2 hours
 
+        // Boost score for recipes that match dietary preferences
+        if (respectDietaryPreferences) {
+          const userDiet = storage.get(PREF_DIET_KEY) as string | undefined;
+          if (
+            userDiet &&
+            recipe.tags?.some(
+              (tag) => tag.toLowerCase() === userDiet.toLowerCase()
+            )
+          ) {
+            score += 50; // Significant boost for dietary preference match
+          }
+        }
+
         // Random factor for variety
         score += Math.random() * 20;
 
@@ -264,8 +476,8 @@ export const recipeApi = {
       };
 
       // Sort and limit recommendations
-      const sortedCanMake = canMake
-        .sort((a, b) => scoreDbRecipe(b) - scoreDbRecipe(a))
+      const sortedCanMake = filteredCanMake
+        .sort((a, b) => scoreUIRecipe(b) - scoreUIRecipe(a))
         .slice(
           0,
           preferCompleteable
@@ -273,33 +485,58 @@ export const recipeApi = {
             : Math.ceil(maxRecommendations * 0.6)
         );
 
-      const sortedPartial = partiallyCanMake
+      const sortedPartial = filteredPartiallyCanMake
         .sort((a, b) => {
           // Sort by completion percentage first, then by recipe score
           const completionDiff =
             b.completionPercentage - a.completionPercentage;
           if (completionDiff !== 0) return completionDiff;
-          return scoreDbRecipe(b.recipe) - scoreDbRecipe(a.recipe);
+          return scoreUIRecipe(b.recipe) - scoreUIRecipe(a.recipe);
         })
         .slice(0, maxRecommendations - sortedCanMake.length);
 
-      // Convert to UI format
-      const canMakeRecommendations = await Promise.all(
-        sortedCanMake.map(convertDbRecipeToUIRecipe)
-      );
-
-      const partialRecommendations = await Promise.all(
-        sortedPartial.map(async (item) => ({
-          recipe: await convertDbRecipeToUIRecipe(item.recipe),
-          completionPercentage: item.completionPercentage,
-        }))
-      );
-
-      return { canMakeRecommendations, partialRecommendations };
-    } catch (error) {
-      console.error("Error getting recipe recommendations:", error);
+      return {
+        canMakeRecommendations: sortedCanMake,
+        partialRecommendations: sortedPartial,
+      };
+    } catch {
       return { canMakeRecommendations: [], partialRecommendations: [] };
     }
+  },
+
+  /**
+   * Get user dietary preferences and allergens
+   */
+  getUserDietaryInfo(): {
+    diet?: Diet;
+    allergens: Allergen[];
+    otherAllergens: string[];
+  } {
+    const diet = storage.get(PREF_DIET_KEY) as Diet | undefined;
+    const allergens = (() => {
+      const stored = storage.get(PREF_ALLERGENS_KEY);
+      if (typeof stored !== "string" || !stored) return [];
+      return stored.split(",") as Allergen[];
+    })();
+    const otherAllergens = (() => {
+      const stored = storage.get(PREF_OTHER_ALLERGENS_KEY) as
+        | string
+        | undefined;
+      if (!stored) return [];
+      return stored
+        .split(",")
+        .map((a: string) => a.trim())
+        .filter((a: string) => a.length > 0);
+    })();
+
+    return { diet, allergens, otherAllergens };
+  },
+
+  /**
+   * Check if a recipe is suitable for current user's dietary preferences
+   */
+  async isRecipeSuitableForUser(recipe: Recipe): Promise<boolean> {
+    return await isRecipeSuitableForUser(recipe);
   },
 };
 
@@ -333,6 +570,7 @@ const convertDbRecipeToUIRecipe = async (
       name: ing.name,
       relatedIngredientId: ing.baseIngredientId,
       quantity: ing.quantity,
+      unit: ing.unit,
       notes: ing.notes,
     })),
     instructions: steps.map((step) => ({

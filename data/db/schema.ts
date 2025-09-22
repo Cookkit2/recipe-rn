@@ -63,7 +63,8 @@ export default appSchema({
         { name: "recipe_id", type: "string", isIndexed: true },
         { name: "base_ingredient_id", type: "string", isIndexed: true },
         { name: "name", type: "string" }, // Display name for this recipe
-        { name: "quantity", type: "string" },
+        { name: "quantity", type: "number" },
+        { name: "unit", type: "string" },
         { name: "notes", type: "string", isOptional: true },
         { name: "created_at", type: "number" },
         { name: "updated_at", type: "number" },

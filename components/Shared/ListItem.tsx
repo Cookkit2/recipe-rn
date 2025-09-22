@@ -1,6 +1,6 @@
 import React from "react";
 import { View } from "react-native";
-import { P } from "../ui/typography";
+import { P } from "~/components/ui/typography";
 
 type ListItemProps = {
   icon: React.ReactNode;

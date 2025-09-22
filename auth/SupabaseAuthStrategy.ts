@@ -7,7 +7,7 @@ import type {
   LinkAccountCredentials,
   AuthSession,
   AuthProvider,
-} from "../types/AuthTypes";
+} from "~/types/AuthTypes";
 import type {
   Session,
   User as SupabaseUser,
@@ -346,7 +346,9 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
       console.log("supabase.auth.signOut() completed, error:", error);
 
       if (error) {
-        console.log("Supabase signOut returned error, clearing local state anyway");
+        console.log(
+          "Supabase signOut returned error, clearing local state anyway"
+        );
         // Still clear local state even if remote sign out failed
         this.currentUser = null;
         this.currentSession = null;

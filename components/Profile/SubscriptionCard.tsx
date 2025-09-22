@@ -4,7 +4,7 @@ import {
   isValidSubscription,
   presentPaywallIfNeeded,
 } from "~/utils/subscription-utils";
-import { Card, CardContent } from "../ui/card";
+import { Card, CardContent } from "~/components/ui/card";
 import { H4, P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
 import { useAsyncEffect } from "~/utils/use-async-effect";

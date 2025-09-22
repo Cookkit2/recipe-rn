@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePantryStore } from "~/store/PantryContext";
 import { IngredientItemCard } from "./IngredientItemCard";
 import { View, ActivityIndicator } from "react-native";
-import { H4, P } from "../ui/typography";
+import { H4, P } from "~/components/ui/typography";
 import { CURVES } from "~/constants/curves";
 import { usePantryItemsByType } from "~/hooks/queries/usePantryQueries";
 

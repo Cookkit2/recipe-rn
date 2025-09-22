@@ -1,15 +1,15 @@
 import { Pressable, View } from "react-native";
 import Animated from "react-native-reanimated";
-import { H4, P } from "../ui/typography";
+import { H4, P } from "~/components/ui/typography";
 import type { PantryItem } from "~/types/PantryItem";
 import { useRouter } from "expo-router";
-import OutlinedImage from "../ui/outlined-image";
+import OutlinedImage from "~/components/ui/outlined-image";
 import useDebounce from "~/hooks/useDebounce";
 import * as Haptics from "expo-haptics";
 import useColors from "~/hooks/useColor";
 import useButtonAnimation from "~/hooks/animation/useButtonAnimations";
 import { usePantryStore } from "~/store/PantryContext";
-import ShapeContainer from "../Shared/Shapes/ShapeContainer";
+import ShapeContainer from "~/components/Shared/Shapes/ShapeContainer";
 
 export const IngredientItemCard = ({
   item,

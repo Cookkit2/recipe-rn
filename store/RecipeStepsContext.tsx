@@ -14,15 +14,21 @@ import {
 } from "react-native-reanimated";
 import type { ICarouselInstance } from "react-native-reanimated-carousel";
 import type { TextLoopRef } from "~/components/ui/TextLoop";
-import type { Recipe } from "~/types/Recipe";
+import type { Recipe, RecipeIngredient } from "~/types/Recipe";
+import type { PantryItem } from "~/types/PantryItem";
 import type { StepPageData } from "~/app/recipes/[recipeId]/steps";
 import { storage } from "~/data";
 import { RECIPE_COOKED_KEY } from "~/constants/storage-keys";
+import {
+  usePantryItemsByType,
+  useUpdatePantryItem,
+  useDeletePantryItem,
+} from "~/hooks/queries/usePantryQueries";
 
 interface RecipeStepsContextType {
   currentStep: number;
   setCurrentStep: (value: number) => void;
-  goToNextStep: () => void;
+  goToNextStep: (servings: number) => void;
   goToPreviousStep: () => void;
   carouselRef: React.RefObject<ICarouselInstance | null>;
   stepPages: StepPageData[];
@@ -50,6 +56,11 @@ export function RecipeStepsProvider({
   const carouselRef = useRef<ICarouselInstance | null>(null);
   const progress = useSharedValue<number>(0);
 
+  // Get pantry items and mutations for ingredient removal
+  const { data: pantryItems = [] } = usePantryItemsByType("all");
+  const updatePantryItemMutation = useUpdatePantryItem();
+  const deletePantryItemMutation = useDeletePantryItem();
+
   // Timer state
   const startTime = useRef(Date.now());
   const [endTime, setEndTime] = useState<number | null>(null);
@@ -64,6 +75,95 @@ export function RecipeStepsProvider({
     storage.set(RECIPE_COOKED_KEY, true);
   }, []);
 
+  const handleRecipeCompletion = useCallback(
+    async (servings: number) => {
+      // Import the ingredient matching utility inline
+      const isIngredientMatch = (
+        pantryItemName: string,
+        recipeIngredientName: string
+      ): boolean => {
+        const pantryName = pantryItemName.toLowerCase().trim();
+        const recipeName = recipeIngredientName.toLowerCase().trim();
+        return (
+          pantryName === recipeName ||
+          pantryName.includes(recipeName) ||
+          recipeName.includes(pantryName)
+        );
+      };
+
+      // Find matching pantry items
+      const matches: Array<{
+        pantryItem: PantryItem;
+        recipeIngredient: RecipeIngredient;
+      }> = [];
+      recipe.ingredients.forEach((recipeIngredient) => {
+        const matchingPantryItem = pantryItems.find((pantryItem) =>
+          isIngredientMatch(pantryItem.name, recipeIngredient.name)
+        );
+        if (matchingPantryItem) {
+          matches.push({ pantryItem: matchingPantryItem, recipeIngredient });
+        }
+      });
+
+      // If no matches found, just navigate away
+      if (matches.length === 0) {
+        router.dismissTo("/");
+        return;
+      }
+
+      // Automatically deduct ingredients without showing alerts
+      try {
+        const updatePromises = matches.map(
+          async ({ pantryItem, recipeIngredient }) => {
+            // Calculate reduction amount based on servings
+            let baseReductionAmount = 1;
+
+            // Check unit compatibility for proper quantity calculation
+            if (
+              pantryItem.unit.toLowerCase() ===
+                recipeIngredient.unit.toLowerCase() ||
+              (pantryItem.unit === "piece" && recipeIngredient.unit === "") ||
+              (pantryItem.unit === "" && recipeIngredient.unit === "piece")
+            ) {
+              baseReductionAmount = recipeIngredient.quantity;
+            }
+
+            // Multiply by servings to get total reduction amount
+            const totalReductionAmount = baseReductionAmount * servings;
+
+            const newQuantity = Math.max(
+              0,
+              pantryItem.quantity - totalReductionAmount
+            );
+
+            if (newQuantity <= 0) {
+              return deletePantryItemMutation.mutateAsync(pantryItem.id);
+            } else {
+              return updatePantryItemMutation.mutateAsync({
+                id: pantryItem.id,
+                updates: { quantity: newQuantity },
+              });
+            }
+          }
+        );
+
+        await Promise.all(updatePromises);
+      } catch {
+        // Silent error handling - errors are handled gracefully
+      }
+
+      // Navigate away after processing
+      router.dismissTo("/");
+    },
+    [
+      recipe,
+      pantryItems,
+      router,
+      updatePantryItemMutation,
+      deletePantryItemMutation,
+    ]
+  );
+
   useAnimatedReaction(
     () => progress.value,
     (progressValue) => {
@@ -77,15 +177,18 @@ export function RecipeStepsProvider({
     []
   );
 
-  const goToNextStep = useCallback(() => {
-    if (currentStep < stepPages.length - 1) {
-      const nextIndex = currentStep + 1;
-      setCurrentStep(nextIndex);
-      carouselRef.current?.scrollTo({ index: nextIndex, animated: true });
-    } else {
-      router.dismissTo("/");
-    }
-  }, [currentStep, router, stepPages.length]);
+  const goToNextStep = useCallback(
+    (servings: number) => {
+      if (currentStep < stepPages.length - 1) {
+        const nextIndex = currentStep + 1;
+        setCurrentStep(nextIndex);
+        carouselRef.current?.scrollTo({ index: nextIndex, animated: true });
+      } else {
+        handleRecipeCompletion(servings);
+      }
+    },
+    [currentStep, stepPages.length, handleRecipeCompletion]
+  );
 
   const goToPreviousStep = useCallback(() => {
     if (currentStep > 0) {

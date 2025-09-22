@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useWindowDimensions, View } from "react-native";
-import { Button } from "../../ui/button";
+import { Button } from "~/components/ui/button";
 import { ArrowLeftIcon, HeartIcon } from "lucide-nativewind";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -31,13 +31,13 @@ export default function TopBar({
 
   const router = useRouter();
 
-  const toggleRecipeFavourite = () => {
-    setIsFav((v) => !v);
-  };
+  // const toggleRecipeFavourite = () => {
+  //   setIsFav((v) => !v);
+  // };
 
   // Function to update status bar style (needs to run on JS thread)
   const updateStatusBarStyle = (isLight: boolean) => {
-    SystemBars.setStyle(isLight ? "light" : "dark");
+    SystemBars.setStyle(isLight ? "light" : "auto");
   };
 
   // Subscribe to scroll offset changes using Reanimated

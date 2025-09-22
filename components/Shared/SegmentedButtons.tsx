@@ -3,7 +3,7 @@ import { Pressable, View, type LayoutChangeEvent } from "react-native";
 import Animated from "react-native-reanimated";
 import useButtonAnimation from "~/hooks/animation/useButtonAnimations";
 import useSelectionRing from "~/hooks/animation/useSelectionRing";
-import { P } from "../ui/typography";
+import { P } from "~/components/ui/typography";
 import { cn } from "~/lib/tw-merge";
 
 export type GroupButton<T> = {

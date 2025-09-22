@@ -32,6 +32,12 @@ export async function presentPaywall(): Promise<boolean> {
 }
 
 export async function presentPaywallIfNeeded(): Promise<boolean> {
+  const entitlements = await isValidSubscription();
+  if (entitlements) {
+    // User already has a valid subscription
+    return true;
+  }
+
   SystemBars.setStyle("light");
   const paywallResult = await RevenueCatUI.presentPaywallIfNeeded({
     requiredEntitlementIdentifier: "entla45938e5ff",

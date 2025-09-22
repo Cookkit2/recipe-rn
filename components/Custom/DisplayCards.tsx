@@ -8,8 +8,8 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { dummyPantryItems } from "~/data/dummy/dummy-data";
-import OutlinedImage from "../ui/outlined-image";
-import RotationCard from "../Onboarding/RotationCard";
+import OutlinedImage from "~/components/ui/outlined-image";
+import RotationCard from "~/components/Onboarding/RotationCard";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 

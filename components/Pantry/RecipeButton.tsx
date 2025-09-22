@@ -1,8 +1,8 @@
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "~/components/ui/button";
 import { ChefHatIcon } from "lucide-nativewind";
-import { H4 } from "../ui/typography";
-import TextShimmer from "../ui/TextShimmer";
+import { H4 } from "~/components/ui/typography";
+import TextShimmer from "~/components/ui/TextShimmer";
 import Animated, {
   useAnimatedStyle,
   withTiming,

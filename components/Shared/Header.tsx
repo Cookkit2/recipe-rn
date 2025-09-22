@@ -3,8 +3,8 @@ import { View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeftIcon } from "lucide-nativewind";
-import { Button } from "../ui/button";
-import { H4 } from "../ui/typography";
+import { Button } from "~/components/ui/button";
+import { H4 } from "~/components/ui/typography";
 import Animated, {
   useAnimatedStyle,
   withTiming,

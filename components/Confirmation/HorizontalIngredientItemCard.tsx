@@ -1,21 +1,18 @@
-import React from "react";
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 import useColors from "~/hooks/useColor";
 import { useCreateIngredientStore } from "~/store/CreateIngredientContext";
 import { type PantryItem } from "~/types/PantryItem";
-import IngredientQuantity from "../Ingredient/IngredientQuantity";
-import EditableTitle from "../Shared/EditableTitle";
-import OutlinedImage from "../ui/outlined-image";
-import { Button } from "../ui/button";
+import IngredientQuantity from "~/components/Ingredient/IngredientQuantity";
+import EditableTitle from "~/components/Shared/EditableTitle";
+import OutlinedImage from "~/components/ui/outlined-image";
+import { Button } from "~/components/ui/button";
 import { Trash2Icon } from "lucide-nativewind";
-import { useRouter } from "expo-router";
 
 export default function HorizontalIngredientItemCard({
   item,
 }: {
   item: PantryItem;
 }) {
-  const router = useRouter();
   const { image_url, name, quantity, unit } = item;
   const { updateProcessPantryItems, deleteProcessPantryItems } =
     useCreateIngredientStore();

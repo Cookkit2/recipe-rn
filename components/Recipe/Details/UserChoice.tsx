@@ -1,6 +1,6 @@
 import React from "react";
 import { View } from "react-native";
-import { H4 } from "../../ui/typography";
+import { H4 } from "~/components/ui/typography";
 import LeafIcon from "~/lib/icons/Leaf";
 
 export default function UserChoice() {

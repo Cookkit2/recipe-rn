@@ -30,6 +30,10 @@ import { Image } from "expo-image";
 import { useRecipe } from "~/hooks/queries/useRecipeQueries";
 import { usePantryItemsByType } from "~/hooks/queries/usePantryQueries";
 import { SystemBars } from "react-native-edge-to-edge";
+import { titleCase } from "~/utils/text-formatter";
+import { Card, CardContent } from "~/components/ui/card";
+import { isIngredientMatch } from "~/utils/ingredient-matching";
+import { useRecipeDetailStore } from "~/store/RecipeDetailContext";
 
 const AnimatedH1 = Animated.createAnimatedComponent(H1);
 const AnimatedImage = Animated.createAnimatedComponent(Image);
@@ -40,8 +44,7 @@ export default function RecipeDetails() {
   const { width: windowWidth } = useWindowDimensions();
   const { data: recipe, isLoading, error } = useRecipe(recipeId);
   const { data: filteredPantryItems = [] } = usePantryItemsByType("all");
-
-  const [serving, setServing] = useState(1);
+  const { servings } = useRecipeDetailStore();
 
   const scrollOffset = useSharedValue(0);
   const scrollHandler = useAnimatedScrollHandler({
@@ -56,17 +59,22 @@ export default function RecipeDetails() {
   }, [recipe]);
 
   const previewImages = useMemo(() => {
-    console.log("Recipe ingredients:", recipe?.ingredients);
-    console.log("Recipe filteredPantryItems:", filteredPantryItems);
     if (!recipe?.ingredients.length) return [];
 
+    // Filter pantry items that match recipe ingredients using improved matching
+    const matchingPantryItems = filteredPantryItems.filter((pantryItem) => {
+      return recipe.ingredients.some((ingredient) =>
+        isIngredientMatch(pantryItem.name, ingredient.name)
+      );
+    });
+
     const count = Math.min(recipe.ingredients.length, 8); // Limit to reasonable number
-    const images = filteredPantryItems
+    const images = matchingPantryItems
       .map((item) => item.image_url)
       .filter((url) => typeof url === "string")
       .slice(0, count);
     return images as string[];
-  }, [recipe?.ingredients.length, filteredPantryItems]);
+  }, [recipe?.ingredients, filteredPantryItems]);
 
   const opacityStyle = useAnimatedStyle(() => {
     const opacity = interpolate(
@@ -78,10 +86,6 @@ export default function RecipeDetails() {
 
     return { opacity };
   });
-
-  const updateServing = (newServing: number) => {
-    setServing(newServing);
-  };
 
   useEffect(() => {
     // Push a new system bar style when the screen mounts
@@ -198,7 +202,7 @@ export default function RecipeDetails() {
             </View>
           )}
 
-          <RecipeServing serving={serving} setServing={updateServing} />
+          <RecipeServing />
 
           {/* User's Choice badge */}
           {/* <UserChoice /> */}
@@ -226,6 +230,23 @@ export default function RecipeDetails() {
             ))}
           </ScrollView>
 
+          {/* Missing Ingredients */}
+          <View className="mt-6 bg-muted rounded-xl px-6 py-4">
+            <H4 className="font-urbanist-semibold text-destructive/60 mb-2">
+              Missing Ingredients
+            </H4>
+            <P className="font-urbanist-regular text-muted-foreground/70 leading-6">
+              {recipe.ingredients
+                .filter((ingredient) => {
+                  return !filteredPantryItems.some((pantryItem) =>
+                    isIngredientMatch(pantryItem.name, ingredient.name)
+                  );
+                })
+                .map(({ name }) => titleCase(name))
+                .join(", ")}
+            </P>
+          </View>
+
           <Separator className="my-8" />
 
           {/* Description */}
@@ -235,14 +256,14 @@ export default function RecipeDetails() {
             </P>
           )}
 
-          <Separator className="my-8" />
+          {/* <Separator className="my-8" /> */}
 
-          <RecipeNutrition recipe={recipe} />
+          {/* <RecipeNutrition recipe={recipe} /> */}
         </View>
       </Animated.ScrollView>
 
       {/* Bottom action bar */}
-      <BottomActionBar recipe={recipe} serving={serving} />
+      <BottomActionBar recipe={recipe} serving={servings} />
     </View>
   );
 }

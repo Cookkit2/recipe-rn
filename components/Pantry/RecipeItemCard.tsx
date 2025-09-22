@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Image } from "expo-image";
-import { H4, P } from "../ui/typography";
+import { H4, P } from "~/components/ui/typography";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import type { Recipe } from "~/types/Recipe";

@@ -6,7 +6,7 @@ import type {
   SocialAuthConfig,
   LinkAccountCredentials,
   AuthSession,
-} from "../types/AuthTypes";
+} from "~/types/AuthTypes";
 
 /**
  * Mock authentication strategy for testing and development
