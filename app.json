@@ -141,6 +141,13 @@
           "recordAudioAndroid": true
         }
       ],
+      [
+        "react-native-vision-camera",
+        {
+          "enableLocation": true,
+          "locationPermissionText": "Cookkit needs your location."
+        }
+      ],
       "expo-web-browser",
       "react-native-edge-to-edge"
     ],

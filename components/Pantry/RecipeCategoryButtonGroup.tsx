@@ -91,22 +91,15 @@ export default function RecipeCategoryButtonGroup() {
       </Button>
       <Button
         variant="outline"
-        className="rounded-2xl border-continuous flex-row items-center gap-2"
-        style={{
-          backgroundColor: lightColors.primary,
-        }}
+        className="rounded-2xl border-continuous flex-row items-center gap-2 border-white/20"
         onPress={handleChooseForMe}
         disabled={isLoading || !hasRecipes}
       >
-        <DicesIcon
-          color={lightColors.primaryForeground}
-          size={18}
-          strokeWidth={3}
-        />
+        <DicesIcon color={lightColors.background} size={18} strokeWidth={3} />
         <P
           className="text-lg font-urbanist-semibold leading-snug"
           style={{
-            color: lightColors.primaryForeground,
+            color: lightColors.background,
           }}
         >
           {isLoading ? "Loading..." : "Choose for me!"}

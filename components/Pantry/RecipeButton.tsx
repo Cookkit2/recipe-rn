@@ -34,12 +34,12 @@ export default function RecipeButton() {
   }));
 
   const onRecipeButtonPress = () => {
-    // if (isFirstTime) {
-    //   // If preferences not set, navigate to preferences screen
-    //   router.push("/preferences");
-    //   setIsFirstTime(false);
-    //   return;
-    // }
+    if (isFirstTime) {
+      // If preferences not set, navigate to preferences screen
+      router.push("/preferences");
+      setIsFirstTime(false);
+      return;
+    }
     updateRecipeOpen(!isRecipeOpen);
   };
 

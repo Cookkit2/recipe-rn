@@ -69,6 +69,7 @@ export default function PantryWrapper() {
       if (velocity < -500) {
         // Fast upward swipe - expand
         snapTarget = -EXPANDED_HEIGHT + collapsedHeight;
+        
       } else if (velocity > 500) {
         // Fast downward swipe - collapse
         snapTarget = 0;

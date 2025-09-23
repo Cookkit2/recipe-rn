@@ -39,6 +39,10 @@ export default function RecipeLists() {
     return [];
   }, [recommendations]);
 
+  // TODO: Use random recipe recommendation 
+  // Need to account for cooked recipe and the cooking utensils
+  const fourRecipesToShow = recipesToShow.slice(0, 4);
+
   // Create display text for selected categories
   const selectedCategoriesText = useMemo(() => {
     if (selectedRecipeTags.length === 0) return "";
@@ -83,7 +87,7 @@ export default function RecipeLists() {
       className="px-3 mt-6"
       scrollEnabled={false}
       showsVerticalScrollIndicator={false}
-      data={recipesToShow}
+      data={fourRecipesToShow} // Limit to 4 recipes
       keyExtractor={(item) => item.id.toString()}
       renderItem={({ item }) => <RecipeItemCard key={item.id} recipe={item} />}
       ListEmptyComponent={
