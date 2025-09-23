@@ -26,6 +26,71 @@ import {
 } from "~/hooks/queries/usePantryQueries";
 import { isIngredientMatch } from "~/utils/ingredient-matching";
 
+// Dictionary to map unit synonyms to their canonical form
+const UNIT_SYNONYMS: Record<string, string> = {
+  // Empty/piece variations
+  "": "piece",
+  piece: "piece",
+  pieces: "piece",
+  units: "piece",
+  unit: "piece",
+
+  // Volume measurements
+  cup: "cup",
+  cups: "cup",
+  c: "cup",
+
+  tablespoon: "tablespoon",
+  tablespoons: "tablespoon",
+  tbsp: "tablespoon",
+  tbs: "tablespoon",
+
+  teaspoon: "teaspoon",
+  teaspoons: "teaspoon",
+  tsp: "teaspoon",
+
+  liter: "liter",
+  liters: "liter",
+  l: "liter",
+
+  milliliter: "milliliter",
+  milliliters: "milliliter",
+  ml: "milliliter",
+
+  // Weight measurements
+  gram: "gram",
+  grams: "gram",
+  g: "gram",
+
+  kilogram: "kilogram",
+  kilograms: "kilogram",
+  kg: "kilogram",
+
+  pound: "pound",
+  pounds: "pound",
+  lb: "pound",
+  lbs: "pound",
+
+  ounce: "ounce",
+  ounces: "ounce",
+  oz: "ounce",
+};
+
+/**
+ * Normalizes a unit string to its canonical form for comparison
+ */
+const normalizeUnit = (unit: string): string => {
+  const normalized = unit.toLowerCase().trim();
+  return UNIT_SYNONYMS[normalized] || normalized;
+};
+
+/**
+ * Checks if two units are compatible (synonymous)
+ */
+const areUnitsCompatible = (unit1: string, unit2: string): boolean => {
+  return normalizeUnit(unit1) === normalizeUnit(unit2);
+};
+
 interface RecipeStepsContextType {
   currentStep: number;
   setCurrentStep: (value: number) => void;
@@ -83,7 +148,7 @@ export function RecipeStepsProvider({
         pantryItem: PantryItem;
         recipeIngredient: RecipeIngredient;
       }> = [];
-      
+
       recipe.ingredients.forEach((recipeIngredient) => {
         const matchingPantryItem = pantryItems.find((pantryItem) =>
           isIngredientMatch(pantryItem.name, recipeIngredient.name)
@@ -107,12 +172,7 @@ export function RecipeStepsProvider({
             let baseReductionAmount = 1;
 
             // Check unit compatibility for proper quantity calculation
-            if (
-              pantryItem.unit.toLowerCase() ===
-                recipeIngredient.unit.toLowerCase() ||
-              (pantryItem.unit === "piece" && recipeIngredient.unit === "") ||
-              (pantryItem.unit === "" && recipeIngredient.unit === "piece")
-            ) {
+            if (areUnitsCompatible(pantryItem.unit, recipeIngredient.unit)) {
               baseReductionAmount = recipeIngredient.quantity;
             }
 
