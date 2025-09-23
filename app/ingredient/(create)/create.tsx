@@ -310,7 +310,11 @@ export default function CreateIngredient() {
 
   const onBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.back();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/");
+    }
   };
 
   // Camera permissions are still loading.

@@ -21,14 +21,14 @@ export default function MenuDropdown() {
       >
         <EllipsisIcon className="text-background" size={18} strokeWidth={3} />
       </Button>
-      <Button
+      {/* <Button
         size="icon-sm"
         variant="default"
         className="bg-foreground"
         onPress={() => router.push("/debug")}
       >
         <BugIcon className="text-background" size={18} strokeWidth={3} />
-      </Button>
+      </Button> */}
     </>
   );
 }

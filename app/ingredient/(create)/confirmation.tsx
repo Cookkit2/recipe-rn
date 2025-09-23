@@ -22,10 +22,13 @@ import { useRouter } from "expo-router";
 import { toast } from "sonner-native";
 import RevenueCatUI from "react-native-purchases-ui";
 import { presentPaywallIfNeeded } from "~/utils/subscription-utils";
+import { useQueryClient } from "@tanstack/react-query";
+import { recipeQueryKeys } from "~/hooks/queries/recipeQueryKeys";
 
 export default function ConfirmationPage() {
   const { bottom } = useSafeAreaInsets();
   const { processPantryItems } = useCreateIngredientStore();
+  const queryClient = useQueryClient();
 
   const router = useRouter();
   const addPantryItems = useAddPantryItems();
@@ -58,6 +61,9 @@ export default function ConfirmationPage() {
       console.log("processPantryItems", processPantryItems);
 
       const result = await addPantryItems.mutateAsync(processPantryItems);
+      queryClient.invalidateQueries({
+        queryKey: recipeQueryKeys.recommendations(),
+      });
       console.log("result", result);
       router.dismissTo("/");
       SystemBars.setStyle("auto");
