@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { RecipeStepsProvider } from "~/store/RecipeStepsContext";
@@ -8,6 +8,7 @@ import StepCarousel from "~/components/Recipe/Step/StepCarousel";
 import StepHeaderBar from "~/components/Recipe/Step/StepHeaderBar";
 import { H1, P } from "~/components/ui/typography";
 import { useRecipe } from "~/hooks/queries/useRecipeQueries";
+import { SystemBars } from "react-native-edge-to-edge";
 
 export type StepPageData = {
   type: "ingredients" | "step" | "congratulations";
@@ -18,6 +19,10 @@ export type StepPageData = {
 export default function RecipeSteps() {
   const { recipeId } = useLocalSearchParams<{ recipeId: string }>();
   const { data: recipe, isLoading, error } = useRecipe(recipeId);
+
+  useEffect(() => {
+    SystemBars.setStyle("auto");
+  }, []);
 
   const stepPages = useMemo((): StepPageData[] => {
     if (!recipe) return [];

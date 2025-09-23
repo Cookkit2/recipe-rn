@@ -22,7 +22,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { recipeQueryKeys } from "~/hooks/queries/recipeQueryKeys";
 
 // NOTE: State-only for now. TODO: persist to storage later.
-type Allergen = "milk" | "eggs" | "nuts" | "fish" | "shellfish" | "wheat";
+export type Allergen = "milk" | "eggs" | "nuts" | "fish" | "shellfish" | "wheat";
 
 const ALLERGEN_OPTIONS: GroupButton<Allergen>[] = [
   { label: "Milk (dairy)", icon: <MilkIcon />, value: "milk" },
