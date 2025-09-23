@@ -24,6 +24,7 @@ import {
   useUpdatePantryItem,
   useDeletePantryItem,
 } from "~/hooks/queries/usePantryQueries";
+import { isIngredientMatch } from "~/utils/ingredient-matching";
 
 interface RecipeStepsContextType {
   currentStep: number;
@@ -77,25 +78,12 @@ export function RecipeStepsProvider({
 
   const handleRecipeCompletion = useCallback(
     async (servings: number) => {
-      // Import the ingredient matching utility inline
-      const isIngredientMatch = (
-        pantryItemName: string,
-        recipeIngredientName: string
-      ): boolean => {
-        const pantryName = pantryItemName.toLowerCase().trim();
-        const recipeName = recipeIngredientName.toLowerCase().trim();
-        return (
-          pantryName === recipeName ||
-          pantryName.includes(recipeName) ||
-          recipeName.includes(pantryName)
-        );
-      };
-
       // Find matching pantry items
       const matches: Array<{
         pantryItem: PantryItem;
         recipeIngredient: RecipeIngredient;
       }> = [];
+      
       recipe.ingredients.forEach((recipeIngredient) => {
         const matchingPantryItem = pantryItems.find((pantryItem) =>
           isIngredientMatch(pantryItem.name, recipeIngredient.name)

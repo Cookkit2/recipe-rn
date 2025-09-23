@@ -88,11 +88,13 @@ export const recipeApi = {
     const recipesWithDetails = await Promise.all(
       recipes.map(async (recipe) => {
         const details = await recipeApi.getRecipeWithDetailsSupabase(recipe.id);
-        return details!; // We know it exists since we just fetched it
+        return details; // May be null, will filter below
       })
     );
 
-    return recipesWithDetails;
+    const filtered = recipesWithDetails.filter((recipe) => recipe !== null);
+
+    return filtered;
   },
 
   /**
