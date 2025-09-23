@@ -8,10 +8,8 @@ import {
   PREF_OTHER_ALLERGENS_KEY,
 } from "~/constants/storage-keys";
 import { isIngredientMatch } from "~/utils/ingredient-matching";
-
-// Types for dietary preferences and allergens
-type Diet = "halal" | "kosher" | "vegetarian" | "vegan" | "pescatarian";
-type Allergen = "milk" | "eggs" | "nuts" | "fish" | "shellfish" | "wheat";
+import type { Diet } from "~/components/Preferences/DietarySection";
+import type { Allergen } from "~/components/Preferences/AllergySection";
 
 /**
  * Check if a recipe is suitable based on user's dietary preferences and allergens
@@ -34,7 +32,7 @@ const isRecipeSuitableForUser = async (recipe: Recipe): Promise<boolean> => {
   })();
 
   // Check dietary preferences (must match)
-  if (userDiet) {
+  if (userDiet && userDiet !== "none") {
     const recipeTags = recipe.tags?.map((tag) => tag.toLowerCase()) || [];
 
     // If user has a dietary preference, recipe must have matching tag
@@ -461,6 +459,7 @@ export const recipeApi = {
           const userDiet = storage.get(PREF_DIET_KEY) as string | undefined;
           if (
             userDiet &&
+            userDiet !== "none" &&
             recipe.tags?.some(
               (tag) => tag.toLowerCase() === userDiet.toLowerCase()
             )

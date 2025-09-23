@@ -91,7 +91,7 @@ export default function RecipeCategoryButtonGroup() {
       </Button>
       <Button
         variant="outline"
-        className="rounded-2xl border-continuous flex-row items-center gap-2 border-white/20"
+        className="rounded-2xl border-continuous flex-row items-center gap-2 border-white/20 bg-transparent"
         onPress={handleChooseForMe}
         disabled={isLoading || !hasRecipes}
       >

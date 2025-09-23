@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import SegmentedButtons, { type GroupButton } from "~/components/Shared/SegmentedButtons";
 import { Card, CardContent } from "~/components/ui/card";
 import { H4 } from "~/components/ui/typography";
-import { MoonIcon, SaladIcon, VeganIcon, FishIcon } from "lucide-nativewind";
+import { MoonIcon, SaladIcon, VeganIcon, FishIcon, BadgeXIcon } from "lucide-nativewind";
 import { StarNorthIcon } from "~/lib/icons/StarNorth";
 import { storage } from "~/data";
 import { PREF_DIET_KEY } from "~/constants/storage-keys";
@@ -10,7 +10,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { recipeQueryKeys } from "~/hooks/queries/recipeQueryKeys";
 
 // NOTE: State-only for now. TODO: persist to storage later.
-type Diet = "halal" | "kosher" | "vegetarian" | "vegan" | "pescatarian";
+export type Diet = "halal" | "kosher" | "vegetarian" | "vegan" | "pescatarian" | "none";
 
 const DIET_OPTIONS: GroupButton<Diet>[] = [
   { label: "Halal", icon: <MoonIcon />, value: "halal" },
@@ -18,6 +18,7 @@ const DIET_OPTIONS: GroupButton<Diet>[] = [
   { label: "Vegetarian", icon: <SaladIcon />, value: "vegetarian" },
   { label: "Vegan", icon: <VeganIcon />, value: "vegan" },
   { label: "Pescatarian", icon: <FishIcon />, value: "pescatarian" },
+  { label: "None", icon: <BadgeXIcon />, value: "none" },
 ];
 
 export default function DietarySection() {

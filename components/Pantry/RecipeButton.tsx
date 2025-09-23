@@ -19,7 +19,7 @@ export default function RecipeButton() {
   const router = useRouter();
   const { isRecipeOpen, updateRecipeOpen } = usePantryStore();
   const [isFirstTime, setIsFirstTime] = useState(
-    storage.get(PREFERENCE_COMPLETED_KEY) !== true
+    !storage.get(PREFERENCE_COMPLETED_KEY)
   );
 
   const recipeButtonStyle = useAnimatedStyle(() => ({
