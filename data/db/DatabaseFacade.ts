@@ -53,7 +53,8 @@ export class DatabaseFacade {
       // Initialize recipe repository to sync from Supabase
       await this.recipes.initialize();
     } catch (error) {
-      // Silent fail for initialization to prevent app crashes
+      // Log error to aid debugging, but prevent app crashes
+      console.error("DatabaseFacade initialization failed:", error);
     }
   }
 
@@ -440,9 +441,7 @@ export class DatabaseFacade {
   }
 
   // Batch operations
-  async importRecipes(
-    recipesData: Recipe[]
-  ): Promise<{
+  async importRecipes(recipesData: Recipe[]): Promise<{
     success: number;
     errors: Array<{ recipe: Recipe; error: string }>;
   }> {

@@ -87,6 +87,17 @@ export default function RecipeDetails() {
     return { opacity };
   });
 
+  const memoizedMissingIngredients = useMemo(() => {
+    return recipe?.ingredients
+      .filter((ingredient) => {
+        return !filteredPantryItems.some((pantryItem) =>
+          isIngredientMatch(pantryItem.name, ingredient.name)
+        );
+      })
+      .map(({ name }) => titleCase(name))
+      .join(", ");
+  }, [recipe, filteredPantryItems]);
+
   useEffect(() => {
     // Push a new system bar style when the screen mounts
     const entry = SystemBars.pushStackEntry({
@@ -231,21 +242,16 @@ export default function RecipeDetails() {
           </ScrollView>
 
           {/* Missing Ingredients */}
-          <View className="mt-6 bg-muted rounded-xl px-6 py-4">
-            <H4 className="font-urbanist-semibold text-destructive/60 mb-2">
-              Missing Ingredients
-            </H4>
-            <P className="font-urbanist-regular text-muted-foreground/70 leading-6">
-              {recipe.ingredients
-                .filter((ingredient) => {
-                  return !filteredPantryItems.some((pantryItem) =>
-                    isIngredientMatch(pantryItem.name, ingredient.name)
-                  );
-                })
-                .map(({ name }) => titleCase(name))
-                .join(", ")}
-            </P>
-          </View>
+          {memoizedMissingIngredients && (
+            <View className="mt-6 bg-muted rounded-xl px-6 py-4">
+              <H4 className="font-urbanist-semibold text-destructive/60 mb-2">
+                Missing Ingredients
+              </H4>
+              <P className="font-urbanist-regular text-muted-foreground/70 leading-6">
+                {memoizedMissingIngredients}
+              </P>
+            </View>
+          )}
 
           <Separator className="my-8" />
 

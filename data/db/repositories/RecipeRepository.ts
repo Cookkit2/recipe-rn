@@ -452,10 +452,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
   ): Promise<Recipe> {
     // Create recipe
     const recipe = await this.collection.create((r) => {
-      // Set the ID if provided (for Supabase sync)
-      if (data.recipe.id) {
-        r._raw.id = data.recipe.id;
-      }
+      if (data.recipe.id) r._raw.id = data.recipe.id;
       r.title = data.recipe.title;
       r.description = data.recipe.description;
       if (data.recipe.imageUrl) r.imageUrl = data.recipe.imageUrl;
