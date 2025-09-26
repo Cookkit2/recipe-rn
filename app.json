@@ -134,16 +134,9 @@
       ],
       "expo-router",
       [
-        "expo-camera",
-        {
-          "cameraPermission": "Allow Cookkit to access your camera",
-          "microphonePermission": "Allow Cookkit to access your microphone",
-          "recordAudioAndroid": true
-        }
-      ],
-      [
         "react-native-vision-camera",
         {
+          "cameraPermission": "Cookkit uses your camera to take photos of ingredients so you can identify and add them to your pantry with AI-powered recognition. This helps you discover recipes based on what you have at home.",
           "enableLocation": true,
           "locationPermissionText": "Cookkit needs your location."
         }

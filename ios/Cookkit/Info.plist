@@ -58,7 +58,7 @@
       to your pantry with AI-powered recognition. This helps you discover recipes based on what you
       have at home.</string>
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>Allow Cookkit to access your location</string>
+    <string>Cookkit needs your location to locate your nearby grocery store.</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>Allow Cookkit to access your microphone</string>
     <key>NSMotionUsageDescription</key>
