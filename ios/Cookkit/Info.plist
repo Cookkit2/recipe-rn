@@ -54,7 +54,9 @@
       <true />
     </dict>
     <key>NSCameraUsageDescription</key>
-    <string>Allow Cookkit to access your camera</string>
+    <string>Cookkit uses your camera to take photos of ingredients so you can identify and add them
+      to your pantry with AI-powered recognition. This helps you discover recipes based on what you
+      have at home.</string>
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>Allow Cookkit to access your location</string>
     <key>NSMicrophoneUsageDescription</key>
@@ -62,7 +64,9 @@
     <key>NSMotionUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to access your device motion</string>
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to access your photos</string>
+    <string>Cookkit accesses your photo library to let you select existing photos of ingredients for
+      identification and adding to your pantry. This provides an alternative to taking new photos
+      with the camera.</string>
     <key>NSUserActivityTypes</key>
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
