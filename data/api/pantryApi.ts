@@ -1,5 +1,6 @@
 import { databaseFacade } from "~/data/db/DatabaseFacade";
-import type { Stock, BaseIngredient } from "~/data/db/models";
+import { database } from "~/data/db/database";
+import type { Stock } from "~/data/db/models";
 import type { ItemType, PantryItem } from "~/types/PantryItem";
 
 /**
@@ -122,45 +123,54 @@ export const pantryApi = {
     items: Omit<PantryItem, "id" | "created_at" | "updated_at">[]
   ): Promise<PantryItem[]> {
     const ingredientIdCache = new Map<string, string>();
+    const createdItems: PantryItem[] = [];
 
-    const createdItems = await Promise.all(
-      items.map(async (item) => {
-        // Find or create base ingredient (with simple in-memory cache per batch)
-        let baseIngredientId = ingredientIdCache.get(item.name);
-        if (!baseIngredientId) {
-          let baseIngredient = await databaseFacade.ingredients.findByName(
-            item.name
-          );
-          if (!baseIngredient) {
-            baseIngredient = await databaseFacade.ingredients.create({
-              name: item.name,
-              synonyms: [],
-            });
+    // Process all items in a single transaction to avoid nested transactions
+    await database.write(async () => {
+      for (const item of items) {
+        try {
+          // Find or create base ingredient (with simple in-memory cache per batch)
+          let baseIngredientId = ingredientIdCache.get(item.name);
+          if (!baseIngredientId) {
+            let baseIngredient = await databaseFacade.ingredients.findByName(
+              item.name
+            );
+            if (!baseIngredient) {
+              // Use raw create method to avoid nested transaction
+              baseIngredient = await databaseFacade.ingredients.createRaw({
+                name: item.name,
+                synonyms: [],
+              });
+            }
+            baseIngredientId = baseIngredient.id;
+            ingredientIdCache.set(item.name, baseIngredientId);
           }
-          baseIngredientId = baseIngredient.id;
-          ingredientIdCache.set(item.name, baseIngredientId);
+
+          // Create stock item using raw method to avoid nested transaction
+          const stockItem = await databaseFacade.stock.createRaw({
+            baseIngredientId,
+            name: item.name,
+            quantity: item.quantity,
+            unit: item.unit,
+            expiryDate: item.expiry_date,
+            type: item.type,
+            backgroundColor: item.background_color,
+            category: item.category,
+            imageUrl:
+              typeof item.image_url === "string" ? item.image_url : undefined,
+            x: item.x,
+            y: item.y,
+            scale: item.scale,
+          });
+
+          const convertedItem = await convertStockToPantryItem(stockItem);
+          createdItems.push(convertedItem);
+        } catch (error) {
+          console.error(`Failed to add pantry item ${item.name}:`, error);
+          // Continue with other items instead of failing completely
         }
-
-        // Create stock item
-        const stockItem = await databaseFacade.stock.create({
-          baseIngredientId,
-          name: item.name,
-          quantity: item.quantity,
-          unit: item.unit,
-          expiryDate: item.expiry_date,
-          type: item.type,
-          backgroundColor: item.background_color,
-          category: item.category,
-          imageUrl:
-            typeof item.image_url === "string" ? item.image_url : undefined,
-          x: item.x,
-          y: item.y,
-          scale: item.scale,
-        });
-
-        return await convertStockToPantryItem(stockItem);
-      })
-    );
+      }
+    });
 
     return createdItems;
   },

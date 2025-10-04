@@ -1,53 +1,89 @@
 import { ImageFormat, Skia, type SkImage } from "@shopify/react-native-skia";
 import { PREF_UNIT_SYSTEM_KEY } from "~/constants/storage-keys";
 import { storage } from "~/data";
-import { generateGeminiContent } from "~/utils/gemini-api";
 import { titleCase } from "~/utils/text-formatter";
 import { convertToUnitSystem } from "~/utils/unit-converter";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
+import { generateObject } from "ai";
+import z from "zod/v4";
+import Constants from "expo-constants";
+
+// Return your answer ONLY in the format: \`name,quantity,unit\`
+// - If the quantity on a known food item is unreadable, use \`1\` and \`unit\`.
 const VEGE_PROMPT = `
 You are an inventory AI. From the image, identify the primary food item.
-Return your answer ONLY in the format: \`name,quantity,unit\`
+Do not add any other text.
 
 - If the object is not a food item or is unidentifiable, return \`unknown,1,unit\`.
 - For countable items, the unit is \`units\`.
-- For packaged goods, read the weight/volume (e.g., \`g\`, \`kg\`, \`ml\`, \`L\`) from the label.
-- If the quantity on a known food item is unreadable, use \`1\` and \`item\`.
-
-Do not add any other text.
+- For packaged goods, read the weight/volume (e.g., \`g\`, \`kg\`, \`ml\`, \`L\`) from the label else use \`1\` and \`unit\` .
 `;
 
 const GEMINI_MODEL_INPUT_SIZE = 400;
+
+const google = createGoogleGenerativeAI({
+  apiKey:
+    process.env.EXPO_PUBLIC_GEMINI_API_KEY ||
+    Constants.expoConfig?.extra?.EXPO_PUBLIC_GEMINI_API_KEY,
+});
 
 export const classifyStaticImage = async (skImage: SkImage) => {
   const startTime = performance.now();
 
   const imageCompressed = compressImage(skImage, GEMINI_MODEL_INPUT_SIZE);
 
-  const geminiResponse = await generateGeminiContent(
-    JSON.stringify({
-      contents: [
-        {
-          parts: [
-            {
-              inline_data: {
-                mime_type: "image/jpeg",
-                data: imageCompressed,
-              },
-            },
-            { text: VEGE_PROMPT },
-          ],
-        },
-      ],
-    })
-  );
+  const objectResult = await generateObject({
+    model: google("gemini-2.0-flash-lite"),
+    messages: [
+      { role: "system", content: "You help planning travel itineraries." },
+      {
+        role: "user",
+        content: [
+          {
+            type: "image",
+            image: imageCompressed,
+          },
+          {
+            type: "text",
+            text: VEGE_PROMPT,
+          },
+        ],
+      },
+    ],
+    schema: z.object({
+      name: z.string(),
+      quantity: z.number(),
+      unit: z.string(),
+    }),
+  });
 
-  const ingredientName = postProcessGeminiResponse(geminiResponse);
+  console.log(objectResult.object);
+
+  // const geminiResponse = await generateGeminiContent(
+  //   JSON.stringify({
+  //     contents: [
+  //       {
+  //         parts: [
+  //           {
+  //             inline_data: {
+  //               mime_type: "image/jpeg",
+  //               data: imageCompressed,
+  //             },
+  //           },
+  //           { text: VEGE_PROMPT },
+  //         ],
+  //       },
+  //     ],
+  //   })
+  // );
+
+  // const ingredientName = postProcessGeminiResponse(geminiResponse);
   const endTime = performance.now();
   const duration = endTime - startTime;
 
   console.log(`classifyStaticImage took ${duration} milliseconds`);
-  return ingredientName;
+  return objectResult.object;
 };
 
 const compressImage = (image: SkImage, imageSize: number) => {

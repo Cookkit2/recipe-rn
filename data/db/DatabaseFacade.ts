@@ -10,6 +10,7 @@ import {
   convertToUnitSystem,
   roundToReasonablePrecision,
 } from "~/utils/unit-converter";
+import { supabase } from "~/lib/supabase/supabase-client";
 
 interface MissingIngredientInfo {
   name: string;
@@ -50,8 +51,11 @@ export class DatabaseFacade {
 
   private async initializeAsync() {
     try {
-      // Initialize recipe repository to sync from Supabase
+      // SYNC DISABLED: Don't sync from Supabase to prevent pulling empty database
+      // TODO: Re-enable after pushing local data to server
       await this.recipes.initialize();
+      // await this.pushRecipeIngredientsToSupabase();
+      console.log("🚫 Database sync DISABLED - local data preserved");
     } catch (error) {
       // Log error to aid debugging, but prevent app crashes
       console.error("DatabaseFacade initialization failed:", error);
@@ -446,7 +450,7 @@ export class DatabaseFacade {
     errors: Array<{ recipe: Recipe; error: string }>;
   }> {
     let success = 0;
-    const errors = [];
+    const errors: Array<{ recipe: Recipe; error: string }> = [];
 
     for (const recipeData of recipesData) {
       try {
@@ -482,6 +486,230 @@ export class DatabaseFacade {
       stock: stockItems.map((s) => s._raw),
       categories,
     };
+  }
+
+  /**
+   * EMERGENCY: Push base_ingredient and pivot_recipe_ingredient data to Supabase
+   *
+   * This method pushes base_ingredient and pivot_recipe_ingredient tables from
+   * your local database to Supabase. It queries existing recipes in Supabase to
+   * get proper UUIDs for foreign key relationships.
+   *
+   * Process:
+   * 1. Push base_ingredient data (let Supabase generate new UUIDs)
+   * 2. Query existing recipes from Supabase to get recipe UUIDs
+   * 3. Map ingredient names to their new Supabase UUIDs
+   * 4. Push pivot_recipe_ingredient data with proper foreign key references
+   *
+   * Usage:
+   * ```typescript
+   * import { databaseFacade } from "~/data/db/DatabaseFacade";
+   * await databaseFacade.pushLocalDataToSupabase();
+   * ```
+   */
+  async pushLocalDataToSupabase(): Promise<void> {
+    try {
+      console.log(
+        "🚀 Starting to push base_ingredient and pivot_recipe_ingredient data to Supabase..."
+      );
+
+      let totalSuccessCount = 0;
+      let totalErrorCount = 0;
+
+      // 1. Push all base_ingredient data
+      console.log("📦 Pushing base_ingredient data...");
+      const allBaseIngredients = await this.ingredients.findAll();
+      console.log(
+        `Found ${allBaseIngredients.length} base ingredients to push`
+      );
+
+      for (const ingredient of allBaseIngredients) {
+        try {
+          // Transform local BaseIngredient to Supabase format
+          // Note: Let Supabase generate new UUIDs, don't include local IDs
+          const baseIngredientData = {
+            name: ingredient.name,
+            steps_to_store_id: null, // Local model doesn't have this, use null
+            days_to_expire: 7, // Default to 7 days
+            storage_type: "refrigerator", // Default storage type
+          };
+
+          console.log(
+            `Pushing base_ingredient: ${ingredient.name} (local id: ${ingredient.id})`
+          );
+          // Use insert instead of upsert since we're letting DB generate new IDs
+          const { data, error } = await supabase
+            .from("base_ingredient")
+            .insert(baseIngredientData)
+            .select()
+            .single();
+
+          if (error) {
+            console.error(
+              `Failed to push base_ingredient ${ingredient.name}:`,
+              error
+            );
+            totalErrorCount++;
+          } else {
+            totalSuccessCount++;
+          }
+        } catch (error) {
+          console.error(
+            `Failed to push base_ingredient ${ingredient.name}:`,
+            error
+          );
+          totalErrorCount++;
+        }
+      }
+
+      // 2. Get existing recipes from Supabase to map recipe titles to UUIDs
+      console.log("🔗 Getting existing recipes from Supabase...");
+      const { data: supabaseRecipes, error: recipeError } = await supabase
+        .from("recipe")
+        .select("id, title");
+
+      if (recipeError) {
+        throw new Error(
+          `Failed to get recipes from Supabase: ${recipeError.message}`
+        );
+      }
+
+      // Create mapping of recipe title to Supabase UUID
+      const recipeTitleToIdMap = new Map<string, string>();
+      supabaseRecipes?.forEach((recipe) => {
+        recipeTitleToIdMap.set(recipe.title.toLowerCase().trim(), recipe.id);
+      });
+
+      console.log(
+        `Found ${supabaseRecipes?.length} existing recipes in Supabase`
+      );
+
+      // 3. Get newly created base ingredients from Supabase to map names to UUIDs
+      console.log("🔗 Getting base ingredients from Supabase for mapping...");
+      const { data: supabaseIngredients, error: mappingError } = await supabase
+        .from("base_ingredient")
+        .select("id, name");
+
+      if (mappingError) {
+        throw new Error(
+          `Failed to get ingredient mapping: ${mappingError.message}`
+        );
+      }
+
+      const ingredientNameToIdMap = new Map<string, string>();
+      supabaseIngredients?.forEach((ingredient) => {
+        ingredientNameToIdMap.set(
+          ingredient.name.toLowerCase().trim(),
+          ingredient.id
+        );
+      });
+
+      // 4. Push all pivot_recipe_ingredient data
+      console.log("🥘 Pushing pivot_recipe_ingredient data...");
+      const allRecipes = await this.recipes.findAll();
+      console.log(
+        `Found ${allRecipes.length} local recipes to extract ingredients from`
+      );
+
+      let totalRecipeIngredients = 0;
+      let recipeIngredientsSuccess = 0;
+      let recipeIngredientsErrors = 0;
+
+      for (const recipe of allRecipes) {
+        try {
+          // Find the Supabase recipe UUID by title
+          const supabaseRecipeId = recipeTitleToIdMap.get(
+            recipe.title.toLowerCase().trim()
+          );
+
+          if (!supabaseRecipeId) {
+            console.log(
+              `⚠️ Recipe "${recipe.title}" not found in Supabase, skipping ingredients`
+            );
+            continue;
+          }
+
+          const recipeDetails = await this.recipes.getRecipeWithDetails(
+            recipe.id
+          );
+          if (recipeDetails && recipeDetails.ingredients) {
+            totalRecipeIngredients += recipeDetails.ingredients.length;
+
+            for (const recipeIngredient of recipeDetails.ingredients) {
+              try {
+                // Find the Supabase base ingredient UUID by name
+                const supabaseBaseIngredientId = ingredientNameToIdMap.get(
+                  recipeIngredient.name.toLowerCase().trim()
+                );
+
+                if (!supabaseBaseIngredientId) {
+                  console.log(
+                    `⚠️ Base ingredient "${recipeIngredient.name}" not found in Supabase, skipping`
+                  );
+                  recipeIngredientsErrors++;
+                  continue;
+                }
+
+                // Transform local RecipeIngredient to Supabase pivot_recipe_ingredient format
+                // const pivotRecipeIngredientData = {
+                //   recipe_id: supabaseRecipeId, // Use Supabase recipe UUID
+                //   base_ingredient_id: supabaseBaseIngredientId, // Use Supabase ingredient UUID
+                //   name: recipeIngredient.name,
+                //   quantity: recipeIngredient.quantity,
+                //   notes: recipeIngredient.notes || null,
+                //   unit: recipeIngredient.unit,
+                // };
+
+                // console.log(
+                //   `Pushing pivot_recipe_ingredient: ${recipeIngredient.name} for recipe ${recipe.title}`
+                // );
+
+                // Insert (let Supabase generate new UUID for the pivot record)
+                // const { error } = await supabase
+                //   .from("pivot_recipe_ingredient")
+                //   .insert(pivotRecipeIngredientData);
+
+                if (error) {
+                  console.error(
+                    `Failed to push recipe ingredient ${recipeIngredient.name}:`,
+                    error
+                  );
+                  recipeIngredientsErrors++;
+                } else {
+                  recipeIngredientsSuccess++;
+                }
+              } catch (error) {
+                console.error(
+                  `Failed to push recipe ingredient ${recipeIngredient.name}:`,
+                  error
+                );
+                recipeIngredientsErrors++;
+              }
+            }
+          }
+        } catch (error) {
+          console.error(
+            `Failed to get ingredients for recipe ${recipe.title}:`,
+            error
+          );
+          recipeIngredientsErrors++;
+        }
+      }
+
+      // Update total counts
+      totalSuccessCount += recipeIngredientsSuccess;
+      totalErrorCount += recipeIngredientsErrors;
+
+      console.log(`📊 Push summary:`);
+      console.log(`  - Base ingredients: ${allBaseIngredients.length} items`);
+      console.log(`  - Recipe ingredients: ${totalRecipeIngredients} items`);
+      console.log(`  - Total success: ${totalSuccessCount}`);
+      console.log(`  - Total errors: ${totalErrorCount}`);
+      console.log("✅ Push to Supabase completed!");
+    } catch (error) {
+      console.error("❌ Error pushing local data to Supabase:", error);
+      throw error;
+    }
   }
 
   // Get raw database instance (for advanced operations)

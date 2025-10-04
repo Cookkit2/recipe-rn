@@ -1,6 +1,6 @@
 import "~/global.css";
-import React, { useEffect, useRef, useState } from "react";
-import { Stack, useRouter, usePathname } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { Stack, useRouter } from "expo-router";
 import { Appearance, Platform, View } from "react-native";
 import { useColorScheme } from "~/hooks/useColorScheme";
 import { PortalHost } from "@rn-primitives/portal";
@@ -14,13 +14,10 @@ import Animated, {
 import { RootScaleProvider, useRootScale } from "~/store/RootScaleContext";
 import { BlurView } from "expo-blur";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { Image } from "expo-image";
-import { dummyRecipesData } from "~/data/dummy/dummy-recipes";
 import { Toaster } from "sonner-native";
 export { ErrorBoundary } from "expo-router";
 import { SystemBars } from "react-native-edge-to-edge";
 import { QueryProvider } from "~/store/QueryProvider";
-import { AuthProvider, SupabaseAuthStrategy } from "~/auth";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { createMMKVStorage } from "~/data/storage";
 import { storage } from "~/data";
@@ -211,7 +208,7 @@ export default function RootLayout() {
 
   // TODO: fetch all recipes images
   useEffect(() => {
-    Image.prefetch([...dummyRecipesData.map((recipe) => recipe.imageUrl)]);
+    // Image.prefetch([...dummyRecipesData.map((recipe) => recipe.imageUrl)]);
     createMMKVStorage(); // Initialize MMKV storage
   }, []);
 

@@ -1,9 +1,6 @@
 import React from "react";
 import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import { EyeIcon, EyeOffIcon } from "lucide-nativewind";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod/v4";
 import { H4, P } from "~/components/ui/typography";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
@@ -14,20 +11,11 @@ import { storage } from "~/data";
 import { toast } from "sonner-native";
 import { PROFILE_IMAGE_KEY, PROFILE_NAME_KEY } from "~/constants/storage-keys";
 
-// Zod validation schema
-const profileSchema = z.object({
-  name: z
-    .string()
-    .min(1, "Name is required")
-    .min(2, "Name must be at least 2 characters"),
-  email: z.email("Please enter a valid email").min(1, "Email is required"),
-  password: z
-    .string()
-    .min(1, "Password is required")
-    .min(6, "Password must be at least 6 characters"),
-});
-
-type ProfileFormData = z.infer<typeof profileSchema>;
+type FormErrors = {
+  name?: string;
+  email?: string;
+  password?: string;
+};
 
 export default function EditProfileModal({
   modalVisible,
@@ -41,42 +29,62 @@ export default function EditProfileModal({
   const [isSigningUp, setIsSigningUp] = React.useState(false);
   const { signUpWithEmail } = useAuthActions();
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-    watch,
-  } = useForm<ProfileFormData>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      password: "",
-    },
-  });
-
-  // Watch the name field to update profileName state
-  const watchedName = watch("name");
+  const [name, setName] = React.useState("");
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [errors, setErrors] = React.useState<FormErrors>({});
 
   const handleImageSelected = (imageUri: string) => {
     setProfileImage(imageUri);
-    // Add your image handling logic here
   };
 
-  const onSubmit = async (data: ProfileFormData) => {
-    if (isSigningUp) return; // Prevent multiple submissions
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+
+    // Validate name
+    if (!name.trim()) {
+      newErrors.name = "Name is required";
+    } else if (name.trim().length < 2) {
+      newErrors.name = "Name must be at least 2 characters";
+    }
+
+    // Validate email
+    if (!email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = "Please enter a valid email";
+    }
+
+    // Validate password
+    if (!password) {
+      newErrors.password = "Password is required";
+    } else if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const onSubmit = async () => {
+    if (isSigningUp) return;
+
+    if (!validateForm()) {
+      return;
+    }
+
     setIsSigningUp(true);
 
     try {
       const result = await signUpWithEmail({
-        email: data.email,
-        password: data.password,
+        email: email,
+        password: password,
       });
 
       console.log("Sign Up Result:", result);
 
       if (result.success) {
-        storage.set(PROFILE_NAME_KEY, data.name);
+        storage.set(PROFILE_NAME_KEY, name);
         storage.set(PROFILE_IMAGE_KEY, profileImage);
         onCancel();
       } else if (result.error) {
@@ -93,7 +101,7 @@ export default function EditProfileModal({
     <BaseModal modalVisible={modalVisible} onCancel={onCancel}>
       <View className="bg-primary rounded-4xl p-4 max-w-xs w-full shadow-2xl border-continuous">
         <H4 className="font-urbanist-bold text-primary-foreground text-center mb-8">
-          Hello, <Text className="font-bowlby-one">{watchedName}</Text>
+          Hello, <Text className="font-bowlby-one">{name}</Text>
         </H4>
       </View>
 
@@ -102,63 +110,57 @@ export default function EditProfileModal({
         <UploadPictureIcon onImageSelected={handleImageSelected} />
 
         {/* Name Input */}
-        <Controller
-          control={control}
-          name="name"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <Input
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              keyboardType="default"
-              placeholder="Enter your name"
-              autoFocus={true}
-              selectTextOnFocus={true}
-              className="w-full mb-2"
-              error={!!errors.name?.message}
-            />
-          )}
+        <Input
+          value={name}
+          onChangeText={(text) => {
+            setName(text);
+            if (errors.name) {
+              setErrors({ ...errors, name: undefined });
+            }
+          }}
+          keyboardType="default"
+          placeholder="Enter your name"
+          autoFocus={true}
+          selectTextOnFocus={true}
+          className="w-full mb-2"
+          error={!!errors.name}
         />
-        <ErrorText text={errors.name?.message} />
+        <ErrorText text={errors.name} />
 
         {/* Email Input */}
-        <Controller
-          control={control}
-          name="email"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <Input
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              keyboardType="email-address"
-              placeholder="Enter your email"
-              autoCapitalize="none"
-              autoCorrect={false}
-              className="w-full mb-2"
-              error={!!errors.email?.message}
-            />
-          )}
+        <Input
+          value={email}
+          onChangeText={(text) => {
+            setEmail(text);
+            if (errors.email) {
+              setErrors({ ...errors, email: undefined });
+            }
+          }}
+          keyboardType="email-address"
+          placeholder="Enter your email"
+          autoCapitalize="none"
+          autoCorrect={false}
+          className="w-full mb-2"
+          error={!!errors.email}
         />
-        <ErrorText text={errors.email?.message} />
+        <ErrorText text={errors.email} />
 
         {/* Password Input with Show/Hide Toggle */}
         <View className="w-full relative mb-2">
-          <Controller
-            control={control}
-            name="password"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <Input
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                placeholder="Enter your password"
-                secureTextEntry={!showPassword}
-                autoCapitalize="none"
-                autoCorrect={false}
-                className="w-full pl-12 pr-12 text-center"
-                error={!!errors.password?.message}
-              />
-            )}
+          <Input
+            value={password}
+            onChangeText={(text) => {
+              setPassword(text);
+              if (errors.password) {
+                setErrors({ ...errors, password: undefined });
+              }
+            }}
+            placeholder="Enter your password"
+            secureTextEntry={!showPassword}
+            autoCapitalize="none"
+            autoCorrect={false}
+            className="w-full pl-12 pr-12 text-center"
+            error={!!errors.password}
           />
           <Pressable
             onPress={() => setShowPassword(!showPassword)}
@@ -179,7 +181,7 @@ export default function EditProfileModal({
             )}
           </Pressable>
         </View>
-        <ErrorText text={errors.password?.message} />
+        <ErrorText text={errors.password} />
 
         <P className="text-sm font-urbanist-regular text-muted-foreground text-center mt-2">
           Set up your profile to correctly backup your data
@@ -187,7 +189,7 @@ export default function EditProfileModal({
 
         <Button
           className="min-w-full mt-4 rounded-2xl bg-foreground flex-row justify-center items-center gap-2"
-          onPress={handleSubmit(onSubmit)}
+          onPress={onSubmit}
           disabled={isSigningUp}
         >
           {isSigningUp && <ActivityIndicator size="small" />}

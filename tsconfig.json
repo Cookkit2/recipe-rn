@@ -23,6 +23,6 @@
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
     "nativewind-env.d.ts"
-  ],
+, "constants/log.tst"  ],
   "exclude": ["node_modules"]
 }

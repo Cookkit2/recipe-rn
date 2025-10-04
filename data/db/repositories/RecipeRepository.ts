@@ -39,8 +39,8 @@ export class RecipeRepository extends BaseRepository<Recipe> {
     if (this.isInitialized) return;
 
     try {
-      // Sync from Supabase on start
-      await this.syncFromSupabase();
+      // Sync from Supabase on start - use high limit to get all recipes
+      await this.syncFromSupabase(1000);
 
       this.isInitialized = true;
     } catch (error) {
@@ -269,7 +269,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
   }
 
   // Sync recipes from Supabase
-  async syncFromSupabase(limit: number = 50): Promise<void> {
+  async syncFromSupabase(limit: number = 1000): Promise<void> {
     try {
       const recipesWithDetails =
         await recipeApi.getRecipesWithDetailsSupabase(limit);
@@ -307,35 +307,34 @@ export class RecipeRepository extends BaseRepository<Recipe> {
         `Found ${newRecipes.length} new recipes and ${existingRecipesToUpdate.length} existing recipes to update`
       );
 
-      // Process new recipes
-      for (const supabaseRecipe of newRecipes) {
-        try {
-          await database.write(async () => {
+      // Process all recipes in a single transaction to avoid nested transactions
+      await database.write(async () => {
+        // Process new recipes
+        for (const supabaseRecipe of newRecipes) {
+          try {
             await this.syncSingleRecipe(supabaseRecipe);
-            // console.log(`Created new recipe: ${localRecipe.title}`);
-          });
-        } catch (error) {
-          console.error(
-            `Failed to create recipe ${supabaseRecipe.recipe.title}:`,
-            error
-          );
+            // console.log(`Created new recipe: ${supabaseRecipe.recipe.title}`);
+          } catch (error) {
+            console.error(
+              `Failed to create recipe ${supabaseRecipe.recipe.title}:`,
+              error
+            );
+          }
         }
-      }
 
-      // Process existing recipes (update them)
-      for (const supabaseRecipe of existingRecipesToUpdate) {
-        try {
-          await database.write(async () => {
+        // Process existing recipes (update them)
+        for (const supabaseRecipe of existingRecipesToUpdate) {
+          try {
             await this.updateExistingRecipe(supabaseRecipe);
             // console.log(`Updated existing recipe: ${supabaseRecipe.recipe.title}`);
-          });
-        } catch (error) {
-          console.error(
-            `Failed to update recipe ${supabaseRecipe.recipe.title}:`,
-            error
-          );
+          } catch (error) {
+            console.error(
+              `Failed to update recipe ${supabaseRecipe.recipe.title}:`,
+              error
+            );
+          }
         }
-      }
+      });
 
       // Verify sync worked
       const localCount = await this.count();

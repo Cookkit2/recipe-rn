@@ -2027,54 +2027,6 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-view-shot (4.0.3):
-    - DoubleConversion
-    - glog
-    - hermes-engine
-    - RCT-Folly (= 2024.11.18.00)
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-hermes
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - Yoga
-  - react-native-webview (13.13.5):
-    - DoubleConversion
-    - glog
-    - hermes-engine
-    - RCT-Folly (= 2024.11.18.00)
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-hermes
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - Yoga
   - react-native-worklets-core (1.6.2):
     - DoubleConversion
     - glog
@@ -2792,31 +2744,6 @@ PODS:
   - TensorFlowLiteC/Core (2.17.0)
   - TensorFlowLiteC/CoreML (2.17.0):
     - TensorFlowLiteC/Core
-  - vision-camera-resize-plugin (3.2.0):
-    - DoubleConversion
-    - glog
-    - hermes-engine
-    - RCT-Folly (= 2024.11.18.00)
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-hermes
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - VisionCamera
-    - Yoga
   - VisionCamera (4.7.2):
     - VisionCamera/Core (= 4.7.2)
     - VisionCamera/FrameProcessors (= 4.7.2)
@@ -2926,8 +2853,6 @@ DEPENDENCIES:
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - react-native-screen-corner-radius (from `../node_modules/react-native-screen-corner-radius`)
   - "react-native-skia (from `../node_modules/@shopify/react-native-skia`)"
-  - react-native-view-shot (from `../node_modules/react-native-view-shot`)
-  - react-native-webview (from `../node_modules/react-native-webview`)
   - react-native-worklets-core (from `../node_modules/react-native-worklets-core`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
   - React-oscompat (from `../node_modules/react-native/ReactCommon/oscompat`)
@@ -2971,7 +2896,6 @@ DEPENDENCIES:
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNSVG (from `../node_modules/react-native-svg`)
   - "simdjson (from `../node_modules/@nozbe/simdjson`)"
-  - vision-camera-resize-plugin (from `../node_modules/vision-camera-resize-plugin`)
   - VisionCamera (from `../node_modules/react-native-vision-camera`)
   - "WatermelonDB (from `../node_modules/@nozbe/watermelondb`)"
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
@@ -3167,10 +3091,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-screen-corner-radius"
   react-native-skia:
     :path: "../node_modules/@shopify/react-native-skia"
-  react-native-view-shot:
-    :path: "../node_modules/react-native-view-shot"
-  react-native-webview:
-    :path: "../node_modules/react-native-webview"
   react-native-worklets-core:
     :path: "../node_modules/react-native-worklets-core"
   React-NativeModulesApple:
@@ -3257,8 +3177,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-svg"
   simdjson:
     :path: "../node_modules/@nozbe/simdjson"
-  vision-camera-resize-plugin:
-    :path: "../node_modules/vision-camera-resize-plugin"
   VisionCamera:
     :path: "../node_modules/react-native-vision-camera"
   WatermelonDB:
@@ -3360,8 +3278,6 @@ SPEC CHECKSUMS:
   react-native-safe-area-context: 00d03dc688ba86664be66f9e3f203fc7d747d899
   react-native-screen-corner-radius: 67064efbb78f2d48f01626713ae8142f6a20f925
   react-native-skia: 3565f73fae91ab1bd44baa6e1da961052345f6e6
-  react-native-view-shot: 41c5c50c809f1fd61f91c99400b2222c9b80d13f
-  react-native-webview: cde150463e7caa49b316b0ed1871e7ef8193bef4
   react-native-worklets-core: 236e83d596d0e2b7fcabc3dcd93b40c3ec9a5ab6
   React-NativeModulesApple: 3ecc647742d33ad617bd2805902e3f91f2b3008f
   React-oscompat: 0592889a9fcf0eacb205532028e4a364e22907dd
@@ -3413,12 +3329,11 @@ SPEC CHECKSUMS:
   simdjson: 7bb9e33d87737cec966e7b427773c67baa4458fe
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   TensorFlowLiteC: eac6d689a8d391d1b202dc59e3d9165ba64aaf73
-  vision-camera-resize-plugin: 558e375b79de27c6e54a69f9695e502e4beac0db
   VisionCamera: 02578a728d4a479d9c47f869efdf906c5680d50b
   WatermelonDB: 8dafe8b8a23dc6d8e033e1086449b8e2638d9453
   Yoga: 357d74ecf46ef5be0234a0a2b08a9f728b37d93f
   ZXingObjC: 8898711ab495761b2dbbdec76d90164a6d7e14c5
 
-PODFILE CHECKSUM: b19150d272b345fe55dab8eabe10562c4e2378be
+PODFILE CHECKSUM: ab175c2692b3eca679c0a970fd485c94ed5a8fe8
 
 COCOAPODS: 1.16.2

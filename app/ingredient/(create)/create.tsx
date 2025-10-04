@@ -5,7 +5,12 @@ import {
   useCameraFormat,
   type CameraPosition,
 } from "react-native-vision-camera";
-import { startTransition, useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import {
   StyleSheet,
   View,
@@ -51,14 +56,11 @@ import {
   type SkImage,
   Image as SkiaImage,
   Canvas,
-  useImage,
   Fill,
 } from "@shopify/react-native-skia";
 import * as FileSystem from "expo-file-system";
 import type { PantryItemConfirmation } from "~/types/PantryItem";
 import type { Prettify } from "~/utils/type-prettier";
-import useImageColors from "~/hooks/useImageColors";
-import useColors from "~/hooks/useColor";
 import * as Haptics from "expo-haptics";
 import { titleCase } from "~/utils/text-formatter";
 import { loadImageIntoSkia } from "~/hooks/model/processImage";
@@ -92,7 +94,7 @@ export default function CreateIngredient() {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [capturedImageSk, setCapturedImageSk] = useState<SkImage | null>(null);
 
-  const [isSegmentingImage, setIsSegmentingImage] = useState(false);
+  const [isSegmentingImage, startTransition] = useTransition();
   const [segmentedImage, setSegmentedImage] = useState<SegmentedImage | null>(
     null
   );
@@ -193,7 +195,7 @@ export default function CreateIngredient() {
   };
 
   const processImage = async (imagePath: string) => {
-    setIsSegmentingImage(true);
+
     setCapturedImage(imagePath);
     capturedImageOpacityValue.value = 1;
 
@@ -203,43 +205,43 @@ export default function CreateIngredient() {
       y: (framePosition.y / ((width * 4) / 3)) * CAMERA_RESOLUTION.height,
     };
 
-    const skImage = await loadImageIntoSkia(imagePath);
-    setCapturedImageSk(skImage);
+    startTransition(async () => {
+      const skImage = await loadImageIntoSkia(imagePath);
+      setCapturedImageSk(skImage);
 
-    if (!skImage) {
-      setIsSegmentingImage(false);
-      toast.error("Failed to load image");
-      return;
-    }
+      if (!skImage) {
+        toast.error("Failed to load image");
+        return;
+      }
 
-    // Process the photo for segmentation
-    const segmentedImage = await segmentStaticImage(
-      skImage,
-      normalizedFramePosition
-    );
-
-    const result: SegmentedImage = {
-      ...segmentedImage,
-      name: "",
-      quantity: 1,
-      unit: "unit",
-    };
-
-    setSegmentedImage(result);
-
-    setIsSegmentingImage(false);
-    setTimeout(() => {
-      capturedImageOpacityValue.value = withTiming(
-        0,
-        CURVES["expressive.fast.effects"]
+      // Process the photo for segmentation
+      const segmentedImage = await segmentStaticImage(
+        skImage,
+        normalizedFramePosition
       );
-    }, 200);
-    setTimeout(() => {
-      greyBackgroundOpacityValue.value = withTiming(
-        1,
-        CURVES["expressive.fast.effects"]
-      );
-    }, 100);
+
+      const result: SegmentedImage = {
+        ...segmentedImage,
+        name: "",
+        quantity: 1,
+        unit: "unit",
+      };
+
+      setSegmentedImage(result);
+
+      setTimeout(() => {
+        capturedImageOpacityValue.value = withTiming(
+          0,
+          CURVES["expressive.fast.effects"]
+        );
+      }, 200);
+      setTimeout(() => {
+        greyBackgroundOpacityValue.value = withTiming(
+          1,
+          CURVES["expressive.fast.effects"]
+        );
+      }, 100);
+    });
   };
 
   const confirmSegmentedImage = () => {

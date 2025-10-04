@@ -52,10 +52,10 @@ export default function ConfirmationPage() {
     // setIsLoading(true);
     const isPurchased = await presentPaywallIfNeeded();
 
-    if (!isPurchased) {
-      toast.error("You need to subscribe to save ingredients.");
-      return;
-    }
+    // if (!isPurchased) {
+    //   toast.error("You need to subscribe to save ingredients.");
+    //   return;
+    // }
 
     try {
       console.log("processPantryItems", processPantryItems);

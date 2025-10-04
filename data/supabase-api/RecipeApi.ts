@@ -19,9 +19,11 @@ export const recipeApi = {
 
   /**
    * Get newest recipes from Supabase (ordered by creation/modification date)
-   * @param limit - Maximum number of recipes to fetch (default: 50)
+   * @param limit - Maximum number of recipes to fetch (default: 1000)
    */
-  getNewestRecipes: async (limit: number = 50): Promise<Tables<"recipe">[]> => {
+  getNewestRecipes: async (
+    limit: number = 1000
+  ): Promise<Tables<"recipe">[]> => {
     const { data, error } = await supabase
       .from("recipe")
       .select("*")
@@ -79,7 +81,7 @@ export const recipeApi = {
    * Get multiple recipes with their details
    */
   getRecipesWithDetailsSupabase: async (
-    limit: number = 50
+    limit: number = 1000
   ): Promise<SupabaseRecipeWithDetails[]> => {
     // First get the newest recipes
     const recipes = await recipeApi.getNewestRecipes(limit);

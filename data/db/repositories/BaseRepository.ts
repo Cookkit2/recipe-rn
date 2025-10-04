@@ -50,12 +50,17 @@ export abstract class BaseRepository<T extends Model> {
 
   async create(data: Partial<T> & Record<string, unknown>): Promise<T> {
     return await database.write(async () => {
-      return await this.collection.create((record: T) => {
-        Object.keys(data).forEach((key) => {
-          if (data[key] !== undefined) {
-            record[key] = data[key];
-          }
-        });
+      return await this.createRaw(data);
+    });
+  }
+
+  // Raw create method that works within existing transactions
+  async createRaw(data: Partial<T> & Record<string, unknown>): Promise<T> {
+    return await this.collection.create((record: T) => {
+      Object.keys(data).forEach((key) => {
+        if (data[key] !== undefined) {
+          (record as any)[key] = data[key];
+        }
       });
     });
   }
@@ -65,13 +70,21 @@ export abstract class BaseRepository<T extends Model> {
     data: Partial<T> & Record<string, unknown>
   ): Promise<T> {
     return await database.write(async () => {
-      const record = await this.collection.find(id);
-      return await record.update((r: T) => {
-        Object.keys(data).forEach((key) => {
-          if (data[key] !== undefined) {
-            r[key] = data[key];
-          }
-        });
+      return await this.updateRaw(id, data);
+    });
+  }
+
+  // Raw update method that works within existing transactions
+  async updateRaw(
+    id: string,
+    data: Partial<T> & Record<string, unknown>
+  ): Promise<T> {
+    const record = await this.collection.find(id);
+    return await record.update((r: T) => {
+      Object.keys(data).forEach((key) => {
+        if (data[key] !== undefined) {
+          (r as any)[key] = data[key];
+        }
       });
     });
   }
