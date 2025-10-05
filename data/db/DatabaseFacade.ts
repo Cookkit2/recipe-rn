@@ -37,6 +37,7 @@ export interface UpdateStockData {
   expirationDate?: number;
   purchaseDate?: number;
   notes?: string;
+  [key: string]: unknown;
 }
 
 export interface CreateRecipeData {
@@ -297,20 +298,25 @@ export class DatabaseFacade {
    * Create a new stock item
    */
   async createStock(data: CreateStockData): Promise<Stock> {
-    return await this.stocks.create({
+    // Map CreateStockData to StockData interface
+    const stockData: Record<string, unknown> = {
       name: data.name,
       quantity: data.quantity,
       unit: data.unit,
-      expiryDate: data.expirationDate
-        ? new Date(data.expirationDate)
-        : undefined,
       storageType: data.storageType,
       imageUrl: data.imageUrl,
       backgroundColor: data.backgroundColor,
       x: data.x,
       y: data.y,
       scale: data.scale,
-    } as any);
+    };
+
+    // Convert timestamp to Date if provided
+    if (data.expirationDate !== undefined) {
+      stockData.expiryDate = new Date(data.expirationDate);
+    }
+
+    return await this.stocks.create(stockData);
   }
 
   /**
@@ -318,7 +324,7 @@ export class DatabaseFacade {
    */
   async updateStock(id: string, data: UpdateStockData): Promise<Stock | null> {
     // Cast to Record<string, unknown> to satisfy repository interface
-    return await this.stocks.update(id, data as Record<string, unknown>);
+    return await this.stocks.update(id, data);
   }
 
   /**

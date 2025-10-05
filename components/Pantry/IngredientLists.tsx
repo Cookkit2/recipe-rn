@@ -1,8 +1,5 @@
 import React from "react";
-import Animated, {
-  useAnimatedStyle,
-  withTiming,
-} from "react-native-reanimated";
+import { useAnimatedStyle, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePantryStore } from "~/store/PantryContext";
 import { IngredientItemCard } from "./IngredientItemCard";
@@ -10,7 +7,6 @@ import { View, ActivityIndicator, FlatList } from "react-native";
 import { H4, P } from "~/components/ui/typography";
 import { CURVES } from "~/constants/curves";
 import { usePantryItemsByType } from "~/hooks/queries/usePantryQueries";
-import { LegendList } from "@legendapp/list";
 
 export default function IngredientLists() {
   const { bottom } = useSafeAreaInsets();
