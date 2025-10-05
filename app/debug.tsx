@@ -2,7 +2,11 @@ import React, { useState } from "react";
 import { View, Alert, ScrollView } from "react-native";
 import { H1, H3, P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
-import { seedDatabase, addSampleData, checkDatabase } from "~/data/db/seed";
+import {
+  seedDatabase,
+  addQuickSampleData,
+  checkDatabase,
+} from "~/data/db/seed";
 import { databaseFacade } from "~/data/db/DatabaseFacade";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -14,7 +18,6 @@ import {
   PREFERENCE_COMPLETED_KEY,
   RECIPE_COOKED_KEY,
 } from "~/constants/storage-keys";
-import { recipeRepository } from "~/data/db";
 
 export default function DebugScreen() {
   const { top } = useSafeAreaInsets();
@@ -54,7 +57,7 @@ export default function DebugScreen() {
   const addSample = async () => {
     try {
       setIsLoading(true);
-      await addSampleData();
+      await addQuickSampleData();
 
       // Refresh contexts after adding sample data
       await Promise.all([refresh()]);
@@ -113,8 +116,8 @@ export default function DebugScreen() {
         "Database Health",
         `Status: ${isHealthy ? "✅ Healthy" : "❌ Unhealthy"}\n\nRecipes: ${
           dbStats.recipes
-        }\nIngredients: ${dbStats.ingredients}\nStock Items: ${
-          dbStats.stockItems
+        }\nStock Items: ${dbStats.stockItems}\nCooking History: ${
+          dbStats.cookingHistory
         }`
       );
     } catch (error) {
@@ -155,15 +158,20 @@ export default function DebugScreen() {
           onPress: async () => {
             try {
               setIsLoading(true);
-              await databaseFacade.recipes.clearAllRecipes();
+              // Note: clearAllData clears everything.
+              // TODO: Add clearRecipes() method to DatabaseFacade if needed
+              await databaseFacade.clearAllData();
 
               // Refresh contexts after clearing data
               await Promise.all([refresh()]);
 
-              Alert.alert("Success!", "All recipes cleared");
+              Alert.alert(
+                "Success!",
+                "All data cleared (recipes, stock, etc.)"
+              );
               await checkStats();
             } catch (error) {
-              Alert.alert("Error", "Failed to clear recipes");
+              Alert.alert("Error", "Failed to clear data");
             } finally {
               setIsLoading(false);
             }

@@ -1,49 +1,141 @@
 import { database } from "./database";
-import type { BaseIngredient, Recipe, Stock } from "./models";
+import { Q } from "@nozbe/watermelondb";
+import type { Recipe, Stock, CookingHistory } from "./models";
 import {
   initializeRepositories,
   RecipeRepository,
-  BaseIngredientRepository,
   StockRepository,
+  CookingHistoryRepository,
 } from "./repositories";
+import type { RecipeSearchOptions } from "./repositories/RecipeRepository";
+import type { StockSearchOptions } from "./repositories/StockRepository";
 import {
   convertToUnitSystem,
   roundToReasonablePrecision,
 } from "~/utils/unit-converter";
-import { supabase } from "~/lib/supabase/supabase-client";
 
-interface MissingIngredientInfo {
+// Public interfaces for database operations
+export interface CreateStockData {
   name: string;
   quantity: number;
   unit: string;
+  expirationDate?: number;
+  purchaseDate?: number;
   notes?: string;
-  baseIngredientId: string;
+  storageType?: string;
+  imageUrl?: string;
+  backgroundColor?: string;
+  x?: number;
+  y?: number;
+  scale?: number;
 }
 
-interface AvailableIngredientInfo {
-  name: string;
-  quantity: number;
-  unit: string;
-  stockQuantity: number;
-  stockUnit: string;
+export interface UpdateStockData {
+  name?: string;
+  quantity?: number;
+  unit?: string;
+  expirationDate?: number;
+  purchaseDate?: number;
+  notes?: string;
+}
+
+export interface CreateRecipeData {
+  title: string;
+  description: string;
+  imageUrl?: string;
+  prepMinutes: number;
+  cookMinutes: number;
+  difficultyStars: number;
+  servings: number;
+  sourceUrl?: string;
+  calories?: number;
+  tags?: string[];
+  steps?: Array<{
+    step: number;
+    title: string;
+    description: string;
+  }>;
+  ingredients?: Array<{
+    name: string;
+    quantity: number;
+    unit: string;
+    notes?: string;
+  }>;
+}
+
+export interface RecordCookingData {
+  rating?: number;
+  notes?: string;
+  photoUrl?: string;
+}
+
+export interface DatabaseStats {
+  recipes: number;
+  stockItems: number;
+  cookingHistory: number;
+  totalRecords: number;
+}
+
+export interface ShoppingListResult {
+  missingIngredients: Array<{
+    name: string;
+    quantity: number;
+    unit: string;
+    notes?: string;
+  }>;
+  availableIngredients: Array<{
+    name: string;
+    quantity: number;
+    unit: string;
+    stockQuantity: number;
+    stockUnit: string;
+  }>;
+}
+
+export interface AvailableRecipesResult {
+  canMake: Recipe[];
+  partiallyCanMake: Array<{
+    recipe: Recipe;
+    completionPercentage: number;
+  }>;
+}
+
+export interface RecipeWithDetails {
+  recipe: Recipe;
+  steps: Array<{
+    id: string;
+    step: number;
+    title: string;
+    description: string;
+  }>;
+  ingredients: Array<{
+    id: string;
+    name: string;
+    quantity: number;
+    unit: string;
+    notes?: string;
+  }>;
 }
 
 /**
  * Database Facade - Main interface for all structured database operations
- * This provides a unified API for accessing all database functionality
+ * This provides a unified, simplified API for accessing all database functionality.
+ *
+ * IMPORTANT: Only methods exposed here should be used throughout the app.
+ * Direct repository access is private and should not be used externally.
  */
 export class DatabaseFacade {
-  // Repository instances
-  public recipes: RecipeRepository;
-  public ingredients: BaseIngredientRepository;
-  public stock: StockRepository;
+  // Private repository instances - not to be accessed directly
+  private recipes: RecipeRepository;
+  private stocks: StockRepository;
+  private cookingHistory: CookingHistoryRepository;
 
   constructor() {
     // Initialize repositories synchronously first
     const repositories = initializeRepositories();
     this.recipes = repositories.recipeRepository!;
-    this.ingredients = repositories.baseIngredientRepository!;
-    this.stock = repositories.stockRepository!;
+    this.stocks = repositories.stockRepository!;
+    this.cookingHistory = repositories.cookingHistoryRepository!;
 
     // Then initialize async features in the background
     this.initializeAsync();
@@ -51,122 +143,210 @@ export class DatabaseFacade {
 
   private async initializeAsync() {
     try {
-      // SYNC DISABLED: Don't sync from Supabase to prevent pulling empty database
-      // TODO: Re-enable after pushing local data to server
       await this.recipes.initialize();
-      // await this.pushRecipeIngredientsToSupabase();
-      console.log("🚫 Database sync DISABLED - local data preserved");
     } catch (error) {
       // Log error to aid debugging, but prevent app crashes
       console.error("DatabaseFacade initialization failed:", error);
     }
   }
 
-  // Database management methods
-  async clearAllData(): Promise<void> {
-    console.log("🧹 Clearing all database data...");
+  // ============================================
+  // RECIPE METHODS
+  // ============================================
 
-    if (!database) {
-      throw new Error("Database is not initialized");
-    }
-
-    // Alternative approach without using database.action
-    const collections = [
-      "recipes",
-      "recipe_steps",
-      "recipe_ingredients",
-      "base_ingredients",
-      "ingredient_categories",
-      "ingredient_category_assignments",
-      "stock",
-      "steps_to_store",
-      "users",
-    ];
-
-    for (const collectionName of collections) {
-      try {
-        console.log(`🗑️ Clearing ${collectionName}...`);
-        const collection = database.collections.get(collectionName);
-        const allRecords = await collection.query().fetch();
-        console.log(`  Found ${allRecords.length} records to delete`);
-
-        // Delete records using database.write
-        if (allRecords.length > 0) {
-          await database.write(async () => {
-            await Promise.all(
-              allRecords.map((record) => record.destroyPermanently())
-            );
-          });
-        }
-
-        console.log(`✅ Cleared ${collectionName}`);
-      } catch (error) {
-        console.warn(`⚠️ Error clearing ${collectionName}:`, error);
-      }
-    }
+  /**
+   * Get all recipes from the local database
+   */
+  async getAllRecipes(): Promise<Recipe[]> {
+    return await this.recipes.findAll();
   }
 
-  async getDatabaseStats(): Promise<{
-    recipes: number;
-    ingredients: number;
-    stockItems: number;
-    categories: number;
-    totalRecords: number;
-  }> {
-    const [recipes, ingredients, stockItems] = await Promise.all([
-      this.recipes.count(),
-      this.ingredients.count(),
-      this.stock.count(),
-    ]);
+  /**
+   * Get a single recipe by ID
+   */
+  async getRecipeById(id: string): Promise<Recipe | null> {
+    return await this.recipes.findById(id);
+  }
 
-    const categories = await this.stock.getAllCategories();
+  /**
+   * Get recipe with all related data (steps and ingredients)
+   */
+  async getRecipeWithDetails(id: string): Promise<RecipeWithDetails | null> {
+    const result = await this.recipes.getRecipeWithDetails(id);
+    if (!result) return null;
 
     return {
-      recipes,
-      ingredients,
-      stockItems,
-      categories: categories.length,
-      totalRecords: recipes + ingredients + stockItems,
+      recipe: result.recipe,
+      steps: result.steps.map((step) => ({
+        id: step.id,
+        step: step.step,
+        title: step.title,
+        description: step.description,
+      })),
+      ingredients: result.ingredients.map((ingredient: any) => ({
+        id: ingredient.id,
+        name: ingredient.name,
+        quantity: ingredient.quantity,
+        unit: ingredient.unit,
+        notes: ingredient.notes,
+      })),
     };
   }
 
-  // Utility methods for common operations
-  async searchEverything(searchTerm: string): Promise<{
-    recipes: Recipe[];
-    ingredients: BaseIngredient[];
-    stockItems: Stock[];
-  }> {
-    const [recipes, ingredients, stockItems] = await Promise.all([
-      this.recipes.searchRecipes({ searchTerm, limit: 10 }),
-      this.ingredients.searchIngredients({ searchTerm, limit: 10 }),
-      this.stock.searchStock({ searchTerm, limit: 10 }),
-    ]);
-
-    return {
-      recipes,
-      ingredients,
-      stockItems,
-    };
+  /**
+   * Search recipes with filters
+   */
+  async searchRecipes(
+    searchTerm?: string,
+    options?: RecipeSearchOptions
+  ): Promise<Recipe[]> {
+    return await this.recipes.searchRecipes({
+      searchTerm,
+      ...options,
+    });
   }
 
+  /**
+   * Create a new recipe with steps and ingredients
+   */
+  async createRecipe(data: CreateRecipeData): Promise<Recipe> {
+    return await this.recipes.createRecipeWithDetails({
+      recipe: {
+        title: data.title,
+        description: data.description,
+        imageUrl: data.imageUrl,
+        prepMinutes: data.prepMinutes,
+        cookMinutes: data.cookMinutes,
+        difficultyStars: data.difficultyStars,
+        servings: data.servings,
+        sourceUrl: data.sourceUrl,
+        calories: data.calories,
+        tags: data.tags || [],
+      },
+      steps: data.steps?.map((step) => ({
+        step: step.step,
+        title: step.title,
+        description: step.description,
+        recipeId: "", // Will be set by the repository
+      })),
+      ingredients: data.ingredients?.map((ingredient) => ({
+        name: ingredient.name,
+        quantity: ingredient.quantity,
+        unit: ingredient.unit,
+        notes: ingredient.notes,
+        recipeId: "", // Will be set by the repository
+      })),
+    });
+  }
+
+  /**
+   * Delete a recipe and all its related data
+   */
+  async deleteRecipe(id: string): Promise<void> {
+    await this.recipes.delete(id);
+  }
+
+  /**
+   * Toggle recipe favorite status
+   */
+  async toggleFavorite(recipeId: string): Promise<Recipe | null> {
+    return await this.recipes.toggleFavorite(recipeId);
+  }
+
+  /**
+   * Get all favorite recipes
+   */
+  async getFavoriteRecipes(): Promise<Recipe[]> {
+    return await this.recipes.getFavoriteRecipes();
+  }
+
+  // ============================================
+  // STOCK (PANTRY) METHODS
+  // ============================================
+
+  /**
+   * Get all stock items from pantry
+   */
+  async getAllStock(): Promise<Stock[]> {
+    return await this.stocks.findAll();
+  }
+
+  /**
+   * Get total count of stock items
+   */
+  async getStockCount(): Promise<number> {
+    return await this.stocks.count();
+  }
+
+  /**
+   * Get a single stock item by ID
+   */
+  async getStockById(id: string): Promise<Stock | null> {
+    return await this.stocks.findById(id);
+  }
+
+  /**
+   * Get stock items by name or synonym
+   * Updated to use new synonym matching
+   */
+  async getStockByIngredient(ingredientName: string): Promise<Stock[]> {
+    return await this.stocks.findByNameOrSynonym(ingredientName);
+  }
+
+  /**
+   * Create a new stock item
+   */
+  async createStock(data: CreateStockData): Promise<Stock> {
+    return await this.stocks.create({
+      name: data.name,
+      quantity: data.quantity,
+      unit: data.unit,
+      expiryDate: data.expirationDate
+        ? new Date(data.expirationDate)
+        : undefined,
+      storageType: data.storageType,
+      imageUrl: data.imageUrl,
+      backgroundColor: data.backgroundColor,
+      x: data.x,
+      y: data.y,
+      scale: data.scale,
+    } as any);
+  }
+
+  /**
+   * Update an existing stock item
+   */
+  async updateStock(id: string, data: UpdateStockData): Promise<Stock | null> {
+    // Cast to Record<string, unknown> to satisfy repository interface
+    return await this.stocks.update(id, data as Record<string, unknown>);
+  }
+
+  /**
+   * Delete a stock item
+   */
+  async deleteStock(id: string): Promise<void> {
+    await this.stocks.delete(id);
+  }
+
+  /**
+   * Search stock items
+   */
+  async searchStock(
+    searchTerm?: string,
+    options?: StockSearchOptions
+  ): Promise<Stock[]> {
+    return await this.stocks.searchStock({
+      searchTerm,
+      ...options,
+    });
+  }
+
+  /**
+   * Convert all stock units to a specific unit system
+   */
   async convertUnits(toUnitSystem: "si" | "imperial"): Promise<void> {
-    /**
-     * Converts all stock item quantities + units to the requested system.
-     * - Skips items whose unit is unknown / non-convertible (e.g. count units)
-     * - Only writes when quantity or unit actually changes (to reduce churn)
-     * - Rounds results with roundToReasonablePrecision (3 dp) to avoid drift
-     * - Logs a concise progress report at the end
-     *
-     * Edge cases handled:
-     *  - Missing or NaN quantity: item skipped automatically by converter
-     *  - Unknown units: left unchanged
-     *  - Count style units (unit / pcs / count): left unchanged
-     *  - Extremely small floating differences (< 0.001): treated as no-op
-     */
-
     try {
-      // Get all stock items
-      const allStockItems = await this.stock.findAll();
+      const allStockItems = await this.stocks.findAll();
       console.log(`📦 Found ${allStockItems.length} stock items to convert`);
 
       if (allStockItems.length === 0) {
@@ -178,46 +358,30 @@ export class DatabaseFacade {
       let skippedCount = 0;
       let errorCount = 0;
 
-      // Process items one by one - use repository update instead of model update
       for (const stockItem of allStockItems) {
         try {
-          console.log(
-            `🔍 Processing: ${stockItem.name} - ${stockItem.quantity} ${stockItem.unit}`
-          );
-
-          // Convert the unit
           const converted = convertToUnitSystem(
             stockItem.quantity,
             stockItem.unit,
             toUnitSystem
           );
 
-          console.log(
-            `🔄 Conversion result: ${converted.quantity} ${converted.unit}`
-          );
-
-          // Check if conversion would make any change
           const quantityChanged =
             Math.abs(converted.quantity - stockItem.quantity) > 0.001;
           const unitChanged = converted.unit !== stockItem.unit;
 
           if (quantityChanged || unitChanged) {
-            // Use repository update method instead of model update method
-            await this.stock.update(stockItem.id, {
+            await this.stocks.update(stockItem.id, {
               quantity: roundToReasonablePrecision(converted.quantity),
               unit: converted.unit,
             });
-
             convertedCount++;
           } else {
-            console.log(
-              `⏭️ Skipped ${stockItem.name}: already in correct format`
-            );
             skippedCount++;
           }
         } catch (error) {
           console.warn(
-            `⚠️ Failed to convert stock item ${stockItem.name} (${stockItem.id}):`,
+            `⚠️ Failed to convert stock item ${stockItem.name}:`,
             error
           );
           errorCount++;
@@ -225,30 +389,100 @@ export class DatabaseFacade {
       }
 
       console.log(
-        `✅ Conversion summary: ${convertedCount} converted, ${skippedCount} skipped, ${errorCount} errors`
+        `✅ Conversion: ${convertedCount} converted, ${skippedCount} skipped, ${errorCount} errors`
       );
     } catch (error) {
       console.error(`❌ Error during unit conversion:`, error);
     }
   }
 
-  // Check what recipes can be made with current stock - Optimized version
-  async getAvailableRecipes(): Promise<{
-    canMake: Recipe[];
-    partiallyCanMake: { recipe: Recipe; completionPercentage: number }[];
-  }> {
-    try {
-      console.log("🔍 Getting available recipes (optimized)...");
+  // ============================================
+  // COOKING HISTORY METHODS
+  // ============================================
 
-      // Get all stock items upfront to create a lookup map
-      const allStock = await this.stock.findAll();
-      const availableIngredientIds = new Set(
-        allStock
-          .filter((stock) => stock.quantity > 0)
-          .map((stock) => stock.baseIngredientId)
+  /**
+   * Record that a recipe was cooked
+   */
+  async recordCooking(
+    recipeId: string,
+    data?: RecordCookingData
+  ): Promise<CookingHistory> {
+    return await this.cookingHistory.recordCooking(recipeId, data);
+  }
+
+  /**
+   * Get cooking history (most recent first)
+   */
+  async getCookingHistory(limit?: number): Promise<CookingHistory[]> {
+    return await this.cookingHistory.getCookingHistory({ limit });
+  }
+
+  /**
+   * Get recently cooked recipes
+   */
+  async getRecentlyCookedRecipes(
+    limit?: number
+  ): Promise<
+    Array<{ recipeId: string; lastCookedAt: number; cookCount: number }>
+  > {
+    return await this.cookingHistory.getRecentlyCookedRecipes(limit);
+  }
+
+  /**
+   * Get most frequently cooked recipes
+   */
+  async getMostCookedRecipes(
+    limit?: number
+  ): Promise<
+    Array<{ recipeId: string; cookCount: number; lastCookedAt: number }>
+  > {
+    return await this.cookingHistory.getMostCookedRecipes(limit);
+  }
+
+  /**
+   * Get cook count for a specific recipe
+   */
+  async getRecipeCookCount(recipeId: string): Promise<number> {
+    return await this.cookingHistory.getRecipeCookCount(recipeId);
+  }
+
+  /**
+   * Update a cooking record
+   */
+  async updateCookingRecord(
+    id: string,
+    data: RecordCookingData
+  ): Promise<CookingHistory | null> {
+    return await this.cookingHistory.updateCookingRecord(id, data);
+  }
+
+  /**
+   * Delete a cooking record
+   */
+  async deleteCookingRecord(id: string): Promise<void> {
+    await this.cookingHistory.delete(id);
+  }
+
+  // ============================================
+  // HIGH-LEVEL UTILITY METHODS
+  // ============================================
+
+  /**
+   * Get recipes that can be made with current stock
+   * Now includes synonym and category matching for better ingredient detection
+   */
+  async getAvailableRecipes(): Promise<AvailableRecipesResult> {
+    try {
+      const allStock = await this.stocks.findAll();
+
+      console.log("🔍 [getAvailableRecipes] Starting...");
+      console.log(`📦 Total stock items: ${allStock.length}`);
+      console.log(
+        `📦 Stock items with quantity > 0: ${allStock.filter((s) => s.quantity > 0).length}`
       );
 
-      // Also create a name-based lookup for ingredient matching
+      // Build a comprehensive set of available ingredient names
+      // Including stock names, synonyms, and normalized variants
       const availableIngredientNames = new Set(
         allStock
           .filter((stock) => stock.quantity > 0)
@@ -256,27 +490,64 @@ export class DatabaseFacade {
       );
 
       console.log(
-        `📦 Found ${availableIngredientIds.size} available ingredient types in stock`
+        "📝 Available ingredient names:",
+        Array.from(availableIngredientNames)
       );
 
-      // Debug: Log all stock items
-      console.log(
-        "📦 All stock items:",
-        allStock.map(
-          (s) =>
-            `${s.name}: ${s.quantity} (ingredientId: ${s.baseIngredientId})`
-        )
-      );
+      // Also fetch synonyms and categories for better matching
+      const stockSynonyms = new Map<string, string[]>(); // stockName -> synonyms
+      const stockCategories = new Map<string, string[]>(); // stockName -> categories
 
-      // Debug: Log available ingredient IDs
-      console.log(
-        "🔍 Available ingredient IDs:",
-        Array.from(availableIngredientIds)
-      );
+      // Populate synonym and category maps
+      for (const stock of allStock) {
+        if (stock.quantity <= 0) continue;
 
-      // Get all recipes and their details in batches
+        const stockName = stock.name.toLowerCase().trim();
+
+        // Fetch synonyms for this stock item
+        const synonymRecords = await database
+          .get("ingredient_synonym")
+          .query(Q.where("stock_id", Q.eq(stock.id)))
+          .fetch();
+
+        const synonyms = synonymRecords.map((syn) => {
+          const record = syn as unknown as { synonym: string };
+          return record.synonym.toLowerCase().trim();
+        });
+        if (synonyms.length > 0) {
+          console.log(`🔗 Synonyms for "${stockName}":`, synonyms);
+          stockSynonyms.set(stockName, synonyms);
+          // Add synonyms to available names too
+          synonyms.forEach((syn: string) => availableIngredientNames.add(syn));
+        }
+
+        // Fetch categories for this stock item
+        const categoryLinks = await database
+          .get("stock_category")
+          .query(Q.where("stock_id", Q.eq(stock.id)))
+          .fetch();
+
+        const categoryIds = categoryLinks.map((link) => {
+          const record = link as unknown as { categoryId: string };
+          return record.categoryId;
+        });
+        if (categoryIds.length > 0) {
+          const categories = await database
+            .get("ingredient_category")
+            .query(Q.where("id", Q.oneOf(categoryIds)))
+            .fetch();
+
+          const categoryNames = categories.map((cat) => {
+            const record = cat as unknown as { name: string };
+            return record.name.toLowerCase().trim();
+          });
+          console.log(`📁 Categories for "${stockName}":`, categoryNames);
+          stockCategories.set(stockName, categoryNames);
+        }
+      }
+
       const allRecipes = await this.recipes.findAll();
-      console.log(`📖 Processing ${allRecipes.length} recipes`);
+      console.log(`📚 Total recipes to check: ${allRecipes.length}`);
 
       const canMake: Recipe[] = [];
       const partiallyCanMake: {
@@ -284,93 +555,163 @@ export class DatabaseFacade {
         completionPercentage: number;
       }[] = [];
 
-      // Process recipes in batches to avoid overwhelming the database
+      // Helper function to check if an ingredient is available
+      const isIngredientAvailable = (ingredientName: string): boolean => {
+        const normalizeIngredientName = (name: string) => {
+          return name
+            .toLowerCase()
+            .trim()
+            .replace(/s$/, "")
+            .replace(/es$/, "")
+            .replace(/ies$/, "y");
+        };
+
+        const normalizedRecipeName = normalizeIngredientName(ingredientName);
+        const lowerIngredientName = ingredientName.toLowerCase().trim();
+
+        // 1. Try exact name match
+        if (availableIngredientNames.has(lowerIngredientName)) {
+          return true;
+        }
+
+        // 2. Try normalized name matching
+        const foundByName = Array.from(availableIngredientNames).some(
+          (stockName) => {
+            const normalizedStockName = normalizeIngredientName(stockName);
+            return (
+              normalizedStockName === normalizedRecipeName ||
+              normalizedStockName.includes(normalizedRecipeName) ||
+              normalizedRecipeName.includes(normalizedStockName)
+            );
+          }
+        );
+
+        if (foundByName) {
+          return true;
+        }
+
+        // 3. Try synonym matching
+        for (const [, synonyms] of stockSynonyms.entries()) {
+          // Check if ingredient matches any synonym
+          if (
+            synonyms.some(
+              (syn) =>
+                syn === lowerIngredientName ||
+                normalizeIngredientName(syn) === normalizedRecipeName
+            )
+          ) {
+            return true;
+          }
+        }
+
+        // 4. Try category matching (less strict, for generic ingredients)
+        for (const [, categories] of stockCategories.entries()) {
+          if (
+            categories.some(
+              (cat) =>
+                cat === lowerIngredientName ||
+                normalizeIngredientName(cat) === normalizedRecipeName
+            )
+          ) {
+            return true;
+          }
+        }
+
+        return false;
+      };
+
+      // Process recipes in batches
       const batchSize = 10;
+      let processedCount = 0;
+      let skippedCount = 0;
+
       for (let i = 0; i < allRecipes.length; i += batchSize) {
         const recipeBatch = allRecipes.slice(i, i + batchSize);
 
-        // Get recipe details for the batch
+        if (i === 0) {
+          console.log(
+            `🔄 Processing first batch (${recipeBatch.length} recipes)...`
+          );
+        }
+
         const batchDetailsPromises = recipeBatch.map((recipe) =>
           this.recipes.getRecipeWithDetails(recipe.id)
         );
 
         const batchDetails = await Promise.all(batchDetailsPromises);
 
-        // Process each recipe in the batch
         for (let j = 0; j < recipeBatch.length; j++) {
           const recipe = recipeBatch[j];
           const recipeDetails = batchDetails[j];
 
-          if (!recipeDetails || !recipeDetails.ingredients.length) continue;
+          // Only log first batch for debugging
+          if (i === 0 && j < 3) {
+            console.log(`📋 Recipe: "${recipe?.title || "unknown"}"`);
+            console.log(`   Has details: ${!!recipeDetails}`);
+            console.log(
+              `   Ingredients: ${recipeDetails?.ingredients?.length || 0}`
+            );
+          }
 
-          // Check ingredient availability using the pre-built set (O(1) lookup)
+          if (!recipeDetails || !recipeDetails.ingredients.length) {
+            skippedCount++;
+            if (i === 0 && j < 3) {
+              console.log(`   ⏭️ Skipping (no ingredients)`);
+            }
+            continue;
+          }
+
+          processedCount++;
+
+          // Only log first few recipes being checked
+          if (processedCount <= 3) {
+            console.log(`\n🍳 Checking recipe: "${recipe?.title}"`);
+            console.log(
+              `   Required ingredients: ${recipeDetails.ingredients.map((i) => i.name).join(", ")}`
+            );
+          }
+
           let availableCount = 0;
           for (const ingredient of recipeDetails.ingredients) {
-            console.log("recipe name", recipe?.title);
-            console.log(
-              `Need ingredient in stock: ${ingredient.name}, count needed: ${ingredient.quantity}, baseIngredientId: ${ingredient.baseIngredientId}`
-            );
-
-            // Check by baseIngredientId first (preferred method)
-            const foundById = availableIngredientIds.has(
-              ingredient.baseIngredientId
-            );
-
-            // Also check by name (fallback method) - normalize names for matching
-            const normalizeIngredientName = (name: string) => {
-              return name
-                .toLowerCase()
-                .trim()
-                .replace(/s$/, "") // Remove plural 's'
-                .replace(/es$/, "") // Remove plural 'es'
-                .replace(/ies$/, "y"); // Replace 'ies' with 'y'
-            };
-
-            const normalizedRecipeName = normalizeIngredientName(
-              ingredient.name
-            );
-            const foundByName = Array.from(availableIngredientNames).some(
-              (stockName) => {
-                const normalizedStockName = normalizeIngredientName(stockName);
-                return (
-                  normalizedStockName === normalizedRecipeName ||
-                  stockName === ingredient.name.toLowerCase().trim() ||
-                  normalizedStockName.includes(normalizedRecipeName) ||
-                  normalizedRecipeName.includes(normalizedStockName)
-                );
-              }
-            );
-
-            if (foundById || foundByName) {
-              // console.log(
-              //   `Found ingredient in stock: ${ingredient.name} (matched by ${foundById ? "ID" : "name"})`
-              // );
+            if (isIngredientAvailable(ingredient.name)) {
               availableCount++;
+              if (processedCount <= 3) {
+                console.log(`   ✅ Found: ${ingredient.name}`);
+              }
             } else {
-              // console.log(
-              //   `❌ NOT FOUND - ${ingredient.name} (baseIngredientId: ${ingredient.baseIngredientId}) not in available stock`
-              // );
+              if (processedCount <= 3) {
+                console.log(`   ❌ Missing: ${ingredient.name}`);
+              }
             }
           }
 
           const totalCount = recipeDetails.ingredients.length;
+          const percentage = Math.round((availableCount / totalCount) * 100);
 
-          if (availableCount === totalCount && totalCount > 0) {
-            canMake.push(recipe!);
-          } else if (availableCount > 0) {
+          if (availableCount === totalCount && totalCount > 0 && recipe) {
+            canMake.push(recipe);
+          } else if (availableCount > 0 && recipe) {
             partiallyCanMake.push({
-              recipe: recipe!,
-              completionPercentage: Math.round(
-                (availableCount / totalCount) * 100
-              ),
+              recipe,
+              completionPercentage: percentage,
             });
           }
         }
       }
 
       console.log(
-        `✅ Found ${canMake.length} complete recipes, ${partiallyCanMake.length} partial recipes`
+        `📊 Processed: ${processedCount} recipes, Skipped: ${skippedCount} recipes (no ingredients)`
       );
+
+      console.log("✅ [getAvailableRecipes] Final results:", {
+        canMake: canMake.length,
+        partiallyCanMake: partiallyCanMake.length,
+        canMakeRecipes: canMake.map((r) => r.title),
+        partiallyCanMakeRecipes: partiallyCanMake.map((p) => ({
+          title: p.recipe.title,
+          completion: p.completionPercentage,
+        })),
+      });
 
       return {
         canMake,
@@ -384,37 +725,25 @@ export class DatabaseFacade {
     }
   }
 
-  // Get shopping list for a recipe
-  async getShoppingListForRecipe(recipeId: string): Promise<{
-    missingIngredients: Array<{
-      name: string;
-      quantity: number;
-      unit: string;
-      notes?: string;
-      baseIngredientId: string;
-    }>;
-    availableIngredients: Array<{
-      name: string;
-      quantity: number;
-      unit: string;
-      stockQuantity: number;
-      stockUnit: string;
-    }>;
-  }> {
+  /**
+   * Get shopping list for a recipe
+   */
+  async getShoppingListForRecipe(
+    recipeId: string
+  ): Promise<ShoppingListResult> {
     const recipeDetails = await this.recipes.getRecipeWithDetails(recipeId);
     if (!recipeDetails) {
       return { missingIngredients: [], availableIngredients: [] };
     }
 
-    const missingIngredients: MissingIngredientInfo[] = [];
-    const availableIngredients: AvailableIngredientInfo[] = [];
+    const missingIngredients: ShoppingListResult["missingIngredients"] = [];
+    const availableIngredients: ShoppingListResult["availableIngredients"] = [];
 
     for (const ingredient of recipeDetails.ingredients) {
-      const stockItems = await this.stock.getStockByIngredient(
-        ingredient.baseIngredientId
-      );
+      // Use findByNameOrSynonym for better matching
+      const stockItems = await this.stocks.findByNameOrSynonym(ingredient.name);
       const totalStock = stockItems.reduce(
-        (sum, item) => sum + item.quantity,
+        (sum: number, item: Stock) => sum + item.quantity,
         0
       );
 
@@ -424,7 +753,6 @@ export class DatabaseFacade {
           quantity: ingredient.quantity,
           unit: ingredient.unit,
           notes: ingredient.notes,
-          baseIngredientId: ingredient.baseIngredientId,
         });
       } else {
         const firstStockItem = stockItems[0];
@@ -444,294 +772,106 @@ export class DatabaseFacade {
     };
   }
 
-  // Batch operations
-  async importRecipes(recipesData: Recipe[]): Promise<{
-    success: number;
-    errors: Array<{ recipe: Recipe; error: string }>;
-  }> {
-    let success = 0;
-    const errors: Array<{ recipe: Recipe; error: string }> = [];
-
-    for (const recipeData of recipesData) {
-      try {
-        await this.recipes.createRecipeWithDetails({ recipe: recipeData });
-        success++;
-      } catch (error) {
-        errors.push({
-          recipe: recipeData,
-          error: error instanceof Error ? error.message : String(error),
-        });
-      }
-    }
-
-    return { success, errors };
-  }
-
-  async exportAllData(): Promise<{
-    recipes: unknown[];
-    ingredients: unknown[];
-    stock: unknown[];
-    categories: string[];
-  }> {
-    const [recipes, ingredients, stockItems, categories] = await Promise.all([
-      this.recipes.findAll(),
-      this.ingredients.findAll(),
-      this.stock.findAll(),
-      this.stock.getAllCategories(),
+  /**
+   * Get database statistics
+   */
+  async getDatabaseStats(): Promise<DatabaseStats> {
+    const [recipes, stockItems, cookingHistory] = await Promise.all([
+      this.recipes.count(),
+      this.stocks.count(),
+      this.cookingHistory.count(),
     ]);
 
     return {
-      recipes: recipes.map((r) => r._raw),
-      ingredients: ingredients.map((i) => i._raw),
-      stock: stockItems.map((s) => s._raw),
-      categories,
+      recipes,
+      stockItems,
+      cookingHistory,
+      totalRecords: recipes + stockItems + cookingHistory,
     };
   }
 
   /**
-   * EMERGENCY: Push base_ingredient and pivot_recipe_ingredient data to Supabase
-   *
-   * This method pushes base_ingredient and pivot_recipe_ingredient tables from
-   * your local database to Supabase. It queries existing recipes in Supabase to
-   * get proper UUIDs for foreign key relationships.
-   *
-   * Process:
-   * 1. Push base_ingredient data (let Supabase generate new UUIDs)
-   * 2. Query existing recipes from Supabase to get recipe UUIDs
-   * 3. Map ingredient names to their new Supabase UUIDs
-   * 4. Push pivot_recipe_ingredient data with proper foreign key references
-   *
-   * Usage:
-   * ```typescript
-   * import { databaseFacade } from "~/data/db/DatabaseFacade";
-   * await databaseFacade.pushLocalDataToSupabase();
-   * ```
+   * Clear all data from the database
    */
-  async pushLocalDataToSupabase(): Promise<void> {
-    try {
-      console.log(
-        "🚀 Starting to push base_ingredient and pivot_recipe_ingredient data to Supabase..."
-      );
+  async clearAllData(): Promise<void> {
+    console.log("🧹 Clearing all database data...");
 
-      let totalSuccessCount = 0;
-      let totalErrorCount = 0;
+    if (!database) {
+      throw new Error("Database is not initialized");
+    }
 
-      // 1. Push all base_ingredient data
-      console.log("📦 Pushing base_ingredient data...");
-      const allBaseIngredients = await this.ingredients.findAll();
-      console.log(
-        `Found ${allBaseIngredients.length} base ingredients to push`
-      );
+    const collections = [
+      "recipe",
+      "recipe_step",
+      "recipe_ingredient",
+      "stock",
+      "steps_to_store",
+      "cooking_history",
+    ];
 
-      for (const ingredient of allBaseIngredients) {
-        try {
-          // Transform local BaseIngredient to Supabase format
-          // Note: Let Supabase generate new UUIDs, don't include local IDs
-          const baseIngredientData = {
-            name: ingredient.name,
-            steps_to_store_id: null, // Local model doesn't have this, use null
-            days_to_expire: 7, // Default to 7 days
-            storage_type: "refrigerator", // Default storage type
-          };
+    for (const collectionName of collections) {
+      try {
+        console.log(`🗑️ Clearing ${collectionName}...`);
+        const collection = database.collections.get(collectionName);
+        const allRecords = await collection.query().fetch();
 
-          console.log(
-            `Pushing base_ingredient: ${ingredient.name} (local id: ${ingredient.id})`
-          );
-          // Use insert instead of upsert since we're letting DB generate new IDs
-          const { data, error } = await supabase
-            .from("base_ingredient")
-            .insert(baseIngredientData)
-            .select()
-            .single();
-
-          if (error) {
-            console.error(
-              `Failed to push base_ingredient ${ingredient.name}:`,
-              error
+        if (allRecords.length > 0) {
+          await database.write(async () => {
+            await Promise.all(
+              allRecords.map((record) => record.destroyPermanently())
             );
-            totalErrorCount++;
-          } else {
-            totalSuccessCount++;
-          }
-        } catch (error) {
-          console.error(
-            `Failed to push base_ingredient ${ingredient.name}:`,
-            error
-          );
-          totalErrorCount++;
+          });
         }
+
+        console.log(`✅ Cleared ${collectionName}`);
+      } catch (error) {
+        console.warn(`⚠️ Error clearing ${collectionName}:`, error);
       }
-
-      // 2. Get existing recipes from Supabase to map recipe titles to UUIDs
-      console.log("🔗 Getting existing recipes from Supabase...");
-      const { data: supabaseRecipes, error: recipeError } = await supabase
-        .from("recipe")
-        .select("id, title");
-
-      if (recipeError) {
-        throw new Error(
-          `Failed to get recipes from Supabase: ${recipeError.message}`
-        );
-      }
-
-      // Create mapping of recipe title to Supabase UUID
-      const recipeTitleToIdMap = new Map<string, string>();
-      supabaseRecipes?.forEach((recipe) => {
-        recipeTitleToIdMap.set(recipe.title.toLowerCase().trim(), recipe.id);
-      });
-
-      console.log(
-        `Found ${supabaseRecipes?.length} existing recipes in Supabase`
-      );
-
-      // 3. Get newly created base ingredients from Supabase to map names to UUIDs
-      console.log("🔗 Getting base ingredients from Supabase for mapping...");
-      const { data: supabaseIngredients, error: mappingError } = await supabase
-        .from("base_ingredient")
-        .select("id, name");
-
-      if (mappingError) {
-        throw new Error(
-          `Failed to get ingredient mapping: ${mappingError.message}`
-        );
-      }
-
-      const ingredientNameToIdMap = new Map<string, string>();
-      supabaseIngredients?.forEach((ingredient) => {
-        ingredientNameToIdMap.set(
-          ingredient.name.toLowerCase().trim(),
-          ingredient.id
-        );
-      });
-
-      // 4. Push all pivot_recipe_ingredient data
-      console.log("🥘 Pushing pivot_recipe_ingredient data...");
-      const allRecipes = await this.recipes.findAll();
-      console.log(
-        `Found ${allRecipes.length} local recipes to extract ingredients from`
-      );
-
-      let totalRecipeIngredients = 0;
-      let recipeIngredientsSuccess = 0;
-      let recipeIngredientsErrors = 0;
-
-      for (const recipe of allRecipes) {
-        try {
-          // Find the Supabase recipe UUID by title
-          const supabaseRecipeId = recipeTitleToIdMap.get(
-            recipe.title.toLowerCase().trim()
-          );
-
-          if (!supabaseRecipeId) {
-            console.log(
-              `⚠️ Recipe "${recipe.title}" not found in Supabase, skipping ingredients`
-            );
-            continue;
-          }
-
-          const recipeDetails = await this.recipes.getRecipeWithDetails(
-            recipe.id
-          );
-          if (recipeDetails && recipeDetails.ingredients) {
-            totalRecipeIngredients += recipeDetails.ingredients.length;
-
-            for (const recipeIngredient of recipeDetails.ingredients) {
-              try {
-                // Find the Supabase base ingredient UUID by name
-                const supabaseBaseIngredientId = ingredientNameToIdMap.get(
-                  recipeIngredient.name.toLowerCase().trim()
-                );
-
-                if (!supabaseBaseIngredientId) {
-                  console.log(
-                    `⚠️ Base ingredient "${recipeIngredient.name}" not found in Supabase, skipping`
-                  );
-                  recipeIngredientsErrors++;
-                  continue;
-                }
-
-                // Transform local RecipeIngredient to Supabase pivot_recipe_ingredient format
-                // const pivotRecipeIngredientData = {
-                //   recipe_id: supabaseRecipeId, // Use Supabase recipe UUID
-                //   base_ingredient_id: supabaseBaseIngredientId, // Use Supabase ingredient UUID
-                //   name: recipeIngredient.name,
-                //   quantity: recipeIngredient.quantity,
-                //   notes: recipeIngredient.notes || null,
-                //   unit: recipeIngredient.unit,
-                // };
-
-                // console.log(
-                //   `Pushing pivot_recipe_ingredient: ${recipeIngredient.name} for recipe ${recipe.title}`
-                // );
-
-                // Insert (let Supabase generate new UUID for the pivot record)
-                // const { error } = await supabase
-                //   .from("pivot_recipe_ingredient")
-                //   .insert(pivotRecipeIngredientData);
-
-                if (error) {
-                  console.error(
-                    `Failed to push recipe ingredient ${recipeIngredient.name}:`,
-                    error
-                  );
-                  recipeIngredientsErrors++;
-                } else {
-                  recipeIngredientsSuccess++;
-                }
-              } catch (error) {
-                console.error(
-                  `Failed to push recipe ingredient ${recipeIngredient.name}:`,
-                  error
-                );
-                recipeIngredientsErrors++;
-              }
-            }
-          }
-        } catch (error) {
-          console.error(
-            `Failed to get ingredients for recipe ${recipe.title}:`,
-            error
-          );
-          recipeIngredientsErrors++;
-        }
-      }
-
-      // Update total counts
-      totalSuccessCount += recipeIngredientsSuccess;
-      totalErrorCount += recipeIngredientsErrors;
-
-      console.log(`📊 Push summary:`);
-      console.log(`  - Base ingredients: ${allBaseIngredients.length} items`);
-      console.log(`  - Recipe ingredients: ${totalRecipeIngredients} items`);
-      console.log(`  - Total success: ${totalSuccessCount}`);
-      console.log(`  - Total errors: ${totalErrorCount}`);
-      console.log("✅ Push to Supabase completed!");
-    } catch (error) {
-      console.error("❌ Error pushing local data to Supabase:", error);
-      throw error;
     }
   }
 
-  // Get raw database instance (for advanced operations)
-  getDatabase() {
-    return database;
+  /**
+   * Export all data from the database
+   */
+  async exportAllData(): Promise<{
+    recipes: unknown[];
+    stock: unknown[];
+    cookingHistory: unknown[];
+  }> {
+    const [recipes, stockItems, cookingHistory] = await Promise.all([
+      this.recipes.findAll(),
+      this.stocks.findAll(),
+      this.cookingHistory.findAll(),
+    ]);
+
+    return {
+      recipes: recipes.map((r) => r._raw),
+      stock: stockItems.map((s) => s._raw),
+      cookingHistory: cookingHistory.map((c) => c._raw),
+    };
   }
 
-  // Health check method for debugging
+  /**
+   * Health check method for debugging
+   */
   async isHealthy(): Promise<boolean> {
     try {
-      // Test basic database connectivity and repositories
-      if (!this.recipes || !this.ingredients || !this.stock) {
+      if (!this.recipes || !this.stocks || !this.cookingHistory) {
         return false;
       }
 
-      // Test if we can query the database
       const recipeCount = await this.recipes.count();
-
-      return recipeCount >= 0; // Should return a number
+      return recipeCount >= 0;
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Get raw database instance (for advanced operations only)
+   */
+  getDatabase() {
+    return database;
   }
 }
 

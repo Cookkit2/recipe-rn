@@ -1,18 +1,13 @@
 import { Q } from "@nozbe/watermelondb";
 import Stock, { type StockData } from "../models/Stock";
-import BaseIngredient from "../models/BaseIngredient";
 import { BaseRepository, type SearchOptions } from "./BaseRepository";
 
 export interface StockSearchOptions extends SearchOptions {
-  type?: string;
+  storageType?: string;
   isExpired?: boolean;
   isExpiringSoon?: boolean;
-  ingredientId?: string;
-}
-
-export interface StockWithIngredient {
-  stock: Stock;
-  ingredient: BaseIngredient;
+  categoryId?: string;
+  synonym?: string;
 }
 
 export class StockRepository extends BaseRepository<Stock> {
@@ -29,16 +24,9 @@ export class StockRepository extends BaseRepository<Stock> {
       query = this.buildSearchQuery(query, options.searchTerm, ["name"]);
     }
 
-    // Filter by type
-    if (options.type) {
-      query = query.extend(Q.where("type", Q.eq(options.type)));
-    }
-
-    // Filter by ingredient
-    if (options.ingredientId) {
-      query = query.extend(
-        Q.where("base_ingredient_id", Q.eq(options.ingredientId))
-      );
+    // Filter by storage type
+    if (options.storageType) {
+      query = query.extend(Q.where("storage_type", Q.eq(options.storageType)));
     }
 
     // Apply sorting
@@ -74,40 +62,6 @@ export class StockRepository extends BaseRepository<Stock> {
     return items;
   }
 
-  // Get stock with ingredient details
-  async getStockWithIngredient(
-    stockId: string
-  ): Promise<StockWithIngredient | null> {
-    try {
-      const stock = await this.findById(stockId);
-      if (!stock) return null;
-
-      const ingredient = await stock.baseIngredient;
-
-      return {
-        stock,
-        ingredient,
-      };
-    } catch (error) {
-      console.error("Error fetching stock with ingredient:", error);
-      return null;
-    }
-  }
-
-  // Get all stock with ingredient details
-  async getAllStockWithIngredients(): Promise<StockWithIngredient[]> {
-    const stockItems = await this.findAll();
-
-    const results = await Promise.all(
-      stockItems.map(async (stock) => {
-        const ingredient = await stock.baseIngredient;
-        return { stock, ingredient };
-      })
-    );
-
-    return results;
-  }
-
   // Get expired items
   async getExpiredItems(): Promise<Stock[]> {
     const items = await this.findAll();
@@ -126,30 +80,68 @@ export class StockRepository extends BaseRepository<Stock> {
     });
   }
 
-  // Get stock by ingredient
-  async getStockByIngredient(ingredientId: string): Promise<Stock[]> {
+  // Get stock by storage type
+  async getStockByStorageType(storageType: string): Promise<Stock[]> {
     return await this.collection
-      .query(Q.where("base_ingredient_id", ingredientId))
+      .query(Q.where("storage_type", Q.eq(storageType)))
       .fetch();
   }
 
-  // Get stock by type
-  async getStockByType(type: string): Promise<Stock[]> {
-    return await this.collection.query(Q.where("type", type)).fetch();
-  }
-
-  // Get all categories
-  async getAllCategories(): Promise<string[]> {
+  // Get all storage types
+  async getAllStorageTypes(): Promise<string[]> {
     const items = await this.collection.query().fetch();
-    const categories = new Set<string>();
+    const types = new Set<string>();
 
     items.forEach((item) => {
-      if (item.type) {
-        categories.add(item.type);
+      if (item.storageType) {
+        types.add(item.storageType);
       }
     });
 
-    return Array.from(categories).sort();
+    return Array.from(types).sort();
+  }
+
+  // Get stock by category (requires StockCategoryRepository)
+  async getStockByCategory(categoryId: string): Promise<Stock[]> {
+    const stockCategories = await this.collection.database
+      .get("stock_category")
+      .query(Q.where("category_id", Q.eq(categoryId)))
+      .fetch();
+
+    const stockIds = stockCategories.map((sc: any) => sc.stockId);
+    if (stockIds.length === 0) return [];
+
+    return await this.collection
+      .query(Q.where("id", Q.oneOf(stockIds)))
+      .fetch();
+  }
+
+  // Get stock by synonym (for recipe matching)
+  async getStockBySynonym(synonym: string): Promise<Stock[]> {
+    const synonyms = await this.collection.database
+      .get("ingredient_synonym")
+      .query(Q.where("synonym", Q.eq(synonym.toLowerCase())))
+      .fetch();
+
+    const stockIds = synonyms.map((syn: any) => syn.stockId);
+    if (stockIds.length === 0) return [];
+
+    return await this.collection
+      .query(Q.where("id", Q.oneOf(stockIds)))
+      .fetch();
+  }
+
+  // Find stock by name or synonym (for recipe matching)
+  async findByNameOrSynonym(name: string): Promise<Stock[]> {
+    // First try exact name match
+    const nameMatch = await this.collection
+      .query(Q.where("name", Q.eq(name)))
+      .fetch();
+
+    if (nameMatch.length > 0) return nameMatch;
+
+    // Then try synonym match
+    return await this.getStockBySynonym(name);
   }
 
   // Update stock quantity
@@ -181,12 +173,12 @@ export class StockRepository extends BaseRepository<Stock> {
     return await this.updateQuantity(stockId, newQuantity);
   }
 
-  // Check if ingredient is in stock
+  // Check if ingredient is in stock by name or synonym
   async isIngredientInStock(
-    ingredientId: string,
+    ingredientName: string,
     minimumQuantity: number = 0
   ): Promise<boolean> {
-    const stockItems = await this.getStockByIngredient(ingredientId);
+    const stockItems = await this.findByNameOrSynonym(ingredientName);
     const totalQuantity = stockItems.reduce(
       (sum, item) => sum + item.quantity,
       0
@@ -200,14 +192,81 @@ export class StockRepository extends BaseRepository<Stock> {
     return items.filter((item) => item.quantity <= threshold);
   }
 
-  // Create stock with ingredient lookup
-  async createStockForIngredient(
-    ingredientId: string,
-    data: Omit<StockData, "baseIngredientId">
+  // Create stock with categories and synonyms
+  async createStockWithMetadata(
+    data: StockData,
+    options?: {
+      categoryIds?: string[];
+      synonyms?: string[];
+    }
   ): Promise<Stock> {
-    return await this.create({
-      ...data,
-      baseIngredientId: ingredientId,
-    } as StockData);
+    const stock = await this.create(data as any);
+
+    if (options?.categoryIds && options.categoryIds.length > 0) {
+      const stockCategoryRepo = this.collection.database.get("stock_category");
+      await this.collection.database.write(async () => {
+        for (const categoryId of options.categoryIds!) {
+          await stockCategoryRepo.create((sc: any) => {
+            sc.stockId = stock.id;
+            sc.categoryId = categoryId;
+          });
+        }
+      });
+    }
+
+    if (options?.synonyms && options.synonyms.length > 0) {
+      const synonymRepo = this.collection.database.get("ingredient_synonym");
+      await this.collection.database.write(async () => {
+        for (const synonym of options.synonyms!) {
+          await synonymRepo.create((syn: any) => {
+            syn.stockId = stock.id;
+            syn.synonym = synonym.toLowerCase();
+          });
+        }
+      });
+    }
+
+    return stock;
+  }
+
+  // Get stock with categories
+  async getStockWithCategories(stockId: string): Promise<{
+    stock: Stock;
+    categories: any[];
+  } | null> {
+    const stock = await this.findById(stockId);
+    if (!stock) return null;
+
+    const stockCategories = await this.collection.database
+      .get("stock_category")
+      .query(Q.where("stock_id", Q.eq(stockId)))
+      .fetch();
+
+    const categoryIds = stockCategories.map((sc: any) => sc.categoryId);
+    const categories =
+      categoryIds.length > 0
+        ? await this.collection.database
+            .get("ingredient_category")
+            .query(Q.where("id", Q.oneOf(categoryIds)))
+            .fetch()
+        : [];
+
+    return { stock, categories };
+  }
+
+  // Get stock with synonyms
+  async getStockWithSynonyms(stockId: string): Promise<{
+    stock: Stock;
+    synonyms: any[];
+  } | null> {
+    const stock = await this.findById(stockId);
+    if (!stock) return null;
+
+    const synonyms = await this.collection.database
+      .get("ingredient_synonym")
+      .query(Q.where("stock_id", Q.eq(stockId)))
+      .fetch();
+
+    return { stock, synonyms };
   }
 }

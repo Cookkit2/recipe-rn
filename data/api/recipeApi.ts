@@ -167,17 +167,13 @@ export const recipeApi = {
       throw new Error("DatabaseFacade is undefined - import failed");
     }
 
-    if (!databaseFacade.recipes) {
-      throw new Error("databaseFacade.recipes is undefined");
-    }
-
     // Run health check
     const isHealthy = await databaseFacade.isHealthy();
     if (!isHealthy) {
       throw new Error("Database health check failed");
     }
 
-    const dbRecipes = await databaseFacade.recipes.findAll();
+    const dbRecipes = await databaseFacade.getAllRecipes();
     const uiRecipes = await Promise.all(
       dbRecipes.map(convertDbRecipeToUIRecipe)
     );
@@ -190,7 +186,7 @@ export const recipeApi = {
    */
   async getRecipeById(id: string): Promise<Recipe | null> {
     try {
-      const dbRecipe = await databaseFacade.recipes.findById(id);
+      const dbRecipe = await databaseFacade.getRecipeById(id);
       if (!dbRecipe) return null;
 
       const recipe = await convertDbRecipeToUIRecipe(dbRecipe);
@@ -218,8 +214,7 @@ export const recipeApi = {
     }
   ): Promise<Recipe[]> {
     try {
-      const dbRecipes = await databaseFacade.recipes.searchRecipes({
-        searchTerm,
+      const dbRecipes = await databaseFacade.searchRecipes(searchTerm, {
         tags: filters?.tags,
         maxPrepTime: filters?.maxPrepTime,
         maxCookTime: filters?.maxCookTime,
@@ -238,27 +233,23 @@ export const recipeApi = {
    * Add a new recipe
    */
   async addRecipe(recipe: Omit<Recipe, "id">): Promise<Recipe> {
-    await databaseFacade.recipes.createRecipeWithDetails({
-      recipe: {
-        title: recipe.title,
-        description: recipe.description,
-        imageUrl: recipe.imageUrl,
-        prepMinutes: recipe.prepMinutes || 0,
-        cookMinutes: recipe.cookMinutes || 0,
-        difficultyStars: recipe.difficultyStars || 1,
-        servings: recipe.servings || 1,
-        sourceUrl: recipe.sourceUrl,
-        calories: recipe.calories,
-        tags: recipe.tags,
-      },
+    await databaseFacade.createRecipe({
+      title: recipe.title,
+      description: recipe.description,
+      imageUrl: recipe.imageUrl,
+      prepMinutes: recipe.prepMinutes || 0,
+      cookMinutes: recipe.cookMinutes || 0,
+      difficultyStars: recipe.difficultyStars || 1,
+      servings: recipe.servings || 1,
+      sourceUrl: recipe.sourceUrl,
+      calories: recipe.calories,
+      tags: recipe.tags,
       steps: recipe.instructions.map((step) => ({
         step: step.step,
         title: step.title,
         description: step.description,
-        recipeId: "", // Will be set automatically
       })),
       ingredients: recipe.ingredients.map((ing) => ({
-        recipeId: "", // Will be set automatically
         baseIngredientId: ing.relatedIngredientId,
         name: ing.name,
         quantity: ing.quantity,
@@ -282,7 +273,7 @@ export const recipeApi = {
    * Update an existing recipe
    */
   async updateRecipe(id: string, updates: Partial<Recipe>): Promise<Recipe> {
-    const dbRecipe = await databaseFacade.recipes.findById(id);
+    const dbRecipe = await databaseFacade.getRecipeById(id);
     if (!dbRecipe) {
       throw new Error("Recipe not found");
     }
@@ -313,7 +304,7 @@ export const recipeApi = {
    * Delete a recipe
    */
   async deleteRecipe(id: string): Promise<void> {
-    await databaseFacade.recipes.delete(id);
+    await databaseFacade.deleteRecipe(id);
   },
 
   /**
@@ -355,7 +346,6 @@ export const recipeApi = {
       quantity: number;
       unit: string;
       notes?: string;
-      baseIngredientId: string;
     }>;
     availableIngredients: Array<{
       name: string;
@@ -530,22 +520,13 @@ export const recipeApi = {
 
     return { diet, allergens, otherAllergens };
   },
-
-  /**
-   * Check if a recipe is suitable for current user's dietary preferences
-   */
-  async isRecipeSuitableForUser(recipe: Recipe): Promise<boolean> {
-    return await isRecipeSuitableForUser(recipe);
-  },
 };
 
 // Helper function to convert database recipe to UI Recipe format
 const convertDbRecipeToUIRecipe = async (
   dbRecipe: DbRecipe
 ): Promise<Recipe> => {
-  const recipeDetails = await databaseFacade.recipes.getRecipeWithDetails(
-    dbRecipe.id
-  );
+  const recipeDetails = await databaseFacade.getRecipeWithDetails(dbRecipe.id);
 
   if (!recipeDetails) {
     throw new Error("Failed to load recipe details");
@@ -567,7 +548,7 @@ const convertDbRecipeToUIRecipe = async (
     tags: recipe.tags,
     ingredients: ingredients.map((ing) => ({
       name: ing.name,
-      relatedIngredientId: ing.baseIngredientId,
+      relatedIngredientId: ing.id,
       quantity: ing.quantity,
       unit: ing.unit,
       notes: ing.notes,

@@ -1,9 +1,10 @@
 import RecipeItemCard from "./RecipeItemCard";
 import { useMemo } from "react";
-import { Animated, View, ActivityIndicator } from "react-native";
+import { View, ActivityIndicator } from "react-native";
 import { useRecipeStore } from "~/store/RecipeContext";
 import { H4, P } from "~/components/ui/typography";
 import { useRecipeRecommendations } from "~/hooks/queries/useRecipeQueries";
+import { LegendList } from "@legendapp/list";
 
 export default function RecipeLists() {
   const { selectedRecipeTags } = useRecipeStore();
@@ -39,7 +40,7 @@ export default function RecipeLists() {
     return [];
   }, [recommendations]);
 
-  // TODO: Use random recipe recommendation 
+  // TODO: Use random recipe recommendation
   // Need to account for cooked recipe and the cooking utensils
   const fourRecipesToShow = recipesToShow.slice(0, 4);
 
@@ -82,13 +83,13 @@ export default function RecipeLists() {
   }
 
   return (
-    <Animated.FlatList
+    <LegendList
+      keyExtractor={(item) => item.id.toString()}
       numColumns={2}
       className="px-3 mt-6"
       scrollEnabled={false}
       showsVerticalScrollIndicator={false}
       data={fourRecipesToShow} // Limit to 4 recipes
-      keyExtractor={(item) => item.id.toString()}
       renderItem={({ item }) => <RecipeItemCard key={item.id} recipe={item} />}
       ListEmptyComponent={
         <View className="py-16 items-center justify-center">

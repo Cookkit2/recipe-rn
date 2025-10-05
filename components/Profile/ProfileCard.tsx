@@ -6,21 +6,22 @@ import { Separator } from "~/components/ui/separator";
 import { H2, H4, P } from "~/components/ui/typography";
 import { database, storage } from "~/data";
 import { PROFILE_IMAGE_KEY, PROFILE_NAME_KEY } from "~/constants/storage-keys";
+import { useAsyncEffect } from "~/utils/use-async-effect";
 
 export default function ProfileCard() {
   const [ingredients, setIngredients] = React.useState(0);
   const [recipes, setRecipes] = React.useState(0);
 
-  useEffect(() => {
-    const fetchIngredients = async () => {
-      const ingredientCount = await database.ingredients.count();
+  useAsyncEffect(
+    async () => {
+      const ingredientCount = await database.getStockCount();
       setIngredients(ingredientCount);
-      const recipeCount = await database.recipes.count();
+      const recipeCount = (await database.getCookingHistory()).length;
       setRecipes(recipeCount);
-    };
-
-    fetchIngredients();
-  }, []);
+    },
+    async () => {},
+    []
+  );
 
   return (
     <Card className="mx-6 shadow-md shadow-foreground/10 rounded-3xl border-continuous">

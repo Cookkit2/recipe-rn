@@ -69,17 +69,15 @@ console.log("✅ WatermelonDB database created successfully");
 
 // Helper function to get collections
 export const collections = {
-  recipes: database.collections.get("recipes"),
-  recipeSteps: database.collections.get("recipe_steps"),
-  baseIngredients: database.collections.get("base_ingredients"),
-  ingredientCategories: database.collections.get("ingredient_categories"),
-  recipeIngredients: database.collections.get("recipe_ingredients"),
-  ingredientCategoryAssignments: database.collections.get(
-    "ingredient_category_assignments"
-  ),
+  recipes: database.collections.get("recipe"),
+  recipeSteps: database.collections.get("recipe_step"),
+  recipeIngredients: database.collections.get("recipe_ingredient"),
   stock: database.collections.get("stock"),
   stepsToStore: database.collections.get("steps_to_store"),
-  users: database.collections.get("users"),
+  ingredientCategories: database.collections.get("ingredient_category"),
+  ingredientSynonyms: database.collections.get("ingredient_synonym"),
+  stockCategories: database.collections.get("stock_category"),
+  cookingHistory: database.collections.get("cooking_history"),
 };
 
 console.log("✅ Database collections initialized");

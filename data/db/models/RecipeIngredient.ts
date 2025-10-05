@@ -2,11 +2,9 @@ import { Model } from "@nozbe/watermelondb";
 import { field, date, relation, writer } from "@nozbe/watermelondb/decorators";
 import type { Associations } from "@nozbe/watermelondb/Model";
 import Recipe from "./Recipe";
-import BaseIngredient from "./BaseIngredient";
 
 export interface RecipeIngredientData {
   recipeId: string;
-  baseIngredientId: string;
   name: string;
   quantity: number;
   unit: string;
@@ -14,22 +12,18 @@ export interface RecipeIngredientData {
 }
 
 export default class RecipeIngredient extends Model {
-  static table = "recipe_ingredients";
+  static table = "recipe_ingredient";
   static associations: Associations = {
-    recipes: { type: "belongs_to", key: "recipe_id" },
-    base_ingredients: { type: "belongs_to", key: "base_ingredient_id" },
+    recipe: { type: "belongs_to", key: "recipe_id" },
   };
 
   @field("recipe_id") recipeId!: string;
-  @field("base_ingredient_id") baseIngredientId!: string;
   @field("name") name!: string; // Display name for this recipe context
   @field("quantity") quantity!: number;
   @field("unit") unit!: string;
   @field("notes") notes?: string;
 
-  @relation("recipes", "recipe_id") recipe!: Recipe;
-  @relation("base_ingredients", "base_ingredient_id")
-  baseIngredient!: BaseIngredient;
+  @relation("recipe", "recipe_id") recipe!: Recipe;
 
   @date("created_at") createdAt!: Date;
   @date("updated_at") updatedAt!: Date;
@@ -40,8 +34,6 @@ export default class RecipeIngredient extends Model {
   ): Promise<RecipeIngredient> {
     return this.update((ingredient) => {
       if (data.recipeId !== undefined) ingredient.recipeId = data.recipeId;
-      if (data.baseIngredientId !== undefined)
-        ingredient.baseIngredientId = data.baseIngredientId;
       if (data.name !== undefined) ingredient.name = data.name;
       if (data.quantity !== undefined) ingredient.quantity = data.quantity;
       if (data.unit !== undefined) ingredient.unit = data.unit;

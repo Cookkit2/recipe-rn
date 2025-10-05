@@ -31,7 +31,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
   private isInitialized = false;
 
   constructor() {
-    super("recipes");
+    super("recipe"); // Updated from "recipes" to "recipe"
   }
 
   // Initialize repository and sync recipes from Supabase
@@ -113,6 +113,54 @@ export class RecipeRepository extends BaseRepository<Recipe> {
     return await query.fetch();
   }
 
+  // Get favorite recipes
+  async getFavoriteRecipes(options: SearchOptions = {}): Promise<Recipe[]> {
+    let query = this.collection.query(Q.where("is_favorite", true));
+
+    // Apply sorting
+    query = this.applySorting(
+      query,
+      options.sortBy || "title",
+      options.sortOrder || "asc"
+    );
+
+    // Apply pagination
+    if (options.offset) {
+      query = query.extend(Q.skip(options.offset));
+    }
+    if (options.limit) {
+      query = query.extend(Q.take(options.limit));
+    }
+
+    return await query.fetch();
+  }
+
+  // Toggle recipe favorite status
+  async toggleFavorite(recipeId: string): Promise<Recipe | null> {
+    const recipe = await this.findById(recipeId);
+    if (!recipe) return null;
+
+    await recipe.toggleFavorite();
+    return recipe;
+  }
+
+  // Set recipe favorite status
+  async setFavorite(
+    recipeId: string,
+    isFavorite: boolean
+  ): Promise<Recipe | null> {
+    const recipe = await this.findById(recipeId);
+    if (!recipe) return null;
+
+    await database.write(async () => {
+      await recipe.update((r) => {
+        r.isFavorite = isFavorite;
+      });
+    });
+
+    return recipe;
+  }
+
   // Get recipe with all related data
   async getRecipeWithDetails(id: string): Promise<{
     recipe: Recipe;
@@ -162,12 +210,12 @@ export class RecipeRepository extends BaseRepository<Recipe> {
 
       // Also clear related steps and ingredients
       const stepsCollection =
-        database.collections.get<RecipeStep>("recipe_steps");
+        database.collections.get<RecipeStep>("recipe_step");
       const allSteps = await stepsCollection.query().fetch();
       await Promise.all(allSteps.map((step) => step.destroyPermanently()));
 
       const ingredientsCollection =
-        database.collections.get<RecipeIngredient>("recipe_ingredients");
+        database.collections.get<RecipeIngredient>("recipe_ingredient");
       const allIngredients = await ingredientsCollection.query().fetch();
       await Promise.all(
         allIngredients.map((ingredient) => ingredient.destroyPermanently())
@@ -186,9 +234,9 @@ export class RecipeRepository extends BaseRepository<Recipe> {
       if (!recipe) return null;
 
       const stepsCollection =
-        database.collections.get<RecipeStep>("recipe_steps");
+        database.collections.get<RecipeStep>("recipe_step");
       const ingredientsCollection =
-        database.collections.get<RecipeIngredient>("recipe_ingredients");
+        database.collections.get<RecipeIngredient>("recipe_ingredient");
 
       const [steps, ingredients] = await Promise.all([
         stepsCollection.query(Q.where("recipe_id", id)).fetch(),
@@ -389,8 +437,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
     });
 
     // Update steps - delete existing and create new ones
-    const stepsCollection =
-      database.collections.get<RecipeStep>("recipe_steps");
+    const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
     const existingSteps = await stepsCollection
       .query(Q.where("recipe_id", recipeId))
       .fetch();
@@ -415,7 +462,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
 
     // Update ingredients - delete existing and create new ones
     const ingredientsCollection =
-      database.collections.get<RecipeIngredient>("recipe_ingredients");
+      database.collections.get<RecipeIngredient>("recipe_ingredient");
     const existingIngredients = await ingredientsCollection
       .query(Q.where("recipe_id", recipeId))
       .fetch();
@@ -433,8 +480,6 @@ export class RecipeRepository extends BaseRepository<Recipe> {
             const transformedIngredient =
               this.transformSupabaseIngredient(ingredientData);
             ingredient.recipeId = recipeId;
-            ingredient.baseIngredientId =
-              transformedIngredient.baseIngredientId;
             ingredient.name = transformedIngredient.name;
             ingredient.quantity = transformedIngredient.quantity;
             ingredient.unit = transformedIngredient.unit;
@@ -462,12 +507,14 @@ export class RecipeRepository extends BaseRepository<Recipe> {
       if (data.recipe.sourceUrl) r.sourceUrl = data.recipe.sourceUrl;
       if (data.recipe.calories) r.calories = data.recipe.calories;
       if (data.recipe.tags) r.tags = data.recipe.tags;
+      r.syncedAt = Date.now(); // Set sync time
+      r.isFavorite = data.recipe.isFavorite ?? false; // Default to false
     });
 
     // Create steps if provided
     if (data.steps && data.steps.length > 0) {
       const stepsCollection =
-        database.collections.get<RecipeStep>("recipe_steps");
+        database.collections.get<RecipeStep>("recipe_step");
       await Promise.all(
         data.steps.map((stepData) =>
           stepsCollection.create((step) => {
@@ -483,12 +530,11 @@ export class RecipeRepository extends BaseRepository<Recipe> {
     // Create ingredients if provided
     if (data.ingredients && data.ingredients.length > 0) {
       const ingredientsCollection =
-        database.collections.get<RecipeIngredient>("recipe_ingredients");
+        database.collections.get<RecipeIngredient>("recipe_ingredient");
       await Promise.all(
         data.ingredients.map((ingredientData) =>
           ingredientsCollection.create((ingredient) => {
             ingredient.recipeId = recipe.id; // Use the new recipe's ID
-            ingredient.baseIngredientId = ingredientData.baseIngredientId;
             ingredient.name = ingredientData.name;
             ingredient.quantity = ingredientData.quantity;
             ingredient.unit = ingredientData.unit;
@@ -538,7 +584,6 @@ export class RecipeRepository extends BaseRepository<Recipe> {
   ): RecipeIngredientData {
     return {
       recipeId: supabaseIngredient.recipe_id,
-      baseIngredientId: supabaseIngredient.base_ingredient_id,
       name: supabaseIngredient.name || "",
       quantity: supabaseIngredient.quantity || 1,
       unit: supabaseIngredient.unit || "unit",

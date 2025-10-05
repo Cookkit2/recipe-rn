@@ -3,6 +3,7 @@ import { field, date, children, writer } from "@nozbe/watermelondb/decorators";
 import type { Associations } from "@nozbe/watermelondb/Model";
 import type RecipeStep from "./RecipeStep";
 import type RecipeIngredient from "./RecipeIngredient";
+import type CookingHistory from "./CookingHistory";
 
 export interface RecipeData {
   title: string;
@@ -15,13 +16,15 @@ export interface RecipeData {
   sourceUrl?: string;
   calories?: number;
   tags?: string[];
+  isFavorite?: boolean;
 }
 
 export default class Recipe extends Model {
-  static table = "recipes";
+  static table = "recipe";
   static associations: Associations = {
-    recipe_steps: { type: "has_many", foreignKey: "recipe_id" },
-    recipe_ingredients: { type: "has_many", foreignKey: "recipe_id" },
+    recipe_step: { type: "has_many", foreignKey: "recipe_id" },
+    recipe_ingredient: { type: "has_many", foreignKey: "recipe_id" },
+    cooking_history: { type: "has_many", foreignKey: "recipe_id" },
   };
 
   @field("title") title!: string;
@@ -34,9 +37,12 @@ export default class Recipe extends Model {
   @field("source_url") sourceUrl?: string;
   @field("calories") calories?: number;
   @field("tags") _tags?: string; // JSON string
+  @field("synced_at") syncedAt!: number; // NEW: Track last sync from cloud
+  @field("is_favorite") isFavorite!: boolean; // NEW: User can favorite recipes
 
-  @children("recipe_steps") steps!: Collection<RecipeStep>;
-  @children("recipe_ingredients") ingredients!: Collection<RecipeIngredient>;
+  @children("recipe_step") steps!: Collection<RecipeStep>;
+  @children("recipe_ingredient") ingredients!: Collection<RecipeIngredient>;
+  @children("cooking_history") cookingHistory!: Collection<CookingHistory>;
 
   @date("created_at") createdAt!: Date;
   @date("updated_at") updatedAt!: Date;
@@ -55,6 +61,17 @@ export default class Recipe extends Model {
     return this.prepMinutes + this.cookMinutes;
   }
 
+  // Computed property for synced at date
+  get syncedAtDate(): Date {
+    return new Date(this.syncedAt);
+  }
+
+  // Check if recipe needs sync (older than 24 hours)
+  get needsSync(): boolean {
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+    return Date.now() - this.syncedAt > ONE_DAY_MS;
+  }
+
   // Update method
   @writer async updateRecipe(data: Partial<RecipeData>): Promise<Recipe> {
     return this.update((recipe) => {
@@ -69,6 +86,14 @@ export default class Recipe extends Model {
       if (data.sourceUrl !== undefined) recipe.sourceUrl = data.sourceUrl;
       if (data.calories !== undefined) recipe.calories = data.calories;
       if (data.tags !== undefined) recipe.tags = data.tags;
+      if (data.isFavorite !== undefined) recipe.isFavorite = data.isFavorite;
+    });
+  }
+
+  // Toggle favorite status
+  @writer async toggleFavorite(): Promise<Recipe> {
+    return this.update((recipe) => {
+      recipe.isFavorite = !recipe.isFavorite;
     });
   }
 }

@@ -136,16 +136,17 @@
       [
         "react-native-vision-camera",
         {
-          "cameraPermission": "Cookkit uses your camera to take photos of ingredients so you can identify and add them to your pantry with AI-powered recognition. This helps you discover recipes based on what you have at home.",
-          "enableLocation": true,
-          "locationPermissionText": "Cookkit needs your location."
+          "cameraPermission": "Cookkit uses your camera to take photos of ingredients to be identified and added to your pantry."
         }
       ],
       "expo-web-browser",
       "react-native-edge-to-edge"
     ],
     "experiments": {
-      "typedRoutes": true
+      "typedRoutes": true,
+      "buildCacheProvider": {
+        "plugin": "expo-build-disk-cache"
+      }
     },
     "extra": {
       "router": {},

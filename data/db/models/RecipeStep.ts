@@ -11,9 +11,9 @@ export interface RecipeStepData {
 }
 
 export default class RecipeStep extends Model {
-  static table = "recipe_steps";
+  static table = "recipe_step";
   static associations: Associations = {
-    recipes: { type: "belongs_to", key: "recipe_id" },
+    recipe: { type: "belongs_to", key: "recipe_id" },
   };
 
   @field("step") step!: number;
@@ -21,7 +21,7 @@ export default class RecipeStep extends Model {
   @field("description") description!: string;
   @field("recipe_id") recipeId!: string;
 
-  @relation("recipes", "recipe_id") recipe!: Recipe;
+  @relation("recipe", "recipe_id") recipe!: Recipe;
 
   @date("created_at") createdAt!: Date;
   @date("updated_at") updatedAt!: Date;
