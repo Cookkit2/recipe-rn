@@ -1,4 +1,4 @@
-import { ChefHatIcon, ReceiptIcon } from "lucide-react-native";
+import { ChefHatIcon, ReceiptIcon } from "lucide-nativewind";
 import React from "react";
 import { Pressable, View } from "react-native";
 import { CardContent } from "../ui/card";
