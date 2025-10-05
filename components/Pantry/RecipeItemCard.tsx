@@ -17,14 +17,13 @@ const RecipeItemCard = ({ recipe }: { recipe: Recipe }) => {
 
   const debouncedPress = useDebounce(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    console.log("Navigating to recipe:", recipe.id);
     router.push(`/recipes/${recipe.id}`);
   });
 
   return (
     <Animated.View
       key={recipe.id}
-      className="flex-1 max-w-[50%] flex-column items-start p-3"
+      className="flex-column items-start p-3"
       style={[animatedStyle]}
     >
       <Pressable

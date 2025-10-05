@@ -54,9 +54,7 @@
       <true />
     </dict>
     <key>NSCameraUsageDescription</key>
-    <string>Cookkit uses your camera to take photos of ingredients so you can identify and add them
-      to your pantry with AI-powered recognition. This helps you discover recipes based on what you
-      have at home.</string>
+    <string>Cookkit uses your camera to take photos of ingredients so you can identify and add them to your pantry with AI-powered recognition.</string>
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>Cookkit needs your location to locate your nearby grocery store.</string>
     <key>NSMicrophoneUsageDescription</key>

@@ -91,6 +91,23 @@ export function useAddPantryItems() {
 }
 
 /**
+ * Mutation hook to add an array of pantry items with metadata (categories, synonyms)
+ */
+export function useAddPantryItemsWithMetadata() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: pantryApi.addPantryItemsWithMetadata,
+    onSuccess: () => {
+      // Invalidate all pantry queries to refetch data
+      queryClient.invalidateQueries({
+        queryKey: pantryQueryKeys.all,
+      });
+    },
+  });
+}
+
+/**
  * Mutation hook to update a pantry item
  */
 export function useUpdatePantryItem() {

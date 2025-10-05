@@ -1,13 +1,8 @@
 import React, { useMemo, useRef } from "react";
-import {
-  Dimensions,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  View,
-} from "react-native";
+import { Dimensions, Pressable, StyleSheet, View } from "react-native";
 import { Image } from "expo-image";
 import type { Recipe } from "~/types/Recipe";
+import { LegendList } from "@legendapp/list";
 
 interface RecipeCarouselProps {
   recipes: Recipe[];
@@ -37,9 +32,9 @@ export default function RecipeCarousel({
   );
 
   return (
-    <FlatList
-      data={recipes}
+    <LegendList
       keyExtractor={(item) => item.id}
+      data={recipes}
       horizontal
       showsHorizontalScrollIndicator={false}
       snapToInterval={SNAP_INTERVAL}

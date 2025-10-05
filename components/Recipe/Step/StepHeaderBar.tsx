@@ -13,7 +13,8 @@ export default function StepHeaderBar() {
   const router = useRouter();
 
   const progressPercentage = useDerivedValue(() => {
-    return (progress.value / (stepPages.length - 1)) * 100;
+    const percent = (progress.value / (stepPages.length - 1)) * 100;
+    return percent;
   });
 
   return (

@@ -6,10 +6,11 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePantryStore } from "~/store/PantryContext";
 import { IngredientItemCard } from "./IngredientItemCard";
-import { View, ActivityIndicator } from "react-native";
+import { View, ActivityIndicator, FlatList } from "react-native";
 import { H4, P } from "~/components/ui/typography";
 import { CURVES } from "~/constants/curves";
 import { usePantryItemsByType } from "~/hooks/queries/usePantryQueries";
+import { LegendList } from "@legendapp/list";
 
 export default function IngredientLists() {
   const { bottom } = useSafeAreaInsets();
@@ -52,14 +53,14 @@ export default function IngredientLists() {
   }
 
   return (
-    <Animated.FlatList
+    <FlatList
+      keyExtractor={(item) => item.id.toString()}
       numColumns={2}
-      className="pb-3 pt-0"
+      className="pb-3"
       style={[flatListStyle]}
       contentContainerStyle={{ paddingBottom: 64 + bottom }}
       showsVerticalScrollIndicator={false}
       data={filteredPantryItems}
-      keyExtractor={(item) => item.id.toString()}
       renderItem={({ item, index }) => (
         <IngredientItemCard key={item.id} item={item} index={index} />
       )}

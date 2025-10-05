@@ -1,15 +1,15 @@
-import { Model } from "@nozbe/watermelondb";
-import { field, date, relation, writer } from "@nozbe/watermelondb/decorators";
+import { Model, Collection } from "@nozbe/watermelondb";
+import { field, date, writer, children } from "@nozbe/watermelondb/decorators";
 import type { Associations } from "@nozbe/watermelondb/Model";
-import BaseIngredient from "./BaseIngredient";
+import type IngredientSynonym from "./IngredientSynonym";
+import type StockCategory from "./StockCategory";
 
 export interface StockData {
-  baseIngredientId: string;
   name: string;
   quantity: number;
   unit: string;
   expiryDate?: Date;
-  type?: string;
+  storageType?: string;
   imageUrl?: string;
   backgroundColor?: string;
   x?: number;
@@ -20,23 +20,23 @@ export interface StockData {
 export default class Stock extends Model {
   static table = "stock";
   static associations: Associations = {
-    base_ingredients: { type: "belongs_to", key: "base_ingredient_id" },
+    ingredient_synonym: { type: "has_many", foreignKey: "stock_id" },
+    stock_category: { type: "has_many", foreignKey: "stock_id" },
   };
 
-  @field("base_ingredient_id") baseIngredientId!: string;
   @field("name") name!: string;
   @field("quantity") quantity!: number;
   @field("unit") unit!: string;
   @field("expiry_date") _expiryDate?: number; // timestamp
-  @field("type") type?: string;
+  @field("storage_type") storageType?: string;
   @field("image_url") imageUrl?: string;
   @field("background_color") backgroundColor?: string;
   @field("x") x?: number;
   @field("y") y?: number;
   @field("scale") scale?: number;
 
-  @relation("base_ingredients", "base_ingredient_id")
-  baseIngredient!: BaseIngredient;
+  @children("ingredient_synonym") synonyms!: Collection<IngredientSynonym>;
+  @children("stock_category") stockCategories!: Collection<StockCategory>;
 
   @date("created_at") createdAt!: Date;
   @date("updated_at") updatedAt!: Date;
@@ -67,13 +67,11 @@ export default class Stock extends Model {
   // Update method
   @writer async updateStock(data: Partial<StockData>): Promise<Stock> {
     return this.update((stock) => {
-      if (data.baseIngredientId !== undefined)
-        stock.baseIngredientId = data.baseIngredientId;
       if (data.name !== undefined) stock.name = data.name;
       if (data.quantity !== undefined) stock.quantity = data.quantity;
       if (data.unit !== undefined) stock.unit = data.unit;
       if (data.expiryDate !== undefined) stock.expiryDate = data.expiryDate;
-      if (data.type !== undefined) stock.type = data.type;
+      if (data.storageType !== undefined) stock.storageType = data.storageType;
       if (data.imageUrl !== undefined) stock.imageUrl = data.imageUrl;
       if (data.backgroundColor !== undefined)
         stock.backgroundColor = data.backgroundColor;

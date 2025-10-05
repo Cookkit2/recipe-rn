@@ -69,7 +69,6 @@ export default function PantryWrapper() {
       if (velocity < -500) {
         // Fast upward swipe - expand
         snapTarget = -EXPANDED_HEIGHT + collapsedHeight;
-        
       } else if (velocity > 500) {
         // Fast downward swipe - collapse
         snapTarget = 0;
@@ -114,20 +113,6 @@ export default function PantryWrapper() {
       marginBottom: withSpring(
         isRecipeOpen ? collapsedHeight - translateY.value : 0,
         SPRING_CONFIG
-        // Means the recipe is currently opening
-        // The animation need to traverse through a larger screen
-        // Thus a longer duration spring is used
-        // translateY.value < -1
-        //   ? {
-        //       damping: 10,
-        //       mass: 1,
-        //       stiffness: 133.33,
-        //     }
-        //   : {
-        //       damping: 100,
-        //       mass: 1,
-        //       stiffness: 500,
-        //     }
       ),
       paddingTop: withSpring(isRecipeOpen ? top - 8 : top, SPRING_CONFIG),
     };
@@ -137,6 +122,15 @@ export default function PantryWrapper() {
     return {
       paddingHorizontal: withTiming(
         isRecipeOpen ? 16 : 24,
+        CURVES["expressive.default.spatial"]
+      ),
+    };
+  });
+
+  const ingredientListStyle = useAnimatedStyle(() => {
+    return {
+      paddingHorizontal: withTiming(
+        isRecipeOpen ? 4 : 12,
         CURVES["expressive.default.spatial"]
       ),
     };
@@ -153,17 +147,6 @@ export default function PantryWrapper() {
           ? SCREEN_HEIGHT - (collapsedHeight - 8 - translateY.value)
           : SCREEN_HEIGHT,
         SPRING_CONFIG
-        // translateY.value < -1
-        //   ? {
-        //       damping: 10,
-        //       mass: 1,
-        //       stiffness: 133.33,
-        //     }
-        //   : {
-        //       mass: 1,
-        //       damping: 25,
-        //       stiffness: 500,
-        //     }
       ),
     };
   });
@@ -195,7 +178,9 @@ export default function PantryWrapper() {
           <MenuDropdown />
         </Animated.View>
         <IngredientCategoryButtonGroup />
-        <IngredientLists />
+        <Animated.View style={ingredientListStyle}>
+          <IngredientLists />
+        </Animated.View>
       </AnimatedPressable>
 
       <RecipeButton />

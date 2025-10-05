@@ -1,16 +1,11 @@
-import { useCameraPermissions } from "expo-camera";
 import {
   Camera,
   useCameraDevice,
   useCameraFormat,
   type CameraPosition,
+  useCameraPermission,
 } from "react-native-vision-camera";
-import {
-  useEffect,
-  useRef,
-  useState,
-  useTransition,
-} from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import {
   StyleSheet,
   View,
@@ -89,7 +84,7 @@ export default function CreateIngredient() {
   const camera = useRef<Camera>(null);
 
   const [facing, setFacing] = useState<CameraPosition>("back");
-  const [permission, requestPermission] = useCameraPermissions();
+  const { hasPermission, requestPermission } = useCameraPermission();
   const [hasAskedPermission, setHasAskedPermission] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [capturedImageSk, setCapturedImageSk] = useState<SkImage | null>(null);
@@ -127,11 +122,11 @@ export default function CreateIngredient() {
   }, []);
 
   useEffect(() => {
-    if (!permission && !hasAskedPermission) {
+    if (!hasPermission && !hasAskedPermission) {
       requestPermission();
       setHasAskedPermission(true);
     }
-  }, [permission, requestPermission, hasAskedPermission]);
+  }, [hasPermission, requestPermission, hasAskedPermission]);
 
   useAsyncEffect(
     async () => {
@@ -194,8 +189,7 @@ export default function CreateIngredient() {
     }
   };
 
-  const processImage = async (imagePath: string) => {
-
+  const processImage = (imagePath: string) => {
     setCapturedImage(imagePath);
     capturedImageOpacityValue.value = 1;
 
@@ -319,17 +313,12 @@ export default function CreateIngredient() {
     }
   };
 
-  // Camera permissions are still loading.
-  if (!permission) {
-    return <View className="flex-1 bg-black" />;
-  }
-
-  if (!permission.granted) {
+  if (!hasPermission) {
     // Camera permissions are not granted yet.
     const handlePermissionRequest = async () => {
       const result = await requestPermission();
 
-      if (!result.granted && result.canAskAgain === false) {
+      if (!result) {
         // User denied permission and selected "Don't ask again"
         Alert.alert(
           "Camera Permission Required",

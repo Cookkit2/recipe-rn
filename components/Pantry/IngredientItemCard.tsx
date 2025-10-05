@@ -38,7 +38,7 @@ export const IngredientItemCard = ({
   return (
     <Animated.View
       style={[animatedStyle]}
-      className="flex-1 max-w-[50%] flex-column items-start p-3"
+      className="p-3 max-w-[50%]"
     >
       <Pressable
         onPress={debouncedPress}

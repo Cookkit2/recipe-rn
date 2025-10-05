@@ -1,28 +1,30 @@
-import { Collection, Model } from "@nozbe/watermelondb";
-import { field, date, children, writer } from "@nozbe/watermelondb/decorators";
+import { Model, Collection } from "@nozbe/watermelondb";
+import { field, date, writer, children } from "@nozbe/watermelondb/decorators";
 import type { Associations } from "@nozbe/watermelondb/Model";
-import type IngredientCategoryAssignment from "./IngredientCategoryAssignment";
+import type StockCategory from "./StockCategory";
 
 export interface IngredientCategoryData {
   name: string;
 }
 
 export default class IngredientCategory extends Model {
-  static table = "ingredient_categories";
+  static table = "ingredient_category";
   static associations: Associations = {
-    ingredient_category_assignments: {
-      type: "has_many",
-      foreignKey: "category_id",
-    },
+    stock_category: { type: "has_many", foreignKey: "category_id" },
   };
 
   @field("name") name!: string;
+  @field("synced_at") syncedAt!: number;
 
-  @children("ingredient_category_assignments")
-  ingredientAssignments?: Collection<IngredientCategoryAssignment>;
+  @children("stock_category") stockCategories!: Collection<StockCategory>;
 
   @date("created_at") createdAt!: Date;
   @date("updated_at") updatedAt!: Date;
+
+  // Computed property for synced at date
+  get syncedAtDate(): Date {
+    return new Date(this.syncedAt);
+  }
 
   // Update method
   @writer async updateCategory(

@@ -31,7 +31,8 @@ const google = createGoogleGenerativeAI({
 export const classifyStaticImage = async (skImage: SkImage) => {
   const startTime = performance.now();
 
-  const imageCompressed = compressImage(skImage, GEMINI_MODEL_INPUT_SIZE);
+  // const imageCompressed = compressImage(skImage, GEMINI_MODEL_INPUT_SIZE);
+  const imageCompressed = skImage.encodeToBase64(ImageFormat.JPEG, 85);
 
   const objectResult = await generateObject({
     model: google("gemini-2.0-flash-lite"),

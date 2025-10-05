@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useTransition } from "react";
 import {
   View,
   Keyboard,
@@ -12,31 +12,30 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCreateIngredientStore } from "~/store/CreateIngredientContext";
 import Header from "~/components/Shared/Header";
-import { H1, H4 } from "~/components/ui/typography";
+import { H1, H4, P } from "~/components/ui/typography";
 import HorizontalIngredientItemCard from "~/components/Confirmation/HorizontalIngredientItemCard";
 import { Button } from "~/components/ui/button";
 import TextShimmer from "~/components/ui/TextShimmer";
 import { SystemBars } from "react-native-edge-to-edge";
-import { useAddPantryItems } from "~/hooks/queries/usePantryQueries";
+import { useAddPantryItemsWithMetadata } from "~/hooks/queries/usePantryQueries";
 import { useRouter } from "expo-router";
 import { toast } from "sonner-native";
-import RevenueCatUI from "react-native-purchases-ui";
 import { presentPaywallIfNeeded } from "~/utils/subscription-utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { recipeQueryKeys } from "~/hooks/queries/recipeQueryKeys";
+import { LegendList } from "@legendapp/list";
 
 export default function ConfirmationPage() {
   const { bottom } = useSafeAreaInsets();
   const { processPantryItems } = useCreateIngredientStore();
+
   const queryClient = useQueryClient();
-
   const router = useRouter();
-  const addPantryItems = useAddPantryItems();
-
+  const addPantryItemsWithMetadata = useAddPantryItemsWithMetadata();
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const scrollOffset = useScrollViewOffset(scrollRef);
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, startTransition] = useTransition();
 
   useEffect(() => {
     // Push a new system bar style when the screen mounts
@@ -48,32 +47,21 @@ export default function ConfirmationPage() {
     return () => SystemBars.popStackEntry(entry);
   }, []);
 
-  const onSaveAllRecipe = async () => {
-    // setIsLoading(true);
-    const isPurchased = await presentPaywallIfNeeded();
+  const onSaveAllRecipe = () => {
+    startTransition(async () => {
+      await presentPaywallIfNeeded();
 
-    // if (!isPurchased) {
-    //   toast.error("You need to subscribe to save ingredients.");
-    //   return;
-    // }
-
-    try {
-      console.log("processPantryItems", processPantryItems);
-
-      const result = await addPantryItems.mutateAsync(processPantryItems);
-      queryClient.invalidateQueries({
-        queryKey: recipeQueryKeys.recommendations(),
-      });
-      console.log("result", result);
-      router.dismissTo("/");
-      SystemBars.setStyle("auto");
-    } catch (error) {
-      console.error("Error saving all recipe:", error);
-      toast.error("Error saving all recipe");
-    }
-    // finally {
-    //   setIsLoading(false);
-    // }
+      try {
+        await addPantryItemsWithMetadata.mutateAsync(processPantryItems);
+        queryClient.invalidateQueries({
+          queryKey: recipeQueryKeys.recommendations(),
+        });
+        router.dismissTo("/");
+        SystemBars.setStyle("auto");
+      } catch {
+        toast.error("Error saving all recipe");
+      }
+    });
   };
 
   return (
@@ -91,7 +79,9 @@ export default function ConfirmationPage() {
           <View className="p-6 pb-4 flex-row items-center gap-3">
             <H1 className="font-bowlby-one pt-2">Confirmation</H1>
           </View>
-          <Animated.FlatList
+          <LegendList
+            keyExtractor={(item) => item.id.toString()}
+            recycleItems
             numColumns={1}
             className="pb-3 pt-0 px-3"
             scrollEnabled={false}
@@ -101,6 +91,16 @@ export default function ConfirmationPage() {
             renderItem={({ item }) => (
               <HorizontalIngredientItemCard key={item.id} item={item} />
             )}
+            ListEmptyComponent={
+              <View className="py-16 items-center justify-center">
+                <H4 className="text-muted-foreground text-center font-urbanist-semibold">
+                  There is nothing to be added
+                </H4>
+                <P className="text-muted-foreground text-center font-urbanist-regular text-sm mt-1">
+                  Go back to take more photos
+                </P>
+              </View>
+            }
           />
         </Animated.ScrollView>
       </TouchableWithoutFeedback>

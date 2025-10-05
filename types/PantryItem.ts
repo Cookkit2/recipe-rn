@@ -19,6 +19,11 @@ export type PantryItem = {
   created_at: Date;
   updated_at: Date;
   steps_to_store: StepsToStore[];
+  // Base ingredient data (fetched from Supabase)
+  base_ingredient_id?: string;
+  base_ingredient_name?: string;
+  synonyms?: Array<{ id: string; synonym: string }>;
+  categories?: Array<{ id: string; name: string }>;
 };
 
 export type PantryItemConfirmation = {

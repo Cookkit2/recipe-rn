@@ -1,6 +1,9 @@
 import { databaseFacade } from "~/data/db/DatabaseFacade";
 import { database } from "~/data/db/database";
 import type { Stock } from "~/data/db/models";
+import type IngredientCategory from "~/data/db/models/IngredientCategory";
+import type IngredientSynonym from "~/data/db/models/IngredientSynonym";
+import type StockCategory from "~/data/db/models/StockCategory";
 import type { ItemType, PantryItem } from "~/types/PantryItem";
 
 /**
@@ -20,10 +23,10 @@ export const pantryApi = {
       console.log("Database healthy:", isHealthy);
 
       // Get raw count from database
-      const stockCount = await databaseFacade.stock.count();
+      const stockCount = await databaseFacade.getStockCount();
       console.log("Stock count in database:", stockCount);
 
-      const stockItems = await databaseFacade.stock.findAll();
+      const stockItems = await databaseFacade.getAllStock();
 
       if (stockItems.length === 0) {
         console.warn("⚠️ No stock items found in database");
@@ -51,32 +54,13 @@ export const pantryApi = {
     try {
       console.log("🔍 Adding pantry item:", item);
 
-      // First create or find base ingredient
-      let baseIngredient = await databaseFacade.ingredients.findByName(
-        item.name
-      );
-      if (!baseIngredient) {
-        console.log("📦 Creating new base ingredient:", item.name);
-        baseIngredient = await databaseFacade.ingredients.create({
-          name: item.name,
-          synonyms: [],
-        });
-        console.log(
-          "✅ Base ingredient created:",
-          baseIngredient.id,
-          baseIngredient.name
-        );
-      } else {
-        console.log(
-          "✅ Found existing base ingredient:",
-          baseIngredient.id,
-          baseIngredient.name
-        );
-      }
+      // Generate a temporary base ingredient ID
+      // TODO: In the future, fetch from cloud API to get the actual base_ingredient_id
+      const baseIngredientId = `temp_${item.name.toLowerCase().replace(/\s+/g, "_")}`;
 
       // Prepare stock data
       const stockData = {
-        baseIngredientId: baseIngredient.id,
+        baseIngredientId,
         name: item.name,
         quantity: item.quantity,
         unit: item.unit,
@@ -94,12 +78,11 @@ export const pantryApi = {
       console.log("📦 Creating stock item with data:", stockData);
 
       // Create stock item
-      const stockItem = await databaseFacade.stock.create(stockData);
+      const stockItem = await databaseFacade.createStock(stockData);
 
       console.log("✅ Stock item created:", stockItem.id, stockItem.name);
       console.log("📊 Stock item details:", {
         id: stockItem.id,
-        baseIngredientId: stockItem.baseIngredientId,
         name: stockItem.name,
         quantity: stockItem.quantity,
         backgroundColor: stockItem.backgroundColor,
@@ -117,53 +100,127 @@ export const pantryApi = {
   },
 
   /**
+   * Add an array of new pantry items with base ingredient metadata
+   */
+  async addPantryItemsWithMetadata(
+    items: Omit<PantryItem, "id" | "created_at" | "updated_at">[]
+  ): Promise<PantryItem[]> {
+    const createdItems: PantryItem[] = [];
+
+    // Process all items in a single transaction
+    await database.write(async () => {
+      const stockCollection = database.collections.get("stock");
+      const categoryCollection = database.collections.get(
+        "ingredient_category"
+      );
+      const synonymCollection = database.collections.get("ingredient_synonym");
+      const stockCategoryCollection =
+        database.collections.get("stock_category");
+
+      for (const item of items) {
+        try {
+          // Create stock item
+          const stockItem = await stockCollection.create((stock) => {
+            (stock as Stock).name = item.name;
+            (stock as Stock).quantity = item.quantity;
+            (stock as Stock).unit = item.unit;
+            if (item.expiry_date)
+              (stock as Stock).expiryDate = item.expiry_date;
+            if (item.type) (stock as Stock).storageType = item.type;
+            if (item.background_color)
+              (stock as Stock).backgroundColor = item.background_color;
+            if (typeof item.image_url === "string")
+              (stock as Stock).imageUrl = item.image_url;
+            if (item.x !== undefined) (stock as Stock).x = item.x;
+            if (item.y !== undefined) (stock as Stock).y = item.y;
+            if (item.scale !== undefined) (stock as Stock).scale = item.scale;
+          });
+
+          // Create categories if they exist
+          if (item.categories && item.categories.length > 0) {
+            for (const category of item.categories) {
+              // First, ensure the category exists (upsert-like behavior)
+              const existingCategories = await categoryCollection
+                .query()
+                .fetch();
+              let categoryRecord = existingCategories.find(
+                (c) => (c as IngredientCategory).name === category.name
+              ) as IngredientCategory | undefined;
+
+              if (!categoryRecord) {
+                categoryRecord = (await categoryCollection.create((cat) => {
+                  (cat as IngredientCategory).name = category.name;
+                  (cat as IngredientCategory).syncedAt = Date.now();
+                })) as IngredientCategory;
+              }
+
+              // Create the stock-category relationship
+              await stockCategoryCollection.create((sc) => {
+                (sc as StockCategory).stockId = stockItem.id;
+                (sc as StockCategory).categoryId = categoryRecord!.id;
+              });
+            }
+          }
+
+          // Create synonyms if they exist
+          if (item.synonyms && item.synonyms.length > 0) {
+            for (const synonym of item.synonyms) {
+              await synonymCollection.create((syn) => {
+                (syn as IngredientSynonym).stockId = stockItem.id;
+                (syn as IngredientSynonym).synonym =
+                  synonym.synonym.toLowerCase();
+              });
+            }
+          }
+
+          const convertedItem = await convertStockToPantryItem(
+            stockItem as Stock
+          );
+          createdItems.push(convertedItem);
+        } catch (error) {
+          console.error(`Failed to add pantry item ${item.name}:`, error);
+          // Continue with other items instead of failing completely
+        }
+      }
+    });
+
+    return createdItems;
+  },
+
+  /**
    * Add an array of new pantry items
    */
   async addPantryItems(
     items: Omit<PantryItem, "id" | "created_at" | "updated_at">[]
   ): Promise<PantryItem[]> {
-    const ingredientIdCache = new Map<string, string>();
     const createdItems: PantryItem[] = [];
 
-    // Process all items in a single transaction to avoid nested transactions
+    // Process all items in a single transaction
     await database.write(async () => {
+      const stockCollection = database.collections.get("stock");
+
       for (const item of items) {
         try {
-          // Find or create base ingredient (with simple in-memory cache per batch)
-          let baseIngredientId = ingredientIdCache.get(item.name);
-          if (!baseIngredientId) {
-            let baseIngredient = await databaseFacade.ingredients.findByName(
-              item.name
-            );
-            if (!baseIngredient) {
-              // Use raw create method to avoid nested transaction
-              baseIngredient = await databaseFacade.ingredients.createRaw({
-                name: item.name,
-                synonyms: [],
-              });
-            }
-            baseIngredientId = baseIngredient.id;
-            ingredientIdCache.set(item.name, baseIngredientId);
-          }
-
-          // Create stock item using raw method to avoid nested transaction
-          const stockItem = await databaseFacade.stock.createRaw({
-            baseIngredientId,
-            name: item.name,
-            quantity: item.quantity,
-            unit: item.unit,
-            expiryDate: item.expiry_date,
-            type: item.type,
-            backgroundColor: item.background_color,
-            category: item.category,
-            imageUrl:
-              typeof item.image_url === "string" ? item.image_url : undefined,
-            x: item.x,
-            y: item.y,
-            scale: item.scale,
+          // Create stock item directly in collection (within transaction)
+          const stockItem = await stockCollection.create((stock) => {
+            (stock as Stock).name = item.name;
+            (stock as Stock).quantity = item.quantity;
+            (stock as Stock).unit = item.unit;
+            if (item.expiry_date)
+              (stock as Stock).expiryDate = item.expiry_date;
+            if (item.type) (stock as Stock).storageType = item.type;
+            if (item.background_color)
+              (stock as Stock).backgroundColor = item.background_color;
+            if (typeof item.image_url === "string")
+              (stock as Stock).imageUrl = item.image_url;
+            if (item.x !== undefined) (stock as Stock).x = item.x;
+            if (item.y !== undefined) (stock as Stock).y = item.y;
+            if (item.scale !== undefined) (stock as Stock).scale = item.scale;
           });
 
-          const convertedItem = await convertStockToPantryItem(stockItem);
+          const convertedItem = await convertStockToPantryItem(
+            stockItem as Stock
+          );
           createdItems.push(convertedItem);
         } catch (error) {
           console.error(`Failed to add pantry item ${item.name}:`, error);
@@ -182,7 +239,7 @@ export const pantryApi = {
     id: string,
     updates: Partial<PantryItem>
   ): Promise<PantryItem> {
-    const stock = await databaseFacade.stock.findById(id);
+    const stock = await databaseFacade.getStockById(id);
 
     if (!stock) {
       throw new Error("Stock item not found");
@@ -193,7 +250,7 @@ export const pantryApi = {
       quantity: updates.quantity,
       unit: updates.unit,
       expiryDate: updates.expiry_date,
-      type: updates.type,
+      storageType: updates.type,
       backgroundColor: updates.background_color,
       imageUrl:
         typeof updates.image_url === "string" ? updates.image_url : undefined,
@@ -203,7 +260,7 @@ export const pantryApi = {
     });
 
     // Fetch the updated item
-    const updatedStock = await databaseFacade.stock.findById(id);
+    const updatedStock = await databaseFacade.getStockById(id);
     if (!updatedStock) {
       throw new Error("Failed to fetch updated stock item");
     }
@@ -215,7 +272,7 @@ export const pantryApi = {
    * Delete a pantry item
    */
   async deletePantryItem(id: string): Promise<void> {
-    await databaseFacade.stock.delete(id);
+    await databaseFacade.deleteStock(id);
   },
 
   /**
@@ -263,7 +320,7 @@ const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
     unit: stock.unit,
     expiry_date: stock.expiryDate || undefined,
     category: "", // TODO: Load from BaseIngredient category if available
-    type: mapDbTypeToType(stock.type),
+    type: mapDbTypeToType(stock.storageType),
     image_url: stock.imageUrl,
     background_color: stock.backgroundColor,
     x: stock.x || 0,
