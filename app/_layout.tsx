@@ -1,6 +1,6 @@
 import "~/global.css";
 import React, { useEffect, useState } from "react";
-import { Stack, useRouter } from "expo-router";
+import { SplashScreen, Stack, useRouter } from "expo-router";
 import { Appearance, Platform, View } from "react-native";
 import { useColorScheme } from "~/hooks/useColorScheme";
 import { PortalHost } from "@rn-primitives/portal";
@@ -33,10 +33,11 @@ const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 
 function AnimatedStack() {
   const { scale } = useRootScale();
+  const { isDarkColorScheme } = useColorScheme();
+  const router = useRouter();
 
   const [isModalActive, setIsModalActive] = useState(false);
   const [canBlur, setCanBlur] = useState(false);
-  const { isDarkColorScheme } = useColorScheme();
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -49,17 +50,15 @@ function AnimatedStack() {
     };
   });
 
-  // For ease of dev, we can redirect to the steps page
-  const router = useRouter();
+  // Check onboarding status on mount
   useEffect(() => {
-    if (__DEV__) {
-      setTimeout(() => {
-        const completed = storage.get<boolean>(ONBOARDING_COMPLETED_KEY);
-        if (completed !== true) {
-          router.replace("/onboarding");
-        }
-      }, 0);
-    }
+    setTimeout(() => {
+      const completed = storage.get<boolean>(ONBOARDING_COMPLETED_KEY);
+      if (completed !== true) {
+        router.replace("/onboarding");
+      }
+      SplashScreen.hideAsync();
+    }, 0);
   }, [router]);
 
   return (
@@ -203,7 +202,7 @@ const usePlatformSpecificSetup = Platform.select({
   default: noop,
 });
 
-// SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   usePlatformSpecificSetup();
