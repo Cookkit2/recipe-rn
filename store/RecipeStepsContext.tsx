@@ -17,7 +17,7 @@ import type { TextLoopRef } from "~/components/ui/TextLoop";
 import type { Recipe, RecipeIngredient } from "~/types/Recipe";
 import type { PantryItem } from "~/types/PantryItem";
 import type { StepPageData } from "~/app/recipes/[recipeId]/steps";
-import { storage } from "~/data";
+import { storage, database } from "~/data";
 import { RECIPE_COOKED_KEY } from "~/constants/storage-keys";
 import {
   usePantryItemsByType,
@@ -25,6 +25,9 @@ import {
   useDeletePantryItem,
 } from "~/hooks/queries/usePantryQueries";
 import { isIngredientMatch } from "~/utils/ingredient-matching";
+import { queryClient } from "./QueryProvider";
+import { recipeQueryKeys } from "~/hooks/queries/recipeQueryKeys";
+import { cookingHistoryQueryKeys } from "~/hooks/queries/useCookingHistoryQueries";
 
 // Dictionary to map unit synonyms to their canonical form
 const UNIT_SYNONYMS: Record<string, string> = {
@@ -143,6 +146,15 @@ export function RecipeStepsProvider({
 
   const handleRecipeCompletion = useCallback(
     async (servings: number) => {
+      // Record the cooking in the database
+      try {
+        await database.recordCooking(recipe.id, {
+          notes: `Cooked ${servings} serving${servings !== 1 ? "s" : ""}`,
+        });
+      } catch {
+        // Continue even if recording fails
+      }
+
       // Find matching pantry items
       const matches: Array<{
         pantryItem: PantryItem;
@@ -199,6 +211,13 @@ export function RecipeStepsProvider({
       } catch {
         // Silent error handling - errors are handled gracefully
       }
+
+      queryClient.invalidateQueries({
+        queryKey: recipeQueryKeys.recommendations(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: cookingHistoryQueryKeys.history(),
+      });
 
       // Navigate away after processing
       router.dismissTo("/");

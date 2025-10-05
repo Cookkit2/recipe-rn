@@ -12,7 +12,7 @@ import {
   StarIcon,
 } from "lucide-nativewind";
 import React, { useCallback, useEffect } from "react";
-import { View, Platform, Linking } from "react-native";
+import { View, Platform, Linking, Pressable } from "react-native";
 import * as StoreReview from "expo-store-review";
 import Constants from "expo-constants";
 import Purchases, { LOG_LEVEL } from "react-native-purchases";
@@ -33,6 +33,8 @@ import * as WebBrowser from "expo-web-browser";
 import { presentPaywall } from "~/utils/subscription-utils";
 import ProfileCard from "~/components/Profile/ProfileCard";
 import SubscriptionCard from "~/components/Profile/SubscriptionCard";
+import useButtonAnimation from "~/hooks/animation/useButtonAnimations";
+import ActionButtonRow from "~/components/Profile/ActionButtonRow";
 
 const appName = Constants.expoConfig?.name ?? "Cookkit";
 const appVersion = Constants.expoConfig?.version ?? "unknown";
@@ -41,6 +43,8 @@ const osVersion = String(Platform.Version ?? "");
 
 const subject = `${appName} Feedback`;
 const email = "cookkit01@gmail.com";
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export default function ProfileScreen() {
   const { top, bottom } = useSafeAreaInsets();
@@ -160,25 +164,15 @@ export default function ProfileScreen() {
 
       {/* {isAuthenticated ? <ProfileCard /> : <SetupProfileCard />} */}
 
-      {/* <View className="flex-row px-6 mt-6 gap-6 ">
-        <Card className="flex-1 rounded-3xl shadow-md shadow-foreground/10 border-none">
-          <CardContent className="py-6 flex gap-3">
-            <ChefHatIcon size={32} strokeWidth={1.618} />
-            <P className="font-urbanist-medium">Cooked Recipes</P>
-          </CardContent>
-        </Card>
-        <Card className="flex-1 rounded-3xl shadow-md shadow-foreground/10 border-none">
-          <CardContent className="py-6 flex gap-3">
-            <ReceiptIcon size={32} strokeWidth={1.618} />
-            <P className="font-urbanist-medium">Receipts</P>
-          </CardContent>
-        </Card>
-      </View> */}
+      <ActionButtonRow />
 
       <SubscriptionCard />
 
       <View className="mt-12">
-        <P className="text-foreground/60 font-urbanist-semibold px-6 mb-2">
+        <P
+          className="text-foreground/60 font-urbanist-semibold 
+        px-6 mb-2"
+        >
           General
         </P>
         <View className="mx-6 rounded-2xl bg-muted/50 overflow-hidden border-continuous">
