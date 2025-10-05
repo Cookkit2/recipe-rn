@@ -1,12 +1,10 @@
-import React, { useMemo } from "react";
-import { View, ActivityIndicator, Pressable, StyleSheet } from "react-native";
+import React from "react";
+import { View, ActivityIndicator } from "react-native";
 import { LegendList } from "@legendapp/list";
 import { useRecentlyCookedRecipes } from "~/hooks/queries/useCookingHistoryQueries";
-import { useRecipes } from "~/hooks/queries/useRecipeQueries";
 import { H1, H4, P } from "~/components/ui/typography";
-
-import Header from "~/components/Shared/Header";
 import { ChefHatIcon } from "lucide-nativewind";
+import Header from "~/components/Shared/Header";
 import CookedRecipeCard from "~/components/Profile/CookedRecipes/CookedRecipeCard";
 
 export default function CookedRecipes() {
