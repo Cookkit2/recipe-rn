@@ -60,7 +60,6 @@
     "expo": "^53.0.9",
     "expo-auth-session": "~6.2.1",
     "expo-blur": "~14.1.5",
-    "expo-build-disk-cache": "^0.7.0",
     "expo-constants": "~17.1.7",
     "expo-dev-client": "~5.2.4",
     "expo-file-system": "~18.1.11",
@@ -80,7 +79,6 @@
     "expo-updates": "~0.28.17",
     "expo-web-browser": "~14.2.0",
     "lucide-nativewind": "^0.536.0",
-    "lucide-react-native": "^0.542.0",
     "nativewind": "^4.1.23",
     "patch-package": "^8.0.0",
     "react": "19.0.0",
@@ -115,6 +113,7 @@
     "zod": "^4.0.17"
   },
   "devDependencies": {
+    "expo-build-disk-cache": "^0.7.0",
     "@babel/core": "^7.26.0",
     "@babel/plugin-proposal-decorators": "^7.28.0",
     "@tanstack/eslint-plugin-query": "^5.86.0",
@@ -139,9 +138,6 @@
     "react-test-renderer": "^19.0.0",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.38.0"
-  },
-  "overrides": {
-    "lucide-react-native": "^0.542.0"
   },
   "private": true
 }

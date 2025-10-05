@@ -15,6 +15,7 @@ import { useLightColors } from "~/hooks/useColor";
 import { useRandomRecipeRecommendation } from "~/hooks/queries/useRecipeQueries";
 import { useRouter } from "expo-router";
 import { toast } from "sonner-native";
+import * as Haptics from "expo-haptics";
 
 const RECIPE_TAGS: {
   label: string;
@@ -85,7 +86,10 @@ export default function RecipeCategoryButtonGroup() {
         size="icon"
         variant="ghost"
         className="h-12 w-12"
-        onPress={() => updateSelection(false)}
+        onPress={() => {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+          updateSelection(false);
+        }}
       >
         <XIcon className="text-white/80" />
       </Button>

@@ -55,9 +55,7 @@ function AnimatedStack() {
     if (__DEV__) {
       setTimeout(() => {
         const completed = storage.get<boolean>(ONBOARDING_COMPLETED_KEY);
-        console.log("Onboarding completed:", completed);
         if (completed !== true) {
-          console.log("Redirecting to onboarding...");
           router.replace("/onboarding");
         }
       }, 0);
@@ -125,6 +123,10 @@ function AnimatedStack() {
           {/* ======== PROFILE ======== */}
           <Stack.Screen
             name="profile/index"
+            options={{ presentation: "card", headerShown: false }}
+          />
+          <Stack.Screen
+            name="profile/cooked-recipes"
             options={{ presentation: "card", headerShown: false }}
           />
           <Stack.Screen
