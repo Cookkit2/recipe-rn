@@ -53,7 +53,7 @@ import {
   Canvas,
   Fill,
 } from "@shopify/react-native-skia";
-import * as FileSystem from "expo-file-system";
+import { File, Paths } from "expo-file-system";
 import type { PantryItemConfirmation } from "~/types/PantryItem";
 import type { Prettify } from "~/utils/type-prettier";
 import * as Haptics from "expo-haptics";
@@ -243,7 +243,7 @@ export default function CreateIngredient() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
     const filename = `masked-${Date.now()}.png`;
-    const outPath = `${FileSystem.cacheDirectory || ""}${filename}`;
+    const file = new File(Paths.cache, filename);
 
     resetImage();
 
@@ -260,14 +260,14 @@ export default function CreateIngredient() {
         300
       );
 
-      await FileSystem.writeAsStringAsync(outPath, resizedBase64 ?? "", {
-        encoding: FileSystem.EncodingType.Base64,
+      file.write(resizedBase64 ?? "", {
+        encoding: "base64",
       });
 
       addProcessPantryItems({
         name: titleCase(segmentedImage.name),
         quantity: segmentedImage.quantity,
-        image_url: outPath,
+        image_url: file.uri,
         background_color: segmentedImage.background_color,
         unit: segmentedImage.unit,
       });

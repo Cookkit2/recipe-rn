@@ -12,6 +12,10 @@ import {
   SEED_INDEX_MULTIPLIER,
   SEED_TOTAL_MULTIPLIER,
 } from "~/constants/seeds";
+import {
+  SPRING_CONFIG,
+  SPRING_CONFIG_SPRINGY,
+} from "~/constants/spring-config";
 
 const RotationCard = ({
   index,
@@ -39,18 +43,18 @@ const RotationCard = ({
     // Animate to final values with delay based on index
     scale.value = withDelay(
       index * 100 + 100,
-      withSpring(scaleEnabled ? stableThumbScale(index, total) : 1, {
-        stiffness: 300,
-        damping: 10,
-      })
+      withSpring(
+        scaleEnabled ? stableThumbScale(index, total) : 1,
+        SPRING_CONFIG_SPRINGY
+      )
     );
 
     rotation.value = withDelay(
       index * 100 + 100,
-      withSpring(rotationEnabled ? stableThumbRotation(index, total) : 0, {
-        stiffness: 300,
-        damping: 10,
-      })
+      withSpring(
+        rotationEnabled ? stableThumbRotation(index, total) : 0,
+        SPRING_CONFIG_SPRINGY
+      )
     );
   }, [index, total, scale, rotation, scaleEnabled, rotationEnabled]);
 

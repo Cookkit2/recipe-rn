@@ -25,7 +25,7 @@ export default function IngredientLists() {
         CURVES["expressive.default.spatial"]
       ),
     };
-  });
+  }, [isRecipeOpen]);
 
   if (isLoading) {
     return (

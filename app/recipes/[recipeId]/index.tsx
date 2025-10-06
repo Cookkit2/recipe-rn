@@ -5,6 +5,7 @@ import {
   StyleSheet,
   useWindowDimensions,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import Animated, {
   Extrapolation,
@@ -16,7 +17,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { H1, H4, P } from "~/components/ui/typography";
-import { ScrollView } from "react-native-gesture-handler";
 import { ClockIcon, StarIcon } from "lucide-nativewind";
 import { OutlinedImage } from "~/components/ui/outlined-image";
 import { Separator } from "~/components/ui/separator";

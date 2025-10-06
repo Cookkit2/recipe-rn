@@ -5,7 +5,6 @@ import { H4, P } from "~/components/ui/typography";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import type { Recipe } from "~/types/Recipe";
-import { StarIcon } from "lucide-nativewind";
 import useDebounce from "~/hooks/useDebounce";
 import Animated from "react-native-reanimated";
 import useButtonAnimation from "~/hooks/animation/useButtonAnimations";
@@ -23,7 +22,7 @@ const RecipeItemCard = ({ recipe }: { recipe: Recipe }) => {
   return (
     <Animated.View
       key={recipe.id}
-      className="flex-column items-start p-3"
+      className="p-3 max-w-[50%]"
       style={[animatedStyle]}
     >
       <Pressable

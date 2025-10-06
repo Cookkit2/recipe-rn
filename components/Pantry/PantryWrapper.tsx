@@ -116,7 +116,7 @@ export default function PantryWrapper() {
       ),
       paddingTop: withSpring(isRecipeOpen ? top - 8 : top, SPRING_CONFIG),
     };
-  });
+  }, [isRecipeOpen, collapsedHeight, top]);
 
   const headerGroupStyle = useAnimatedStyle(() => {
     return {
@@ -125,7 +125,7 @@ export default function PantryWrapper() {
         CURVES["expressive.default.spatial"]
       ),
     };
-  });
+  }, [isRecipeOpen]);
 
   const ingredientListStyle = useAnimatedStyle(() => {
     return {
@@ -134,7 +134,7 @@ export default function PantryWrapper() {
         CURVES["expressive.default.spatial"]
       ),
     };
-  });
+  }, [isRecipeOpen]);
 
   const recipeGroupStyle = useAnimatedStyle(() => {
     return {
@@ -149,7 +149,7 @@ export default function PantryWrapper() {
         SPRING_CONFIG
       ),
     };
-  });
+  }, [isRecipeOpen, collapsedHeight]);
 
   return (
     <Animated.View className="relative flex-1 bg-black">

@@ -8,6 +8,8 @@ import React, {
 } from "react";
 import { useUpdatePantryItem } from "~/hooks/queries/usePantryQueries";
 import type { PantryItem } from "~/types/PantryItem";
+import { queryClient } from "./QueryProvider";
+import { recipeQueryKeys } from "~/hooks/queries/recipeQueryKeys";
 
 interface IngredientDetailContextType {
   pantryItem: PantryItem;
@@ -43,6 +45,10 @@ export function IngredientDetailProvider({
       updatePantryItemMutation.mutate({
         id: pantryItemRef.current.id,
         updates: pantryItemRef.current,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: recipeQueryKeys.recommendations(),
       });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
