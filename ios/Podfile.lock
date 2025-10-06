@@ -2491,6 +2491,34 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
+  - react-native-worklets-core (1.6.2):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - glog
+    - hermes-engine
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - SocketRocket
+    - Yoga
   - React-NativeModulesApple (0.81.4):
     - boost
     - DoubleConversion
@@ -3462,10 +3490,16 @@ PODS:
     - TensorFlowLiteC/Core
   - VisionCamera (4.7.2):
     - VisionCamera/Core (= 4.7.2)
+    - VisionCamera/FrameProcessors (= 4.7.2)
     - VisionCamera/React (= 4.7.2)
   - VisionCamera/Core (4.7.2)
+  - VisionCamera/FrameProcessors (4.7.2):
+    - React
+    - React-callinvoker
+    - react-native-worklets-core
   - VisionCamera/React (4.7.2):
     - React-Core
+    - VisionCamera/FrameProcessors
   - WatermelonDB (0.28.0):
     - React
     - simdjson
@@ -3557,6 +3591,7 @@ DEPENDENCIES:
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - react-native-screen-corner-radius (from `../node_modules/react-native-screen-corner-radius`)
   - "react-native-skia (from `../node_modules/@shopify/react-native-skia`)"
+  - react-native-worklets-core (from `../node_modules/react-native-worklets-core`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
   - React-oscompat (from `../node_modules/react-native/ReactCommon/oscompat`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
@@ -3794,6 +3829,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-screen-corner-radius"
   react-native-skia:
     :path: "../node_modules/@shopify/react-native-skia"
+  react-native-worklets-core:
+    :path: "../node_modules/react-native-worklets-core"
   React-NativeModulesApple:
     :path: "../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios"
   React-oscompat:
@@ -3979,6 +4016,7 @@ SPEC CHECKSUMS:
   react-native-safe-area-context: 6d8a7b750e496e37bda47c938320bf2c734d441f
   react-native-screen-corner-radius: 67064efbb78f2d48f01626713ae8142f6a20f925
   react-native-skia: 6fe142fbe7f93579e6205d4045abdf5d6574b942
+  react-native-worklets-core: 5abf7405ae179fd6b3a45899b1a0e5777aa389d3
   React-NativeModulesApple: b5d18bc109c45c9a1c6b71664991b5cc3adc4e48
   React-oscompat: 93b5535ea7f7dff46aaee4f78309a70979bdde9d
   React-perflogger: a03d913e3205b00aee4128082abe42fd45ce0c98
@@ -4029,7 +4067,7 @@ SPEC CHECKSUMS:
   simdjson: 7bb9e33d87737cec966e7b427773c67baa4458fe
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   TensorFlowLiteC: eac6d689a8d391d1b202dc59e3d9165ba64aaf73
-  VisionCamera: 2230ecfd78a1f6cddd8be0fe4e6589f21a6385e1
+  VisionCamera: 02578a728d4a479d9c47f869efdf906c5680d50b
   WatermelonDB: 8dafe8b8a23dc6d8e033e1086449b8e2638d9453
   Yoga: 922d794dce2af9c437f864bf4093abfa7a131adb
 

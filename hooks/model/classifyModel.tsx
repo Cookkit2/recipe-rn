@@ -3,11 +3,12 @@ import { PREF_UNIT_SYSTEM_KEY } from "~/constants/storage-keys";
 import { storage } from "~/data";
 import { titleCase } from "~/utils/text-formatter";
 import { convertToUnitSystem } from "~/utils/unit-converter";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
+// import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
-import { generateObject } from "ai";
-import z from "zod/v4";
-import Constants from "expo-constants";
+// import { generateObject } from "ai";
+// import z from "zod/v4";
+// import Constants from "expo-constants";
+import { generateGeminiContent } from "~/utils/gemini-api";
 
 // Return your answer ONLY in the format: \`name,quantity,unit\`
 // - If the quantity on a known food item is unreadable, use \`1\` and \`unit\`.
@@ -22,69 +23,69 @@ Do not add any other text.
 
 const GEMINI_MODEL_INPUT_SIZE = 400;
 
-const google = createGoogleGenerativeAI({
-  apiKey:
-    process.env.EXPO_PUBLIC_GEMINI_API_KEY ||
-    Constants.expoConfig?.extra?.EXPO_PUBLIC_GEMINI_API_KEY,
-});
+// const google = createGoogleGenerativeAI({
+//   apiKey:
+//     process.env.EXPO_PUBLIC_GEMINI_API_KEY ||
+//     Constants.expoConfig?.extra?.EXPO_PUBLIC_GEMINI_API_KEY,
+// });
 
 export const classifyStaticImage = async (skImage: SkImage) => {
   const startTime = performance.now();
 
-  // const imageCompressed = compressImage(skImage, GEMINI_MODEL_INPUT_SIZE);
-  const imageCompressed = skImage.encodeToBase64(ImageFormat.JPEG, 85);
+  const imageCompressed = compressImage(skImage, GEMINI_MODEL_INPUT_SIZE);
+  // const imageCompressed = skImage.encodeToBase64(ImageFormat.JPEG, 85);
 
-  const objectResult = await generateObject({
-    model: google("gemini-2.0-flash-lite"),
-    messages: [
-      { role: "system", content: "You help planning travel itineraries." },
-      {
-        role: "user",
-        content: [
-          {
-            type: "image",
-            image: imageCompressed,
-          },
-          {
-            type: "text",
-            text: VEGE_PROMPT,
-          },
-        ],
-      },
-    ],
-    schema: z.object({
-      name: z.string(),
-      quantity: z.number(),
-      unit: z.string(),
-    }),
-  });
+  // const objectResult = await generateObject({
+  //   model: google("gemini-2.0-flash-lite"),
+  //   messages: [
+  //     { role: "system", content: "You help planning travel itineraries." },
+  //     {
+  //       role: "user",
+  //       content: [
+  //         {
+  //           type: "image",
+  //           image: imageCompressed,
+  //         },
+  //         {
+  //           type: "text",
+  //           text: VEGE_PROMPT,
+  //         },
+  //       ],
+  //     },
+  //   ],
+  //   schema: z.object({
+  //     name: z.string(),
+  //     quantity: z.number(),
+  //     unit: z.string(),
+  //   }),
+  // });
 
-  console.log(objectResult.object);
+  // console.log(objectResult.object);
 
-  // const geminiResponse = await generateGeminiContent(
-  //   JSON.stringify({
-  //     contents: [
-  //       {
-  //         parts: [
-  //           {
-  //             inline_data: {
-  //               mime_type: "image/jpeg",
-  //               data: imageCompressed,
-  //             },
-  //           },
-  //           { text: VEGE_PROMPT },
-  //         ],
-  //       },
-  //     ],
-  //   })
-  // );
+  const geminiResponse = await generateGeminiContent(
+    JSON.stringify({
+      contents: [
+        {
+          parts: [
+            {
+              inline_data: {
+                mime_type: "image/jpeg",
+                data: imageCompressed,
+              },
+            },
+            { text: VEGE_PROMPT },
+          ],
+        },
+      ],
+    })
+  );
 
-  // const ingredientName = postProcessGeminiResponse(geminiResponse);
+  const ingredientName = postProcessGeminiResponse(geminiResponse);
   const endTime = performance.now();
   const duration = endTime - startTime;
 
   console.log(`classifyStaticImage took ${duration} milliseconds`);
-  return objectResult.object;
+  return ingredientName;
 };
 
 const compressImage = (image: SkImage, imageSize: number) => {
