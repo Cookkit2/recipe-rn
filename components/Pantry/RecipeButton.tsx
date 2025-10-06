@@ -22,16 +22,19 @@ export default function RecipeButton() {
     !storage.get(PREFERENCE_COMPLETED_KEY)
   );
 
-  const recipeButtonStyle = useAnimatedStyle(() => ({
-    transform: [
-      {
-        scale: withTiming(
-          isRecipeOpen ? 0 : 1,
-          CURVES["expressive.fast.spatial"]
-        ),
-      },
-    ],
-  }));
+  const recipeButtonStyle = useAnimatedStyle(
+    () => ({
+      transform: [
+        {
+          scale: withTiming(
+            isRecipeOpen ? 0 : 1,
+            CURVES["expressive.fast.spatial"]
+          ),
+        },
+      ],
+    }),
+    [isRecipeOpen]
+  );
 
   const onRecipeButtonPress = () => {
     if (isFirstTime) {

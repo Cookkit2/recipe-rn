@@ -72,7 +72,7 @@ export const recipeApi = {
       ingredients: ingredients || [],
     };
 
-    console.log("Fetched recipe with details:", currentRecipe);
+    // console.log("Fetched recipe with details:", currentRecipe);
 
     return currentRecipe;
   },

@@ -1,10 +1,10 @@
 import RecipeItemCard from "./RecipeItemCard";
 import { useMemo } from "react";
-import { View, ActivityIndicator } from "react-native";
+import { View, ActivityIndicator, FlatList } from "react-native";
 import { useRecipeStore } from "~/store/RecipeContext";
 import { H4, P } from "~/components/ui/typography";
 import { useRecipeRecommendations } from "~/hooks/queries/useRecipeQueries";
-import { LegendList } from "@legendapp/list";
+// import { LegendList } from "@legendapp/list";
 
 export default function RecipeLists() {
   const { selectedRecipeTags } = useRecipeStore();
@@ -83,7 +83,7 @@ export default function RecipeLists() {
   }
 
   return (
-    <LegendList
+    <FlatList
       keyExtractor={(item) => item.id.toString()}
       numColumns={2}
       className="px-3 mt-6"

@@ -58,7 +58,6 @@ export function AnimatedOutlinedImage({
       {offsets.map(([dx, dy], idx) => (
         <AnimatedImage
           key={`outline-${idx}`}
-          sharedTransitionTag={`outline-${idx}`}
           source={source}
           transition={{
             duration: 100,
@@ -81,7 +80,6 @@ export function AnimatedOutlinedImage({
       ))}
       <AnimatedImage
         key={`main-image`}
-        sharedTransitionTag={`main-image`}
         transition={{
           duration: 100,
           timing: "ease-in-out",

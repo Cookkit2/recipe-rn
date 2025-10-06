@@ -24,13 +24,21 @@ export default function ActionButtonRow() {
         style={[animatedStyle, roundedStyle]}
       >
         <CardContent className="py-6 flex gap-3">
-          <ChefHatIcon size={32} strokeWidth={1.618} />
+          <ChefHatIcon
+            className="text-foreground"
+            size={32}
+            strokeWidth={1.618}
+          />
           <P className="font-urbanist-medium">Cooked Recipes</P>
         </CardContent>
       </AnimatedPressable>
       <AnimatedPressable className="flex-1 rounded-3xl shadow-md shadow-foreground/10 border-none bg-card">
         <CardContent className="py-6 flex gap-3">
-          <ReceiptIcon size={32} strokeWidth={1.618} />
+          <ReceiptIcon
+            className="text-foreground"
+            size={32}
+            strokeWidth={1.618}
+          />
           <View className="flex flex-row gap-1 items-center">
             <P className="font-urbanist-medium">Receipts</P>
             <View className="rounded-full bg-primary/10 px-3 ml-2">

@@ -7,7 +7,7 @@
 
 import { databaseFacade } from "./DatabaseFacade";
 import { dummyPantryItems } from "~/data/dummy/dummy-data";
-import * as FileSystem from "expo-file-system";
+import { File, Paths } from "expo-file-system";
 import { Asset } from "expo-asset";
 import type { ImageSourcePropType } from "react-native";
 
@@ -49,15 +49,13 @@ async function saveImageAsset(
 
     // Create a filename based on the asset name or hash
     const filename = asset.name || `asset_${Date.now()}.png`;
-    const destinationPath = `${FileSystem.cacheDirectory}${filename}`;
+    const destinationFile = new File(Paths.cache, filename);
 
     // Copy the asset to cache directory
-    await FileSystem.copyAsync({
-      from: asset.localUri,
-      to: destinationPath,
-    });
+    const sourceFile = new File(asset.localUri);
+    sourceFile.copy(destinationFile);
 
-    return destinationPath;
+    return destinationFile.uri;
   } catch (error) {
     console.error("Error saving image asset:", error);
     // Return a fallback empty string if saving fails

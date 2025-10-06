@@ -22,14 +22,17 @@ export default function IngredientCategoryButtonGroup() {
       CURVES["expressive.fast.effects"]
     );
     return { borderBottomColor: borderColor, borderBottomWidth: 1 };
-  });
+  }, [colors.border, colors.background]);
 
-  const sizeStyle = useAnimatedStyle(() => ({
-    paddingHorizontal: withTiming(
-      isRecipeOpen ? 16 : 24,
-      CURVES["expressive.default.spatial"]
-    ),
-  }));
+  const sizeStyle = useAnimatedStyle(
+    () => ({
+      paddingHorizontal: withTiming(
+        isRecipeOpen ? 16 : 24,
+        CURVES["expressive.default.spatial"]
+      ),
+    }),
+    [isRecipeOpen]
+  );
 
   return (
     <Animated.View

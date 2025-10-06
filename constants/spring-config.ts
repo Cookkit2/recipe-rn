@@ -4,6 +4,12 @@ export const SPRING_CONFIG = {
   mass: 0.5,
 };
 
+export const SPRING_CONFIG_SPRINGY = {
+  damping: 10,
+  stiffness: 300,
+  mass: 1,
+};
+
 // Material 3 motion spring tokens (12 total): 6 Standard, 6 Expressive
 // Token names mirror the Material token IDs for easy mapping across platforms
 // export const SPRINGS = {

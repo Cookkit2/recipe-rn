@@ -324,7 +324,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
       console.log(
         `Syncing ${recipesWithDetails.length} recipes from Supabase...`
       );
-      console.log("First recipe preview:", recipesWithDetails[0]?.ingredients);
+      // console.log("First recipe preview:", recipesWithDetails[0]?.ingredients);
 
       // Check if we have recipes to sync
       if (recipesWithDetails.length === 0) {
