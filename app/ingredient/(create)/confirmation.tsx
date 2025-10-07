@@ -16,7 +16,7 @@ import { H1, H4, P } from "~/components/ui/typography";
 import HorizontalIngredientItemCard from "~/components/Confirmation/HorizontalIngredientItemCard";
 import { Button } from "~/components/ui/button";
 import TextShimmer from "~/components/ui/TextShimmer";
-import { SystemBars } from "react-native-edge-to-edge";
+import { setStatusBarStyle } from "expo-status-bar";
 import { useAddPantryItemsWithMetadata } from "~/hooks/queries/usePantryQueries";
 import { useRouter } from "expo-router";
 import { toast } from "sonner-native";
@@ -38,13 +38,7 @@ export default function ConfirmationPage() {
   const [isLoading, startTransition] = useTransition();
 
   useEffect(() => {
-    // Push a new system bar style when the screen mounts
-    const entry = SystemBars.pushStackEntry({
-      style: "auto",
-    });
-
-    // Pop it back when leaving (to restore previous settings)
-    return () => SystemBars.popStackEntry(entry);
+    setStatusBarStyle("auto", true);
   }, []);
 
   const onSaveAllRecipe = () => {
@@ -57,7 +51,6 @@ export default function ConfirmationPage() {
           queryKey: recipeQueryKeys.recommendations(),
         });
         router.dismissTo("/");
-        SystemBars.setStyle("auto");
       } catch {
         toast.error("Error saving all recipe");
       }

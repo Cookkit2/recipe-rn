@@ -22,17 +22,13 @@
       }
     },
     "android": {
+      "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "package": "app.cookkit.cookkit",
-      "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO",
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO"
-      ]
+      "permissions": ["android.permission.CAMERA"]
     },
     "web": {
       "bundler": "metro",
@@ -136,11 +132,10 @@
       [
         "react-native-vision-camera",
         {
-          "cameraPermission": "Cookkit uses your camera to take photos of ingredients to be identified and added to your pantry."
+          "cameraPermission": "Allow Cookkit to use your camera to take photos of ingredients"
         }
       ],
-      "expo-web-browser",
-      "react-native-edge-to-edge"
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

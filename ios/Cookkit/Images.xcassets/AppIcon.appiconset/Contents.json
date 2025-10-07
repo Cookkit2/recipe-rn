@@ -1,37 +1,14 @@
 {
-  "images" : [
+  "images": [
     {
-      "filename" : "Cookkit-iOS-Default-1024x1024@1x.png",
-      "idiom" : "universal",
-      "platform" : "ios",
-      "size" : "1024x1024"
-    },
-    {
-      "appearances" : [
-        {
-          "appearance" : "luminosity",
-          "value" : "dark"
-        }
-      ],
-      "filename" : "Cookkit-iOS-Dark-1024x1024@1x 1.png",
-      "idiom" : "universal",
-      "platform" : "ios",
-      "size" : "1024x1024"
-    },
-    {
-      "appearances" : [
-        {
-          "appearance" : "luminosity",
-          "value" : "tinted"
-        }
-      ],
-      "idiom" : "universal",
-      "platform" : "ios",
-      "size" : "1024x1024"
+      "filename": "App-Icon-1024x1024@1x.png",
+      "idiom": "universal",
+      "platform": "ios",
+      "size": "1024x1024"
     }
   ],
-  "info" : {
-    "author" : "xcode",
-    "version" : 1
+  "info": {
+    "version": 1,
+    "author": "expo"
   }
 }

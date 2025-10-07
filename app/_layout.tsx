@@ -16,7 +16,6 @@ import { BlurView } from "expo-blur";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Toaster } from "sonner-native";
 export { ErrorBoundary } from "expo-router";
-import { SystemBars } from "react-native-edge-to-edge";
 import { QueryProvider } from "~/store/QueryProvider";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { createMMKVStorage } from "~/data/storage";
@@ -24,6 +23,7 @@ import { storage } from "~/data";
 import { ONBOARDING_COMPLETED_KEY } from "~/constants/storage-keys";
 import Purchases, { LOG_LEVEL } from "react-native-purchases";
 import Constants from "expo-constants";
+import { StatusBar } from "expo-status-bar";
 
 const revenuecatProjectAppleApiKey =
   process.env.EXPO_PUBLIC_REVENUECAT_PROJECT_APPLE_API_KEY ||
@@ -239,7 +239,7 @@ export default function RootLayout() {
               autoInitialize={true}
             > */}
             <KeyboardProvider>
-              <SystemBars style="auto" />
+              <StatusBar style="auto" />
               <AnimatedStack />
               <PortalHost />
               <Toaster />

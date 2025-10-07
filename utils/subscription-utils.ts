@@ -1,4 +1,4 @@
-import { SystemBars } from "react-native-edge-to-edge";
+import { setStatusBarStyle } from "expo-status-bar";
 import Purchases from "react-native-purchases";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 
@@ -37,12 +37,11 @@ export async function presentPaywallIfNeeded(): Promise<boolean> {
     // User already has a valid subscription
     return true;
   }
-
-  SystemBars.setStyle("light");
+  setStatusBarStyle("light", true);
   const paywallResult = await RevenueCatUI.presentPaywallIfNeeded({
     requiredEntitlementIdentifier: "entla45938e5ff",
   });
-  SystemBars.setStyle("auto");
+  setStatusBarStyle("auto", true);
 
   switch (paywallResult) {
     case PAYWALL_RESULT.NOT_PRESENTED:

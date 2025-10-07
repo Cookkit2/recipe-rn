@@ -22,7 +22,6 @@ import {
   HORIZONTAL_DRAG_THRESHOLD,
   DRAG_THRESHOLD,
 } from "~/constants/sheet-modal";
-import { SystemBars } from "react-native-edge-to-edge";
 
 export default function SheetModalWrapper({
   children,
@@ -59,7 +58,6 @@ export default function SheetModalWrapper({
       isClosing.current = true;
       handleHapticFeedback();
       router.back();
-      
     }
   }, [handleHapticFeedback]);
 
