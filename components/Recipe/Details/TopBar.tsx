@@ -13,7 +13,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { H4 } from "~/components/ui/typography";
 import { CURVES } from "~/constants/curves";
-import { SystemBars } from "react-native-edge-to-edge";
+import { setStatusBarStyle } from "expo-status-bar";
 
 export default function TopBar({
   id,
@@ -37,7 +37,7 @@ export default function TopBar({
 
   // Function to update status bar style (needs to run on JS thread)
   const updateStatusBarStyle = (isLight: boolean) => {
-    SystemBars.setStyle(isLight ? "light" : "auto");
+    setStatusBarStyle(isLight ? "light" : "auto", true);
   };
 
   // Subscribe to scroll offset changes using Reanimated

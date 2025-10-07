@@ -10,11 +10,11 @@ import Animated, {
   withTiming,
   type SharedValue,
 } from "react-native-reanimated";
-import { SystemBars } from "react-native-edge-to-edge";
 import { CURVES } from "~/constants/curves";
 import { H4 } from "~/components/ui/typography";
 import { useDeletePantryItem } from "~/hooks/queries/usePantryQueries";
 import * as Haptics from "expo-haptics";
+import { setStatusBarStyle } from "expo-status-bar";
 
 export default function IngredientAppBar({
   id,
@@ -32,7 +32,7 @@ export default function IngredientAppBar({
 
   // Function to update status bar style (needs to run on JS thread)
   const updateStatusBarStyle = (isLight: boolean) => {
-    SystemBars.setStyle(isLight ? "light" : "dark");
+    setStatusBarStyle(isLight ? "light" : "auto", true);
   };
 
   // Subscribe to scroll offset changes using Reanimated

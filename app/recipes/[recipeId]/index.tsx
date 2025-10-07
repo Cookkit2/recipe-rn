@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import {
   View,
   StyleSheet,
@@ -29,11 +29,11 @@ import useHeaderAnimatedStyle from "~/hooks/animation/useHeaderAnimatedStyle";
 import { Image } from "expo-image";
 import { useRecipe } from "~/hooks/queries/useRecipeQueries";
 import { usePantryItemsByType } from "~/hooks/queries/usePantryQueries";
-import { SystemBars } from "react-native-edge-to-edge";
 import { titleCase } from "~/utils/text-formatter";
 import { Card, CardContent } from "~/components/ui/card";
 import { isIngredientMatch } from "~/utils/ingredient-matching";
 import { useRecipeDetailStore } from "~/store/RecipeDetailContext";
+import { setStatusBarStyle } from "expo-status-bar";
 
 const AnimatedH1 = Animated.createAnimatedComponent(H1);
 const AnimatedImage = Animated.createAnimatedComponent(Image);
@@ -99,13 +99,7 @@ export default function RecipeDetails() {
   }, [recipe, filteredPantryItems]);
 
   useEffect(() => {
-    // Push a new system bar style when the screen mounts
-    const entry = SystemBars.pushStackEntry({
-      style: "light",
-    });
-
-    // Pop it back when leaving (to restore previous settings)
-    return () => SystemBars.popStackEntry(entry);
+    setStatusBarStyle("light", true);
   }, []);
 
   if (isLoading) {

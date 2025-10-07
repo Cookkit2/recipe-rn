@@ -7,8 +7,8 @@ import SheetModalWrapper from "~/components/SheetModal/SheetModalWrapper";
 import Animated, { useAnimatedRef } from "react-native-reanimated";
 import { usePantryItemsByType } from "~/hooks/queries/usePantryQueries";
 import { Button } from "~/components/ui/button";
-import { SystemBars } from "react-native-edge-to-edge";
 import { IngredientDetailProvider } from "~/store/IngredientDetailContext";
+import { setStatusBarStyle } from "expo-status-bar";
 
 export default function IngredientPage() {
   const { ingredientId } = useLocalSearchParams<{ ingredientId: string }>();
@@ -24,15 +24,7 @@ export default function IngredientPage() {
   }, [filteredPantryItems, ingredientId]);
 
   useEffect(() => {
-    // Push a new system bar style when the screen mounts
-    const entry = SystemBars.pushStackEntry({
-      style: "light",
-    });
-
-    // Pop it back when leaving (to restore previous settings)
-    return () => {
-      setTimeout(() => SystemBars.popStackEntry(entry), 0);
-    };
+    setStatusBarStyle("light", true);
   }, []);
 
   if (isLoading) {

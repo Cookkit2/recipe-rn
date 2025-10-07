@@ -30,7 +30,6 @@ import {
 } from "lucide-nativewind";
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { SystemBars } from "react-native-edge-to-edge";
 import {
   segmentStaticImage,
   trimTransparentBorders,
@@ -64,6 +63,7 @@ import { useAsyncEffect } from "~/utils/use-async-effect";
 import { storage } from "~/data";
 import { RECIPE_COOKED_KEY } from "~/constants/storage-keys";
 import { presentPaywallIfNeeded } from "~/utils/subscription-utils";
+import { setStatusBarStyle } from "expo-status-bar";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const THUMBNAIL_SIZE = 32;
@@ -110,15 +110,7 @@ export default function CreateIngredient() {
   const greyBackgroundOpacityValue = useSharedValue(0);
 
   useEffect(() => {
-    // Push a new system bar style when the screen mounts
-    const entry = SystemBars.pushStackEntry({
-      style: "light",
-    });
-
-    // Pop it back when leaving (to restore previous settings)
-    return () => {
-      SystemBars.popStackEntry(entry);
-    };
+    setStatusBarStyle("light", true);
   }, []);
 
   useEffect(() => {

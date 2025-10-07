@@ -8,7 +8,7 @@ import StepCarousel from "~/components/Recipe/Step/StepCarousel";
 import StepHeaderBar from "~/components/Recipe/Step/StepHeaderBar";
 import { H1, P } from "~/components/ui/typography";
 import { useRecipe } from "~/hooks/queries/useRecipeQueries";
-import { SystemBars } from "react-native-edge-to-edge";
+import { setStatusBarStyle } from "expo-status-bar";
 
 export type StepPageData = {
   type: "ingredients" | "step" | "congratulations";
@@ -21,7 +21,7 @@ export default function RecipeSteps() {
   const { data: recipe, isLoading, error } = useRecipe(recipeId);
 
   useEffect(() => {
-    SystemBars.setStyle("auto");
+    setStatusBarStyle("auto", true);
   }, []);
 
   const stepPages = useMemo((): StepPageData[] => {
