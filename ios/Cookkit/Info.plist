@@ -54,7 +54,7 @@
       <true />
     </dict>
     <key>NSCameraUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to access your camera</string>
+    <string>Allow $(PRODUCT_NAME) to access your camera to capture ingredients</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to access your microphone</string>
     <key>NSPhotoLibraryUsageDescription</key>
