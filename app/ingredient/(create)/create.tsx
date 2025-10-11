@@ -5,7 +5,7 @@ import {
   type CameraPosition,
   useCameraPermission,
 } from "react-native-vision-camera";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, startTransition } from "react";
 import {
   StyleSheet,
   View,
@@ -40,11 +40,8 @@ import Animated, {
   BounceIn,
   FadeOut,
   LinearTransition,
-  useSharedValue,
-  withTiming,
 } from "react-native-reanimated";
 import { toast } from "sonner-native";
-import { CURVES } from "~/constants/curves";
 import { useCreateIngredientStore } from "~/store/CreateIngredientContext";
 import {
   type SkImage,
@@ -59,7 +56,6 @@ import * as Haptics from "expo-haptics";
 import { titleCase } from "~/utils/text-formatter";
 import { loadImageIntoSkia } from "~/hooks/model/processImage";
 import { classifyStaticImage } from "~/hooks/model/classifyModel";
-import { useAsyncEffect } from "~/utils/use-async-effect";
 import { storage } from "~/data";
 import { RECIPE_COOKED_KEY } from "~/constants/storage-keys";
 import { presentPaywallIfNeeded } from "~/utils/subscription-utils";
@@ -86,10 +82,7 @@ export default function CreateIngredient() {
   const [facing, setFacing] = useState<CameraPosition>("back");
   const { hasPermission, requestPermission } = useCameraPermission();
   const [hasAskedPermission, setHasAskedPermission] = useState(false);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [capturedImageSk, setCapturedImageSk] = useState<SkImage | null>(null);
-
-  const [isSegmentingImage, startTransition] = useTransition();
+  const [isSegmentingImage, setIsSegmentingImage] = useState(false);
   const [segmentedImage, setSegmentedImage] = useState<SegmentedImage | null>(
     null
   );
@@ -98,19 +91,21 @@ export default function CreateIngredient() {
   const isCameraAvailable = !!device;
   const isRecipeCooked = storage.get(RECIPE_COOKED_KEY) === true;
 
-  const { processPantryItems, addProcessPantryItems, framePosition } =
-    useCreateIngredientStore();
+  const {
+    processPantryItems,
+    addProcessPantryItems,
+    framePosition,
+    updateFramePosition,
+  } = useCreateIngredientStore();
 
   const format = useCameraFormat(device, [
     { photoResolution: CAMERA_RESOLUTION },
     { videoResolution: CAMERA_RESOLUTION },
   ]);
 
-  const capturedImageOpacityValue = useSharedValue(0);
-  const greyBackgroundOpacityValue = useSharedValue(0);
-
   useEffect(() => {
     setStatusBarStyle("light", true);
+    return () => setStatusBarStyle("auto", true);
   }, []);
 
   useEffect(() => {
@@ -119,16 +114,6 @@ export default function CreateIngredient() {
       setHasAskedPermission(true);
     }
   }, [hasPermission, requestPermission, hasAskedPermission]);
-
-  useAsyncEffect(
-    async () => {
-      if (!capturedImageSk) return;
-      const content = await classifyStaticImage(capturedImageSk);
-      setSegmentedImage((prev) => (prev ? { ...prev, ...content } : null));
-    },
-    async () => {},
-    [capturedImageSk]
-  );
 
   // Camera and gallery functions
   const takePicture = async () => {
@@ -172,6 +157,13 @@ export default function CreateIngredient() {
       });
 
       if (!result.canceled && result.assets?.[0]) {
+        // Reset focus point to center when picking from gallery
+        const cameraHeight = (width * 4) / 3;
+        updateFramePosition({
+          x: width / 2,
+          y: cameraHeight / 2,
+        });
+
         const selectedImage = result.assets[0];
         processImage(selectedImage.uri);
       }
@@ -181,53 +173,29 @@ export default function CreateIngredient() {
     }
   };
 
-  const processImage = (imagePath: string) => {
-    setCapturedImage(imagePath);
-    capturedImageOpacityValue.value = 1;
-
+  const processImage = async (imagePath: string) => {
+    setIsSegmentingImage(true);
     // Normalize the frame position to the image size
     const normalizedFramePosition = {
       x: (framePosition.x / width) * CAMERA_RESOLUTION.width,
       y: (framePosition.y / ((width * 4) / 3)) * CAMERA_RESOLUTION.height,
     };
 
-    startTransition(async () => {
-      const skImage = await loadImageIntoSkia(imagePath);
-      setCapturedImageSk(skImage);
+    const skImage = await loadImageIntoSkia(imagePath);
 
-      if (!skImage) {
-        toast.error("Failed to load image");
-        return;
-      }
+    if (!skImage) {
+      toast.error("Failed to load image");
+      return;
+    }
 
-      // Process the photo for segmentation
-      const segmentedImage = await segmentStaticImage(
-        skImage,
-        normalizedFramePosition
-      );
+    // Segment and classify image using promise.all
+    const [segmentedImage, content] = await Promise.all([
+      segmentStaticImage(skImage, normalizedFramePosition),
+      classifyStaticImage(skImage),
+    ]);
 
-      const result: SegmentedImage = {
-        ...segmentedImage,
-        name: "",
-        quantity: 1,
-        unit: "unit",
-      };
-
-      setSegmentedImage(result);
-
-      setTimeout(() => {
-        capturedImageOpacityValue.value = withTiming(
-          0,
-          CURVES["expressive.fast.effects"]
-        );
-      }, 200);
-      setTimeout(() => {
-        greyBackgroundOpacityValue.value = withTiming(
-          1,
-          CURVES["expressive.fast.effects"]
-        );
-      }, 100);
-    });
+    setSegmentedImage({ ...segmentedImage, ...content });
+    setIsSegmentingImage(false);
   };
 
   const confirmSegmentedImage = () => {
@@ -239,20 +207,17 @@ export default function CreateIngredient() {
 
     resetImage();
 
-    // Write to cache asynchronously for better performance
-    startTransition(async () => {
+    startTransition(() => {
+      // Write to cache asynchronously for better performance
       const { finalImage: trimmedImage } = trimTransparentBorders(
         segmentedImage.skImage,
         2
       );
 
       // Downscale to ~350px width to reduce file size, keep alpha
-      const { base64: resizedBase64 } = resizeImagePreserveAlpha(
-        trimmedImage,
-        300
-      );
+      const { base64 } = resizeImagePreserveAlpha(trimmedImage, 300);
 
-      file.write(resizedBase64 ?? "", {
+      file.write(base64, {
         encoding: "base64",
       });
 
@@ -273,13 +238,6 @@ export default function CreateIngredient() {
 
   const resetImage = () => {
     setSegmentedImage(null);
-    setCapturedImage(null);
-    setCapturedImageSk(null);
-
-    greyBackgroundOpacityValue.value = withTiming(
-      0,
-      CURVES["expressive.fast.effects"]
-    );
   };
 
   function toggleCameraFacing() {
@@ -415,9 +373,9 @@ export default function CreateIngredient() {
             photoQualityBalance="speed"
             device={device!}
             format={format}
-            enableZoomGesture
+            // enableZoomGesture
             enableDepthData={false}
-            isActive={capturedImage || segmentedImage ? false : true}
+            isActive={segmentedImage || isSegmentingImage ? false : true}
           />
         ) : (
           <View className="absolute inset-0 items-center justify-center bg-black">
@@ -438,28 +396,18 @@ export default function CreateIngredient() {
             { width: width, height: (width / 3) * 4 },
           ]}
         >
-          <Fill
-            color={segmentedImage?.background_color}
-            opacity={greyBackgroundOpacityValue}
-          />
-          <SkiaImage
-            image={capturedImageSk}
-            x={0}
-            y={0}
-            opacity={capturedImageOpacityValue}
-            width={width}
-            height={(width / 3) * 4}
-            fit="contain"
-          />
           {segmentedImage && (
-            <SkiaImage
-              image={segmentedImage?.skImage}
-              x={0}
-              y={0}
-              width={width}
-              height={(width / 3) * 4}
-              fit="contain"
-            />
+            <>
+              <Fill color={segmentedImage.background_color} />
+              <SkiaImage
+                image={segmentedImage.skImage}
+                x={0}
+                y={0}
+                width={width}
+                height={(width / 3) * 4}
+                fit="contain"
+              />
+            </>
           )}
         </Canvas>
 
@@ -481,7 +429,7 @@ export default function CreateIngredient() {
           )}
         </View>
 
-        {isCameraAvailable && !capturedImageSk && (
+        {isCameraAvailable && !segmentedImage && (
           <FocusingAreaIndicator cameraRef={camera} />
         )}
       </View>

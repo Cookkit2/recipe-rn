@@ -7,7 +7,7 @@ import {
 } from "react-native";
 import Animated, {
   useAnimatedRef,
-  useScrollViewOffset,
+  useSharedValue,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCreateIngredientStore } from "~/store/CreateIngredientContext";
@@ -33,7 +33,7 @@ export default function ConfirmationPage() {
   const router = useRouter();
   const addPantryItemsWithMetadata = useAddPantryItemsWithMetadata();
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
-  const scrollOffset = useScrollViewOffset(scrollRef);
+  const scrollOffset = useSharedValue(0);
 
   const [isLoading, startTransition] = useTransition();
 
@@ -67,6 +67,9 @@ export default function ConfirmationPage() {
           stickyHeaderIndices={[0]}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
+          onScroll={(e) => {
+            scrollOffset.value = e.nativeEvent.contentOffset.y;
+          }}
         >
           <Header title="Confirmation" scrollOffset={scrollOffset} />
           <View className="p-6 pb-4 flex-row items-center gap-3">

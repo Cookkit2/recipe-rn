@@ -348,11 +348,11 @@ PODS:
   - libwebp/sharpyuv (1.5.0)
   - libwebp/webp (1.5.0):
     - libwebp/sharpyuv
-  - PurchasesHybridCommon (17.9.0):
-    - RevenueCat (= 5.41.0)
-  - PurchasesHybridCommonUI (17.9.0):
-    - PurchasesHybridCommon (= 17.9.0)
-    - RevenueCatUI (= 5.41.0)
+  - PurchasesHybridCommon (17.6.0):
+    - RevenueCat (= 5.38.2)
+  - PurchasesHybridCommonUI (17.6.0):
+    - PurchasesHybridCommon (= 17.6.0)
+    - RevenueCatUI (= 5.38.2)
   - RCTDeprecation (0.81.4)
   - RCTRequired (0.81.4)
   - RCTTypeSafety (0.81.4):
@@ -1633,7 +1633,7 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - react-native-context-menu-view (1.20.0):
+  - react-native-context-menu-view (1.19.0):
     - React
   - react-native-fast-tflite (1.6.1):
     - hermes-engine
@@ -2215,9 +2215,9 @@ PODS:
     - React-utils (= 0.81.4)
     - ReactNativeDependencies
   - ReactNativeDependencies (0.81.4)
-  - RevenueCat (5.41.0)
-  - RevenueCatUI (5.41.0):
-    - RevenueCat (= 5.41.0)
+  - RevenueCat (5.38.2)
+  - RevenueCatUI (5.38.2):
+    - RevenueCat (= 5.38.2)
   - RNCAsyncStorage (2.2.0):
     - hermes-engine
     - RCTRequired
@@ -2328,11 +2328,11 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNPaywalls (9.5.3):
-    - PurchasesHybridCommonUI (= 17.9.0)
+  - RNPaywalls (9.4.2):
+    - PurchasesHybridCommonUI (= 17.6.0)
     - React-Core
-  - RNPurchases (9.5.3):
-    - PurchasesHybridCommon (= 17.9.0)
+  - RNPurchases (9.4.2):
+    - PurchasesHybridCommon (= 17.6.0)
     - React-Core
   - RNReanimated (4.1.2):
     - hermes-engine
@@ -2571,9 +2571,9 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - SDWebImage (5.21.2):
-    - SDWebImage/Core (= 5.21.2)
-  - SDWebImage/Core (5.21.2)
+  - SDWebImage (5.21.3):
+    - SDWebImage/Core (= 5.21.3)
+  - SDWebImage/Core (5.21.3)
   - SDWebImageAVIFCoder (0.11.1):
     - libavif/core (>= 0.11.0)
     - SDWebImage (~> 5.10)
@@ -3039,8 +3039,8 @@ SPEC CHECKSUMS:
   libavif: 84bbb62fb232c3018d6f1bab79beea87e35de7b7
   libdav1d: 23581a4d8ec811ff171ed5e2e05cd27bad64c39f
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
-  PurchasesHybridCommon: f497ca753fd7dd00fb0fbb1548acc384bd01b86b
-  PurchasesHybridCommonUI: 9dcc87d9517853fa371a7d3665651b4d47f610ad
+  PurchasesHybridCommon: 3e27aec7bccba3d3d34cd66a7033ba9b268caa5e
+  PurchasesHybridCommonUI: 0d6940f80d2bcbce81a2904a8328e1b38dcda94e
   RCTDeprecation: 7487d6dda857ccd4cb3dd6ecfccdc3170e85dcbc
   RCTRequired: 54128b7df8be566881d48c7234724a78cb9b6157
   RCTTypeSafety: d2b07797a79e45d7b19e1cd2f53c79ab419fe217
@@ -3075,7 +3075,7 @@ SPEC CHECKSUMS:
   React-logger: 472e292c035c024ac73070cd6cbd011a827136f9
   React-Mapbuffer: 823a2c0e0d1826c784f808174626d5229f59be17
   React-microtasksnativemodule: 70cdf4826e52c7bcf98bc55255c3e30b5455d318
-  react-native-context-menu-view: 8c79cd39dbafc7c7313071fa8eeb3fd8e5b8c054
+  react-native-context-menu-view: f20df4bf07145c6d14ef631c8b8663ccdac9fb7c
   react-native-fast-tflite: cba2f8ed59f67e5743dd7f4ceeb97fe71e8a7889
   react-native-keyboard-controller: 5587bad7f102125e2020720c4e37e0b58ff5e52e
   react-native-menu: 4a981a309e4ab6780e628f951ab104b36a072be4
@@ -3115,20 +3115,20 @@ SPEC CHECKSUMS:
   ReactCodegen: c7382a9d84b5826fec1441c7eec6e424499bc8c0
   ReactCommon: b720ccad5e1e8a528746c39b671825fcb7207d3c
   ReactNativeDependencies: ed6d1e64802b150399f04f1d5728ec16b437251e
-  RevenueCat: a094ccf2d12c4778144d3a0560a8b9f6bd3a84aa
-  RevenueCatUI: cf8d8da5c06163877b66a90114f7fb2de27eac37
+  RevenueCat: f6b7c7e55f548a2bf304a3abbed0cc2447364427
+  RevenueCatUI: 19681d899df72efe37f073ad1cd55e84877673da
   RNCAsyncStorage: e85a99325df9eb0191a6ee2b2a842644c7eb29f4
   RNCMaskedView: 3c9d7586e2b9bbab573591dcb823918bc4668005
   RNCPicker: f97c908b7774248c1093ec3831ca70d338627bf7
   RNDateTimePicker: 6fdd63f5d1e0f21faf4cc8674957c52958a7efae
   RNGestureHandler: 6a488ce85c88e82d8610db1108daf04e9b2d5162
-  RNPaywalls: d811388b72df59201c13be04a26a15ce936fd5c1
-  RNPurchases: cd5d082e2f6fa5b6a2c8255a1090cd6b891d94ea
+  RNPaywalls: 3691aef0d51568f1cb1697334929b544ce8b8a11
+  RNPurchases: 06f3af43ac937efa83b66a86ff2241fcee44e3bb
   RNReanimated: fe39bddb3d2d02e38f171bf4b3c6eea787ed90a7
   RNScreens: dd61bc3a3e6f6901ad833efa411917d44827cf51
   RNSVG: 2825ee146e0f6a16221e852299943e4cceef4528
   RNWorklets: 28ee7370ca8da356fcc914e3e68b97e9752196d2
-  SDWebImage: 9f177d83116802728e122410fb25ad88f5c7608a
+  SDWebImage: 16309af6d214ba3f77a7c6f6fdda888cb313a50a
   SDWebImageAVIFCoder: afe194a084e851f70228e4be35ef651df0fc5c57
   SDWebImageSVGCoder: 15a300a97ec1c8ac958f009c02220ac0402e936c
   SDWebImageWebPCoder: e38c0a70396191361d60c092933e22c20d5b1380

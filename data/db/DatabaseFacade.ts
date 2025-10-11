@@ -481,11 +481,13 @@ export class DatabaseFacade {
     try {
       const allStock = await this.stocks.findAll();
 
-      console.log("🔍 [getAvailableRecipes] Starting...");
-      console.log(`📦 Total stock items: ${allStock.length}`);
-      console.log(
-        `📦 Stock items with quantity > 0: ${allStock.filter((s) => s.quantity > 0).length}`
-      );
+      // console.log("🔍 [getAvailableRecipes] Starting...");
+      // console.log(`📦 Total stock items: ${allStock.length}`);
+      // console.log(
+      //   `📦 Stock items with quantity > 0: ${
+      //     allStock.filter((s) => s.quantity > 0).length
+      //   }`
+      // );
 
       // Build a comprehensive set of available ingredient names
       // Including stock names, synonyms, and normalized variants
@@ -495,10 +497,10 @@ export class DatabaseFacade {
           .map((stock) => stock.name.toLowerCase().trim())
       );
 
-      console.log(
-        "📝 Available ingredient names:",
-        Array.from(availableIngredientNames)
-      );
+      // console.log(
+      //   "📝 Available ingredient names:",
+      //   Array.from(availableIngredientNames)
+      // );
 
       // Also fetch synonyms and categories for better matching
       const stockSynonyms = new Map<string, string[]>(); // stockName -> synonyms
@@ -521,7 +523,7 @@ export class DatabaseFacade {
           return record.synonym.toLowerCase().trim();
         });
         if (synonyms.length > 0) {
-          console.log(`🔗 Synonyms for "${stockName}":`, synonyms);
+          // console.log(`🔗 Synonyms for "${stockName}":`, synonyms);
           stockSynonyms.set(stockName, synonyms);
           // Add synonyms to available names too
           synonyms.forEach((syn: string) => availableIngredientNames.add(syn));
@@ -547,13 +549,13 @@ export class DatabaseFacade {
             const record = cat as unknown as { name: string };
             return record.name.toLowerCase().trim();
           });
-          console.log(`📁 Categories for "${stockName}":`, categoryNames);
+          // console.log(`📁 Categories for "${stockName}":`, categoryNames);
           stockCategories.set(stockName, categoryNames);
         }
       }
 
       const allRecipes = await this.recipes.findAll();
-      console.log(`📚 Total recipes to check: ${allRecipes.length}`);
+      // console.log(`📚 Total recipes to check: ${allRecipes.length}`);
 
       const canMake: Recipe[] = [];
       const partiallyCanMake: {
@@ -628,17 +630,9 @@ export class DatabaseFacade {
 
       // Process recipes in batches
       const batchSize = 10;
-      let processedCount = 0;
-      let skippedCount = 0;
 
       for (let i = 0; i < allRecipes.length; i += batchSize) {
         const recipeBatch = allRecipes.slice(i, i + batchSize);
-
-        if (i === 0) {
-          console.log(
-            `🔄 Processing first batch (${recipeBatch.length} recipes)...`
-          );
-        }
 
         const batchDetailsPromises = recipeBatch.map((recipe) =>
           this.recipes.getRecipeWithDetails(recipe.id)
@@ -650,44 +644,14 @@ export class DatabaseFacade {
           const recipe = recipeBatch[j];
           const recipeDetails = batchDetails[j];
 
-          // Only log first batch for debugging
-          if (i === 0 && j < 3) {
-            console.log(`📋 Recipe: "${recipe?.title || "unknown"}"`);
-            console.log(`   Has details: ${!!recipeDetails}`);
-            console.log(
-              `   Ingredients: ${recipeDetails?.ingredients?.length || 0}`
-            );
-          }
-
           if (!recipeDetails || !recipeDetails.ingredients.length) {
-            skippedCount++;
-            if (i === 0 && j < 3) {
-              console.log(`   ⏭️ Skipping (no ingredients)`);
-            }
             continue;
-          }
-
-          processedCount++;
-
-          // Only log first few recipes being checked
-          if (processedCount <= 3) {
-            console.log(`\n🍳 Checking recipe: "${recipe?.title}"`);
-            console.log(
-              `   Required ingredients: ${recipeDetails.ingredients.map((i) => i.name).join(", ")}`
-            );
           }
 
           let availableCount = 0;
           for (const ingredient of recipeDetails.ingredients) {
             if (isIngredientAvailable(ingredient.name)) {
               availableCount++;
-              if (processedCount <= 3) {
-                console.log(`   ✅ Found: ${ingredient.name}`);
-              }
-            } else {
-              if (processedCount <= 3) {
-                console.log(`   ❌ Missing: ${ingredient.name}`);
-              }
             }
           }
 
@@ -704,20 +668,6 @@ export class DatabaseFacade {
           }
         }
       }
-
-      console.log(
-        `📊 Processed: ${processedCount} recipes, Skipped: ${skippedCount} recipes (no ingredients)`
-      );
-
-      console.log("✅ [getAvailableRecipes] Final results:", {
-        canMake: canMake.length,
-        partiallyCanMake: partiallyCanMake.length,
-        canMakeRecipes: canMake.map((r) => r.title),
-        partiallyCanMakeRecipes: partiallyCanMake.map((p) => ({
-          title: p.recipe.title,
-          completion: p.completionPercentage,
-        })),
-      });
 
       return {
         canMake,
@@ -800,8 +750,6 @@ export class DatabaseFacade {
    * Clear all data from the database
    */
   async clearAllData(): Promise<void> {
-    console.log("🧹 Clearing all database data...");
-
     if (!database) {
       throw new Error("Database is not initialized");
     }
@@ -817,7 +765,6 @@ export class DatabaseFacade {
 
     for (const collectionName of collections) {
       try {
-        console.log(`🗑️ Clearing ${collectionName}...`);
         const collection = database.collections.get(collectionName);
         const allRecords = await collection.query().fetch();
 
@@ -828,8 +775,6 @@ export class DatabaseFacade {
             );
           });
         }
-
-        console.log(`✅ Cleared ${collectionName}`);
       } catch (error) {
         console.warn(`⚠️ Error clearing ${collectionName}:`, error);
       }

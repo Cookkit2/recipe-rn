@@ -25,6 +25,8 @@ export default function IngredientPage() {
 
   useEffect(() => {
     setStatusBarStyle("light", true);
+
+    return () => setStatusBarStyle("auto", true);
   }, []);
 
   if (isLoading) {

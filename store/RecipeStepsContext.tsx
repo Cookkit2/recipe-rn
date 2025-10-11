@@ -216,7 +216,7 @@ export function RecipeStepsProvider({
         queryKey: recipeQueryKeys.recommendations(),
       });
       queryClient.invalidateQueries({
-        queryKey: cookingHistoryQueryKeys.history(),
+        queryKey: cookingHistoryQueryKeys.all,
       });
 
       // Navigate away after processing
