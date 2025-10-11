@@ -3,88 +3,102 @@ import { PREF_UNIT_SYSTEM_KEY } from "~/constants/storage-keys";
 import { storage } from "~/data";
 import { titleCase } from "~/utils/text-formatter";
 import { convertToUnitSystem } from "~/utils/unit-converter";
-// import { createGoogleGenerativeAI } from "@ai-sdk/google";
-
-// import { generateObject } from "ai";
-// import z from "zod/v4";
-// import Constants from "expo-constants";
 import { generateGeminiContent } from "~/utils/gemini-api";
+// import { generateGroqVisionContent } from "~/utils/groq-api"; // Commented out - using Gemini instead
 
-// Return your answer ONLY in the format: \`name,quantity,unit\`
-// - If the quantity on a known food item is unreadable, use \`1\` and \`unit\`.
-const VEGE_PROMPT = `
-You are an inventory AI. From the image, identify the primary food item.
-Do not add any other text.
+const VEGE_PROMPT: string = `Identify food item. Output: [name],[quantity],[unit]
+Rules: singular lowercase name, no adjectives.
+Units: 'units' for countable items, weight/volume (g,kg,ml,L) for packages.
+Unknown items: unknown,1,unit`;
 
-- If the object is not a food item or is unidentifiable, return \`unknown,1,unit\`.
-- For countable items, the unit is \`units\`.
-- For packaged goods, read the weight/volume (e.g., \`g\`, \`kg\`, \`ml\`, \`L\`) from the label else use \`1\` and \`unit\` .
-`;
-
-const GEMINI_MODEL_INPUT_SIZE = 400;
-
-// const google = createGoogleGenerativeAI({
-//   apiKey:
-//     process.env.EXPO_PUBLIC_GEMINI_API_KEY ||
-//     Constants.expoConfig?.extra?.EXPO_PUBLIC_GEMINI_API_KEY,
-// });
+const GEMINI_MODEL_INPUT_SIZE = 256; // Reduced from 400 for faster API calls
 
 export const classifyStaticImage = async (skImage: SkImage) => {
   const startTime = performance.now();
+  console.log("📊 [Profiling] Starting image classification...");
 
+  // Step 1: Image Compression
+  const compressStart = performance.now();
   const imageCompressed = compressImage(skImage, GEMINI_MODEL_INPUT_SIZE);
-  // const imageCompressed = skImage.encodeToBase64(ImageFormat.JPEG, 85);
-
-  // const objectResult = await generateObject({
-  //   model: google("gemini-2.0-flash-lite"),
-  //   messages: [
-  //     { role: "system", content: "You help planning travel itineraries." },
-  //     {
-  //       role: "user",
-  //       content: [
-  //         {
-  //           type: "image",
-  //           image: imageCompressed,
-  //         },
-  //         {
-  //           type: "text",
-  //           text: VEGE_PROMPT,
-  //         },
-  //       ],
-  //     },
-  //   ],
-  //   schema: z.object({
-  //     name: z.string(),
-  //     quantity: z.number(),
-  //     unit: z.string(),
-  //   }),
-  // });
-
-  // console.log(objectResult.object);
-
-  const geminiResponse = await generateGeminiContent(
-    JSON.stringify({
-      contents: [
-        {
-          parts: [
-            {
-              inline_data: {
-                mime_type: "image/jpeg",
-                data: imageCompressed,
-              },
-            },
-            { text: VEGE_PROMPT },
-          ],
-        },
-      ],
-    })
+  const compressEnd = performance.now();
+  const compressDuration = compressEnd - compressStart;
+  console.log(
+    `📊 [Profiling] Image compression took ${compressDuration.toFixed(2)}ms`
+  );
+  console.log(
+    `📊 [Profiling] Compressed image size: ${imageCompressed.length} characters`
   );
 
-  const ingredientName = postProcessGeminiResponse(geminiResponse);
+  // Step 2: Gemini API Call
+  const apiStart = performance.now();
+  console.log("📊 [Profiling] Calling Gemini API...");
+
+  const apiResponse = await generateGeminiContent({
+    contents: [
+      {
+        parts: [
+          {
+            inline_data: {
+              mime_type: "image/jpeg",
+              data: imageCompressed,
+            },
+          },
+          { text: VEGE_PROMPT },
+        ],
+      },
+    ],
+  });
+
+  // COMMENTED OUT: Groq API Call (if you want to try Groq for faster inference)
+  // const apiResponse = await generateGroqVisionContent(
+  //   imageCompressed,
+  //   VEGE_PROMPT,
+  //   "llama-3.2-11b-vision-preview" // Fast vision model
+  // );
+
+  const apiEnd = performance.now();
+  const apiDuration = apiEnd - apiStart;
+  console.log(
+    `📊 [Profiling] Gemini API call took ${apiDuration.toFixed(2)}ms`
+  );
+  console.log("📊 [Profiling] Gemini response:", apiResponse);
+
+  // Step 3: Post-processing
+  const postProcessStart = performance.now();
+  const ingredientName = postProcessResponse(apiResponse);
+  const postProcessEnd = performance.now();
+  const postProcessDuration = postProcessEnd - postProcessStart;
+  console.log(
+    `📊 [Profiling] Post-processing took ${postProcessDuration.toFixed(2)}ms`
+  );
+  console.log(`📊 [Profiling] Extracted ingredient:`, ingredientName);
+
+  // Overall timing
   const endTime = performance.now();
   const duration = endTime - startTime;
 
-  console.log(`classifyStaticImage took ${duration} milliseconds`);
+  console.log("\n📊 [Profiling] ===== SUMMARY =====");
+  console.log(
+    `📊 [Profiling] Image compression: ${compressDuration.toFixed(2)}ms (${(
+      (compressDuration / duration) *
+      100
+    ).toFixed(1)}%)`
+  );
+  console.log(
+    `📊 [Profiling] Gemini API call:   ${apiDuration.toFixed(2)}ms (${(
+      (apiDuration / duration) *
+      100
+    ).toFixed(1)}%)`
+  );
+  console.log(
+    `📊 [Profiling] Post-processing:   ${postProcessDuration.toFixed(2)}ms (${(
+      (postProcessDuration / duration) *
+      100
+    ).toFixed(1)}%)`
+  );
+  console.log(`📊 [Profiling] TOTAL:             ${duration.toFixed(2)}ms`);
+  console.log("📊 [Profiling] ==================\n");
+
   return ingredientName;
 };
 
@@ -110,12 +124,12 @@ const compressImage = (image: SkImage, imageSize: number) => {
 
   const snapshot = surface.makeImageSnapshot();
 
-  const base64 = snapshot?.encodeToBase64(ImageFormat.JPEG, 85);
+  const base64 = snapshot?.encodeToBase64(ImageFormat.JPEG, 60); // Reduced quality for faster uploads
 
   return base64;
 };
 
-const postProcessGeminiResponse = (responseText: string) => {
+const postProcessResponse = (responseText: string) => {
   // It return in format of "name,quantity,unit"
   // Split by , and trim whitespace
   const parts = responseText.split(",").map((part) => part.trim());

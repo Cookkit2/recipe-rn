@@ -101,6 +101,7 @@ export const pantryApi = {
 
   /**
    * Add an array of new pantry items with base ingredient metadata
+   * If an ingredient already exists, updates its image and quantity instead
    */
   async addPantryItemsWithMetadata(
     items: Omit<PantryItem, "id" | "created_at" | "updated_at">[]
@@ -119,25 +120,64 @@ export const pantryApi = {
 
       for (const item of items) {
         try {
-          // Create stock item
-          const stockItem = await stockCollection.create((stock) => {
-            (stock as Stock).name = item.name;
-            (stock as Stock).quantity = item.quantity;
-            (stock as Stock).unit = item.unit;
-            if (item.expiry_date)
-              (stock as Stock).expiryDate = item.expiry_date;
-            if (item.type) (stock as Stock).storageType = item.type;
-            if (item.background_color)
-              (stock as Stock).backgroundColor = item.background_color;
-            if (typeof item.image_url === "string")
-              (stock as Stock).imageUrl = item.image_url;
-            if (item.x !== undefined) (stock as Stock).x = item.x;
-            if (item.y !== undefined) (stock as Stock).y = item.y;
-            if (item.scale !== undefined) (stock as Stock).scale = item.scale;
-          });
+          // Check if an ingredient with the same name already exists
+          const existingStockItems = await stockCollection.query().fetch();
+          const existingStock = existingStockItems.find(
+            (s) => (s as Stock).name.toLowerCase() === item.name.toLowerCase()
+          ) as Stock | undefined;
 
-          // Create categories if they exist
-          if (item.categories && item.categories.length > 0) {
+          let stockItem: Stock;
+
+          if (existingStock) {
+            // Update existing stock item
+            console.log(`🔄 Updating existing pantry item: ${item.name}`);
+
+            await existingStock.update((stock) => {
+              // Update quantity (add to existing quantity)
+              (stock as Stock).quantity =
+                existingStock.quantity + item.quantity;
+
+              // Update image with new image if provided
+              if (typeof item.image_url === "string") {
+                (stock as Stock).imageUrl = item.image_url;
+              }
+
+              // Update other fields if provided
+              if (item.unit) (stock as Stock).unit = item.unit;
+              if (item.expiry_date)
+                (stock as Stock).expiryDate = item.expiry_date;
+              if (item.type) (stock as Stock).storageType = item.type;
+              if (item.background_color)
+                (stock as Stock).backgroundColor = item.background_color;
+              if (item.x !== undefined) (stock as Stock).x = item.x;
+              if (item.y !== undefined) (stock as Stock).y = item.y;
+              if (item.scale !== undefined) (stock as Stock).scale = item.scale;
+            });
+
+            stockItem = existingStock;
+          } else {
+            // Create new stock item
+            console.log(`✨ Creating new pantry item: ${item.name}`);
+
+            stockItem = (await stockCollection.create((stock) => {
+              (stock as Stock).name = item.name;
+              (stock as Stock).quantity = item.quantity;
+              (stock as Stock).unit = item.unit;
+              if (item.expiry_date)
+                (stock as Stock).expiryDate = item.expiry_date;
+              if (item.type) (stock as Stock).storageType = item.type;
+              if (item.background_color)
+                (stock as Stock).backgroundColor = item.background_color;
+              if (typeof item.image_url === "string")
+                (stock as Stock).imageUrl = item.image_url;
+              if (item.x !== undefined) (stock as Stock).x = item.x;
+              if (item.y !== undefined) (stock as Stock).y = item.y;
+              if (item.scale !== undefined) (stock as Stock).scale = item.scale;
+            })) as Stock;
+          }
+
+          // Create categories if they exist (only for new items)
+          if (!existingStock && item.categories && item.categories.length > 0) {
             for (const category of item.categories) {
               // First, ensure the category exists (upsert-like behavior)
               const existingCategories = await categoryCollection
@@ -162,8 +202,8 @@ export const pantryApi = {
             }
           }
 
-          // Create synonyms if they exist
-          if (item.synonyms && item.synonyms.length > 0) {
+          // Create synonyms if they exist (only for new items)
+          if (!existingStock && item.synonyms && item.synonyms.length > 0) {
             for (const synonym of item.synonyms) {
               await synonymCollection.create((syn) => {
                 (syn as IngredientSynonym).stockId = stockItem.id;
@@ -173,12 +213,13 @@ export const pantryApi = {
             }
           }
 
-          const convertedItem = await convertStockToPantryItem(
-            stockItem as Stock
-          );
+          const convertedItem = await convertStockToPantryItem(stockItem);
           createdItems.push(convertedItem);
         } catch (error) {
-          console.error(`Failed to add pantry item ${item.name}:`, error);
+          console.error(
+            `Failed to add/update pantry item ${item.name}:`,
+            error
+          );
           // Continue with other items instead of failing completely
         }
       }

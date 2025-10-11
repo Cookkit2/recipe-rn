@@ -17,26 +17,49 @@ export const segmentStaticImage = async (
   skImage: SkImage,
   coordinate: { x: number; y: number }
 ) => {
+  const startTime = performance.now();
+  console.log("📊 [Profiling] Starting image segmentation...");
+
+  // Step 1: Model Loading
+  const modelLoadStart = performance.now();
   const { magicTouchModel } = await allModel.get();
+  const modelLoadEnd = performance.now();
+  const modelLoadDuration = modelLoadEnd - modelLoadStart;
+  console.log(
+    `📊 [Profiling] Model loading took ${modelLoadDuration.toFixed(2)}ms`
+  );
 
   try {
+    // Step 2: Preprocessing Input
+    const preprocessStart = performance.now();
     const input = preprocessMagicTouchInput(skImage, {
       x: coordinate.x,
       y: coordinate.y,
     }); // Float32Array length 512*512*4
-    const startTime = performance.now();
+    const preprocessEnd = performance.now();
+    const preprocessDuration = preprocessEnd - preprocessStart;
+    console.log(
+      `📊 [Profiling] Preprocessing took ${preprocessDuration.toFixed(2)}ms`
+    );
+    console.log(
+      `📊 [Profiling] Input array size: ${input.length} (${(input.length * 4 / 1024).toFixed(2)} KB)`
+    );
 
+    // Step 3: Model Inference
+    const inferenceStart = performance.now();
     const magicTouchOutputs = magicTouchModel.runSync([
       input,
     ]) as Float32Array[];
-
-    const endTime = performance.now();
-    const duration = endTime - startTime;
-
-    console.log(`segmentStaticImage took ${duration} milliseconds`);
+    const inferenceEnd = performance.now();
+    const inferenceDuration = inferenceEnd - inferenceStart;
+    console.log(
+      `📊 [Profiling] Model inference took ${inferenceDuration.toFixed(2)}ms`
+    );
 
     let returnSkImage: SkImage = skImage;
 
+    // Step 4: Applying Mask
+    const maskStart = performance.now();
     if (magicTouchOutputs[0]) {
       const magicMaskOutputs = applyMagicTouchMaskAndExport(
         skImage,
@@ -47,13 +70,78 @@ export const segmentStaticImage = async (
         returnSkImage = magicMaskOutputs?.finalImage;
       }
     }
+    const maskEnd = performance.now();
+    const maskDuration = maskEnd - maskStart;
+    console.log(
+      `📊 [Profiling] Applying mask took ${maskDuration.toFixed(2)}ms`
+    );
 
-    const base64 = returnSkImage.encodeToBase64(ImageFormat.PNG, 85);
-    const url = `data:image/png;base64,${base64}`;
-    // console.log("Segmented image URL:", url);
+    // Step 5: Create Thumbnail for Color Extraction
+    // Using a small 128x128 PNG thumbnail is much faster than encoding full-resolution PNG
+    const thumbnailStart = performance.now();
+    const thumbnailBase64 = createThumbnailForColors(returnSkImage, 128);
+    const url = `data:image/png;base64,${thumbnailBase64}`;
+    const thumbnailEnd = performance.now();
+    const thumbnailDuration = thumbnailEnd - thumbnailStart;
+    console.log(
+      `📊 [Profiling] Thumbnail creation took ${thumbnailDuration.toFixed(2)}ms`
+    );
+    console.log(
+      `📊 [Profiling] Thumbnail size: ${thumbnailBase64.length} characters (vs full image)`
+    );
 
-    // Fetch dominant colors for background placeholder
+    // Step 6: Color Extraction
+    const colorStart = performance.now();
     const backgroundColor = await fetchColors(url);
+    const colorEnd = performance.now();
+    const colorDuration = colorEnd - colorStart;
+    console.log(
+      `📊 [Profiling] Color extraction took ${colorDuration.toFixed(2)}ms`
+    );
+
+    // Overall timing
+    const endTime = performance.now();
+    const duration = endTime - startTime;
+
+    console.log("\n📊 [Profiling] ===== SUMMARY =====");
+    console.log(
+      `📊 [Profiling] Model loading:     ${modelLoadDuration.toFixed(2)}ms (${(
+        (modelLoadDuration / duration) *
+        100
+      ).toFixed(1)}%)`
+    );
+    console.log(
+      `📊 [Profiling] Preprocessing:     ${preprocessDuration.toFixed(2)}ms (${(
+        (preprocessDuration / duration) *
+        100
+      ).toFixed(1)}%)`
+    );
+    console.log(
+      `📊 [Profiling] Model inference:   ${inferenceDuration.toFixed(2)}ms (${(
+        (inferenceDuration / duration) *
+        100
+      ).toFixed(1)}%)`
+    );
+    console.log(
+      `📊 [Profiling] Applying mask:     ${maskDuration.toFixed(2)}ms (${(
+        (maskDuration / duration) *
+        100
+      ).toFixed(1)}%)`
+    );
+    console.log(
+      `📊 [Profiling] Thumbnail creation: ${thumbnailDuration.toFixed(2)}ms (${(
+        (thumbnailDuration / duration) *
+        100
+      ).toFixed(1)}%)`
+    );
+    console.log(
+      `📊 [Profiling] Color extraction:  ${colorDuration.toFixed(2)}ms (${(
+        (colorDuration / duration) *
+        100
+      ).toFixed(1)}%)`
+    );
+    console.log(`📊 [Profiling] TOTAL:             ${duration.toFixed(2)}ms`);
+    console.log("📊 [Profiling] ==================\n");
 
     return {
       background_color: backgroundColor,
@@ -86,6 +174,37 @@ export const fetchColors = async (url: string) => {
     console.warn("Error fetching image colors, using fallback:", error);
     return "#f4f4f5";
   }
+};
+
+/**
+ * Create a small thumbnail for fast color extraction
+ * Using a small PNG (128x128) is much faster than encoding a full-resolution PNG
+ * We must use PNG to preserve alpha channel for proper color extraction
+ */
+const createThumbnailForColors = (image: SkImage, size: number = 128): string => {
+  "worklet";
+  const surface = Skia.Surface.MakeOffscreen(size, size);
+  if (!surface) {
+    throw new Error("Failed to create thumbnail surface");
+  }
+
+  const canvas = surface.getCanvas();
+  const srcRect = {
+    x: 0,
+    y: 0,
+    width: image.width(),
+    height: image.height(),
+  } as const;
+  const dstRect = { x: 0, y: 0, width: size, height: size } as const;
+  const paint = Skia.Paint();
+  paint.setAntiAlias(true);
+  canvas.drawImageRect(image, srcRect, dstRect, paint);
+
+  const snapshot = surface.makeImageSnapshot();
+  // Use PNG to preserve alpha channel (transparency)
+  const base64 = snapshot?.encodeToBase64(ImageFormat.PNG, 60);
+
+  return base64 ?? "";
 };
 
 /**
@@ -262,12 +381,43 @@ const applyMagicTouchMaskAndExport = (image: SkImage, mask: Float32Array) => {
     auxiliaryCanvas?.drawImage(image, 0, 0, paintSrcIn);
     const snapshot = auxiliarySkiaSurface?.makeImageSnapshot();
 
-    const base64 = snapshot?.encodeToBase64(ImageFormat.PNG, 85);
-    const imageData = Skia.Data.fromBase64(base64 ?? "");
-    const finalImage = Skia.Image.MakeImageFromEncoded(imageData);
+    if (!snapshot) {
+      console.error("Failed to create snapshot");
+      return null;
+    }
 
-    return { finalImage, base64 };
-    // return snapshot;
+    // Create a persistent image from pixel data - much faster than PNG encode/decode
+    // Read pixels from snapshot
+    const pixels = snapshot.readPixels();
+    if (!pixels) {
+      console.error("Failed to read pixels from snapshot");
+      return null;
+    }
+
+    // Ensure pixels is Uint8Array
+    const pixelBytes = pixels instanceof Uint8Array ? pixels : new Uint8Array(pixels.buffer);
+    
+    // Create data from pixels
+    const pixelData = Skia.Data.fromBytes(pixelBytes);
+    
+    // Create a new persistent image from the pixel data
+    const finalImage = Skia.Image.MakeImage(
+      {
+        width,
+        height,
+        alphaType: AlphaType.Premul,
+        colorType: ColorType.RGBA_8888,
+      },
+      pixelData,
+      width * 4 // bytes per row (4 bytes per pixel for RGBA)
+    );
+
+    if (!finalImage) {
+      console.error("Failed to create final image from pixels");
+      return null;
+    }
+
+    return { finalImage };
   } catch (error) {
     console.error("Error applying mask and exporting:", error);
     return null;

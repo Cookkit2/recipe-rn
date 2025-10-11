@@ -30,7 +30,6 @@ import { Image } from "expo-image";
 import { useRecipe } from "~/hooks/queries/useRecipeQueries";
 import { usePantryItemsByType } from "~/hooks/queries/usePantryQueries";
 import { titleCase } from "~/utils/text-formatter";
-import { Card, CardContent } from "~/components/ui/card";
 import { isIngredientMatch } from "~/utils/ingredient-matching";
 import { useRecipeDetailStore } from "~/store/RecipeDetailContext";
 import { setStatusBarStyle } from "expo-status-bar";
@@ -100,6 +99,8 @@ export default function RecipeDetails() {
 
   useEffect(() => {
     setStatusBarStyle("light", true);
+
+    return () => setStatusBarStyle("auto", true);
   }, []);
 
   if (isLoading) {
