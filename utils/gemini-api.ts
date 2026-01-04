@@ -6,33 +6,6 @@ const API_KEY =
 
 const BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 
-interface GeminiContentPart {
-  text?: string;
-  inline_data?: {
-    mime_type: string;
-    data: string;
-  };
-}
-
-interface GeminiContent {
-  parts: GeminiContentPart[];
-  role?: string;
-}
-
-export interface GeminiRequestBody {
-  contents: GeminiContent[];
-  generationConfig?: {
-    temperature?: number;
-    topK?: number;
-    topP?: number;
-    maxOutputTokens?: number;
-  };
-  safetySettings?: Array<{
-    category: string;
-    threshold: string;
-  }>;
-}
-
 interface GeminiResponse {
   candidates?: Array<{
     content: {
@@ -77,17 +50,11 @@ export class GeminiAPI {
    */
   async generateContent(
     model: string = "gemini-2.0-flash",
-    requestBody: GeminiRequestBody | string
+    body: string
   ): Promise<string> {
     if (!API_KEY) {
       throw new Error("Gemini API key is not set");
     }
-
-    // If it's an object, stringify it. If it's already a string, use it as-is
-    const body =
-      typeof requestBody === "string"
-        ? requestBody
-        : JSON.stringify(requestBody);
 
     const response = await fetch(
       `${BASE_URL}/models/${model}:generateContent`,
@@ -95,27 +62,22 @@ export class GeminiAPI {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-goog-api-key": API_KEY,
+          "X-goog-api-key": API_KEY,
         },
         body: body,
       }
     );
 
+    console.log("Gemini response:", response);
+
+    console.log("Gemini API response:", response);
+
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Gemini API error:", {
-        status: response.status,
-        statusText: response.statusText,
-        error: errorText,
-        url: response.url,
-        body: body.substring(0, 500), // Log first 500 chars of request
-      });
       throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
     }
 
     const data: GeminiResponse = await response.json();
-
-    console.log("Gemini API response:", data);
 
     if (!data.candidates || data.candidates.length === 0) {
       throw new Error("No response generated from Gemini API");
@@ -136,7 +98,7 @@ export class GeminiAPI {
     const response = await fetch(`${BASE_URL}/models`, {
       method: "GET",
       headers: {
-        "x-goog-api-key": API_KEY,
+        "X-goog-api-key": API_KEY,
       },
     });
 
@@ -150,9 +112,7 @@ export class GeminiAPI {
 }
 
 // Simple helper function for quick content generation
-export const generateGeminiContent = async (
-  requestBody: GeminiRequestBody | string
-): Promise<string> => {
+export const generateGeminiContent = async (body: string): Promise<string> => {
   const client = new GeminiAPI();
-  return await client.generateContent("gemini-2.0-flash-lite-001", requestBody);
+  return await client.generateContent("gemini-2.0-flash-lite-001", body);
 };

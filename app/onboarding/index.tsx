@@ -10,11 +10,11 @@ import { dummyPantryItems } from "~/data/dummy/dummy-data";
 import useColors from "~/hooks/useColor";
 import RotationCard from "~/components/Onboarding/RotationCard";
 import OutlinedImage from "~/components/ui/outlined-image";
-import { SparkleIcon } from "lucide-nativewind";
 import { storage } from "~/data";
 import { ONBOARDING_COMPLETED_KEY } from "~/constants/storage-keys";
 import * as WebBrowser from "expo-web-browser";
 import { toast } from "sonner-native";
+import PoweredByAI from "~/components/Shared/PoweredByAI";
 
 // Take first 10 items and assign different coordinates (0-100 scale)
 const previewImages = dummyPantryItems.slice(0, 10).map((item, index) => ({
@@ -108,27 +108,7 @@ export default function OnboardingScreen() {
               Track your ingredients {"\n"}
               Discover tailored recipes
             </P>
-            <View className="relative flex-row items-center justify-center mt-1 gap-2 shadow-sm">
-              <P className="font-urbanist-bold text-foreground/70">
-                Powered by
-              </P>
-              <View className="rounded-full px-3 py-[2] overflow-hidden border-border border-2 flex-row gap-1 items-center">
-                <LinearGradient
-                  colors={[colors.primary, "#FF6F4B"]}
-                  start={[0.1, 0.4]}
-                  end={[0.8, 0.9]}
-                  style={StyleSheet.absoluteFill}
-                />
-                <P className="font-urbanist-extrabold text-primary-foreground">
-                  AI
-                </P>
-                <SparkleIcon
-                  size={14}
-                  color={colors.primaryForeground}
-                  fill="#FFFFFF"
-                />
-              </View>
-            </View>
+            <PoweredByAI />
           </View>
         </View>
         <View className="px-6 pb-10">
