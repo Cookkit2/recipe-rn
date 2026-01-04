@@ -13,7 +13,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "app.cookkit.cookkit",
@@ -28,7 +30,9 @@
         "backgroundColor": "#ffffff"
       },
       "package": "app.cookkit.cookkit",
-      "permissions": ["android.permission.CAMERA"]
+      "permissions": [
+        "android.permission.CAMERA"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -36,7 +40,9 @@
       "favicon": "./assets/favicon.png"
     },
     "linking": {
-      "prefixes": ["recipe-app://"],
+      "prefixes": [
+        "recipe-app://"
+      ],
       "config": {
         "screens": {
           "auth": {
@@ -135,7 +141,8 @@
           "cameraPermission": "Allow Cookkit to use your camera to take photos of ingredients"
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true,

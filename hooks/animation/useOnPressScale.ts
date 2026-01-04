@@ -3,7 +3,6 @@ import {
   useAnimatedStyle,
   withSequence,
   withTiming,
-  runOnUI,
 } from "react-native-reanimated";
 import { CURVES } from "~/constants/curves";
 

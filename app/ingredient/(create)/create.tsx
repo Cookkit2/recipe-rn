@@ -27,6 +27,7 @@ import {
   ImagesIcon,
   RefreshCcwIcon,
   XIcon,
+  SaveIcon,
 } from "lucide-nativewind";
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -57,9 +58,13 @@ import { titleCase } from "~/utils/text-formatter";
 import { loadImageIntoSkia } from "~/hooks/model/processImage";
 import { classifyStaticImage } from "~/hooks/model/classifyModel";
 import { storage } from "~/data";
-import { RECIPE_COOKED_KEY } from "~/constants/storage-keys";
+import {
+  RECIPE_COOKED_KEY,
+  CAMERA_ONBOARDING_COMPLETED_KEY,
+} from "~/constants/storage-keys";
 import { presentPaywallIfNeeded } from "~/utils/subscription-utils";
 import { setStatusBarStyle } from "expo-status-bar";
+import CameraOnboardingSheet from "~/components/Camera/CameraOnboardingSheet";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const THUMBNAIL_SIZE = 32;
@@ -86,6 +91,7 @@ export default function CreateIngredient() {
   const [segmentedImage, setSegmentedImage] = useState<SegmentedImage | null>(
     null
   );
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const device = useCameraDevice(facing);
   const isCameraAvailable = !!device;
@@ -106,6 +112,16 @@ export default function CreateIngredient() {
   useEffect(() => {
     setStatusBarStyle("light", true);
     return () => setStatusBarStyle("auto", true);
+  }, []);
+
+  // Check if user has completed camera onboarding
+  useEffect(() => {
+    const hasCompletedOnboarding = storage.get<boolean>(
+      CAMERA_ONBOARDING_COMPLETED_KEY
+    );
+    if (!hasCompletedOnboarding) {
+      setShowOnboarding(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -185,17 +201,24 @@ export default function CreateIngredient() {
 
     if (!skImage) {
       toast.error("Failed to load image");
+      setIsSegmentingImage(false);
       return;
     }
 
-    // Segment and classify image using promise.all
-    const [segmentedImage, content] = await Promise.all([
-      segmentStaticImage(skImage, normalizedFramePosition),
-      classifyStaticImage(skImage),
-    ]);
+    try {
+      // Segment and classify image using promise.all
+      const [segmentedImage, content] = await Promise.all([
+        segmentStaticImage(skImage, normalizedFramePosition),
+        classifyStaticImage(skImage),
+      ]);
 
-    setSegmentedImage({ ...segmentedImage, ...content });
-    setIsSegmentingImage(false);
+      setSegmentedImage({ ...segmentedImage, ...content });
+    } catch (error) {
+      console.error("Error processing image:", error);
+      toast.error("Error processing image");
+    } finally {
+      setIsSegmentingImage(false);
+    }
   };
 
   const confirmSegmentedImage = () => {
@@ -261,6 +284,16 @@ export default function CreateIngredient() {
     } else {
       router.replace("/");
     }
+  };
+
+  const handleOnboardingComplete = () => {
+    storage.set(CAMERA_ONBOARDING_COMPLETED_KEY, true);
+    setShowOnboarding(false);
+  };
+
+  const handleOnboardingClose = () => {
+    // Close without saving - will show again next time
+    setShowOnboarding(false);
   };
 
   if (!hasPermission) {
@@ -354,6 +387,15 @@ export default function CreateIngredient() {
             </AnimatedPressable>
           )}
         />
+        <Button
+          size="icon-sm"
+          variant="ghost"
+          className="rounded-full ml-4"
+          onPress={onConfirm}
+          disabled={processPantryItems.length === 0}
+        >
+          <SaveIcon className="text-white" size={20} />
+        </Button>
         <Button
           size="icon-sm"
           variant="ghost"
@@ -501,6 +543,13 @@ export default function CreateIngredient() {
           </Button>
         </View>
       )}
+
+      {/* Camera Onboarding Sheet */}
+      <CameraOnboardingSheet
+        visible={showOnboarding}
+        onClose={handleOnboardingClose}
+        onComplete={handleOnboardingComplete}
+      />
     </View>
   );
 }

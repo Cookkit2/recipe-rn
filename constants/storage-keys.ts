@@ -27,3 +27,6 @@ export const PREF_COLOR_SCHEME_KEY = "color-scheme"; // preserved existing raw k
 
 export const PROFILE_IMAGE_KEY = "profile:image";
 export const PROFILE_NAME_KEY = "profile:name";
+
+// CAMERA ONBOARDING
+export const CAMERA_ONBOARDING_COMPLETED_KEY = "camera:onboarding_completed";

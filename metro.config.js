@@ -11,8 +11,8 @@ config.resolver.platforms = [
   "android",
 ];
 
-// Add onnx asset extension
-config.resolver.assetExts = [...config.resolver.assetExts, "onnx", "tflite"];
+// Add onnx, tflite, and video asset extensions
+config.resolver.assetExts = [...config.resolver.assetExts, "onnx", "tflite", "mp4"];
 
 module.exports = withNativeWind(config, {
   input: "./global.css",

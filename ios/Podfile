@@ -23,9 +23,6 @@ prepare_react_native_project!
 
 target 'Cookkit' do
   use_expo_modules!
-  
-  # WatermelonDB dependency
-  pod 'simdjson', path: '../node_modules/@nozbe/simdjson', modular_headers: true
 
   if ENV['EXPO_USE_COMMUNITY_AUTOLINKING'] == '1'
     config_command = ['node', '-e', "process.argv=['', '', 'config'];require('@react-native-community/cli').run()"];
@@ -60,13 +57,5 @@ target 'Cookkit' do
       :mac_catalyst_enabled => false,
       :ccache_enabled => ccache_enabled?(podfile_properties),
     )
-    
-    # Ensure dSYM files are generated for all targets
-    installer.pods_project.targets.each do |target|
-      target.build_configurations.each do |config|
-        config.build_settings['DEBUG_INFORMATION_FORMAT'] = 'dwarf-with-dsym'
-        config.build_settings['ONLY_ACTIVE_ARCH'] = 'NO'
-      end
-    end
   end
 end
