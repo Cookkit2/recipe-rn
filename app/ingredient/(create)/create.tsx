@@ -2,7 +2,6 @@ import {
   Camera,
   useCameraDevice,
   useCameraFormat,
-  type CameraPosition,
   useCameraPermission,
 } from "react-native-vision-camera";
 import { useEffect, useRef, useState, startTransition } from "react";
@@ -25,7 +24,6 @@ import {
   CameraIcon,
   CheckIcon,
   ImagesIcon,
-  RefreshCcwIcon,
   XIcon,
   SaveIcon,
 } from "lucide-nativewind";
@@ -84,7 +82,7 @@ export default function CreateIngredient() {
 
   const camera = useRef<Camera>(null);
 
-  const [facing, setFacing] = useState<CameraPosition>("back");
+  // const [facing, setFacing] = useState<CameraPosition>("back");
   const { hasPermission, requestPermission } = useCameraPermission();
   const [hasAskedPermission, setHasAskedPermission] = useState(false);
   const [isSegmentingImage, setIsSegmentingImage] = useState(false);
@@ -93,7 +91,7 @@ export default function CreateIngredient() {
   );
   const [showOnboarding, setShowOnboarding] = useState(false);
 
-  const device = useCameraDevice(facing);
+  const device = useCameraDevice("back");
   const isCameraAvailable = !!device;
   const isRecipeCooked = storage.get(RECIPE_COOKED_KEY) === true;
 
@@ -263,10 +261,6 @@ export default function CreateIngredient() {
     setSegmentedImage(null);
   };
 
-  function toggleCameraFacing() {
-    setFacing((current) => (current === "back" ? "front" : "back"));
-  }
-
   const onConfirm = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
@@ -353,7 +347,7 @@ export default function CreateIngredient() {
       <View className="w-full flex flex-row justify-between items-center py-4">
         {processPantryItems.length === 0 && (
           <P className="text-white pl-4 font-urbanist-regular">
-            Place the item in the frame
+            Logged ingredients will appear here
           </P>
         )}
         <Animated.FlatList
@@ -390,15 +384,6 @@ export default function CreateIngredient() {
         <Button
           size="icon-sm"
           variant="ghost"
-          className="rounded-full ml-4"
-          onPress={onConfirm}
-          disabled={processPantryItems.length === 0}
-        >
-          <SaveIcon className="text-white" size={20} />
-        </Button>
-        <Button
-          size="icon-sm"
-          variant="ghost"
           className="rounded-full mx-4"
           onPress={onBack}
         >
@@ -415,7 +400,6 @@ export default function CreateIngredient() {
             photoQualityBalance="speed"
             device={device!}
             format={format}
-            // enableZoomGesture
             enableDepthData={false}
             isActive={segmentedImage || isSegmentingImage ? false : true}
           />
@@ -536,10 +520,14 @@ export default function CreateIngredient() {
             size="icon-lg"
             variant="ghost"
             className="rounded-full active:bg-white/10"
-            onPress={toggleCameraFacing}
-            disabled={!isCameraAvailable || isSegmentingImage}
+            onPress={onConfirm}
+            disabled={
+              !isCameraAvailable ||
+              isSegmentingImage ||
+              processPantryItems.length === 0
+            }
           >
-            <RefreshCcwIcon className="text-white/80" size={24} />
+            <SaveIcon className="text-white/80" size={24} />
           </Button>
         </View>
       )}

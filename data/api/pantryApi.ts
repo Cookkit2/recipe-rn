@@ -354,6 +354,16 @@ export const pantryApi = {
 
 // Helper function to convert Stock + BaseIngredient to PantryItem
 const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
+  // Fetch synonyms if available
+  let synonyms: Array<{ id: string; synonym: string }> = [];
+  try {
+    // @ts-ignore - WatermelonDB types are tricky
+    const synonymRecords = await stock.synonyms.fetch();
+    synonyms = synonymRecords.map((s) => ({ id: s.id, synonym: s.synonym }));
+  } catch (error) {
+    console.error("Error fetching synonyms:", error);
+  }
+
   return {
     id: stock.id,
     name: stock.name,
@@ -370,6 +380,7 @@ const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
     created_at: stock.createdAt,
     updated_at: stock.updatedAt,
     steps_to_store: [], // TODO: Load from StepsToStore model
+    synonyms,
   };
 };
 // Map database dbType to ItemType

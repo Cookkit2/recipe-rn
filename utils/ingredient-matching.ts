@@ -1,13 +1,27 @@
 // Improved ingredient matching function that handles synonyms and variations
 export const isIngredientMatch = (
   pantryItemName: string,
-  recipeIngredientName: string
+  recipeIngredientName: string,
+  pantryItemSynonyms: string[] = []
 ): boolean => {
   const pantryName = pantryItemName.toLowerCase().trim();
   const recipeName = recipeIngredientName.toLowerCase().trim();
 
   // Direct match
   if (pantryName === recipeName) return true;
+
+  // Check provided synonyms (from database)
+  if (pantryItemSynonyms.length > 0) {
+    const isSynonymMatch = pantryItemSynonyms.some((synonym) => {
+      const syn = synonym.toLowerCase().trim();
+      return (
+        syn === recipeName ||
+        recipeName.includes(syn) ||
+        syn.includes(recipeName)
+      );
+    });
+    if (isSynonymMatch) return true;
+  }
 
   // Contains match (existing logic)
   if (pantryName.includes(recipeName) || recipeName.includes(pantryName))

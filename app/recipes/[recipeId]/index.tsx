@@ -63,7 +63,11 @@ export default function RecipeDetails() {
     // Filter pantry items that match recipe ingredients using improved matching
     const matchingPantryItems = filteredPantryItems.filter((pantryItem) => {
       return recipe.ingredients.some((ingredient) =>
-        isIngredientMatch(pantryItem.name, ingredient.name)
+        isIngredientMatch(
+          pantryItem.name,
+          ingredient.name,
+          pantryItem.synonyms?.map((s) => s.synonym)
+        )
       );
     });
 
@@ -90,7 +94,11 @@ export default function RecipeDetails() {
     return recipe?.ingredients
       .filter((ingredient) => {
         return !filteredPantryItems.some((pantryItem) =>
-          isIngredientMatch(pantryItem.name, ingredient.name)
+          isIngredientMatch(
+            pantryItem.name,
+            ingredient.name,
+            pantryItem.synonyms?.map((s) => s.synonym)
+          )
         );
       })
       .map(({ name }) => titleCase(name))
