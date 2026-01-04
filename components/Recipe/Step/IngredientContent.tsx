@@ -79,7 +79,11 @@ const IngredientItem: React.FC<{
   const currentIngredient = useMemo(() => {
     // Find pantry item that matches this ingredient by name (same logic as index page)
     return filteredPantryItems.find((pantryItem) =>
-      isIngredientMatch(pantryItem.name, ingredient.name)
+      isIngredientMatch(
+        pantryItem.name,
+        ingredient.name,
+        pantryItem.synonyms?.map((s) => s.synonym)
+      )
     );
   }, [filteredPantryItems, ingredient.name]);
 

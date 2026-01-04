@@ -13,6 +13,7 @@ import {
   convertToUnitSystem,
   roundToReasonablePrecision,
 } from "~/utils/unit-converter";
+import { isIngredientMatch } from "~/utils/ingredient-matching";
 
 // Public interfaces for database operations
 export interface CreateStockData {
@@ -481,152 +482,66 @@ export class DatabaseFacade {
     try {
       const allStock = await this.stocks.findAll();
 
-      // console.log("🔍 [getAvailableRecipes] Starting...");
-      // console.log(`📦 Total stock items: ${allStock.length}`);
-      // console.log(
-      //   `📦 Stock items with quantity > 0: ${
-      //     allStock.filter((s) => s.quantity > 0).length
-      //   }`
-      // );
-
-      // Build a comprehensive set of available ingredient names
-      // Including stock names, synonyms, and normalized variants
-      const availableIngredientNames = new Set(
+      // Pre-fetch synonyms and categories for all stock items
+      const pantryItemsWithMetadata = await Promise.all(
         allStock
           .filter((stock) => stock.quantity > 0)
-          .map((stock) => stock.name.toLowerCase().trim())
+          .map(async (stock) => {
+            // Fetch synonyms
+            const synonymRecords = await database
+              .get("ingredient_synonym")
+              .query(Q.where("stock_id", Q.eq(stock.id)))
+              .fetch();
+
+            const synonyms = synonymRecords.map((syn) => {
+              const record = syn as unknown as { synonym: string };
+              return record.synonym;
+            });
+
+            // Fetch categories
+            const categoryLinks = await database
+              .get("stock_category")
+              .query(Q.where("stock_id", Q.eq(stock.id)))
+              .fetch();
+
+            const categoryIds = categoryLinks.map((link) => {
+              const record = link as unknown as { categoryId: string };
+              return record.categoryId;
+            });
+
+            let categories: string[] = [];
+
+            if (categoryIds.length > 0) {
+              const categoryRecords = await database
+                .get("ingredient_category")
+                .query(Q.where("id", Q.oneOf(categoryIds)))
+                .fetch();
+
+              categories = categoryRecords.map((cat) => {
+                const record = cat as unknown as { name: string };
+                return record.name;
+              });
+            }
+
+            return {
+              name: stock.name,
+              synonyms: [...synonyms, ...categories],
+            };
+          })
       );
 
-      // console.log(
-      //   "📝 Available ingredient names:",
-      //   Array.from(availableIngredientNames)
-      // );
-
-      // Also fetch synonyms and categories for better matching
-      const stockSynonyms = new Map<string, string[]>(); // stockName -> synonyms
-      const stockCategories = new Map<string, string[]>(); // stockName -> categories
-
-      // Populate synonym and category maps
-      for (const stock of allStock) {
-        if (stock.quantity <= 0) continue;
-
-        const stockName = stock.name.toLowerCase().trim();
-
-        // Fetch synonyms for this stock item
-        const synonymRecords = await database
-          .get("ingredient_synonym")
-          .query(Q.where("stock_id", Q.eq(stock.id)))
-          .fetch();
-
-        const synonyms = synonymRecords.map((syn) => {
-          const record = syn as unknown as { synonym: string };
-          return record.synonym.toLowerCase().trim();
-        });
-        if (synonyms.length > 0) {
-          // console.log(`🔗 Synonyms for "${stockName}":`, synonyms);
-          stockSynonyms.set(stockName, synonyms);
-          // Add synonyms to available names too
-          synonyms.forEach((syn: string) => availableIngredientNames.add(syn));
-        }
-
-        // Fetch categories for this stock item
-        const categoryLinks = await database
-          .get("stock_category")
-          .query(Q.where("stock_id", Q.eq(stock.id)))
-          .fetch();
-
-        const categoryIds = categoryLinks.map((link) => {
-          const record = link as unknown as { categoryId: string };
-          return record.categoryId;
-        });
-        if (categoryIds.length > 0) {
-          const categories = await database
-            .get("ingredient_category")
-            .query(Q.where("id", Q.oneOf(categoryIds)))
-            .fetch();
-
-          const categoryNames = categories.map((cat) => {
-            const record = cat as unknown as { name: string };
-            return record.name.toLowerCase().trim();
-          });
-          // console.log(`📁 Categories for "${stockName}":`, categoryNames);
-          stockCategories.set(stockName, categoryNames);
-        }
-      }
+      console.log(
+        "🔍 Pantry Items for Matching:",
+        JSON.stringify(pantryItemsWithMetadata, null, 2)
+      );
 
       const allRecipes = await this.recipes.findAll();
-      // console.log(`📚 Total recipes to check: ${allRecipes.length}`);
 
       const canMake: Recipe[] = [];
       const partiallyCanMake: {
         recipe: Recipe;
         completionPercentage: number;
       }[] = [];
-
-      // Helper function to check if an ingredient is available
-      const isIngredientAvailable = (ingredientName: string): boolean => {
-        const normalizeIngredientName = (name: string) => {
-          return name
-            .toLowerCase()
-            .trim()
-            .replace(/s$/, "")
-            .replace(/es$/, "")
-            .replace(/ies$/, "y");
-        };
-
-        const normalizedRecipeName = normalizeIngredientName(ingredientName);
-        const lowerIngredientName = ingredientName.toLowerCase().trim();
-
-        // 1. Try exact name match
-        if (availableIngredientNames.has(lowerIngredientName)) {
-          return true;
-        }
-
-        // 2. Try normalized name matching
-        const foundByName = Array.from(availableIngredientNames).some(
-          (stockName) => {
-            const normalizedStockName = normalizeIngredientName(stockName);
-            return (
-              normalizedStockName === normalizedRecipeName ||
-              normalizedStockName.includes(normalizedRecipeName) ||
-              normalizedRecipeName.includes(normalizedStockName)
-            );
-          }
-        );
-
-        if (foundByName) {
-          return true;
-        }
-
-        // 3. Try synonym matching
-        for (const [, synonyms] of stockSynonyms.entries()) {
-          // Check if ingredient matches any synonym
-          if (
-            synonyms.some(
-              (syn) =>
-                syn === lowerIngredientName ||
-                normalizeIngredientName(syn) === normalizedRecipeName
-            )
-          ) {
-            return true;
-          }
-        }
-
-        // 4. Try category matching (less strict, for generic ingredients)
-        for (const [, categories] of stockCategories.entries()) {
-          if (
-            categories.some(
-              (cat) =>
-                cat === lowerIngredientName ||
-                normalizeIngredientName(cat) === normalizedRecipeName
-            )
-          ) {
-            return true;
-          }
-        }
-
-        return false;
-      };
 
       // Process recipes in batches
       const batchSize = 10;
@@ -650,8 +565,21 @@ export class DatabaseFacade {
 
           let availableCount = 0;
           for (const ingredient of recipeDetails.ingredients) {
-            if (isIngredientAvailable(ingredient.name)) {
+            const matchingItem = pantryItemsWithMetadata.find((pantryItem) =>
+              isIngredientMatch(
+                pantryItem.name,
+                ingredient.name,
+                pantryItem.synonyms
+              )
+            );
+
+            if (matchingItem) {
+              // console.log(
+              //   `✅ [${recipe?.title}] Found ${ingredient.name} (matched ${matchingItem.name})`
+              // );
               availableCount++;
+            } else {
+              console.log(`❌ [${recipe?.title}] Missing ${ingredient.name}`);
             }
           }
 
