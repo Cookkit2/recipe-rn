@@ -13,14 +13,16 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "app.cookkit.cookkit",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera to capture ingredients",
+        "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to access your microphone",
+        "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos of ingredients",
+        "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location to locate your nearby grocery stores"
       }
     },
     "android": {
@@ -30,9 +32,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "app.cookkit.cookkit",
-      "permissions": [
-        "android.permission.CAMERA"
-      ]
+      "permissions": ["android.permission.CAMERA"]
     },
     "web": {
       "bundler": "metro",
@@ -40,9 +40,7 @@
       "favicon": "./assets/favicon.png"
     },
     "linking": {
-      "prefixes": [
-        "recipe-app://"
-      ],
+      "prefixes": ["recipe-app://"],
       "config": {
         "screens": {
           "auth": {
