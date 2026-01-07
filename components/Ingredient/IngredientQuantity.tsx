@@ -60,7 +60,9 @@ export default function IngredientQuantity({
       <View className="flex-row gap-1">
         <SlidingNumber
           value={quantity}
-          onValueChange={(newValue) => updateQuantity(Math.max(0, newValue))}
+          onValueChange={(newValue) =>
+            updateQuantity(Math.min(9999, Math.max(0, newValue)))
+          }
         />
         <Pressable onPress={showUnitPicker} className="min-w-[24px]">
           <H4 className="text-center font-urbanist-medium">{unit}</H4>
@@ -73,7 +75,7 @@ export default function IngredientQuantity({
         variant="ghost"
         className="rounded-full"
         enableDebounce={false}
-        onPress={() => updateQuantity(quantity + 1)}
+        onPress={() => updateQuantity(Math.min(9999, quantity + 1))}
       >
         <PlusIcon className="text-foreground" size={20} strokeWidth={2.618} />
       </Button>
