@@ -1,7 +1,5 @@
 import { Q } from "@nozbe/watermelondb";
-import IngredientCategory, {
-  type IngredientCategoryData,
-} from "../models/IngredientCategory";
+import IngredientCategory from "../models/IngredientCategory";
 import { BaseRepository, type SearchOptions } from "./BaseRepository";
 
 export class IngredientCategoryRepository extends BaseRepository<IngredientCategory> {

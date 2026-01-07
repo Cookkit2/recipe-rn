@@ -37,8 +37,7 @@ const useImageColors = (url: string | ImageSourcePropType | undefined) => {
             setImageColor(color.dominant || "#4ECDC4");
             break;
         }
-      } catch (error) {
-        console.warn("Error fetching image colors, using fallback:", error);
+      } catch () {
         // Fallback color
         setImageColor("#4ECDC4");
       }
