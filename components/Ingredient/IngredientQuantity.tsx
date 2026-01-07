@@ -1,5 +1,5 @@
 import { View, Pressable, Alert } from "react-native";
-import { SlidingNumber } from "~/components/SlidingNumber";
+import { SlidingNumber } from "~/components/Shared/SlidingNumber";
 import { Separator } from "~/components/ui/separator";
 import { Button } from "~/components/ui/button";
 import { H4 } from "~/components/ui/typography";

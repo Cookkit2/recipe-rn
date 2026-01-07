@@ -1,7 +1,7 @@
 import { setAndroidNavigationBar } from "~/lib/android-navigation-bar";
 import { MoonStarIcon, SunIcon } from "lucide-nativewind";
 import { useColorScheme } from "~/hooks/useColorScheme";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 
 export function ThemeToggle() {
   const { isDarkColorScheme, setColorScheme } = useColorScheme();

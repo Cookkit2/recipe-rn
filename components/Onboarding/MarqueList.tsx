@@ -1,9 +1,9 @@
-import { Marquee } from "~/components/Marque";
+import { Marquee } from "~/components/Onboarding/Marque";
 import { View } from "react-native";
 import { dummyPantryItems } from "~/data/dummy/dummy-data";
 import OutlinedImage from "~/components/ui/outlined-image";
 import { H1, P } from "~/components/ui/typography";
-import RotationCard from "./RotationCard";
+import RotationCard from "../Shared/RotationCard";
 
 const previewImages = dummyPantryItems.map((item) => item.image_url);
 

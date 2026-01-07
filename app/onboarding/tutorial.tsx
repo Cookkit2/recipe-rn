@@ -13,11 +13,10 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { CURVES } from "~/constants/curves";
-import DisplayCards from "~/components/Custom/DisplayCards";
+import DisplayCards from "~/components/Onboarding/DisplayCards";
 import { useRouter } from "expo-router";
 import { storage } from "~/data";
 import { ONBOARDING_COMPLETED_KEY } from "~/constants/storage-keys";
-import RevenueCatUI from "react-native-purchases-ui";
 
 // Step data extracted for easier maintenance / localization
 const STEP_TITLES = ["Snap Groceries", "Manage Ingredients", "Cook Recipes"];

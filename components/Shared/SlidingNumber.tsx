@@ -6,11 +6,11 @@ import Animated, {
   type SharedValue,
   withTiming,
 } from "react-native-reanimated";
-import { H4, P } from "./ui/typography";
-import { Button } from "./ui/button";
+import { H4, P } from "../ui/typography";
+import { Button } from "../ui/button";
 import { CURVES } from "~/constants/curves";
-import { Input } from "./ui/input";
-import BaseModal from "./ui/modal";
+import { Input } from "../ui/input";
+import BaseModal from "../ui/modal";
 
 function Digit({ value, place }: { value: number; place: number }) {
   const valueRoundedToPlace = Math.floor(value / place) % 10;

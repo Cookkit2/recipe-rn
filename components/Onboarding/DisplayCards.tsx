@@ -9,7 +9,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { dummyPantryItems } from "~/data/dummy/dummy-data";
 import OutlinedImage from "~/components/ui/outlined-image";
-import RotationCard from "~/components/Onboarding/RotationCard";
+import RotationCard from "~/components/Shared/RotationCard";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
