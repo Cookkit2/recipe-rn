@@ -1,7 +1,5 @@
 import { Q } from "@nozbe/watermelondb";
-import IngredientSynonym, {
-  type IngredientSynonymData,
-} from "../models/IngredientSynonym";
+import IngredientSynonym from "../models/IngredientSynonym";
 import { BaseRepository } from "./BaseRepository";
 
 export class IngredientSynonymRepository extends BaseRepository<IngredientSynonym> {

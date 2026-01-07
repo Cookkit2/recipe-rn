@@ -1,12 +1,5 @@
-import React, { useState } from "react";
-import {
-  Button,
-  StyleSheet,
-  View,
-  Image,
-  type StyleProp,
-  type ViewStyle,
-} from "react-native";
+import React from "react";
+import { StyleSheet, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useFrameCallback,
