@@ -135,7 +135,7 @@ export function SlidingNumber({
     }
 
     if (onValueChange) {
-      onValueChange(numValue);
+      onValueChange(Math.min(9999, numValue));
     }
     setModalVisible(false);
   };
@@ -194,6 +194,7 @@ export function SlidingNumber({
             selectTextOnFocus={true}
             onSubmitEditing={handleSubmit}
             className="text-foreground"
+            maxLength={4}
           />
 
           <View className="flex-row gap-3 mt-6 justify-end">
