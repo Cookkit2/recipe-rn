@@ -3,7 +3,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { View, ActivityIndicator, Platform } from "react-native";
 import { H1, P } from "~/components/ui/typography";
 import IngredientWrapper from "~/components/Ingredient/IngredientWrapper";
-import SheetModalWrapper from "~/components/SheetModal/SheetModalWrapper";
+import SheetModalWrapper from "~/components/Shared/SheetModalWrapper";
 import Animated, { useAnimatedRef } from "react-native-reanimated";
 import { usePantryItemsByType } from "~/hooks/queries/usePantryQueries";
 import { Button } from "~/components/ui/button";

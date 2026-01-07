@@ -8,7 +8,7 @@ import useColors from "~/hooks/useColor";
 import { LinearGradient } from "expo-linear-gradient";
 import { dummyPantryItems } from "~/data/dummy/dummy-data";
 import OutlinedImage from "~/components/ui/outlined-image";
-import RotationCard from "~/components/Onboarding/RotationCard";
+import RotationCard from "~/components/Shared/RotationCard";
 import {
   SEED_INDEX_MULTIPLIER,
   SEED_TOTAL_MULTIPLIER,

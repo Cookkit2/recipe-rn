@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import TextShimmer from "~/components/ui/TextShimmer";
 import { dummyPantryItems } from "~/data/dummy/dummy-data";
 import useColors from "~/hooks/useColor";
-import RotationCard from "~/components/Onboarding/RotationCard";
+import RotationCard from "~/components/Shared/RotationCard";
 import OutlinedImage from "~/components/ui/outlined-image";
 import { storage } from "~/data";
 import { ONBOARDING_COMPLETED_KEY } from "~/constants/storage-keys";
