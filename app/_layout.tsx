@@ -141,16 +141,6 @@ function AnimatedStack() {
             options={{ presentation: "card", headerShown: false }}
           />
 
-          {/* ======== MISCELLANOUS ======== */}
-          <Stack.Screen
-            name="misc/terms"
-            options={{ presentation: "modal", headerShown: false }}
-          />
-          <Stack.Screen
-            name="misc/privacy"
-            options={{ presentation: "modal", headerShown: false }}
-          />
-
           {/* ======== ONBOARDING ======== */}
           <Stack.Screen
             name="onboarding/index"
@@ -164,30 +154,8 @@ function AnimatedStack() {
             name="preferences/index"
             options={{ presentation: "modal", headerShown: false }}
           />
-          {/* ======== ONBOARDING PREFERENCES ======== */}
-          <Stack.Screen
-            name="onboarding-pref/index"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="onboarding-pref/appliances"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="onboarding-pref/allergy"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="onboarding-pref/dietary-preference"
-            options={{ headerShown: false }}
-          />
 
-          {/* ======== SUBSCRIPTION ======== */}
-          <Stack.Screen
-            name="subscription/index"
-            options={{ presentation: "containedModal", headerShown: false }}
-          />
-
+          {/* ======== MISCELLANOUS ======== */}
           <Stack.Screen name="debug" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" />
         </Stack>

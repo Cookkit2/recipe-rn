@@ -50,7 +50,7 @@ export default function Header({ title, scrollOffset }: HeaderProps) {
 
   return (
     <Animated.View
-      className="flex-row items-center px-6 pb-2 bg-background border-border"
+      className="flex-row items-center px-6 pb-6 bg-background border-border"
       style={[{ paddingTop: top + 20 }, borderAnimatedStyle]}
     >
       <Button
