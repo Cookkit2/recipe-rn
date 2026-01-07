@@ -1,6 +1,13 @@
 import { database } from "./database";
 import { Q } from "@nozbe/watermelondb";
-import type { Recipe, Stock, CookingHistory } from "./models";
+import type {
+  Recipe,
+  Stock,
+  CookingHistory,
+  IngredientSynonym,
+  StockCategory,
+  IngredientCategory,
+} from "./models";
 import {
   initializeRepositories,
   RecipeRepository,
@@ -482,58 +489,97 @@ export class DatabaseFacade {
     try {
       const allStock = await this.stocks.findAll();
 
-      // Pre-fetch synonyms and categories for all stock items
-      const pantryItemsWithMetadata = await Promise.all(
-        allStock
-          .filter((stock) => stock.quantity > 0)
-          .map(async (stock) => {
-            // Fetch synonyms
-            const synonymRecords = await database
-              .get("ingredient_synonym")
-              .query(Q.where("stock_id", Q.eq(stock.id)))
-              .fetch();
+      // Pre-fetch synonyms and categories for all stock items - Optimized to avoid N+1 queries
+      const activeStock = allStock.filter((stock) => stock.quantity > 0);
+      const activeStockIds = activeStock.map((s) => s.id);
 
-            const synonyms = synonymRecords.map((syn) => {
-              const record = syn as unknown as { synonym: string };
-              return record.synonym;
-            });
+      let allSynonyms: IngredientSynonym[] = [];
+      let allStockCategories: StockCategory[] = [];
 
-            // Fetch categories
-            const categoryLinks = await database
-              .get("stock_category")
-              .query(Q.where("stock_id", Q.eq(stock.id)))
-              .fetch();
+      if (activeStockIds.length > 0) {
+        // Fetch synonyms in batches of 500 to avoid SQLite limits
+        const synonymBatches: Promise<IngredientSynonym[]>[] = [];
+        for (let i = 0; i < activeStockIds.length; i += 500) {
+          const batchIds = activeStockIds.slice(i, i + 500);
+          synonymBatches.push(
+            database
+              .get<IngredientSynonym>("ingredient_synonym")
+              .query(Q.where("stock_id", Q.oneOf(batchIds)))
+              .fetch()
+          );
+        }
+        const synonymResults = await Promise.all(synonymBatches);
+        allSynonyms = synonymResults.flat();
 
-            const categoryIds = categoryLinks.map((link) => {
-              const record = link as unknown as { categoryId: string };
-              return record.categoryId;
-            });
+        // Fetch stock categories in batches
+        const stockCategoryBatches: Promise<StockCategory[]>[] = [];
+        for (let i = 0; i < activeStockIds.length; i += 500) {
+          const batchIds = activeStockIds.slice(i, i + 500);
+          stockCategoryBatches.push(
+            database
+              .get<StockCategory>("stock_category")
+              .query(Q.where("stock_id", Q.oneOf(batchIds)))
+              .fetch()
+          );
+        }
+        const stockCategoryResults = await Promise.all(stockCategoryBatches);
+        allStockCategories = stockCategoryResults.flat();
+      }
 
-            let categories: string[] = [];
+      // Collect unique category IDs
+      const categoryIds = [
+        ...new Set(allStockCategories.map((sc) => sc.categoryId)),
+      ];
 
-            if (categoryIds.length > 0) {
-              const categoryRecords = await database
-                .get("ingredient_category")
-                .query(Q.where("id", Q.oneOf(categoryIds)))
-                .fetch();
+      let allCategories: IngredientCategory[] = [];
+      if (categoryIds.length > 0) {
+        // Fetch categories in batches
+        const categoryBatches: Promise<IngredientCategory[]>[] = [];
+        for (let i = 0; i < categoryIds.length; i += 500) {
+          const batchIds = categoryIds.slice(i, i + 500);
+          categoryBatches.push(
+            database
+              .get<IngredientCategory>("ingredient_category")
+              .query(Q.where("id", Q.oneOf(batchIds)))
+              .fetch()
+          );
+        }
+        const categoryResults = await Promise.all(categoryBatches);
+        allCategories = categoryResults.flat();
+      }
 
-              categories = categoryRecords.map((cat) => {
-                const record = cat as unknown as { name: string };
-                return record.name;
-              });
-            }
+      // Create lookup maps
+      const synonymsByStockId = new Map<string, string[]>();
+      allSynonyms.forEach((syn) => {
+        if (!synonymsByStockId.has(syn.stockId)) {
+          synonymsByStockId.set(syn.stockId, []);
+        }
+        synonymsByStockId.get(syn.stockId)?.push(syn.synonym);
+      });
 
-            return {
-              name: stock.name,
-              synonyms: [...synonyms, ...categories],
-            };
-          })
-      );
+      const categoryNameMap = new Map<string, string>();
+      allCategories.forEach((cat) => categoryNameMap.set(cat.id, cat.name));
 
-      console.log(
-        "🔍 Pantry Items for Matching:",
-        JSON.stringify(pantryItemsWithMetadata, null, 2)
-      );
+      const categoriesByStockId = new Map<string, string[]>();
+      allStockCategories.forEach((sc) => {
+        const categoryName = categoryNameMap.get(sc.categoryId);
+        if (categoryName) {
+          if (!categoriesByStockId.has(sc.stockId)) {
+            categoriesByStockId.set(sc.stockId, []);
+          }
+          categoriesByStockId.get(sc.stockId)?.push(categoryName);
+        }
+      });
+
+      const pantryItemsWithMetadata = activeStock.map((stock) => {
+        const synonyms = synonymsByStockId.get(stock.id) || [];
+        const categories = categoriesByStockId.get(stock.id) || [];
+
+        return {
+          name: stock.name,
+          synonyms: [...synonyms, ...categories],
+        };
+      });
 
       const allRecipes = await this.recipes.findAll();
 
@@ -574,12 +620,7 @@ export class DatabaseFacade {
             );
 
             if (matchingItem) {
-              // console.log(
-              //   `✅ [${recipe?.title}] Found ${ingredient.name} (matched ${matchingItem.name})`
-              // );
               availableCount++;
-            } else {
-              console.log(`❌ [${recipe?.title}] Missing ${ingredient.name}`);
             }
           }
 
