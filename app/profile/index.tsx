@@ -1,39 +1,24 @@
-import { Link, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import {
-  ArrowUpRightIcon,
-  BellIcon,
-  ChefHatIcon,
-  ImagesIcon,
   InfoIcon,
   MailIcon,
   MessageSquareHeartIcon,
-  ReceiptIcon,
   SettingsIcon,
-  StarIcon,
 } from "lucide-nativewind";
-import React, { useCallback, useEffect } from "react";
-import { View, Platform, Linking, Pressable } from "react-native";
+import React, { useCallback } from "react";
+import { View, Platform, Linking } from "react-native";
 import * as StoreReview from "expo-store-review";
 import Constants from "expo-constants";
-import Purchases, { LOG_LEVEL } from "react-native-purchases";
-import Animated, {
-  useAnimatedRef,
-  useScrollViewOffset,
-} from "react-native-reanimated";
+import Purchases from "react-native-purchases";
+import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Button } from "~/components/ui/button";
-import { Card, CardContent } from "~/components/ui/card";
-import { H1, H4, P } from "~/components/ui/typography";
+import { CardContent } from "~/components/ui/card";
+import { P } from "~/components/ui/typography";
 import Header from "~/components/Shared/Header";
-import SetupProfileCard from "~/components/Profile/SetupProfileCard";
 import ListButton from "~/components/Shared/ListButton";
 import { toast } from "sonner-native";
 import * as WebBrowser from "expo-web-browser";
-// import { useAuth, useAuthStore } from "~/auth";
-import { presentPaywall } from "~/utils/subscription-utils";
-import ProfileCard from "~/components/Profile/ProfileCard";
 import SubscriptionCard from "~/components/Profile/SubscriptionCard";
-import useButtonAnimation from "~/hooks/animation/useButtonAnimations";
 import ActionButtonRow from "~/components/Profile/ActionButtonRow";
 
 const appName = Constants.expoConfig?.name ?? "Cookkit";
@@ -44,14 +29,9 @@ const osVersion = String(Platform.Version ?? "");
 const subject = `${appName} Feedback`;
 const email = "cookkit01@gmail.com";
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
 export default function ProfileScreen() {
-  const { top, bottom } = useSafeAreaInsets();
-
+  const { bottom } = useSafeAreaInsets();
   const router = useRouter();
-  const scrollRef = useAnimatedRef<Animated.ScrollView>();
-  const scrollOffset = useScrollViewOffset(scrollRef);
 
   // const { signOut, isAuthenticated } = useAuth();
   // const authStore = useAuthStore();
@@ -153,14 +133,9 @@ export default function ProfileScreen() {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingBottom: bottom }}
       // onScroll={scrollHandler}
-      ref={scrollRef}
       stickyHeaderIndices={[0]}
     >
-      <Header scrollOffset={scrollOffset} />
-      {/* <View className="p-6 pb-4 flex-row items-center mb-4 gap-3">
-        <H1 className="font-bowlby-one pt-2">Profile</H1>
-      </View> */}
-      <View className="pb-4" />
+      <Header />
 
       {/* {isAuthenticated ? <ProfileCard /> : <SetupProfileCard />} */}
 
@@ -187,11 +162,6 @@ export default function ProfileScreen() {
               icon={BellIcon}
               onPress={() => router.push("/profile/notification")}
             /> */}
-            {/* <ListButton
-              title="Photo Access"
-              icon={ImagesIcon}
-              onPress={() => router.push("/profile/photo-access")}
-            /> */}
             <ListButton
               title="Contact Us"
               icon={MailIcon}
@@ -200,26 +170,6 @@ export default function ProfileScreen() {
           </CardContent>
         </View>
       </View>
-
-      {/* <View className="mt-12">
-        <P className="text-foreground/60 font-urbanist-semibold px-6 mb-2">
-          App
-        </P>
-        <View className="mx-6 rounded-2xl bg-muted/50 overflow-hidden border-continuous">
-          <CardContent className="flex p-0 py-2">
-            <ListButton
-              title="What's new"
-              icon={StarIcon}
-              onPress={() => router.push("/profile/preference")}
-            />
-            <ListButton
-              title="Contact Us"
-              icon={MailIcon}
-              onPress={() => router.push("/profile/notification")}
-            />
-          </CardContent>
-        </View>
-      </View> */}
 
       <View className="mt-12">
         <P className="text-foreground/60 font-urbanist-semibold px-6 mb-2">
@@ -251,7 +201,6 @@ export default function ProfileScreen() {
           <CardContent className="flex p-0 py-2">
             <ListButton
               title="Terms of Service"
-              // onPress={() => router.push("/misc/terms")}
               onPress={() =>
                 handleOpenLink("https://www.cookkit.app/terms-and-conditions")
               }
@@ -259,7 +208,6 @@ export default function ProfileScreen() {
             />
             <ListButton
               title="Privacy Policy"
-              // onPress={() => router.push("/misc/privacy")}
               onPress={() =>
                 handleOpenLink("https://www.cookkit.app/privacy-policy")
               }
