@@ -37,7 +37,7 @@ const useImageColors = (url: string | ImageSourcePropType | undefined) => {
             setImageColor(color.dominant || "#4ECDC4");
             break;
         }
-      } catch () {
+      } catch (error) {
         // Fallback color
         setImageColor("#4ECDC4");
       }
