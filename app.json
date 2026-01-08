@@ -143,6 +143,7 @@
       "expo-video"
     ],
     "experiments": {
+      "reactCompiler": true,
       "typedRoutes": true,
       "buildCacheProvider": {
         "plugin": "expo-build-disk-cache"
