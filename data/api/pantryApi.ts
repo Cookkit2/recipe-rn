@@ -357,7 +357,6 @@ const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
   // Fetch synonyms if available
   let synonyms: Array<{ id: string; synonym: string }> = [];
   try {
-    // @ts-ignore - WatermelonDB types are tricky
     const synonymRecords = await stock.synonyms.fetch();
     synonyms = synonymRecords.map((s) => ({ id: s.id, synonym: s.synonym }));
   } catch (error) {
