@@ -21,7 +21,7 @@ export default function IngredientHeaderRow() {
   const onBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-    if (processPantryItems.length > 1) {
+    if (processPantryItems.length > 0) {
       Alert.alert(
         "Discard Items?",
         "Are you sure you want to go back? Your captured images won't be saved.",

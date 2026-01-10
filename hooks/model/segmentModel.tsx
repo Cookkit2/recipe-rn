@@ -285,13 +285,25 @@ export const preprocessMagicTouchInput = (
   }
 
   // Single pass: normalize RGB and add guidance
+  // Branch once outside the loop to avoid per-pixel conditional
   const invScale = 1 / 255;
-  for (let i = 0; i < imageSize * imageSize; i++) {
-    const rgbaIndex = i * 4;
-    out[rgbaIndex] = (pixelData[rgbaIndex] || 0) * invScale;
-    out[rgbaIndex + 1] = (pixelData[rgbaIndex + 1] || 0) * invScale;
-    out[rgbaIndex + 2] = (pixelData[rgbaIndex + 2] || 0) * invScale;
-    out[rgbaIndex + 3] = guidanceAlpha ? (guidanceAlpha[i] || 0) * invScale : 0;
+  const totalPixels = imageSize * imageSize;
+  if (guidanceAlpha) {
+    for (let i = 0; i < totalPixels; i++) {
+      const rgbaIndex = i * 4;
+      out[rgbaIndex] = (pixelData[rgbaIndex] || 0) * invScale;
+      out[rgbaIndex + 1] = (pixelData[rgbaIndex + 1] || 0) * invScale;
+      out[rgbaIndex + 2] = (pixelData[rgbaIndex + 2] || 0) * invScale;
+      out[rgbaIndex + 3] = (guidanceAlpha[i] || 0) * invScale;
+    }
+  } else {
+    for (let i = 0; i < totalPixels; i++) {
+      const rgbaIndex = i * 4;
+      out[rgbaIndex] = (pixelData[rgbaIndex] || 0) * invScale;
+      out[rgbaIndex + 1] = (pixelData[rgbaIndex + 1] || 0) * invScale;
+      out[rgbaIndex + 2] = (pixelData[rgbaIndex + 2] || 0) * invScale;
+      out[rgbaIndex + 3] = 0;
+    }
   }
 
   return out;
