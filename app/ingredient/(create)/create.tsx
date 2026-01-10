@@ -2,15 +2,17 @@ import {
   Camera,
   useCameraDevice,
   useCameraFormat,
-  useCameraPermission,
 } from "react-native-vision-camera";
-import { useEffect, useRef, useState, startTransition } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  startTransition,
+  useTransition,
+} from "react";
 import {
   StyleSheet,
   View,
-  Alert,
-  Linking,
-  Platform,
   Pressable,
   useWindowDimensions,
   ActivityIndicator,
@@ -63,10 +65,12 @@ import {
 import { presentPaywallIfNeeded } from "~/utils/subscription-utils";
 import { setStatusBarStyle } from "expo-status-bar";
 import CameraOnboardingSheet from "~/components/Camera/CameraOnboardingSheet";
+import useLocalStorageState from "~/hooks/useLocalStorageState";
+import { useCameraPermissions } from "~/hooks/useCameraPermissions";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const THUMBNAIL_SIZE = 32;
-const CAMERA_RESOLUTION = { width: 3024, height: 4032 };
+export const CAMERA_RESOLUTION = { width: 3024, height: 4032 };
 
 export type SegmentedImage = Prettify<
   Omit<PantryItemConfirmation, "id" | "image_url"> & {
@@ -82,23 +86,27 @@ export default function CreateIngredient() {
 
   const camera = useRef<Camera>(null);
 
-  // const [facing, setFacing] = useState<CameraPosition>("back");
-  const { hasPermission, requestPermission } = useCameraPermission();
-  const [hasAskedPermission, setHasAskedPermission] = useState(false);
-  const [isSegmentingImage, setIsSegmentingImage] = useState(false);
+  const { hasPermission, handlePermissionRequest } = useCameraPermissions();
+
   const [segmentedImage, setSegmentedImage] = useState<SegmentedImage | null>(
     null
   );
-  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useLocalStorageState(
+    CAMERA_ONBOARDING_COMPLETED_KEY,
+    { defaultValue: false }
+  );
+
+  const [isRecipeCooked] = useLocalStorageState(RECIPE_COOKED_KEY, {
+    defaultValue: false,
+  });
 
   const device = useCameraDevice("back");
   const isCameraAvailable = !!device;
-  const isRecipeCooked = storage.get(RECIPE_COOKED_KEY) === true;
 
   const {
     processPantryItems,
     addProcessPantryItems,
-    framePosition,
+    processImage,
     updateFramePosition,
   } = useCreateIngredientStore();
 
@@ -107,27 +115,12 @@ export default function CreateIngredient() {
     { videoResolution: CAMERA_RESOLUTION },
   ]);
 
+  const [isProcessingImage, startProcessingImage] = useTransition();
+
   useEffect(() => {
     setStatusBarStyle("light", true);
     return () => setStatusBarStyle("auto", true);
   }, []);
-
-  // Check if user has completed camera onboarding
-  useEffect(() => {
-    const hasCompletedOnboarding = storage.get<boolean>(
-      CAMERA_ONBOARDING_COMPLETED_KEY
-    );
-    if (!hasCompletedOnboarding) {
-      setShowOnboarding(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!hasPermission && !hasAskedPermission) {
-      requestPermission();
-      setHasAskedPermission(true);
-    }
-  }, [hasPermission, requestPermission, hasAskedPermission]);
 
   // Camera and gallery functions
   const takePicture = async () => {
@@ -145,7 +138,12 @@ export default function CreateIngredient() {
         const photo = await camera.current.takePhoto();
 
         if (photo?.path) {
-          processImage(photo.path);
+          startProcessingImage(async () => {
+            const result = await processImage(photo.path);
+            if (result) {
+              setSegmentedImage(result);
+            }
+          });
         }
       } catch (error) {
         console.error("Error taking picture:", error);
@@ -179,43 +177,17 @@ export default function CreateIngredient() {
         });
 
         const selectedImage = result.assets[0];
-        processImage(selectedImage.uri);
+
+        startProcessingImage(async () => {
+          const result = await processImage(selectedImage.uri);
+          if (result) {
+            setSegmentedImage(result);
+          }
+        });
       }
     } catch (error) {
       console.error("Error picking from gallery:", error);
       toast.error("Error picking from gallery");
-    }
-  };
-
-  const processImage = async (imagePath: string) => {
-    setIsSegmentingImage(true);
-    // Normalize the frame position to the image size
-    const normalizedFramePosition = {
-      x: (framePosition.x / width) * CAMERA_RESOLUTION.width,
-      y: (framePosition.y / ((width * 4) / 3)) * CAMERA_RESOLUTION.height,
-    };
-
-    const skImage = await loadImageIntoSkia(imagePath);
-
-    if (!skImage) {
-      toast.error("Failed to load image");
-      setIsSegmentingImage(false);
-      return;
-    }
-
-    try {
-      // Segment and classify image using promise.all
-      const [segmentedImage, content] = await Promise.all([
-        segmentStaticImage(skImage, normalizedFramePosition),
-        classifyStaticImage(skImage),
-      ]);
-
-      setSegmentedImage({ ...segmentedImage, ...content });
-    } catch (error) {
-      console.error("Error processing image:", error);
-      toast.error("Error processing image");
-    } finally {
-      setIsSegmentingImage(false);
     }
   };
 
@@ -292,31 +264,6 @@ export default function CreateIngredient() {
 
   if (!hasPermission) {
     // Camera permissions are not granted yet.
-    const handlePermissionRequest = async () => {
-      const result = await requestPermission();
-
-      if (!result) {
-        // User denied permission and selected "Don't ask again"
-        Alert.alert(
-          "Camera Permission Required",
-          "To add ingredients using your camera, please enable camera access in your device settings.",
-          [
-            { text: "Cancel", style: "cancel" },
-            {
-              text: "Open Settings",
-              onPress: () => {
-                if (Platform.OS === "ios") {
-                  Linking.openURL("app-settings:");
-                } else {
-                  Linking.openSettings();
-                }
-              },
-            },
-          ]
-        );
-      }
-    };
-
     return (
       <View className="flex-1 bg-black justify-center items-center px-6">
         <View className="items-center space-y-6">
@@ -401,7 +348,7 @@ export default function CreateIngredient() {
             device={device!}
             format={format}
             enableDepthData={false}
-            isActive={segmentedImage || isSegmentingImage ? false : true}
+            isActive={!segmentedImage && !isProcessingImage}
           />
         ) : (
           <View className="absolute inset-0 items-center justify-center bg-black">
@@ -494,7 +441,7 @@ export default function CreateIngredient() {
             variant="ghost"
             className="rounded-full active:bg-white/10"
             onPress={pickFromGallery}
-            disabled={isSegmentingImage}
+            disabled={isProcessingImage}
           >
             <ImagesIcon className="text-white/80" size={24} />
           </Button>
@@ -506,9 +453,9 @@ export default function CreateIngredient() {
             onPressIn={handlePressIn}
             onPressOut={handlePressOut}
             style={animatedStyle}
-            disabled={!isCameraAvailable || isSegmentingImage}
+            disabled={!isCameraAvailable || isProcessingImage}
           >
-            {isSegmentingImage ? (
+            {isProcessingImage ? (
               <ActivityIndicator size="small" className="text-black" />
             ) : (
               <View className="w-15 h-15 rounded-full bg-white border-2 border-gray-400" />
@@ -523,7 +470,7 @@ export default function CreateIngredient() {
             onPress={onConfirm}
             disabled={
               !isCameraAvailable ||
-              isSegmentingImage ||
+              isProcessingImage ||
               processPantryItems.length === 0
             }
           >

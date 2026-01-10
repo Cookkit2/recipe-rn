@@ -68,10 +68,6 @@ export class GeminiAPI {
       }
     );
 
-    console.log("Gemini response:", response);
-
-    console.log("Gemini API response:", response);
-
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`Gemini API error: ${response.status} - ${errorText}`);

@@ -12,6 +12,12 @@ import type {
 } from "~/types/PantryItem";
 import { useWindowDimensions } from "react-native";
 import { baseIngredientApi } from "~/data/supabase-api/BaseIngredientApi";
+import { toast } from "sonner-native";
+import { classifyStaticImage } from "~/hooks/model/classifyModel";
+import { loadImageIntoSkia } from "~/hooks/model/processImage";
+import { segmentStaticImage } from "~/hooks/model/segmentModel";
+import { CAMERA_RESOLUTION } from "~/app/ingredient/(create)/create";
+import type { SkImage } from "@shopify/react-native-skia";
 
 interface CreateIngredientContextType {
   // UI State only
@@ -26,6 +32,16 @@ interface CreateIngredientContextType {
   deleteProcessPantryItems: (id: string) => void;
   framePosition: { x: number; y: number };
   updateFramePosition: (framePosition: { x: number; y: number }) => void;
+  processImage: (imagePath: string) => Promise<
+    | {
+        quantity: number;
+        unit: string;
+        name: string;
+        background_color: string | undefined;
+        skImage: SkImage;
+      }
+    | undefined
+  >;
 }
 
 const CreateIngredientContext =
@@ -64,6 +80,34 @@ export function CreateIngredientProvider({
     },
     []
   );
+
+  const processImage = async (imagePath: string) => {
+    // Normalize the frame position to the image size
+    const normalizedFramePosition = {
+      x: (framePosition.x / width) * CAMERA_RESOLUTION.width,
+      y: (framePosition.y / ((width * 4) / 3)) * CAMERA_RESOLUTION.height,
+    };
+
+    const skImage = await loadImageIntoSkia(imagePath);
+
+    if (!skImage) {
+      toast.error("Failed to load image");
+      return undefined;
+    }
+
+    try {
+      // Segment and classify image using promise.all
+      const [segmentedImage, content] = await Promise.all([
+        segmentStaticImage(skImage, normalizedFramePosition),
+        classifyStaticImage(skImage),
+      ]);
+
+      return { ...segmentedImage, ...content };
+    } catch (error) {
+      console.error("Error processing image:", error);
+      toast.error("Error processing image");
+    }
+  };
 
   const addProcessPantryItems = useCallback(
     async (item: PantryItemConfirmation) => {
@@ -192,6 +236,7 @@ export function CreateIngredientProvider({
         deleteProcessPantryItems,
         framePosition,
         updateFramePosition,
+        processImage,
       }}
     >
       {children}

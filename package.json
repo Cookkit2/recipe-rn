@@ -54,7 +54,6 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "date-fns": "^4.1.0",
-    "eslint-plugin-perfectionist": "^4.15.1",
     "expo": "^54.0.0",
     "expo-auth-session": "~7.0.8",
     "expo-blur": "~15.0.7",

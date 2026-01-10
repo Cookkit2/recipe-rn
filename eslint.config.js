@@ -6,11 +6,9 @@ import reactNative from "eslint-plugin-react-native";
 import reactHooks from "eslint-plugin-react-hooks";
 import prettier from "eslint-config-prettier";
 import globals from "globals";
-import perfectionist from "eslint-plugin-perfectionist";
 
 export default [
   js.configs.recommended,
-  // perfectionist.configs["recommended-natural"],
   ...tseslint.configs.recommended,
   {
     ignores: [
