@@ -1,4 +1,4 @@
-import { View } from "react-native";
+import { ScrollView, View } from "react-native";
 import Animated, {
   useAnimatedRef,
   useScrollViewOffset,
@@ -8,7 +8,6 @@ import Header from "~/components/Shared/Header";
 import { MilkIcon, SaladIcon } from "lucide-nativewind";
 import { useRouter } from "expo-router";
 import ListButton from "~/components/Shared/ListButton";
-import AppliancesSection from "~/components/Preferences/AppliancesSection";
 import UnitSection from "~/components/Preferences/UnitSection";
 import ThemeSection from "~/components/Preferences/ThemeSection";
 
@@ -19,7 +18,7 @@ export default function PreferenceScreen() {
   const scrollOffset = useScrollViewOffset(scrollRef);
 
   return (
-    <Animated.ScrollView
+    <ScrollView
       className="bg-background"
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingBottom: bottom }}
@@ -52,6 +51,6 @@ export default function PreferenceScreen() {
       </View>
 
       <View className="mb-8" />
-    </Animated.ScrollView>
+    </ScrollView>
   );
 }

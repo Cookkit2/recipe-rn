@@ -6,7 +6,7 @@ import {
   SettingsIcon,
 } from "lucide-nativewind";
 import React, { useCallback } from "react";
-import { View, Platform, Linking } from "react-native";
+import { View, Platform, Linking, ScrollView } from "react-native";
 import * as StoreReview from "expo-store-review";
 import Constants from "expo-constants";
 import Purchases from "react-native-purchases";
@@ -128,11 +128,10 @@ export default function ProfileScreen() {
   };
 
   return (
-    <Animated.ScrollView
+    <ScrollView
       className="bg-background"
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingBottom: bottom }}
-      // onScroll={scrollHandler}
       stickyHeaderIndices={[0]}
     >
       <Header />
@@ -232,6 +231,6 @@ export default function ProfileScreen() {
           </Button>
         )}
       </View> */}
-    </Animated.ScrollView>
+    </ScrollView>
   );
 }
