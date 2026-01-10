@@ -29,26 +29,26 @@ export default function ConfirmationPage() {
   const router = useRouter();
   const addPantryItemsWithMetadata = useAddPantryItemsWithMetadata();
 
-  const [isSavingRecipe, startSavingAllRecipe] = useTransition();
+  const [isSavingRecipe, setIsSavingRecipe] = React.useState(false);
 
   useEffect(() => {
     setStatusBarStyle("auto", true);
   }, []);
 
-  const onSaveAllRecipe = useCallback(() => {
-    startSavingAllRecipe(async () => {
+  const onSaveAllRecipe = useCallback(async () => {
+    try {
+      setIsSavingRecipe(true);
       await presentPaywallIfNeeded();
-
-      try {
-        await addPantryItemsWithMetadata.mutateAsync(processPantryItems);
-        queryClient.invalidateQueries({
-          queryKey: recipeQueryKeys.recommendations(),
-        });
-        router.dismissTo("/");
-      } catch {
-        toast.error("Error saving all recipe");
-      }
-    });
+      await addPantryItemsWithMetadata.mutateAsync(processPantryItems);
+      queryClient.invalidateQueries({
+        queryKey: recipeQueryKeys.recommendations(),
+      });
+      router.dismissTo("/");
+    } catch {
+      toast.error("Error saving all recipe");
+    } finally {
+      setIsSavingRecipe(false);
+    }
   }, [processPantryItems]);
 
   return (
