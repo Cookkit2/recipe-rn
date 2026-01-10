@@ -1,7 +1,7 @@
 import { View } from "react-native";
 import useColors from "~/hooks/useColor";
 import { useCreateIngredientStore } from "~/store/CreateIngredientContext";
-import { type PantryItem } from "~/types/PantryItem";
+import type { PantryItem } from "~/types/PantryItem";
 import IngredientQuantity from "~/components/Ingredient/IngredientQuantity";
 import EditableTitle from "~/components/Shared/EditableTitle";
 import OutlinedImage from "~/components/ui/outlined-image";
@@ -13,18 +13,10 @@ export default function HorizontalIngredientItemCard({
 }: {
   item: PantryItem;
 }) {
+  const colors = useColors();
   const { image_url, name, quantity, unit } = item;
   const { updateProcessPantryItems, deleteProcessPantryItems } =
     useCreateIngredientStore();
-
-  const colors = useColors();
-
-  const updateTitle = (text: string) => {
-    if (!item) return;
-    //clone another object of same id
-    const newItem = { ...item, name: text };
-    updateProcessPantryItems(newItem);
-  };
 
   return (
     <View className="flex-1 flex-row items-start gap-4 p-3">
@@ -37,7 +29,10 @@ export default function HorizontalIngredientItemCard({
       <View className="mt-2 flex-1 flex-column">
         <EditableTitle
           value={name}
-          onChangeText={updateTitle}
+          onChangeText={(text: string) => {
+            const newItem = { ...item, name: text };
+            updateProcessPantryItems(newItem);
+          }}
           placeholder="Enter title"
           TextComponent="H3"
           textClassName="opacity-80 font-urbanist-bold"

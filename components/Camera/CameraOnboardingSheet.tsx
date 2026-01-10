@@ -10,6 +10,8 @@ import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import useColors from "~/hooks/useColor";
 import PoweredByAI from "../Shared/PoweredByAI";
+import { CAMERA_ONBOARDING_COMPLETED_KEY } from "~/constants/storage-keys";
+import useLocalStorageState from "~/hooks/useLocalStorageState";
 
 // Assets
 const tutorialVideo =
@@ -22,17 +24,11 @@ const FRAME_ASPECT_RATIO = 9 / 19.5;
 const FRAME_HEIGHT = 400;
 const FRAME_WIDTH = FRAME_HEIGHT * FRAME_ASPECT_RATIO;
 
-interface CameraOnboardingSheetProps {
-  visible: boolean;
-  onClose: () => void;
-  onComplete: () => void;
-}
-
-export default function CameraOnboardingSheet({
-  visible,
-  onClose,
-  onComplete,
-}: CameraOnboardingSheetProps) {
+export default function CameraOnboardingSheet() {
+  const [showOnboarding, setShowOnboarding] = useLocalStorageState(
+    CAMERA_ONBOARDING_COMPLETED_KEY,
+    { defaultValue: false }
+  );
   const bottomSheetRef = useRef<BottomSheet>(null);
   const { bottom } = useSafeAreaInsets();
   const colors = useColors();
@@ -43,37 +39,37 @@ export default function CameraOnboardingSheet({
   });
 
   useEffect(() => {
-    if (visible) {
+    if (showOnboarding) {
       bottomSheetRef.current?.expand();
       player.play();
     } else {
       bottomSheetRef.current?.close();
       player.pause();
     }
-  }, [visible, player]);
+  }, [showOnboarding, player]);
 
   const handleSheetChanges = useCallback(
     (index: number) => {
       if (index === -1) {
-        onClose();
+        setShowOnboarding(false);
         player.pause();
       }
     },
-    [onClose, player]
+    [player, setShowOnboarding]
   );
 
   const handleComplete = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     player.pause();
     bottomSheetRef.current?.close();
-    onComplete();
+    setShowOnboarding(true);
   };
 
   return (
     <Portal name="camera-onboarding-sheet">
       <BottomSheet
         ref={bottomSheetRef}
-        index={visible ? 0 : -1}
+        index={showOnboarding ? 0 : -1}
         snapPoints={["85%"]}
         onChange={handleSheetChanges}
         enablePanDownToClose
