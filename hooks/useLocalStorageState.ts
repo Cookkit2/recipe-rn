@@ -1,6 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { storage } from "~/data";
+import { log } from "~/utils/logger";
 
 // in memory fallback used when storage throws an error
 export const inMemoryData = new Map<string, unknown>();
@@ -82,10 +83,7 @@ function useAsyncStorage<T>(
               const parsed = parse(storedValue) as T;
               setValue(parsed);
             } catch (error) {
-              console.error(
-                `Error parsing stored value for key "${key}":`,
-                error
-              );
+              log.error(`Error parsing stored value for key "${key}":`, error);
               setValue(defaultValue);
             }
           } else if (defaultValue !== undefined) {
@@ -94,10 +92,7 @@ function useAsyncStorage<T>(
               storage.set(key, stringify(defaultValue));
               setValue(defaultValue);
             } catch (error) {
-              console.error(
-                `Error storing default value for key "${key}":`,
-                error
-              );
+              log.error(`Error storing default value for key "${key}":`, error);
               inMemoryData.set(key, defaultValue);
               setValue(defaultValue);
               setIsPersistent(false);
@@ -105,7 +100,7 @@ function useAsyncStorage<T>(
           }
         }
       } catch (error) {
-        console.error(`Error loading value for key "${key}":`, error);
+        log.error(`Error loading value for key "${key}":`, error);
         if (mounted) {
           inMemoryData.set(key, defaultValue);
           setValue(defaultValue);
@@ -136,7 +131,7 @@ function useAsyncStorage<T>(
             inMemoryData.delete(key);
             setIsPersistent(true);
           } catch (error) {
-            console.error(`Error saving value for key "${key}":`, error);
+            log.error(`Error saving value for key "${key}":`, error);
             inMemoryData.set(key, resolvedValue);
             setIsPersistent(false);
           }
@@ -148,14 +143,14 @@ function useAsyncStorage<T>(
     [key, stringify]
   );
 
-  const removeItem = useCallback(async () => {
+  const removeItem = useCallback(() => {
     try {
       storage.delete(key);
       inMemoryData.delete(key);
       setValue(defaultValue);
       setIsPersistent(true);
     } catch (error) {
-      console.error(`Error removing value for key "${key}":`, error);
+      log.error(`Error removing value for key "${key}":`, error);
       inMemoryData.delete(key);
       setValue(defaultValue);
     }

@@ -20,24 +20,19 @@ export default function ConfirmationPage() {
   const { bottom } = useSafeAreaInsets();
   const { processPantryItems } = useCreateIngredientStore();
 
-  const completedItems = useMemo(
-    () => processPantryItems.filter((item) => !item.status),
-    [processPantryItems]
-  );
-
   const queryClient = useQueryClient();
   const router = useRouter();
   const addPantryItemsWithMetadata = useAddPantryItemsWithMetadata();
 
-  const [isSavingRecipe, setIsSavingRecipe] = React.useState(false);
+  const [isSavingIngredients, setIsSavingIngredients] = React.useState(false);
 
   useEffect(() => {
     setStatusBarStyle("auto", true);
   }, []);
 
-  const onSaveAllRecipe = useCallback(async () => {
+  const onSaveAllIngredients = useCallback(async () => {
     try {
-      setIsSavingRecipe(true);
+      setIsSavingIngredients(true);
       await presentPaywallIfNeeded();
       await addPantryItemsWithMetadata.mutateAsync(processPantryItems);
       queryClient.invalidateQueries({
@@ -47,7 +42,7 @@ export default function ConfirmationPage() {
     } catch {
       toast.error("Error saving all recipe");
     } finally {
-      setIsSavingRecipe(false);
+      setIsSavingIngredients(false);
     }
   }, [processPantryItems]);
 
@@ -55,7 +50,7 @@ export default function ConfirmationPage() {
     <View className="flex-1 relative bg-background">
       <Header title="Confirmation" />
       <Animated.FlatList
-        data={completedItems}
+        data={processPantryItems}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <HorizontalIngredientItemCard item={item} />}
         itemLayoutAnimation={LinearTransition.springify()
@@ -90,11 +85,11 @@ export default function ConfirmationPage() {
           size="lg"
           variant="secondary"
           className="rounded-2xl border-continuous bg-foreground/80"
-          onPress={onSaveAllRecipe}
-          disabled={isSavingRecipe || processPantryItems.length === 0}
+          onPress={onSaveAllIngredients}
+          disabled={isSavingIngredients || processPantryItems.length === 0}
         >
           <TextShimmer className="flex-row items-center gap-2 justify-center">
-            {isSavingRecipe && <ActivityIndicator />}
+            {isSavingIngredients && <ActivityIndicator />}
             <H4 className="text-background font-urbanist font-semibold">
               Save
             </H4>

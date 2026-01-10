@@ -21,6 +21,7 @@ import { File, Paths } from "expo-file-system";
 import { titleCase } from "~/utils/text-formatter";
 import * as Haptics from "expo-haptics";
 import type { Prettify } from "~/utils/type-prettier";
+import { log } from "~/utils/logger";
 
 // Processing status for items being scanned (local to this context)
 export type ProcessingStatus = "processing" | "classifying" | "failed";
@@ -232,13 +233,13 @@ export function CreateIngredientProvider({
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
     },
-    []
+    [width]
   );
 
   // Add item and immediately start processing (fire and forget, parallel)
   const processImage = useCallback(
     (imagePath: string, itemFramePosition: { x: number; y: number }) => {
-      const itemId = `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const itemId = `item-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 
       const newItem: CreatePantryItem = {
         id: itemId,
@@ -348,7 +349,7 @@ export function CreateIngredientProvider({
           });
         }
       } catch (error) {
-        console.error("Error fetching base ingredient on update:", error);
+        log.error("Error fetching base ingredient on update:", error);
       }
 
       timeoutRef.current = null;
