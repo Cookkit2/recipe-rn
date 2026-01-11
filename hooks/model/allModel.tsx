@@ -46,6 +46,13 @@ class AllModelSingleton {
   preload(): void {
     void this.get();
   }
+
+  dispose(): void {
+    if (this.models) {
+      this.models = null;
+      this.loadPromise = null;
+    }
+  }
 }
 
 const allModel = AllModelSingleton.getInstance();
