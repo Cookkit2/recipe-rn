@@ -1,6 +1,11 @@
 import "~/global.css";
 import React, { useEffect, useState } from "react";
-import { SplashScreen, Stack, useRouter } from "expo-router";
+import {
+  SplashScreen,
+  Stack,
+  useNavigationContainerRef,
+  useRouter,
+} from "expo-router";
 import { Appearance, Platform, View } from "react-native";
 import { useColorScheme } from "~/hooks/useColorScheme";
 import { PortalHost } from "@rn-primitives/portal";
@@ -25,6 +30,11 @@ import Purchases, { LOG_LEVEL } from "react-native-purchases";
 import Constants from "expo-constants";
 import { StatusBar } from "expo-status-bar";
 import * as Sentry from "@sentry/react-native";
+import { isRunningInExpoGo } from "expo";
+
+const navigationIntegration = Sentry.reactNavigationIntegration({
+  enableTimeToInitialDisplay: !isRunningInExpoGo(),
+});
 
 Sentry.init({
   dsn: "https://2f34d5a8b19013c5bbbc810f22dbe09f@o4510690689417216.ingest.de.sentry.io/4510690690793552",
@@ -33,22 +43,35 @@ Sentry.init({
   // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
   sendDefaultPii: true,
 
-  // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
-  // We recommend adjusting this value in production.
-  tracesSampleRate: 1.0,
+  // Set tracesSampleRate based on environment
+  // In development: 100% for testing
+  // In production: 20% to reduce overhead and costs
+  tracesSampleRate: __DEV__ ? 1.0 : 0.2,
+
   // profilesSampleRate is relative to tracesSampleRate.
-  // Here, we'll capture profiles for 100% of transactions.
+  // Sample 100% of traced transactions for profiling
   profilesSampleRate: 1.0,
+
+  // Enable automatic instrumentation
+  enableAutoSessionTracking: true,
+  enableAutoPerformanceTracing: true,
+
+  // Automatically capture user interactions
+  enableUserInteractionTracing: true,
 
   // Enable Logs
   enableLogs: true,
 
-  // Configure Session Replay
+  // Integration for automatic breadcrumbs and navigation tracking
+  integrations: [navigationIntegration],
+  enableNativeFramesTracking: !isRunningInExpoGo(),
+
+  // Configure Session Replay (optional - currently commented out)
   // replaysSessionSampleRate: 0.1,
   // replaysOnErrorSampleRate: 1,
-  // integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
+  // integrations: [..., Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
 
-  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
+  // Enable Spotlight for local debugging (https://spotlightjs.com)
   // spotlight: __DEV__,
 });
 
@@ -65,6 +88,15 @@ function AnimatedStack() {
 
   const [isModalActive, setIsModalActive] = useState(false);
   const [canBlur, setCanBlur] = useState(false);
+
+  // Register the navigation container with Sentry for automatic route tracking
+  const ref = useNavigationContainerRef();
+
+  useEffect(() => {
+    if (ref) {
+      navigationIntegration.registerNavigationContainer(ref);
+    }
+  }, [ref]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
