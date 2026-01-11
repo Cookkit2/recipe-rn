@@ -1,7 +1,5 @@
 const { withNativeWind } = require("nativewind/metro");
-const {
-  getSentryExpoConfig
-} = require("@sentry/react-native/metro");
+const { getSentryExpoConfig } = require("@sentry/react-native/metro");
 
 const config = getSentryExpoConfig(__dirname);
 
@@ -14,7 +12,12 @@ config.resolver.platforms = [
 ];
 
 // Add onnx, tflite, and video asset extensions
-config.resolver.assetExts = [...config.resolver.assetExts, "onnx", "tflite", "mp4"];
+config.resolver.assetExts = [
+  ...config.resolver.assetExts,
+  "onnx",
+  "tflite",
+  "mp4",
+];
 
 module.exports = withNativeWind(config, {
   input: "./global.css",
