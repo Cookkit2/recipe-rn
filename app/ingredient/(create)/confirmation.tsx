@@ -38,7 +38,7 @@ export default function ConfirmationPage() {
     try {
       setIsSavingIngredients(true);
       await presentPaywallIfNeeded();
-      await addPantryItemsWithMetadata.mutateAsync(processPantryItems);
+      await addPantryItemsWithMetadata.mutateAsync(completedItems);
       queryClient.invalidateQueries({
         queryKey: recipeQueryKeys.recommendations(),
       });
@@ -48,7 +48,7 @@ export default function ConfirmationPage() {
     } finally {
       setIsSavingIngredients(false);
     }
-  }, [processPantryItems]);
+  }, [completedItems]);
 
   return (
     <View className="flex-1 relative bg-background">
@@ -90,7 +90,7 @@ export default function ConfirmationPage() {
           variant="secondary"
           className="rounded-2xl border-continuous bg-foreground/80"
           onPress={onSaveAllIngredients}
-          // on allow save when there are all completed items
+          // only allow save when all of them are completed items
           disabled={
             isSavingIngredients ||
             processPantryItems.length === 0 ||

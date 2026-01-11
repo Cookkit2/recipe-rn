@@ -202,7 +202,7 @@ const createThumbnailForColors = (
   canvas.drawImageRect(image, srcRect, dstRect, paint);
 
   const snapshot = surface.makeImageSnapshot();
-  const base64 = snapshot?.encodeToBase64(ImageFormat.PNG, 30);
+  const base64 = snapshot?.encodeToBase64(ImageFormat.PNG, 60);
 
   return base64 ?? "";
 };
@@ -269,7 +269,7 @@ export const preprocessMagicTouchInput = (
         null
       );
       gPaint.setImageFilter(filter);
-      gPaint.setAntiAlias(false);
+      gPaint.setAntiAlias(true);
       const radius = Math.max(2, Math.round(imageSize * 0.01));
       gPaint.setColor(Skia.Color("white"));
       gCanvas.drawCircle(tx, ty, radius, gPaint);
