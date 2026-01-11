@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { storage } from "~/data";
 import { log } from "~/utils/logger";
 
@@ -113,6 +113,7 @@ function useAsyncStorage<T>(
     return () => {
       mounted = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]); // Only run on mount and when key changes
 
   const setState = useCallback(
