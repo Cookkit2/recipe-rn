@@ -50,7 +50,7 @@ export default function SheetModalWrapper({
 
   const handleHapticFeedback = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch((error) => {
-      log.info("Haptics not available:", error);
+      log.warn("Haptics not available:", error);
     });
   }, []);
 
