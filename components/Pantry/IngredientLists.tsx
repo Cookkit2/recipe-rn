@@ -60,6 +60,7 @@ export default function IngredientLists() {
       renderItem={({ item, index }) => (
         <IngredientItemCard key={item.id} item={item} index={index} />
       )}
+      scrollEventThrottle={16}
       onScroll={(e) => {
         ingredientScrollY.value = e.nativeEvent.contentOffset.y;
       }}

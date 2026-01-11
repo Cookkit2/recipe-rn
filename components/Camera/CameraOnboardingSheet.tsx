@@ -12,6 +12,7 @@ import useColors from "~/hooks/useColor";
 import PoweredByAI from "../Shared/PoweredByAI";
 import { CAMERA_ONBOARDING_COMPLETED_KEY } from "~/constants/storage-keys";
 import useLocalStorageState from "~/hooks/useLocalStorageState";
+import { log } from "~/utils/logger";
 
 // Assets
 const tutorialVideo =
@@ -27,7 +28,7 @@ const FRAME_WIDTH = FRAME_HEIGHT * FRAME_ASPECT_RATIO;
 export default function CameraOnboardingSheet() {
   const [isOnboardingComplete, setIsOnboardingComplete] = useLocalStorageState(
     CAMERA_ONBOARDING_COMPLETED_KEY,
-    { defaultValue: false }
+    { defaultValue: true }
   );
   const bottomSheetRef = useRef<BottomSheet>(null);
   const { bottom } = useSafeAreaInsets();
@@ -41,18 +42,38 @@ export default function CameraOnboardingSheet() {
   useEffect(() => {
     if (!isOnboardingComplete) {
       bottomSheetRef.current?.expand();
-      player.play();
+      try {
+        player?.play();
+      } catch (error) {
+        log.warn("Failed to play video:", error);
+      }
     } else {
       bottomSheetRef.current?.close();
-      player.pause();
+      try {
+        player?.pause();
+      } catch (error) {
+        log.warn("Failed to pause video:", error);
+      }
     }
+
+    return () => {
+      try {
+        player?.pause();
+      } catch (error) {
+        // Silent cleanup - player may already be disposed
+      }
+    };
   }, [isOnboardingComplete, player]);
 
   const handleSheetChanges = useCallback(
     (index: number) => {
       if (index === -1) {
         setIsOnboardingComplete(true);
-        player.pause();
+        try {
+          player?.pause();
+        } catch (error) {
+          console.warn("Failed to pause video on sheet close:", error);
+        }
       }
     },
     [player, setIsOnboardingComplete]
@@ -60,7 +81,11 @@ export default function CameraOnboardingSheet() {
 
   const handleComplete = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    player.pause();
+    try {
+      player?.pause();
+    } catch (error) {
+      console.warn("Failed to pause video on complete:", error);
+    }
     bottomSheetRef.current?.close();
     setIsOnboardingComplete(true);
   };
