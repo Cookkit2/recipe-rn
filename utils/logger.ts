@@ -18,12 +18,12 @@ export const log = {
    */
   trace: (message: string, ...args: any[]) => {
     rnLogger.debug(message, ...args);
-    try {
-      const attributes = parseLogAttributes(args);
-      Sentry.logger.trace(message, attributes);
-    } catch (error) {
-      // Silent fail - don't let Sentry errors break logging
-    }
+    // try {
+    //   const attributes = parseLogAttributes(args);
+    //   Sentry.logger.trace(message, attributes);
+    // } catch (error) {
+    //   // Silent fail - don't let Sentry errors break logging
+    // }
   },
 
   /**
@@ -31,12 +31,12 @@ export const log = {
    */
   debug: (message: string, ...args: any[]) => {
     rnLogger.debug(message, ...args);
-    try {
-      const attributes = parseLogAttributes(args);
-      Sentry.logger.debug(message, attributes);
-    } catch (error) {
-      // Silent fail
-    }
+    // try {
+    //   const attributes = parseLogAttributes(args);
+    //   Sentry.logger.debug(message, attributes);
+    // } catch (error) {
+    //   // Silent fail
+    // }
   },
 
   /**
@@ -44,12 +44,12 @@ export const log = {
    */
   info: (message: string, ...args: any[]) => {
     rnLogger.info(message, ...args);
-    try {
-      const attributes = parseLogAttributes(args);
-      Sentry.logger.info(message, attributes);
-    } catch (error) {
-      // Silent fail
-    }
+    // try {
+    //   const attributes = parseLogAttributes(args);
+    //   Sentry.logger.info(message, attributes);
+    // } catch (error) {
+    //   // Silent fail
+    // }
   },
 
   /**
