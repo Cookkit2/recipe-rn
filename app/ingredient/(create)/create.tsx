@@ -5,6 +5,8 @@ import {
 } from "react-native-vision-camera";
 import { useEffect, useRef } from "react";
 import { StyleSheet, View } from "react-native";
+import allModel from "~/hooks/model/allModel";
+import { log } from "~/utils/logger";
 import FocusingAreaIndicator from "~/components/Camera/FocusingAreaIndicator";
 import { H4, P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
@@ -28,8 +30,20 @@ export default function CreateIngredient() {
   ]);
 
   useEffect(() => {
+    requestIdleCallback(() => {
+      // Load the model if not already loaded
+      if (!allModel.isLoaded()) {
+        allModel.get().catch((error) => {
+          log.error("Failed to load model:", error);
+        });
+      }
+    });
+
     setStatusBarStyle("light", true);
-    return () => setStatusBarStyle("auto", true);
+    return () => {
+      setStatusBarStyle("auto", true);
+      allModel.dispose();
+    };
   }, []);
 
   if (!hasPermission) {
