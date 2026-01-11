@@ -34,9 +34,24 @@ export const pantryApi = {
         return [];
       }
 
-      const pantryItemsConverted = await Promise.all(
-        stockItems.map(convertStockToPantryItem)
-      );
+      // Convert items in smaller batches to prevent JSI overload
+      const batchSize = 10;
+      const pantryItemsConverted: PantryItem[] = [];
+
+      for (let i = 0; i < stockItems.length; i += batchSize) {
+        const batch = stockItems.slice(i, i + batchSize);
+        const converted = await Promise.all(
+          batch.map((item) =>
+            convertStockToPantryItem(item).catch((err) => {
+              log.error("Error converting stock item:", item.id, err);
+              return null;
+            })
+          )
+        );
+        pantryItemsConverted.push(
+          ...converted.filter((item): item is PantryItem => item !== null)
+        );
+      }
 
       log.info("✅ Converted pantry items:", pantryItemsConverted.length);
       return pantryItemsConverted;
@@ -355,10 +370,17 @@ const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
   // Fetch synonyms if available
   let synonyms: Array<{ id: string; synonym: string }> = [];
   try {
-    const synonymRecords = await stock.synonyms.fetch();
+    // Add timeout to prevent hanging
+    const synonymRecords = await Promise.race([
+      stock.synonyms.fetch(),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Synonym fetch timeout")), 3000)
+      ),
+    ]);
     synonyms = synonymRecords.map((s) => ({ id: s.id, synonym: s.synonym }));
   } catch (error) {
-    log.error("Error fetching synonyms:", error);
+    // Silent fail for synonyms - they're not critical
+    log.warn("Could not fetch synonyms for stock:", stock.id);
   }
 
   return {

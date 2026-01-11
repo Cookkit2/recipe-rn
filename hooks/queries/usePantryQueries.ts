@@ -10,8 +10,8 @@ export function usePantryItems() {
   return useQuery({
     queryKey: pantryQueryKeys.items(),
     queryFn: pantryApi.fetchAllPantryItems,
-    // staleTime: 2 * 60 * 1000, // 2 minutes - pantry data changes frequently
-    staleTime: 1,
+    staleTime: 30 * 1000, // 30 seconds - balance between freshness and performance
+    gcTime: 5 * 60 * 1000, // 5 minutes garbage collection
   });
 }
 

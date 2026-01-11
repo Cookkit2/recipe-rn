@@ -1,4 +1,4 @@
-import React from "react";
+import { memo, useMemo, type FC } from "react";
 import {
   StyleSheet,
   View,
@@ -22,15 +22,15 @@ type OutlinedImageProps = {
  * Renders a PNG with an approximate white outline by layering tinted copies
  * behind the original at small offsets. Works well for small icons/thumbnails.
  */
-export function OutlinedImage({
+export const OutlinedImage: FC<OutlinedImageProps> = ({
   source,
   size = 48,
   strokeColor = "#FFFFFF",
   strokeWidth = 2,
   style,
   imageStyle,
-}: OutlinedImageProps) {
-  const offsets = React.useMemo(() => {
+}) => {
+  const offsets = useMemo(() => {
     const r = Math.max(1, Math.round(strokeWidth));
     return [
       [-r, 0],
@@ -71,7 +71,7 @@ export function OutlinedImage({
       />
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   abs: {
@@ -81,4 +81,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default OutlinedImage;
+export default memo(OutlinedImage);
