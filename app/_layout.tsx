@@ -24,6 +24,33 @@ import { ONBOARDING_COMPLETED_KEY } from "~/constants/storage-keys";
 import Purchases, { LOG_LEVEL } from "react-native-purchases";
 import Constants from "expo-constants";
 import { StatusBar } from "expo-status-bar";
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "https://2f34d5a8b19013c5bbbc810f22dbe09f@o4510690689417216.ingest.de.sentry.io/4510690690793552",
+
+  // Adds more context data to events (IP address, cookies, user, etc.)
+  // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
+  sendDefaultPii: true,
+
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
+  // We recommend adjusting this value in production.
+  tracesSampleRate: 1.0,
+  // profilesSampleRate is relative to tracesSampleRate.
+  // Here, we'll capture profiles for 100% of transactions.
+  profilesSampleRate: 1.0,
+
+  // Enable Logs
+  enableLogs: true,
+
+  // Configure Session Replay
+  // replaysSessionSampleRate: 0.1,
+  // replaysOnErrorSampleRate: 1,
+  // integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
+
+  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
+  // spotlight: __DEV__,
+});
 
 const revenuecatProjectAppleApiKey =
   process.env.EXPO_PUBLIC_REVENUECAT_PROJECT_APPLE_API_KEY ||
@@ -172,7 +199,7 @@ const usePlatformSpecificSetup = Platform.select({
 
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+export default Sentry.wrap(function RootLayout() {
   usePlatformSpecificSetup();
 
   // TODO: fetch all recipes images
@@ -218,7 +245,7 @@ export default function RootLayout() {
       </RootScaleProvider>
     </GestureHandlerRootView>
   );
-}
+});
 
 const useIsomorphicLayoutEffect =
   Platform.OS === "web" && typeof window === "undefined"
