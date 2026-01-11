@@ -22,6 +22,7 @@ import {
   HORIZONTAL_DRAG_THRESHOLD,
   DRAG_THRESHOLD,
 } from "~/constants/sheet-modal";
+import { log } from "~/utils/logger";
 
 export default function SheetModalWrapper({
   children,
@@ -49,7 +50,7 @@ export default function SheetModalWrapper({
 
   const handleHapticFeedback = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch((error) => {
-      console.log("Haptics not available:", error);
+      log.info("Haptics not available:", error);
     });
   }, []);
 
@@ -219,7 +220,7 @@ export default function SheetModalWrapper({
       try {
         setScale(SCALE_FACTOR);
       } catch (error) {
-        console.log("Initial scale error:", error);
+        log.error("Initial scale error:", error);
       }
     }, 0);
 
@@ -228,7 +229,7 @@ export default function SheetModalWrapper({
       try {
         setScale(1);
       } catch (error) {
-        console.log("Cleanup scale error:", error);
+        log.error("Cleanup scale error:", error);
       }
     };
   }, [setScale]);

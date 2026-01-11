@@ -4,8 +4,9 @@
  * This file handles database initialization and optional seeding for development.
  */
 
+import { log } from "~/utils/logger";
 import { databaseFacade } from "./DatabaseFacade";
-import { seedDatabase, checkDatabase } from "./seed";
+import { seedDatabase } from "./seed";
 
 export async function initializeDatabase(
   options: {
@@ -16,7 +17,7 @@ export async function initializeDatabase(
 ) {
   const { autoSeed = false, clearFirst = false, logStats = true } = options;
 
-  console.log("🍉 Initializing WatermelonDB...");
+  log.info("🍉 Initializing WatermelonDB...");
 
   try {
     // Check if database is healthy
@@ -27,7 +28,7 @@ export async function initializeDatabase(
 
     // Clear database if requested
     if (clearFirst) {
-      console.log("🧹 Clearing database...");
+      log.info("🧹 Clearing database...");
       await databaseFacade.clearAllData();
     }
 
@@ -35,24 +36,24 @@ export async function initializeDatabase(
     const initialStats = await databaseFacade.getDatabaseStats();
 
     if (logStats) {
-      console.log("📊 Initial database stats:", initialStats);
+      log.info("📊 Initial database stats:", initialStats);
     }
 
     // Auto-seed if requested and database is empty
     if (autoSeed && initialStats.totalRecords === 0) {
-      console.log("🌱 Auto-seeding database...");
+      log.info("🌱 Auto-seeding database...");
       await seedDatabase();
 
       if (logStats) {
         const finalStats = await databaseFacade.getDatabaseStats();
-        console.log("📈 Post-seed database stats:", finalStats);
+        log.info("📈 Post-seed database stats:", finalStats);
       }
     }
 
-    console.log("✅ Database initialization complete");
+    log.info("✅ Database initialization complete");
     return true;
   } catch (error) {
-    console.error("❌ Database initialization failed:", error);
+    log.error("❌ Database initialization failed:", error);
     throw error;
   }
 }

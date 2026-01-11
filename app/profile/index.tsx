@@ -43,10 +43,10 @@ export default function ProfileScreen() {
   //   // Try remote sign out in background (don't await it)
   //   signOut()
   //     .then((result) => {
-  //       console.log("Background sign out completed:", result);
+  //       log.info("Background sign out completed:", result);
   //     })
   //     .catch((error) => {
-  //       console.log("Background sign out failed:", error);
+  //       log.error("Background sign out failed:", error);
   //     });
   // };
 

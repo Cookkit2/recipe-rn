@@ -1,16 +1,17 @@
 import { setStatusBarStyle } from "expo-status-bar";
 import Purchases from "react-native-purchases";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
+import { log } from "./logger";
 
 export const isValidSubscription = async () => {
   try {
     const customerInfo = await Purchases.getCustomerInfo();
-    console.log("Customer Info:", customerInfo);
+    log.info("Customer Info:", customerInfo);
     const entitlements = customerInfo.entitlements.active["Pro"];
 
     return entitlements;
   } catch (e) {
-    console.error(e);
+    log.error(e);
   }
 };
 

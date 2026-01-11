@@ -1,6 +1,7 @@
 import { storageConfigs } from "~/data/storage/storage-config";
 import { StorageFactory } from "~/data/storage";
 import type { AuthSession } from "~/types/AuthTypes";
+import { log } from "~/utils/logger";
 
 /**
  * Secure storage integration for authentication tokens
@@ -57,9 +58,9 @@ export class AuthStorageManager {
         true
       );
 
-      console.log("Auth session stored securely");
+      log.info("Auth session stored securely");
     } catch (error) {
-      console.error("Failed to store auth session:", error);
+      log.error("Failed to store auth session:", error);
       throw new Error("Failed to store authentication session");
     }
   }
@@ -83,14 +84,14 @@ export class AuthStorageManager {
       // Check if session is expired
       const expiresAt = new Date(session.expiresAt);
       if (expiresAt <= new Date()) {
-        console.log("Stored session is expired");
+        log.info("Stored session is expired");
         await this.clearSession();
         return null;
       }
 
       return session;
     } catch (error) {
-      console.error("Failed to retrieve auth session:", error);
+      log.error("Failed to retrieve auth session:", error);
       return null;
     }
   }
@@ -106,7 +107,7 @@ export class AuthStorageManager {
       );
       return token || null;
     } catch (error) {
-      console.error("Failed to retrieve access token:", error);
+      log.error("Failed to retrieve access token:", error);
       return null;
     }
   }
@@ -122,7 +123,7 @@ export class AuthStorageManager {
       );
       return token || null;
     } catch (error) {
-      console.error("Failed to retrieve refresh token:", error);
+      log.error("Failed to retrieve refresh token:", error);
       return null;
     }
   }
@@ -136,9 +137,9 @@ export class AuthStorageManager {
         this.storage.delete(key);
       });
 
-      console.log("Auth session cleared");
+      log.info("Auth session cleared");
     } catch (error) {
-      console.error("Failed to clear auth session:", error);
+      log.error("Failed to clear auth session:", error);
       throw new Error("Failed to clear authentication session");
     }
   }
@@ -171,9 +172,9 @@ export class AuthStorageManager {
         );
       }
 
-      console.log("Access token updated");
+      log.info("Access token updated");
     } catch (error) {
-      console.error("Failed to update access token:", error);
+      log.error("Failed to update access token:", error);
       throw new Error("Failed to update access token");
     }
   }
@@ -185,7 +186,7 @@ export class AuthStorageManager {
     try {
       return this.storage.contains(this.KEYS.ACCESS_TOKEN);
     } catch (error) {
-      console.error("Failed to check for stored session:", error);
+      log.error("Failed to check for stored session:", error);
       return false;
     }
   }
@@ -229,7 +230,7 @@ export const createSupabaseStorageAdapter = () => {
       try {
         return await authStorage.getStringAsync(key);
       } catch (error) {
-        console.error(`Failed to get item ${key}:`, error);
+        log.error(`Failed to get item ${key}:`, error);
         return null;
       }
     },
@@ -238,7 +239,7 @@ export const createSupabaseStorageAdapter = () => {
       try {
         await authStorage.setStringAsync(key, value);
       } catch (error) {
-        console.error(`Failed to set item ${key}:`, error);
+        log.error(`Failed to set item ${key}:`, error);
       }
     },
 
@@ -246,7 +247,7 @@ export const createSupabaseStorageAdapter = () => {
       try {
         await authStorage.removeAsync(key);
       } catch (error) {
-        console.error(`Failed to remove item ${key}:`, error);
+        log.error(`Failed to remove item ${key}:`, error);
       }
     },
   };

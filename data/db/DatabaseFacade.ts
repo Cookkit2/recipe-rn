@@ -21,6 +21,7 @@ import {
   roundToReasonablePrecision,
 } from "~/utils/unit-converter";
 import { isIngredientMatch } from "~/utils/ingredient-matching";
+import { log } from "~/utils/logger";
 
 // Public interfaces for database operations
 export interface CreateStockData {
@@ -155,7 +156,7 @@ export class DatabaseFacade {
       await this.recipes.initialize();
     } catch (error) {
       // Log error to aid debugging, but prevent app crashes
-      console.error("DatabaseFacade initialization failed:", error);
+      log.error("DatabaseFacade initialization failed:", error);
     }
   }
 
@@ -192,7 +193,7 @@ export class DatabaseFacade {
         title: step.title,
         description: step.description,
       })),
-      ingredients: result.ingredients.map((ingredient: any) => ({
+      ingredients: result.ingredients.map((ingredient) => ({
         id: ingredient.id,
         name: ingredient.name,
         quantity: ingredient.quantity,
@@ -361,10 +362,10 @@ export class DatabaseFacade {
   async convertUnits(toUnitSystem: "si" | "imperial"): Promise<void> {
     try {
       const allStockItems = await this.stocks.findAll();
-      console.log(`📦 Found ${allStockItems.length} stock items to convert`);
+      log.info(`📦 Found ${allStockItems.length} stock items to convert`);
 
       if (allStockItems.length === 0) {
-        console.log("ℹ️ No stock items to convert");
+        log.info("ℹ️ No stock items to convert");
         return;
       }
 
@@ -394,19 +395,16 @@ export class DatabaseFacade {
             skippedCount++;
           }
         } catch (error) {
-          console.warn(
-            `⚠️ Failed to convert stock item ${stockItem.name}:`,
-            error
-          );
+          log.warn(`⚠️ Failed to convert stock item ${stockItem.name}:`, error);
           errorCount++;
         }
       }
 
-      console.log(
+      log.info(
         `✅ Conversion: ${convertedCount} converted, ${skippedCount} skipped, ${errorCount} errors`
       );
     } catch (error) {
-      console.error(`❌ Error during unit conversion:`, error);
+      log.error(`❌ Error during unit conversion:`, error);
     }
   }
 
@@ -645,7 +643,7 @@ export class DatabaseFacade {
         ),
       };
     } catch (error) {
-      console.error("❌ Error in getAvailableRecipes:", error);
+      log.error("❌ Error in getAvailableRecipes:", error);
       return { canMake: [], partiallyCanMake: [] };
     }
   }
@@ -745,7 +743,7 @@ export class DatabaseFacade {
           });
         }
       } catch (error) {
-        console.warn(`⚠️ Error clearing ${collectionName}:`, error);
+        log.warn(`⚠️ Error clearing ${collectionName}:`, error);
       }
     }
   }

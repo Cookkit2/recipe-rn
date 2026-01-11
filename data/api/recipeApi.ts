@@ -10,6 +10,7 @@ import {
 import { isIngredientMatch } from "~/utils/ingredient-matching";
 import type { Diet } from "~/components/Preferences/DietarySection";
 import type { Allergen } from "~/components/Preferences/AllergySection";
+import { log } from "~/utils/logger";
 
 /**
  * Check if a recipe is suitable based on user's dietary preferences and allergens
@@ -191,11 +192,11 @@ export const recipeApi = {
 
       const recipe = await convertDbRecipeToUIRecipe(dbRecipe);
 
-      console.log("Found recipe in DB:", recipe.ingredients);
+      log.info("Found recipe in DB:", recipe.ingredients);
 
       return recipe;
     } catch (error) {
-      console.error("Error getting recipe by id:", error);
+      log.error("Error getting recipe by id:", error);
       // Error getting recipe by id
       return null;
     }
@@ -223,7 +224,7 @@ export const recipeApi = {
 
       return await Promise.all(dbRecipes.map(convertDbRecipeToUIRecipe));
     } catch (error) {
-      console.error("Error searching recipes:", error);
+      log.error("Error searching recipes:", error);
       // Error searching recipes
       return [];
     }

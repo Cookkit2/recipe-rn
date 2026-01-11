@@ -9,6 +9,7 @@ import { convertToUnitSystem } from "~/utils/unit-converter";
 // import z from "zod/v4";
 // import Constants from "expo-constants";
 import { generateGeminiContent } from "~/utils/gemini-api";
+import { log } from "~/utils/logger";
 
 // Return your answer ONLY in the format: \`name,quantity,unit\`
 // - If the quantity on a known food item is unreadable, use \`1\` and \`unit\`.
@@ -54,7 +55,7 @@ export const classifyStaticImage = async (skImage: SkImage) => {
   //   }),
   // });
 
-  // console.log(objectResult.object);
+  // log.info(objectResult.object);
 
   const geminiResponse = await generateGeminiContent(
     JSON.stringify({
@@ -74,13 +75,13 @@ export const classifyStaticImage = async (skImage: SkImage) => {
     })
   );
 
-  console.log("Gemini response:", geminiResponse);
+  log.info("Gemini response:", geminiResponse);
 
   const ingredientName = postProcessResponse(geminiResponse);
   const endTime = performance.now();
   const duration = endTime - startTime;
 
-  console.log(`classifyStaticImage took ${duration} milliseconds`);
+  log.info(`classifyStaticImage took ${duration} milliseconds`);
   return ingredientName;
 };
 

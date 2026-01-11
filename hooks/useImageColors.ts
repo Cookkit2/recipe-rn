@@ -2,16 +2,7 @@ import { useEffect, useState } from "react";
 import type { ImageSourcePropType } from "react-native";
 import useColors from "./useColor";
 import { getColors } from "react-native-image-colors";
-
-// Try to import the native module with fallback
-// let getColors: any = null;
-// try {
-//   const imageColors = require("react-native-image-colors");
-//   getColors = imageColors.getColors;
-// } catch (error) {
-//   console.warn("react-native-image-colors not available, using fallback");
-//   getColors = null;
-// }
+import { log } from "~/utils/logger";
 
 const useImageColors = (url: string | ImageSourcePropType | undefined) => {
   const colors = useColors();
@@ -38,6 +29,7 @@ const useImageColors = (url: string | ImageSourcePropType | undefined) => {
             break;
         }
       } catch (error) {
+        log.error("Error fetching image colors:", error);
         // Fallback color
         setImageColor("#4ECDC4");
       }
