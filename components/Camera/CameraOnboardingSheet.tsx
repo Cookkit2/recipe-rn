@@ -25,7 +25,7 @@ const FRAME_HEIGHT = 400;
 const FRAME_WIDTH = FRAME_HEIGHT * FRAME_ASPECT_RATIO;
 
 export default function CameraOnboardingSheet() {
-  const [showOnboarding, setShowOnboarding] = useLocalStorageState(
+  const [isOnboardingComplete, setIsOnboardingComplete] = useLocalStorageState(
     CAMERA_ONBOARDING_COMPLETED_KEY,
     { defaultValue: false }
   );
@@ -39,37 +39,37 @@ export default function CameraOnboardingSheet() {
   });
 
   useEffect(() => {
-    if (showOnboarding) {
+    if (!isOnboardingComplete) {
       bottomSheetRef.current?.expand();
       player.play();
     } else {
       bottomSheetRef.current?.close();
       player.pause();
     }
-  }, [showOnboarding, player]);
+  }, [isOnboardingComplete, player]);
 
   const handleSheetChanges = useCallback(
     (index: number) => {
       if (index === -1) {
-        setShowOnboarding(false);
+        setIsOnboardingComplete(true);
         player.pause();
       }
     },
-    [player, setShowOnboarding]
+    [player, setIsOnboardingComplete]
   );
 
   const handleComplete = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     player.pause();
     bottomSheetRef.current?.close();
-    setShowOnboarding(true);
+    setIsOnboardingComplete(true);
   };
 
   return (
     <Portal name="camera-onboarding-sheet">
       <BottomSheet
         ref={bottomSheetRef}
-        index={showOnboarding ? 0 : -1}
+        index={isOnboardingComplete ? -1 : 0}
         snapPoints={["85%"]}
         onChange={handleSheetChanges}
         enablePanDownToClose
