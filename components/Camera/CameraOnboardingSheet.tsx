@@ -72,7 +72,7 @@ export default function CameraOnboardingSheet() {
         try {
           player?.pause();
         } catch (error) {
-          console.warn("Failed to pause video on sheet close:", error);
+          log.warn("Failed to pause video on sheet close:", error);
         }
       }
     },
@@ -84,7 +84,7 @@ export default function CameraOnboardingSheet() {
     try {
       player?.pause();
     } catch (error) {
-      console.warn("Failed to pause video on complete:", error);
+      log.warn("Failed to pause video on complete:", error);
     }
     bottomSheetRef.current?.close();
     setIsOnboardingComplete(true);
