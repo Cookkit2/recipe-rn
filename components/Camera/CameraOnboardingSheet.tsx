@@ -28,8 +28,11 @@ const FRAME_WIDTH = FRAME_HEIGHT * FRAME_ASPECT_RATIO;
 export default function CameraOnboardingSheet() {
   const [isOnboardingComplete, setIsOnboardingComplete] = useLocalStorageState(
     CAMERA_ONBOARDING_COMPLETED_KEY,
-    { defaultValue: true }
+    {
+      defaultValue: false,
+    }
   );
+  const [isLoaded, setIsLoaded] = React.useState(false);
   const bottomSheetRef = useRef<BottomSheet>(null);
   const { bottom } = useSafeAreaInsets();
   const colors = useColors();
@@ -39,7 +42,18 @@ export default function CameraOnboardingSheet() {
     player.muted = true;
   });
 
+  // Wait for storage to load before showing the sheet
   useEffect(() => {
+    // Small delay to ensure storage has loaded
+    const timer = setTimeout(() => {
+      setIsLoaded(true);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+
     if (!isOnboardingComplete) {
       bottomSheetRef.current?.expand();
       try {
@@ -63,7 +77,7 @@ export default function CameraOnboardingSheet() {
         // Silent cleanup - player may already be disposed
       }
     };
-  }, [isOnboardingComplete, player]);
+  }, [isOnboardingComplete, player, isLoaded]);
 
   const handleSheetChanges = useCallback(
     (index: number) => {
@@ -89,6 +103,11 @@ export default function CameraOnboardingSheet() {
     bottomSheetRef.current?.close();
     setIsOnboardingComplete(true);
   };
+
+  // Don't render until storage has loaded
+  if (!isLoaded) {
+    return null;
+  }
 
   return (
     <Portal name="camera-onboarding-sheet">

@@ -39,37 +39,29 @@ export const recipeApi = {
   getRecipeWithDetailsSupabase: async (
     recipeId: string
   ): Promise<SupabaseRecipeWithDetails | null> => {
-    // Fetch recipe details
-    const { data: recipe, error: recipeError } = await supabase
+    // Fetch recipe with related data in a single query using relationship expansion
+    const { data, error } = await supabase
       .from("recipe")
-      .select("*")
+      .select(
+        `
+        *,
+        recipe_step!recipe_step_recipe_id_fkey(*),
+        pivot_recipe_ingredient!pivot_recipe_ingredient_recipe_id_fkey(*)
+      `
+      )
       .eq("id", recipeId)
+      .order("step", { referencedTable: "recipe_step", ascending: true })
       .single();
 
-    if (recipeError) throw recipeError;
-    if (!recipe) return null;
+    if (error) throw error;
+    if (!data) return null;
 
-    // Fetch recipe steps
-    const { data: steps, error: stepsError } = await supabase
-      .from("recipe_step")
-      .select("*")
-      .eq("recipe_id", recipeId)
-      .order("step", { ascending: true });
-
-    if (stepsError) throw stepsError;
-
-    // Fetch recipe ingredients
-    const { data: ingredients, error: ingredientsError } = await supabase
-      .from("pivot_recipe_ingredient")
-      .select("*")
-      .eq("recipe_id", recipeId);
-
-    if (ingredientsError) throw ingredientsError;
-
-    const currentRecipe = {
-      recipe,
-      steps: steps || [],
-      ingredients: ingredients || [],
+    // Transform the nested structure to match our interface
+    const currentRecipe: SupabaseRecipeWithDetails = {
+      recipe: data,
+      steps: (data.recipe_step || []) as Tables<"recipe_step">[],
+      ingredients: (data.pivot_recipe_ingredient ||
+        []) as Tables<"pivot_recipe_ingredient">[],
     };
 
     return currentRecipe;
@@ -81,20 +73,30 @@ export const recipeApi = {
   getRecipesWithDetailsSupabase: async (
     limit: number = 1000
   ): Promise<SupabaseRecipeWithDetails[]> => {
-    // First get the newest recipes
-    const recipes = await recipeApi.getNewestRecipes(limit);
+    // Fetch all recipes with related data in a single query using relationship expansion
+    const { data, error } = await supabase
+      .from("recipe")
+      .select(
+        `
+        *,
+        recipe_step!recipe_step_recipe_id_fkey(*),
+        pivot_recipe_ingredient!pivot_recipe_ingredient_recipe_id_fkey(*)
+      `
+      )
+      .order("id", { ascending: false })
+      .order("step", { referencedTable: "recipe_step", ascending: true })
+      .limit(limit);
 
-    // Then fetch details for each recipe
-    const recipesWithDetails = await Promise.all(
-      recipes.map(async (recipe) => {
-        const details = await recipeApi.getRecipeWithDetailsSupabase(recipe.id);
-        return details; // May be null, will filter below
-      })
-    );
+    if (error) throw error;
+    if (!data) return [];
 
-    const filtered = recipesWithDetails.filter((recipe) => recipe !== null);
-
-    return filtered;
+    // Transform the nested structure to match our interface
+    return data.map((recipe) => ({
+      recipe,
+      steps: (recipe.recipe_step || []) as Tables<"recipe_step">[],
+      ingredients: (recipe.pivot_recipe_ingredient ||
+        []) as Tables<"pivot_recipe_ingredient">[],
+    }));
   },
 
   /**
