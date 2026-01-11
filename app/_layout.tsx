@@ -46,7 +46,7 @@ Sentry.init({
   // Set tracesSampleRate based on environment
   // In development: 100% for testing
   // In production: 20% to reduce overhead and costs
-  tracesSampleRate: __DEV__ ? 1.0 : 0.2,
+  tracesSampleRate: __DEV__ ? 1.0 : 0.5,
 
   // profilesSampleRate is relative to tracesSampleRate.
   // Sample 100% of traced transactions for profiling
