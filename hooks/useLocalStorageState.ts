@@ -59,7 +59,6 @@ function useAsyncStorage<T>(
 ): LocalStorageState<T | undefined> {
   const [value, setValue] = useState<T | undefined>(defaultValue);
   const [isPersistent, setIsPersistent] = useState(true);
-  const isInitialized = useRef(false);
 
   // Load initial value from storage
   useEffect(() => {
@@ -106,8 +105,6 @@ function useAsyncStorage<T>(
           setValue(defaultValue);
           setIsPersistent(false);
         }
-      } finally {
-        isInitialized.current = true;
       }
     };
 

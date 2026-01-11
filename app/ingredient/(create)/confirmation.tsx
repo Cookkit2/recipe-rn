@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useTransition } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { View, ActivityIndicator } from "react-native";
 import Animated, { LinearTransition } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -24,11 +24,15 @@ export default function ConfirmationPage() {
   const router = useRouter();
   const addPantryItemsWithMetadata = useAddPantryItemsWithMetadata();
 
-  const [isSavingIngredients, setIsSavingIngredients] = React.useState(false);
+  const [isSavingIngredients, setIsSavingIngredients] = useState(false);
 
   useEffect(() => {
     setStatusBarStyle("auto", true);
   }, []);
+
+  const completedItems = processPantryItems.filter(
+    (item) => item.status === undefined
+  );
 
   const onSaveAllIngredients = useCallback(async () => {
     try {
@@ -40,7 +44,7 @@ export default function ConfirmationPage() {
       });
       router.dismissTo("/");
     } catch {
-      toast.error("Error saving all recipe");
+      toast.error("Error saving ingredients");
     } finally {
       setIsSavingIngredients(false);
     }
@@ -86,7 +90,12 @@ export default function ConfirmationPage() {
           variant="secondary"
           className="rounded-2xl border-continuous bg-foreground/80"
           onPress={onSaveAllIngredients}
-          disabled={isSavingIngredients || processPantryItems.length === 0}
+          // on allow save when there are all completed items
+          disabled={
+            isSavingIngredients ||
+            processPantryItems.length === 0 ||
+            completedItems.length === 0
+          }
         >
           <TextShimmer className="flex-row items-center gap-2 justify-center">
             {isSavingIngredients && <ActivityIndicator />}

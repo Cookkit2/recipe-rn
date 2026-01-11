@@ -9,21 +9,12 @@ import FocusingAreaIndicator from "~/components/Camera/FocusingAreaIndicator";
 import { H4, P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
 import { CameraIcon } from "lucide-nativewind";
-import type { SkImage } from "@shopify/react-native-skia";
-import type { PantryItemConfirmation } from "~/types/PantryItem";
-import type { Prettify } from "~/utils/type-prettier";
 import { setStatusBarStyle } from "expo-status-bar";
 import { useCameraPermissions } from "~/hooks/useCameraPermissions";
 import CameraActionRow from "~/components/Camera/CameraActionRow";
 import CameraLayout from "~/components/Camera/CameraLayout";
 
 export const CAMERA_RESOLUTION = { width: 3024, height: 4032 };
-
-export type SegmentedImage = Prettify<
-  Omit<PantryItemConfirmation, "id" | "image_url"> & {
-    skImage: SkImage;
-  }
->;
 
 export default function CreateIngredient() {
   const { hasPermission, handlePermissionRequest } = useCameraPermissions();

@@ -4,7 +4,6 @@ import React, {
   useContext,
   useRef,
   useState,
-  startTransition,
 } from "react";
 import type { ItemType, PantryItem } from "~/types/PantryItem";
 import { useWindowDimensions } from "react-native";
@@ -123,20 +122,18 @@ export function CreateIngredientProvider({
         file.write(base64, { encoding: "base64" });
 
         // Step 3: Update the item with the segmented image first
-        startTransition(() => {
-          setProcessPantryItems((prev) =>
-            prev.map((i) =>
-              i.id === itemId
-                ? {
-                    ...i,
-                    image_url: file.uri,
-                    background_color: segmentedImage.background_color,
-                    status: "classifying", // Segmentation done, now classifying
-                  }
-                : i
-            )
-          );
-        });
+        setProcessPantryItems((prev) =>
+          prev.map((i) =>
+            i.id === itemId
+              ? {
+                  ...i,
+                  image_url: file.uri,
+                  background_color: segmentedImage.background_color,
+                  status: "classifying", // Segmentation done, now classifying
+                }
+              : i
+          )
+        );
 
         // Step 4: Classify the image
         const content = await classifyStaticImage(skImage);
@@ -149,24 +146,22 @@ export function CreateIngredientProvider({
         const expiryDate = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000);
 
         // Step 5: Update with classification results
-        startTransition(() => {
-          setProcessPantryItems((prev) =>
-            prev.map((i) =>
-              i.id === itemId
-                ? {
-                    ...i,
-                    name: titleCase(content.name),
-                    quantity: content.quantity,
-                    unit: content.unit,
-                    expiry_date: expiryDate,
-                    status: undefined,
-                    imagePath: undefined,
-                    framePosition: undefined,
-                  }
-                : i
-            )
-          );
-        });
+        setProcessPantryItems((prev) =>
+          prev.map((i) =>
+            i.id === itemId
+              ? {
+                  ...i,
+                  name: titleCase(content.name),
+                  quantity: content.quantity,
+                  unit: content.unit,
+                  expiry_date: expiryDate,
+                  status: undefined,
+                  imagePath: undefined,
+                  framePosition: undefined,
+                }
+              : i
+          )
+        );
 
         // Step 6: Fetch base ingredient data in the background
         try {
@@ -180,56 +175,52 @@ export function CreateIngredientProvider({
               Date.now() + baseIngredient.days_to_expire * 24 * 60 * 60 * 1000
             );
 
-            startTransition(() => {
-              setProcessPantryItems((prev) =>
-                prev.map((i) => {
-                  if (i.id === itemId) {
-                    return {
-                      ...i,
-                      name: baseIngredient.name,
-                      expiry_date: newExpiryDate,
-                      type: baseIngredient.storage_type as Exclude<
-                        ItemType,
-                        "all"
-                      >,
-                      base_ingredient_id: baseIngredient.id,
-                      base_ingredient_name: baseIngredient.name,
-                      synonyms: baseIngredient.synonyms,
-                      categories: baseIngredient.categories,
-                    };
-                  }
-                  return i;
-                })
-              );
-            });
+            setProcessPantryItems((prev) =>
+              prev.map((i) => {
+                if (i.id === itemId) {
+                  return {
+                    ...i,
+                    name: baseIngredient.name,
+                    expiry_date: newExpiryDate,
+                    type: baseIngredient.storage_type as Exclude<
+                      ItemType,
+                      "all"
+                    >,
+                    base_ingredient_id: baseIngredient.id,
+                    base_ingredient_name: baseIngredient.name,
+                    synonyms: baseIngredient.synonyms,
+                    categories: baseIngredient.categories,
+                  };
+                }
+                return i;
+              })
+            );
           }
-        } catch {
+        } catch (error) {
+          log.error("Error fetching base ingredient after processing:", error);
           // Continue with default values if fetch fails
         }
 
         // Haptic feedback for success
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("Processing error:", error);
+        log.error("Processing error:", error);
 
         // Mark as failed
-        startTransition(() => {
-          setProcessPantryItems((prev) =>
-            prev.map((i) =>
-              i.id === itemId
-                ? {
-                    ...i,
-                    status: "failed" as const,
-                    error:
-                      error instanceof Error
-                        ? error.message
-                        : "Processing failed",
-                  }
-                : i
-            )
-          );
-        });
+        setProcessPantryItems((prev) =>
+          prev.map((i) =>
+            i.id === itemId
+              ? {
+                  ...i,
+                  status: "failed" as const,
+                  error:
+                    error instanceof Error
+                      ? error.message
+                      : "Processing failed",
+                }
+              : i
+          )
+        );
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
     },
@@ -325,28 +316,23 @@ export function CreateIngredientProvider({
           );
 
           // Update the item with new details
-          startTransition(() => {
-            setProcessPantryItems((prev) =>
-              prev.map((item) => {
-                if (item.id === currentItem.id) {
-                  return {
-                    ...item,
-                    name: baseIngredient.name, // Use the standardized name
-                    expiry_date: expiryDate,
-                    type: baseIngredient.storage_type as Exclude<
-                      ItemType,
-                      "all"
-                    >,
-                    base_ingredient_id: baseIngredient.id,
-                    base_ingredient_name: baseIngredient.name,
-                    synonyms: baseIngredient.synonyms,
-                    categories: baseIngredient.categories,
-                  };
-                }
-                return item;
-              })
-            );
-          });
+          setProcessPantryItems((prev) =>
+            prev.map((item) => {
+              if (item.id === currentItem.id) {
+                return {
+                  ...item,
+                  name: baseIngredient.name, // Use the standardized name
+                  expiry_date: expiryDate,
+                  type: baseIngredient.storage_type as Exclude<ItemType, "all">,
+                  base_ingredient_id: baseIngredient.id,
+                  base_ingredient_name: baseIngredient.name,
+                  synonyms: baseIngredient.synonyms,
+                  categories: baseIngredient.categories,
+                };
+              }
+              return item;
+            })
+          );
         }
       } catch (error) {
         log.error("Error fetching base ingredient on update:", error);
