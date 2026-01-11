@@ -22,6 +22,7 @@ export type LocalStorageState<T> = [
   {
     isPersistent: boolean;
     removeItem: () => void;
+    isLoading: boolean;
   },
 ];
 
@@ -59,6 +60,7 @@ function useAsyncStorage<T>(
 ): LocalStorageState<T | undefined> {
   const [value, setValue] = useState<T | undefined>(defaultValue);
   const [isPersistent, setIsPersistent] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Load initial value from storage
   useEffect(() => {
@@ -70,6 +72,7 @@ function useAsyncStorage<T>(
           if (mounted) {
             setValue(inMemoryData.get(key) as T | undefined);
             setIsPersistent(false);
+            setIsLoading(false);
           }
           return;
         }
@@ -105,6 +108,8 @@ function useAsyncStorage<T>(
           setValue(defaultValue);
           setIsPersistent(false);
         }
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -161,9 +166,10 @@ function useAsyncStorage<T>(
       {
         isPersistent,
         removeItem,
+        isLoading,
       },
     ],
-    [value, setState, isPersistent, removeItem]
+    [value, setState, isPersistent, removeItem, isLoading]
   );
 }
 
