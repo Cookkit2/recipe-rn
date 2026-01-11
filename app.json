@@ -13,7 +13,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "app.cookkit.cookkit",
@@ -32,7 +34,9 @@
         "backgroundColor": "#ffffff"
       },
       "package": "app.cookkit.cookkit",
-      "permissions": ["android.permission.CAMERA"]
+      "permissions": [
+        "android.permission.CAMERA"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -40,7 +44,9 @@
       "favicon": "./assets/favicon.png"
     },
     "linking": {
-      "prefixes": ["recipe-app://"],
+      "prefixes": [
+        "recipe-app://"
+      ],
       "config": {
         "screens": {
           "auth": {
@@ -140,7 +146,15 @@
         }
       ],
       "expo-web-browser",
-      "expo-video"
+      "expo-video",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "react-native",
+          "organization": "cookkit-d6"
+        }
+      ]
     ],
     "experiments": {
       "reactCompiler": true,
