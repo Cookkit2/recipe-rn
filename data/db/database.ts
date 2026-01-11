@@ -6,6 +6,7 @@ import LokiJSAdapter from "@nozbe/watermelondb/adapters/lokijs";
 import schema from "./schema";
 import migrations from "./migrations";
 import { modelClasses } from "./models";
+import { log } from "~/utils/logger";
 
 // Create the adapter based on platform
 const createAdapter = () => {
@@ -18,20 +19,20 @@ const createAdapter = () => {
       useIncrementalIndexedDB: true,
       dbName: "recipe_app",
       onQuotaExceededError: (error) => {
-        console.error("Browser ran out of disk space:", error);
+        log.error("Browser ran out of disk space:", error);
         // Could show user a message to clear data or reload
       },
       onSetUpError: (error) => {
-        console.error("Database failed to load:", error);
+        log.error("Database failed to load:", error);
         // Could show user a message to reload the app
       },
       extraIncrementalIDBOptions: {
         onDidOverwrite: () => {
-          console.warn("Database overwritten by another tab");
+          log.warn("Database overwritten by another tab");
           // Could try to sync or alert user
         },
         onversionchange: () => {
-          console.warn("Database deleted in another tab");
+          log.warn("Database deleted in another tab");
           // Could reload the page
           if (typeof window !== "undefined") {
             window.location.reload();
@@ -47,7 +48,7 @@ const createAdapter = () => {
       dbName: "recipe_app",
       jsi: true, // Use JSI for better performance
       onSetUpError: (error) => {
-        console.error("Database failed to load:", error);
+        log.error("Database failed to load:", error);
         // Could show user a message to reload the app or clear data
       },
     });
@@ -57,7 +58,7 @@ const createAdapter = () => {
 // Create the database instance
 const adapter = createAdapter();
 
-console.log("🔍 Creating WatermelonDB database instance...");
+log.info("🔍 Creating WatermelonDB database instance...");
 
 export const database = new Database({
   adapter,
@@ -65,7 +66,7 @@ export const database = new Database({
   // Note: Removed actionsEnabled as it may not be supported in this version
 });
 
-console.log("✅ WatermelonDB database created successfully");
+log.info("✅ WatermelonDB database created successfully");
 
 // Helper function to get collections
 export const collections = {
@@ -80,7 +81,7 @@ export const collections = {
   cookingHistory: database.collections.get("cooking_history"),
 };
 
-console.log("✅ Database collections initialized");
+log.info("✅ Database collections initialized");
 
 // Export database as default
 export default database;

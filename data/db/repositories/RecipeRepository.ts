@@ -11,6 +11,7 @@ import {
   type SupabaseRecipeWithDetails,
 } from "~/data/supabase-api/RecipeApi";
 import type { Tables } from "~/lib/supabase/supabase-types";
+import { log } from "~/utils/logger";
 
 export interface RecipeSearchOptions extends SearchOptions {
   tags?: string[];
@@ -321,18 +322,16 @@ export class RecipeRepository extends BaseRepository<Recipe> {
     try {
       const recipesWithDetails =
         await recipeApi.getRecipesWithDetailsSupabase(limit);
-      console.log(
-        `Syncing ${recipesWithDetails.length} recipes from Supabase...`
-      );
-      // console.log("First recipe preview:", recipesWithDetails[0]?.ingredients);
+      log.info(`Syncing ${recipesWithDetails.length} recipes from Supabase...`);
+      // log.info("First recipe preview:", recipesWithDetails[0]?.ingredients);
 
       // Check if we have recipes to sync
       if (recipesWithDetails.length === 0) {
-        console.log("No recipes found to sync from Supabase");
+        log.info("No recipes found to sync from Supabase");
         return;
       }
 
-      console.log(`First recipe: ${recipesWithDetails[0]?.recipe.title}`);
+      log.info(`First recipe: ${recipesWithDetails[0]?.recipe.title}`);
 
       // Get all existing recipe IDs to check for updates vs new recipes
       const existingRecipeIds = new Set<string>();
@@ -351,7 +350,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
         }
       });
 
-      console.log(
+      log.info(
         `Found ${newRecipes.length} new recipes and ${existingRecipesToUpdate.length} existing recipes to update`
       );
 
@@ -361,9 +360,9 @@ export class RecipeRepository extends BaseRepository<Recipe> {
         for (const supabaseRecipe of newRecipes) {
           try {
             await this.syncSingleRecipe(supabaseRecipe);
-            // console.log(`Created new recipe: ${supabaseRecipe.recipe.title}`);
+            // log.info(`Created new recipe: ${supabaseRecipe.recipe.title}`);
           } catch (error) {
-            console.error(
+            log.error(
               `Failed to create recipe ${supabaseRecipe.recipe.title}:`,
               error
             );
@@ -374,9 +373,9 @@ export class RecipeRepository extends BaseRepository<Recipe> {
         for (const supabaseRecipe of existingRecipesToUpdate) {
           try {
             await this.updateExistingRecipe(supabaseRecipe);
-            // console.log(`Updated existing recipe: ${supabaseRecipe.recipe.title}`);
+            // log.info(`Updated existing recipe: ${supabaseRecipe.recipe.title}`);
           } catch (error) {
-            console.error(
+            log.error(
               `Failed to update recipe ${supabaseRecipe.recipe.title}:`,
               error
             );
@@ -386,9 +385,9 @@ export class RecipeRepository extends BaseRepository<Recipe> {
 
       // Verify sync worked
       const localCount = await this.count();
-      console.log(`Local database now has ${localCount} recipes`);
+      log.info(`Local database now has ${localCount} recipes`);
     } catch (error) {
-      console.error("Error syncing from Supabase:", error);
+      log.error("Error syncing from Supabase:", error);
       throw error;
     }
   }

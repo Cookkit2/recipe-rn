@@ -9,6 +9,7 @@ import type {
   AuthSession,
 } from "~/types/AuthTypes";
 import type { AuthStrategy } from "./AuthStrategy";
+import { log } from "~/utils/logger";
 
 interface AuthStore {
   // State
@@ -60,7 +61,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   // Set the authentication strategy
   setStrategy: (strategy: AuthStrategy) => {
     const state = get();
-    
+
     // Set up auth state change listener
     strategy.onAuthStateChange((user) => {
       get()._setUser(user);
@@ -252,7 +253,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   // Sign out
   signOut: async () => {
-    console.log("AuthStore.signOut() called");
+    log.info("AuthStore.signOut() called");
     const { strategy } = get();
     if (!strategy) {
       // Allow sign out even without strategy to clear local state
@@ -267,7 +268,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
     try {
       const result = await strategy.signOut();
-      console.log("Strategy.signOut() completed:", result.success);
+      log.info("Strategy.signOut() completed:", result.success);
 
       // Clear local state regardless of strategy result
       get()._setUser(null);
@@ -276,7 +277,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
       return result;
     } catch (error) {
-      console.error("Error in AuthStore.signOut():", error);
+      log.error("Error in AuthStore.signOut():", error);
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error occurred";
       get()._setError(errorMessage);
@@ -468,7 +469,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         get()._setAuthState("unauthenticated");
       }
     } catch (error) {
-      console.error("Auth initialization error:", error);
+      log.error("Auth initialization error:", error);
       get()._setAuthState("unauthenticated");
     } finally {
       get()._setLoading(false);
@@ -484,7 +485,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     try {
       return await strategy.validateSession();
     } catch (error) {
-      console.error("Session validation error:", error);
+      log.error("Session validation error:", error);
       return false;
     }
   },
@@ -496,7 +497,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   // Force sign out (bypass strategy)
   forceSignOut: () => {
-    console.log("Force sign out called - clearing all auth state");
+    log.info("Force sign out called - clearing all auth state");
     get()._setUser(null);
     get()._setSession(null);
     get()._setAuthState("unauthenticated");

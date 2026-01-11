@@ -17,6 +17,7 @@ import * as ExpoAuthSession from "expo-auth-session";
 import * as Linking from "expo-linking";
 import { APP_CONFIG } from "~/lib/constants";
 import { supabase } from "~/lib/supabase/supabase-client";
+import { log } from "~/utils/logger";
 
 /**
  * Supabase authentication strategy implementation
@@ -36,7 +37,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
    */
   private setupAuthListener(): void {
     supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Supabase auth state change:", event, session?.user?.id);
+      log.info("Supabase auth state change:", event, session?.user?.id);
 
       if (session?.user) {
         this.currentUser = this.mapSupabaseUserToUser(session.user);
@@ -145,7 +146,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
       } = await supabase.auth.getUser();
 
       if (error) {
-        console.warn("Error getting current user:", error);
+        log.warn("Error getting current user:", error);
         return null;
       }
 
@@ -156,7 +157,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
 
       return null;
     } catch (error) {
-      console.error("Error in getCurrentUser:", error);
+      log.error("Error in getCurrentUser:", error);
       return null;
     }
   }
@@ -169,7 +170,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
       } = await supabase.auth.getSession();
 
       if (error) {
-        console.warn("Error getting current session:", error);
+        log.warn("Error getting current session:", error);
         return null;
       }
 
@@ -180,7 +181,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
 
       return null;
     } catch (error) {
-      console.error("Error in getCurrentSession:", error);
+      log.error("Error in getCurrentSession:", error);
       return null;
     }
   }
@@ -212,7 +213,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
         true
       );
     } catch (error) {
-      console.error("Error in signInWithEmail:", error);
+      log.error("Error in signInWithEmail:", error);
       return this.createErrorResult(
         "SIGNIN_ERROR",
         "An unexpected error occurred during sign in",
@@ -229,7 +230,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
       const redirectUrl = ExpoAuthSession.makeRedirectUri({ scheme });
 
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: config.provider as any, // Supabase provider names match ours
+        provider: config.provider,
         options: {
           redirectTo: config.redirectUrl || redirectUrl,
           scopes: config.scopes?.join(" "),
@@ -280,7 +281,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
         true
       );
     } catch (error) {
-      console.error("Error in signInAnonymously:", error);
+      log.error("Error in signInAnonymously:", error);
       return this.createErrorResult(
         "ANONYMOUS_SIGNIN_ERROR",
         "An unexpected error occurred during anonymous sign in",
@@ -329,7 +330,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
         true
       );
     } catch (error) {
-      console.error("Error in signUpWithEmail:", error);
+      log.error("Error in signUpWithEmail:", error);
       return this.createErrorResult(
         "SIGNUP_ERROR",
         "An unexpected error occurred during sign up",
@@ -341,12 +342,12 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
 
   async signOut(): Promise<AuthResult> {
     try {
-      console.log("About to call supabase.auth.signOut()");
+      log.info("About to call supabase.auth.signOut()");
       const { error } = await supabase.auth.signOut();
-      console.log("supabase.auth.signOut() completed, error:", error);
+      log.info("supabase.auth.signOut() completed, error:", error);
 
       if (error) {
-        console.log(
+        log.info(
           "Supabase signOut returned error, clearing local state anyway"
         );
         // Still clear local state even if remote sign out failed
@@ -362,7 +363,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
         );
       }
 
-      console.log("Supabase signOut successful, clearing local state");
+      log.info("Supabase signOut successful, clearing local state");
       // Clear local state
       this.currentUser = null;
       this.currentSession = null;
@@ -370,7 +371,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
 
       return { success: true };
     } catch (error) {
-      console.error("Error in signOut:", error);
+      log.error("Error in signOut:", error);
 
       // Clear local state even on error
       this.currentUser = null;
@@ -410,7 +411,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
         true
       );
     } catch (error) {
-      console.error("Error in refreshSession:", error);
+      log.error("Error in refreshSession:", error);
       return this.createErrorResult(
         "REFRESH_ERROR",
         "An unexpected error occurred during session refresh",
@@ -459,7 +460,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
         true
       );
     } catch (error) {
-      console.error("Error in linkAnonymousAccount:", error);
+      log.error("Error in linkAnonymousAccount:", error);
       return this.createErrorResult(
         "LINK_ACCOUNT_ERROR",
         "An unexpected error occurred during account linking",
@@ -481,7 +482,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
 
       return { success: true };
     } catch (error) {
-      console.error("Error in resetPassword:", error);
+      log.error("Error in resetPassword:", error);
       return this.createErrorResult(
         "RESET_PASSWORD_ERROR",
         "An unexpected error occurred during password reset",
@@ -506,7 +507,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
       const expiresAt = session.expires_at ? session.expires_at * 1000 : 0;
       return expiresAt > Date.now();
     } catch (error) {
-      console.error("Error in validateSession:", error);
+      log.error("Error in validateSession:", error);
       return false;
     }
   }

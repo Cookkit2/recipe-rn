@@ -3,6 +3,7 @@ import { View, ScrollView, ActivityIndicator } from "react-native";
 import { H1, H3, P } from "~/components/ui/typography";
 import { databaseFacade } from "~/data/db/DatabaseFacade";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { log } from "~/utils/logger";
 
 export default function DebugDBScreen() {
   const [loading, setLoading] = useState(true);
@@ -40,7 +41,7 @@ export default function DebugDBScreen() {
 
       setRecipes(recipesWithDetails);
     } catch (error) {
-      console.error("Error loading data:", error);
+      log.error("Error loading data:", error);
     } finally {
       setLoading(false);
     }

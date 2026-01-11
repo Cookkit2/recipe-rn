@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
-import { InteractionManager } from 'react-native';
-import allModel from './allModel';
+import { useEffect, useState } from "react";
+import { InteractionManager } from "react-native";
+import allModel from "./allModel";
+import { log } from "~/utils/logger";
 
 interface ModelPreloaderOptions {
   delay?: number;
-  priority?: 'low' | 'normal' | 'high';
+  priority?: "low" | "normal" | "high";
   onLoadStart?: () => void;
   onLoadComplete?: () => void;
   onLoadError?: (error: Error) => void;
@@ -14,13 +15,13 @@ export const useModelPreloader = (options: ModelPreloaderOptions = {}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  
+
   const {
     delay = 100,
-    priority = 'low',
+    priority = "low",
     onLoadStart,
     onLoadComplete,
-    onLoadError
+    onLoadError,
   } = options;
 
   useEffect(() => {
@@ -28,29 +29,30 @@ export const useModelPreloader = (options: ModelPreloaderOptions = {}) => {
       try {
         setIsLoading(true);
         setError(null);
-        
+
         if (__DEV__) {
-          console.log(`Starting model preload with ${priority} priority...`);
+          log.info(`Starting model preload with ${priority} priority...`);
         }
-        
+
         onLoadStart?.();
-        
+
         // Wait for models to load
         await allModel.get();
-        
+
         setIsLoaded(true);
         onLoadComplete?.();
-        
+
         if (__DEV__) {
-          console.log('Model preload completed successfully');
+          log.info("Model preload completed successfully");
         }
       } catch (err) {
-        const error = err instanceof Error ? err : new Error('Model loading failed');
+        const error =
+          err instanceof Error ? err : new Error("Model loading failed");
         setError(error);
         onLoadError?.(error);
-        
+
         if (__DEV__) {
-          console.error('Model preload failed:', error);
+          log.error("Model preload failed:", error);
         }
       } finally {
         setIsLoading(false);
@@ -58,7 +60,7 @@ export const useModelPreloader = (options: ModelPreloaderOptions = {}) => {
     };
 
     const scheduleModelLoading = () => {
-      if (priority === 'high') {
+      if (priority === "high") {
         // Load immediately after interactions
         InteractionManager.runAfterInteractions(() => {
           loadModel();
@@ -90,6 +92,6 @@ export const useModelPreloader = (options: ModelPreloaderOptions = {}) => {
         setError(null);
         allModel.preload();
       }
-    }
+    },
   };
 };

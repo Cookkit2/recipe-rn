@@ -8,6 +8,7 @@ import { PREF_UNIT_SYSTEM_KEY } from "~/constants/storage-keys";
 import { toast } from "sonner-native";
 import { useRefreshPantryItems } from "~/hooks/queries/usePantryQueries";
 import { useRefreshRecipes } from "~/hooks/queries/useRecipeQueries";
+import { log } from "~/utils/logger";
 
 type UnitSystem = "si" | "imperial";
 
@@ -30,7 +31,7 @@ export default function UnitSection() {
         refreshPantry();
         refreshRecipe();
       } catch (error) {
-        console.error("Error converting units:", error);
+        log.error("Error converting units:", error);
         toast.error("Failed to convert units");
         setUnit(previousUnit);
         storage.set(PREF_UNIT_SYSTEM_KEY, previousUnit);

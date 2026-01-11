@@ -5,6 +5,7 @@ import type IngredientCategory from "~/data/db/models/IngredientCategory";
 import type IngredientSynonym from "~/data/db/models/IngredientSynonym";
 import type StockCategory from "~/data/db/models/StockCategory";
 import type { ItemType, PantryItem } from "~/types/PantryItem";
+import { log } from "~/utils/logger";
 
 /**
  * Pure API functions for pantry operations
@@ -16,20 +17,20 @@ export const pantryApi = {
    */
   async fetchAllPantryItems(): Promise<PantryItem[]> {
     try {
-      console.log("🔍 Fetching pantry items...");
+      log.info("🔍 Fetching pantry items...");
 
       // Check database health first
       const isHealthy = await databaseFacade.isHealthy();
-      console.log("Database healthy:", isHealthy);
+      log.info("Database healthy:", isHealthy);
 
       // Get raw count from database
       const stockCount = await databaseFacade.getStockCount();
-      console.log("Stock count in database:", stockCount);
+      log.info("Stock count in database:", stockCount);
 
       const stockItems = await databaseFacade.getAllStock();
 
       if (stockItems.length === 0) {
-        console.warn("⚠️ No stock items found in database");
+        log.warn("⚠️ No stock items found in database");
         return [];
       }
 
@@ -37,10 +38,10 @@ export const pantryApi = {
         stockItems.map(convertStockToPantryItem)
       );
 
-      console.log("✅ Converted pantry items:", pantryItemsConverted.length);
+      log.info("✅ Converted pantry items:", pantryItemsConverted.length);
       return pantryItemsConverted;
     } catch (error) {
-      console.error("❌ Error fetching pantry items:", error);
+      log.error("❌ Error fetching pantry items:", error);
       return [];
     }
   },
@@ -52,7 +53,7 @@ export const pantryApi = {
     item: Omit<PantryItem, "id" | "created_at" | "updated_at">
   ): Promise<PantryItem> {
     try {
-      console.log("🔍 Adding pantry item:", item);
+      log.info("🔍 Adding pantry item:", item);
 
       // Generate a temporary base ingredient ID
       // TODO: In the future, fetch from cloud API to get the actual base_ingredient_id
@@ -75,13 +76,13 @@ export const pantryApi = {
         scale: item.scale,
       };
 
-      console.log("📦 Creating stock item with data:", stockData);
+      log.info("📦 Creating stock item with data:", stockData);
 
       // Create stock item
       const stockItem = await databaseFacade.createStock(stockData);
 
-      console.log("✅ Stock item created:", stockItem.id, stockItem.name);
-      console.log("📊 Stock item details:", {
+      log.info("✅ Stock item created:", stockItem.id, stockItem.name);
+      log.info("📊 Stock item details:", {
         id: stockItem.id,
         name: stockItem.name,
         quantity: stockItem.quantity,
@@ -89,12 +90,12 @@ export const pantryApi = {
       });
 
       const convertedItem = await convertStockToPantryItem(stockItem);
-      console.log("✅ Converted pantry item:", convertedItem);
+      log.info("✅ Converted pantry item:", convertedItem);
 
       return convertedItem;
     } catch (error) {
-      console.error("❌ Error adding pantry item:", error);
-      console.error("Error details:", error);
+      log.error("❌ Error adding pantry item:", error);
+      log.error("Error details:", error);
       throw error;
     }
   },
@@ -130,7 +131,7 @@ export const pantryApi = {
 
           if (existingStock) {
             // Update existing stock item
-            console.log(`🔄 Updating existing pantry item: ${item.name}`);
+            log.info(`🔄 Updating existing pantry item: ${item.name}`);
 
             await existingStock.update((stock) => {
               // Update quantity (add to existing quantity)
@@ -157,7 +158,7 @@ export const pantryApi = {
             stockItem = existingStock;
           } else {
             // Create new stock item
-            console.log(`✨ Creating new pantry item: ${item.name}`);
+            log.info(`✨ Creating new pantry item: ${item.name}`);
 
             stockItem = (await stockCollection.create((stock) => {
               (stock as Stock).name = item.name;
@@ -216,10 +217,7 @@ export const pantryApi = {
           const convertedItem = await convertStockToPantryItem(stockItem);
           createdItems.push(convertedItem);
         } catch (error) {
-          console.error(
-            `Failed to add/update pantry item ${item.name}:`,
-            error
-          );
+          log.error(`Failed to add/update pantry item ${item.name}:`, error);
           // Continue with other items instead of failing completely
         }
       }
@@ -264,7 +262,7 @@ export const pantryApi = {
           );
           createdItems.push(convertedItem);
         } catch (error) {
-          console.error(`Failed to add pantry item ${item.name}:`, error);
+          log.error(`Failed to add pantry item ${item.name}:`, error);
           // Continue with other items instead of failing completely
         }
       }
@@ -360,7 +358,7 @@ const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
     const synonymRecords = await stock.synonyms.fetch();
     synonyms = synonymRecords.map((s) => ({ id: s.id, synonym: s.synonym }));
   } catch (error) {
-    console.error("Error fetching synonyms:", error);
+    log.error("Error fetching synonyms:", error);
   }
 
   return {

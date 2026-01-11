@@ -18,6 +18,7 @@ import {
   PREFERENCE_COMPLETED_KEY,
   RECIPE_COOKED_KEY,
 } from "~/constants/storage-keys";
+import { log } from "~/utils/logger";
 
 export default function DebugScreen() {
   const { top } = useSafeAreaInsets();
@@ -37,9 +38,9 @@ export default function DebugScreen() {
       await seedDatabase();
 
       // ✨ REFRESH ALL CONTEXTS AFTER SEEDING
-      console.log("🔄 Refreshing all contexts after seeding...");
+      log.info("🔄 Refreshing all contexts after seeding...");
       await Promise.all([refresh()]);
-      console.log("✅ Contexts refreshed successfully");
+      log.info("✅ Contexts refreshed successfully");
 
       Alert.alert(
         "Success!",
@@ -47,7 +48,7 @@ export default function DebugScreen() {
       );
       await checkStats();
     } catch (error) {
-      console.error("Seeding error:", error);
+      log.error("Seeding error:", error);
       Alert.alert("Error", "Failed to seed database");
     } finally {
       setIsLoading(false);
@@ -65,7 +66,7 @@ export default function DebugScreen() {
       Alert.alert("Success!", "Sample data added");
       await checkStats();
     } catch (error) {
-      console.error("Sample data error:", error);
+      log.error("Sample data error:", error);
       Alert.alert("Error", "Failed to add sample data");
     } finally {
       setIsLoading(false);
@@ -102,9 +103,9 @@ export default function DebugScreen() {
     try {
       const dbStats = await databaseFacade.getDatabaseStats();
       setStats(dbStats);
-      console.log("📊 Current stats:", dbStats);
+      log.info("📊 Current stats:", dbStats);
     } catch (error) {
-      console.error("Stats error:", error);
+      log.error("Stats error:", error);
     }
   };
 
@@ -128,18 +129,18 @@ export default function DebugScreen() {
   const refreshAllContexts = async () => {
     try {
       setIsLoading(true);
-      console.log("🔄 Manually refreshing all contexts...");
+      log.info("🔄 Manually refreshing all contexts...");
 
       await Promise.all([refresh()]);
 
-      console.log("✅ All contexts refreshed successfully");
+      log.info("✅ All contexts refreshed successfully");
       Alert.alert(
         "Success!",
         "UI contexts refreshed! Check your Pantry and Recipes."
       );
       await checkStats();
     } catch (error) {
-      console.error("Refresh error:", error);
+      log.error("Refresh error:", error);
       Alert.alert("Error", "Failed to refresh contexts");
     } finally {
       setIsLoading(false);

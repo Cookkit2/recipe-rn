@@ -4,6 +4,7 @@ import { PlusIcon } from "lucide-nativewind";
 import { ActivityIndicator, InteractionManager } from "react-native";
 import { useState } from "react";
 import allModel from "~/hooks/model/allModel";
+import { log } from "~/utils/logger";
 
 export default function AddPantryItem() {
   const router = useRouter();
@@ -23,7 +24,7 @@ export default function AddPantryItem() {
         await allModel.get();
         router.push("/ingredient/create");
       } catch (error) {
-        console.error("Failed to load model:", error);
+        log.error("Failed to load model:", error);
         // Still navigate even if model loading fails
         router.push("/ingredient/create");
       } finally {

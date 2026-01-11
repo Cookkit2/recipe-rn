@@ -4,6 +4,7 @@ import {
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
+import { log } from "~/utils/logger";
 
 interface RootScaleContextType {
   scale: SharedValue<number>;
@@ -24,7 +25,7 @@ export function RootScaleProvider({ children }: { children: React.ReactNode }) {
           mass: 0.5,
         });
       } catch (error) {
-        console.warn("Scale animation error:", error);
+        log.warn("Scale animation error:", error);
         scale.value = value;
       }
     },

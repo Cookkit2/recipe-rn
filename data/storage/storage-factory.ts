@@ -2,6 +2,7 @@ import type { IStorage, StorageConfig, StorageType } from "./storage-types";
 import { StorageError } from "./storage-types";
 import { MMKVStorageImpl } from "./implementations/mmkv-storage-impl";
 import { AsyncStorageImpl } from "./implementations/async-storage-impl";
+import { log } from "~/utils/logger";
 
 export class StorageFactory {
   private static instance: IStorage | null = null;
@@ -119,7 +120,7 @@ export class StorageFactory {
       }
 
       if (keysToMigrate.length === 0) {
-        console.log("No data to migrate");
+        log.info("No data to migrate");
         return;
       }
 
@@ -144,7 +145,7 @@ export class StorageFactory {
         }
       }
 
-      console.log(`Successfully migrated ${keysToMigrate.length} items`);
+      log.info(`Successfully migrated ${keysToMigrate.length} items`);
     } catch (error) {
       throw new StorageError(`Migration failed: ${error}`, toConfig.type);
     }
