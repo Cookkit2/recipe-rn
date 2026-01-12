@@ -52,9 +52,8 @@ export default function IngredientLists() {
     <FlatList
       keyExtractor={(item) => item.id.toString()}
       numColumns={2}
-      className="pb-3"
       style={[flatListStyle]}
-      contentContainerStyle={{ paddingBottom: 64 + bottom }}
+      contentContainerStyle={{ paddingBottom: 100 + bottom }}
       showsVerticalScrollIndicator={false}
       data={filteredPantryItems}
       renderItem={({ item, index }) => (
@@ -76,6 +75,7 @@ export default function IngredientLists() {
           </P>
         </View>
       }
+      ListFooterComponent={<View style={{ height: 64 + bottom }} />}
     />
   );
 }

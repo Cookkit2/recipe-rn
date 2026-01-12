@@ -10,6 +10,7 @@ import { useRouter } from "expo-router";
 import ListButton from "~/components/Shared/ListButton";
 import UnitSection from "~/components/Preferences/UnitSection";
 import ThemeSection from "~/components/Preferences/ThemeSection";
+import AppliancesSection from "~/components/Preferences/AppliancesSection";
 
 export default function PreferenceScreen() {
   const { bottom } = useSafeAreaInsets();
@@ -27,16 +28,12 @@ export default function PreferenceScreen() {
     >
       <Header title="Preferences" scrollOffset={scrollOffset} />
 
-      {/* Theme */}
       <ThemeSection />
 
-      {/* Units */}
       <UnitSection />
 
-      {/* Appliances */}
-      {/* <AppliancesSection /> */}
+      <AppliancesSection />
 
-      {/* Navigation to Diet and Allergy screens */}
       <View className="flex mx-6 mt-4 p-0 py-2 rounded-2xl bg-muted/50 overflow-hidden border-continuous">
         <ListButton
           title="Dietary Preference"
