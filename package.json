@@ -69,7 +69,7 @@
     "expo-linear-gradient": "~15.0.7",
     "expo-linking": "~8.0.8",
     "expo-navigation-bar": "~5.0.8",
-    "expo-notifications": "~0.32.12",
+    "expo-notifications": "~0.31.4",
     "expo-router": "~6.0.10",
     "expo-splash-screen": "~31.0.10",
     "expo-status-bar": "~3.0.8",
