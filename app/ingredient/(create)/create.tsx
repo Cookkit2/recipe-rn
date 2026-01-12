@@ -29,7 +29,7 @@ export default function CreateIngredient() {
   ]);
 
   useEffect(() => {
-    requestIdleCallback(() => {
+    const requestId = requestIdleCallback(() => {
       // Load the model if not already loaded
       if (!allModel.isLoaded()) {
         allModel.get().catch((error) => {
@@ -39,7 +39,10 @@ export default function CreateIngredient() {
     });
 
     setStatusBarStyle("light", true);
-    return () => setStatusBarStyle("auto", true);
+    return () => {
+      setStatusBarStyle("auto", true);
+      cancelIdleCallback(requestId);
+    };
   }, []);
 
   if (!hasPermission) {
