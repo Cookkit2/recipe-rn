@@ -15,8 +15,7 @@ import { setStatusBarStyle } from "expo-status-bar";
 import { useCameraPermissions } from "~/hooks/useCameraPermissions";
 import CameraActionRow from "~/components/Camera/CameraActionRow";
 import CameraLayout from "~/components/Camera/CameraLayout";
-
-export const CAMERA_RESOLUTION = { width: 3024, height: 4032 };
+import { CAMERA_RESOLUTION } from "~/constants/camera";
 
 export default function CreateIngredient() {
   const { hasPermission, handlePermissionRequest } = useCameraPermissions();
