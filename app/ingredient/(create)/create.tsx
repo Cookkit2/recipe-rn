@@ -39,10 +39,7 @@ export default function CreateIngredient() {
     });
 
     setStatusBarStyle("light", true);
-    return () => {
-      setStatusBarStyle("auto", true);
-      allModel.dispose();
-    };
+    return () => setStatusBarStyle("auto", true);
   }, []);
 
   if (!hasPermission) {
