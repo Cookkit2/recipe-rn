@@ -15,7 +15,7 @@ import {
   trimTransparentBorders,
   resizeImagePreserveAlpha,
 } from "~/hooks/model/segmentModel";
-import { CAMERA_RESOLUTION } from "~/app/ingredient/(create)/create";
+import { CAMERA_RESOLUTION } from "~/constants/camera";
 import { File, Paths } from "expo-file-system";
 import { titleCase } from "~/utils/text-formatter";
 import * as Haptics from "expo-haptics";
