@@ -74,6 +74,7 @@ Sentry.init({
   // Enable Spotlight for local debugging (https://spotlightjs.com)
   // spotlight: __DEV__,
 });
+import { NotificationProvider } from "~/lib/notifications";
 
 const revenuecatProjectAppleApiKey =
   process.env.EXPO_PUBLIC_REVENUECAT_PROJECT_APPLE_API_KEY ||
@@ -265,12 +266,14 @@ export default Sentry.wrap(function RootLayout() {
               strategy={new SupabaseAuthStrategy()}
               autoInitialize={true}
             > */}
-            <KeyboardProvider>
-              <StatusBar style="auto" />
-              <AnimatedStack />
-              <PortalHost />
-              <Toaster />
-            </KeyboardProvider>
+            <NotificationProvider>
+              <KeyboardProvider>
+                <StatusBar style="auto" />
+                <AnimatedStack />
+                <PortalHost />
+                <Toaster />
+              </KeyboardProvider>
+            </NotificationProvider>
             {/* </AuthProvider> */}
           </QueryProvider>
         </SafeAreaProvider>
