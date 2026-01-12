@@ -13,10 +13,15 @@ import { useRouter } from "expo-router";
 import { ArrowLeftIcon } from "lucide-nativewind";
 import { useRefreshPantryItems } from "~/hooks/queries/usePantryQueries";
 import { storage } from "~/data";
+import { recipeApi } from "~/data/api/recipeApi";
 import {
   ONBOARDING_COMPLETED_KEY,
   PREFERENCE_COMPLETED_KEY,
   RECIPE_COOKED_KEY,
+  PREF_APPLIANCES_KEY,
+  PREF_ALLERGENS_KEY,
+  PREF_OTHER_ALLERGENS_KEY,
+  PREF_DIET_KEY,
 } from "~/constants/storage-keys";
 import { log } from "~/utils/logger";
 
@@ -262,6 +267,163 @@ export default function DebugScreen() {
             className="w-full"
           >
             <P className="text-foreground font-medium">📊 Refresh Stats</P>
+          </Button>
+
+          <Button
+            onPress={async () => {
+              try {
+                const stock = await databaseFacade.getAllStock();
+                // Extract plain data from WatermelonDB models to avoid circular references
+                const plainData = stock.map((item) => ({
+                  id: item.id,
+                  name: item.name,
+                  quantity: item.quantity,
+                  unit: item.unit,
+                  expiryDate: item.expiryDate,
+                  createdAt: item.createdAt,
+                  updatedAt: item.updatedAt,
+                }));
+                const jsonOutput = JSON.stringify(plainData, null, 2);
+                log.info("Current Ingredients (Stock):", jsonOutput);
+                Alert.alert(
+                  "Ingredients Logged",
+                  `${stock.length} ingredients logged to console. Check your logs.`
+                );
+              } catch (error) {
+                log.error("Failed to get ingredients:", error);
+                Alert.alert("Error", "Failed to get ingredients");
+              }
+            }}
+            disabled={isLoading}
+            variant="outline"
+            className="w-full"
+          >
+            <P className="text-foreground font-medium">
+              📄 Print Ingredients JSON
+            </P>
+          </Button>
+
+          <Button
+            onPress={() => {
+              try {
+                // Get user preferences from storage
+                const appliances = storage.get(PREF_APPLIANCES_KEY) || "";
+                const diet = storage.get(PREF_DIET_KEY) || "none";
+                const allergens = storage.get(PREF_ALLERGENS_KEY) || "";
+                const otherAllergens =
+                  storage.get(PREF_OTHER_ALLERGENS_KEY) || "";
+
+                const preferences = {
+                  electricAppliances: appliances ? appliances?.split(",") : [],
+                  dietaryPreference: diet,
+                  allergens: allergens ? allergens?.split(",") : [],
+                  otherAllergens: otherAllergens
+                    ? otherAllergens?.split(",").map((a: string) => a.trim())
+                    : [],
+                };
+
+                const jsonOutput = JSON.stringify(preferences, null, 2);
+                log.info("User Preferences:", jsonOutput);
+                Alert.alert(
+                  "Preferences Logged",
+                  "User preferences logged to console. Check your logs."
+                );
+              } catch (error) {
+                log.error("Failed to get preferences:", error);
+                Alert.alert("Error", "Failed to get preferences");
+              }
+            }}
+            disabled={isLoading}
+            variant="outline"
+            className="w-full"
+          >
+            <P className="text-foreground font-medium">
+              ⚙️ Print User Preferences
+            </P>
+          </Button>
+
+          <Button
+            onPress={async () => {
+              try {
+                setIsLoading(true);
+                const recommendations =
+                  await recipeApi.getRecipeRecommendations({
+                    maxRecommendations: 10,
+                    respectDietaryPreferences: true,
+                  });
+
+                const output = {
+                  canMake: recommendations.canMakeRecommendations.map((r) => ({
+                    id: r.id,
+                    title: r.title,
+                    description: r.description,
+                    prepMinutes: r.prepMinutes,
+                    cookMinutes: r.cookMinutes,
+                    servings: r.servings,
+                    difficultyStars: r.difficultyStars,
+                    calories: r.calories,
+                    tags: r.tags,
+                    ingredients: (r.ingredients || []).map((ing) => ({
+                      name: ing.name,
+                      quantity: ing.quantity,
+                      unit: ing.unit,
+                      notes: ing.notes,
+                    })),
+                    instructions: (r.instructions || []).map((step) => ({
+                      step: step.step,
+                      title: step.title,
+                      description: step.description,
+                    })),
+                  })),
+                  partiallyCanMake: recommendations.partialRecommendations.map(
+                    (r) => ({
+                      id: r.recipe.id,
+                      title: r.recipe.title,
+                      description: r.recipe.description,
+                      completionPercentage: r.completionPercentage,
+                      prepMinutes: r.recipe.prepMinutes,
+                      cookMinutes: r.recipe.cookMinutes,
+                      servings: r.recipe.servings,
+                      difficultyStars: r.recipe.difficultyStars,
+                      calories: r.recipe.calories,
+                      tags: r.recipe.tags,
+                      ingredients: (r.recipe.ingredients || []).map((ing) => ({
+                        name: ing.name,
+                        quantity: ing.quantity,
+                        unit: ing.unit,
+                        notes: ing.notes,
+                      })),
+                      instructions: (r.recipe.instructions || []).map(
+                        (step) => ({
+                          step: step.step,
+                          title: step.title,
+                          description: step.description,
+                        })
+                      ),
+                    })
+                  ),
+                };
+
+                const jsonOutput = JSON.stringify(output, null, 2);
+                log.info("Recommended Recipes (Full Data):", jsonOutput);
+                Alert.alert(
+                  "Recipes Logged",
+                  `${output.canMake.length} complete + ${output.partiallyCanMake.length} partial recommendations logged. Check your logs.`
+                );
+              } catch (error) {
+                log.error("Failed to get recommendations:", error);
+                Alert.alert("Error", "Failed to get recommendations");
+              } finally {
+                setIsLoading(false);
+              }
+            }}
+            disabled={isLoading}
+            variant="outline"
+            className="w-full"
+          >
+            <P className="text-foreground font-medium">
+              🍳 Print Recommended Recipes
+            </P>
           </Button>
 
           <Button
