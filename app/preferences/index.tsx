@@ -5,7 +5,7 @@ import { View } from "react-native";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AllergySection from "~/components/Preferences/AllergySection";
-// import AppliancesSection from "~/components/Preferences/AppliancesSection";
+import AppliancesSection from "~/components/Preferences/AppliancesSection";
 import DietarySection from "~/components/Preferences/DietarySection";
 import { Button } from "~/components/ui/button";
 import { H1, H4, P } from "~/components/ui/typography";
@@ -36,7 +36,7 @@ export default function PreferencePage() {
             Fill in your preferences to get a tailored recipes.
           </P>
         </View>
-        {/* <AppliancesSection /> */}
+        <AppliancesSection />
         <DietarySection />
         <AllergySection />
       </Animated.ScrollView>
