@@ -15,6 +15,7 @@ import { toast } from "sonner-native";
 import { presentPaywallIfNeeded } from "~/utils/subscription-utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { recipeQueryKeys } from "~/hooks/queries/recipeQueryKeys";
+import { scheduleExpiryNotifications } from "~/lib/notifications";
 
 export default function ConfirmationPage() {
   const { bottom } = useSafeAreaInsets();
@@ -39,6 +40,10 @@ export default function ConfirmationPage() {
       setIsSavingIngredients(true);
       await presentPaywallIfNeeded();
       await addPantryItemsWithMetadata.mutateAsync(completedItems);
+
+      // Schedule expiry notifications for saved items
+      await scheduleExpiryNotifications(completedItems);
+
       queryClient.invalidateQueries({
         queryKey: recipeQueryKeys.recommendations(),
       });

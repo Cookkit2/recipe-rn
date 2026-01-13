@@ -36,6 +36,14 @@ export {
   useNotificationContext,
 } from "./NotificationProvider";
 
+// Expiry Notifications - Ingredient expiry scheduling
+export {
+  cancelExpiryNotification,
+  scheduleExpiryNotifications,
+} from "./expiry-notifications/expiry-notifications";
+
+export type { ExpiryItem } from "./expiry-notifications/expiry-notifications";
+
 // Types
 export type {
   DailyTrigger,

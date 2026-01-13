@@ -74,7 +74,10 @@ Sentry.init({
   // Enable Spotlight for local debugging (https://spotlightjs.com)
   // spotlight: __DEV__,
 });
-import { NotificationProvider } from "~/lib/notifications";
+import {
+  NotificationProvider,
+  registerNotificationHandler,
+} from "~/lib/notifications";
 
 const revenuecatProjectAppleApiKey =
   process.env.EXPO_PUBLIC_REVENUECAT_PROJECT_APPLE_API_KEY ||
@@ -98,6 +101,13 @@ function AnimatedStack() {
       navigationIntegration.registerNavigationContainer(ref);
     }
   }, [ref]);
+
+  // Register notification handlers for ingredient expiry
+  useEffect(() => {
+    registerNotificationHandler("ingredient_expiry", () => {
+      router.push("/"); // Navigate to pantry
+    });
+  }, [router]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {

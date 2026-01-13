@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { pantryQueryKeys } from "./pantryQueryKeys";
 import type { ItemType, PantryItem } from "~/types/PantryItem";
 import { pantryApi } from "~/data/api/pantryApi";
+import { cancelExpiryNotification } from "~/lib/notifications";
 
 /**
  * Hook to fetch all pantry items
@@ -149,7 +150,10 @@ export function useDeletePantryItem() {
 
   return useMutation({
     mutationFn: pantryApi.deletePantryItem,
-    onSuccess: (_, deletedId) => {
+    onSuccess: async (_, deletedId) => {
+      // Cancel any scheduled expiry notification for this item
+      await cancelExpiryNotification(deletedId);
+
       // Remove the item from cache
       queryClient.setQueryData<PantryItem[]>(
         pantryQueryKeys.items(),
