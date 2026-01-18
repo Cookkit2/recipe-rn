@@ -19,28 +19,60 @@ export class RecipeAnalyzer {
 
   /**
    * Analyze video content to determine if it's cooking-related
-   * and extract recipe information
+   * and extract recipe information.
+   * 
+   * Uses Gemini's native YouTube video understanding when no transcript is available.
    */
   async analyzeForRecipe(
     videoInfo: YouTubeVideoInfo,
     transcript?: YouTubeTranscript,
     sourceUrl?: string
   ): Promise<RecipeAnalysisResult> {
-    const prompt = this.buildAnalysisPrompt(videoInfo, transcript);
-
     try {
-      const requestBody = JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: prompt }],
+      let requestBody: string;
+      
+      if (transcript?.text && transcript.text.length > 100) {
+        // Use transcript-based analysis
+        log.debug("RecipeAnalyzer: Using transcript-based analysis");
+        const prompt = this.buildAnalysisPrompt(videoInfo, transcript);
+        requestBody = JSON.stringify({
+          contents: [
+            {
+              parts: [{ text: prompt }],
+            },
+          ],
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: this.getRecipeSchema(),
+            temperature: 0.3,
           },
-        ],
-        generationConfig: {
-          responseMimeType: "application/json",
-          responseSchema: this.getRecipeSchema(),
-          temperature: 0.3, // Lower temperature for more consistent output
-        },
-      });
+        });
+      } 
+      else {
+        // Use Gemini's YouTube video understanding (no transcript needed)
+        log.debug("RecipeAnalyzer: Using Gemini video understanding for YouTube URL");
+        const prompt = this.buildVideoAnalysisPrompt(videoInfo, sourceUrl || `https://www.youtube.com/watch?v=${videoInfo.videoId}`);
+        requestBody = JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  fileData: {
+                    mimeType: "video/mp4",
+                    fileUri: sourceUrl || `https://www.youtube.com/watch?v=${videoInfo.videoId}`,
+                  },
+                },
+                { text: prompt },
+              ],
+            },
+          ],
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: this.getRecipeSchema(),
+            temperature: 0.3,
+          },
+        });
+      }
 
       const response = await this.gemini.generateContent(
         "gemini-2.0-flash",
@@ -61,6 +93,47 @@ export class RecipeAnalyzer {
             : "Failed to analyze video content",
       };
     }
+  }
+
+  /**
+   * Build prompt for direct video analysis (when no transcript available)
+   */
+  private buildVideoAnalysisPrompt(
+    videoInfo: YouTubeVideoInfo,
+    videoUrl: string
+  ): string {
+    return `
+You are a recipe extraction assistant. Watch and analyze this YouTube cooking video to extract the recipe.
+
+VIDEO TITLE: ${videoInfo.title}
+CHANNEL: ${videoInfo.channelName}
+VIDEO URL: ${videoUrl}
+
+INSTRUCTIONS:
+1. Watch the video and determine if this is a cooking/recipe video (isCookingVideo: true/false)
+2. Provide a confidence score (0-1) for your determination
+3. If it IS a cooking video, extract the complete recipe by watching the video:
+   - Title: Clean, formatted recipe name
+   - Description: Brief 1-2 sentence summary of the dish
+   - Prep time and cook time in minutes
+   - Number of servings (default to 4 if not clear)
+   - Difficulty (1-5 stars based on technique complexity)
+   - Complete ingredient list with quantities and units (watch carefully for measurements)
+   - Step-by-step instructions with clear titles and descriptions
+   - Relevant tags (cuisine type, dietary info, meal type, etc.)
+   - Estimated calories per serving if mentioned
+
+IMPORTANT GUIDELINES:
+- Pay close attention to ingredient quantities shown or mentioned in the video
+- If quantities are vague, estimate reasonable amounts
+- Normalize units to standard cooking measurements
+- Ensure ingredient names are singular and standardized
+- For steps, create clear actionable titles
+- Include cooking temperatures and times from the video
+- If this is NOT a cooking video, set isCookingVideo to false
+
+Return a valid JSON response matching the schema provided.
+    `.trim();
   }
 
   /**
@@ -191,6 +264,10 @@ Return a valid JSON response matching the schema provided.
     sourceUrl?: string
   ): RecipeAnalysisResult {
     try {
+
+      // TODO: delete after debugging
+      log.debug("RecipeAnalyzer: Response:", response);
+
       const parsed = JSON.parse(response);
 
       // Validate required fields
