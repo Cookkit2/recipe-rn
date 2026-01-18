@@ -1,4 +1,5 @@
-import { Pressable, View, Dimensions } from "react-native";
+import { Pressable, View, Dimensions, TextInput, Text, ActivityIndicator } from "react-native";
+import { useState } from "react";
 import { H1 } from "~/components/ui/typography";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MenuDropdown from "~/components/Pantry/MenuDropdown";
@@ -21,6 +22,7 @@ import { EXPANDED_HEIGHT, SNAP_THRESHOLD } from "~/constants/pantry";
 import { usePantryStore } from "~/store/PantryContext";
 import IngredientCategoryButtonGroup from "~/components/Pantry/IngredientCategoryButtonGroup";
 import IngredientLists from "~/components/Pantry/IngredientLists";
+import { useImportYouTubeRecipe, getImportStatusMessage } from "~/hooks/queries/useYouTubeRecipeQueries";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -43,6 +45,10 @@ export default function PantryWrapper() {
     isGestureActive,
     collapsedHeight,
   } = usePantryStore();
+
+  // YouTube Import Test State
+  const [youtubeUrl, setYoutubeUrl] = useState("https://www.youtube.com/watch?v=K32XDmE778k");
+  const { importRecipe, importStatus, data, error, isPending, reset } = useImportYouTubeRecipe();
 
   // Pan gesture handler
   const panGesture = Gesture.Pan()
@@ -177,6 +183,72 @@ export default function PantryWrapper() {
           <AddPantryItem />
           <MenuDropdown />
         </Animated.View>
+
+        {/* YouTube Import Test Section */}
+        <View className="mx-4 mb-4 p-3 bg-muted rounded-xl">
+          <Text className="text-foreground font-semibold mb-2">Test YouTube Import</Text>
+          <TextInput
+            className="bg-background text-foreground px-3 py-2 rounded-lg mb-2"
+            placeholder="Paste YouTube URL..."
+            placeholderTextColor="#888"
+            value={youtubeUrl}
+            onChangeText={setYoutubeUrl}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <View className="flex-row gap-2">
+            <Pressable
+              className={`flex-1 py-2 rounded-lg items-center justify-center ${
+                isPending ? "bg-muted-foreground" : "bg-primary"
+              }`}
+              onPress={() => importRecipe(youtubeUrl)}
+              disabled={isPending || !youtubeUrl.trim()}
+            >
+              {isPending ? (
+                <ActivityIndicator color="white" size="small" />
+              ) : (
+                <Text className="text-primary-foreground font-semibold">Import Recipe</Text>
+              )}
+            </Pressable>
+            {(data || error) && (
+              <Pressable
+                className="px-4 py-2 rounded-lg bg-destructive items-center justify-center"
+                onPress={() => {
+                  reset();
+                  setYoutubeUrl("");
+                }}
+              >
+                <Text className="text-destructive-foreground font-semibold">Clear</Text>
+              </Pressable>
+            )}
+          </View>
+          {/* Status Display */}
+          {importStatus !== "idle" && (
+            <Text className="text-muted-foreground text-sm mt-2">
+              {getImportStatusMessage(importStatus)}
+            </Text>
+          )}
+          {/* Success Result */}
+          {data?.success && data.recipe && (
+            <View className="mt-2 p-2 bg-green-500/20 rounded-lg">
+              <Text className="text-green-600 font-semibold">
+                Success: {data.recipe.title}
+              </Text>
+              <Text className="text-green-600 text-sm">
+                Missing ingredients: {data.shoppingList?.missingIngredients.length ?? 0}
+              </Text>
+            </View>
+          )}
+          {/* Error Display */}
+          {(data?.error || error) && (
+            <View className="mt-2 p-2 bg-destructive/20 rounded-lg">
+              <Text className="text-destructive text-sm">
+                {data?.error || error?.message}
+              </Text>
+            </View>
+          )}
+        </View>
+
         <IngredientCategoryButtonGroup />
         <Animated.View style={ingredientListStyle}>
           <IngredientLists />
