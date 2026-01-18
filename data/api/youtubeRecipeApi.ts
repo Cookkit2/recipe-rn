@@ -87,9 +87,151 @@ export const youtubeRecipeApi = {
       }
 
       // Step 4: Analyze with Gemini AI
+      // When no transcript is available, Gemini will use its video understanding capability
       onStatusChange?.("analyzing");
       log.info("YouTube Import: Analyzing video with AI...");
 
+      // TODO: delete after debugging
+      // Mock this out for now
+      // const analysisResult = {
+      //   isCookingVideo: true,
+      //   confidence: 1,
+      //   recipe: {
+      //     "title": "Spring Pasta",
+      //     "description": "Gordon Ramsay cooks up a simple and easy pasta dish in just 10 minutes.  This is a great dish to eat the night before a big run because it's hearty, delicious, and easy to do.",
+      //     "prepMinutes": 5,
+      //     "cookMinutes": 10,
+      //     "servings": 3,
+      //     "difficultyStars": 2,
+      //     "ingredients": [
+      //       {
+      //         "name": "spaghetti",
+      //         "quantity": 1,
+      //         "unit": "package"
+      //       },
+      //       {
+      //         "name": "salt",
+      //         "quantity": 1,
+      //         "unit": "tablespoon"
+      //       },
+      //       {
+      //         "name": "pancetta",
+      //         "quantity": 0.5,
+      //         "unit": "cup"
+      //       },
+      //       {
+      //         "name": "grapeseed oil",
+      //         "quantity": 1,
+      //         "unit": "tablespoon"
+      //       },
+      //       {
+      //         "name": "black pepper",
+      //         "quantity": 1,
+      //         "unit": "teaspoon"
+      //       },
+      //       {
+      //         "name": "garlic",
+      //         "quantity": 2,
+      //         "unit": "clove"
+      //       },
+      //       {
+      //         "name": "fresno chili",
+      //         "quantity": 1,
+      //         "unit": "piece"
+      //       },
+      //       {
+      //         "name": "butter",
+      //         "quantity": 2,
+      //         "unit": "tablespoon"
+      //       },
+      //       {
+      //         "name": "frozen pea",
+      //         "quantity": 0.5,
+      //         "unit": "cup"
+      //       },
+      //       {
+      //         "name": "chive",
+      //         "quantity": 0.25,
+      //         "unit": "cup"
+      //       },
+      //       {
+      //         "name": "parsley",
+      //         "quantity": 0.25,
+      //         "unit": "cup"
+      //       },
+      //       {
+      //         "name": "basil",
+      //         "quantity": 0.25,
+      //         "unit": "cup"
+      //       },
+      //       {
+      //         "name": "vegetable stock",
+      //         "quantity": 2,
+      //         "unit": "tablespoon"
+      //       },
+      //       {
+      //         "name": "green leaf lettuce",
+      //         "quantity": 0.5,
+      //         "unit": "head"
+      //       },
+      //       {
+      //         "name": "lemon",
+      //         "quantity": 1,
+      //         "unit": "piece"
+      //       },
+      //       {
+      //         "name": "chili flake",
+      //         "quantity": 0.25,
+      //         "unit": "teaspoon"
+      //       },
+      //       {
+      //         "name": "pecorino cheese",
+      //         "quantity": 0.25,
+      //         "unit": "cup"
+      //       }
+      //     ],
+      //     "steps": [
+      //       {
+      //         "step": 1,
+      //         "title": "Cook Pasta",
+      //         "description": "Salt the water generously and bring to a boil. Add the pasta and cook for 8-9 minutes. Stir the pasta as soon as it hits the water to make sure it doesn't stick."
+      //       },
+      //       {
+      //         "step": 2,
+      //         "title": "Render Pancetta",
+      //         "description": "Add the pancetta to a hot pan and render the fat out. Add a touch of grapeseed oil to speed up the process. Season lightly with pepper."
+      //       },
+      //       {
+      //         "step": 3,
+      //         "title": "Add Garlic and Chili",
+      //         "description": "Slice the garlic thinly and add to the pan. Slice the chili and add to the pan."
+      //       },
+      //       {
+      //         "step": 4,
+      //         "title": "Add Butter, Peas, and Herbs",
+      //         "description": "Add the butter and peas to the pan.  Chop the chives, parsley, and basil and add to the pan."
+      //       },
+      //       {
+      //         "step": 5,
+      //         "title": "Add Stock, Lemon, and Pasta",
+      //         "description": "Add the vegetable stock to the pan.  Zest the lemon and add to the pan.  Remove the pasta from the water and add to the pan."
+      //       },
+      //       {
+      //         "step": 6,
+      //         "title": "Add Lettuce and Serve",
+      //         "description": "Chop the lettuce and add to the pan.  Turn off the heat and fold the lettuce in gently.  Serve and top with pecorino cheese."
+      //       }
+      //     ],
+      //     "tags": [
+      //       "italian",
+      //       "pasta",
+      //       "main course",
+      //       "dinner"
+      //     ],
+      //     "sourceUrl": "https://www.youtube.com/watch?v=K32XDmE778k",
+      //     "calories": 600
+      //   },
+      // };
       const analysisResult = await recipeAnalyzer.analyzeForRecipe(
         videoInfo,
         transcript,
@@ -119,6 +261,7 @@ export const youtubeRecipeApi = {
       // Step 5: Save recipe to database
       onStatusChange?.("generating-recipe");
       log.info("YouTube Import: Saving recipe to database...");
+      log.debug("YouTube Import: Recipe:", analysisResult.recipe);
 
       const recipe = await this.saveRecipeToDatabase(
         analysisResult.recipe,
