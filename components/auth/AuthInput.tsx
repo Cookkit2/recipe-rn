@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, TextInput, Pressable } from "react-native";
 import { Text } from "~/components/ui/text";
 import { cn } from "~/lib/utils";
-import { EyeIcon, EyeOffIcon } from "lucide-nativewind";
+import { EyeIcon, EyeOffIcon } from "lucide-uniwind";
 
 interface AuthInputProps {
   label: string;

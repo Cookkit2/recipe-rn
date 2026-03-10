@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { Pressable, useWindowDimensions, View } from "react-native";
 import { Button } from "../ui/button";
 import { useCreateIngredientStore } from "~/store/CreateIngredientContext";
 import { useRouter } from "expo-router";
-import { ImagesIcon, SaveIcon } from "lucide-nativewind";
+import { ImagesIcon, SaveIcon } from "lucide-uniwind";
 import { toast } from "sonner-native";
 import { RECIPE_COOKED_KEY } from "~/constants/storage-keys";
 import useOnPressScale from "~/hooks/animation/useOnPressScale";
@@ -13,6 +13,7 @@ import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import type { Camera } from "react-native-vision-camera";
 import Animated from "react-native-reanimated";
+import ImagePointPickerOverlay from "./ImagePointPickerOverlay";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -26,12 +27,15 @@ export default function CameraActionRow({
   const router = useRouter();
   const { width } = useWindowDimensions();
   const { animatedStyle, handlePressIn, handlePressOut } = useOnPressScale();
-  const { processPantryItems, processImage, framePosition } =
-    useCreateIngredientStore();
+  const { processPantryItems, processImage, framePosition } = useCreateIngredientStore();
 
   const [isRecipeCooked] = useLocalStorageState(RECIPE_COOKED_KEY, {
     defaultValue: false,
   });
+
+  // State for the image point picker overlay
+  const [pickedImageUri, setPickedImageUri] = useState<string | null>(null);
+  const [showPointPicker, setShowPointPicker] = useState(false);
 
   // Camera and gallery functions
   const takePicture = async () => {
@@ -73,18 +77,27 @@ export default function CameraActionRow({
       });
 
       if (!result.canceled && result.assets?.[0]) {
-        const cameraHeight = (width * 4) / 3;
-        const centerPosition = {
-          x: width / 2,
-          y: cameraHeight / 2,
-        };
-
         const selectedImage = result.assets[0];
-        processImage(selectedImage.uri, centerPosition);
+        // Show point picker overlay so user can select the ingredient location
+        setPickedImageUri(selectedImage.uri);
+        setShowPointPicker(true);
       }
     } catch (error) {
       toast.error("Error picking from gallery");
     }
+  };
+
+  const handlePointConfirm = (point: { x: number; y: number }) => {
+    if (pickedImageUri) {
+      processImage(pickedImageUri, point);
+    }
+    setShowPointPicker(false);
+    setPickedImageUri(null);
+  };
+
+  const handlePointCancel = () => {
+    setShowPointPicker(false);
+    setPickedImageUri(null);
   };
 
   const onConfirm = () => {
@@ -126,6 +139,16 @@ export default function CameraActionRow({
       >
         <SaveIcon className="text-white/80" size={24} />
       </Button>
+
+      {/* Image Point Picker Overlay for gallery images */}
+      {pickedImageUri && (
+        <ImagePointPickerOverlay
+          imageUri={pickedImageUri}
+          visible={showPointPicker}
+          onConfirm={handlePointConfirm}
+          onCancel={handlePointCancel}
+        />
+      )}
     </View>
   );
 }

@@ -3,6 +3,7 @@ import { field, date, writer, children } from "@nozbe/watermelondb/decorators";
 import type { Associations } from "@nozbe/watermelondb/Model";
 import type IngredientSynonym from "./IngredientSynonym";
 import type StockCategory from "./StockCategory";
+import type WasteLog from "./WasteLog";
 
 export interface StockData {
   name: string;
@@ -22,6 +23,7 @@ export default class Stock extends Model {
   static associations: Associations = {
     ingredient_synonym: { type: "has_many", foreignKey: "stock_id" },
     stock_category: { type: "has_many", foreignKey: "stock_id" },
+    waste_log: { type: "has_many", foreignKey: "stock_id" },
   };
 
   @field("name") name!: string;
@@ -37,6 +39,7 @@ export default class Stock extends Model {
 
   @children("ingredient_synonym") synonyms!: Collection<IngredientSynonym>;
   @children("stock_category") stockCategories!: Collection<StockCategory>;
+  @children("waste_log") wasteLogs!: Collection<WasteLog>;
 
   @date("created_at") createdAt!: Date;
   @date("updated_at") updatedAt!: Date;

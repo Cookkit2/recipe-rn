@@ -10,6 +10,7 @@ import useColors from "~/hooks/useColor";
 import ShapeContainer from "~/components/Shared/Shapes/ShapeContainer";
 import OutlinedImage from "~/components/ui/outlined-image";
 import { useIngredientDetailStore } from "~/store/IngredientDetailContext";
+import { Link } from "expo-router";
 
 const HeroImage = ({ scrollOffset }: { scrollOffset: SharedValue<number> }) => {
   const { pantryItem } = useIngredientDetailStore();
@@ -40,22 +41,20 @@ const HeroImage = ({ scrollOffset }: { scrollOffset: SharedValue<number> }) => {
         headerAnimatedStyle,
       ]}
     >
-      {pantryItem.image_url ? (
-        <OutlinedImage
-          source={pantryItem.image_url}
-          size={120}
-          strokeWidth={4}
-        />
-      ) : (
-        <ShapeContainer
-          index={0}
-          width={100}
-          height={100}
-          text="?"
-          textClassname="text-3xl text-foreground/70 leading-[2]"
-          color={colors.border}
-        />
-      )}
+      <Link.AppleZoomTarget>
+        {pantryItem.image_url ? (
+          <OutlinedImage source={pantryItem.image_url} size={120} strokeWidth={4} />
+        ) : (
+          <ShapeContainer
+            index={0}
+            width={100}
+            height={100}
+            text="?"
+            textClassname="text-3xl text-foreground/70 leading-[2]"
+            color={colors.border}
+          />
+        )}
+      </Link.AppleZoomTarget>
       <Animated.View
         style={[opacityStyle, { height: windowWidth }]}
         className="absolute inset-0 bg-background w-full"

@@ -23,7 +23,7 @@ import Shape20 from "./Shape20";
 import Shape21 from "./Shape21";
 import { View } from "react-native";
 import { P } from "~/components/ui/typography";
-import { cn } from "~/lib/tw-merge";
+import { cn } from "~/lib/utils";
 
 interface ShapeContainerProps extends SvgProps {
   index: number;

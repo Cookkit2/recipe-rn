@@ -1,20 +1,21 @@
 import { useRouter } from "expo-router";
 import {
+  BellIcon,
+  CalendarIcon,
+  ChartBarIcon,
   InfoIcon,
   MailIcon,
   MessageSquareHeartIcon,
   SettingsIcon,
-} from "lucide-nativewind";
+  TrophyIcon,
+} from "lucide-uniwind";
 import React, { useCallback } from "react";
 import { View, Platform, Linking, ScrollView } from "react-native";
 import * as StoreReview from "expo-store-review";
 import Constants from "expo-constants";
 import Purchases from "react-native-purchases";
-import Animated from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CardContent } from "~/components/ui/card";
 import { P } from "~/components/ui/typography";
-import Header from "~/components/Shared/Header";
 import ListButton from "~/components/Shared/ListButton";
 import { toast } from "sonner-native";
 import * as WebBrowser from "expo-web-browser";
@@ -27,10 +28,9 @@ const osName = Platform.OS;
 const osVersion = String(Platform.Version ?? "");
 
 const subject = `${appName} Feedback`;
-const email = "cookkit01@gmail.com";
+const email = "fridgit132@gmail.com";
 
 export default function ProfileScreen() {
-  const { bottom } = useSafeAreaInsets();
   const router = useRouter();
 
   // const { signOut, isAuthenticated } = useAuth();
@@ -102,7 +102,7 @@ export default function ProfileScreen() {
         duration: 5000,
       });
     } catch {
-      toast.error("Please email us at: cookkit01@gmail.com");
+      toast.error("Please email us at: fridgit132@gmail.com");
     }
   }, []);
 
@@ -129,16 +129,13 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView
-      className="bg-background"
+      contentInsetAdjustmentBehavior="automatic"
+      className="flex-1 bg-background"
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: bottom }}
-      stickyHeaderIndices={[0]}
     >
-      <Header />
-
-      {/* {isAuthenticated ? <ProfileCard /> : <SetupProfileCard />} */}
-
       <ActionButtonRow />
+
+      {/* <AchievementsCard /> */}
 
       <SubscriptionCard />
 
@@ -157,23 +154,32 @@ export default function ProfileScreen() {
               onPress={() => router.push("/profile/preferences")}
             />
             {/* <ListButton
+              title="Analytics"
+              icon={ChartBarIcon}
+              onPress={() => router.push("/profile/analytics")}
+            />
+            <ListButton
+              title="Achievements"
+              icon={TrophyIcon}
+              onPress={() => router.push("/profile/achievements")}
+            />
+            <ListButton
+              title="Meal Plans"
+              icon={CalendarIcon}
+              onPress={() => router.push("/meal-plan")}
+            /> */}
+            {/* <ListButton
               title="Notification"
               icon={BellIcon}
               onPress={() => router.push("/profile/notification")}
             /> */}
-            <ListButton
-              title="Contact Us"
-              icon={MailIcon}
-              onPress={handleContactUs}
-            />
+            <ListButton title="Contact Us" icon={MailIcon} onPress={handleContactUs} />
           </CardContent>
         </View>
       </View>
 
       <View className="mt-12">
-        <P className="text-foreground/60 font-urbanist-semibold px-6 mb-2">
-          About
-        </P>
+        <P className="text-foreground/60 font-urbanist-semibold px-6 mb-2">About</P>
         <View className="mx-6 rounded-2xl bg-muted/50 overflow-hidden border-continuous">
           <CardContent className="flex p-0 py-2">
             <ListButton
@@ -193,23 +199,17 @@ export default function ProfileScreen() {
       </View>
 
       <View className="mt-12">
-        <P className="text-foreground/60 font-urbanist-semibold px-6 mb-2">
-          Terms & Privacy
-        </P>
+        <P className="text-foreground/60 font-urbanist-semibold px-6 mb-2">Terms & Privacy</P>
         <View className="mx-6 rounded-2xl bg-muted/50 overflow-hidden border-continuous">
           <CardContent className="flex p-0 py-2">
             <ListButton
               title="Terms of Service"
-              onPress={() =>
-                handleOpenLink("https://www.cookkit.app/terms-and-conditions")
-              }
+              onPress={() => handleOpenLink("https://cookkit.app/terms-and-conditions")}
               external
             />
             <ListButton
               title="Privacy Policy"
-              onPress={() =>
-                handleOpenLink("https://www.cookkit.app/privacy-policy")
-              }
+              onPress={() => handleOpenLink("https://cookkit.app/privacy-policy")}
               external
             />
           </CardContent>

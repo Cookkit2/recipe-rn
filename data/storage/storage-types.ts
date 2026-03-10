@@ -57,25 +57,31 @@ export interface IAsyncBatchStorage {
   deleteBatchAsync(keys: string[]): Promise<void>;
 }
 
+// Optional capability detection: storage may implement these for async/batch support
+export interface IStorageCapabilities {
+  getAsync?<T>(key: string): Promise<T | null>;
+  setAsync?<T>(key: string, value: T): Promise<void>;
+  deleteAsync?(key: string): Promise<void>;
+  clearAsync?(): Promise<void>;
+  getBatch?(keys: string[]): Record<string, unknown>;
+  setBatch?<T>(data: Record<string, T>): void;
+  deleteBatch?(keys: string[]): void;
+  getAllKeys?(): string[];
+  size?(): number;
+}
+
 // ===== COMPOSITE INTERFACES =====
 
 // Full synchronous storage interface (for MMKV, etc.)
 export interface ISyncStorage
-  extends IReadableStorage,
-    IWritableStorage,
-    IStorageMetadata,
-    IBatchStorage {}
+  extends IReadableStorage, IWritableStorage, IStorageMetadata, IBatchStorage {}
 
 // Minimal async storage interface (for AsyncStorage - only essential operations)
-export interface IAsyncStorage
-  extends IAsyncReadableStorage,
-    IAsyncWritableStorage {}
+export interface IAsyncStorage extends IAsyncReadableStorage, IAsyncWritableStorage {}
 
 // Full async storage interface (for databases that support all async operations)
 export interface IFullAsyncStorage
-  extends IAsyncStorage,
-    IAsyncStorageMetadata,
-    IAsyncBatchStorage {}
+  extends IAsyncStorage, IAsyncStorageMetadata, IAsyncBatchStorage {}
 
 // Unified storage interface (matches StorageFacade API - single method per operation)
 export interface IStorage {
@@ -132,7 +138,7 @@ export interface StorageConfig {
   options?: Record<string, any>;
 }
 
-export type StorageType = "mmkv" | "async-storage";
+export type StorageType = 'mmkv';
 
 // Error types
 export class StorageError extends Error {
@@ -141,7 +147,7 @@ export class StorageError extends Error {
     public readonly storageType: StorageType
   ) {
     super(message);
-    this.name = "StorageError";
+    this.name = 'StorageError';
   }
 }
 

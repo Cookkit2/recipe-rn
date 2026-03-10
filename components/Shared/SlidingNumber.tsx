@@ -17,16 +17,13 @@ function Digit({ value, place }: { value: number; place: number }) {
   const animatedValue = useSharedValue(valueRoundedToPlace);
 
   useEffect(() => {
-    animatedValue.value = withTiming(
-      valueRoundedToPlace,
-      CURVES["expressive.fast.spatial"]
-    );
+    animatedValue.value = withTiming(valueRoundedToPlace, CURVES["expressive.fast.spatial"]);
   }, [animatedValue, valueRoundedToPlace]);
 
   return (
     <View className="relative overflow-hidden w-3">
       <View className="opacity-0">
-        <H4 className="text-center font-urbanist-medium">0</H4>
+        <P className="text-center font-urbanist-medium text-xl">0</P>
       </View>
       {Array.from({ length: 10 }, (_, i) => (
         <Number key={i} mv={animatedValue} number={i} />
@@ -76,18 +73,18 @@ function Number({ mv, number }: { mv: SharedValue<number>; number: number }) {
   // Render invisible measurement text first
   if (!bounds?.height) {
     return (
-      <H4
+      <P
         onLayout={handleLayout}
-        className="absolute top-0 left-0 right-0 opacity-0 text-center"
+        className="absolute top-0 left-0 right-0 opacity-0 text-center font-urbanist-medium text-xl"
       >
         {number}
-      </H4>
+      </P>
     );
   }
 
   return (
     <Animated.View style={animatedStyle}>
-      <H4 className="text-center font-urbanist-medium">{number}</H4>
+      <P className="text-center font-urbanist-medium text-xl">{number}</P>
     </Animated.View>
   );
 }
@@ -112,17 +109,14 @@ export function SlidingNumber({
   const [integerPart, decimalPart] = absValue.toString().split(".");
   const integerValue = parseInt(integerPart ?? "0", 10);
 
-  const paddedInteger =
-    padStart && integerValue < 10 ? `0${integerPart}` : integerPart;
+  const paddedInteger = padStart && integerValue < 10 ? `0${integerPart}` : integerPart;
 
   const integerDigits = paddedInteger?.split("");
-  const integerPlaces = integerDigits?.map((_, i) =>
-    Math.pow(10, integerDigits.length - i - 1)
-  );
+  const integerPlaces = integerDigits?.map((_, i) => Math.pow(10, integerDigits.length - i - 1));
 
   const handlePress = () => {
     if (editable && onValueChange) {
-      setInputValue(value.toString());
+      setInputValue(Math.min(9999, value).toString());
       setModalVisible(true);
     }
   };
@@ -147,7 +141,7 @@ export function SlidingNumber({
 
   const numberDisplay = (
     <View className="flex flex-row items-center justify-center">
-      {value < 0 && <H4 className="text-center font-urbanist-medium">-</H4>}
+      {value < 0 && <P className="text-center font-urbanist-medium text-xl">-</P>}
       {integerDigits?.map((_, index) => (
         <Digit
           key={`pos-${integerPlaces ? integerPlaces[index] : 0}`}
@@ -157,12 +151,10 @@ export function SlidingNumber({
       ))}
       {decimalPart && (
         <>
-          <H4 className="text-center font-urbanist-medium">
-            {decimalSeparator}
-          </H4>
-          {decimalPart.split("").map((_, index) => (
+          <P className="text-center font-urbanist-medium text-xl">{decimalSeparator}</P>
+          {decimalPart.split("").map((char, index) => (
             <Digit
-              key={`decimal-${index}`}
+              key={`decimal-${char}-${index}`}
               value={parseInt(decimalPart, 10)}
               place={10 ** (decimalPart.length - index - 1)}
             />
@@ -182,10 +174,7 @@ export function SlidingNumber({
 
       <BaseModal modalVisible={modalVisible} onCancel={handleCancel}>
         <View className="bg-background rounded-2xl p-6 w-full max-w-sm shadow-2xl border-continuous">
-          <H4 className="mb-6 font-urbanist-bold text-foreground">
-            Enter Quantity
-          </H4>
-
+          <H4 className="mb-6 font-urbanist-bold text-foreground">Enter Quantity</H4>
           <Input
             value={inputValue}
             onChangeText={setInputValue}
@@ -198,18 +187,12 @@ export function SlidingNumber({
           />
 
           <View className="flex-row gap-3 mt-6 justify-end">
-            <Button
-              variant="outline"
-              className="w-full rounded-xl"
-              onPress={handleCancel}
-            >
+            <Button variant="outline" className="w-full rounded-xl" onPress={handleCancel}>
               <P className="font-urbanist-semibold text-foreground">Cancel</P>
             </Button>
 
             <Button className="w-full rounded-xl" onPress={handleSubmit}>
-              <P className="font-urbanist-semibold text-primary-foreground">
-                Confirm
-              </P>
+              <P className="font-urbanist-semibold text-primary-foreground">Confirm</P>
             </Button>
           </View>
         </View>

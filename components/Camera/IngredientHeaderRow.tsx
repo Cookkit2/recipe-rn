@@ -3,7 +3,7 @@ import { Alert, Pressable, View } from "react-native";
 import Animated, { LinearTransition } from "react-native-reanimated";
 import IngredientThumbnail from "../Ingredient/IngredientThumbnail";
 import { Button } from "../ui/button";
-import { XIcon } from "lucide-nativewind";
+import { XIcon } from "lucide-uniwind";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { useCreateIngredientStore } from "~/store/CreateIngredientContext";

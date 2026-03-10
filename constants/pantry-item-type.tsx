@@ -1,6 +1,6 @@
 import CabinetIcon from "~/lib/icons/CabinetIcon";
 import type { ItemType } from "~/types/PantryItem";
-import { AppleIcon, RefrigeratorIcon, SnowflakeIcon } from "lucide-nativewind";
+import { AppleIcon, RefrigeratorIcon, SnowflakeIcon } from "lucide-uniwind";
 import type { JSX } from "react";
 
 export const PANTRY_ITEM_TYPE_OPTIONS: Array<{

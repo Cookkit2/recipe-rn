@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import SegmentedButtons, { type GroupButton } from "~/components/Shared/SegmentedButtons";
 import { Card, CardContent } from "~/components/ui/card";
 import { H4 } from "~/components/ui/typography";
-import { MoonIcon, SaladIcon, VeganIcon, FishIcon, BadgeXIcon } from "lucide-nativewind";
+import { MoonIcon, SaladIcon, VeganIcon, FishIcon, BadgeXIcon } from "lucide-uniwind";
 import { StarNorthIcon } from "~/lib/icons/StarNorth";
 import { storage } from "~/data";
 import { PREF_DIET_KEY } from "~/constants/storage-keys";
@@ -33,6 +33,9 @@ export default function DietarySection() {
       storage.set(PREF_DIET_KEY, diet);
       queryClient.invalidateQueries({
         queryKey: recipeQueryKeys.recommendations(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: recipeQueryKeys.expiringRecipes(),
       });
     },
     [queryClient]

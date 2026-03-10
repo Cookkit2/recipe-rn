@@ -1,13 +1,11 @@
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-} from "react";
+import React, { createContext, useCallback, useContext, useMemo, useState } from "react";
+import type { FlatList } from "react-native";
 import {
+  useAnimatedRef,
+  useScrollOffset,
   useSharedValue,
   withTiming,
+  type AnimatedRef,
   type SharedValue,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -33,6 +31,7 @@ interface PantryContextType {
   // Use to manually snap the bottom recipe page to expanded state
   snapToExpanded: () => void;
 
+  ingredientScrollRef: AnimatedRef<FlatList>;
   ingredientScrollY: SharedValue<number>;
 }
 
@@ -49,7 +48,9 @@ export function PantryProvider({ children }: { children: React.ReactNode }) {
   const translateY = useSharedValue(0);
   const context = useSharedValue<{ y: number }>({ y: 0 });
   const isGestureActive = useSharedValue(false);
-  const ingredientScrollY = useSharedValue(0);
+
+  const ingredientScrollRef = useAnimatedRef<FlatList>();
+  const ingredientScrollY = useScrollOffset(ingredientScrollRef);
 
   // Height when collapsed
   const collapsedHeight = useMemo(() => bottom + 8 + 44, [bottom]);
@@ -83,6 +84,7 @@ export function PantryProvider({ children }: { children: React.ReactNode }) {
         isGestureActive,
         collapsedHeight,
         snapToExpanded,
+        ingredientScrollRef,
         ingredientScrollY,
       }}
     >

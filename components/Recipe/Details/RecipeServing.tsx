@@ -1,4 +1,4 @@
-import { MinusIcon, PlusIcon } from "lucide-nativewind";
+import { MinusIcon, PlusIcon } from "lucide-uniwind";
 import React from "react";
 import { View } from "react-native";
 import { SlidingNumber } from "~/components/Shared/SlidingNumber";

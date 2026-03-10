@@ -1,8 +1,10 @@
-# Cookkit - Smart Recipe & Pantry Management App
+# DoneDish (legacy: Cookkit) – Smart Recipe & Pantry Management App
+
+> **Product name:** DoneDish. Legacy/internal name: Cookkit.
 
 ## App Overview
 
-**Cookkit** is a sophisticated React Native mobile application that revolutionizes home cooking through intelligent pantry management and AI-powered recipe discovery. The app combines modern design principles with practical functionality to help users efficiently track ingredients, discover personalized recipes, and streamline their cooking experience.
+**DoneDish** is a sophisticated React Native mobile application that revolutionizes home cooking through intelligent pantry management and AI-powered recipe discovery. The app combines modern design principles with practical functionality to help users efficiently track ingredients, discover personalized recipes, and streamline their cooking experience.
 
 ### Core Value Proposition
 - **Smart Pantry Tracking**: Visual inventory management with expiration date monitoring

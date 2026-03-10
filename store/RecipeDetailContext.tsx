@@ -1,19 +1,32 @@
 import React, { createContext, useCallback, useContext, useState } from "react";
+import type { Recipe } from "~/types/Recipe";
+import useRecipeScaling from "~/hooks/useRecipeScaling";
 
 interface RecipeDetailContextType {
-  // UI State only
+  // UI State
   servings: number;
   updateServings: (servings: number) => void;
+
+  // Scaled ingredients
+  scaledIngredients: Recipe["ingredients"];
+  originalServings: number;
+  scalingFactor: number;
+  isScaled: boolean;
 }
 
 const RecipeDetailContext = createContext<RecipeDetailContextType | null>(null);
 
 export function RecipeDetailProvider({
   children,
+  recipe,
 }: {
   children: React.ReactNode;
+  recipe?: Recipe | null;
 }) {
-  const [servings, setServings] = useState<number>(1);
+  const [servings, setServings] = useState<number>(recipe?.servings ?? 1);
+
+  // Use the recipe scaling hook to get scaled ingredients
+  const scalingResult = useRecipeScaling(recipe, servings);
 
   // UI callbacks
   const updateServings = useCallback((newServings: number) => {
@@ -25,6 +38,10 @@ export function RecipeDetailProvider({
       value={{
         servings,
         updateServings,
+        scaledIngredients: scalingResult.scaledIngredients,
+        originalServings: scalingResult.originalServings,
+        scalingFactor: scalingResult.scalingFactor,
+        isScaled: scalingResult.isScaled,
       }}
     >
       {children}

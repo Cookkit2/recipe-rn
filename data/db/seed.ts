@@ -7,6 +7,7 @@
 
 import { databaseFacade } from "./DatabaseFacade";
 import { dummyPantryItems } from "~/data/dummy/dummy-data";
+import { seedAchievements } from "./seed-achievements";
 import { File, Paths } from "expo-file-system";
 import { Asset } from "expo-asset";
 import type { ImageSourcePropType } from "react-native";
@@ -147,11 +148,12 @@ export async function seedDatabase() {
         expirationDate: item.expiry_date?.getTime(),
         storageType: item.type,
         imageUrl: imagePath, // Use the saved file path instead of the original asset
-        x: item.x,
-        y: item.y,
-        scale: item.scale,
       });
     }
+
+    // Seed achievement definitions
+    log.info("🏆 Seeding achievement definitions...");
+    await seedAchievements();
 
     // Recipes are synced from Supabase during initialization
     // No need to seed them manually

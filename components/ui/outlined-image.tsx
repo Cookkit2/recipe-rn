@@ -16,6 +16,10 @@ type OutlinedImageProps = {
   strokeWidth?: number;
   style?: StyleProp<ViewStyle>;
   imageStyle?: StyleProp<ImageStyle>;
+  /** Use with remote URLs for better cache hits. */
+  cacheKey?: string;
+  /** Default "memory-disk" for list/thumbnail reuse. */
+  cachePolicy?: "none" | "disk" | "memory" | "memory-disk";
 };
 
 /**
@@ -29,7 +33,17 @@ export const OutlinedImage: FC<OutlinedImageProps> = ({
   strokeWidth = 2,
   style,
   imageStyle,
+  cacheKey,
+  cachePolicy = "memory-disk",
 }) => {
+  const resolvedSource = useMemo(() => {
+    if (source == null) return source;
+    if (cacheKey == null) return source;
+    if (typeof source === "string") return { uri: source, cacheKey };
+    if (typeof source === "object" && "uri" in source) return { ...source, cacheKey };
+    return source;
+  }, [source, cacheKey]);
+
   const offsets = useMemo(() => {
     const r = Math.max(1, Math.round(strokeWidth));
     return [
@@ -45,11 +59,11 @@ export const OutlinedImage: FC<OutlinedImageProps> = ({
   }, [strokeWidth]);
 
   return (
-    <View className="relative" style={[{ width: size, height: size }, style]}>
+    <View className="relative" style={[{ width: size, height: size }, style]} collapsable={false}>
       {offsets.map(([dx, dy], idx) => (
         <Image
           key={`outline-${idx}`}
-          source={source}
+          source={resolvedSource}
           style={[
             styles.abs,
             {
@@ -62,12 +76,16 @@ export const OutlinedImage: FC<OutlinedImageProps> = ({
             imageStyle,
           ]}
           contentFit="contain"
+          cachePolicy={cachePolicy}
+          transition={150}
         />
       ))}
       <Image
-        source={source}
+        source={resolvedSource}
         style={[styles.abs, { width: size, height: size }, imageStyle]}
         contentFit="contain"
+        cachePolicy={cachePolicy}
+        transition={150}
       />
     </View>
   );

@@ -14,8 +14,21 @@ import { SPRING_CONFIG } from "~/constants/spring-config";
  * Contract
  * - Input: selectedIndex (number of the selected item)
  * - Output: onItemLayout(index) handler and animated ringStyle
- * - Behavior: When any item's layout is measured and when selectedIndex
- *   changes, the ring animates to the target item's rect.
+ * - Behavior:
+ *   - Stores measured layouts for all items keyed by index
+ *   - Ring initializes to the selected item's layout on first measurement
+ *   - When selectedIndex changes, ring animates (springs) to the new item's rect
+ *   - Uses spring animations configured with SPRING_CONFIG for smooth motion
+ *
+ * @param selectedIndex - The index of the currently selected item
+ * @returns Object containing:
+ *   - onItemLayout: Function that returns a layout event handler for each item
+ *   - ringStyle: Animated style with transform (translateX, translateY) and dimensions (width, height)
+ *
+ * @remarks
+ * The ring's position is absolute (transform-based) rather than relative,
+ * allowing it to move freely across the screen. Layout measurements are
+ * persisted in a ref keyed by index for efficient lookup.
  */
 export default function useSelectionRing(selectedIndex: number) {
   // Store measured layouts keyed by index

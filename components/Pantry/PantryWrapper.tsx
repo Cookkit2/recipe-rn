@@ -1,18 +1,13 @@
-import { Pressable, View, Dimensions, TextInput, Text, ActivityIndicator } from "react-native";
-import { useState } from "react";
-import { H1 } from "~/components/ui/typography";
+import { Pressable, View, Dimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import MenuDropdown from "~/components/Pantry/MenuDropdown";
-import AddPantryItem from "~/components/Pantry/AddPantryItem";
 import RecipeButton from "~/components/Pantry/RecipeButton";
 import Animated, {
-  Easing,
-  SlideInUp,
   useAnimatedStyle,
+  useSharedValue,
   withSpring,
   withTiming,
-  runOnJS,
 } from "react-native-reanimated";
+import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { CURVES } from "~/constants/curves";
 import useDeviceCornerRadius from "~/hooks/useDeviceCornerRadius";
@@ -20,9 +15,9 @@ import RecipeCategoryButtonGroup from "~/components/Pantry/RecipeCategoryButtonG
 import RecipeLists from "~/components/Pantry/RecipeLists";
 import { EXPANDED_HEIGHT, SNAP_THRESHOLD } from "~/constants/pantry";
 import { usePantryStore } from "~/store/PantryContext";
-import IngredientCategoryButtonGroup from "~/components/Pantry/IngredientCategoryButtonGroup";
 import IngredientLists from "~/components/Pantry/IngredientLists";
-import { useImportYouTubeRecipe, getImportStatusMessage } from "~/hooks/queries/useYouTubeRecipeQueries";
+import { useCallback, useEffect } from "react";
+import { setStatusBarStyle } from "expo-status-bar";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -37,20 +32,28 @@ export default function PantryWrapper() {
   const borderRadius = useDeviceCornerRadius();
   const { top } = useSafeAreaInsets();
 
-  const {
-    isRecipeOpen,
-    updateRecipeOpen,
-    translateY,
-    context,
-    isGestureActive,
-    collapsedHeight,
-  } = usePantryStore();
+  const { isRecipeOpen, updateRecipeOpen, translateY, context, isGestureActive, collapsedHeight } =
+    usePantryStore();
 
-  // YouTube Import Test State
-  const [youtubeUrl, setYoutubeUrl] = useState("https://www.youtube.com/watch?v=K32XDmE778k");
-  const { importRecipe, importStatus, data, error, isPending, reset } = useImportYouTubeRecipe();
+  const entranceOffset = useSharedValue(isRecipeOpen ? 1 : 0);
 
-  // Pan gesture handler
+  useEffect(() => {
+    setStatusBarStyle("auto", true);
+  }, []);
+
+  useEffect(() => {
+    const target = isRecipeOpen ? 1 : 0;
+    scheduleOnUI((t: number) => {
+      "worklet";
+      entranceOffset.value = withSpring(t, {
+        damping: 15,
+        mass: 0.8,
+        stiffness: 400,
+      });
+    }, target);
+  }, [isRecipeOpen]);
+
+  // Pan gesture handler - memoized to avoid recreation on every render
   const panGesture = Gesture.Pan()
     .onStart(() => {
       isGestureActive.value = true;
@@ -59,10 +62,7 @@ export default function PantryWrapper() {
     .onUpdate((event) => {
       // Only allow dragging up (negative values)
       const newTranslateY = context.value.y + event.translationY;
-      translateY.value = Math.min(
-        0,
-        Math.max(-EXPANDED_HEIGHT + collapsedHeight, newTranslateY)
-      );
+      translateY.value = Math.min(0, Math.max(-EXPANDED_HEIGHT + collapsedHeight, newTranslateY));
     })
     .onEnd((event) => {
       isGestureActive.value = false;
@@ -95,7 +95,7 @@ export default function PantryWrapper() {
 
       // Update selection state based on position
       const isExpanded = snapTarget < 0;
-      runOnJS(updateRecipeOpen)(isExpanded);
+      scheduleOnRN(updateRecipeOpen, isExpanded);
     });
 
   // Update container style to work with pan gesture
@@ -111,158 +111,55 @@ export default function PantryWrapper() {
       ),
       borderTopRightRadius: isRecipeOpen ? borderRadius : 0,
       borderTopLeftRadius: isRecipeOpen ? borderRadius : 0,
-      marginHorizontal: withTiming(
-        isRecipeOpen ? 8 : 0,
-        CURVES["expressive.default.spatial"]
-      ),
+      marginHorizontal: withTiming(isRecipeOpen ? 8 : 0, CURVES["expressive.default.spatial"]),
       marginTop: withSpring(isRecipeOpen ? 8 : 0, SPRING_CONFIG),
-      marginBottom: withSpring(
-        isRecipeOpen ? collapsedHeight - translateY.value : 0,
-        SPRING_CONFIG
-      ),
+      // Keep spacing in sync with the sheet height, but avoid re-starting a spring on every frame
+      marginBottom: isRecipeOpen ? collapsedHeight - translateY.value : 0,
       paddingTop: withSpring(isRecipeOpen ? top - 8 : top, SPRING_CONFIG),
     };
   }, [isRecipeOpen, collapsedHeight, top]);
 
-  const headerGroupStyle = useAnimatedStyle(() => {
-    return {
-      paddingHorizontal: withTiming(
-        isRecipeOpen ? 16 : 24,
-        CURVES["expressive.default.spatial"]
-      ),
-    };
-  }, [isRecipeOpen]);
-
-  const ingredientListStyle = useAnimatedStyle(() => {
-    return {
-      paddingHorizontal: withTiming(
-        isRecipeOpen ? 4 : 12,
-        CURVES["expressive.default.spatial"]
-      ),
-    };
-  }, [isRecipeOpen]);
+  const closeRecipe = useCallback(() => {
+    if (isRecipeOpen) {
+      updateRecipeOpen(false);
+      translateY.value = withSpring(0, {
+        damping: 15,
+        mass: 1,
+        stiffness: 300,
+      });
+    }
+  }, [isRecipeOpen, updateRecipeOpen, translateY]);
 
   const recipeGroupStyle = useAnimatedStyle(() => {
+    const visibleHeight = collapsedHeight - 8 - translateY.value;
     return {
-      opacity: withTiming(
-        isRecipeOpen ? 1 : 0,
-        CURVES["expressive.fast.spatial"]
-      ),
-      top: withSpring(
-        isRecipeOpen
-          ? SCREEN_HEIGHT - (collapsedHeight - 8 - translateY.value)
-          : SCREEN_HEIGHT,
-        SPRING_CONFIG
-      ),
+      opacity: entranceOffset.value,
+      // entranceOffset springs 0→1 on open (bounce), 1→0 on close; translateY drives drag directly
+      top: SCREEN_HEIGHT - entranceOffset.value * visibleHeight,
     };
-  }, [isRecipeOpen, collapsedHeight]);
+  }, [collapsedHeight]);
 
   return (
     <Animated.View className="relative flex-1 bg-black">
       <AnimatedPressable
         className="relative flex-1 bg-background overflow-hidden"
-        exiting={SlideInUp.duration(1000).easing(Easing.inOut(Easing.quad))}
         style={containerStyle}
-        onPress={() => {
-          if (isRecipeOpen) {
-            updateRecipeOpen(false);
-            translateY.value = withSpring(0, {
-              damping: 15,
-              mass: 1,
-              stiffness: 300,
-            });
-          }
-        }}
+        onPress={closeRecipe}
       >
-        <Animated.View
-          className="flex-row items-center my-5 gap-3"
-          style={headerGroupStyle}
-        >
-          <H1 className="font-bowlby-one pt-2">Pantry</H1>
-          <View className="flex-1" />
-          <AddPantryItem />
-          <MenuDropdown />
-        </Animated.View>
-
-        {/* YouTube Import Test Section */}
-        <View className="mx-4 mb-4 p-3 bg-muted rounded-xl">
-          <Text className="text-foreground font-semibold mb-2">Test YouTube Import</Text>
-          <TextInput
-            className="bg-background text-foreground px-3 py-2 rounded-lg mb-2"
-            placeholder="Paste YouTube URL..."
-            placeholderTextColor="#888"
-            value={youtubeUrl}
-            onChangeText={setYoutubeUrl}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          <View className="flex-row gap-2">
-            <Pressable
-              className={`flex-1 py-2 rounded-lg items-center justify-center ${
-                isPending ? "bg-muted-foreground" : "bg-primary"
-              }`}
-              onPress={() => importRecipe(youtubeUrl)}
-              disabled={isPending || !youtubeUrl.trim()}
-            >
-              {isPending ? (
-                <ActivityIndicator color="white" size="small" />
-              ) : (
-                <Text className="text-primary-foreground font-semibold">Import Recipe</Text>
-              )}
-            </Pressable>
-            {(data || error) && (
-              <Pressable
-                className="px-4 py-2 rounded-lg bg-destructive items-center justify-center"
-                onPress={() => {
-                  reset();
-                  setYoutubeUrl("");
-                }}
-              >
-                <Text className="text-destructive-foreground font-semibold">Clear</Text>
-              </Pressable>
-            )}
-          </View>
-          {/* Status Display */}
-          {importStatus !== "idle" && (
-            <Text className="text-muted-foreground text-sm mt-2">
-              {getImportStatusMessage(importStatus)}
-            </Text>
-          )}
-          {/* Success Result */}
-          {data?.success && data.recipe && (
-            <View className="mt-2 p-2 bg-green-500/20 rounded-lg">
-              <Text className="text-green-600 font-semibold">
-                Success: {data.recipe.title}
-              </Text>
-              <Text className="text-green-600 text-sm">
-                Missing ingredients: {data.shoppingList?.missingIngredients.length ?? 0}
-              </Text>
-            </View>
-          )}
-          {/* Error Display */}
-          {(data?.error || error) && (
-            <View className="mt-2 p-2 bg-destructive/20 rounded-lg">
-              <Text className="text-destructive text-sm">
-                {data?.error || error?.message}
-              </Text>
-            </View>
-          )}
-        </View>
-
-        <IngredientCategoryButtonGroup />
-        <Animated.View style={ingredientListStyle}>
-          <IngredientLists />
-        </Animated.View>
+        <IngredientLists />
       </AnimatedPressable>
 
       <RecipeButton />
 
       <GestureDetector gesture={panGesture}>
         <Animated.View
-          className="absolute left-0 right-0"
+          className="absolute left-0 right-0 h-full"
+          pointerEvents={isRecipeOpen ? "auto" : "none"}
           style={[recipeGroupStyle]}
         >
           <View className="bg-muted/80 h-1 w-16 rounded-full self-center mb-2" />
+          {/* Invisible touch area overlay for easier grabbing */}
+          <View className="absolute top-0 left-0 right-0 h-12" />
           <RecipeCategoryButtonGroup />
           <RecipeLists />
         </Animated.View>

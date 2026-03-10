@@ -10,12 +10,12 @@ import { useRefreshPantryItems } from "~/hooks/queries/usePantryQueries";
 import { useRefreshRecipes } from "~/hooks/queries/useRecipeQueries";
 import { log } from "~/utils/logger";
 
-type UnitSystem = "si" | "imperial";
+type UnitSystem = "metric" | "imperial";
 
 export default function UnitSection() {
-  const [unit, setUnit] = useState<UnitSystem>(
-    storage.get(PREF_UNIT_SYSTEM_KEY) || "si"
-  );
+  // Handle legacy "si" value - treat as "metric"
+  const storedValue = storage.get(PREF_UNIT_SYSTEM_KEY) as string | undefined;
+  const [unit, setUnit] = useState<UnitSystem>(storedValue === "imperial" ? "imperial" : "metric");
   // const [isLoading, setIsLoading] = useState(false);
   const { refresh: refreshPantry } = useRefreshPantryItems();
   const { refresh: refreshRecipe } = useRefreshRecipes();
@@ -58,18 +58,14 @@ export default function UnitSection() {
             Choose your preferred measurement system
           </P>
         </View>
-        <SegmentedButtons
-          buttons={UNIT_BUTTONS}
-          value={unit}
-          onValueChange={handleSelectUnit}
-        />
+        <SegmentedButtons buttons={UNIT_BUTTONS} value={unit} onValueChange={handleSelectUnit} />
       </CardContent>
     </Card>
   );
 }
 
 const UNIT_BUTTONS: GroupButton<UnitSystem>[] = [
-  { label: "SI", icon: <P className="font-bowlby-one">kg</P>, value: "si" },
+  { label: "Metric", icon: <P className="font-bowlby-one">kg</P>, value: "metric" },
   {
     label: "Imperial",
     icon: <P className="font-bowlby-one">lbs</P>,

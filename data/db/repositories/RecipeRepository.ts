@@ -11,7 +11,7 @@ import {
   type SupabaseRecipeWithDetails,
 } from "~/data/supabase-api/RecipeApi";
 import type { Tables } from "~/lib/supabase/supabase-types";
-import { log } from "~/utils/logger";
+import { log } from '~/utils/logger';
 
 export interface RecipeSearchOptions extends SearchOptions {
   tags?: string[];
@@ -199,6 +199,108 @@ export class RecipeRepository extends BaseRepository<Recipe> {
     } catch (error) {
       // Fallback: try direct query approach
       return await this.getRecipeWithDetailsDirectQuery(id);
+    }
+  }
+
+  /**
+   * Get multiple recipes with their details in a single batch query.
+   *
+   * **Performance Benefit:** This method uses Q.oneOf() to fetch all recipes, steps,
+   * and ingredients in just 3 database queries total, regardless of how many recipes
+   * are requested. Compare this to calling getRecipeWithDetails() in a loop, which
+   * would result in 3 queries per recipe (N+1 problem).
+   *
+   * **When to use:** Use this method when you need to fetch details for multiple recipes
+   * at once, such as in recipe lists, search results, or recommendation features.
+   *
+   * **When NOT to use:** For fetching a single recipe's details, use getRecipeWithDetails() instead.
+   *
+   * @param recipeIds - Array of recipe IDs to fetch details for
+   * @returns Map<recipeId, RecipeWithDetails> where each entry contains the recipe with its steps and ingredients
+   *
+   * @example
+   * // ✅ GOOD: Batch fetch for multiple recipes
+   * const recipeIds = dbRecipes.map(r => r.id);
+   * const detailsMap = await recipeRepository.getRecipesWithDetails(recipeIds);
+   *
+   * @example
+   * // ❌ BAD: Using this for a single recipe (use getRecipeWithDetails instead)
+   * const details = await recipeRepository.getRecipesWithDetails([singleId]);
+   * const singleRecipe = details.get(singleId);
+   */
+  async getRecipesWithDetails(recipeIds: string[]): Promise<Map<string, {
+    recipe: Recipe;
+    steps: RecipeStep[];
+    ingredients: RecipeIngredient[];
+  }>> {
+    // Handle empty input
+    if (recipeIds.length === 0) {
+      return new Map();
+    }
+
+    try {
+      // Batch fetch all recipes using Q.oneOf
+      const recipes = await this.collection
+        .query(Q.where('id', Q.oneOf(recipeIds)))
+        .fetch();
+
+      if (recipes.length === 0) {
+        return new Map();
+      }
+
+      // Batch fetch all steps for these recipes in a single query
+      const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
+      const allSteps = await stepsCollection
+        .query(Q.where('recipe_id', Q.oneOf(recipeIds)))
+        .fetch();
+
+      // Batch fetch all ingredients for these recipes in a single query
+      const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
+      const allIngredients = await ingredientsCollection
+        .query(Q.where('recipe_id', Q.oneOf(recipeIds)))
+        .fetch();
+
+      // Build the result Map
+      const resultMap = new Map<string, {
+        recipe: Recipe;
+        steps: RecipeStep[];
+        ingredients: RecipeIngredient[];
+      }>();
+
+      // Initialize map with recipes
+      recipes.forEach((recipe) => {
+        resultMap.set(recipe.id, {
+          recipe,
+          steps: [],
+          ingredients: [],
+        });
+      });
+
+      // Group steps by recipe_id and sort by step number
+      allSteps.forEach((step) => {
+        const entry = resultMap.get(step.recipeId);
+        if (entry) {
+          entry.steps.push(step);
+        }
+      });
+
+      // Group ingredients by recipe_id
+      allIngredients.forEach((ingredient) => {
+        const entry = resultMap.get(ingredient.recipeId);
+        if (entry) {
+          entry.ingredients.push(ingredient);
+        }
+      });
+
+      // Sort steps by step number for each recipe
+      resultMap.forEach((entry) => {
+        entry.steps.sort((a, b) => a.step - b.step);
+      });
+
+      return resultMap;
+    } catch (error) {
+      log.error('Error in getRecipesWithDetails:', error);
+      return new Map();
     }
   }
 
@@ -506,6 +608,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
       if (data.recipe.sourceUrl) r.sourceUrl = data.recipe.sourceUrl;
       if (data.recipe.calories) r.calories = data.recipe.calories;
       if (data.recipe.tags) r.tags = data.recipe.tags;
+      if (data.recipe.type) r.type = data.recipe.type;
       r.syncedAt = Date.now(); // Set sync time
       r.isFavorite = data.recipe.isFavorite ?? false; // Default to false
     });
@@ -588,5 +691,179 @@ export class RecipeRepository extends BaseRepository<Recipe> {
       unit: supabaseIngredient.unit || "unit",
       notes: supabaseIngredient.notes || undefined,
     };
+  }
+
+  // Update recipe with steps and ingredients
+  async updateRecipeWithDetails(
+    recipeId: string,
+    data: Partial<CreateRecipeWithDetailsData>
+  ): Promise<Recipe> {
+    return await database.write(async () => {
+      const recipe = await this.collection.find(recipeId);
+
+      // Update recipe fields
+      if (data.recipe) {
+        await recipe.updateRecipe(data.recipe);
+      }
+
+      // Update steps if provided
+      if (data.steps) {
+        const stepsCollection =
+          database.collections.get<RecipeStep>("recipe_step");
+        const existingSteps = await stepsCollection
+          .query(Q.where("recipe_id", recipeId))
+          .fetch();
+
+        // Delete existing steps
+        await Promise.all(
+          existingSteps.map((step) => step.destroyPermanently())
+        );
+
+        // Create new steps
+        if (data.steps.length > 0) {
+          await Promise.all(
+            data.steps.map((stepData) =>
+              stepsCollection.create((step) => {
+                step.step = stepData.step;
+                step.title = stepData.title;
+                step.description = stepData.description;
+                step.recipeId = recipeId;
+              })
+            )
+          );
+        }
+      }
+
+      // Update ingredients if provided
+      if (data.ingredients) {
+        const ingredientsCollection =
+          database.collections.get<RecipeIngredient>("recipe_ingredient");
+        const existingIngredients = await ingredientsCollection
+          .query(Q.where("recipe_id", recipeId))
+          .fetch();
+
+        // Delete existing ingredients
+        await Promise.all(
+          existingIngredients.map((ingredient) =>
+            ingredient.destroyPermanently()
+          )
+        );
+
+        // Create new ingredients
+        if (data.ingredients.length > 0) {
+          await Promise.all(
+            data.ingredients.map((ingredientData) =>
+              ingredientsCollection.create((ingredient) => {
+                ingredient.recipeId = recipeId;
+                ingredient.name = ingredientData.name;
+                ingredient.quantity = ingredientData.quantity;
+                ingredient.unit = ingredientData.unit;
+                ingredient.notes = ingredientData.notes;
+              })
+            )
+          );
+        }
+      }
+
+      return recipe;
+    });
+  }
+
+  // Duplicate a recipe with optional modifications
+  async duplicateRecipe(
+    recipeId: string,
+    modifications?: Partial<CreateRecipeWithDetailsData>
+  ): Promise<Recipe> {
+    return await database.write(async () => {
+      const originalRecipe = await this.collection.find(recipeId);
+
+      // Fetch original steps and ingredients
+      const stepsCollection =
+        database.collections.get<RecipeStep>("recipe_step");
+      const ingredientsCollection =
+        database.collections.get<RecipeIngredient>("recipe_ingredient");
+
+      const [originalSteps, originalIngredients] = await Promise.all([
+        stepsCollection.query(Q.where("recipe_id", recipeId)).fetch(),
+        ingredientsCollection.query(Q.where("recipe_id", recipeId)).fetch(),
+      ]);
+
+      // Apply modifications to recipe data
+      const recipeData: RecipeData = {
+        title: modifications?.recipe?.title
+          ? modifications.recipe.title
+          : `${originalRecipe.title} (Copy)`,
+        description:
+          modifications?.recipe?.description ?? originalRecipe.description,
+        imageUrl: modifications?.recipe?.imageUrl ?? originalRecipe.imageUrl,
+        prepMinutes:
+          modifications?.recipe?.prepMinutes ?? originalRecipe.prepMinutes,
+        cookMinutes:
+          modifications?.recipe?.cookMinutes ?? originalRecipe.cookMinutes,
+        difficultyStars:
+          modifications?.recipe?.difficultyStars ??
+          originalRecipe.difficultyStars,
+        servings:
+          modifications?.recipe?.servings ?? originalRecipe.servings,
+        sourceUrl:
+          modifications?.recipe?.sourceUrl ?? originalRecipe.sourceUrl,
+        calories:
+          modifications?.recipe?.calories ?? originalRecipe.calories,
+        tags: modifications?.recipe?.tags ?? originalRecipe.tags,
+        type: modifications?.recipe?.type,
+        isFavorite: false, // Copies are not favorited by default
+      };
+
+      // Use provided steps/ingredients or original ones
+      const stepsData = modifications?.steps ?? originalSteps;
+      const ingredientsData = modifications?.ingredients ?? originalIngredients;
+
+      // Create the duplicate using createRecipeWithDetailsRaw
+      const newRecipe = await this.createRecipeWithDetailsRaw({
+        recipe: recipeData,
+        steps: stepsData.map((step) => ({
+          step: step.step,
+          title: step.title,
+          description: step.description,
+          recipeId: "", // Will be set by createRecipeWithDetailsRaw
+        })),
+        ingredients: ingredientsData.map((ingredient) => ({
+          name: ingredient.name,
+          quantity: ingredient.quantity,
+          unit: ingredient.unit,
+          notes: ingredient.notes,
+          recipeId: "", // Will be set by createRecipeWithDetailsRaw
+        })),
+      });
+
+      return newRecipe;
+    });
+  }
+
+  // Delegate method to get versions for a recipe
+  // This method imports RecipeVersionRepository lazily to avoid circular dependencies
+  async getVersionsForRecipe(
+    recipeId: string,
+    options?: SearchOptions
+  ): Promise<import("../models/RecipeVersion").default[]> {
+    const { RecipeVersionRepository } = await import("./RecipeVersionRepository");
+    const versionRepo = new RecipeVersionRepository();
+    return await versionRepo.getVersionsForRecipe(recipeId, options);
+  }
+
+  // Delegate method to create a version
+  async createRecipeVersion(
+    data: import("../models/RecipeVersion").RecipeVersionData
+  ): Promise<import("../models/RecipeVersion").default> {
+    const { RecipeVersionRepository } = await import("./RecipeVersionRepository");
+    const versionRepo = new RecipeVersionRepository();
+    return await versionRepo.createVersion(data);
+  }
+
+  // Delegate method to get the next version number
+  async getNextVersionNumber(recipeId: string): Promise<number> {
+    const { RecipeVersionRepository } = await import("./RecipeVersionRepository");
+    const versionRepo = new RecipeVersionRepository();
+    return await versionRepo.getNextVersionNumber(recipeId);
   }
 }

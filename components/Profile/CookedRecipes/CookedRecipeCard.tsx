@@ -5,7 +5,7 @@ import Animated from "react-native-reanimated";
 import useButtonAnimation from "~/hooks/animation/useButtonAnimations";
 import { useRecipe } from "~/hooks/queries/useRecipeQueries";
 import { Pressable, StyleSheet, View } from "react-native";
-import { ChefHatIcon } from "lucide-nativewind";
+import { ChefHatIcon } from "lucide-uniwind";
 import { H4, P } from "~/components/ui/typography";
 
 const CookedRecipeCard = ({

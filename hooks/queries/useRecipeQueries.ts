@@ -2,6 +2,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { recipeQueryKeys } from "./recipeQueryKeys";
 import type { Recipe } from "~/types/Recipe";
 import { recipeApi } from "~/data/api/recipeApi";
+import { databaseFacade } from "~/data/db/DatabaseFacade";
+import {
+  type RecipeRankingStrategy,
+  type RecipeFilterStrategy,
+  createHistoryAwareRankingStrategy,
+} from "~/hooks/recommendation";
+import { useMemo } from "react";
 
 /**
  * Hook to fetch all recipes
@@ -58,19 +65,160 @@ export function useAvailableRecipes() {
 }
 
 /**
- * Hook to get smart recipe recommendations
+ * Hook to fetch recipe availability data from database
+ *
+ * Caches available recipes results separately for efficient reuse.
+ * This data depends on pantry state and may change frequently.
+ * Returns raw database format for efficient processing.
+ *
+ * Cache: 1 minute stale time, 5 minutes garbage collection.
  */
-export function useRecipeRecommendations(options?: {
-  maxRecommendations?: number;
-  preferCompleteable?: boolean;
-  categories?: string[];
-  respectDietaryPreferences?: boolean;
-}) {
+export function useRecipeAvailability() {
   return useQuery({
-    queryKey: recipeQueryKeys.recommendations(options),
-    queryFn: () => recipeApi.getRecipeRecommendations(options),
-    staleTime: 2 * 60 * 1000, // 2 minutes - recommendations can be a bit more stable
+    queryKey: recipeQueryKeys.available(),
+    queryFn: () => databaseFacade.getAvailableRecipes(),
+    staleTime: 1 * 60 * 1000, // 1 minute - depends on pantry which changes frequently
+    gcTime: 5 * 60 * 1000, // 5 minutes garbage collection
   });
+}
+
+/**
+ * Recipe with its completion percentage
+ */
+export interface RecipeWithCompletion {
+  recipe: Recipe;
+  completionPercentage: number;
+  matchCategory?: "can_make_now" | "missing_1_2" | "missing_3_plus";
+}
+
+/**
+ * Options for useRecipeRecommendations hook
+ */
+export interface UseRecipeRecommendationsOptions {
+  /** Maximum recommendations to return */
+  maxRecommendations?: number;
+  /** Filter by recipe tags/categories */
+  categories?: string[];
+  /** Custom filter strategy (e.g., DietaryFilter for dietary preferences) */
+  filterStrategy?: RecipeFilterStrategy;
+  /** Custom ranking strategy (defaults to createHistoryAwareRankingStrategy) */
+  rankingStrategy?: RecipeRankingStrategy;
+}
+
+/**
+ * Hook to get smart recipe recommendations
+ *
+ * Uses cached data from availability and cooking history queries,
+ * passing it to getRecipeRecommendations to avoid redundant database calls.
+ */
+export function useRecipeRecommendations(options?: UseRecipeRecommendationsOptions) {
+  const {
+    maxRecommendations,
+    categories,
+    filterStrategy,
+    rankingStrategy = createHistoryAwareRankingStrategy(),
+  } = options || {};
+
+  // Get cached data from separate queries
+  const availabilityQuery = useRecipeAvailability();
+
+  const mostCookedQuery = useQuery({
+    queryKey: ["cookingHistory", "mostCooked", 100],
+    queryFn: () => databaseFacade.getMostCookedRecipes(100),
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+
+  const cookingHistoryQuery = useQuery({
+    queryKey: ["cookingHistory", "list", 500],
+    queryFn: () => databaseFacade.getCookingHistory(500),
+    staleTime: 1 * 60 * 1000, // 1 minute
+  });
+
+  // Query to compute recommendations from cached data
+  const recommendationsQuery = useQuery({
+    queryKey: [
+      "recipes",
+      "recommendations",
+      categories,
+      // Use constructor names for stable cache keys (Object.prototype.toString returns [object Object] for objects)
+      filterStrategy?.constructor?.name ?? "default",
+      rankingStrategy?.constructor?.name ?? "default",
+      maxRecommendations,
+    ],
+    queryFn: async () => {
+      const mostCookedData = mostCookedQuery.data ?? [];
+      const cookingHistoryDataRaw = cookingHistoryQuery.data ?? [];
+
+      // Build cooking history data from cached queries
+      const mostCookedMap = new Map(
+        mostCookedData.map((d) => [
+          d.recipeId,
+          { cookCount: d.cookCount, lastCookedAt: d.lastCookedAt },
+        ])
+      );
+
+      const ratingsByRecipe = new Map<string, number[]>();
+      for (const record of cookingHistoryDataRaw) {
+        if (record.rating !== undefined && record.rating >= 1 && record.rating <= 5) {
+          const existing = ratingsByRecipe.get(record.recipeId) || [];
+          existing.push(record.rating);
+          ratingsByRecipe.set(record.recipeId, existing);
+        }
+      }
+
+      const ratingsMap = new Map<string, number>();
+      for (const [recipeId, ratings] of ratingsByRecipe) {
+        const avgRating = ratings.reduce((sum, r) => sum + r, 0) / ratings.length;
+        ratingsMap.set(recipeId, avgRating);
+      }
+
+      const cookingHistoryData = {
+        mostCooked: mostCookedMap,
+        ratings: ratingsMap,
+      };
+
+      return recipeApi.getRecipeRecommendations({
+        maxRecommendations,
+        categories,
+        filterStrategy,
+        rankingStrategy,
+        preFetchedAvailability: availabilityQuery.data,
+        preFetchedCookingHistory: cookingHistoryData,
+      });
+    },
+    enabled: !!availabilityQuery.data && !!mostCookedQuery.data && !!cookingHistoryQuery.data,
+    staleTime: 30 * 1000, // 30 seconds - recommendations depend on other cached data
+  });
+
+  const recipes = recommendationsQuery.data?.recipes ?? [];
+
+  // Combine loading states
+  const isLoading =
+    availabilityQuery.isLoading ||
+    mostCookedQuery.isLoading ||
+    cookingHistoryQuery.isLoading ||
+    recommendationsQuery.isLoading;
+
+  // Combine errors
+  const error =
+    availabilityQuery.error ||
+    mostCookedQuery.error ||
+    cookingHistoryQuery.error ||
+    recommendationsQuery.error;
+
+  return {
+    recipes,
+    isLoading,
+    error,
+    refetch: () => {
+      return Promise.all([
+        availabilityQuery.refetch(),
+        mostCookedQuery.refetch(),
+        cookingHistoryQuery.refetch(),
+        recommendationsQuery.refetch(),
+      ]);
+    },
+  };
 }
 
 /**
@@ -78,41 +226,61 @@ export function useRecipeRecommendations(options?: {
  */
 export function useRandomRecipeRecommendation(options?: {
   maxRecommendations?: number;
-  preferCompleteable?: boolean;
   categories?: string[];
-  respectDietaryPreferences?: boolean;
 }) {
-  const recommendationsQuery = useRecipeRecommendations({
+  const { recipes, isLoading, error, refetch } = useRecipeRecommendations({
     ...options,
     maxRecommendations: options?.maxRecommendations || 20, // Get more recipes for better randomness
   });
 
   const getRandomRecipe = () => {
-    if (!recommendationsQuery.data) return null;
-
-    // Combine all available recipes
-    const allRecommendations = [
-      ...recommendationsQuery.data.canMakeRecommendations,
-      ...recommendationsQuery.data.partialRecommendations.map(
-        (item) => item.recipe
-      ),
-    ];
-
-    if (allRecommendations.length === 0) return null;
+    if (recipes.length === 0) return null;
 
     // Return a random recipe
-    const randomIndex = Math.floor(Math.random() * allRecommendations.length);
-    return allRecommendations[randomIndex];
+    const randomIndex = Math.floor(Math.random() * recipes.length);
+    return recipes[randomIndex]?.recipe ?? null;
   };
 
   return {
-    ...recommendationsQuery,
+    recipes,
+    isLoading,
+    error,
+    refetch,
     getRandomRecipe,
-    hasRecipes: recommendationsQuery.data
-      ? recommendationsQuery.data.canMakeRecommendations.length +
-          recommendationsQuery.data.partialRecommendations.length >
-        0
-      : false,
+    hasRecipes: recipes.length > 0,
+  };
+}
+
+/**
+ * Hook to get recipes based on ingredients expiring soon
+ *
+ * Fetches recipes ranked by how many expiring ingredients they use,
+ * helping to reduce food waste. Also returns the list of expiring
+ * ingredient IDs for UI display.
+ *
+ * @param options.daysBeforeExpiry - Days threshold for expiring ingredients (default: 3)
+ * @param options.maxRecommendations - Maximum recommendations to return
+ */
+export function useExpiringRecipes(options?: {
+  /** Number of days to look ahead for expiring ingredients (default: 3) */
+  daysBeforeExpiry?: number;
+  /** Maximum recommendations to return */
+  maxRecommendations?: number;
+}) {
+  const queryKey = recipeQueryKeys.expiringRecipes(options);
+
+  const query = useQuery({
+    queryKey,
+    queryFn: () => recipeApi.getRecipeRecommendationsForExpiring(options),
+    staleTime: 1 * 60 * 1000, // 1 minute - depends on pantry which changes frequently
+  });
+
+  return {
+    recipes: query.data?.recipes ?? [],
+    expiringIngredientIds: query.data?.expiringIngredientIds ?? new Set<string>(),
+    isLoading: query.isLoading,
+    error: query.error,
+    refetch: query.refetch,
   };
 }
 
@@ -138,13 +306,10 @@ export function useAddRecipe() {
     mutationFn: recipeApi.addRecipe,
     onSuccess: (newRecipe) => {
       // Add the new recipe to the recipes list cache
-      queryClient.setQueryData<Recipe[]>(
-        recipeQueryKeys.recipes(),
-        (oldData) => {
-          if (!oldData) return [newRecipe];
-          return [...oldData, newRecipe];
-        }
-      );
+      queryClient.setQueryData<Recipe[]>(recipeQueryKeys.recipes(), (oldData) => {
+        if (!oldData) return [newRecipe];
+        return [...oldData, newRecipe];
+      });
 
       // Invalidate related queries that might be affected
       queryClient.invalidateQueries({
@@ -171,21 +336,13 @@ export function useUpdateRecipe() {
       recipeApi.updateRecipe(id, updates),
     onSuccess: (updatedRecipe) => {
       // Update the specific recipe in cache
-      queryClient.setQueryData(
-        recipeQueryKeys.recipe(updatedRecipe.id),
-        updatedRecipe
-      );
+      queryClient.setQueryData(recipeQueryKeys.recipe(updatedRecipe.id), updatedRecipe);
 
       // Update the recipe in the recipes list cache
-      queryClient.setQueryData<Recipe[]>(
-        recipeQueryKeys.recipes(),
-        (oldData) => {
-          if (!oldData) return oldData;
-          return oldData.map((recipe) =>
-            recipe.id === updatedRecipe.id ? updatedRecipe : recipe
-          );
-        }
-      );
+      queryClient.setQueryData<Recipe[]>(recipeQueryKeys.recipes(), (oldData) => {
+        if (!oldData) return oldData;
+        return oldData.map((recipe) => (recipe.id === updatedRecipe.id ? updatedRecipe : recipe));
+      });
 
       // Invalidate related queries
       queryClient.invalidateQueries({
@@ -214,13 +371,10 @@ export function useDeleteRecipe() {
     mutationFn: recipeApi.deleteRecipe,
     onSuccess: (_, deletedId) => {
       // Remove the recipe from the recipes list cache
-      queryClient.setQueryData<Recipe[]>(
-        recipeQueryKeys.recipes(),
-        (oldData) => {
-          if (!oldData) return oldData;
-          return oldData.filter((recipe) => recipe.id !== deletedId);
-        }
-      );
+      queryClient.setQueryData<Recipe[]>(recipeQueryKeys.recipes(), (oldData) => {
+        if (!oldData) return oldData;
+        return oldData.filter((recipe) => recipe.id !== deletedId);
+      });
 
       // Remove the individual recipe from cache
       queryClient.removeQueries({

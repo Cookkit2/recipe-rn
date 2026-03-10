@@ -52,12 +52,7 @@ const StepCard: React.FC<{
 
   const cardStyle = useAnimatedStyle(() => {
     // Existing card rotation and scaling based on stack position
-    const rotate = interpolate(
-      animationValue.value,
-      [0, leftLength],
-      [0, 15],
-      Extrapolation.CLAMP
-    );
+    const rotate = interpolate(animationValue.value, [0, leftLength], [0, 15], Extrapolation.CLAMP);
 
     const scale = interpolate(
       animationValue.value,
@@ -88,16 +83,6 @@ const StepCard: React.FC<{
       Extrapolation.CLAMP
     );
 
-    return {
-      transform: [
-        { rotateZ: `${rotate + randomRotation.value}deg` }, // Stack rotation + random rotation
-        { scale: withSpring(scale * fallScale * pressScale.value) },
-        { translateY: withSpring(translateY + fallY) },
-      ],
-    };
-  });
-
-  const shadowStyle = useAnimatedStyle(() => {
     const shadowOpacity = interpolate(
       animationValue.value,
       [0, leftLength],
@@ -105,7 +90,14 @@ const StepCard: React.FC<{
       Extrapolation.CLAMP
     );
 
-    return { shadowOpacity: withSpring(shadowOpacity) };
+    return {
+      transform: [
+        { rotateZ: `${rotate + randomRotation.value}deg` }, // Stack rotation + random rotation
+        { scale: withSpring(scale * fallScale * pressScale.value) },
+        { translateY: withSpring(translateY + fallY) },
+      ],
+      shadowOpacity: withSpring(shadowOpacity),
+    };
   });
 
   let content = null;
@@ -117,37 +109,31 @@ const StepCard: React.FC<{
           ingredients={data.content as RecipeIngredient[]}
           totalSteps={stepPages.length}
         />
-    );
+      );
       break;
     case "congratulations":
       content = <CongratulationsContent />;
       break;
     case "step":
-      content = (
-        <StepContent
-          step={data.content as RecipeStep}
-          totalSteps={stepPages.length}
-        />
-      );
+      content = <StepContent step={data.content as RecipeStep} totalSteps={stepPages.length} />;
       break;
-    default:
+    default: {
+      const _: never = data.type;
+      break;
+    }
   }
 
   return (
-    <Animated.View className="flex-1 shadow-xl mx-8 my-16" style={shadowStyle}>
-      <Pressable
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        className="flex-1"
+    <Pressable onPressIn={handlePressIn} onPressOut={handlePressOut} className="flex-1 px-8 py-16">
+      <Animated.View
+        className="flex-1 bg-muted rounded-3xl border-continuous shadow-xl"
+        style={[cardStyle]}
+        shouldRasterizeIOS={true}
+        renderToHardwareTextureAndroid={true}
       >
-        <Animated.View
-          className="flex-1 bg-muted rounded-3xl border-continuous"
-          style={[cardStyle]}
-        >
-          {content}
-        </Animated.View>
-      </Pressable>
-    </Animated.View>
+        {content}
+      </Animated.View>
+    </Pressable>
   );
 };
 

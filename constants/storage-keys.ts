@@ -28,5 +28,20 @@ export const PREF_COLOR_SCHEME_KEY = "color-scheme"; // preserved existing raw k
 export const PROFILE_IMAGE_KEY = "profile:image";
 export const PROFILE_NAME_KEY = "profile:name";
 
+// TEMP: Recipe ID for header button
+export const CURRENT_RECIPE_ID_KEY = "current_recipe_id";
+
 // CAMERA ONBOARDING
 export const CAMERA_ONBOARDING_COMPLETED_KEY = "camera:onboarding_completed";
+
+// VOICE COOKING
+export const VOICE_COOKING_SETTINGS_KEY = "voice:cooking_settings";
+
+// NOTIFICATIONS
+export const NOTIFICATION_SETTINGS_KEY = "notifications:settings";
+
+// COOKING TIMERS
+export const COOKING_TIMERS_KEY = "cooking:timers";
+
+// EXPIRING RECIPES
+export const EXPIRING_RECIPES_DISMISSED_AT_KEY = "expiring_recipes:dismissed_at";

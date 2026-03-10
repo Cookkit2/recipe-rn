@@ -1,17 +1,7 @@
-import React, {
-  createContext,
-  useContext,
-  useCallback,
-  useState,
-  useRef,
-} from "react";
+import React, { createContext, useContext, useCallback, useState, useRef } from "react";
 import { useRouter } from "expo-router";
-import {
-  runOnJS,
-  useAnimatedReaction,
-  useSharedValue,
-  type SharedValue,
-} from "react-native-reanimated";
+import { useAnimatedReaction, useSharedValue, type SharedValue } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import type { ICarouselInstance } from "react-native-reanimated-carousel";
 import type { TextLoopRef } from "~/components/ui/TextLoop";
 import type { Recipe, RecipeIngredient } from "~/types/Recipe";
@@ -19,80 +9,22 @@ import type { PantryItem } from "~/types/PantryItem";
 import type { StepPageData } from "~/app/recipes/[recipeId]/steps";
 import { storage, database } from "~/data";
 import { RECIPE_COOKED_KEY } from "~/constants/storage-keys";
+import { achievementService } from "~/data/services/AchievementService";
 import {
   usePantryItemsByType,
   useUpdatePantryItem,
   useDeletePantryItem,
 } from "~/hooks/queries/usePantryQueries";
 import { isIngredientMatch } from "~/utils/ingredient-matching";
+import {
+  areDimensionsCompatible,
+  convertToBaseUnit,
+  roundToReasonablePrecision,
+} from "~/utils/unit-converter";
 import { queryClient } from "./QueryProvider";
 import { recipeQueryKeys } from "~/hooks/queries/recipeQueryKeys";
 import { cookingHistoryQueryKeys } from "~/hooks/queries/useCookingHistoryQueries";
-
-// Dictionary to map unit synonyms to their canonical form
-const UNIT_SYNONYMS: Record<string, string> = {
-  // Empty/piece variations
-  "": "piece",
-  piece: "piece",
-  pieces: "piece",
-  units: "piece",
-  unit: "piece",
-
-  // Volume measurements
-  cup: "cup",
-  cups: "cup",
-  c: "cup",
-
-  tablespoon: "tablespoon",
-  tablespoons: "tablespoon",
-  tbsp: "tablespoon",
-  tbs: "tablespoon",
-
-  teaspoon: "teaspoon",
-  teaspoons: "teaspoon",
-  tsp: "teaspoon",
-
-  liter: "liter",
-  liters: "liter",
-  l: "liter",
-
-  milliliter: "milliliter",
-  milliliters: "milliliter",
-  ml: "milliliter",
-
-  // Weight measurements
-  gram: "gram",
-  grams: "gram",
-  g: "gram",
-
-  kilogram: "kilogram",
-  kilograms: "kilogram",
-  kg: "kilogram",
-
-  pound: "pound",
-  pounds: "pound",
-  lb: "pound",
-  lbs: "pound",
-
-  ounce: "ounce",
-  ounces: "ounce",
-  oz: "ounce",
-};
-
-/**
- * Normalizes a unit string to its canonical form for comparison
- */
-const normalizeUnit = (unit: string): string => {
-  const normalized = unit.toLowerCase().trim();
-  return UNIT_SYNONYMS[normalized] || normalized;
-};
-
-/**
- * Checks if two units are compatible (synonymous)
- */
-const areUnitsCompatible = (unit1: string, unit2: string): boolean => {
-  return normalizeUnit(unit1) === normalizeUnit(unit2);
-};
+import { log } from "~/utils/logger";
 
 interface RecipeStepsContextType {
   currentStep: number;
@@ -105,16 +37,23 @@ interface RecipeStepsContextType {
   recipe: Recipe;
   duration: number | null;
   loopRef: React.RefObject<TextLoopRef | null>;
+  showRatingModal: boolean;
+  closeRatingModal: () => void;
+  saveRatingAndComplete: (rating: number | undefined, notes: string) => void;
+  skipRatingAndComplete: () => void;
+  isCompletingRecipe: boolean;
 }
 
 const RecipeStepsContext = createContext<RecipeStepsContextType | null>(null);
 
 export function RecipeStepsProvider({
   recipe,
+  baseRecipeId,
   stepPages,
   children,
 }: {
   recipe: Recipe;
+  baseRecipeId: string;
   stepPages: StepPageData[];
   children: React.ReactNode;
 }) {
@@ -135,6 +74,11 @@ export function RecipeStepsProvider({
   const [endTime, setEndTime] = useState<number | null>(null);
   const duration = endTime ? endTime - startTime.current : null;
 
+  // Rating modal state
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [isCompletingRecipe, setIsCompletingRecipe] = useState(false);
+  const pendingServings = useRef<number>(0);
+
   const animateLoopToIndex = useCallback((index: number) => {
     loopRef.current?.animateToIndex(index);
   }, []);
@@ -145,12 +89,18 @@ export function RecipeStepsProvider({
   }, []);
 
   const handleRecipeCompletion = useCallback(
-    async (servings: number) => {
+    async (servings: number, rating?: number, notes?: string) => {
       // Record the cooking in the database
       try {
-        await database.recordCooking(recipe.id, {
-          notes: `Cooked ${servings} serving${servings !== 1 ? "s" : ""}`,
+        await database.recordCooking(baseRecipeId, {
+          rating,
+          notes: notes || `Cooked ${servings} serving${servings !== 1 ? "s" : ""}`,
+          servingsMade: servings,
         });
+
+        // Check for achievements after recording cooking
+        // This will trigger achievement checks and unlock any newly achieved milestones
+        await achievementService.checkAchievements();
       } catch {
         // Continue even if recording fails
       }
@@ -182,34 +132,55 @@ export function RecipeStepsProvider({
 
       // Automatically deduct ingredients without showing alerts
       try {
-        const updatePromises = matches.map(
-          async ({ pantryItem, recipeIngredient }) => {
-            // Calculate reduction amount based on servings
-            let baseReductionAmount = 1;
+        const updatePromises = matches.map(async ({ pantryItem, recipeIngredient }) => {
+          let reductionInPantryUnits: number;
 
-            // Check unit compatibility for proper quantity calculation
-            if (areUnitsCompatible(pantryItem.unit, recipeIngredient.unit)) {
-              baseReductionAmount = recipeIngredient.quantity;
-            }
-
-            // Multiply by servings to get total reduction amount
-            const totalReductionAmount = baseReductionAmount * servings;
-
-            const newQuantity = Math.max(
-              0,
-              pantryItem.quantity - totalReductionAmount
+          // Check if dimensions are compatible (both weight, both volume, etc.)
+          if (areDimensionsCompatible(pantryItem.unit, recipeIngredient.unit)) {
+            // Convert both to base units for accurate comparison
+            const recipeInBase = convertToBaseUnit(
+              recipeIngredient.quantity,
+              recipeIngredient.unit
             );
+            const pantryInBase = convertToBaseUnit(pantryItem.quantity, pantryItem.unit);
 
-            if (newQuantity <= 0) {
-              return deletePantryItemMutation.mutateAsync(pantryItem.id);
+            if (pantryInBase > 0) {
+              // Calculate reduction as a proportion of pantry quantity
+              // E.g., if recipe needs 50ml and pantry has 1L (1000ml), reduce by 50/1000 * 1 = 0.05L
+              reductionInPantryUnits = (recipeInBase / pantryInBase) * pantryItem.quantity;
             } else {
-              return updatePantryItemMutation.mutateAsync({
-                id: pantryItem.id,
-                updates: { quantity: newQuantity },
-              });
+              reductionInPantryUnits = 0;
+            }
+          } else {
+            // Incompatible dimensions or unknown units
+            // If both units normalize to the same string, assume they're compatible
+            const normalizedPantryUnit = pantryItem.unit.toLowerCase().trim();
+            const normalizedRecipeUnit = recipeIngredient.unit.toLowerCase().trim();
+
+            if (normalizedPantryUnit === normalizedRecipeUnit) {
+              // Same unit (case-insensitive), deduct recipe quantity
+              reductionInPantryUnits = recipeIngredient.quantity;
+            } else {
+              // Different unknown units, fall back to deducting 1 unit
+              reductionInPantryUnits = 1;
             }
           }
-        );
+
+          // Multiply by servings to get total reduction amount
+          const totalReductionAmount = reductionInPantryUnits * servings;
+          const newQuantity = roundToReasonablePrecision(
+            Math.max(0, pantryItem.quantity - totalReductionAmount)
+          );
+
+          if (newQuantity <= 0) {
+            return deletePantryItemMutation.mutateAsync(pantryItem.id);
+          } else {
+            return updatePantryItemMutation.mutateAsync({
+              id: pantryItem.id,
+              updates: { quantity: newQuantity },
+            });
+          }
+        });
 
         await Promise.all(updatePromises);
       } catch {
@@ -222,12 +193,16 @@ export function RecipeStepsProvider({
       queryClient.invalidateQueries({
         queryKey: cookingHistoryQueryKeys.all,
       });
+      queryClient.invalidateQueries({
+        queryKey: cookingHistoryQueryKeys.recipeCookCount(baseRecipeId),
+      });
 
       // Navigate away after processing
       router.dismissTo("/");
     },
     [
-      recipe,
+      baseRecipeId,
+      recipe.ingredients,
       pantryItems,
       router,
       updatePantryItemMutation,
@@ -235,14 +210,41 @@ export function RecipeStepsProvider({
     ]
   );
 
+  const saveRatingAndComplete = useCallback(
+    async (rating: number | undefined, notes: string) => {
+      setIsCompletingRecipe(true);
+      try {
+        await handleRecipeCompletion(pendingServings.current, rating, notes);
+      } finally {
+        setIsCompletingRecipe(false);
+        setShowRatingModal(false);
+      }
+    },
+    [handleRecipeCompletion]
+  );
+
+  const closeRatingModal = useCallback(() => {
+    setShowRatingModal(false);
+  }, []);
+
+  const skipRatingAndComplete = useCallback(async () => {
+    setIsCompletingRecipe(true);
+    try {
+      await handleRecipeCompletion(pendingServings.current);
+    } finally {
+      setIsCompletingRecipe(false);
+      setShowRatingModal(false);
+    }
+  }, [handleRecipeCompletion]);
+
   useAnimatedReaction(
     () => progress.value,
     (progressValue) => {
       if (progressValue >= stepPages.length - 1) {
-        runOnJS(updateEndTime)();
-        runOnJS(animateLoopToIndex)(1);
+        scheduleOnRN(updateEndTime);
+        scheduleOnRN(animateLoopToIndex, 1);
       } else {
-        runOnJS(animateLoopToIndex)(0);
+        scheduleOnRN(animateLoopToIndex, 0);
       }
     },
     []
@@ -250,24 +252,56 @@ export function RecipeStepsProvider({
 
   const goToNextStep = useCallback(
     (servings: number) => {
+      log.info("\n═══════════════════════════════════════════════════════════");
+      log.info("[RecipeStepsContext] goToNextStep called");
+      log.info("[RecipeStepsContext] Current step:", currentStep);
+      log.info("[RecipeStepsContext] Total steps:", stepPages.length);
+      log.info("[RecipeStepsContext] Servings:", servings);
+
       if (currentStep < stepPages.length - 1) {
         const nextIndex = currentStep + 1;
+        log.info("[RecipeStepsContext] ✅ Moving to next step");
+        log.info("[RecipeStepsContext] Next index:", nextIndex);
+        log.info("[RecipeStepsContext] About to call setCurrentStep to", nextIndex);
         setCurrentStep(nextIndex);
+        log.info("[RecipeStepsContext] setCurrentStep called");
+
+        log.info("[RecipeStepsContext] Carousel ref exists?", !!carouselRef.current);
+        log.info("[RecipeStepsContext] About to call carousel.scrollTo");
         carouselRef.current?.scrollTo({ index: nextIndex, animated: true });
+        log.info("[RecipeStepsContext] carousel.scrollTo called");
       } else {
-        handleRecipeCompletion(servings);
+        log.info("[RecipeStepsContext] ✅ At end, showing rating modal");
+        // Store the servings for the completion
+        pendingServings.current = servings;
+        // Show the rating modal instead of completing directly
+        setShowRatingModal(true);
       }
+      log.info("═══════════════════════════════════════════════════════════\n");
     },
-    [currentStep, stepPages.length, handleRecipeCompletion]
+    [currentStep, stepPages.length]
   );
 
   const goToPreviousStep = useCallback(() => {
+    log.info("\n═══════════════════════════════════════════════════════════");
+    log.info("[RecipeStepsContext] goToPreviousStep called");
+    log.info("[RecipeStepsContext] Current step:", currentStep);
+
     if (currentStep > 0) {
-      const nextIndex = currentStep - 1;
-      setCurrentStep(nextIndex);
-      carouselRef.current?.scrollTo({ index: nextIndex, animated: true });
+      const prevIndex = currentStep - 1;
+      log.info("[RecipeStepsContext] ✅ Moving to previous step");
+      log.info("[RecipeStepsContext] Previous index:", prevIndex);
+      setCurrentStep(prevIndex);
+      log.info("[RecipeStepsContext] About to call carousel.scrollTo");
+      carouselRef.current?.scrollTo({ index: prevIndex, animated: true });
+      log.info("[RecipeStepsContext] carousel.scrollTo called");
+      log.info("[RecipeStepsContext] About to animate loop to index 0");
       loopRef.current?.animateToIndex(0);
+      log.info("[RecipeStepsContext] Loop animated");
+    } else {
+      log.info("[RecipeStepsContext] ⚠️ Already at first step, can't go back");
     }
+    log.info("═══════════════════════════════════════════════════════════\n");
   }, [currentStep]);
 
   return (
@@ -283,6 +317,11 @@ export function RecipeStepsProvider({
         recipe,
         duration,
         loopRef,
+        showRatingModal,
+        closeRatingModal,
+        saveRatingAndComplete,
+        skipRatingAndComplete,
+        isCompletingRecipe,
       }}
     >
       {children}

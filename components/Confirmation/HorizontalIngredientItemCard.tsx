@@ -1,26 +1,49 @@
+import React, { useCallback } from "react";
 import { View } from "react-native";
 import useColors from "~/hooks/useColor";
-import {
-  useCreateIngredientStore,
-  type CreatePantryItem,
-} from "~/store/CreateIngredientContext";
+import { useCreateIngredientStore, type CreatePantryItem } from "~/store/CreateIngredientContext";
 import IngredientQuantity from "~/components/Ingredient/IngredientQuantity";
 import EditableTitle from "~/components/Shared/EditableTitle";
 import OutlinedImage from "~/components/ui/outlined-image";
 import { Button } from "~/components/ui/button";
-import { Trash2Icon, RefreshCwIcon } from "lucide-nativewind";
+import { Trash2Icon, RefreshCwIcon } from "lucide-uniwind";
 import { H3, Muted } from "~/components/ui/typography";
 import Skeleton from "../ui/skeleton";
 
-export default function HorizontalIngredientItemCard({
-  item,
-}: {
-  item: CreatePantryItem;
-}) {
-  const colors = useColors();
+function HorizontalIngredientItemCard({ item }: { item: CreatePantryItem }) {
   const { image_url, name, quantity, unit, status } = item;
   const { updateProcessPantryItems, deleteProcessPantryItems, retryItem } =
     useCreateIngredientStore();
+
+  // Memoized callbacks to prevent re-renders
+  const handleNameChange = useCallback(
+    (text: string) => {
+      updateProcessPantryItems({ ...item, name: text });
+    },
+    [item, updateProcessPantryItems]
+  );
+
+  const handleQuantityChange = useCallback(
+    (newQuantity: number) => {
+      updateProcessPantryItems({ ...item, quantity: newQuantity });
+    },
+    [item, updateProcessPantryItems]
+  );
+
+  const handleUnitChange = useCallback(
+    (newUnit: string) => {
+      updateProcessPantryItems({ ...item, unit: newUnit });
+    },
+    [item, updateProcessPantryItems]
+  );
+
+  const handleDelete = useCallback(() => {
+    deleteProcessPantryItems(item.id);
+  }, [item.id, deleteProcessPantryItems]);
+
+  const handleRetry = useCallback(() => {
+    retryItem(item.id);
+  }, [item.id, retryItem]);
 
   // Show loading skeleton for processing/classifying states
   if (status === "processing" || status === "classifying") {
@@ -29,29 +52,21 @@ export default function HorizontalIngredientItemCard({
 
   // Show failed state with retry option
   if (status === "failed") {
-    return (
-      <FailedState
-        onRetry={() => retryItem(item.id)}
-        onDelete={() => deleteProcessPantryItems(item.id)}
-      />
-    );
+    return <FailedState onRetry={handleRetry} onDelete={handleDelete} />;
   }
 
   return (
     <View className="flex-1 flex-row items-start gap-4 p-3">
       <View
-        className="w-36 relative rounded-3xl flex items-center justify-center border-continuous aspect-square"
-        style={[{ backgroundColor: item.background_color || colors.muted }]}
+        className="w-36 relative rounded-3xl flex items-center justify-center border-continuous aspect-square bg-muted"
+        style={[{ backgroundColor: item.background_color }]}
       >
         <OutlinedImage source={image_url} size={64} />
       </View>
       <View className="mt-2 flex-1 flex-column">
         <EditableTitle
           value={name}
-          onChangeText={(text: string) => {
-            const newItem = { ...item, name: text };
-            updateProcessPantryItems(newItem);
-          }}
+          onChangeText={handleNameChange}
           placeholder="Enter title"
           TextComponent="H3"
           textClassName="opacity-80 font-urbanist-bold"
@@ -63,22 +78,11 @@ export default function HorizontalIngredientItemCard({
             quantity={quantity}
             unit={unit}
             className="justify-start gap-1"
-            updateQuantity={(quantity) =>
-              updateProcessPantryItems({ ...item, quantity })
-            }
-            updateUnit={(unit) => updateProcessPantryItems({ ...item, unit })}
+            updateQuantity={handleQuantityChange}
+            updateUnit={handleUnitChange}
           />
-          <Button
-            size="icon"
-            variant="ghost"
-            className="rounded-full"
-            onPress={() => deleteProcessPantryItems(item.id)}
-          >
-            <Trash2Icon
-              className="text-destructive"
-              size={20}
-              strokeWidth={2.618}
-            />
+          <Button size="icon" variant="ghost" className="rounded-full" onPress={handleDelete}>
+            <Trash2Icon className="text-destructive" size={20} strokeWidth={2.618} />
           </Button>
         </View>
       </View>
@@ -86,15 +90,23 @@ export default function HorizontalIngredientItemCard({
   );
 }
 
-function LoadingState() {
-  const colors = useColors();
+export default React.memo(HorizontalIngredientItemCard, (prevProps, nextProps) => {
+  // Custom comparison - only re-render if item properties actually changed
+  return (
+    prevProps.item.id === nextProps.item.id &&
+    prevProps.item.name === nextProps.item.name &&
+    prevProps.item.quantity === nextProps.item.quantity &&
+    prevProps.item.unit === nextProps.item.unit &&
+    prevProps.item.status === nextProps.item.status &&
+    prevProps.item.image_url === nextProps.item.image_url &&
+    prevProps.item.background_color === nextProps.item.background_color
+  );
+});
 
+function LoadingState() {
   return (
     <View className="flex-1 flex-row items-start gap-4 p-3">
-      <Skeleton
-        className="w-36 rounded-3xl aspect-square"
-        style={{ backgroundColor: colors.muted }}
-      />
+      <Skeleton className="w-36 rounded-3xl aspect-square bg-muted" />
       <View className="mt-2 flex-1 flex-column gap-2">
         <Skeleton className="h-6 w-3/4 rounded-lg" />
         <View className="flex-1" />
@@ -107,15 +119,8 @@ function LoadingState() {
   );
 }
 
-function FailedState({
-  onRetry,
-  onDelete,
-}: {
-  onRetry: () => void;
-  onDelete: () => void;
-}) {
+function FailedState({ onRetry, onDelete }: { onRetry: () => void; onDelete: () => void }) {
   const colors = useColors();
-
   return (
     <View className="flex-1 flex-row items-start gap-4 p-3">
       <View
@@ -129,21 +134,11 @@ function FailedState({
         <Muted className="text-sm">Unknown error</Muted>
         <View className="flex-1" />
         <View className="flex-row gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            className="flex-1"
-            onPress={onRetry}
-          >
-            <RefreshCwIcon size={20} strokeWidth={2.618} />
+          <Button size="sm" variant="outline" className="flex-1" onPress={onRetry}>
             <Muted>Retry</Muted>
           </Button>
           <Button size="icon" variant="ghost" onPress={onDelete}>
-            <Trash2Icon
-              className="text-destructive"
-              size={20}
-              strokeWidth={2.618}
-            />
+            <Trash2Icon className="text-destructive" size={20} strokeWidth={2.618} />
           </Button>
         </View>
       </View>

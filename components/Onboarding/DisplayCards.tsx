@@ -43,11 +43,7 @@ export default function DisplayCards() {
   const rotationDegrees = useSharedValue(0);
 
   useEffect(() => {
-    rotate.value = withRepeat(
-      withTiming(1, { duration: 48000, easing: Easing.linear }),
-      -1,
-      false
-    );
+    rotate.value = withRepeat(withTiming(1, { duration: 48000, easing: Easing.linear }), -1, false);
     pulse.value = withRepeat(
       withTiming(1.12, { duration: 3400, easing: Easing.inOut(Easing.ease) }),
       -1,
@@ -102,10 +98,7 @@ export default function DisplayCards() {
   }, []);
 
   return (
-    <View
-      className="justify-center self-center"
-      style={[{ width: size, height: size }]}
-    >
+    <View className="justify-center self-center" style={[{ width: size, height: size }]}>
       {/* Center Ring */}
       <View
         className="absolute inset-0 bg-primary rounded-full"
@@ -153,14 +146,12 @@ export default function DisplayCards() {
         style={[orbitStyle, { width: size, height: size }]}
       >
         {placements.map((p, i) => {
-          const x =
-            center + outerRadius * Math.cos(p.angle) - avatarSizeOuter / 2;
-          const y =
-            center + outerRadius * Math.sin(p.angle) - avatarSizeOuter / 2;
+          const x = center + outerRadius * Math.cos(p.angle) - avatarSizeOuter / 2;
+          const y = center + outerRadius * Math.sin(p.angle) - avatarSizeOuter / 2;
           return (
             <View
               key={p.id}
-              className="absolute rounded-full shadow-sm"
+              className="absolute rounded-full"
               style={[
                 {
                   width: avatarSizeOuter,
@@ -187,14 +178,12 @@ export default function DisplayCards() {
         style={[orbitStyle, { width: size, height: size }]}
       >
         {innerPlacements.map((p, i) => {
-          const x =
-            center + innerRadius * Math.cos(p.angle) - avatarSizeInner / 2;
-          const y =
-            center + innerRadius * Math.sin(p.angle) - avatarSizeInner / 2;
+          const x = center + innerRadius * Math.cos(p.angle) - avatarSizeInner / 2;
+          const y = center + innerRadius * Math.sin(p.angle) - avatarSizeInner / 2;
           return (
             <View
               key={p.id}
-              className="absolute rounded-full shadow-sm"
+              className="absolute rounded-full"
               style={[
                 {
                   width: avatarSizeOuter,

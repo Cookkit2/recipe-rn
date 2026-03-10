@@ -1,14 +1,14 @@
-import { StorageFactory } from "~/data/storage";
-import { storageConfigs } from "~/data/storage/storage-config";
-import type { AuthSession } from "~/types/AuthTypes";
+import { StorageFactory } from '~/data/storage';
+import { storageConfigs } from '~/data/storage/storage-config';
+import type { AuthSession } from '~/types/AuthTypes';
 import {
   AUTH_ACCESS_TOKEN_KEY,
   AUTH_REFRESH_TOKEN_KEY,
   AUTH_SESSION_DATA_KEY,
   AUTH_USER_DATA_KEY,
   AUTH_SESSION_EXPIRES_AT_KEY,
-} from "~/constants/storage-keys";
-import { log } from "~/utils/logger";
+} from '~/constants/storage-keys';
+import { log } from '~/utils/logger';
 
 /**
  * Secure storage integration for authentication tokens
@@ -18,7 +18,7 @@ export class AuthStorageManager {
   private static instance: AuthStorageManager | null = null;
   private storage = StorageFactory.initialize(
     // Use encrypted storage for auth; assert presence since config defines it
-    storageConfigs.encrypted as (typeof storageConfigs)["encrypted"]
+    storageConfigs.encrypted as (typeof storageConfigs)['encrypted']
   );
 
   static getInstance(): AuthStorageManager {
@@ -43,9 +43,7 @@ export class AuthStorageManager {
   async storeSession(session: AuthSession): Promise<void> {
     try {
       if (!this.storage.set) {
-        throw new Error(
-          "Storage implementation does not support async operations"
-        );
+        throw new Error('Storage implementation does not support async operations');
       }
 
       this.storage.set(this.KEYS.ACCESS_TOKEN, session.accessToken);
@@ -54,16 +52,13 @@ export class AuthStorageManager {
         this.storage.set(this.KEYS.REFRESH_TOKEN, session.refreshToken);
       }
 
-      this.storage.set(
-        this.KEYS.SESSION_EXPIRES_AT,
-        session.expiresAt.toISOString()
-      );
+      this.storage.set(this.KEYS.SESSION_EXPIRES_AT, session.expiresAt.toISOString());
       this.storage.set(this.KEYS.SESSION_DATA, JSON.stringify(session));
 
-      log.info("Auth session stored securely");
+      log.info('Auth session stored securely');
     } catch (error) {
-      log.error("Failed to store auth session:", error);
-      throw new Error("Failed to store authentication session");
+      log.error('Failed to store auth session:', error);
+      throw new Error('Failed to store authentication session');
     }
   }
 
@@ -73,9 +68,7 @@ export class AuthStorageManager {
   async getSession(): Promise<AuthSession | null> {
     try {
       if (!this.storage.get) {
-        throw new Error(
-          "Storage implementation does not support async operations"
-        );
+        throw new Error('Storage implementation does not support async operations');
       }
 
       const sessionData = this.storage.get<string>(this.KEYS.SESSION_DATA);
@@ -89,14 +82,14 @@ export class AuthStorageManager {
       // Check if session is expired
       const expiresAt = new Date(session.expiresAt);
       if (expiresAt <= new Date()) {
-        log.info("Stored session is expired");
+        log.info('Stored session is expired');
         await this.clearSession();
         return null;
       }
 
       return session;
     } catch (error) {
-      log.error("Failed to retrieve auth session:", error);
+      log.error('Failed to retrieve auth session:', error);
       return null;
     }
   }
@@ -107,15 +100,13 @@ export class AuthStorageManager {
   async getAccessToken(): Promise<string | null> {
     try {
       if (!this.storage.get) {
-        throw new Error(
-          "Storage implementation does not support async operations"
-        );
+        throw new Error('Storage implementation does not support async operations');
       }
 
       const token = this.storage.get<string>(this.KEYS.ACCESS_TOKEN);
       return token || null;
     } catch (error) {
-      log.error("Failed to retrieve access token:", error);
+      log.error('Failed to retrieve access token:', error);
       return null;
     }
   }
@@ -126,15 +117,13 @@ export class AuthStorageManager {
   async getRefreshToken(): Promise<string | null> {
     try {
       if (!this.storage.get) {
-        throw new Error(
-          "Storage implementation does not support async operations"
-        );
+        throw new Error('Storage implementation does not support async operations');
       }
 
       const token = this.storage.get<string>(this.KEYS.REFRESH_TOKEN);
       return token || null;
     } catch (error) {
-      log.error("Failed to retrieve refresh token:", error);
+      log.error('Failed to retrieve refresh token:', error);
       return null;
     }
   }
@@ -148,10 +137,10 @@ export class AuthStorageManager {
         this.storage.delete(key);
       });
 
-      log.info("Auth session cleared");
+      log.info('Auth session cleared');
     } catch (error) {
-      log.error("Failed to clear auth session:", error);
-      throw new Error("Failed to clear authentication session");
+      log.error('Failed to clear auth session:', error);
+      throw new Error('Failed to clear authentication session');
     }
   }
 
@@ -161,9 +150,7 @@ export class AuthStorageManager {
   async updateAccessToken(accessToken: string, expiresAt: Date): Promise<void> {
     try {
       if (!this.storage.set || !this.storage.get) {
-        throw new Error(
-          "Storage implementation does not support async operations"
-        );
+        throw new Error('Storage implementation does not support async operations');
       }
 
       this.storage.set(this.KEYS.ACCESS_TOKEN, accessToken);
@@ -178,10 +165,10 @@ export class AuthStorageManager {
         this.storage.set(this.KEYS.SESSION_DATA, JSON.stringify(session));
       }
 
-      log.info("Access token updated");
+      log.info('Access token updated');
     } catch (error) {
-      log.error("Failed to update access token:", error);
-      throw new Error("Failed to update access token");
+      log.error('Failed to update access token:', error);
+      throw new Error('Failed to update access token');
     }
   }
 
@@ -192,7 +179,7 @@ export class AuthStorageManager {
     try {
       return this.storage.contains(this.KEYS.ACCESS_TOKEN);
     } catch (error) {
-      log.error("Failed to check for stored session:", error);
+      log.error('Failed to check for stored session:', error);
       return false;
     }
   }
@@ -213,27 +200,21 @@ export class AuthStorageManager {
   // Async versions for better AsyncStorage compatibility
   public async getStringAsync(key: string): Promise<string | null> {
     if (!this.storage.get) {
-      throw new Error(
-        "Storage implementation does not support async operations"
-      );
+      throw new Error('Storage implementation does not support async operations');
     }
     return this.storage.get<string>(key) || null;
   }
 
   public async setStringAsync(key: string, value: string): Promise<void> {
     if (!this.storage.set) {
-      throw new Error(
-        "Storage implementation does not support async operations"
-      );
+      throw new Error('Storage implementation does not support async operations');
     }
     this.storage.set(key, value);
   }
 
   public async removeAsync(key: string): Promise<void> {
     if (!this.storage.delete) {
-      throw new Error(
-        "Storage implementation does not support async operations"
-      );
+      throw new Error('Storage implementation does not support async operations');
     }
     this.storage.delete(key);
   }

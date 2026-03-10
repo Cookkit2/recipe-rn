@@ -27,10 +27,12 @@ export const recipeQueryKeys = {
   // Available recipes (what can be made with current pantry)
   available: () => [...recipeQueryKeys.all, "available"] as const,
 
+  // Recipe availability data (which recipes can be made with current pantry)
+  availability: () => [...recipeQueryKeys.all, "availability"] as const,
+
   // Recipe recommendations based on pantry
   recommendations: (options?: {
     maxRecommendations?: number;
-    preferCompleteable?: boolean;
     categories?: string[];
   }) => [...recipeQueryKeys.all, "recommendations", options] as const,
 
@@ -40,4 +42,16 @@ export const recipeQueryKeys = {
 
   // Recipe tags (for filtering)
   tags: () => [...recipeQueryKeys.all, "tags"] as const,
+
+  // Recipes based on ingredients expiring soon
+  expiringRecipes: (options?: { daysBeforeExpiry?: number; maxRecommendations?: number }) =>
+    [...recipeQueryKeys.all, "expiring", options] as const,
+
+  // Recipe version history
+  versions: (recipeId: string) =>
+    [...recipeQueryKeys.all, "versions", recipeId] as const,
+
+  // Latest recipe version metadata
+  latestVersion: (recipeId: string) =>
+    [...recipeQueryKeys.all, "latest-version", recipeId] as const,
 } as const;

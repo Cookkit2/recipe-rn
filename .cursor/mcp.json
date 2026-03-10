@@ -1,19 +1,7 @@
 {
   "mcpServers": {
-    "supabase": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@supabase/mcp-server-supabase@latest",
-        "--read-only",
-        "--project-ref=npeumniwtoipfvuqqqwl"
-      ],
-      "env": {
-        "SUPABASE_ACCESS_TOKEN": "sbp_f59016c63ce9ff87405309a4f776f9da1c6c647e"
-      }
-    },
     "Sentry": {
-      "url": "https://mcp.sentry.dev/mcp/cookkit-d6/react-native"
+      "url": "https://mcp.sentry.dev/mcp/donedish/react-native"
     }
   }
 }

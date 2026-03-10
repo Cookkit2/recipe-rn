@@ -30,11 +30,7 @@ export class StockRepository extends BaseRepository<Stock> {
     }
 
     // Apply sorting
-    query = this.applySorting(
-      query,
-      options.sortBy || "name",
-      options.sortOrder || "asc"
-    );
+    query = this.applySorting(query, options.sortBy || "name", options.sortOrder || "asc");
 
     // Apply pagination
     if (options.offset) {
@@ -68,6 +64,35 @@ export class StockRepository extends BaseRepository<Stock> {
     return items.filter((item) => item.isExpired);
   }
 
+  // Detect expired waste - finds items that are expired and returns them with metadata
+  async detectExpiredWaste(): Promise<
+    Array<{
+      stock: Stock;
+      daysExpired: number;
+      estimatedCost?: number;
+    }>
+  > {
+    const items = await this.findAll();
+    const now = new Date();
+
+    return items
+      .filter((item) => item.isExpired)
+      .map((stock) => {
+        let daysExpired = 0;
+        if (stock.expiryDate) {
+          const diffTime = now.getTime() - stock.expiryDate.getTime();
+          daysExpired = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        }
+
+        return {
+          stock,
+          daysExpired,
+          estimatedCost: undefined, // Can be calculated if cost data is added to Stock model
+        };
+      })
+      .sort((a, b) => b.daysExpired - a.daysExpired); // Sort by most expired first
+  }
+
   // Get items expiring soon
   async getExpiringSoonItems(days: number = 3): Promise<Stock[]> {
     const items = await this.findAll();
@@ -82,9 +107,7 @@ export class StockRepository extends BaseRepository<Stock> {
 
   // Get stock by storage type
   async getStockByStorageType(storageType: string): Promise<Stock[]> {
-    return await this.collection
-      .query(Q.where("storage_type", Q.eq(storageType)))
-      .fetch();
+    return await this.collection.query(Q.where("storage_type", Q.eq(storageType))).fetch();
   }
 
   // Get all storage types
@@ -111,9 +134,7 @@ export class StockRepository extends BaseRepository<Stock> {
     const stockIds = stockCategories.map((sc: any) => sc.stockId);
     if (stockIds.length === 0) return [];
 
-    return await this.collection
-      .query(Q.where("id", Q.oneOf(stockIds)))
-      .fetch();
+    return await this.collection.query(Q.where("id", Q.oneOf(stockIds))).fetch();
   }
 
   // Get stock by synonym (for recipe matching)
@@ -126,17 +147,13 @@ export class StockRepository extends BaseRepository<Stock> {
     const stockIds = synonyms.map((syn: any) => syn.stockId);
     if (stockIds.length === 0) return [];
 
-    return await this.collection
-      .query(Q.where("id", Q.oneOf(stockIds)))
-      .fetch();
+    return await this.collection.query(Q.where("id", Q.oneOf(stockIds))).fetch();
   }
 
   // Find stock by name or synonym (for recipe matching)
   async findByNameOrSynonym(name: string): Promise<Stock[]> {
     // First try exact name match
-    const nameMatch = await this.collection
-      .query(Q.where("name", Q.eq(name)))
-      .fetch();
+    const nameMatch = await this.collection.query(Q.where("name", Q.eq(name))).fetch();
 
     if (nameMatch.length > 0) return nameMatch;
 
@@ -174,15 +191,9 @@ export class StockRepository extends BaseRepository<Stock> {
   }
 
   // Check if ingredient is in stock by name or synonym
-  async isIngredientInStock(
-    ingredientName: string,
-    minimumQuantity: number = 0
-  ): Promise<boolean> {
+  async isIngredientInStock(ingredientName: string, minimumQuantity: number = 0): Promise<boolean> {
     const stockItems = await this.findByNameOrSynonym(ingredientName);
-    const totalQuantity = stockItems.reduce(
-      (sum, item) => sum + item.quantity,
-      0
-    );
+    const totalQuantity = stockItems.reduce((sum, item) => sum + item.quantity, 0);
     return totalQuantity > minimumQuantity;
   }
 
@@ -200,33 +211,32 @@ export class StockRepository extends BaseRepository<Stock> {
       synonyms?: string[];
     }
   ): Promise<Stock> {
-    const stock = await this.create(data as any);
+    // Use a single database.write() to avoid nested write deadlocks
+    return await this.collection.database.write(async () => {
+      const stock = await this.createRaw(data as any);
 
-    if (options?.categoryIds && options.categoryIds.length > 0) {
-      const stockCategoryRepo = this.collection.database.get("stock_category");
-      await this.collection.database.write(async () => {
+      if (options?.categoryIds && options.categoryIds.length > 0) {
+        const stockCategoryRepo = this.collection.database.get("stock_category");
         for (const categoryId of options.categoryIds!) {
           await stockCategoryRepo.create((sc: any) => {
             sc.stockId = stock.id;
             sc.categoryId = categoryId;
           });
         }
-      });
-    }
+      }
 
-    if (options?.synonyms && options.synonyms.length > 0) {
-      const synonymRepo = this.collection.database.get("ingredient_synonym");
-      await this.collection.database.write(async () => {
+      if (options?.synonyms && options.synonyms.length > 0) {
+        const synonymRepo = this.collection.database.get("ingredient_synonym");
         for (const synonym of options.synonyms!) {
           await synonymRepo.create((syn: any) => {
             syn.stockId = stock.id;
             syn.synonym = synonym.toLowerCase();
           });
         }
-      });
-    }
+      }
 
-    return stock;
+      return stock;
+    });
   }
 
   // Get stock with categories
@@ -268,5 +278,44 @@ export class StockRepository extends BaseRepository<Stock> {
       .fetch();
 
     return { stock, synonyms };
+  }
+
+  /**
+   * Optimized method to fetch all stocks with their synonyms in just 2 queries.
+   * This is crucial to avoid N+1 performance issues when checking ingredients.
+   */
+  async getAllWithSynonyms(): Promise<
+    { id: string; name: string; quantity: number; synonyms: string[] }[]
+  > {
+    // 1. Fetch all stocks
+    const stocks = await this.collection.query().fetch();
+
+    // 2. Fetch all synonyms
+    const synonymCollection = this.collection.database.collections.get("ingredient_synonym");
+    const allSynonyms = await synonymCollection.query().fetch();
+
+    // 3. Create a map of stockId -> synonyms[]
+    const synonymsMap = new Map<string, string[]>();
+    for (const syn of allSynonyms) {
+      // Access raw data for speed/safety. Cast to any to access _raw.
+      const raw = (syn as any)._raw;
+      const stockId = raw.stock_id;
+      const val = raw.synonym;
+
+      if (stockId && val) {
+        if (!synonymsMap.has(stockId)) {
+          synonymsMap.set(stockId, []);
+        }
+        synonymsMap.get(stockId)?.push(val);
+      }
+    }
+
+    // 4. Map results
+    return stocks.map((stock) => ({
+      id: stock.id,
+      name: stock.name,
+      quantity: stock.quantity,
+      synonyms: synonymsMap.get(stock.id) || [],
+    }));
   }
 }

@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, Pressable, ActivityIndicator } from "react-native";
-import { EyeIcon, EyeOffIcon } from "lucide-nativewind";
+import { EyeIcon, EyeOffIcon } from "lucide-uniwind";
 import { H4, P } from "~/components/ui/typography";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";

@@ -12,7 +12,7 @@ import { Text } from "~/components/ui/text";
 import { Button } from "~/components/ui/button";
 import { AuthContainer, AuthCard, AuthInput } from "~/components/auth";
 import { useAuth } from "~/auth";
-import { ArrowLeftIcon } from "lucide-nativewind";
+import { ArrowLeftIcon } from "lucide-uniwind";
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState("");

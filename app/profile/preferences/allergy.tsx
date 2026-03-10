@@ -1,15 +1,17 @@
-import { View } from "react-native";
+import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AllergySection from "~/components/Preferences/AllergySection";
-import Header from "~/components/Shared/Header";
 
 export default function AllergyScreen() {
   const { bottom } = useSafeAreaInsets();
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingBottom: bottom }}>
-      <Header title="Food Allergies" />
+    <Animated.ScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      className="bg-background"
+      contentContainerStyle={{ paddingBottom: bottom }}
+    >
       <AllergySection />
-    </View>
+    </Animated.ScrollView>
   );
 }

@@ -1,9 +1,6 @@
 import { Icon } from "lucide-react-native";
 import { starNorth } from "@lucide/lab";
-import {
-  iconWithClassName,
-  type LucidePropsWithClassName,
-} from "lucide-nativewind";
+import { iconWithClassName, type LucidePropsWithClassName } from "lucide-uniwind";
 
 function StarNorth(props: LucidePropsWithClassName) {
   return <Icon iconNode={starNorth} {...props} />;

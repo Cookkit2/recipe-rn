@@ -1,7 +1,7 @@
 // Main database exports
-export { default as database, collections } from "./database";
-export { default as schema } from "./schema";
-export { default as migrations } from "./migrations";
+export { default as database, collections } from './database';
+export { default as schema } from './schema';
+export { default as migrations } from './migrations';
 
 // Model exports (for type usage only)
 export type {
@@ -11,10 +11,10 @@ export type {
   Stock,
   CookingHistory,
   StepsToStore,
-} from "./models";
+} from './models';
 
 // Database facade - ONLY public API
-export { DatabaseFacade, databaseFacade } from "./DatabaseFacade";
+export { DatabaseFacade, databaseFacade } from './DatabaseFacade';
 
 // Export types from DatabaseFacade for convenience
 export type {
@@ -26,7 +26,7 @@ export type {
   ShoppingListResult,
   AvailableRecipesResult,
   RecipeWithDetails,
-} from "./DatabaseFacade";
+} from './DatabaseFacade';
 
 // Default export is the database facade for convenience
-export { databaseFacade as default } from "./DatabaseFacade";
+export { databaseFacade as default } from './DatabaseFacade';

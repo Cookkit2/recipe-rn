@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { XIcon } from "lucide-nativewind";
+import { XIcon } from "lucide-uniwind";
 import React from "react";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";

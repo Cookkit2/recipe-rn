@@ -1,29 +1,44 @@
+import Constants from "expo-constants";
 import type { StorageConfig } from ".";
+import { log } from "~/utils/logger";
+
+const ENCRYPTION_KEY_ENV = "EXPO_PUBLIC_MMKV_ENCRYPTION_KEY";
+
+function getEncryptionKey(): string | undefined {
+  return (
+    (typeof process !== "undefined" && process.env?.[ENCRYPTION_KEY_ENV]) ||
+    Constants.expoConfig?.extra?.[ENCRYPTION_KEY_ENV]
+  );
+}
 
 /**
  * Storage configuration for different environments and use cases
  * You can easily switch between different storage implementations here
  */
 export const storageConfigs: Record<string, StorageConfig> = {
-  // Production configuration with AsyncStorage
   production: {
     type: "mmkv",
   },
 
-  // Development configuration with AsyncStorage (Expo Go compatible)
   development: {
     type: "mmkv",
   },
 
-  // AsyncStorage fallback (for compatibility)
-  asyncStorage: {
-    type: "async-storage",
-  },
-
-  // Encrypted storage for sensitive data (using AsyncStorage for now)
-  encrypted: {
-    type: "async-storage",
-  },
+  encrypted: (() => {
+    const key = getEncryptionKey();
+    if (!key) {
+      log.warn(
+        "[storage-config] No encryption key found. Set EXPO_PUBLIC_MMKV_ENCRYPTION_KEY (env or app.json extra) for encrypted auth storage. Using non-encrypted MMKV for this instance."
+      );
+    }
+    return {
+      type: "mmkv" as const,
+      options: {
+        id: "encrypted",
+        ...(key && { encryptionKey: key }),
+      },
+    };
+  })(),
 };
 
 /**

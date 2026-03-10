@@ -5,7 +5,7 @@ import { View } from "react-native";
 import {
   ArrowUpRightIcon,
   type LucidePropsWithClassName,
-} from "lucide-nativewind";
+} from "lucide-uniwind";
 
 export default function ListButton({
   title,
@@ -28,7 +28,7 @@ export default function ListButton({
       onPress={onPress}
       enableAnimation={false}
     >
-      {icon && <Icon className="color-foreground" size={24} strokeWidth={2} />}
+      {icon && <Icon className="text-foreground" size={24} strokeWidth={2} />}
       <P className="text-lg font-urbanist-semibold">{title}</P>
       <View className="flex-1" />
       {external && (

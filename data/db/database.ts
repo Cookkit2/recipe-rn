@@ -46,9 +46,13 @@ const createAdapter = () => {
       schema,
       migrations,
       dbName: "recipe_app",
-      jsi: true, // Use JSI for better performance
+      jsi: false, // Disabled: JSI can cause migration failures; re-enable after migrations succeed
       onSetUpError: (error) => {
-        log.error("Database failed to load:", error);
+        const err = error instanceof Error ? error : new Error(String(error));
+        log.error("Database failed to load:", err.message, err.stack);
+        if ("code" in err) log.error("Error code:", (err as { code?: unknown }).code);
+        if ("message" in (error as object))
+          log.error("Raw error message:", (error as { message?: string }).message);
         // Could show user a message to reload the app or clear data
       },
     });
@@ -79,6 +83,8 @@ export const collections = {
   ingredientSynonyms: database.collections.get("ingredient_synonym"),
   stockCategories: database.collections.get("stock_category"),
   cookingHistory: database.collections.get("cooking_history"),
+  wasteLogs: database.collections.get("waste_log"),
+  tailoredRecipeMappings: database.collections.get("tailored_recipe_mapping"),
 };
 
 log.info("✅ Database collections initialized");

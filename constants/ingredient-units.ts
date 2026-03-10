@@ -1,5 +1,5 @@
 export const UNIT_OPTIONS = {
-  si: [
+  metric: [
     { label: "kilogram", value: "kg" },
     { label: "gram", value: "g" },
     { label: "litre", value: "L" },

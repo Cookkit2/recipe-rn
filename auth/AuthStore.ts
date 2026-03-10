@@ -9,7 +9,7 @@ import type {
   AuthSession,
 } from "~/types/AuthTypes";
 import type { AuthStrategy } from "./AuthStrategy";
-import { log } from "~/utils/logger";
+import { log } from '~/utils/logger';
 
 interface AuthStore {
   // State

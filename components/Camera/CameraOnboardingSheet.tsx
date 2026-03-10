@@ -26,10 +26,12 @@ const FRAME_HEIGHT = 400;
 const FRAME_WIDTH = FRAME_HEIGHT * FRAME_ASPECT_RATIO;
 
 export default function CameraOnboardingSheet() {
-  const [isOnboardingComplete, setIsOnboardingComplete, { isLoading }] =
-    useLocalStorageState(CAMERA_ONBOARDING_COMPLETED_KEY, {
+  const [isOnboardingComplete, setIsOnboardingComplete, { isLoading }] = useLocalStorageState(
+    CAMERA_ONBOARDING_COMPLETED_KEY,
+    {
       defaultValue: false,
-    });
+    }
+  );
   const bottomSheetRef = useRef<BottomSheet>(null);
   const { bottom } = useSafeAreaInsets();
   const colors = useColors();
@@ -106,15 +108,10 @@ export default function CameraOnboardingSheet() {
         snapPoints={["85%"]}
         onChange={handleSheetChanges}
         enablePanDownToClose
-        backgroundStyle={[
-          styles.sheetBackground,
-          { backgroundColor: colors.card },
-        ]}
+        backgroundStyle={[styles.sheetBackground, { backgroundColor: colors.card }]}
         handleIndicatorStyle={styles.handleIndicator}
       >
-        <BottomSheetView
-          style={[styles.contentContainer, { paddingBottom: bottom }]}
-        >
+        <BottomSheetView style={[styles.contentContainer, { paddingBottom: bottom }]}>
           <PoweredByAI />
           {/* Video with iPhone Frame */}
           <View className="items-center justify-center py-4">
@@ -127,19 +124,13 @@ export default function CameraOnboardingSheet() {
                 nativeControls={false}
               />
               {/* iPhone frame overlay */}
-              <Image
-                source={iphoneFrame}
-                style={styles.frameImage}
-                contentFit="contain"
-              />
+              <Image source={iphoneFrame} style={styles.frameImage} contentFit="contain" />
             </View>
           </View>
 
           {/* Content */}
           <View className="flex-1 justify-end">
-            <H1 className="text-3xl font-bowlby-one text-center pt-4 tracking-wider">
-              Snap it. Record it.
-            </H1>
+            <H1 className="text-3xl font-bowlby-one text-center pt-4">Snap it. Record it.</H1>
             <P className="font-urbanist-medium text-foreground/80 px-4 text-center text-xl mb-2">
               One ingredient at a time
             </P>
@@ -150,9 +141,7 @@ export default function CameraOnboardingSheet() {
               onPress={handleComplete}
               className="mt-6 rounded-2xl bg-foreground mx-6"
             >
-              <H4 className="text-background font-urbanist font-semibold">
-                Got It
-              </H4>
+              <H4 className="text-background font-urbanist font-semibold">Got It</H4>
             </Button>
           </View>
         </BottomSheetView>

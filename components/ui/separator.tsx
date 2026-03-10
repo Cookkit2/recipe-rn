@@ -1,6 +1,6 @@
 import * as SeparatorPrimitive from '@rn-primitives/separator';
 import * as React from 'react';
-import { cn } from '~/lib/tw-merge';
+import { cn } from '~/lib/utils';
 
 function Separator({
   className,

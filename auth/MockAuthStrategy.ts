@@ -1,5 +1,5 @@
-import { log } from "~/utils/logger";
 import { BaseAuthStrategy } from "./AuthStrategy";
+import { log } from '~/utils/logger';
 import type {
   User,
   AuthResult,

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
@@ -6,7 +6,7 @@ import Animated, {
   useSharedValue,
   type SharedValue,
 } from "react-native-reanimated";
-import { cn } from "~/lib/tw-merge";
+import { cn } from "~/lib/utils";
 
 const MeasureElement = ({
   onLayout,
@@ -15,14 +15,8 @@ const MeasureElement = ({
   onLayout: (width: number) => void;
   children: React.ReactNode;
 }) => (
-  <Animated.ScrollView
-    horizontal
-    style={marqueeStyles.hidden}
-    pointerEvents="box-none"
-  >
-    <View onLayout={(ev) => onLayout(ev.nativeEvent.layout.width)}>
-      {children}
-    </View>
+  <Animated.ScrollView horizontal style={marqueeStyles.hidden} pointerEvents="box-none">
+    <View onLayout={(ev) => onLayout(ev.nativeEvent.layout.width)}>{children}</View>
   </Animated.ScrollView>
 );
 
@@ -84,11 +78,16 @@ const ChildrenScroller = ({
     coeff.value = reverse ? 1 : -1;
   }, [coeff, reverse]);
 
-  useFrameCallback((i) => {
-    // prettier-ignore
-    offset.value += (coeff.value * ((i.timeSincePreviousFrame ?? 1) * childrenWidth)) / duration;
-    offset.value = offset.value % childrenWidth;
-  }, true);
+  const frameCallback = useCallback(
+    (i: { timeSincePreviousFrame: number | null }) => {
+      "worklet";
+      offset.value += (coeff.value * ((i.timeSincePreviousFrame ?? 1) * childrenWidth)) / duration;
+      offset.value = offset.value % childrenWidth;
+    },
+    [offset, coeff, childrenWidth, duration]
+  );
+
+  useFrameCallback(frameCallback, true);
 
   const count = Math.round(parentWidth / childrenWidth) + 2;
   const renderChild = (index: number) => (

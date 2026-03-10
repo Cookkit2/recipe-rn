@@ -13,6 +13,12 @@ export interface RecipeStep {
   relatedIngredientIds: string[];
 }
 
+export type StepPageData = {
+  type: 'ingredients' | 'step' | 'congratulations';
+  step: number;
+  content: RecipeIngredient[] | RecipeStep | null;
+};
+
 export interface Recipe {
   id: string;
   title: string;
@@ -27,4 +33,16 @@ export interface Recipe {
   sourceUrl?: string;
   calories?: number; // Added from previous recipe list example
   tags?: string[];
+  isFavorite?: boolean;
 }
+
+// Re-export recipe matching types for convenience
+export type {
+  IngredientMatchStatus,
+  IngredientMatchDetail,
+  RecipeMatchCategory,
+  RecipeWithMatchInfo,
+  ShoppingListItem,
+  AvailableIngredientItem,
+} from './RecipeMatching';
+export { RECIPE_MATCH_CATEGORY_LABELS, getRecipeMatchCategory } from './RecipeMatching';

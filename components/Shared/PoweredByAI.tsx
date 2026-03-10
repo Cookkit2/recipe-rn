@@ -1,4 +1,4 @@
-import { SparkleIcon } from "lucide-nativewind";
+import { SparkleIcon } from "lucide-uniwind";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import { P } from "../ui/typography";
@@ -9,7 +9,7 @@ export default function PoweredByAI() {
   const colors = useColors();
 
   return (
-    <View className="relative flex-row items-center justify-center mt-1 gap-2 shadow-sm">
+    <View className="relative flex-row items-center justify-center mt-1 gap-2">
       <P className="font-urbanist-bold text-foreground/70">Powered by</P>
       <View className="rounded-full px-3 py-[2] overflow-hidden border-border border-2 flex-row gap-1 items-center">
         <LinearGradient

@@ -3,7 +3,6 @@ import { View, ActivityIndicator } from "react-native";
 import Animated, { LinearTransition } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCreateIngredientStore } from "~/store/CreateIngredientContext";
-import Header from "~/components/Shared/Header";
 import { H1, H4, P } from "~/components/ui/typography";
 import HorizontalIngredientItemCard from "~/components/Confirmation/HorizontalIngredientItemCard";
 import { Button } from "~/components/ui/button";
@@ -15,6 +14,11 @@ import { toast } from "sonner-native";
 import { presentPaywallIfNeeded } from "~/utils/subscription-utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { recipeQueryKeys } from "~/hooks/queries/recipeQueryKeys";
+import {
+  scheduleExpiryNotifications,
+  requestNotificationPermissions,
+  getNotificationPermissions,
+} from "~/lib/notifications";
 
 export default function ConfirmationPage() {
   const { bottom } = useSafeAreaInsets();
@@ -30,15 +34,25 @@ export default function ConfirmationPage() {
     setStatusBarStyle("auto", true);
   }, []);
 
-  const completedItems = processPantryItems.filter(
-    (item) => item.status === undefined
-  );
+  const completedItems = processPantryItems.filter((item) => item.status === undefined);
 
   const onSaveAllIngredients = useCallback(async () => {
     try {
       setIsSavingIngredients(true);
       await presentPaywallIfNeeded();
-      await addPantryItemsWithMetadata.mutateAsync(completedItems);
+      const savedItems = await addPantryItemsWithMetadata.mutateAsync(completedItems);
+
+      // Schedule expiry notifications for saved items (using DB-assigned IDs)
+      try {
+        const { granted } = await getNotificationPermissions();
+        if (!granted) {
+          await requestNotificationPermissions();
+        }
+        await scheduleExpiryNotifications(savedItems);
+      } catch {
+        // Non-critical: don't block save flow if notifications fail
+      }
+
       queryClient.invalidateQueries({
         queryKey: recipeQueryKeys.recommendations(),
       });
@@ -50,13 +64,21 @@ export default function ConfirmationPage() {
     }
   }, [completedItems]);
 
+  // Memoized render item to prevent re-creation on each render
+  const renderItem = useCallback(
+    ({ item }: { item: (typeof processPantryItems)[number] }) => (
+      <HorizontalIngredientItemCard item={item} />
+    ),
+    []
+  );
+
   return (
-    <View className="flex-1 relative bg-background">
-      <Header title="Confirmation" />
+    <>
       <Animated.FlatList
+        contentInsetAdjustmentBehavior="automatic"
         data={processPantryItems}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <HorizontalIngredientItemCard item={item} />}
+        renderItem={renderItem}
         itemLayoutAnimation={LinearTransition.springify()
           .damping(20)
           .mass(1)
@@ -66,10 +88,12 @@ export default function ConfirmationPage() {
         contentContainerStyle={{ paddingBottom: bottom + 80 }}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
-        className="px-3 pb-3"
-        ListHeaderComponent={() => (
-          <H1 className="font-bowlby-one p-6 pb-4">Confirmation</H1>
-        )}
+        className="px-3 pb-3 bg-background"
+        // Performance optimizations
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={5}
+        initialNumToRender={5}
+        windowSize={5}
         ListEmptyComponent={() => (
           <View className="py-16 items-center justify-center">
             <H4 className="text-muted-foreground text-center font-urbanist-semibold">
@@ -81,30 +105,28 @@ export default function ConfirmationPage() {
           </View>
         )}
       />
+
+      {/* Fixed footer button */}
       <View
-        className="absolute left-0 right-0 flex-row justify-center"
-        style={{ bottom: bottom + 8 }}
+        pointerEvents="box-none"
+        className="absolute inset-0 justify-end items-center"
+        style={{ paddingBottom: bottom + 8 }}
       >
         <Button
           size="lg"
           variant="secondary"
           className="rounded-2xl border-continuous bg-foreground/80"
           onPress={onSaveAllIngredients}
-          // only allow save when all of them are completed items
           disabled={
-            isSavingIngredients ||
-            processPantryItems.length === 0 ||
-            completedItems.length === 0
+            isSavingIngredients || processPantryItems.length === 0 || completedItems.length === 0
           }
         >
           <TextShimmer className="flex-row items-center gap-2 justify-center">
             {isSavingIngredients && <ActivityIndicator />}
-            <H4 className="text-background font-urbanist font-semibold">
-              Save
-            </H4>
+            <H4 className="text-background font-urbanist font-semibold">Save</H4>
           </TextShimmer>
         </Button>
       </View>
-    </View>
+    </>
   );
 }

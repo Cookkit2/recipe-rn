@@ -2,9 +2,9 @@ import { View, Pressable, Alert } from "react-native";
 import { SlidingNumber } from "~/components/Shared/SlidingNumber";
 import { Separator } from "~/components/ui/separator";
 import { Button } from "~/components/ui/button";
-import { H4 } from "~/components/ui/typography";
-import { MinusIcon, PlusIcon } from "lucide-nativewind";
-import { cn } from "~/lib/tw-merge";
+import { H4, P } from "~/components/ui/typography";
+import { MinusIcon, PlusIcon } from "lucide-uniwind";
+import { cn } from "~/lib/utils";
 import { UNIT_OPTIONS } from "~/constants/ingredient-units";
 import { storage } from "~/data";
 import { PREF_UNIT_SYSTEM_KEY } from "~/constants/storage-keys";
@@ -24,9 +24,9 @@ export default function IngredientQuantity({
   className?: string;
   size?: "default" | "sm";
 }) {
-  const currentUnit = (storage.get(PREF_UNIT_SYSTEM_KEY) || "si") as
-    | "si"
-    | "imperial";
+  // Handle legacy "si" value - treat as "metric"
+  const storedValue = storage.get(PREF_UNIT_SYSTEM_KEY) as string | undefined;
+  const currentUnit = storedValue === "imperial" ? "imperial" : "metric";
 
   const showUnitPicker = () => {
     const buttons = [
@@ -44,9 +44,7 @@ export default function IngredientQuantity({
   };
 
   return (
-    <View
-      className={cn("flex-row items-center justify-center gap-4", className)}
-    >
+    <View className={cn("flex-row items-center justify-center gap-4", className)}>
       <Button
         size={size === "default" ? "icon" : "icon-sm"}
         variant="ghost"
@@ -60,12 +58,10 @@ export default function IngredientQuantity({
       <View className="flex-row gap-1">
         <SlidingNumber
           value={quantity}
-          onValueChange={(newValue) =>
-            updateQuantity(Math.min(9999, Math.max(0, newValue)))
-          }
+          onValueChange={(newValue) => updateQuantity(Math.min(9999, Math.max(0, newValue)))}
         />
-        <Pressable onPress={showUnitPicker} className="min-w-[24px]">
-          <H4 className="text-center font-urbanist-medium">{unit}</H4>
+        <Pressable onPress={showUnitPicker} className="min-w-6">
+          <P className="text-center font-urbanist-medium text-xl">{unit}</P>
         </Pressable>
       </View>
 

@@ -1,8 +1,8 @@
 import React from "react";
 import { Modal, Platform, Pressable } from "react-native";
 import { BlurView } from "expo-blur";
-import { useColorScheme } from "~/hooks/useColorScheme";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import { useUniwind } from "uniwind";
 
 export default function BaseModal({
   modalVisible,
@@ -13,7 +13,7 @@ export default function BaseModal({
   onCancel: () => void;
   children: React.ReactNode;
 }) {
-  const { isDarkColorScheme } = useColorScheme();
+  const { theme } = useUniwind();
 
   return (
     <Modal
@@ -25,7 +25,7 @@ export default function BaseModal({
       <BlurView
         intensity={20}
         className="absolute inset-0 z-[1]"
-        tint={isDarkColorScheme ? "dark" : "light"}
+        tint={theme}
       />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}

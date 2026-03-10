@@ -6,12 +6,12 @@ import Animated, {
   useAnimatedStyle,
   useDerivedValue,
   withTiming,
-  runOnJS,
   type SharedValue,
   useSharedValue,
   withDelay,
 } from "react-native-reanimated";
-import { cn } from "~/lib/tw-merge";
+import { scheduleOnRN } from "react-native-worklets";
+import { cn } from "~/lib/utils";
 import { CURVES } from "~/constants/curves";
 
 function Progress({
@@ -31,11 +31,7 @@ function Progress({
       className={cn("relative h-4 w-full rounded-full bg-secondary", className)}
       {...props}
     >
-      <Indicator
-        value={value}
-        animatedValue={animatedValue}
-        className={indicatorClassName}
-      />
+      <Indicator value={value} animatedValue={animatedValue} className={indicatorClassName} />
     </ProgressPrimitive.Root>
   );
 }
@@ -63,10 +59,7 @@ function Indicator({
   const wasComplete = React.useRef(false);
 
   const triggerStarburst = React.useCallback(() => {
-    starburstTrigger.value = withDelay(
-      0,
-      withTiming(1, CURVES["expressive.fast.effects"])
-    );
+    starburstTrigger.value = withDelay(0, withTiming(1, CURVES["expressive.fast.effects"]));
 
     // Reset after animation
     setTimeout(() => {
@@ -80,7 +73,7 @@ function Indicator({
 
     if (currentProgress >= 10 && !wasComplete.current) {
       wasComplete.current = true;
-      runOnJS(triggerStarburst)();
+      scheduleOnRN(triggerStarburst);
     } else if (currentProgress < 100) {
       wasComplete.current = false;
     }
@@ -113,15 +106,10 @@ function Indicator({
 
   return (
     <>
-      <ProgressPrimitive.Indicator asChild>
-        <Animated.View
-          style={indicator}
-          className={cn(
-            "h-full bg-foreground rounded-full shadow-md",
-            className
-          )}
-        />
-      </ProgressPrimitive.Indicator>
+      <Animated.View
+        style={indicator}
+        className={cn("h-full bg-foreground rounded-full shadow-md", className)}
+      />
       {/* <Starburst triggerAnimation={starburstTrigger} progress={progress} /> */}
     </>
   );

@@ -1,6 +1,6 @@
-# Cookkit - AI Context Document
+# DoneDish (fridgit) – AI Context Document
 
-> **Purpose**: This document provides comprehensive context for AI assistants to understand the project structure, architecture, business logic, and development patterns of the Cookkit mobile application.
+> **Purpose**: This document provides comprehensive context for AI assistants to understand the project structure, architecture, business logic, and development patterns of the DoneDish mobile application.
 
 ---
 
@@ -25,14 +25,14 @@
 
 | Layer | Technology |
 |-------|------------|
-| **Framework** | React Native 0.81+ with Expo SDK 54 |
+| **Framework** | React Native with Expo SDK 55 |
 | **Navigation** | Expo Router (file-based routing) |
-| **State Management** | React Context + Zustand-style stores + React Query |
+| **State Management** | React Query (server/async) + React Context (UI state) |
 | **Local Database** | WatermelonDB (SQLite) |
 | **Cloud Backend** | Supabase (PostgreSQL + Auth + Storage) |
 | **Key-Value Storage** | MMKV (primary) / AsyncStorage (fallback) |
-| **Styling** | NativeWind v4 (Tailwind CSS for RN) |
-| **Animations** | React Native Reanimated 3 + Moti |
+| **Styling** | Tailwind CSS v4 via Uniwind |
+| **Animations** | React Native Reanimated |
 | **UI Components** | @rn-primitives (shadcn-style accessible components) |
 
 ### High-Level Data Flow
@@ -86,9 +86,8 @@ recipe-rn/
 │   ├── AuthStrategy.ts           # Interface contract
 │   ├── SupabaseAuthStrategy.ts   # Production implementation
 │   ├── MockAuthStrategy.ts       # Testing implementation
-│   ├── AuthContext.tsx           # React context & hooks
-│   ├── AuthStore.ts              # Zustand auth store
-│   └── StorageIntegration.ts     # Auth token persistence
+│   ├── AuthStore.ts              # Auth state
+│   └── storage-integration.ts    # Auth token persistence (encrypted storage)
 │
 ├── components/                   # React components
 │   ├── ui/                       # Primitive UI components (shadcn-style)
@@ -437,7 +436,7 @@ try {
 }
 ```
 
-### Styling with NativeWind
+### Styling (Uniwind / Tailwind)
 
 ```tsx
 <View className="flex-1 bg-background p-4">
@@ -452,17 +451,18 @@ try {
 ## 🧪 Testing Strategy
 
 ### Test Files Location
-- `__tests__/storage/` - Storage layer tests (high coverage)
-- `__tests__/auth/` - Authentication integration tests
-- `__tests__/components/` - Component tests
-- `__tests__/utils/` - Utility function tests
+- `utils/__tests__/` - Utility tests (e.g. input sanitization, quantity comparison)
+- `auth/__tests__/` - Auth storage integration tests
+- `data/api/__tests__/` - API tests (pantry, recipe, import)
+- `lib/recipe-scrapper/__tests__/` - Recipe validation tests
+- `lib/notifications/expiry-notifications/__tests__/` - Expiry notification tests
 
 ### Scripts
 ```bash
-npm run test             # Run all tests
-npm run test:storage     # Storage layer tests
+npm test                 # Run all tests
 npm run test:coverage    # Coverage report
-npm run lint:check       # ESLint (zero warnings)
+npm run typecheck        # TypeScript check
+npm run lint             # Prettier + typecheck
 ```
 
 ---
@@ -471,16 +471,16 @@ npm run lint:check       # ESLint (zero warnings)
 
 ```bash
 # Development
-npm run start            # Start Expo with cache clear
+npm run dev              # Start Expo with cache clear
 npm run ios              # Run on iOS
 npm run android          # Run on Android
+npm run web              # Run in browser
 
 # Code Quality
-npm run lint:fix         # Auto-fix lint issues
 npm run typecheck        # TypeScript check
-
-# Database
-npm run seed-db          # Seed development database
+npm run lint             # Prettier check + typecheck
+npm test                 # Run Jest tests
+npm run test:coverage     # Tests with coverage
 ```
 
 ---
@@ -503,12 +503,12 @@ npm run seed-db          # Seed development database
 ### Adding a New Feature
 
 1. **Types** → Define in `types/`
-2. **Database** → Add model in `data/db/models/`, repository in `data/db/repositories/`
-3. **API Layer** → Add operations in `data/api/`
+2. **Database** → Add model in `data/db/models/`, repository in `data/db/repositories/`; expose via `DatabaseFacade` only
+3. **API Layer** → Add operations in `data/api/` (pantryApi, recipeApi, etc.)
 4. **React Query** → Create hooks in `hooks/queries/`
 5. **Context** (if needed) → UI state in `store/`
 6. **Components** → Feature components in `components/`
-7. **Screens** → Route files in `app/`
+7. **Screens** → Route files in `app/` (Expo Router)
 
 ### Common Operations
 
@@ -534,14 +534,12 @@ const { user, signIn, signOut } = useAuth();
 
 ## 🔄 Current Development Focus
 
-Based on the branch `feat/expo-notification`, the current focus appears to be implementing push notifications using Expo Notifications.
+See `CLAUDE.md` and the repo README for up-to-date setup and commands. Key areas:
 
-### Recent/Planned Migrations
-- Moving from direct context database calls to React Query hooks
-- Normalizing categories and synonyms into separate tables
-- Implementing camera background processing queue
-- Database facade simplification
+- **Data access**: Use `databaseFacade` and `storage` only; see `docs/REPOSITORY_PATTERN.md` and `docs/adr/`.
+- **Notifications**: Local notifications with handler registry; user settings in profile. See `docs/LOCAL_NOTIFICATIONS.md`.
+- **Testing**: Jest for unit/integration tests; run `npm test` and `npm run test:coverage`.
 
 ---
 
-*Last Updated: January 2026*
+*Last Updated: March 2026*

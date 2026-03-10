@@ -1,6 +1,11 @@
 import { supabase } from "~/lib/supabase/supabase-client";
 import type { Tables } from "~/lib/supabase/supabase-types";
 
+function guardSupabase() {
+  if (!supabase) return false;
+  return true;
+}
+
 export interface SupabaseRecipeWithDetails {
   recipe: Tables<"recipe">;
   steps: Tables<"recipe_step">[];
@@ -12,7 +17,8 @@ export const recipeApi = {
    * Get all recipes from Supabase
    */
   getAllRecipes: async (): Promise<Tables<"recipe">[]> => {
-    const { data, error } = await supabase.from("recipe").select("*");
+    if (!guardSupabase()) return [];
+    const { data, error } = await supabase!.from("recipe").select("*");
     if (error) throw error;
     return data;
   },
@@ -24,7 +30,8 @@ export const recipeApi = {
   getNewestRecipes: async (
     limit: number = 1000
   ): Promise<Tables<"recipe">[]> => {
-    const { data, error } = await supabase
+    if (!guardSupabase()) return [];
+    const { data, error } = await supabase!
       .from("recipe")
       .select("*")
       .order("id", { ascending: false }) // Assuming newer recipes have higher IDs
@@ -39,8 +46,8 @@ export const recipeApi = {
   getRecipeWithDetailsSupabase: async (
     recipeId: string
   ): Promise<SupabaseRecipeWithDetails | null> => {
-    // Fetch recipe with related data in a single query using relationship expansion
-    const { data, error } = await supabase
+    if (!guardSupabase()) return null;
+    const { data, error } = await supabase!
       .from("recipe")
       .select(
         `
@@ -73,8 +80,8 @@ export const recipeApi = {
   getRecipesWithDetailsSupabase: async (
     limit: number = 1000
   ): Promise<SupabaseRecipeWithDetails[]> => {
-    // Fetch all recipes with related data in a single query using relationship expansion
-    const { data, error } = await supabase
+    if (!guardSupabase()) return [];
+    const { data, error } = await supabase!
       .from("recipe")
       .select(
         `
@@ -103,9 +110,9 @@ export const recipeApi = {
    * Get recipes by specific IDs
    */
   getRecipesByIds: async (recipeIds: string[]): Promise<Tables<"recipe">[]> => {
-    if (recipeIds.length === 0) return [];
+    if (recipeIds.length === 0 || !guardSupabase()) return [];
 
-    const { data, error } = await supabase
+    const { data, error } = await supabase!
       .from("recipe")
       .select("*")
       .in("id", recipeIds);

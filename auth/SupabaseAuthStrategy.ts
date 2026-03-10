@@ -17,7 +17,7 @@ import * as ExpoAuthSession from "expo-auth-session";
 import * as Linking from "expo-linking";
 import { APP_CONFIG } from "~/lib/constants";
 import { supabase } from "~/lib/supabase/supabase-client";
-import { log } from "~/utils/logger";
+import { log } from '~/utils/logger';
 
 /**
  * Supabase authentication strategy implementation
@@ -36,6 +36,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
    * Set up auth state change listener
    */
   private setupAuthListener(): void {
+    if (!supabase) return;
     supabase.auth.onAuthStateChange((event, session) => {
       log.info("Supabase auth state change:", event, session?.user?.id);
 
@@ -139,6 +140,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async getCurrentUser(): Promise<User | null> {
+    if (!supabase) return null;
     try {
       const {
         data: { user },
@@ -163,6 +165,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async getCurrentSession(): Promise<AuthSession | null> {
+    if (!supabase) return null;
     try {
       const {
         data: { session },
@@ -187,6 +190,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async signInWithEmail(credentials: SignInCredentials): Promise<AuthResult> {
+    if (!supabase) return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: credentials.email,
@@ -224,8 +228,8 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async signInWithProvider(config: SocialAuthConfig): Promise<AuthResult> {
+    if (!supabase) return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
     try {
-      // Create redirect URL for OAuth flow based on app.json scheme
       const scheme = Linking.createURL("").split(":")[0] || "recipe-app";
       const redirectUrl = ExpoAuthSession.makeRedirectUri({ scheme });
 
@@ -259,6 +263,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
 
   async signInAnonymously(): Promise<AuthResult> {
     try {
+      if (!supabase) return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
       const { data, error } = await supabase.auth.signInAnonymously();
 
       if (error) {
@@ -292,6 +297,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async signUpWithEmail(credentials: SignInCredentials): Promise<AuthResult> {
+    if (!supabase) return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
     try {
       const { data, error } = await supabase.auth.signUp({
         email: credentials.email,
@@ -341,6 +347,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async signOut(): Promise<AuthResult> {
+    if (!supabase) return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
     try {
       log.info("About to call supabase.auth.signOut()");
       const { error } = await supabase.auth.signOut();
@@ -388,6 +395,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async refreshSession(): Promise<AuthResult> {
+    if (!supabase) return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
     try {
       const { data, error } = await supabase.auth.refreshSession();
 
@@ -424,8 +432,8 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   async linkAnonymousAccount(
     credentials: LinkAccountCredentials
   ): Promise<AuthResult> {
+    if (!supabase) return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
     try {
-      // Check if current user is anonymous
       if (!this.currentUser || !this.currentUser.isAnonymous) {
         return this.createErrorResult(
           "NOT_ANONYMOUS",
@@ -471,6 +479,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async resetPassword(email: string): Promise<AuthResult> {
+    if (!supabase) return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${APP_CONFIG.DEEP_LINK_SCHEME}://${APP_CONFIG.DEEP_LINK_PATHS.RESET_PASSWORD}`,
@@ -493,6 +502,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async validateSession(): Promise<boolean> {
+    if (!supabase) return false;
     try {
       const {
         data: { session },

@@ -1,6 +1,6 @@
 import { Pressable, ActivityIndicator } from "react-native";
 import Animated, { BounceIn } from "react-native-reanimated";
-import { AlertCircleIcon } from "lucide-nativewind";
+import { AlertCircleIcon } from "lucide-uniwind";
 import { Image } from "expo-image";
 import {
   useCreateIngredientStore,

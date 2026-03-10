@@ -5,6 +5,12 @@ import type RecipeStep from "./RecipeStep";
 import type RecipeIngredient from "./RecipeIngredient";
 import type CookingHistory from "./CookingHistory";
 
+export enum RecipeType {
+  STANDARD = 'standard',
+  TAILORED = 'tailored',
+  CONVERTED = 'converted',
+}
+
 export interface RecipeData {
   title: string;
   description: string;
@@ -17,6 +23,7 @@ export interface RecipeData {
   calories?: number;
   tags?: string[];
   isFavorite?: boolean;
+  type?: RecipeType;
 }
 
 export default class Recipe extends Model {
@@ -39,6 +46,7 @@ export default class Recipe extends Model {
   @field("tags") _tags?: string; // JSON string
   @field("synced_at") syncedAt!: number; // NEW: Track last sync from cloud
   @field("is_favorite") isFavorite!: boolean; // NEW: User can favorite recipes
+  @field("type") type?: RecipeType;
 
   @children("recipe_step") steps!: Collection<RecipeStep>;
   @children("recipe_ingredient") ingredients!: Collection<RecipeIngredient>;
@@ -72,6 +80,11 @@ export default class Recipe extends Model {
     return Date.now() - this.syncedAt > ONE_DAY_MS;
   }
 
+  // Check if this is a tailored recipe
+  get isTailored(): boolean {
+    return this.type === RecipeType.TAILORED;
+  }
+
   // Update method
   @writer async updateRecipe(data: Partial<RecipeData>): Promise<Recipe> {
     return this.update((recipe) => {
@@ -87,6 +100,7 @@ export default class Recipe extends Model {
       if (data.calories !== undefined) recipe.calories = data.calories;
       if (data.tags !== undefined) recipe.tags = data.tags;
       if (data.isFavorite !== undefined) recipe.isFavorite = data.isFavorite;
+      if (data.type !== undefined) recipe.type = data.type;
     });
   }
 

@@ -9,20 +9,14 @@ import {
   PlugIcon,
   MicrowaveIcon,
   WheatIcon,
-  AirVentIcon,
+  FlameIcon,
   FanIcon,
-} from "lucide-nativewind";
+} from "lucide-uniwind";
 import { toggleFromArray } from "~/utils/array-helper";
 import { storage } from "~/data";
 import { PREF_APPLIANCES_KEY } from "~/constants/storage-keys";
 
-type Appliance =
-  | "stovetop"
-  | "electric-pot"
-  | "oven"
-  | "rice-cooker"
-  | "air-fryer"
-  | "blender";
+type Appliance = "stovetop" | "electric-pot" | "oven" | "rice-cooker" | "air-fryer" | "blender";
 
 export default function AppliancesSection() {
   const [appliances, setAppliances] = useState<Appliance[]>(
@@ -46,9 +40,7 @@ export default function AppliancesSection() {
       <CardContent className="py-6 gap-3 bg-muted/50 rounded-3xl">
         <View className="gap-1">
           <H4 className="font-urbanist-bold">Cooking Appliances</H4>
-          <P className="font-urbanist-regular text-muted-foreground">
-            Select all that apply
-          </P>
+          <P className="font-urbanist-regular text-muted-foreground">Select all that apply</P>
         </View>
         <GridButtons
           buttons={APPLIANCE_OPTIONS}
@@ -83,7 +75,7 @@ const APPLIANCE_OPTIONS: GroupButton<Appliance>[] = [
   },
   {
     label: "Air fryer",
-    icon: <AirVentIcon className="rotate-180" />,
+    icon: <FlameIcon />,
     value: "air-fryer",
   },
   {

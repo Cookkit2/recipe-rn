@@ -1,9 +1,6 @@
 import React from "react";
 import { View } from "react-native";
-import {
-  isValidSubscription,
-  presentPaywallIfNeeded,
-} from "~/utils/subscription-utils";
+import { isValidSubscription, presentPaywallIfNeeded } from "~/utils/subscription-utils";
 import { Card, CardContent } from "~/components/ui/card";
 import { H4, P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
@@ -40,11 +37,8 @@ export default function SubscriptionCard() {
           </View>
           {currentEntitlements ? (
             <P className="text-sm text-foreground/80 font-urbanist-medium">
-              Your{" "}
-              {currentEntitlements.periodType === "TRIAL"
-                ? "trial"
-                : "subscription"}{" "}
-              ends in {expiredInDays} {expiredInDays === 1 ? "day" : "days"}.
+              Your {currentEntitlements.periodType === "TRIAL" ? "trial" : "subscription"} ends in{" "}
+              {expiredInDays} {expiredInDays === 1 ? "day" : "days"}.
             </P>
           ) : (
             <P className="text-sm text-foreground/80 font-urbanist-medium">
@@ -58,9 +52,7 @@ export default function SubscriptionCard() {
             className="rounded-xl border-continuous"
             onPress={() => presentPaywallIfNeeded()}
           >
-            <P className="font-urbanist-semibold text-primary-foreground">
-              Subscribe
-            </P>
+            <P className="font-urbanist-semibold text-primary-foreground">Subscribe</P>
           </Button>
         )}
       </CardContent>

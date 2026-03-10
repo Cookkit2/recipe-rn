@@ -6,14 +6,13 @@ import Animated, {
   useSharedValue,
   useAnimatedRef,
   withTiming,
-  runOnJS,
   withSpring,
   useAnimatedStyle,
   useAnimatedScrollHandler,
   useAnimatedReaction,
   type AnimatedRef,
 } from "react-native-reanimated";
-import { useRootScale } from "~/store/RootScaleContext";
+import { scheduleOnRN } from "react-native-worklets";
 import * as Haptics from "expo-haptics";
 import {
   SCALE_FACTOR,
@@ -28,16 +27,12 @@ export default function SheetModalWrapper({
   children,
 }: {
   children: (props: {
-    ScrollComponent: (
-      props: React.ComponentProps<typeof ScrollView>
-    ) => React.ReactElement;
+    ScrollComponent: (props: React.ComponentProps<typeof ScrollView>) => React.ReactElement;
     scrollRef: AnimatedRef<Animated.ScrollView>;
   }) => React.ReactNode;
 }) {
-  const { setScale } = useRootScale();
   const isClosing = useRef(false);
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
-  const shouldScale = useSharedValue(SCALE_FACTOR);
 
   const translateY = useSharedValue(0);
   const scrollOffset = useSharedValue(0);
@@ -78,11 +73,7 @@ export default function SheetModalWrapper({
       const dx = event.translationX;
       const dy = event.translationY;
 
-      if (
-        ENABLE_HORIZONTAL_DRAG_CLOSE &&
-        !isHorizontalGesture.value &&
-        !isScrolling.value
-      ) {
+      if (ENABLE_HORIZONTAL_DRAG_CLOSE && !isHorizontalGesture.value && !isScrolling.value) {
         if (Math.abs(dx) > 10) {
           // Calculate angle only when needed and use simpler calculation
           const angle = Math.abs(Math.atan2(dy, dx) * (180 / Math.PI));
@@ -115,10 +106,9 @@ export default function SheetModalWrapper({
 
           translateX.value = withTiming(exitX, { duration: 300 });
           translateY.value = withTiming(exitY, { duration: 300 });
-          shouldScale.value = 1;
 
-          runOnJS(handleHapticFeedback)();
-          runOnJS(goBack)();
+          scheduleOnRN(handleHapticFeedback);
+          scheduleOnRN(goBack);
         } else {
           translateX.value = withSpring(0, {
             damping: 15,
@@ -128,7 +118,6 @@ export default function SheetModalWrapper({
             damping: 15,
             stiffness: 150,
           });
-          shouldScale.value = SCALE_FACTOR;
         }
       } else if (scrollOffset.value <= 0) {
         const shouldClose = event.translationY > DRAG_THRESHOLD;
@@ -137,15 +126,13 @@ export default function SheetModalWrapper({
           translateY.value = withTiming(event.translationY + 100, {
             duration: 300,
           });
-          shouldScale.value = 1;
-          runOnJS(handleHapticFeedback)();
-          runOnJS(goBack)();
+          scheduleOnRN(handleHapticFeedback);
+          scheduleOnRN(goBack);
         } else {
           translateY.value = withSpring(0, {
             damping: 15,
             stiffness: 150,
           });
-          shouldScale.value = SCALE_FACTOR;
         }
       }
     })
@@ -198,41 +185,9 @@ export default function SheetModalWrapper({
   );
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateY: translateY.value },
-      { translateX: translateX.value },
-    ],
+    transform: [{ translateY: translateY.value }, { translateX: translateX.value }],
     opacity: withSpring(1),
   }));
-
-  // Batch scale updates to reduce bridge calls
-  useAnimatedReaction(
-    () => shouldScale.value,
-    (currentScale, previousScale) => {
-      if (currentScale !== previousScale) {
-        runOnJS(setScale)(currentScale);
-      }
-    }
-  );
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      try {
-        setScale(SCALE_FACTOR);
-      } catch (error) {
-        log.error("Initial scale error:", error);
-      }
-    }, 0);
-
-    return () => {
-      clearTimeout(timeout);
-      try {
-        setScale(1);
-      } catch (error) {
-        log.error("Cleanup scale error:", error);
-      }
-    };
-  }, [setScale]);
 
   return (
     <Animated.View className="flex h-full" style={[animatedStyle]}>

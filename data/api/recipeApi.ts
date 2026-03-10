@@ -1,159 +1,53 @@
-import { databaseFacade } from "~/data/db/DatabaseFacade";
+import {
+  databaseFacade,
+  type AvailableRecipesResult,
+  type RecipeWithDetails,
+} from "~/data/db/DatabaseFacade";
 import type { Recipe as DbRecipe } from "~/data/db/models";
+import { RecipeType } from "~/data/db/models/Recipe";
 import type { Recipe } from "~/types/Recipe";
+import { getRecipeMatchCategory } from "~/types/RecipeMatching";
 import { storage } from "~/data";
 import {
   PREF_DIET_KEY,
   PREF_ALLERGENS_KEY,
   PREF_OTHER_ALLERGENS_KEY,
+  PREF_APPLIANCES_KEY,
 } from "~/constants/storage-keys";
-import { isIngredientMatch } from "~/utils/ingredient-matching";
-import type { Diet } from "~/components/Preferences/DietarySection";
-import type { Allergen } from "~/components/Preferences/AllergySection";
+import type { Allergen } from "~/types/Allergen";
+import type { Diet } from "~/types/Diet";
+import type { PantryItem } from "~/types/PantryItem";
 import { log } from "~/utils/logger";
-
-/**
- * Check if a recipe is suitable based on user's dietary preferences and allergens
- */
-const isRecipeSuitableForUser = async (recipe: Recipe): Promise<boolean> => {
-  // Get user preferences from storage
-  const userDiet = storage.get(PREF_DIET_KEY) as Diet | undefined;
-  const userAllergens = (() => {
-    const stored = storage.get(PREF_ALLERGENS_KEY);
-    if (typeof stored !== "string" || !stored) return [];
-    return stored.split(",") as Allergen[];
-  })();
-  const otherAllergens = (() => {
-    const stored = storage.get(PREF_OTHER_ALLERGENS_KEY) as string | undefined;
-    if (!stored) return [];
-    return stored
-      .split(",")
-      .map((a: string) => a.trim())
-      .filter((a: string) => a.length > 0);
-  })();
-
-  // Check dietary preferences (must match)
-  if (userDiet && userDiet !== "none") {
-    const recipeTags = recipe.tags?.map((tag) => tag.toLowerCase()) || [];
-
-    // If user has a dietary preference, recipe must have matching tag
-    if (!recipeTags.includes(userDiet.toLowerCase())) {
-      return false;
-    }
-  }
-
-  // Check allergens (must NOT contain any allergens user is allergic to)
-  const allUserAllergens = [...userAllergens, ...otherAllergens];
-
-  if (allUserAllergens.length > 0) {
-    // Check recipe ingredients for allergens
-    for (const ingredient of recipe.ingredients) {
-      const ingredientName = ingredient.name.toLowerCase();
-
-      // Check against main allergens
-      for (const allergen of userAllergens) {
-        if (containsAllergen(ingredientName, allergen)) {
-          return false;
-        }
-      }
-
-      // Check against other allergens using ingredient matching
-      for (const allergen of otherAllergens) {
-        if (isIngredientMatch(ingredientName, allergen.toLowerCase())) {
-          return false;
-        }
-      }
-    }
-
-    // Also check recipe tags for allergen mentions
-    const recipeTags = recipe.tags?.map((tag) => tag.toLowerCase()) || [];
-    for (const allergen of allUserAllergens) {
-      if (recipeTags.some((tag) => tag.includes(allergen.toLowerCase()))) {
-        return false;
-      }
-    }
-  }
-
-  return true;
-};
-
-/**
- * Check if an ingredient contains a specific allergen
- */
-const containsAllergen = (
-  ingredientName: string,
-  allergen: Allergen
-): boolean => {
-  const ingredient = ingredientName.toLowerCase();
-
-  switch (allergen) {
-    case "milk":
-      return (
-        ingredient.includes("milk") ||
-        ingredient.includes("dairy") ||
-        ingredient.includes("cheese") ||
-        ingredient.includes("butter") ||
-        ingredient.includes("cream") ||
-        ingredient.includes("yogurt") ||
-        ingredient.includes("lactose")
-      );
-
-    case "eggs":
-      return (
-        ingredient.includes("egg") ||
-        ingredient.includes("mayonnaise") ||
-        ingredient.includes("mayo")
-      );
-
-    case "nuts":
-      return (
-        ingredient.includes("nut") ||
-        ingredient.includes("almond") ||
-        ingredient.includes("walnut") ||
-        ingredient.includes("pecan") ||
-        ingredient.includes("cashew") ||
-        ingredient.includes("pistachio") ||
-        ingredient.includes("hazelnut") ||
-        ingredient.includes("macadamia")
-      );
-
-    case "fish":
-      return (
-        ingredient.includes("fish") ||
-        ingredient.includes("salmon") ||
-        ingredient.includes("tuna") ||
-        ingredient.includes("cod") ||
-        ingredient.includes("anchovy") ||
-        ingredient.includes("sardine")
-      );
-
-    case "shellfish":
-      return (
-        ingredient.includes("shellfish") ||
-        ingredient.includes("shrimp") ||
-        ingredient.includes("crab") ||
-        ingredient.includes("lobster") ||
-        ingredient.includes("prawn") ||
-        ingredient.includes("scallop") ||
-        ingredient.includes("oyster") ||
-        ingredient.includes("mussel")
-      );
-
-    case "wheat":
-      return (
-        ingredient.includes("wheat") ||
-        ingredient.includes("flour") ||
-        ingredient.includes("gluten") ||
-        ingredient.includes("bread") ||
-        ingredient.includes("pasta") ||
-        ingredient.includes("noodle") ||
-        ingredient.includes("soy sauce")
-      ); // often contains wheat
-
-    default:
-      return false;
-  }
-};
+import { generateGeminiContent } from "~/utils/gemini-api";
+import { SYSTEM_PROMPT } from "~/lib/tailored-recipe/systemPrompt";
+import {
+  buildPantryHash,
+  buildTailoredPrompt,
+  parseTailoredRecipeResponse,
+  convertDbTailoredRecipeToUIRecipe,
+} from "~/lib/tailored-recipe/helpers";
+import { convertDbRecipesToUIRecipesBatch } from "./recipe-conversion";
+import {
+  type RecipeRankingStrategy,
+  type RankingContext,
+  type RecipeFilterStrategy,
+  type FilterContext,
+  type CookingHistoryData,
+  createHistoryAwareRankingStrategy,
+  CompositeFilterStrategy,
+  CategoryFilter,
+  DietaryFilter,
+  ExpiringIngredientsRankingStrategy,
+} from "~/hooks/recommendation";
+import {
+  withErrorHandling,
+  withErrorLogging,
+  withSilentError,
+  logAndWrapResult,
+  wrapResult,
+} from "~/utils/api-error-handler";
+import type { AppResult } from "~/utils/result";
+import type { AppError } from "~/types/AppError";
 
 /**
  * Pure API functions for recipe operations
@@ -164,29 +58,76 @@ export const recipeApi = {
    * Fetch all recipes from database
    */
   async fetchAllRecipes(): Promise<Recipe[]> {
-    if (!databaseFacade) {
-      throw new Error("DatabaseFacade is undefined - import failed");
-    }
+    return withErrorLogging(async () => {
+      if (!databaseFacade) {
+        throw new Error("DatabaseFacade is undefined - import failed");
+      }
 
-    // Run health check
-    const isHealthy = await databaseFacade.isHealthy();
-    if (!isHealthy) {
-      throw new Error("Database health check failed");
-    }
+      // Run health check
+      const isHealthy = await databaseFacade.isHealthy();
+      if (!isHealthy) {
+        throw new Error("Database health check failed");
+      }
 
-    const dbRecipes = await databaseFacade.getAllRecipes();
-    const uiRecipes = await Promise.all(
-      dbRecipes.map(convertDbRecipeToUIRecipe)
-    );
+      const dbRecipes = await databaseFacade.getAllRecipes();
 
-    return uiRecipes;
+      // Use batch query to get all recipe details in one call
+      const recipeIds = dbRecipes.map((r) => r.id);
+      const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
+
+      // Use batch conversion to avoid N+1 queries
+      const uiRecipes = convertDbRecipesToUIRecipesBatch(dbRecipes, recipeDetailsMap);
+
+      return uiRecipes;
+    }, "Error fetching all recipes");
+  },
+
+  /**
+   * Result-based variant of fetchAllRecipes (does not throw).
+   */
+  async fetchAllRecipesResult(): Promise<AppResult<Recipe[], AppError>> {
+    return logAndWrapResult(async () => {
+      if (!databaseFacade) {
+        throw new Error("DatabaseFacade is undefined - import failed");
+      }
+
+      const isHealthy = await databaseFacade.isHealthy();
+      if (!isHealthy) {
+        throw new Error("Database health check failed");
+      }
+
+      const dbRecipes = await databaseFacade.getAllRecipes();
+      const uiRecipes = await Promise.all(dbRecipes.map(convertDbRecipeToUIRecipe));
+
+      return uiRecipes;
+    }, "Error fetching all recipes");
   },
 
   /**
    * Get a single recipe by ID
    */
   async getRecipeById(id: string): Promise<Recipe | null> {
-    try {
+    return withErrorHandling(
+      async () => {
+        const dbRecipe = await databaseFacade.getRecipeById(id);
+        if (!dbRecipe) return null;
+
+        const recipe = await convertDbRecipeToUIRecipe(dbRecipe);
+
+        log.info("Found recipe in DB:", recipe.ingredients);
+
+        return recipe;
+      },
+      "Error getting recipe by id",
+      null
+    );
+  },
+
+  /**
+   * Result-based variant of getRecipeById.
+   */
+  async getRecipeByIdResult(id: string): Promise<AppResult<Recipe | null, AppError>> {
+    return logAndWrapResult(async () => {
       const dbRecipe = await databaseFacade.getRecipeById(id);
       if (!dbRecipe) return null;
 
@@ -195,11 +136,7 @@ export const recipeApi = {
       log.info("Found recipe in DB:", recipe.ingredients);
 
       return recipe;
-    } catch (error) {
-      log.error("Error getting recipe by id:", error);
-      // Error getting recipe by id
-      return null;
-    }
+    }, "Error getting recipe by id");
   },
 
   /**
@@ -214,7 +151,40 @@ export const recipeApi = {
       maxDifficulty?: number;
     }
   ): Promise<Recipe[]> {
-    try {
+    return withErrorHandling(
+      async () => {
+        const dbRecipes = await databaseFacade.searchRecipes(searchTerm, {
+          tags: filters?.tags,
+          maxPrepTime: filters?.maxPrepTime,
+          maxCookTime: filters?.maxCookTime,
+          maxDifficulty: filters?.maxDifficulty,
+        });
+
+        // Use batch query to get all recipe details in one call
+        const recipeIds = dbRecipes.map((r) => r.id);
+        const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
+
+        // Use batch conversion to avoid N+1 queries
+        return convertDbRecipesToUIRecipesBatch(dbRecipes, recipeDetailsMap);
+      },
+      "Error searching recipes",
+      []
+    );
+  },
+
+  /**
+   * Result-based variant of searchRecipes.
+   */
+  async searchRecipesResult(
+    searchTerm: string,
+    filters?: {
+      tags?: string[];
+      maxPrepTime?: number;
+      maxCookTime?: number;
+      maxDifficulty?: number;
+    }
+  ): Promise<AppResult<Recipe[], AppError>> {
+    return logAndWrapResult(async () => {
       const dbRecipes = await databaseFacade.searchRecipes(searchTerm, {
         tags: filters?.tags,
         maxPrepTime: filters?.maxPrepTime,
@@ -223,89 +193,178 @@ export const recipeApi = {
       });
 
       return await Promise.all(dbRecipes.map(convertDbRecipeToUIRecipe));
-    } catch (error) {
-      log.error("Error searching recipes:", error);
-      // Error searching recipes
-      return [];
-    }
+    }, "Error searching recipes");
   },
 
   /**
    * Add a new recipe
    */
   async addRecipe(recipe: Omit<Recipe, "id">): Promise<Recipe> {
-    await databaseFacade.createRecipe({
-      title: recipe.title,
-      description: recipe.description,
-      imageUrl: recipe.imageUrl,
-      prepMinutes: recipe.prepMinutes || 0,
-      cookMinutes: recipe.cookMinutes || 0,
-      difficultyStars: recipe.difficultyStars || 1,
-      servings: recipe.servings || 1,
-      sourceUrl: recipe.sourceUrl,
-      calories: recipe.calories,
-      tags: recipe.tags,
-      steps: recipe.instructions.map((step) => ({
-        step: step.step,
-        title: step.title,
-        description: step.description,
-      })),
-      ingredients: recipe.ingredients.map((ing) => ({
-        baseIngredientId: ing.relatedIngredientId,
-        name: ing.name,
-        quantity: ing.quantity,
-        unit: ing.unit,
-        notes: ing.notes,
-      })),
-    });
+    return withErrorLogging(async () => {
+      await databaseFacade.createRecipe({
+        title: recipe.title,
+        description: recipe.description,
+        imageUrl: recipe.imageUrl,
+        prepMinutes: recipe.prepMinutes || 0,
+        cookMinutes: recipe.cookMinutes || 0,
+        difficultyStars: recipe.difficultyStars || 1,
+        servings: recipe.servings || 1,
+        sourceUrl: recipe.sourceUrl,
+        calories: recipe.calories,
+        tags: recipe.tags,
+        type: RecipeType.STANDARD,
+        steps: recipe.instructions.map((step) => ({
+          step: step.step,
+          title: step.title,
+          description: step.description,
+        })),
+        ingredients: recipe.ingredients.map((ing) => ({
+          baseIngredientId: ing.relatedIngredientId,
+          name: ing.name,
+          quantity: ing.quantity,
+          unit: ing.unit,
+          notes: ing.notes,
+        })),
+      });
 
-    // Return the updated recipes list to get the new recipe with ID
-    const allRecipes = await this.fetchAllRecipes();
-    const newRecipe = allRecipes.find((r) => r.title === recipe.title);
+      // Return the updated recipes list to get the new recipe with ID
+      const allRecipes = await this.fetchAllRecipes();
+      const newRecipe = allRecipes.find((r) => r.title === recipe.title);
 
-    if (!newRecipe) {
-      throw new Error("Failed to retrieve newly created recipe");
-    }
+      if (!newRecipe) {
+        throw new Error("Failed to retrieve newly created recipe");
+      }
 
-    return newRecipe;
+      return newRecipe;
+    }, "Error adding recipe");
+  },
+
+  /**
+   * Result-based variant of addRecipe.
+   */
+  async addRecipeResult(recipe: Omit<Recipe, "id">): Promise<AppResult<Recipe, AppError>> {
+    return logAndWrapResult(async () => {
+      await databaseFacade.createRecipe({
+        title: recipe.title,
+        description: recipe.description,
+        imageUrl: recipe.imageUrl,
+        prepMinutes: recipe.prepMinutes || 0,
+        cookMinutes: recipe.cookMinutes || 0,
+        difficultyStars: recipe.difficultyStars || 1,
+        servings: recipe.servings || 1,
+        sourceUrl: recipe.sourceUrl,
+        calories: recipe.calories,
+        tags: recipe.tags,
+        type: RecipeType.STANDARD,
+        steps: recipe.instructions.map((step) => ({
+          step: step.step,
+          title: step.title,
+          description: step.description,
+        })),
+        ingredients: recipe.ingredients.map((ing) => ({
+          baseIngredientId: ing.relatedIngredientId,
+          name: ing.name,
+          quantity: ing.quantity,
+          unit: ing.unit,
+          notes: ing.notes,
+        })),
+      });
+
+      const allRecipes = await this.fetchAllRecipes();
+      const newRecipe = allRecipes.find((r) => r.title === recipe.title);
+
+      if (!newRecipe) {
+        throw new Error("Failed to retrieve newly created recipe");
+      }
+
+      return newRecipe;
+    }, "Error adding recipe");
   },
 
   /**
    * Update an existing recipe
    */
   async updateRecipe(id: string, updates: Partial<Recipe>): Promise<Recipe> {
-    const dbRecipe = await databaseFacade.getRecipeById(id);
-    if (!dbRecipe) {
-      throw new Error("Recipe not found");
-    }
+    return withErrorLogging(async () => {
+      const dbRecipe = await databaseFacade.getRecipeById(id);
+      if (!dbRecipe) {
+        throw new Error("Recipe not found");
+      }
 
-    await dbRecipe.updateRecipe({
-      title: updates.title,
-      description: updates.description,
-      imageUrl: updates.imageUrl,
-      prepMinutes: updates.prepMinutes,
-      cookMinutes: updates.cookMinutes,
-      difficultyStars: updates.difficultyStars,
-      servings: updates.servings,
-      sourceUrl: updates.sourceUrl,
-      calories: updates.calories,
-      tags: updates.tags,
-    });
+      await dbRecipe.updateRecipe({
+        title: updates.title,
+        description: updates.description,
+        imageUrl: updates.imageUrl,
+        prepMinutes: updates.prepMinutes,
+        cookMinutes: updates.cookMinutes,
+        difficultyStars: updates.difficultyStars,
+        servings: updates.servings,
+        sourceUrl: updates.sourceUrl,
+        calories: updates.calories,
+        tags: updates.tags,
+      });
 
-    // Fetch the updated recipe
-    const updatedRecipe = await this.getRecipeById(id);
-    if (!updatedRecipe) {
-      throw new Error("Failed to fetch updated recipe");
-    }
+      // Fetch the updated recipe
+      const updatedRecipe = await this.getRecipeById(id);
+      if (!updatedRecipe) {
+        throw new Error("Failed to fetch updated recipe");
+      }
 
-    return updatedRecipe;
+      return updatedRecipe;
+    }, "Error updating recipe");
+  },
+
+  /**
+   * Result-based variant of updateRecipe.
+   */
+  async updateRecipeResult(
+    id: string,
+    updates: Partial<Recipe>
+  ): Promise<AppResult<Recipe, AppError>> {
+    return logAndWrapResult(async () => {
+      const dbRecipe = await databaseFacade.getRecipeById(id);
+      if (!dbRecipe) {
+        throw new Error("Recipe not found");
+      }
+
+      await dbRecipe.updateRecipe({
+        title: updates.title,
+        description: updates.description,
+        imageUrl: updates.imageUrl,
+        prepMinutes: updates.prepMinutes,
+        cookMinutes: updates.cookMinutes,
+        difficultyStars: updates.difficultyStars,
+        servings: updates.servings,
+        sourceUrl: updates.sourceUrl,
+        calories: updates.calories,
+        tags: updates.tags,
+      });
+
+      const updatedRecipe = await this.getRecipeById(id);
+      if (!updatedRecipe) {
+        throw new Error("Failed to fetch updated recipe");
+      }
+
+      return updatedRecipe;
+    }, "Error updating recipe");
   },
 
   /**
    * Delete a recipe
    */
   async deleteRecipe(id: string): Promise<void> {
-    await databaseFacade.deleteRecipe(id);
+    return withErrorLogging(async () => {
+      await databaseFacade.deleteRecipe(id);
+    }, "Error deleting recipe");
+  },
+
+  /**
+   * Result-based variant of deleteRecipe.
+   */
+  async deleteRecipeResult(id: string): Promise<AppResult<void, AppError>> {
+    return logAndWrapResult(async () => {
+      await databaseFacade.deleteRecipe(id);
+    }, "Error deleting recipe");
   },
 
   /**
@@ -315,27 +374,69 @@ export const recipeApi = {
     canMake: Recipe[];
     partiallyCanMake: Array<{ recipe: Recipe; completionPercentage: number }>;
   }> {
-    try {
+    return withSilentError(
+      async () => {
+        const availability = await databaseFacade.getAvailableRecipes();
+
+        const canMake = await Promise.all(availability.canMake.map(convertDbRecipeToUIRecipe));
+
+        const partiallyCanMake = await Promise.all(
+          availability.partiallyCanMake.map(async (item) => {
+            return {
+              recipe: await convertDbRecipeToUIRecipe(item.recipe),
+              completionPercentage: item.completionPercentage,
+            };
+          })
+        );
+
+        return { canMake, partiallyCanMake };
+      },
+      { canMake: [], partiallyCanMake: [] }
+    );
+  },
+
+  /**
+   * Result-based variant of getAvailableRecipes (no logging on error).
+   */
+  async getAvailableRecipesResult(): Promise<
+    AppResult<
+      {
+        canMake: Recipe[];
+        partiallyCanMake: Array<{ recipe: Recipe; completionPercentage: number }>;
+      },
+      AppError
+    >
+  > {
+    return wrapResult(async () => {
       const availability = await databaseFacade.getAvailableRecipes();
 
-      const canMake = await Promise.all(
-        availability.canMake.map(convertDbRecipeToUIRecipe)
-      );
+      // Collect all recipe IDs for batch query
+      const canMakeIds = availability.canMake.map((r) => r.id);
+      const partiallyMakeIds = availability.partiallyCanMake.map((item) => item.recipe.id);
+      const allRecipeIds = [...canMakeIds, ...partiallyMakeIds];
 
-      const partiallyCanMake = await Promise.all(
-        availability.partiallyCanMake.map(async (item) => {
+      // Fetch all recipe details in a single batch call to avoid N+1 queries
+      const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(allRecipeIds);
+
+      // Convert canMake recipes using batch approach
+      const canMake = convertDbRecipesToUIRecipesBatch(availability.canMake, recipeDetailsMap);
+
+      // Convert partiallyCanMake recipes using batch approach
+      const partiallyCanMake = availability.partiallyCanMake
+        .map((item) => {
+          const uiRecipes = convertDbRecipesToUIRecipesBatch([item.recipe], recipeDetailsMap);
+          if (uiRecipes.length === 0) {
+            return null;
+          }
           return {
-            recipe: await convertDbRecipeToUIRecipe(item.recipe),
+            recipe: uiRecipes[0],
             completionPercentage: item.completionPercentage,
           };
         })
-      );
+        .filter((item): item is { recipe: Recipe; completionPercentage: number } => item !== null);
 
       return { canMake, partiallyCanMake };
-    } catch {
-      // Error getting available recipes
-      return { canMake: [], partiallyCanMake: [] };
-    }
+    });
   },
 
   /**
@@ -356,151 +457,355 @@ export const recipeApi = {
       stockUnit: string;
     }>;
   }> {
-    try {
-      return await databaseFacade.getShoppingListForRecipe(recipeId);
-    } catch {
-      return { missingIngredients: [], availableIngredients: [] };
-    }
+    return withSilentError(
+      async () => {
+        return await databaseFacade.getShoppingListForRecipe(recipeId);
+      },
+      { missingIngredients: [], availableIngredients: [] }
+    );
   },
 
   /**
-   * Get smart recipe recommendations based on pantry availability and user dietary preferences
+   * Result-based variant of getShoppingListForRecipe (no logging on error).
+   */
+  async getShoppingListForRecipeResult(recipeId: string): Promise<
+    AppResult<
+      {
+        missingIngredients: Array<{
+          name: string;
+          quantity: number;
+          unit: string;
+          notes?: string;
+        }>;
+        availableIngredients: Array<{
+          name: string;
+          quantity: number;
+          unit: string;
+          stockQuantity: number;
+          stockUnit: string;
+        }>;
+      },
+      AppError
+    >
+  > {
+    return wrapResult(async () => {
+      return await databaseFacade.getShoppingListForRecipe(recipeId);
+    });
+  },
+
+  /**
+   * Get smart recipe recommendations based on pantry availability
+   *
+   * Fetches all recipes, applies filtering and ranking strategies,
+   * and returns a unified list with completion percentages.
+   *
+   * @param options.filterStrategy - Custom filter strategy (e.g., DietaryFilter)
+   * @param options.rankingStrategy - Custom ranking strategy
    */
   async getRecipeRecommendations(options?: {
+    /** Maximum recommendations to return */
     maxRecommendations?: number;
-    preferCompleteable?: boolean;
+    /** Filter by recipe tags/categories */
     categories?: string[];
-    respectDietaryPreferences?: boolean;
+    /** Custom filter strategy to apply (e.g., DietaryFilter, CategoryFilter) */
+    filterStrategy?: RecipeFilterStrategy;
+    /** Custom ranking strategy (defaults to createHistoryAwareRankingStrategy()) */
+    rankingStrategy?: RecipeRankingStrategy;
+    /** Pre-built ranking context (for strategies that need external data like cooking history) */
+    rankingContext?: RankingContext;
+    /** Pre-fetched availability data (optional - if provided, skips database call) */
+    preFetchedAvailability?: AvailableRecipesResult;
+    /** Pre-fetched cooking history data (optional - if provided, skips database call) */
+    preFetchedCookingHistory?: CookingHistoryData;
   }): Promise<{
-    canMakeRecommendations: Recipe[];
-    partialRecommendations: Array<{
-      recipe: Recipe;
-      completionPercentage: number;
-    }>;
+    /** Unified list of recipes with completion percentages, filtered and ranked */
+    recipes: Array<{ recipe: Recipe; completionPercentage: number }>;
+  }> {
+    return withSilentError(
+      async () => {
+        const {
+          maxRecommendations,
+          categories,
+          filterStrategy: providedStrategy,
+          rankingStrategy = createHistoryAwareRankingStrategy(),
+          rankingContext,
+        } = options || {};
+
+        // Ensure categories are filtered if provided
+        let filterStrategy = providedStrategy;
+
+        if (categories && categories.length > 0) {
+          const categoryFilter = new CategoryFilter({ categories });
+
+          if (filterStrategy) {
+            // Combine provided strategy with category filter
+            filterStrategy = new CompositeFilterStrategy()
+              .addFilter(filterStrategy)
+              .addFilter(categoryFilter);
+          } else {
+            // Use category filter as the strategy
+            filterStrategy = categoryFilter;
+          }
+        }
+
+        // Get availability data (needed for completion percentages)
+        const availability =
+          options?.preFetchedAvailability ?? (await databaseFacade.getAvailableRecipes());
+
+        // Build completion percentage map
+        const completionMap = new Map<string, number>();
+        for (const recipe of availability.canMake) {
+          completionMap.set(recipe.id, 100);
+        }
+        for (const item of availability.partiallyCanMake) {
+          completionMap.set(item.recipe.id, item.completionPercentage);
+        }
+
+        // Auto-fetch cooking history data if not provided in context or pre-fetched
+        let cookingHistoryData: CookingHistoryData | undefined =
+          rankingContext?.cookingHistory || options?.preFetchedCookingHistory;
+
+        if (!cookingHistoryData) {
+          try {
+            const mostCookedData = await databaseFacade.getMostCookedRecipes(100);
+            const mostCookedMap = new Map(
+              mostCookedData.map((d) => [
+                d.recipeId,
+                { cookCount: d.cookCount, lastCookedAt: d.lastCookedAt },
+              ])
+            );
+
+            const cookingHistory = await databaseFacade.getCookingHistory(500);
+            const ratingsMap = new Map<string, number>();
+            const ratingsByRecipe = new Map<string, number[]>();
+
+            for (const record of cookingHistory) {
+              if (record.rating !== undefined && record.rating >= 1 && record.rating <= 5) {
+                const existing = ratingsByRecipe.get(record.recipeId) || [];
+                existing.push(record.rating);
+                ratingsByRecipe.set(record.recipeId, existing);
+              }
+            }
+
+            for (const [recipeId, ratings] of ratingsByRecipe) {
+              const avgRating = ratings.reduce((sum, r) => sum + r, 0) / ratings.length;
+              ratingsMap.set(recipeId, avgRating);
+            }
+
+            cookingHistoryData = {
+              mostCooked: mostCookedMap,
+              ratings: ratingsMap,
+            };
+          } catch (error) {
+            log.warn("Failed to fetch cooking history for ranking", error);
+          }
+        }
+
+        // Build contexts for filtering and ranking
+        const filterCtx: FilterContext = {
+          completionPercentages: completionMap,
+          selectedCategories: categories,
+        };
+
+        const rankingCtx: RankingContext = {
+          ...rankingContext,
+          completionPercentages: completionMap,
+          cookingHistory: cookingHistoryData,
+        };
+
+        const scoreRecipe = (recipe: Recipe) => rankingStrategy!.score(recipe, rankingCtx);
+
+        // Fetch ALL recipes, excluding tailored recipes from the main list
+        const allDbRecipes = await databaseFacade.getAllRecipes();
+
+        // Use batch query to get all recipe details in one call
+        const recipeIds = allDbRecipes
+          .filter((r) => r.type !== RecipeType.TAILORED)
+          .map((r) => r.id);
+        const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
+
+        // Use batch conversion to avoid N+1 queries
+        let allRecipes = convertDbRecipesToUIRecipesBatch(allDbRecipes, recipeDetailsMap);
+
+        // Apply filter strategy
+        if (filterStrategy) {
+          allRecipes = allRecipes.filter((recipe) => filterStrategy.filter(recipe, filterCtx));
+        }
+
+        // Map to recipes with completion percentages
+        let recipesWithCompletion = allRecipes.map((recipe) => ({
+          recipe,
+          completionPercentage: completionMap.get(recipe.id) ?? 0,
+        }));
+
+        // Apply ranking strategy
+        recipesWithCompletion.sort((a, b) => scoreRecipe(b.recipe) - scoreRecipe(a.recipe));
+
+        // Apply limit if specified
+        if (maxRecommendations && maxRecommendations < recipesWithCompletion.length) {
+          recipesWithCompletion = recipesWithCompletion.slice(0, maxRecommendations);
+        }
+
+        return { recipes: recipesWithCompletion };
+      },
+      { recipes: [] }
+    );
+  },
+
+  /**
+   * Get recipe recommendations based on ingredients expiring soon
+   *
+   * This method prioritizes recipes that use ingredients approaching expiration,
+   * helping to reduce food waste. It uses ExpiringIngredientsRankingStrategy to
+   * rank recipes by how many expiring ingredients they use, and applies
+   * DietaryFilter to respect user preferences.
+   *
+   * @param options.daysBeforeExpiry - Days threshold for expiring ingredients (default: 3)
+   * @param options.maxRecommendations - Maximum recommendations to return
+   * @returns Ranked recipes with completion percentages and list of expiring ingredient IDs
+   */
+  async getRecipeRecommendationsForExpiring(options?: {
+    /** Number of days to look ahead for expiring ingredients (default: 3) */
+    daysBeforeExpiry?: number;
+    /** Maximum recommendations to return */
+    maxRecommendations?: number;
+  }): Promise<{
+    /** Recipes ranked by how many expiring ingredients they use */
+    recipes: Array<{ recipe: Recipe; completionPercentage: number }>;
+    /** Set of ingredient IDs that are expiring (for UI display) */
+    expiringIngredientIds: Set<string>;
   }> {
     try {
-      const {
-        maxRecommendations = 5,
-        preferCompleteable = true,
-        categories,
-        respectDietaryPreferences = true,
-      } = options || {};
-      const availability = await databaseFacade.getAvailableRecipes();
+      const { daysBeforeExpiry = 3, maxRecommendations } = options || {};
 
-      // Filter by categories if specified
-      let canMake = availability.canMake;
-      let partiallyCanMake = availability.partiallyCanMake;
+      // Step 1: Fetch expiring stock items
+      const expiringStock = await databaseFacade.getExpiringStock(daysBeforeExpiry);
 
-      if (categories && categories.length > 0) {
-        canMake = canMake.filter((recipe) =>
-          recipe.tags?.some((tag) => categories.includes(tag))
-        );
-        partiallyCanMake = partiallyCanMake.filter((item) =>
-          item.recipe.tags?.some((tag) => categories.includes(tag))
-        );
+      if (expiringStock.length === 0) {
+        // No expiring ingredients, return empty result
+        return { recipes: [], expiringIngredientIds: new Set() };
       }
 
-      // Convert to UI format first so we can apply dietary filtering
-      const canMakeUI = await Promise.all(
-        canMake.map(convertDbRecipeToUIRecipe)
-      );
-      const partiallyCanMakeUI = await Promise.all(
-        partiallyCanMake.map(async (item) => ({
-          recipe: await convertDbRecipeToUIRecipe(item.recipe),
-          completionPercentage: item.completionPercentage,
-        }))
-      );
+      // Step 2: Build set of expiring ingredient IDs (stock IDs used for matching)
+      const expiringIngredientIds = new Set(expiringStock.map((stock) => stock.id));
 
-      // Apply dietary filtering if enabled
-      let filteredCanMake = canMakeUI;
-      let filteredPartiallyCanMake = partiallyCanMakeUI;
+      // Step 3: Create ranking strategy for expiring ingredients
+      const rankingStrategy = new ExpiringIngredientsRankingStrategy({
+        baseBonus: 20,
+        multipleIngredientMultiplier: 1.5,
+        multiplierThreshold: 2,
+      });
 
-      if (respectDietaryPreferences) {
-        filteredCanMake = [];
-        filteredPartiallyCanMake = [];
+      // Step 4: Create filter strategy for dietary preferences
+      const filterStrategy = new DietaryFilter({
+        checkDietaryPreferences: true,
+        checkAllergens: true,
+        checkTagsForAllergens: true,
+      });
 
-        // Filter canMake recipes
-        for (const recipe of canMakeUI) {
-          if (await isRecipeSuitableForUser(recipe)) {
-            filteredCanMake.push(recipe);
-          }
-        }
-
-        // Filter partiallyCanMake recipes
-        for (const item of partiallyCanMakeUI) {
-          if (await isRecipeSuitableForUser(item.recipe)) {
-            filteredPartiallyCanMake.push(item);
-          }
-        }
-      }
-
-      // Smart recommendation algorithm - works with UI Recipe models
-      const scoreUIRecipe = (recipe: Recipe) => {
-        let score = 0;
-
-        // Prefer easier recipes (lower difficulty = higher score)
-        score += (6 - (recipe.difficultyStars || 3)) * 10;
-
-        // Prefer shorter prep/cook time
-        const totalTime = (recipe.prepMinutes || 0) + (recipe.cookMinutes || 0);
-        score += Math.max(0, 120 - totalTime) / 10; // Max bonus for recipes under 2 hours
-
-        // Boost score for recipes that match dietary preferences
-        if (respectDietaryPreferences) {
-          const userDiet = storage.get(PREF_DIET_KEY) as string | undefined;
-          if (
-            userDiet &&
-            userDiet !== "none" &&
-            recipe.tags?.some(
-              (tag) => tag.toLowerCase() === userDiet.toLowerCase()
-            )
-          ) {
-            score += 50; // Significant boost for dietary preference match
-          }
-        }
-
-        // Random factor for variety
-        score += Math.random() * 20;
-
-        return score;
+      // Step 5: Build ranking context with expiring ingredients
+      const rankingContext: RankingContext = {
+        expiringIngredients: expiringIngredientIds,
       };
 
-      // Sort and limit recommendations
-      const sortedCanMake = filteredCanMake
-        .sort((a, b) => scoreUIRecipe(b) - scoreUIRecipe(a))
-        .slice(
-          0,
-          preferCompleteable
-            ? maxRecommendations
-            : Math.ceil(maxRecommendations * 0.6)
-        );
-
-      const sortedPartial = filteredPartiallyCanMake
-        .sort((a, b) => {
-          // Sort by completion percentage first, then by recipe score
-          const completionDiff =
-            b.completionPercentage - a.completionPercentage;
-          if (completionDiff !== 0) return completionDiff;
-          return scoreUIRecipe(b.recipe) - scoreUIRecipe(a.recipe);
-        })
-        .slice(0, maxRecommendations - sortedCanMake.length);
+      // Step 6: Get recipe recommendations using the strategies
+      const result = await this.getRecipeRecommendations({
+        maxRecommendations,
+        filterStrategy,
+        rankingStrategy,
+        rankingContext,
+      });
 
       return {
-        canMakeRecommendations: sortedCanMake,
-        partialRecommendations: sortedPartial,
+        recipes: result.recipes,
+        expiringIngredientIds,
       };
     } catch {
-      return { canMakeRecommendations: [], partialRecommendations: [] };
+      return { recipes: [], expiringIngredientIds: new Set() };
     }
   },
 
   /**
-   * Get user dietary preferences and allergens
+   * Generate a tailored recipe based on current pantry items
+   */
+  async generateTailoredRecipe(recipe: Recipe, pantryItems: PantryItem[]): Promise<Recipe> {
+    return withErrorLogging(async () => {
+      if (!pantryItems.length) {
+        throw new Error("No pantry items available for tailoring");
+      }
+
+      const pantryHash = buildPantryHash(pantryItems);
+      const cached = await databaseFacade.getTailoredRecipeWithDetailsByBaseAndHash(
+        recipe.id,
+        pantryHash
+      );
+
+      if (cached) {
+        return convertDbTailoredRecipeToUIRecipe(
+          cached.recipe,
+          cached.steps,
+          cached.ingredients,
+          recipe
+        );
+      }
+
+      const dietaryInfo = recipeApi.getUserDietaryInfo();
+      const inputPrompt = buildTailoredPrompt(recipe, pantryItems, dietaryInfo);
+
+      const body = JSON.stringify({
+        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        contents: [{ role: "user", parts: [{ text: inputPrompt }] }],
+        generationConfig: { responseMimeType: "application/json" },
+      });
+
+      const responseText = await generateGeminiContent(body);
+      const tailored = parseTailoredRecipeResponse(responseText, recipe);
+
+      // Delete any existing tailored recipes for this base recipe before saving the new one
+      await databaseFacade.clearTailoredRecipesForBase(recipe.id);
+
+      const saved = await databaseFacade.createTailoredRecipeWithDetails({
+        recipe: {
+          baseRecipeId: recipe.id,
+          pantryHash,
+          title: tailored.title,
+          description: tailored.description,
+          imageUrl: tailored.imageUrl,
+          prepMinutes: tailored.prepMinutes || 0,
+          cookMinutes: tailored.cookMinutes || 0,
+          difficultyStars: tailored.difficultyStars || 1,
+          servings: tailored.servings || 1,
+          calories: tailored.calories,
+          tags: tailored.tags,
+        },
+        steps: tailored.instructions.map((step) => ({
+          step: step.step,
+          title: step.title,
+          description: step.description,
+        })),
+        ingredients: tailored.ingredients.map((ing) => ({
+          name: ing.name,
+          quantity: ing.quantity,
+          unit: ing.unit,
+          notes: ing.notes,
+        })),
+      });
+
+      return {
+        ...tailored,
+        id: saved.id,
+      };
+    }, "Failed to generate tailored recipe");
+  },
+
+  /**
+   * Get user dietary preferences, allergens, and cooking appliances
    */
   getUserDietaryInfo(): {
     diet?: Diet;
     allergens: Allergen[];
     otherAllergens: string[];
+    appliances: string[];
   } {
     const diet = storage.get(PREF_DIET_KEY) as Diet | undefined;
     const allergens = (() => {
@@ -509,9 +814,15 @@ export const recipeApi = {
       return stored.split(",") as Allergen[];
     })();
     const otherAllergens = (() => {
-      const stored = storage.get(PREF_OTHER_ALLERGENS_KEY) as
-        | string
-        | undefined;
+      const stored = storage.get(PREF_OTHER_ALLERGENS_KEY) as string | undefined;
+      if (!stored) return [];
+      return stored
+        .split(",")
+        .map((a: string) => a.trim())
+        .filter((a: string) => a.length > 0);
+    })();
+    const appliances = (() => {
+      const stored = storage.get(PREF_APPLIANCES_KEY) as string | undefined;
       if (!stored) return [];
       return stored
         .split(",")
@@ -519,14 +830,46 @@ export const recipeApi = {
         .filter((a: string) => a.length > 0);
     })();
 
-    return { diet, allergens, otherAllergens };
+    return { diet, allergens, otherAllergens, appliances };
   },
 };
 
-// Helper function to convert database recipe to UI Recipe format
-const convertDbRecipeToUIRecipe = async (
-  dbRecipe: DbRecipe
-): Promise<Recipe> => {
+/**
+ * Converts a single database recipe to UI Recipe format.
+ *
+ * **Use this function for single recipe operations only**, such as:
+ * - Fetching a single recipe by ID (e.g., recipe detail page)
+ * - Processing individual recipes in isolation
+ *
+ * **⚠️ DO NOT use this function for batch operations** as it will cause N+1 query problems.
+ * For converting multiple recipes, use {@link convertDbRecipesToUIRecipesBatch} instead.
+ *
+ * **Performance Note:** This function makes a database call to fetch recipe details
+ * (ingredients, steps). If called in a loop, it will result in N+1 database queries.
+ *
+ * @param dbRecipe - The database recipe model to convert
+ * @returns Promise<Recipe> - The UI Recipe object with ingredients and instructions
+ *
+ * @example
+ * // ✅ GOOD: Single recipe use case
+ * const dbRecipe = await databaseFacade.getRecipeById(id);
+ * const uiRecipe = await convertDbRecipeToUIRecipe(dbRecipe);
+ *
+ * @example
+ * // ❌ BAD: Batch use case - causes N+1 queries
+ * const dbRecipes = await databaseFacade.getAllRecipes();
+ * const uiRecipes = await Promise.all(
+ *   dbRecipes.map(r => convertDbRecipeToUIRecipe(r)) // N+1 queries!
+ * );
+ *
+ * @example
+ * // ✅ GOOD: Batch use case with proper function
+ * const dbRecipes = await databaseFacade.getAllRecipes();
+ * const recipeIds = dbRecipes.map(r => r.id);
+ * const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
+ * const uiRecipes = convertDbRecipesToUIRecipesBatch(dbRecipes, recipeDetailsMap);
+ */
+const convertDbRecipeToUIRecipe = async (dbRecipe: DbRecipe): Promise<Recipe> => {
   const recipeDetails = await databaseFacade.getRecipeWithDetails(dbRecipe.id);
 
   if (!recipeDetails) {

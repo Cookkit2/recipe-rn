@@ -1,11 +1,7 @@
-import { ScrollView, View } from "react-native";
-import Animated, {
-  useAnimatedRef,
-  useScrollViewOffset,
-} from "react-native-reanimated";
+import { View } from "react-native";
+import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Header from "~/components/Shared/Header";
-import { MilkIcon, SaladIcon } from "lucide-nativewind";
+import { MilkIcon, SaladIcon, SpeakerIcon } from "lucide-uniwind";
 import { useRouter } from "expo-router";
 import ListButton from "~/components/Shared/ListButton";
 import UnitSection from "~/components/Preferences/UnitSection";
@@ -13,21 +9,14 @@ import ThemeSection from "~/components/Preferences/ThemeSection";
 import AppliancesSection from "~/components/Preferences/AppliancesSection";
 
 export default function PreferenceScreen() {
-  const { bottom } = useSafeAreaInsets();
   const router = useRouter();
-  const scrollRef = useAnimatedRef<Animated.ScrollView>();
-  const scrollOffset = useScrollViewOffset(scrollRef);
 
   return (
-    <ScrollView
+    <Animated.ScrollView
+      contentInsetAdjustmentBehavior="automatic"
       className="bg-background"
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: bottom }}
-      ref={scrollRef}
-      stickyHeaderIndices={[0]}
     >
-      <Header title="Preferences" scrollOffset={scrollOffset} />
-
       <ThemeSection />
 
       <UnitSection />
@@ -45,9 +34,14 @@ export default function PreferenceScreen() {
           icon={MilkIcon}
           onPress={() => router.push("/profile/preferences/allergy")}
         />
+        <ListButton
+          title="Voice Settings"
+          icon={SpeakerIcon}
+          onPress={() => router.push("/profile/preferences/voice-settings")}
+        />
       </View>
 
       <View className="mb-8" />
-    </ScrollView>
+    </Animated.ScrollView>
   );
 }

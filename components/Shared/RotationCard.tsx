@@ -7,7 +7,7 @@ import Animated, {
   type SharedValue,
 } from "react-native-reanimated";
 import type { ViewStyle } from "react-native";
-import { cn } from "~/lib/tw-merge";
+import { cn } from "~/lib/utils";
 import {
   SEED_INDEX_MULTIPLIER,
   SEED_TOTAL_MULTIPLIER,

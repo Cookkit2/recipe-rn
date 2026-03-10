@@ -10,7 +10,7 @@ import {
   FishIcon,
   ShrimpIcon,
   WheatIcon,
-} from "lucide-nativewind";
+} from "lucide-uniwind";
 import { toggleFromArray } from "~/utils/array-helper";
 import type { GroupButton } from "~/components/Shared/SegmentedButtons";
 import { storage } from "~/data";
@@ -57,6 +57,9 @@ export default function AllergySection() {
       queryClient.invalidateQueries({
         queryKey: recipeQueryKeys.recommendations(),
       });
+      queryClient.invalidateQueries({
+        queryKey: recipeQueryKeys.expiringRecipes(),
+      });
     },
     [queryClient]
   );
@@ -67,6 +70,9 @@ export default function AllergySection() {
       storage.set(PREF_OTHER_ALLERGENS_KEY, text);
       queryClient.invalidateQueries({
         queryKey: recipeQueryKeys.recommendations(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: recipeQueryKeys.expiringRecipes(),
       });
     },
     [queryClient]

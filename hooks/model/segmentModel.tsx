@@ -10,7 +10,7 @@ import {
 } from "@shopify/react-native-skia";
 import allModel from "./allModel";
 import { getColors } from "react-native-image-colors";
-import { log } from "~/utils/logger";
+import { log } from '~/utils/logger';
 
 const MAGIC_TOUCH_MODEL_INPUT_SIZE = 512;
 

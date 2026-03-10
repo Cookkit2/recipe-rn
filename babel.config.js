@@ -1,23 +1,18 @@
 module.exports = function (api) {
   api.cache(true);
   return {
-    presets: [
-      ["babel-preset-expo", { jsxImportSource: "nativewind" }],
-      "nativewind/babel",
-    ],
+    presets: [['babel-preset-expo']],
     plugins: [
-      ["@babel/plugin-proposal-decorators", { legacy: true }],
+      ['@babel/plugin-proposal-decorators', { legacy: true }],
       [
-        "module-resolver",
+        'module-resolver',
         {
-          root: ["./"],
+          root: ['./'],
           alias: {
-            "~": "./", // or whatever your root folder is
+            '~': './', // or whatever your root folder is
           },
         },
       ],
-      "react-native-worklets-core/plugin",
-      "react-native-reanimated/plugin",
     ],
   };
 };
