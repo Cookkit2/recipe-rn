@@ -15,8 +15,6 @@ import Animated, {
   withSpring,
   withTiming,
   Easing,
-  interpolate,
-  runOnJS,
 } from "react-native-reanimated";
 
 export interface AchievementConfettiProps {
@@ -54,11 +52,17 @@ function generateConfettiParticles(count: number, colors: string[]): ConfettiPar
 /**
  * Individual Confetti Particle Component
  */
-function ConfettiParticleComponent({ particle, duration }: { particle: ConfettiParticle; duration: number }) {
+function ConfettiParticleComponent({
+  particle,
+  duration,
+}: {
+  particle: ConfettiParticle;
+  duration: number;
+}) {
   const animatedY = useSharedValue(particle.y);
   const animatedX = useSharedValue(particle.x);
   const animatedRotation = useSharedValue(particle.rotation);
-  const animatedOpacity = useSharedValue(1);
+  const animatedOpacity = useSharedValue(0);
   const animatedScale = useSharedValue(0);
 
   // Start animation when component mounts
@@ -66,7 +70,10 @@ function ConfettiParticleComponent({ particle, duration }: { particle: ConfettiP
     // Fall animation
     animatedY.value = withDelay(
       particle.delay,
-      withTiming(600, { duration: duration * (0.8 + Math.random() * 0.4), easing: Easing.out(Easing.quad) })
+      withTiming(600, {
+        duration: duration * (0.8 + Math.random() * 0.4),
+        easing: Easing.out(Easing.quad),
+      })
     );
 
     // Wiggle effect
@@ -86,14 +93,14 @@ function ConfettiParticleComponent({ particle, duration }: { particle: ConfettiP
     );
 
     // Fade in and scale up at start
-    animatedOpacity.value = withDelay(particle.delay, withTiming(1, { duration: 100 }));
-    animatedScale.value = withDelay(particle.delay, withSpring(1, { damping: 15, stiffness: 150 }));
-
-    // Fade out at end
     animatedOpacity.value = withDelay(
-      particle.delay + duration - 200,
-      withTiming(0, { duration: 200 })
+      particle.delay,
+      withSequence(
+        withTiming(1, { duration: 100 }),
+        withDelay(duration - 200, withTiming(0, { duration: 200 }))
+      )
     );
+    animatedScale.value = withDelay(particle.delay, withSpring(1, { damping: 15, stiffness: 150 }));
   }, []);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -182,7 +189,11 @@ export default function AchievementConfetti({
   return (
     <View style={styles.container} pointerEvents="none">
       {particles.map((particle) => (
-        <ConfettiParticleComponent key={`${animationKey.current}-${particle.id}`} particle={particle} duration={duration} />
+        <ConfettiParticleComponent
+          key={`${animationKey.current}-${particle.id}`}
+          particle={particle}
+          duration={duration}
+        />
       ))}
     </View>
   );

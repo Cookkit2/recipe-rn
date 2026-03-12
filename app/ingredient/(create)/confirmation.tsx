@@ -62,7 +62,7 @@ export default function ConfirmationPage() {
     } finally {
       setIsSavingIngredients(false);
     }
-  }, [completedItems]);
+  }, [addPantryItemsWithMetadata, completedItems, queryClient, router]);
 
   // Memoized render item to prevent re-creation on each render
   const renderItem = useCallback(

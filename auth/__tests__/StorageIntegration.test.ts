@@ -50,7 +50,8 @@ import { StorageFactory } from "~/data/storage";
 import { AuthStorageManager } from "../StorageIntegration";
 
 const getMockStorage = (): typeof mockStorage =>
-  ((StorageFactory.initialize as jest.Mock).mock.results[0]?.value ?? mockStorage) as typeof mockStorage;
+  ((StorageFactory.initialize as jest.Mock).mock.results[0]?.value ??
+    mockStorage) as typeof mockStorage;
 
 describe("AuthStorageManager", () => {
   beforeEach(() => {
@@ -85,6 +86,28 @@ describe("AuthStorageManager", () => {
     const session = await manager.getSession();
 
     expect(session).toBeNull();
+  });
+
+  it("rehydrates expiresAt as a Date when restoring a stored session", async () => {
+    const manager = AuthStorageManager.getInstance();
+    const storage = getMockStorage();
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+    storage.set(
+      "auth_session_data",
+      JSON.stringify({
+        accessToken: "access-token",
+        refreshToken: "refresh-token",
+        expiresAt: expiresAt.toISOString(),
+        tokenType: "Bearer",
+      })
+    );
+
+    const session = await manager.getSession();
+
+    expect(session).not.toBeNull();
+    expect(session?.expiresAt).toBeInstanceOf(Date);
+    expect(session?.expiresAt.toISOString()).toBe(expiresAt.toISOString());
   });
 
   it("clears and returns null when stored session is expired", async () => {
@@ -124,4 +147,3 @@ describe("AuthStorageManager", () => {
     expect(storage.contains("auth_session_expires_at")).toBe(false);
   });
 });
-

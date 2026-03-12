@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { View, TextInput, Pressable, ActivityIndicator, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { H4, P } from "~/components/ui/typography";
@@ -18,6 +18,7 @@ export default function ImportYouTubeRecipe() {
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [urlError, setUrlError] = useState("");
   const { importRecipe, importStatus, data, error, isPending, reset } = useImportYouTubeRecipe();
+  const shouldResetOnUnmountRef = useRef(false);
 
   // Validate URL as user types
   useEffect(() => {
@@ -30,12 +31,16 @@ export default function ImportYouTubeRecipe() {
 
   // Clear state when successful and user navigates away
   useEffect(() => {
+    shouldResetOnUnmountRef.current = Boolean(data?.success);
+  }, [data?.success]);
+
+  useEffect(() => {
     return () => {
-      if (data?.success) {
+      if (shouldResetOnUnmountRef.current) {
         reset();
       }
     };
-  }, []);
+  }, [reset]);
 
   const handleImport = () => {
     if (!youtubeUrl.trim()) {

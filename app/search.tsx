@@ -26,7 +26,7 @@ export default function SearchScreen() {
   const [input, setInput] = useState("");
   const [debouncedInput, setDebouncedInput] = useState("");
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedInput(input), 10);
+    const t = setTimeout(() => setDebouncedInput(input), 250);
     return () => clearTimeout(t);
   }, [input]);
   const hasQuery = debouncedInput.trim().length > 0;

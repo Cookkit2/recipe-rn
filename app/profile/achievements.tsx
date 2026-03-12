@@ -112,31 +112,29 @@ export default function AchievementsScreen() {
       showsVerticalScrollIndicator={false}
       className="bg-background"
       stickyHeaderIndices={[0]}
-      StickyHeaderComponent={() => (
-        <View className="px-6 pt-6 pb-4 flex-row gap-2">
-          {renderTabButton(
-            "achievements",
-            "Achievements",
-            <TrophyIcon
-              size={16}
-              className={
-                activeTab === "achievements" ? "text-primary-foreground" : "text-foreground/70"
-              }
-            />
-          )}
-          {renderTabButton(
-            "challenges",
-            "Challenges",
-            <TargetIcon
-              size={16}
-              className={
-                activeTab === "challenges" ? "text-primary-foreground" : "text-foreground/70"
-              }
-            />
-          )}
-        </View>
-      )}
     >
+      <View className="px-6 pt-6 pb-4 flex-row gap-2 bg-background">
+        {renderTabButton(
+          "achievements",
+          "Achievements",
+          <TrophyIcon
+            size={16}
+            className={
+              activeTab === "achievements" ? "text-primary-foreground" : "text-foreground/70"
+            }
+          />
+        )}
+        {renderTabButton(
+          "challenges",
+          "Challenges",
+          <TargetIcon
+            size={16}
+            className={
+              activeTab === "challenges" ? "text-primary-foreground" : "text-foreground/70"
+            }
+          />
+        )}
+      </View>
       {activeTab === "achievements" ? (
         <View className="gap-6 pb-8">
           {Object.keys(groupedAchievements).length === 0
