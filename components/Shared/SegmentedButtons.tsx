@@ -6,6 +6,21 @@ import useSelectionRing from "~/hooks/animation/useSelectionRing";
 import { P } from "~/components/ui/typography";
 import { cn } from "~/lib/utils";
 
+const COLUMN_CLASS_MAP = {
+  1: "basis-full",
+  2: "basis-1/2",
+  3: "basis-1/3",
+  4: "basis-1/4",
+} as const;
+
+function getSegmentedButtonWidthClassName(buttonCount: number, columns: number): string {
+  const resolvedColumns = buttonCount === 2 ? 2 : columns;
+  const basisClass =
+    COLUMN_CLASS_MAP[resolvedColumns as keyof typeof COLUMN_CLASS_MAP] ?? "basis-1/3";
+
+  return `${basisClass} px-1.5`;
+}
+
 export type GroupButton<T> = {
   label: string;
   icon: JSX.Element;
@@ -30,7 +45,6 @@ export default function SegmentedButtons<T>({
     [buttons, value]
   );
   const { onItemLayout, ringStyle } = useSelectionRing(selectedIndex);
-  const twoOnly = useMemo(() => buttons.length === 2, [buttons.length]);
 
   return (
     <View className="relative mt-2">
@@ -48,7 +62,7 @@ export default function SegmentedButtons<T>({
           <GroupButton
             key={index}
             item={item}
-            className={twoOnly ? "basis-1/2 px-1.5" : `basis-1/${columns} px-1.5`}
+            className={getSegmentedButtonWidthClassName(buttons.length, columns)}
             onLayout={onItemLayout(index)}
             selected={value === item.value}
             onPress={() => onValueChange(item.value)}

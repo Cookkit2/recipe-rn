@@ -13,19 +13,17 @@ import { recipeQueryKeys } from "~/hooks/queries/recipeQueryKeys";
 export type Diet = "halal" | "kosher" | "vegetarian" | "vegan" | "pescatarian" | "none";
 
 const DIET_OPTIONS: GroupButton<Diet>[] = [
+  { label: "None", icon: <BadgeXIcon />, value: "none" },
   { label: "Halal", icon: <MoonIcon />, value: "halal" },
   { label: "Kosher", icon: <StarNorthIcon />, value: "kosher" },
   { label: "Vegetarian", icon: <SaladIcon />, value: "vegetarian" },
   { label: "Vegan", icon: <VeganIcon />, value: "vegan" },
   { label: "Pescatarian", icon: <FishIcon />, value: "pescatarian" },
-  { label: "None", icon: <BadgeXIcon />, value: "none" },
 ];
 
 export default function DietarySection() {
   const queryClient = useQueryClient();
-  const [diet, setDiet] = useState<Diet | undefined>(
-    storage.get(PREF_DIET_KEY) || undefined
-  );
+  const [diet, setDiet] = useState<Diet | undefined>(storage.get(PREF_DIET_KEY) || undefined);
 
   const handleToggleDiet = useCallback(
     (diet: Diet) => {
@@ -46,6 +44,7 @@ export default function DietarySection() {
       <CardContent className="py-6 gap-3 bg-muted/50 rounded-3xl">
         <H4 className="font-urbanist-bold">Dietary Preference</H4>
         <SegmentedButtons
+          columns={3}
           buttons={DIET_OPTIONS}
           value={diet}
           onValueChange={handleToggleDiet}

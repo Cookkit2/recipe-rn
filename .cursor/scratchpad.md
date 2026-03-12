@@ -135,6 +135,7 @@ The core intelligence of this feature:
 - [x] Phase 4: UI - Recipe Detail "Add to Plan" ✅
 - [x] Phase 5: Grocery List Page ✅
 - [x] Phase 6: Polish & UX ✅
+- [ ] 2026-03-12: Fix `SegmentedButtons` column layout regression caused by dynamic NativeWind basis classes.
 
 ---
 
@@ -143,6 +144,12 @@ The core intelligence of this feature:
 **✅ FEATURE IMPLEMENTATION COMPLETE!**
 
 All phases have been implemented. The grocery list feature is now ready for testing.
+
+2026-03-12 executor update:
+- Investigating a UI regression where `DietarySection` passes `columns={3}` but `SegmentedButtons` renders each option full-width.
+- Root cause: runtime-generated class names like ``basis-1/${columns}`` are not statically compiled by NativeWind, so the width class is dropped.
+- Plan: replace the dynamic basis class with a small static mapping helper and keep a regression test alongside it.
+- Blocker: `npm test` cannot run because the workspace does not currently have the `jest` binary installed, so automated red/green verification is limited to type/lint checks for this task.
 
 ---
 
