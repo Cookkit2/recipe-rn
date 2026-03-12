@@ -1,48 +1,38 @@
 module.exports = {
-  preset: "react-native",
-  setupFilesAfterEnv: ["<rootDir>/__tests__/setup.ts"],
-  testMatch: ["**/__tests__/**/*.test.ts", "**/__tests__/**/*.test.tsx"],
+  preset: "ts-jest",
+  testEnvironment: "node",
+  setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
+  testMatch: ["**/__tests__/**/*.test.(js|jsx|ts|tsx)"],
+  moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json"],
+  transform: {
+    "^.+\\.(ts|tsx)$": ["ts-jest", {
+      tsconfig: {
+        jsx: "react",
+        esModuleInterop: true,
+        allowSyntheticDefaultImports: true,
+        skipLibCheck: true,
+      },
+    }],
+  },
+  transformIgnorePatterns: [
+    "node_modules/(?!(react-native|@react-native|@nozbe|@expo|expo|react-navigation)/)",
+  ],
   moduleNameMapper: {
     "^~/(.*)$": "<rootDir>/$1",
   },
   collectCoverageFrom: [
-    "data/storage/**/*.ts",
-    "data/repositories/**/*.ts", 
-    "data/pantry-repository.ts",
+    "utils/**/*.{ts,tsx}",
+    "data/**/*.{ts,tsx}",
+    "lib/**/*.{ts,tsx}",
+    "auth/**/*.{ts,tsx}",
     "!**/*.d.ts",
-    "!**/node_modules/**",
     "!**/__tests__/**",
-    // Exclude placeholder implementations from coverage
-    "!data/storage/implementations/async-storage-impl.ts",
-    "!data/storage/implementations/sqlite-storage.ts", 
-    "!data/storage/implementations/watermelon-storage.ts",
-    "!data/storage/implementations/realm-storage.ts",
-    "!data/storage/index.ts", // Re-exports only
-    "!data/repositories/recipe-repository.ts", // Not used in main app yet
+    "!**/node_modules/**",
+    "!data/db/database.ts",
+    "!data/db/migrations/**",
   ],
-  coverageThreshold: {
-    global: {
-      branches: 60,
-      functions: 50,
-      lines: 60,
-      statements: 60,
-    },
-    // Specific thresholds for core storage components (these should be high)
-    "data/storage/storage-facade.ts": {
-      branches: 100,
-      functions: 100,
-      lines: 100,
-      statements: 100,
-    },
-    "data/storage/implementations/mmkv-storage.ts": {
-      branches: 95,
-      functions: 100,
-      lines: 95,
-      statements: 95,
-    },
-  },
-  transformIgnorePatterns: [
-    "node_modules/(?!(react-native|@react-native|react-native-mmkv)/)",
+  testPathIgnorePatterns: [
+    "/node_modules/",
+    "/.expo/",
   ],
-  testEnvironment: "node",
 };

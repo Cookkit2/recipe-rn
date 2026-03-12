@@ -1,4 +1,5 @@
 import { BaseAuthStrategy } from "./AuthStrategy";
+import { log } from '~/utils/logger';
 import type {
   User,
   AuthResult,
@@ -266,7 +267,7 @@ export class MockAuthStrategy extends BaseAuthStrategy {
     }
 
     // In a real implementation, this would send a reset email
-    console.log(`Mock: Password reset email sent to ${email}`);
+    log.info(`Mock: Password reset email sent to ${email}`);
 
     return { success: true };
   }

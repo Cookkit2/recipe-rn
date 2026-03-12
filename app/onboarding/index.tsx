@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -8,10 +8,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import TextShimmer from "~/components/ui/TextShimmer";
 import { dummyPantryItems } from "~/data/dummy/dummy-data";
 import useColors from "~/hooks/useColor";
-import RotationCard from "~/components/Onboarding/RotationCard";
+import RotationCard from "~/components/Shared/RotationCard";
 import OutlinedImage from "~/components/ui/outlined-image";
-import { storage } from "~/data";
-import { ONBOARDING_COMPLETED_KEY } from "~/constants/storage-keys";
 import * as WebBrowser from "expo-web-browser";
 import { toast } from "sonner-native";
 import PoweredByAI from "~/components/Shared/PoweredByAI";
@@ -33,21 +31,8 @@ export default function OnboardingScreen() {
     height: 0,
   });
 
-  // If onboarding already completed, skip this screen
-  useEffect(() => {
-    const completed = storage.get<boolean>(ONBOARDING_COMPLETED_KEY);
-    if (completed) {
-      router.replace("/");
-    }
-  }, [router]);
-
   const convertToAbsWrapper = (x: number, y: number) => {
-    return convertToAbsolutePosition(
-      x,
-      y,
-      containerDimensions.width,
-      containerDimensions.height
-    );
+    return convertToAbsolutePosition(x, y, containerDimensions.width, containerDimensions.height);
   };
 
   const complete = () => {
@@ -64,15 +49,9 @@ export default function OnboardingScreen() {
 
   return (
     <View className="relative flex-1">
-      <LinearGradient
-        colors={[colors.border, colors.muted]}
-        style={[StyleSheet.absoluteFill]}
-      />
+      <LinearGradient colors={[colors.border, colors.muted]} style={[StyleSheet.absoluteFill]} />
 
-      <View
-        className="flex flex-1"
-        style={{ paddingTop: top, paddingBottom: bottom }}
-      >
+      <View className="flex flex-1" style={{ paddingTop: top, paddingBottom: bottom }}>
         <View
           className="relative flex-1 justify-around px-10 pb-10"
           onLayout={(event) => {
@@ -101,9 +80,7 @@ export default function OnboardingScreen() {
               );
             })}
           <View className="absolute inset-0 flex-1 justify-end">
-            <H1 className="text-5xl font-bowlby-one text-center pt-4 tracking-wider">
-              Cookkit
-            </H1>
+            <H1 className="text-5xl font-bowlby-one text-center pt-4 tracking-normal">Cookkit</H1>
             <P className="font-urbanist-medium text-foreground/80 px-4 text-center text-xl">
               Track your ingredients {"\n"}
               Discover tailored recipes
@@ -119,9 +96,7 @@ export default function OnboardingScreen() {
             className="mt-12 rounded-2xl bg-foreground"
           >
             <TextShimmer className="text-center">
-              <H4 className="text-background font-urbanist font-semibold">
-                Continue
-              </H4>
+              <H4 className="text-background font-urbanist-bold">Continue</H4>
             </TextShimmer>
           </Button>
           <P className="font-urbanist-regular text-center text-foreground/80 mt-8 px-10">
@@ -131,9 +106,7 @@ export default function OnboardingScreen() {
               accessibilityRole="link"
               accessibilityLabel="Terms of Service"
               accessibilityHint="Opens the Terms of Service page"
-              onPress={() =>
-                handleOpenLink("https://www.cookkit.app/terms-and-conditions")
-              }
+              onPress={() => handleOpenLink("https://cookkit.app/terms-and-conditions")}
             >
               Terms of Service
             </Text>{" "}
@@ -143,9 +116,7 @@ export default function OnboardingScreen() {
               accessibilityRole="link"
               accessibilityLabel="Privacy Policy"
               accessibilityHint="Opens the Privacy Policy page"
-              onPress={() =>
-                handleOpenLink("https://www.cookkit.app/privacy-policy")
-              }
+              onPress={() => handleOpenLink("https://cookkit.app/privacy-policy")}
             >
               Privacy Policy
             </Text>

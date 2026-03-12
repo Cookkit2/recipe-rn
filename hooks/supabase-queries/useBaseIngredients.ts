@@ -10,7 +10,16 @@ const baseIngredientQueryKeys = {
 } as const;
 
 /**
- * Hook to fetch pantry items by type with client-side filtering
+ * Hook to fetch all base ingredients from Supabase.
+ *
+ * Fetches the complete list of base ingredients including categories and synonyms.
+ * Data is cached for 24 hours to reduce network requests since base ingredients
+ * change infrequently.
+ *
+ * @returns React Query result with base ingredients data
+ *
+ * @example
+ * const { data: baseIngredients, isLoading } = useBaseIngredients();
  */
 export function useBaseIngredients() {
   return useQuery({
@@ -20,6 +29,14 @@ export function useBaseIngredients() {
   });
 }
 
+/**
+ * Hook to fetch base ingredients for category-based operations.
+ *
+ * Provides the same data as useBaseIngredients but with a distinct query key
+ * for category-specific invalidation or caching strategies.
+ *
+ * @returns React Query result with base ingredients data for category operations
+ */
 export function useIngredientsCategory() {
   return useQuery({
     queryKey: baseIngredientQueryKeys.category,
@@ -28,6 +45,15 @@ export function useIngredientsCategory() {
   });
 }
 
+/**
+ * Hook to fetch base ingredients for synonym-based matching operations.
+ *
+ * Provides the same data as useBaseIngredients but with a distinct query key
+ * for synonym-specific invalidation or caching strategies. Used for ingredient
+ * name matching and normalization.
+ *
+ * @returns React Query result with base ingredients data for synonym operations
+ */
 export function useIngredientsSynonym() {
   return useQuery({
     queryKey: baseIngredientQueryKeys.synonym,

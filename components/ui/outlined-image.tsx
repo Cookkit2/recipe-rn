@@ -1,4 +1,4 @@
-import React from "react";
+import { memo, useMemo, type FC } from "react";
 import {
   StyleSheet,
   View,
@@ -16,21 +16,35 @@ type OutlinedImageProps = {
   strokeWidth?: number;
   style?: StyleProp<ViewStyle>;
   imageStyle?: StyleProp<ImageStyle>;
+  /** Use with remote URLs for better cache hits. */
+  cacheKey?: string;
+  /** Default "memory-disk" for list/thumbnail reuse. */
+  cachePolicy?: "none" | "disk" | "memory" | "memory-disk";
 };
 
 /**
  * Renders a PNG with an approximate white outline by layering tinted copies
  * behind the original at small offsets. Works well for small icons/thumbnails.
  */
-export function OutlinedImage({
+export const OutlinedImage: FC<OutlinedImageProps> = ({
   source,
   size = 48,
   strokeColor = "#FFFFFF",
   strokeWidth = 2,
   style,
   imageStyle,
-}: OutlinedImageProps) {
-  const offsets = React.useMemo(() => {
+  cacheKey,
+  cachePolicy = "memory-disk",
+}) => {
+  const resolvedSource = useMemo(() => {
+    if (source == null) return source;
+    if (cacheKey == null) return source;
+    if (typeof source === "string") return { uri: source, cacheKey };
+    if (typeof source === "object" && "uri" in source) return { ...source, cacheKey };
+    return source;
+  }, [source, cacheKey]);
+
+  const offsets = useMemo(() => {
     const r = Math.max(1, Math.round(strokeWidth));
     return [
       [-r, 0],
@@ -45,11 +59,11 @@ export function OutlinedImage({
   }, [strokeWidth]);
 
   return (
-    <View className="relative" style={[{ width: size, height: size }, style]}>
+    <View className="relative" style={[{ width: size, height: size }, style]} collapsable={false}>
       {offsets.map(([dx, dy], idx) => (
         <Image
           key={`outline-${idx}`}
-          source={source}
+          source={resolvedSource}
           style={[
             styles.abs,
             {
@@ -62,16 +76,20 @@ export function OutlinedImage({
             imageStyle,
           ]}
           contentFit="contain"
+          cachePolicy={cachePolicy}
+          transition={150}
         />
       ))}
       <Image
-        source={source}
+        source={resolvedSource}
         style={[styles.abs, { width: size, height: size }, imageStyle]}
         contentFit="contain"
+        cachePolicy={cachePolicy}
+        transition={150}
       />
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   abs: {
@@ -81,4 +99,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default OutlinedImage;
+export default memo(OutlinedImage);

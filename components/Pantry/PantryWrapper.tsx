@@ -1,17 +1,13 @@
 import { Pressable, View, Dimensions } from "react-native";
-import { H1 } from "~/components/ui/typography";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import MenuDropdown from "~/components/Pantry/MenuDropdown";
-import AddPantryItem from "~/components/Pantry/AddPantryItem";
 import RecipeButton from "~/components/Pantry/RecipeButton";
 import Animated, {
-  Easing,
-  SlideInUp,
   useAnimatedStyle,
+  useSharedValue,
   withSpring,
   withTiming,
-  runOnJS,
 } from "react-native-reanimated";
+import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { CURVES } from "~/constants/curves";
 import useDeviceCornerRadius from "~/hooks/useDeviceCornerRadius";
@@ -19,8 +15,9 @@ import RecipeCategoryButtonGroup from "~/components/Pantry/RecipeCategoryButtonG
 import RecipeLists from "~/components/Pantry/RecipeLists";
 import { EXPANDED_HEIGHT, SNAP_THRESHOLD } from "~/constants/pantry";
 import { usePantryStore } from "~/store/PantryContext";
-import IngredientCategoryButtonGroup from "~/components/Pantry/IngredientCategoryButtonGroup";
 import IngredientLists from "~/components/Pantry/IngredientLists";
+import { useCallback, useEffect } from "react";
+import { setStatusBarStyle } from "expo-status-bar";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -35,16 +32,28 @@ export default function PantryWrapper() {
   const borderRadius = useDeviceCornerRadius();
   const { top } = useSafeAreaInsets();
 
-  const {
-    isRecipeOpen,
-    updateRecipeOpen,
-    translateY,
-    context,
-    isGestureActive,
-    collapsedHeight,
-  } = usePantryStore();
+  const { isRecipeOpen, updateRecipeOpen, translateY, context, isGestureActive, collapsedHeight } =
+    usePantryStore();
 
-  // Pan gesture handler
+  const entranceOffset = useSharedValue(isRecipeOpen ? 1 : 0);
+
+  useEffect(() => {
+    setStatusBarStyle("auto", true);
+  }, []);
+
+  useEffect(() => {
+    const target = isRecipeOpen ? 1 : 0;
+    scheduleOnUI((t: number) => {
+      "worklet";
+      entranceOffset.value = withSpring(t, {
+        damping: 15,
+        mass: 0.8,
+        stiffness: 400,
+      });
+    }, target);
+  }, [isRecipeOpen]);
+
+  // Pan gesture handler - memoized to avoid recreation on every render
   const panGesture = Gesture.Pan()
     .onStart(() => {
       isGestureActive.value = true;
@@ -53,10 +62,7 @@ export default function PantryWrapper() {
     .onUpdate((event) => {
       // Only allow dragging up (negative values)
       const newTranslateY = context.value.y + event.translationY;
-      translateY.value = Math.min(
-        0,
-        Math.max(-EXPANDED_HEIGHT + collapsedHeight, newTranslateY)
-      );
+      translateY.value = Math.min(0, Math.max(-EXPANDED_HEIGHT + collapsedHeight, newTranslateY));
     })
     .onEnd((event) => {
       isGestureActive.value = false;
@@ -89,7 +95,7 @@ export default function PantryWrapper() {
 
       // Update selection state based on position
       const isExpanded = snapTarget < 0;
-      runOnJS(updateRecipeOpen)(isExpanded);
+      scheduleOnRN(updateRecipeOpen, isExpanded);
     });
 
   // Update container style to work with pan gesture
@@ -105,92 +111,55 @@ export default function PantryWrapper() {
       ),
       borderTopRightRadius: isRecipeOpen ? borderRadius : 0,
       borderTopLeftRadius: isRecipeOpen ? borderRadius : 0,
-      marginHorizontal: withTiming(
-        isRecipeOpen ? 8 : 0,
-        CURVES["expressive.default.spatial"]
-      ),
+      marginHorizontal: withTiming(isRecipeOpen ? 8 : 0, CURVES["expressive.default.spatial"]),
       marginTop: withSpring(isRecipeOpen ? 8 : 0, SPRING_CONFIG),
-      marginBottom: withSpring(
-        isRecipeOpen ? collapsedHeight - translateY.value : 0,
-        SPRING_CONFIG
-      ),
+      // Keep spacing in sync with the sheet height, but avoid re-starting a spring on every frame
+      marginBottom: isRecipeOpen ? collapsedHeight - translateY.value : 0,
       paddingTop: withSpring(isRecipeOpen ? top - 8 : top, SPRING_CONFIG),
     };
   }, [isRecipeOpen, collapsedHeight, top]);
 
-  const headerGroupStyle = useAnimatedStyle(() => {
-    return {
-      paddingHorizontal: withTiming(
-        isRecipeOpen ? 16 : 24,
-        CURVES["expressive.default.spatial"]
-      ),
-    };
-  }, [isRecipeOpen]);
-
-  const ingredientListStyle = useAnimatedStyle(() => {
-    return {
-      paddingHorizontal: withTiming(
-        isRecipeOpen ? 4 : 12,
-        CURVES["expressive.default.spatial"]
-      ),
-    };
-  }, [isRecipeOpen]);
+  const closeRecipe = useCallback(() => {
+    if (isRecipeOpen) {
+      updateRecipeOpen(false);
+      translateY.value = withSpring(0, {
+        damping: 15,
+        mass: 1,
+        stiffness: 300,
+      });
+    }
+  }, [isRecipeOpen, updateRecipeOpen, translateY]);
 
   const recipeGroupStyle = useAnimatedStyle(() => {
+    const visibleHeight = collapsedHeight - 8 - translateY.value;
     return {
-      opacity: withTiming(
-        isRecipeOpen ? 1 : 0,
-        CURVES["expressive.fast.spatial"]
-      ),
-      top: withSpring(
-        isRecipeOpen
-          ? SCREEN_HEIGHT - (collapsedHeight - 8 - translateY.value)
-          : SCREEN_HEIGHT,
-        SPRING_CONFIG
-      ),
+      opacity: entranceOffset.value,
+      // entranceOffset springs 0→1 on open (bounce), 1→0 on close; translateY drives drag directly
+      top: SCREEN_HEIGHT - entranceOffset.value * visibleHeight,
     };
-  }, [isRecipeOpen, collapsedHeight]);
+  }, [collapsedHeight]);
 
   return (
     <Animated.View className="relative flex-1 bg-black">
       <AnimatedPressable
         className="relative flex-1 bg-background overflow-hidden"
-        exiting={SlideInUp.duration(1000).easing(Easing.inOut(Easing.quad))}
         style={containerStyle}
-        onPress={() => {
-          if (isRecipeOpen) {
-            updateRecipeOpen(false);
-            translateY.value = withSpring(0, {
-              damping: 15,
-              mass: 1,
-              stiffness: 300,
-            });
-          }
-        }}
+        onPress={closeRecipe}
       >
-        <Animated.View
-          className="flex-row items-center my-5 gap-3"
-          style={headerGroupStyle}
-        >
-          <H1 className="font-bowlby-one pt-2">Pantry</H1>
-          <View className="flex-1" />
-          <AddPantryItem />
-          <MenuDropdown />
-        </Animated.View>
-        <IngredientCategoryButtonGroup />
-        <Animated.View style={ingredientListStyle}>
-          <IngredientLists />
-        </Animated.View>
+        <IngredientLists />
       </AnimatedPressable>
 
       <RecipeButton />
 
       <GestureDetector gesture={panGesture}>
         <Animated.View
-          className="absolute left-0 right-0"
+          className="absolute left-0 right-0 h-full"
+          pointerEvents={isRecipeOpen ? "auto" : "none"}
           style={[recipeGroupStyle]}
         >
           <View className="bg-muted/80 h-1 w-16 rounded-full self-center mb-2" />
+          {/* Invisible touch area overlay for easier grabbing */}
+          <View className="absolute top-0 left-0 right-0 h-12" />
           <RecipeCategoryButtonGroup />
           <RecipeLists />
         </Animated.View>

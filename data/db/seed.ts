@@ -7,9 +7,11 @@
 
 import { databaseFacade } from "./DatabaseFacade";
 import { dummyPantryItems } from "~/data/dummy/dummy-data";
+import { seedAchievements } from "./seed-achievements";
 import { File, Paths } from "expo-file-system";
 import { Asset } from "expo-asset";
 import type { ImageSourcePropType } from "react-native";
+import { log } from "~/utils/logger";
 
 /**
  * Save an image asset to the file system and return the path
@@ -57,7 +59,7 @@ async function saveImageAsset(
 
     return destinationFile.uri;
   } catch (error) {
-    console.error("Error saving image asset:", error);
+    log.error("Error saving image asset:", error);
     // Return a fallback empty string if saving fails
     return "";
   }
@@ -126,15 +128,15 @@ function mapIngredientName(recipeName: string, pantryNames: string[]): string {
 }
 
 export async function seedDatabase() {
-  console.log("🌱 Starting database seeding...");
+  log.info("🌱 Starting database seeding...");
 
   try {
     // Clear existing data
-    console.log("🧹 Clearing existing data...");
+    log.info("🧹 Clearing existing data...");
     await databaseFacade.clearAllData();
 
     // Seed stock items
-    console.log("📦 Seeding stock items...");
+    log.info("📦 Seeding stock items...");
     for (const item of dummyPantryItems) {
       // Save the image from asset into file system and return the path
       const imagePath = await saveImageAsset(item.image_url);
@@ -146,24 +148,25 @@ export async function seedDatabase() {
         expirationDate: item.expiry_date?.getTime(),
         storageType: item.type,
         imageUrl: imagePath, // Use the saved file path instead of the original asset
-        x: item.x,
-        y: item.y,
-        scale: item.scale,
       });
     }
 
+    // Seed achievement definitions
+    log.info("🏆 Seeding achievement definitions...");
+    await seedAchievements();
+
     // Recipes are synced from Supabase during initialization
     // No need to seed them manually
-    console.log("👨‍🍳 Recipes will be synced from Supabase...");
+    log.info("👨‍🍳 Recipes will be synced from Supabase...");
 
     // Get final stats
     const stats = await databaseFacade.getDatabaseStats();
-    console.log("📊 Database seeding completed successfully!");
-    console.log("📈 Database stats:", stats);
+    log.info("📊 Database seeding completed successfully!");
+    log.info("📈 Database stats:", stats);
 
     return true;
   } catch (error) {
-    console.error("❌ Error seeding database:", error);
+    log.error("❌ Error seeding database:", error);
     throw error;
   }
 }

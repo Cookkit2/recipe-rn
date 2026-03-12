@@ -83,6 +83,7 @@ export default function DateSection() {
                   display="spinner"
                   onChange={onExpiryDateChange}
                   style={styles.datePicker}
+                  minimumDate={new Date()}
                 />
               </View>
             </View>
@@ -135,6 +136,7 @@ export default function DateSection() {
               mode="date"
               display="default"
               onChange={onExpiryDateChange}
+              minimumDate={new Date()}
             />
           )}
           {purchasedDateOpen && (
@@ -158,13 +160,13 @@ export default function DateSection() {
             <H4 className="font-urbanist-semibold text-center">
               Expires on{" "}
               <Text className="text-primary">
-                {format(pantryItem.expiry_date || new Date(), "d MMM")}
+                {format(pantryItem.expiry_date || new Date(), "d MMM yyyy")}
               </Text>
             </H4>
           </Pressable>
           <Pressable onPress={() => setPurchasedDateOpen(true)}>
             <P className="text-sm font-urbanist-regular tracking-wider text-foreground/80 text-center">
-              Purchased on {format(pantryItem.created_at, "d MMM")}
+              Purchased on {format(pantryItem.created_at, "d MMM yyyy")}
             </P>
           </Pressable>
         </CardContent>

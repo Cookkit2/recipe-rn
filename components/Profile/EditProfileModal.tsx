@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, Pressable, ActivityIndicator } from "react-native";
-import { EyeIcon, EyeOffIcon } from "lucide-nativewind";
+import { EyeIcon, EyeOffIcon } from "lucide-uniwind";
 import { H4, P } from "~/components/ui/typography";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
@@ -10,6 +10,7 @@ import { useAuthActions } from "~/auth";
 import { storage } from "~/data";
 import { toast } from "sonner-native";
 import { PROFILE_IMAGE_KEY, PROFILE_NAME_KEY } from "~/constants/storage-keys";
+import { log } from "~/utils/logger";
 
 type FormErrors = {
   name?: string;
@@ -81,7 +82,7 @@ export default function EditProfileModal({
         password: password,
       });
 
-      console.log("Sign Up Result:", result);
+      log.info("Sign Up Result:", result);
 
       if (result.success) {
         storage.set(PROFILE_NAME_KEY, name);
@@ -91,7 +92,7 @@ export default function EditProfileModal({
         toast.error(result.error.message || "Sign up failed");
       }
     } catch (error) {
-      console.error("Sign Up Error:", error);
+      log.error("Sign Up Error:", error);
     } finally {
       setIsSigningUp(false);
     }

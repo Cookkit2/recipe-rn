@@ -7,17 +7,13 @@ import { Button } from "~/components/ui/button";
 import { H1, H4, P } from "~/components/ui/typography";
 import { Card } from "~/components/ui/card";
 import { TextLoop, type TextLoopRef } from "~/components/ui/TextLoop";
-import { ArrowLeftIcon } from "lucide-nativewind";
-import Animated, {
-  useAnimatedStyle,
-  withTiming,
-} from "react-native-reanimated";
+import { ArrowLeftIcon } from "lucide-uniwind";
+import Animated, { useAnimatedStyle, withTiming } from "react-native-reanimated";
 import { CURVES } from "~/constants/curves";
-import DisplayCards from "~/components/Custom/DisplayCards";
+import DisplayCards from "~/components/Onboarding/DisplayCards";
 import { useRouter } from "expo-router";
 import { storage } from "~/data";
 import { ONBOARDING_COMPLETED_KEY } from "~/constants/storage-keys";
-import RevenueCatUI from "react-native-purchases-ui";
 
 // Step data extracted for easier maintenance / localization
 const STEP_TITLES = ["Snap Groceries", "Manage Ingredients", "Cook Recipes"];
@@ -79,61 +75,34 @@ export default function Tutorial() {
   };
 
   const opacityStyle = useAnimatedStyle(() => ({
-    opacity: withTiming(
-      currentStep > 1 ? 1 : 0,
-      CURVES["expressive.slow.effects"]
-    ),
+    opacity: withTiming(currentStep > 1 ? 1 : 0, CURVES["expressive.slow.effects"]),
   }));
 
   return (
     <View className="relative flex-1">
-      <LinearGradient
-        colors={[colors.border, colors.muted]}
-        style={[StyleSheet.absoluteFill]}
-      />
+      <LinearGradient colors={[colors.border, colors.muted]} style={[StyleSheet.absoluteFill]} />
 
-      <Animated.View
-        className="absolute left-6"
-        style={[{ top }, opacityStyle]}
-      >
-        <Button
-          size="icon"
-          variant="secondary"
-          className="rounded-full"
-          onPress={onBack}
-        >
-          <ArrowLeftIcon
-            className="text-foreground"
-            size={20}
-            strokeWidth={2.618}
-          />
+      <Animated.View className="absolute left-6" style={[{ top }, opacityStyle]}>
+        <Button size="icon" variant="secondary" className="rounded-full" onPress={onBack}>
+          <ArrowLeftIcon className="text-foreground" size={20} strokeWidth={2.618} />
         </Button>
       </Animated.View>
 
-      <View
-        className="flex flex-1"
-        style={{ paddingTop: top, paddingBottom: bottom + 8 }}
-      >
+      <View className="flex flex-1" style={{ paddingTop: top, paddingBottom: bottom + 8 }}>
         <View className="flex-1 justify-center items-center">
           <DisplayCards />
         </View>
-        <Card className="p-6 mx-6 rounded-5xl border-continuous">
+        <Card className="p-6 mx-6 rounded-4xl border-continuous">
           <TextLoop ref={titleLoopRef} trigger={false}>
             {STEP_TITLES.map((title, i) => (
-              <H1
-                key={`title-${i}`}
-                className="font-urbanist-medium text-center"
-              >
+              <H1 key={`title-${i}`} className="font-urbanist-medium text-center">
                 {title}
               </H1>
             ))}
           </TextLoop>
           <TextLoop ref={contentLoopRef} trigger={false}>
             {STEP_CONTENT.map((content, i) => (
-              <P
-                key={`content-${i}`}
-                className="mt-4 text-foreground/80 px-4 text-center"
-              >
+              <P key={`content-${i}`} className="mt-4 text-foreground/80 px-4 text-center">
                 {content}
               </P>
             ))}
@@ -148,10 +117,7 @@ export default function Tutorial() {
         >
           <TextLoop ref={buttonLoopRef} trigger={false}>
             {BUTTON_LABELS.map((label, i) => (
-              <H4
-                key={`btn-${i}`}
-                className="text-background font-urbanist font-semibold"
-              >
+              <H4 key={`btn-${i}`} className="text-background font-urbanist-bold">
                 {label}
               </H4>
             ))}

@@ -6,52 +6,62 @@ import { Image } from "expo-image";
 import MaskedView from "@react-native-masked-view/masked-view";
 import ShapeContainer from "~/components/Shared/Shapes/ShapeContainer";
 import { formatDuration } from "~/utils/time-formatter";
-import { useColorScheme } from "~/hooks/useColorScheme";
-import { cn } from "~/lib/tw-merge";
+import { useUniwind } from "uniwind";
+import { cn } from "~/lib/utils";
+import RateRecipeModal from "~/components/Recipe/Step/RateRecipeModal";
 
 const CongratulationsContent = () => {
-  const { recipe, duration } = useRecipeSteps();
-  const { isDarkColorScheme } = useColorScheme();
+  const { recipe, duration, showRatingModal, closeRatingModal, saveRatingAndComplete, skipRatingAndComplete, isCompletingRecipe } = useRecipeSteps();
+  const { theme } = useUniwind();
 
   return (
-    <View
-      className={cn(
-        "flex-1 flex bg-black rounded-3xl border-continuous p-4 justify-center items-center border-2",
-        isDarkColorScheme ? "border-white" : "border-black"
-      )}
-    >
-      <P className="text-lg text-center text-white/90 font-urbanist-medium mb-2">
-        You've completed
-      </P>
-      <H2 className="text-primary font-bowlby-one px-6 text-center">
-        {recipe.title}
-      </H2>
-
-      <View className="w-[80%] aspect-square mb-4">
-        <MaskedView
-          style={styles.fill}
-          maskElement={
-            <ShapeContainer index={12} text="" width="100%" height="100%" />
-          }
-        >
-          <Image
-            source={{ uri: recipe.imageUrl }}
-            style={styles.fill}
-            contentFit="cover"
-          />
-        </MaskedView>
-      </View>
-      <P className="text-lg text-center text-white/80 font-urbanist-extrabold mb-1">
-        Completed in{" "}
-        <P className="text-primary">
-          {duration ? formatDuration(duration) : "..."}
+    <>
+      <View
+        className={cn(
+          "flex-1 flex bg-black rounded-3xl border-continuous p-4 justify-center items-center border-2 border-foreground",
+        )}
+      >
+        <P className="text-lg text-center text-white/90 font-urbanist-medium mb-2">
+          You've completed
         </P>
-        ! 🎉
-      </P>
-      <P className="text-center text-white/80 font-urbanist-semibold">
-        Great job following and enjoy your dishes!
-      </P>
-    </View>
+        <H2 className="text-primary font-bowlby-one px-6 text-center">
+          {recipe.title}
+        </H2>
+
+        <View className="w-[80%] aspect-square mb-4">
+          <MaskedView
+            style={styles.fill}
+            maskElement={
+              <ShapeContainer index={12} text="" width="100%" height="100%" />
+            }
+          >
+            <Image
+              source={{ uri: recipe.imageUrl }}
+              style={styles.fill}
+              contentFit="cover"
+            />
+          </MaskedView>
+        </View>
+        <P className="text-lg text-center text-white/80 font-urbanist-extrabold mb-1">
+          Completed in{" "}
+          <P className="text-primary">
+            {duration ? formatDuration(duration) : "..."}
+          </P>
+          ! 🎉
+        </P>
+        <P className="text-center text-white/80 font-urbanist-semibold">
+          Great job following and enjoy your dishes!
+        </P>
+      </View>
+
+      <RateRecipeModal
+        modalVisible={showRatingModal}
+        onCancel={closeRatingModal}
+        onSave={saveRatingAndComplete}
+        onSkip={skipRatingAndComplete}
+        isSaving={isCompletingRecipe}
+      />
+    </>
   );
 };
 

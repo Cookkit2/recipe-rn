@@ -2,7 +2,7 @@ import React, { useCallback } from "react";
 import { FlatList, Pressable } from "react-native";
 import Animated from "react-native-reanimated";
 import useButtonAnimation from "~/hooks/animation/useButtonAnimations";
-import { cn } from "~/lib/tw-merge";
+import { cn } from "~/lib/utils";
 import { P } from "~/components/ui/typography";
 import type { GroupButton } from "./SegmentedButtons";
 

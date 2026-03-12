@@ -4,7 +4,7 @@ import Animated from "react-native-reanimated";
 import useButtonAnimation from "~/hooks/animation/useButtonAnimations";
 import useSelectionRing from "~/hooks/animation/useSelectionRing";
 import { P } from "~/components/ui/typography";
-import { cn } from "~/lib/tw-merge";
+import { cn } from "~/lib/utils";
 
 export type GroupButton<T> = {
   label: string;
@@ -16,12 +16,14 @@ type SegmentedButtonsProps<T> = {
   buttons: GroupButton<T>[];
   value: T | undefined;
   onValueChange: (scheme: T) => void;
+  columns?: number;
 };
 
 export default function SegmentedButtons<T>({
   buttons,
   value,
   onValueChange,
+  columns = 3,
 }: SegmentedButtonsProps<T>) {
   const selectedIndex = useMemo(
     () => buttons.findIndex((b) => b.value === value),
@@ -46,7 +48,7 @@ export default function SegmentedButtons<T>({
           <GroupButton
             key={index}
             item={item}
-            className={twoOnly ? "basis-1/2 px-1.5" : "basis-1/3 px-1.5"}
+            className={twoOnly ? "basis-1/2 px-1.5" : `basis-1/${columns} px-1.5`}
             onLayout={onItemLayout(index)}
             selected={value === item.value}
             onPress={() => onValueChange(item.value)}
@@ -72,8 +74,7 @@ function GroupButton<T>({
   selected?: boolean;
   onPress?: () => void;
 }) {
-  const { animatedStyle, roundedStyle, onPressIn, onPressOut } =
-    useButtonAnimation(true);
+  const { animatedStyle, roundedStyle, onPressIn, onPressOut } = useButtonAnimation(true);
 
   return (
     <AnimatedPressable

@@ -1,27 +1,20 @@
-import React, { useState } from "react";
+import React from "react";
 import { View } from "react-native";
-import {
-  isValidSubscription,
-  presentPaywallIfNeeded,
-} from "~/utils/subscription-utils";
+import { isValidSubscription, presentPaywallIfNeeded } from "~/utils/subscription-utils";
 import { Card, CardContent } from "~/components/ui/card";
 import { H4, P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
-import { useAsyncEffect } from "~/utils/use-async-effect";
-import type { PurchasesEntitlementInfo } from "react-native-purchases";
+import { useQuery } from "@tanstack/react-query";
 
 export default function SubscriptionCard() {
-  const [currentEntitlements, setCurrentEntitlements] =
-    useState<PurchasesEntitlementInfo | null>(null);
-
-  useAsyncEffect(
-    async () => {
-      const entitlements = await isValidSubscription();
-      setCurrentEntitlements(entitlements || null);
+  const { data: currentEntitlements } = useQuery({
+    queryKey: ["subscription", "entitlements"],
+    queryFn: async () => {
+      const result = await isValidSubscription();
+      return result ?? null;
     },
-    async () => {},
-    []
-  );
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
   const currentDate = new Date();
   const expiredDate = new Date(currentEntitlements?.expirationDateMillis ?? 0);
@@ -44,11 +37,8 @@ export default function SubscriptionCard() {
           </View>
           {currentEntitlements ? (
             <P className="text-sm text-foreground/80 font-urbanist-medium">
-              Your{" "}
-              {currentEntitlements.periodType === "TRIAL"
-                ? "trial"
-                : "subscription"}{" "}
-              ends in {expiredInDays} {expiredInDays === 1 ? "day" : "days"}.
+              Your {currentEntitlements.periodType === "TRIAL" ? "trial" : "subscription"} ends in{" "}
+              {expiredInDays} {expiredInDays === 1 ? "day" : "days"}.
             </P>
           ) : (
             <P className="text-sm text-foreground/80 font-urbanist-medium">
@@ -62,9 +52,7 @@ export default function SubscriptionCard() {
             className="rounded-xl border-continuous"
             onPress={() => presentPaywallIfNeeded()}
           >
-            <P className="font-urbanist-semibold text-primary-foreground">
-              Subscribe
-            </P>
+            <P className="font-urbanist-semibold text-primary-foreground">Subscribe</P>
           </Button>
         )}
       </CardContent>

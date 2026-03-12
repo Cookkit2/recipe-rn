@@ -1,42 +1,69 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { View } from "react-native";
 import { Button } from "~/components//ui/button";
-import { H4, P } from "~/components//ui/typography";
+import { H4 } from "~/components//ui/typography";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { Recipe } from "~/types/Recipe";
 import { storage } from "~/data";
 import { RECIPE_COOKED_KEY } from "~/constants/storage-keys";
 import { presentPaywallIfNeeded } from "~/utils/subscription-utils";
+import { UtensilsCrossedIcon, Edit2Icon, HeartIcon } from "lucide-uniwind";
+import TextShimmer from "~/components/ui/TextShimmer";
 
-export default function BottomActionBar({
-  recipe,
-  serving,
-}: {
+export type BottomActionBarProps = {
   recipe: Recipe;
-  serving: number;
-}) {
+  baseRecipeId: string;
+  tailoredRecipeId?: string | null;
+  mode: "original" | "tailored";
+  hasTailored: boolean;
+  canTailor: boolean;
+  isTailoring: boolean;
+  onTailor: () => void;
+  onToggleMode: () => void;
+  onEdit?: () => void;
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
+};
+
+const BottomActionBar = ({
+  recipe,
+  baseRecipeId,
+  tailoredRecipeId,
+  mode,
+  hasTailored,
+  canTailor,
+  isTailoring,
+  onTailor,
+  onToggleMode,
+  onEdit,
+  isFavorite = false,
+  onToggleFavorite,
+}: BottomActionBarProps) => {
   const router = useRouter();
   const { bottom } = useSafeAreaInsets();
   const isRecipeCooked = storage.get(RECIPE_COOKED_KEY) === true;
 
-  const readyByLabel = useMemo(() => {
-    if (!recipe) return { label: "Ready by —", time: "" };
-    const total = (recipe.prepMinutes ?? 0) + (recipe.cookMinutes ?? 0);
-    if (total <= 0) return { label: "Ready by —", time: "" };
-    const dt = new Date(Date.now() + total * 60 * 1000);
-    const rel = formatRelative(total);
-    const crossesMidnight = crossesNextDay(new Date(), dt);
-    const dayHint = crossesMidnight ? " (tomorrow)" : "";
-    return {
-      label: `Ready by ${formatTime(dt)}${dayHint}`,
-      time: rel,
-    };
-  }, [recipe]);
-
   const navigateToCookingSteps = async () => {
+    const targetRecipeId = baseRecipeId || recipe.id;
+    const targetTailoredId = tailoredRecipeId || "";
+    const targetPath =
+      mode === "tailored"
+        ? {
+            pathname: "/recipes/[recipeId]/steps" as const,
+            params: {
+              recipeId: targetRecipeId,
+              tailored: "1",
+              tailoredId: targetTailoredId,
+            },
+          }
+        : {
+            pathname: "/recipes/[recipeId]/steps" as const,
+            params: { recipeId: targetRecipeId },
+          };
+
     if (!isRecipeCooked) {
-      router.push(`/recipes/${recipe.id}/steps`);
+      router.push(targetPath);
       return;
     }
 
@@ -44,71 +71,83 @@ export default function BottomActionBar({
     // Present paywall if not subscribed
     const isPurchased = await presentPaywallIfNeeded();
     if (isPurchased) {
-      router.push(`/recipes/${recipe.id}/steps`);
+      router.push(targetPath);
     }
   };
 
+  const showToggle = hasTailored;
+  const toggleLabel = mode === "tailored" ? "View original" : "View tailored";
+  const showTailor = canTailor && !hasTailored;
+  const showEdit = onEdit !== undefined && mode === "original";
+  const showFavorite = onToggleFavorite !== undefined;
+
   return (
     <View
-      className="absolute left-0 right-0 bottom-0 border-t border-border pt-3 bg-background shadow-md"
-      style={{ paddingBottom: bottom }}
+      className="absolute left-0 right-0 pt-3 flex-row items-center justify-center gap-2"
+      style={{ bottom: bottom + 8 }}
     >
-      <View className="px-6 pb-3">
-        <View className="flex-row items-center justify-between">
-          <View className="flex-col">
-            <View className="flex-row items-center gap-2">
-              <P className="font-urbanist-medium text-foreground font-semibold">
-                {readyByLabel.label}
-              </P>
-              <P className="font-urbanist-regular text-muted-foreground">
-                ({readyByLabel.time})
-              </P>
-            </View>
-            <P className="font-urbanist-regular text-muted-foreground">
-              {serving} {serving === 1 ? "serving" : "servings"}
-            </P>
-          </View>
-          <Button
-            size="lg"
-            className="rounded-full px-6"
-            onPress={navigateToCookingSteps}
-          >
-            <H4 className="font-urbanist-semibold text-primary-foreground">Cook</H4>
-          </Button>
-        </View>
-      </View>
+      {showFavorite && (
+        <Button
+          size="lg"
+          variant={isFavorite ? "default" : "outline"}
+          className="rounded-full px-4"
+          onPress={onToggleFavorite}
+          disabled={isTailoring}
+        >
+          <HeartIcon
+            className={isFavorite ? "text-background" : "text-foreground"}
+            size={16}
+            strokeWidth={2.5}
+            fill={isFavorite ? "currentColor" : "none"}
+          />
+        </Button>
+      )}
+      {showEdit && (
+        <Button
+          size="lg"
+          variant="outline"
+          className="rounded-full px-4"
+          onPress={onEdit}
+          disabled={isTailoring}
+        >
+          <H4 className="font-urbanist-semibold">Edit</H4>
+          <Edit2Icon className="text-foreground" size={16} strokeWidth={2.5} />
+        </Button>
+      )}
+      {showTailor && (
+        <Button
+          size="lg"
+          variant="outline"
+          className="rounded-full px-5"
+          onPress={onTailor}
+          disabled={isTailoring}
+        >
+          <H4 className="font-urbanist-semibold">{isTailoring ? "Tailoring..." : "Tailor"}</H4>
+        </Button>
+      )}
+      {showToggle && (
+        <Button
+          size="lg"
+          variant="outline"
+          className="rounded-full px-5"
+          onPress={onToggleMode}
+          disabled={isTailoring}
+        >
+          <H4 className="font-urbanist-semibold">{toggleLabel}</H4>
+        </Button>
+      )}
+      <Button
+        size="lg"
+        className="rounded-2xl border-continuous bg-foreground"
+        onPress={navigateToCookingSteps}
+      >
+        <TextShimmer className="flex-row items-center gap-2 justify-center">
+          <UtensilsCrossedIcon className="text-background" size={18} strokeWidth={3} />
+          <H4 className="font-urbanist-bold text-background">Cook</H4>
+        </TextShimmer>
+      </Button>
     </View>
   );
-}
-
-// ----- Time formatting helper -----
-
-const formatTime = (date: Date): string => {
-  try {
-    return date.toLocaleTimeString(undefined, {
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  } catch {
-    // Fallback: HH:MM
-    const h = date.getHours();
-    const m = date.getMinutes().toString().padStart(2, "0");
-    return `${h}:${m}`;
-  }
 };
 
-const formatRelative = (minutesFromNow: number): string => {
-  if (minutesFromNow < 60) return `in ${minutesFromNow}m`;
-  const hours = Math.floor(minutesFromNow / 60);
-  const mins = minutesFromNow % 60;
-  if (mins === 0) return `in ${hours}h`;
-  return `in ${hours}h ${mins}m`;
-};
-
-const crossesNextDay = (from: Date, to: Date): boolean => {
-  return (
-    from.getFullYear() !== to.getFullYear() ||
-    from.getMonth() !== to.getMonth() ||
-    from.getDate() !== to.getDate()
-  );
-};
+export default BottomActionBar;

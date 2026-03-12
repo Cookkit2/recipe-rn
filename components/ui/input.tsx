@@ -1,6 +1,6 @@
 import React from "react";
 import { TextInput, type TextInputProps } from "react-native";
-import { cn } from "~/lib/tw-merge";
+import { cn } from "~/lib/utils";
 
 type InputProps = TextInputProps & {
   error?: boolean;

@@ -10,6 +10,7 @@ import { useUpdatePantryItem } from "~/hooks/queries/usePantryQueries";
 import type { PantryItem } from "~/types/PantryItem";
 import { queryClient } from "./QueryProvider";
 import { recipeQueryKeys } from "~/hooks/queries/recipeQueryKeys";
+import { log } from "~/utils/logger";
 
 interface IngredientDetailContextType {
   pantryItem: PantryItem;
@@ -40,7 +41,7 @@ export function IngredientDetailProvider({
   // Save changes when component unmounts
   useEffect(() => {
     return () => {
-      console.log("Saving pantry item changes...", pantryItemRef.current);
+      log.info("Saving pantry item changes...", pantryItemRef.current);
       // Only save if there were changes to avoid unnecessary API calls
       updatePantryItemMutation.mutate({
         id: pantryItemRef.current.id,

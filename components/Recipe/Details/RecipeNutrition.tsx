@@ -5,7 +5,7 @@ import {
   DrumstickIcon,
   FlameIcon,
   WheatIcon,
-} from "lucide-nativewind";
+} from "lucide-uniwind";
 import type { Recipe } from "~/types/Recipe";
 import ListItem from "~/components/Shared/ListItem";
 

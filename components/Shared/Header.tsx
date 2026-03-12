@@ -2,7 +2,7 @@ import React from "react";
 import { View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeftIcon } from "lucide-nativewind";
+import { ArrowLeftIcon } from "lucide-uniwind";
 import { Button } from "~/components/ui/button";
 import { H4 } from "~/components/ui/typography";
 import Animated, {
@@ -19,7 +19,6 @@ interface HeaderProps {
 
 export default function Header({ title, scrollOffset }: HeaderProps) {
   const { top } = useSafeAreaInsets();
-  const router = useRouter();
 
   // Animated styles for the title
   const titleAnimatedStyle = useAnimatedStyle(() => {
@@ -50,10 +49,10 @@ export default function Header({ title, scrollOffset }: HeaderProps) {
 
   return (
     <Animated.View
-      className="flex-row items-center px-6 pb-2 bg-background border-border"
+      className="flex-row items-center px-6 pb-6 bg-background border-border"
       style={[{ paddingTop: top + 20 }, borderAnimatedStyle]}
     >
-      <Button
+      {/* <Button
         size="icon"
         variant="secondary"
         className="rounded-full"
@@ -64,19 +63,19 @@ export default function Header({ title, scrollOffset }: HeaderProps) {
           size={20}
           strokeWidth={2.618}
         />
-      </Button>
-      <View className="flex-1" />
+      </Button> */}
+      {/* <View className="flex-1" /> */}
       {title && (
         <View className="overflow-hidden h-8 justify-center">
           <Animated.View style={titleAnimatedStyle}>
-            <H4 className="font-urbanist-semibold tracking-wide">{title}</H4>
+            <H4 className="font-bowlby-one">{title}</H4>
           </Animated.View>
         </View>
       )}
-      <View className="flex-1" />
-      <Button size="icon" variant="ghost" className="rounded-full" disabled>
+      {/* <View className="flex-1" /> */}
+      {/* <Button size="icon" variant="ghost" className="rounded-full" disabled>
         <ArrowLeftIcon className="text-background" size={1} />
-      </Button>
+      </Button> */}
     </Animated.View>
   );
 }

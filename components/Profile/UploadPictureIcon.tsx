@@ -1,4 +1,4 @@
-import { UploadCloudIcon } from "lucide-nativewind";
+import { UploadCloudIcon } from "lucide-uniwind";
 import React from "react";
 import { Pressable, Image } from "react-native";
 import Animated from "react-native-reanimated";

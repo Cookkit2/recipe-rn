@@ -1,4 +1,18 @@
-// Improved ingredient matching function that handles synonyms and variations
+/**
+ * Determines if a pantry item matches a recipe ingredient by name and optional synonyms.
+ *
+ * Matching order: direct name equality → synonym list (DB) → substring contains →
+ * key-word extraction (ignoring modifiers like "fresh", "diced") → built-in synonym map.
+ *
+ * @param pantryItemName - Display name of the pantry item
+ * @param recipeIngredientName - Ingredient name from the recipe
+ * @param pantryItemSynonyms - Optional list of synonyms for the pantry item (e.g. from DB)
+ * @returns true if the pantry item is considered a match for the recipe ingredient
+ *
+ * @example
+ * isIngredientMatch("Chicken Breast", "chicken breast", []); // true
+ * isIngredientMatch("Milk", "whole milk", ["whole milk"]);    // true (synonym)
+ */
 export const isIngredientMatch = (
   pantryItemName: string,
   recipeIngredientName: string,

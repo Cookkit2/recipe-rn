@@ -1,9 +1,6 @@
 import { Icon } from "lucide-react-native";
 import { cabinetFiling } from "@lucide/lab";
-import {
-  iconWithClassName,
-  type LucidePropsWithClassName,
-} from "lucide-nativewind";
+import { iconWithClassName, type LucidePropsWithClassName } from "lucide-uniwind";
 
 function Cabinet(props: LucidePropsWithClassName) {
   return <Icon iconNode={cabinetFiling} {...props} />;

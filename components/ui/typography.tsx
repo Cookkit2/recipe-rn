@@ -1,7 +1,7 @@
 import * as Slot from "@rn-primitives/slot";
 import React from "react";
 import { Platform, Text as RNText } from "react-native";
-import { cn } from "~/lib/tw-merge";
+import { cn } from "~/lib/utils";
 
 type TypographyProps = React.ComponentProps<typeof RNText> & {
   asChild?: boolean;
@@ -81,7 +81,7 @@ function BlockQuote({ className, asChild = false, ...props }: TypographyProps) {
   const Component = asChild ? Slot.Text : RNText;
   return (
     <Component
-      // @ts-ignore - role of blockquote renders blockquote element on the web
+      // @ts-expect-error - RN Text does not include blockquote; role renders blockquote on web
       role={Platform.OS === "web" ? "blockquote" : undefined}
       className={cn(
         "mt-6 native:mt-4 border-l-2 border-border pl-6 native:pl-3 text-base text-foreground italic web:select-text",
@@ -96,7 +96,7 @@ function Code({ className, asChild = false, ...props }: TypographyProps) {
   const Component = asChild ? Slot.Text : RNText;
   return (
     <Component
-      // @ts-ignore - role of code renders code element on the web
+      // @ts-expect-error - RN Text does not include code; role renders code on web
       role={Platform.OS === "web" ? "code" : undefined}
       className={cn(
         "relative rounded-md bg-muted px-[0.3rem] py-[0.2rem] text-sm text-foreground font-semibold web:select-text",

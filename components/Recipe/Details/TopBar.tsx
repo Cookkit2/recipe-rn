@@ -1,39 +1,31 @@
-import React, { useState } from "react";
 import { useWindowDimensions, View } from "react-native";
-import { Button } from "~/components/ui/button";
-import { ArrowLeftIcon, HeartIcon } from "lucide-nativewind";
-import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { SharedValue } from "react-native-reanimated";
 import Animated, {
   useAnimatedStyle,
   useAnimatedReaction,
-  runOnJS,
   withTiming,
 } from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
 import { H4 } from "~/components/ui/typography";
 import { CURVES } from "~/constants/curves";
 import { setStatusBarStyle } from "expo-status-bar";
+import { scheduleOnRN } from "react-native-worklets";
+import useColors from "~/hooks/useColor";
+
+const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
+const AnimatedH4 = Animated.createAnimatedComponent(H4);
 
 export default function TopBar({
-  id,
   scrollOffset,
   title,
 }: {
-  id: string;
   scrollOffset: SharedValue<number>;
   title: string;
 }) {
   const { width } = useWindowDimensions();
   const { top } = useSafeAreaInsets();
-
-  const [isFav, setIsFav] = useState(false);
-
-  const router = useRouter();
-
-  // const toggleRecipeFavourite = () => {
-  //   setIsFav((v) => !v);
-  // };
+  const colors = useColors();
 
   // Function to update status bar style (needs to run on JS thread)
   const updateStatusBarStyle = (isLight: boolean) => {
@@ -44,8 +36,8 @@ export default function TopBar({
   useAnimatedReaction(
     () => scrollOffset.value,
     (currentValue) => {
-      const shouldUseDarkStyle = currentValue < width * 0.7;
-      runOnJS(updateStatusBarStyle)(shouldUseDarkStyle);
+      const shouldUseDarkStyle = currentValue < width * 0.8;
+      scheduleOnRN(updateStatusBarStyle, shouldUseDarkStyle);
     },
     [scrollOffset]
   );
@@ -68,16 +60,7 @@ export default function TopBar({
     return { transform: [{ translateY }], opacity };
   });
 
-  const borderAnimatedStyle = useAnimatedStyle(() => {
-    const isVisible = scrollOffset.value > width * 0.7;
 
-    const borderBottomWidth = withTiming(
-      isVisible ? 1 : 0,
-      CURVES["expressive.fast.effects"]
-    );
-
-    return { borderBottomWidth };
-  });
 
   const backgroundOpacityStyle = useAnimatedStyle(() => {
     const isVisible = scrollOffset.value > width * 0.7;
@@ -92,38 +75,26 @@ export default function TopBar({
 
   return (
     <Animated.View
-      className="absolute top-0 left-0 right-0 flex-row items-center justify-between px-6 py-2 z-[1] border-border"
-      style={[{ paddingTop: top + 8 }, borderAnimatedStyle]}
+      className="absolute top-0 left-0 right-0 flex-row items-center justify-center px-6 py-2 z-1"
+      style={[{ paddingTop: top + 8 }]}
       pointerEvents="box-none"
     >
-      <Animated.View
-        className="absolute inset-0 bg-background"
+      <AnimatedLinearGradient
+        colors={[colors.background.toString(), colors.background.toString(), "transparent"]}
+        className="absolute inset-0"
         style={backgroundOpacityStyle}
       />
-      <Button
-        size="icon"
-        variant="secondary"
-        className="rounded-full"
-        onPress={() => router.back()}
-      >
-        <ArrowLeftIcon className="text-foreground" size={20} />
-      </Button>
-      <View className="overflow-hidden h-8 justify-center">
-        <Animated.View style={titleAnimatedStyle}>
-          <H4 className="font-urbanist-semibold tracking-wide">{title}</H4>
-        </Animated.View>
+
+      {/* Center title */}
+      <View className="overflow-hidden h-8 justify-center max-w-[70%]">
+        <AnimatedH4
+          style={titleAnimatedStyle}
+          className="font-bowlby-one text-center"
+          numberOfLines={1}
+        >
+          {title}
+        </AnimatedH4>
       </View>
-      <Button
-        size="icon"
-        variant="secondary"
-        className="rounded-full opacity-0"
-        // onPress={toggleRecipeFavourite}
-      >
-        <HeartIcon
-          className={isFav ? "text-red-500" : "text-foreground"}
-          size={20}
-        />
-      </Button>
     </Animated.View>
   );
 }

@@ -1,17 +1,8 @@
-import React, { useEffect, useTransition } from "react";
-import {
-  View,
-  Keyboard,
-  TouchableWithoutFeedback,
-  ActivityIndicator,
-} from "react-native";
-import Animated, {
-  useAnimatedRef,
-  useSharedValue,
-} from "react-native-reanimated";
+import { useCallback, useEffect, useState } from "react";
+import { View, ActivityIndicator } from "react-native";
+import Animated, { LinearTransition } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCreateIngredientStore } from "~/store/CreateIngredientContext";
-import Header from "~/components/Shared/Header";
 import { H1, H4, P } from "~/components/ui/typography";
 import HorizontalIngredientItemCard from "~/components/Confirmation/HorizontalIngredientItemCard";
 import { Button } from "~/components/ui/button";
@@ -23,7 +14,11 @@ import { toast } from "sonner-native";
 import { presentPaywallIfNeeded } from "~/utils/subscription-utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { recipeQueryKeys } from "~/hooks/queries/recipeQueryKeys";
-import { LegendList } from "@legendapp/list";
+import {
+  scheduleExpiryNotifications,
+  requestNotificationPermissions,
+  getNotificationPermissions,
+} from "~/lib/notifications";
 
 export default function ConfirmationPage() {
   const { bottom } = useSafeAreaInsets();
@@ -32,93 +27,106 @@ export default function ConfirmationPage() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const addPantryItemsWithMetadata = useAddPantryItemsWithMetadata();
-  const scrollRef = useAnimatedRef<Animated.ScrollView>();
-  const scrollOffset = useSharedValue(0);
 
-  const [isLoading, startTransition] = useTransition();
+  const [isSavingIngredients, setIsSavingIngredients] = useState(false);
 
   useEffect(() => {
     setStatusBarStyle("auto", true);
   }, []);
 
-  const onSaveAllRecipe = () => {
-    startTransition(async () => {
-      await presentPaywallIfNeeded();
+  const completedItems = processPantryItems.filter((item) => item.status === undefined);
 
+  const onSaveAllIngredients = useCallback(async () => {
+    try {
+      setIsSavingIngredients(true);
+      await presentPaywallIfNeeded();
+      const savedItems = await addPantryItemsWithMetadata.mutateAsync(completedItems);
+
+      // Schedule expiry notifications for saved items (using DB-assigned IDs)
       try {
-        await addPantryItemsWithMetadata.mutateAsync(processPantryItems);
-        queryClient.invalidateQueries({
-          queryKey: recipeQueryKeys.recommendations(),
-        });
-        router.dismissTo("/");
+        const { granted } = await getNotificationPermissions();
+        if (!granted) {
+          await requestNotificationPermissions();
+        }
+        await scheduleExpiryNotifications(savedItems);
       } catch {
-        toast.error("Error saving all recipe");
+        // Non-critical: don't block save flow if notifications fail
       }
-    });
-  };
+
+      queryClient.invalidateQueries({
+        queryKey: recipeQueryKeys.recommendations(),
+      });
+      router.dismissTo("/");
+    } catch {
+      toast.error("Error saving ingredients");
+    } finally {
+      setIsSavingIngredients(false);
+    }
+  }, [addPantryItemsWithMetadata, completedItems, queryClient, router]);
+
+  // Memoized render item to prevent re-creation on each render
+  const renderItem = useCallback(
+    ({ item }: { item: (typeof processPantryItems)[number] }) => (
+      <HorizontalIngredientItemCard item={item} />
+    ),
+    []
+  );
 
   return (
-    <View className="flex-1 relative bg-background">
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <Animated.ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: bottom }}
-          ref={scrollRef}
-          stickyHeaderIndices={[0]}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-          onScroll={(e) => {
-            scrollOffset.value = e.nativeEvent.contentOffset.y;
-          }}
-        >
-          <Header title="Confirmation" scrollOffset={scrollOffset} />
-          <View className="p-6 pb-4 flex-row items-center gap-3">
-            <H1 className="font-bowlby-one pt-2">Confirmation</H1>
+    <>
+      <Animated.FlatList
+        contentInsetAdjustmentBehavior="automatic"
+        data={processPantryItems}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        itemLayoutAnimation={LinearTransition.springify()
+          .damping(20)
+          .mass(1)
+          .stiffness(300)
+          .overshootClamping(0)}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: bottom + 80 }}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        className="px-3 pb-3 bg-background"
+        // Performance optimizations
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={5}
+        initialNumToRender={5}
+        windowSize={5}
+        ListEmptyComponent={() => (
+          <View className="py-16 items-center justify-center">
+            <H4 className="text-muted-foreground text-center font-urbanist-semibold">
+              There is nothing to be added
+            </H4>
+            <P className="text-muted-foreground text-center font-urbanist-regular text-sm mt-1">
+              Go back to take more photos
+            </P>
           </View>
-          <LegendList
-            keyExtractor={(item) => item.id.toString()}
-            recycleItems
-            numColumns={1}
-            className="pb-3 pt-0 px-3"
-            scrollEnabled={false}
-            contentContainerStyle={{ paddingBottom: 64 + bottom }}
-            showsVerticalScrollIndicator={false}
-            data={processPantryItems}
-            renderItem={({ item }) => (
-              <HorizontalIngredientItemCard key={item.id} item={item} />
-            )}
-            ListEmptyComponent={
-              <View className="py-16 items-center justify-center">
-                <H4 className="text-muted-foreground text-center font-urbanist-semibold">
-                  There is nothing to be added
-                </H4>
-                <P className="text-muted-foreground text-center font-urbanist-regular text-sm mt-1">
-                  Go back to take more photos
-                </P>
-              </View>
-            }
-          />
-        </Animated.ScrollView>
-      </TouchableWithoutFeedback>
+        )}
+      />
+
+      {/* Fixed footer button */}
       <View
-        className="absolute left-0 right-0 flex-row justify-center"
-        style={[{ bottom: bottom + 8 }]}
+        pointerEvents="box-none"
+        className="absolute inset-0 justify-end items-center"
+        style={{ paddingBottom: bottom + 8 }}
       >
         <Button
           size="lg"
           variant="secondary"
           className="rounded-2xl border-continuous bg-foreground/80"
-          onPress={onSaveAllRecipe}
-          disabled={isLoading || processPantryItems.length === 0}
+          onPress={onSaveAllIngredients}
+          disabled={
+            isSavingIngredients || processPantryItems.length === 0 || completedItems.length === 0
+          }
         >
           <TextShimmer className="flex-row items-center gap-2 justify-center">
-            {isLoading && <ActivityIndicator />}
-            <H4 className="text-background font-urbanist font-semibold">
-              Save
-            </H4>
+            {isSavingIngredients && <ActivityIndicator />}
+            <H4 className="text-background font-urbanist font-semibold">Save</H4>
           </TextShimmer>
         </Button>
       </View>
-    </View>
+    </>
   );
 }

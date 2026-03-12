@@ -10,6 +10,9 @@ import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import useColors from "~/hooks/useColor";
 import PoweredByAI from "../Shared/PoweredByAI";
+import { CAMERA_ONBOARDING_COMPLETED_KEY } from "~/constants/storage-keys";
+import useLocalStorageState from "~/hooks/useLocalStorageState";
+import { log } from "~/utils/logger";
 
 // Assets
 const tutorialVideo =
@@ -22,17 +25,13 @@ const FRAME_ASPECT_RATIO = 9 / 19.5;
 const FRAME_HEIGHT = 400;
 const FRAME_WIDTH = FRAME_HEIGHT * FRAME_ASPECT_RATIO;
 
-interface CameraOnboardingSheetProps {
-  visible: boolean;
-  onClose: () => void;
-  onComplete: () => void;
-}
-
-export default function CameraOnboardingSheet({
-  visible,
-  onClose,
-  onComplete,
-}: CameraOnboardingSheetProps) {
+export default function CameraOnboardingSheet() {
+  const [isOnboardingComplete, setIsOnboardingComplete, { isLoading }] = useLocalStorageState(
+    CAMERA_ONBOARDING_COMPLETED_KEY,
+    {
+      defaultValue: false,
+    }
+  );
   const bottomSheetRef = useRef<BottomSheet>(null);
   const { bottom } = useSafeAreaInsets();
   const colors = useColors();
@@ -43,49 +42,76 @@ export default function CameraOnboardingSheet({
   });
 
   useEffect(() => {
-    if (visible) {
+    // Wait for storage to load before controlling the sheet
+    if (isLoading) return;
+
+    if (!isOnboardingComplete) {
       bottomSheetRef.current?.expand();
-      player.play();
+      try {
+        player?.play();
+      } catch (error) {
+        log.warn("Failed to play video:", error);
+      }
     } else {
       bottomSheetRef.current?.close();
-      player.pause();
+      try {
+        player?.pause();
+      } catch (error) {
+        log.warn("Failed to pause video:", error);
+      }
     }
-  }, [visible, player]);
+
+    return () => {
+      try {
+        player?.pause();
+      } catch (error) {
+        // Silent cleanup - player may already be disposed
+      }
+    };
+  }, [isOnboardingComplete, player, isLoading]);
 
   const handleSheetChanges = useCallback(
     (index: number) => {
       if (index === -1) {
-        onClose();
-        player.pause();
+        setIsOnboardingComplete(true);
+        try {
+          player?.pause();
+        } catch (error) {
+          log.warn("Failed to pause video on sheet close:", error);
+        }
       }
     },
-    [onClose, player]
+    [player, setIsOnboardingComplete]
   );
 
   const handleComplete = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    player.pause();
+    try {
+      player?.pause();
+    } catch (error) {
+      log.warn("Failed to pause video on complete:", error);
+    }
     bottomSheetRef.current?.close();
-    onComplete();
+    setIsOnboardingComplete(true);
   };
+
+  // Don't render until storage has loaded
+  if (isLoading) {
+    return null;
+  }
 
   return (
     <Portal name="camera-onboarding-sheet">
       <BottomSheet
         ref={bottomSheetRef}
-        index={visible ? 0 : -1}
+        index={isOnboardingComplete ? -1 : 0}
         snapPoints={["85%"]}
         onChange={handleSheetChanges}
         enablePanDownToClose
-        backgroundStyle={[
-          styles.sheetBackground,
-          { backgroundColor: colors.card },
-        ]}
+        backgroundStyle={[styles.sheetBackground, { backgroundColor: colors.card }]}
         handleIndicatorStyle={styles.handleIndicator}
       >
-        <BottomSheetView
-          style={[styles.contentContainer, { paddingBottom: bottom }]}
-        >
+        <BottomSheetView style={[styles.contentContainer, { paddingBottom: bottom }]}>
           <PoweredByAI />
           {/* Video with iPhone Frame */}
           <View className="items-center justify-center py-4">
@@ -98,19 +124,13 @@ export default function CameraOnboardingSheet({
                 nativeControls={false}
               />
               {/* iPhone frame overlay */}
-              <Image
-                source={iphoneFrame}
-                style={styles.frameImage}
-                contentFit="contain"
-              />
+              <Image source={iphoneFrame} style={styles.frameImage} contentFit="contain" />
             </View>
           </View>
 
           {/* Content */}
           <View className="flex-1 justify-end">
-            <H1 className="text-3xl font-bowlby-one text-center pt-4 tracking-wider">
-              Snap it. Record it.
-            </H1>
+            <H1 className="text-3xl font-bowlby-one text-center pt-4">Snap it. Record it.</H1>
             <P className="font-urbanist-medium text-foreground/80 px-4 text-center text-xl mb-2">
               One ingredient at a time
             </P>
@@ -121,9 +141,7 @@ export default function CameraOnboardingSheet({
               onPress={handleComplete}
               className="mt-6 rounded-2xl bg-foreground mx-6"
             >
-              <H4 className="text-background font-urbanist font-semibold">
-                Got It
-              </H4>
+              <H4 className="text-background font-urbanist font-semibold">Got It</H4>
             </Button>
           </View>
         </BottomSheetView>

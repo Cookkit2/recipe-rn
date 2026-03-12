@@ -1,5 +1,9 @@
 import { supabase } from "~/lib/supabase/supabase-client";
 
+function guardSupabase() {
+  return supabase != null;
+}
+
 export interface BaseIngredientWithRelations {
   id: string;
   name: string;
@@ -17,8 +21,8 @@ export const baseIngredientApi = {
   getBaseIngredientByName: async (
     name: string
   ): Promise<BaseIngredientWithRelations | null> => {
-    // First try to find by exact name match
-    const { data: baseIngredient, error: baseError } = await supabase
+    if (!guardSupabase()) return null;
+    const { data: baseIngredient, error: baseError } = await supabase!
       .from("base_ingredient")
       .select("*")
       .ilike("name", name)
@@ -31,7 +35,7 @@ export const baseIngredientApi = {
 
     if (!baseIngredient) {
       // Try to find by synonym
-      const { data: synonymData, error: synonymError } = await supabase
+      const { data: synonymData, error: synonymError } = await supabase!
         .from("ingredient_synonym")
         .select("base_ingredient_id")
         .ilike("synonym", name)
@@ -47,7 +51,7 @@ export const baseIngredientApi = {
 
       // Fetch the base ingredient by ID from synonym match
       const { data: ingredientFromSynonym, error: ingredientError } =
-        await supabase
+        await supabase!
           .from("base_ingredient")
           .select("*")
           .eq("id", synonymData.base_ingredient_id)
@@ -66,13 +70,15 @@ export const baseIngredientApi = {
   },
 
   getAllBaseIngredients: async () => {
-    const { data, error } = await supabase.from("base_ingredient").select("*");
+    if (!guardSupabase()) return [];
+    const { data, error } = await supabase!.from("base_ingredient").select("*");
     if (error) throw error;
     return data;
   },
 
   getAllSynonyms: async () => {
-    const { data, error } = await supabase
+    if (!guardSupabase()) return [];
+    const { data, error } = await supabase!
       .from("ingredient_synonym")
       .select("*");
     if (error) throw error;
@@ -80,7 +86,8 @@ export const baseIngredientApi = {
   },
 
   getAllCategories: async () => {
-    const { data, error } = await supabase
+    if (!guardSupabase()) return [];
+    const { data, error } = await supabase!
       .from("ingredient_category")
       .select("*");
     if (error) throw error;
@@ -99,16 +106,16 @@ async function fetchRelatedData(
     { data: synonyms, error: synonymError },
     { data: categoryLinks, error: categoryError },
   ] = await Promise.all([
-    supabase
+    supabase!
       .from("base_ingredient")
       .select("*")
       .eq("id", baseIngredientId)
       .single(),
-    supabase
+    supabase!
       .from("ingredient_synonym")
       .select("id, synonym")
       .eq("base_ingredient_id", baseIngredientId),
-    supabase
+    supabase!
       .from("pivot_ingredient_category")
       .select("ingredient_category(id, name)")
       .eq("ingredient_id", baseIngredientId),

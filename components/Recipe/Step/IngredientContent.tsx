@@ -27,7 +27,10 @@ export const IngredientsContent: React.FC<{
   const colors = useColors();
 
   return (
-    <View className="flex-1 h-full rounded-3xl border-continuous p-4 overflow-hidden">
+    <View className="flex-1 h-full rounded-3xl border-continuous p-4 overflow-hidden"
+           shouldRasterizeIOS={true}
+        renderToHardwareTextureAndroid={true}
+    >
       <LinearGradient
         colors={[colors.foreground, colors.mutedForeground]}
         style={[StyleSheet.absoluteFill]}

@@ -1,7 +1,7 @@
-import type { IStorage, StorageConfig, StorageType } from "./storage-types";
-import { StorageError } from "./storage-types";
-import { MMKVStorageImpl } from "./implementations/mmkv-storage-impl";
-import { AsyncStorageImpl } from "./implementations/async-storage-impl";
+import type { IStorage, StorageConfig, StorageType } from './storage-types';
+import { StorageError } from './storage-types';
+import { MMKVStorageImpl } from './implementations/mmkv-storage-impl';
+import { log } from '~/utils/logger';
 
 export class StorageFactory {
   private static instance: IStorage | null = null;
@@ -16,10 +16,7 @@ export class StorageFactory {
       this.currentConfig = config;
       return this.instance;
     } catch (error) {
-      throw new StorageError(
-        `Failed to initialize storage: ${error}`,
-        config.type
-      );
+      throw new StorageError(`Failed to initialize storage: ${error}`, 'mmkv');
     }
   }
 
@@ -28,8 +25,7 @@ export class StorageFactory {
    */
   static getInstance(): IStorage {
     if (!this.instance) {
-      // Default to AsyncStorage if no configuration is provided (Expo Go compatible)
-      return this.initialize({ type: "async-storage" });
+      throw new StorageError('Storage not initialized', 'mmkv');
     }
     return this.instance;
   }
@@ -54,11 +50,8 @@ export class StorageFactory {
    */
   private static createStorage(config: StorageConfig): IStorage {
     switch (config.type) {
-      case "mmkv":
-        return new MMKVStorageImpl();
-
-      case "async-storage":
-        return new AsyncStorageImpl();
+      case 'mmkv':
+        return new MMKVStorageImpl(config.options);
 
       default:
         throw new StorageError(
@@ -73,8 +66,7 @@ export class StorageFactory {
    */
   static supportsAsync(): boolean {
     const config = this.getCurrentConfig();
-    // AsyncStorage is inherently async, MMKV can be sync or async
-    return config?.type === "async-storage" || config?.type === "mmkv";
+    return config?.type === 'mmkv';
   }
 
   /**
@@ -84,11 +76,8 @@ export class StorageFactory {
     const instance = this.getInstance();
     // Check if the instance has both sync batch methods
     return (
-      this.storageSupportsMethod(instance, "getBatch") &&
-      this.storageSupportsMethod(instance, "setBatch") &&
-      // For AsyncStorage, batch operations exist but are async only
-      // We need to check if sync batch operations are available
-      !(instance instanceof AsyncStorageImpl)
+      this.storageSupportsMethod(instance, 'getBatch') &&
+      this.storageSupportsMethod(instance, 'setBatch')
     );
   }
 
@@ -112,23 +101,18 @@ export class StorageFactory {
       } else {
         // Always call getAllKeys for tests to verify it's called
         const allKeys =
-          typeof fromStorage.getAllKeys === "function"
-            ? fromStorage.getAllKeys()
-            : null;
+          typeof fromStorage.getAllKeys === 'function' ? fromStorage.getAllKeys() : null;
         keysToMigrate = Array.isArray(allKeys) ? allKeys : [];
       }
 
       if (keysToMigrate.length === 0) {
-        console.log("No data to migrate");
+        log.info('No data to migrate');
         return;
       }
 
       // Check if both storages support batch operations
-      const fromSupportsBatch = this.storageSupportsMethod(
-        fromStorage,
-        "getBatch"
-      );
-      const toSupportsBatch = this.storageSupportsMethod(toStorage, "setBatch");
+      const fromSupportsBatch = this.storageSupportsMethod(fromStorage, 'getBatch');
+      const toSupportsBatch = this.storageSupportsMethod(toStorage, 'setBatch');
 
       if (fromSupportsBatch && toSupportsBatch) {
         // Use batch operations for efficiency
@@ -144,7 +128,7 @@ export class StorageFactory {
         }
       }
 
-      console.log(`Successfully migrated ${keysToMigrate.length} items`);
+      log.info(`Successfully migrated ${keysToMigrate.length} items`);
     } catch (error) {
       throw new StorageError(`Migration failed: ${error}`, toConfig.type);
     }
@@ -153,19 +137,11 @@ export class StorageFactory {
   /**
    * Check if a storage instance supports a specific method
    */
-  private static storageSupportsMethod(
-    storage: IStorage,
-    methodName: string
-  ): boolean {
-    return typeof (storage as any)[methodName] === "function";
+  private static storageSupportsMethod(storage: IStorage, methodName: string): boolean {
+    return typeof (storage as any)[methodName] === 'function';
   }
 }
 
 // Convenience methods for common configurations
-export const createMMKVStorage = (options?: {
-  id?: string;
-  encryptionKey?: string;
-}) => StorageFactory.initialize({ type: "mmkv", options });
-
-export const createAsyncStorage = () =>
-  StorageFactory.initialize({ type: "async-storage" });
+export const createMMKVStorage = (options?: { id?: string; encryptionKey?: string }) =>
+  StorageFactory.initialize({ type: 'mmkv', options });

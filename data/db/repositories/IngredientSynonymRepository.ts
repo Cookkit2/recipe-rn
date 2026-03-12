@@ -1,7 +1,5 @@
 import { Q } from "@nozbe/watermelondb";
-import IngredientSynonym, {
-  type IngredientSynonymData,
-} from "../models/IngredientSynonym";
+import IngredientSynonym from "../models/IngredientSynonym";
 import { BaseRepository } from "./BaseRepository";
 
 export class IngredientSynonymRepository extends BaseRepository<IngredientSynonym> {
@@ -71,8 +69,25 @@ export class IngredientSynonymRepository extends BaseRepository<IngredientSynony
 
     await db.write(async () => {
       for (const synonym of synonyms) {
-        const syn = await this.addSynonym(stockId, synonym);
-        created.push(syn);
+        // Check if synonym already exists for this stock (inline to avoid nested write)
+        const existing = await this.collection
+          .query(
+            Q.and(
+              Q.where("stock_id", Q.eq(stockId)),
+              Q.where("synonym", Q.eq(synonym.toLowerCase()))
+            )
+          )
+          .fetch();
+
+        if (existing.length > 0) {
+          created.push(existing[0]!);
+        } else {
+          const syn = await this.collection.create((record: any) => {
+            record.stockId = stockId;
+            record.synonym = synonym.toLowerCase();
+          });
+          created.push(syn);
+        }
       }
     });
 
@@ -81,13 +96,13 @@ export class IngredientSynonymRepository extends BaseRepository<IngredientSynony
 
   // Remove all synonyms for a stock
   async removeAllForStock(stockId: string): Promise<void> {
-    const synonyms = await this.findByStockId(stockId);
     const db = this.collection.database;
 
     await db.write(async () => {
-      for (const syn of synonyms) {
-        await syn.markAsDeleted();
-      }
+      const synonyms = await this.collection
+        .query(Q.where("stock_id", Q.eq(stockId)))
+        .fetch();
+      await Promise.all(synonyms.map((syn) => syn.markAsDeleted()));
     });
   }
 

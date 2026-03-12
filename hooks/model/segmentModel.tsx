@@ -10,6 +10,7 @@ import {
 } from "@shopify/react-native-skia";
 import allModel from "./allModel";
 import { getColors } from "react-native-image-colors";
+import { log } from '~/utils/logger';
 
 const MAGIC_TOUCH_MODEL_INPUT_SIZE = 512;
 
@@ -18,14 +19,14 @@ export const segmentStaticImage = async (
   coordinate: { x: number; y: number }
 ) => {
   const startTime = performance.now();
-  console.log("📊 [Profiling] Starting image segmentation...");
+  log.info("📊 [Profiling] Starting image segmentation...");
 
   // Step 1: Model Loading
   const modelLoadStart = performance.now();
   const { magicTouchModel } = await allModel.get();
   const modelLoadEnd = performance.now();
   const modelLoadDuration = modelLoadEnd - modelLoadStart;
-  console.log(
+  log.info(
     `📊 [Profiling] Model loading took ${modelLoadDuration.toFixed(2)}ms`
   );
 
@@ -38,11 +39,11 @@ export const segmentStaticImage = async (
     }); // Float32Array length 512*512*4
     const preprocessEnd = performance.now();
     const preprocessDuration = preprocessEnd - preprocessStart;
-    console.log(
+    log.info(
       `📊 [Profiling] Preprocessing took ${preprocessDuration.toFixed(2)}ms`
     );
-    console.log(
-      `📊 [Profiling] Input array size: ${input.length} (${(input.length * 4 / 1024).toFixed(2)} KB)`
+    log.info(
+      `📊 [Profiling] Input array size: ${input.length} (${((input.length * 4) / 1024).toFixed(2)} KB)`
     );
 
     // Step 3: Model Inference
@@ -52,7 +53,7 @@ export const segmentStaticImage = async (
     ]) as Float32Array[];
     const inferenceEnd = performance.now();
     const inferenceDuration = inferenceEnd - inferenceStart;
-    console.log(
+    log.info(
       `📊 [Profiling] Model inference took ${inferenceDuration.toFixed(2)}ms`
     );
 
@@ -72,21 +73,19 @@ export const segmentStaticImage = async (
     }
     const maskEnd = performance.now();
     const maskDuration = maskEnd - maskStart;
-    console.log(
-      `📊 [Profiling] Applying mask took ${maskDuration.toFixed(2)}ms`
-    );
+    log.info(`📊 [Profiling] Applying mask took ${maskDuration.toFixed(2)}ms`);
 
     // Step 5: Create Thumbnail for Color Extraction
-    // Using a small 128x128 PNG thumbnail is much faster than encoding full-resolution PNG
+    // Using a tiny 32x32 PNG thumbnail for fast color extraction
     const thumbnailStart = performance.now();
-    const thumbnailBase64 = createThumbnailForColors(returnSkImage, 128);
+    const thumbnailBase64 = createThumbnailForColors(returnSkImage, 32);
     const url = `data:image/png;base64,${thumbnailBase64}`;
     const thumbnailEnd = performance.now();
     const thumbnailDuration = thumbnailEnd - thumbnailStart;
-    console.log(
+    log.info(
       `📊 [Profiling] Thumbnail creation took ${thumbnailDuration.toFixed(2)}ms`
     );
-    console.log(
+    log.info(
       `📊 [Profiling] Thumbnail size: ${thumbnailBase64.length} characters (vs full image)`
     );
 
@@ -95,7 +94,7 @@ export const segmentStaticImage = async (
     const backgroundColor = await fetchColors(url);
     const colorEnd = performance.now();
     const colorDuration = colorEnd - colorStart;
-    console.log(
+    log.info(
       `📊 [Profiling] Color extraction took ${colorDuration.toFixed(2)}ms`
     );
 
@@ -103,52 +102,52 @@ export const segmentStaticImage = async (
     const endTime = performance.now();
     const duration = endTime - startTime;
 
-    console.log("\n📊 [Profiling] ===== SUMMARY =====");
-    console.log(
+    log.info("\n📊 [Profiling] ===== SUMMARY =====");
+    log.info(
       `📊 [Profiling] Model loading:     ${modelLoadDuration.toFixed(2)}ms (${(
         (modelLoadDuration / duration) *
         100
       ).toFixed(1)}%)`
     );
-    console.log(
+    log.info(
       `📊 [Profiling] Preprocessing:     ${preprocessDuration.toFixed(2)}ms (${(
         (preprocessDuration / duration) *
         100
       ).toFixed(1)}%)`
     );
-    console.log(
+    log.info(
       `📊 [Profiling] Model inference:   ${inferenceDuration.toFixed(2)}ms (${(
         (inferenceDuration / duration) *
         100
       ).toFixed(1)}%)`
     );
-    console.log(
+    log.info(
       `📊 [Profiling] Applying mask:     ${maskDuration.toFixed(2)}ms (${(
         (maskDuration / duration) *
         100
       ).toFixed(1)}%)`
     );
-    console.log(
+    log.info(
       `📊 [Profiling] Thumbnail creation: ${thumbnailDuration.toFixed(2)}ms (${(
         (thumbnailDuration / duration) *
         100
       ).toFixed(1)}%)`
     );
-    console.log(
+    log.info(
       `📊 [Profiling] Color extraction:  ${colorDuration.toFixed(2)}ms (${(
         (colorDuration / duration) *
         100
       ).toFixed(1)}%)`
     );
-    console.log(`📊 [Profiling] TOTAL:             ${duration.toFixed(2)}ms`);
-    console.log("📊 [Profiling] ==================\n");
+    log.info(`📊 [Profiling] TOTAL:             ${duration.toFixed(2)}ms`);
+    log.info("📊 [Profiling] ==================\n");
 
     return {
       background_color: backgroundColor,
       skImage: returnSkImage,
     };
   } catch (error) {
-    console.error("Error processing static image:", error);
+    log.error("Error processing static image:", error);
     return {
       background_color: undefined,
       skImage: skImage,
@@ -171,17 +170,19 @@ export const fetchColors = async (url: string) => {
         return color.background;
     }
   } catch (error) {
-    console.warn("Error fetching image colors, using fallback:", error);
+    log.warn("Error fetching image colors, using fallback:", error);
     return "#f4f4f5";
   }
 };
 
 /**
  * Create a small thumbnail for fast color extraction
- * Using a small PNG (128x128) is much faster than encoding a full-resolution PNG
- * We must use PNG to preserve alpha channel for proper color extraction
+ * Using a tiny 32x32 PNG is much faster than encoding larger images
  */
-const createThumbnailForColors = (image: SkImage, size: number = 128): string => {
+const createThumbnailForColors = (
+  image: SkImage,
+  size: number = 32
+): string => {
   "worklet";
   const surface = Skia.Surface.MakeOffscreen(size, size);
   if (!surface) {
@@ -197,11 +198,10 @@ const createThumbnailForColors = (image: SkImage, size: number = 128): string =>
   } as const;
   const dstRect = { x: 0, y: 0, width: size, height: size } as const;
   const paint = Skia.Paint();
-  paint.setAntiAlias(true);
+  paint.setAntiAlias(false);
   canvas.drawImageRect(image, srcRect, dstRect, paint);
 
   const snapshot = surface.makeImageSnapshot();
-  // Use PNG to preserve alpha channel (transparency)
   const base64 = snapshot?.encodeToBase64(ImageFormat.PNG, 60);
 
   return base64 ?? "";
@@ -234,7 +234,7 @@ export const preprocessMagicTouchInput = (
   } as const;
   const dstRect = { x: 0, y: 0, width: imageSize, height: imageSize } as const;
   const paint = Skia.Paint();
-  paint.setAntiAlias(true);
+  paint.setAntiAlias(false);
   canvas.drawImageRect(image, srcRect, dstRect, paint);
 
   const snapshot = surface.makeImageSnapshot();
@@ -260,7 +260,6 @@ export const preprocessMagicTouchInput = (
     const gSurface = Skia.Surface.MakeOffscreen(imageSize, imageSize);
     const gCanvas = gSurface?.getCanvas();
     if (gSurface && gCanvas) {
-      // Clear to transparent
       gCanvas.clear(Skia.Color("transparent"));
       const gPaint = Skia.Paint();
       const filter = Skia.ImageFilter.MakeBlur(
@@ -271,8 +270,6 @@ export const preprocessMagicTouchInput = (
       );
       gPaint.setImageFilter(filter);
       gPaint.setAntiAlias(true);
-      // Draw a solid white circle and let the blur create a Gaussian-like falloff
-      // Default radius tuned for 512 grid
       const radius = Math.max(2, Math.round(imageSize * 0.01));
       gPaint.setColor(Skia.Color("white"));
       gCanvas.drawCircle(tx, ty, radius, gPaint);
@@ -281,27 +278,34 @@ export const preprocessMagicTouchInput = (
       if (gPixels) {
         guidanceAlpha = new Uint8Array(imageSize * imageSize);
         for (let i = 0; i < imageSize * imageSize; i++) {
-          const ai = i * 4 + 3;
-          guidanceAlpha[i] = gPixels[ai] || 0;
+          guidanceAlpha[i] = gPixels[i * 4 + 3] || 0;
         }
       }
     }
   }
 
-  for (let i = 0; i < imageSize * imageSize; i++) {
-    const rgbaIndex = i * 4;
-    const outIndex = rgbaIndex; // 4-channel interleaved
-
-    // RGB normalized to 0..1
-    out[outIndex] = (pixelData[rgbaIndex] || 0) / 255.0; // R
-    out[outIndex + 1] = (pixelData[rgbaIndex + 1] || 0) / 255.0; // G
-    out[outIndex + 2] = (pixelData[rgbaIndex + 2] || 0) / 255.0; // B
-
-    // Guidance from blurred alpha map
-    out[outIndex + 3] = guidanceAlpha ? (guidanceAlpha[i] || 0) / 255.0 : 0;
+  // Single pass: normalize RGB and add guidance
+  // Branch once outside the loop to avoid per-pixel conditional
+  const invScale = 1 / 255;
+  const totalPixels = imageSize * imageSize;
+  if (guidanceAlpha) {
+    for (let i = 0; i < totalPixels; i++) {
+      const rgbaIndex = i * 4;
+      out[rgbaIndex] = (pixelData[rgbaIndex] || 0) * invScale;
+      out[rgbaIndex + 1] = (pixelData[rgbaIndex + 1] || 0) * invScale;
+      out[rgbaIndex + 2] = (pixelData[rgbaIndex + 2] || 0) * invScale;
+      out[rgbaIndex + 3] = (guidanceAlpha[i] || 0) * invScale;
+    }
+  } else {
+    for (let i = 0; i < totalPixels; i++) {
+      const rgbaIndex = i * 4;
+      out[rgbaIndex] = (pixelData[rgbaIndex] || 0) * invScale;
+      out[rgbaIndex + 1] = (pixelData[rgbaIndex + 1] || 0) * invScale;
+      out[rgbaIndex + 2] = (pixelData[rgbaIndex + 2] || 0) * invScale;
+      out[rgbaIndex + 3] = 0;
+    }
   }
 
-  // surface.dispose?.();
   return out;
 };
 
@@ -310,23 +314,36 @@ const convertFloat32ArrayToUint8Array = (float32Array: Float32Array) => {
   // Detect if values are already probabilities [0,1] or logits
   let min = Number.POSITIVE_INFINITY;
   let max = Number.NEGATIVE_INFINITY;
-  for (let i = 0; i < float32Array.length; i++) {
+
+  // Sample a subset for faster min/max detection
+  const sampleStep = Math.max(1, Math.floor(float32Array.length / 1000));
+  for (let i = 0; i < float32Array.length; i += sampleStep) {
     const v = float32Array[i] as number;
     if (v < min) min = v;
     if (v > max) max = v;
   }
   const needsSigmoid = !(min >= 0 && max <= 1);
 
-  const toByte = (v: number) => {
-    const p = needsSigmoid ? 1 / (1 + Math.exp(-v)) : v;
-    const clamped = p <= 0 ? 0 : p >= 1 ? 1 : p;
-    return Math.round(clamped * 255);
-  };
-
   const output = new Uint8Array(float32Array.length);
-  for (let i = 0; i < float32Array.length; i++) {
-    output[i] = toByte(float32Array[i] as number);
+
+  if (needsSigmoid) {
+    // Use lookup table for sigmoid approximation (faster for large arrays)
+    for (let i = 0; i < float32Array.length; i++) {
+      const v = float32Array[i] as number;
+      // Clamp to avoid overflow in exp
+      const clamped = v < -10 ? -10 : v > 10 ? 10 : v;
+      const p = 1 / (1 + Math.exp(-clamped));
+      output[i] = Math.round(p * 255);
+    }
+  } else {
+    // Direct conversion for probabilities
+    for (let i = 0; i < float32Array.length; i++) {
+      const v = float32Array[i] as number;
+      const clamped = v <= 0 ? 0 : v >= 1 ? 1 : v;
+      output[i] = Math.round(clamped * 255);
+    }
   }
+
   return output;
 };
 
@@ -349,15 +366,40 @@ const applyMagicTouchMaskAndExport = (image: SkImage, mask: Float32Array) => {
     if (maskImage == null) {
       return;
     }
+
+    const width = image.width();
+    const height = image.height();
+
+    // OPTIMIZED: Apply erode/blur at model resolution (512x512) instead of full image size
+    // Then upscale the processed mask
+    const maskSurface = Skia.Surface.MakeOffscreen(
+      MAGIC_TOUCH_MODEL_INPUT_SIZE,
+      MAGIC_TOUCH_MODEL_INPUT_SIZE
+    );
+    const maskCanvas = maskSurface?.getCanvas();
+    if (!maskSurface || !maskCanvas) {
+      return null;
+    }
+
+    const paintMask = Skia.Paint();
+    // Apply erode and blur at smaller resolution (much faster)
+    let filter = Skia.ImageFilter.MakeErode(3, 3, null);
+    filter = Skia.ImageFilter.MakeBlur(2, 2, TileMode.Clamp, filter);
+    paintMask.setImageFilter(filter);
+    maskCanvas.drawImage(maskImage, 0, 0, paintMask);
+    const processedMask = maskSurface.makeImageSnapshot();
+
+    if (!processedMask) {
+      return null;
+    }
+
+    // Now composite at full resolution
     const srcRect: SkRect = {
       x: 0,
       y: 0,
       width: MAGIC_TOUCH_MODEL_INPUT_SIZE,
       height: MAGIC_TOUCH_MODEL_INPUT_SIZE,
     };
-
-    const width = image.width();
-    const height = image.height();
     const dstRect: SkRect = {
       x: 0,
       y: 0,
@@ -368,39 +410,37 @@ const applyMagicTouchMaskAndExport = (image: SkImage, mask: Float32Array) => {
     const paintSrcIn = Skia.Paint();
     paintSrcIn.setBlendMode(BlendMode.SrcIn);
 
-    const paintMask = Skia.Paint();
-    let filter = Skia.ImageFilter.MakeErode(7, 7, null);
-    filter = Skia.ImageFilter.MakeBlur(5, 5, TileMode.Clamp, filter);
-    paintMask.setImageFilter(filter);
-
     const auxiliarySkiaSurface = Skia.Surface.MakeOffscreen(width, height);
-
     const auxiliaryCanvas = auxiliarySkiaSurface?.getCanvas();
 
-    auxiliaryCanvas?.drawImageRect(maskImage, srcRect, dstRect, paintMask);
+    // Draw upscaled processed mask, then composite with source image
+    const upscalePaint = Skia.Paint();
+    upscalePaint.setAntiAlias(false);
+    auxiliaryCanvas?.drawImageRect(
+      processedMask,
+      srcRect,
+      dstRect,
+      upscalePaint
+    );
     auxiliaryCanvas?.drawImage(image, 0, 0, paintSrcIn);
     const snapshot = auxiliarySkiaSurface?.makeImageSnapshot();
 
     if (!snapshot) {
-      console.error("Failed to create snapshot");
+      log.error("Failed to create snapshot");
       return null;
     }
 
-    // Create a persistent image from pixel data - much faster than PNG encode/decode
-    // Read pixels from snapshot
+    // Create a persistent image from pixel data
     const pixels = snapshot.readPixels();
     if (!pixels) {
-      console.error("Failed to read pixels from snapshot");
+      log.error("Failed to read pixels from snapshot");
       return null;
     }
 
-    // Ensure pixels is Uint8Array
-    const pixelBytes = pixels instanceof Uint8Array ? pixels : new Uint8Array(pixels.buffer);
-    
-    // Create data from pixels
+    const pixelBytes =
+      pixels instanceof Uint8Array ? pixels : new Uint8Array(pixels.buffer);
     const pixelData = Skia.Data.fromBytes(pixelBytes);
-    
-    // Create a new persistent image from the pixel data
+
     const finalImage = Skia.Image.MakeImage(
       {
         width,
@@ -409,17 +449,17 @@ const applyMagicTouchMaskAndExport = (image: SkImage, mask: Float32Array) => {
         colorType: ColorType.RGBA_8888,
       },
       pixelData,
-      width * 4 // bytes per row (4 bytes per pixel for RGBA)
+      width * 4
     );
 
     if (!finalImage) {
-      console.error("Failed to create final image from pixels");
+      log.error("Failed to create final image from pixels");
       return null;
     }
 
     return { finalImage };
   } catch (error) {
-    console.error("Error applying mask and exporting:", error);
+    log.error("Error applying mask and exporting:", error);
     return null;
   }
 };

@@ -1,14 +1,14 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback } from "react";
 import { View } from "react-native";
 import { Card, CardContent } from "~/components/ui/card";
-import { storage } from "~/data";
-import { PREF_COLOR_SCHEME_KEY } from "~/constants/storage-keys";
-import { useColorScheme } from "~/hooks/useColorScheme";
 import { setAndroidNavigationBar } from "~/lib/android-navigation-bar";
 import { H4 } from "~/components/ui/typography";
 import type { GroupButton } from "~/components/Shared/SegmentedButtons";
 import SegmentedButtons from "~/components/Shared/SegmentedButtons";
-import { MonitorIcon, MoonIcon, SunIcon } from "lucide-nativewind";
+import { MonitorIcon, MoonIcon, SunIcon } from "lucide-uniwind";
+import { Uniwind, useUniwind } from "uniwind";
+import { storage } from "~/data";
+import { PREF_COLOR_SCHEME_KEY } from "~/constants/storage-keys";
 
 type Theme = "light" | "dark" | "system";
 
@@ -31,21 +31,17 @@ const THEME_BUTTONS: GroupButton<Theme>[] = [
 ];
 
 export default function ThemeSection() {
-  const [currentTheme, setCurrentTheme] = useState<Theme>(
-    storage.get(PREF_COLOR_SCHEME_KEY) || "system"
-  );
-
-  const { isDarkColorScheme, setColorScheme } = useColorScheme();
+  const { theme, hasAdaptiveThemes } = useUniwind();
+  const themePreference = hasAdaptiveThemes ? "system" : theme;
 
   const handleSelectTheme = useCallback(
     (scheme: "light" | "dark" | "system") => {
-      // Only set the scheme here; update system UI in an effect after mount.
-      setCurrentTheme(scheme);
-      setColorScheme(scheme);
+      // Persist to MMKV and update UI
       storage.set(PREF_COLOR_SCHEME_KEY, scheme);
-      setAndroidNavigationBar(isDarkColorScheme ? "light" : "dark");
+      Uniwind.setTheme(scheme);
+      setAndroidNavigationBar(theme);
     },
-    [isDarkColorScheme, setColorScheme]
+    [theme]
   );
 
   return (
@@ -56,7 +52,7 @@ export default function ThemeSection() {
         </View>
         <SegmentedButtons
           buttons={THEME_BUTTONS}
-          value={currentTheme}
+          value={themePreference}
           onValueChange={handleSelectTheme}
         />
       </CardContent>

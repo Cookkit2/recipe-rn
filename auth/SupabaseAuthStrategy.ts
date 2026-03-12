@@ -17,6 +17,7 @@ import * as ExpoAuthSession from "expo-auth-session";
 import * as Linking from "expo-linking";
 import { APP_CONFIG } from "~/lib/constants";
 import { supabase } from "~/lib/supabase/supabase-client";
+import { log } from '~/utils/logger';
 
 /**
  * Supabase authentication strategy implementation
@@ -35,8 +36,9 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
    * Set up auth state change listener
    */
   private setupAuthListener(): void {
+    if (!supabase) return;
     supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Supabase auth state change:", event, session?.user?.id);
+      log.info("Supabase auth state change:", event, session?.user?.id);
 
       if (session?.user) {
         this.currentUser = this.mapSupabaseUserToUser(session.user);
@@ -138,6 +140,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async getCurrentUser(): Promise<User | null> {
+    if (!supabase) return null;
     try {
       const {
         data: { user },
@@ -145,7 +148,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
       } = await supabase.auth.getUser();
 
       if (error) {
-        console.warn("Error getting current user:", error);
+        log.warn("Error getting current user:", error);
         return null;
       }
 
@@ -156,12 +159,13 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
 
       return null;
     } catch (error) {
-      console.error("Error in getCurrentUser:", error);
+      log.error("Error in getCurrentUser:", error);
       return null;
     }
   }
 
   async getCurrentSession(): Promise<AuthSession | null> {
+    if (!supabase) return null;
     try {
       const {
         data: { session },
@@ -169,7 +173,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
       } = await supabase.auth.getSession();
 
       if (error) {
-        console.warn("Error getting current session:", error);
+        log.warn("Error getting current session:", error);
         return null;
       }
 
@@ -180,12 +184,13 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
 
       return null;
     } catch (error) {
-      console.error("Error in getCurrentSession:", error);
+      log.error("Error in getCurrentSession:", error);
       return null;
     }
   }
 
   async signInWithEmail(credentials: SignInCredentials): Promise<AuthResult> {
+    if (!supabase) return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: credentials.email,
@@ -212,7 +217,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
         true
       );
     } catch (error) {
-      console.error("Error in signInWithEmail:", error);
+      log.error("Error in signInWithEmail:", error);
       return this.createErrorResult(
         "SIGNIN_ERROR",
         "An unexpected error occurred during sign in",
@@ -223,13 +228,13 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async signInWithProvider(config: SocialAuthConfig): Promise<AuthResult> {
+    if (!supabase) return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
     try {
-      // Create redirect URL for OAuth flow based on app.json scheme
       const scheme = Linking.createURL("").split(":")[0] || "recipe-app";
       const redirectUrl = ExpoAuthSession.makeRedirectUri({ scheme });
 
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: config.provider as any, // Supabase provider names match ours
+        provider: config.provider,
         options: {
           redirectTo: config.redirectUrl || redirectUrl,
           scopes: config.scopes?.join(" "),
@@ -258,6 +263,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
 
   async signInAnonymously(): Promise<AuthResult> {
     try {
+      if (!supabase) return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
       const { data, error } = await supabase.auth.signInAnonymously();
 
       if (error) {
@@ -280,7 +286,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
         true
       );
     } catch (error) {
-      console.error("Error in signInAnonymously:", error);
+      log.error("Error in signInAnonymously:", error);
       return this.createErrorResult(
         "ANONYMOUS_SIGNIN_ERROR",
         "An unexpected error occurred during anonymous sign in",
@@ -291,6 +297,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async signUpWithEmail(credentials: SignInCredentials): Promise<AuthResult> {
+    if (!supabase) return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
     try {
       const { data, error } = await supabase.auth.signUp({
         email: credentials.email,
@@ -329,7 +336,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
         true
       );
     } catch (error) {
-      console.error("Error in signUpWithEmail:", error);
+      log.error("Error in signUpWithEmail:", error);
       return this.createErrorResult(
         "SIGNUP_ERROR",
         "An unexpected error occurred during sign up",
@@ -340,13 +347,14 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async signOut(): Promise<AuthResult> {
+    if (!supabase) return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
     try {
-      console.log("About to call supabase.auth.signOut()");
+      log.info("About to call supabase.auth.signOut()");
       const { error } = await supabase.auth.signOut();
-      console.log("supabase.auth.signOut() completed, error:", error);
+      log.info("supabase.auth.signOut() completed, error:", error);
 
       if (error) {
-        console.log(
+        log.info(
           "Supabase signOut returned error, clearing local state anyway"
         );
         // Still clear local state even if remote sign out failed
@@ -362,7 +370,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
         );
       }
 
-      console.log("Supabase signOut successful, clearing local state");
+      log.info("Supabase signOut successful, clearing local state");
       // Clear local state
       this.currentUser = null;
       this.currentSession = null;
@@ -370,7 +378,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
 
       return { success: true };
     } catch (error) {
-      console.error("Error in signOut:", error);
+      log.error("Error in signOut:", error);
 
       // Clear local state even on error
       this.currentUser = null;
@@ -387,6 +395,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async refreshSession(): Promise<AuthResult> {
+    if (!supabase) return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
     try {
       const { data, error } = await supabase.auth.refreshSession();
 
@@ -410,7 +419,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
         true
       );
     } catch (error) {
-      console.error("Error in refreshSession:", error);
+      log.error("Error in refreshSession:", error);
       return this.createErrorResult(
         "REFRESH_ERROR",
         "An unexpected error occurred during session refresh",
@@ -423,8 +432,8 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   async linkAnonymousAccount(
     credentials: LinkAccountCredentials
   ): Promise<AuthResult> {
+    if (!supabase) return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
     try {
-      // Check if current user is anonymous
       if (!this.currentUser || !this.currentUser.isAnonymous) {
         return this.createErrorResult(
           "NOT_ANONYMOUS",
@@ -459,7 +468,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
         true
       );
     } catch (error) {
-      console.error("Error in linkAnonymousAccount:", error);
+      log.error("Error in linkAnonymousAccount:", error);
       return this.createErrorResult(
         "LINK_ACCOUNT_ERROR",
         "An unexpected error occurred during account linking",
@@ -470,6 +479,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async resetPassword(email: string): Promise<AuthResult> {
+    if (!supabase) return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${APP_CONFIG.DEEP_LINK_SCHEME}://${APP_CONFIG.DEEP_LINK_PATHS.RESET_PASSWORD}`,
@@ -481,7 +491,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
 
       return { success: true };
     } catch (error) {
-      console.error("Error in resetPassword:", error);
+      log.error("Error in resetPassword:", error);
       return this.createErrorResult(
         "RESET_PASSWORD_ERROR",
         "An unexpected error occurred during password reset",
@@ -492,6 +502,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async validateSession(): Promise<boolean> {
+    if (!supabase) return false;
     try {
       const {
         data: { session },
@@ -506,7 +517,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
       const expiresAt = session.expires_at ? session.expires_at * 1000 : 0;
       return expiresAt > Date.now();
     } catch (error) {
-      console.error("Error in validateSession:", error);
+      log.error("Error in validateSession:", error);
       return false;
     }
   }

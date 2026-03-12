@@ -14,8 +14,8 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
   ChevronUpIcon,
-} from "lucide-nativewind";
-import { cn } from "~/lib/tw-merge";
+} from "lucide-uniwind";
+import { cn } from "~/lib/utils";
 import { TextClassContext } from "~/components/ui/text";
 
 const DropdownMenu = DropdownMenuPrimitive.Root;

@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { Pressable, TextInput, View, Text } from "react-native";
-import { cn } from "~/lib/tw-merge";
+import { cn } from "~/lib/utils";
 
 type EditableTitleProps = {
   value: string;

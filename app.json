@@ -2,21 +2,21 @@
   "expo": {
     "name": "Cookkit",
     "slug": "cookkit",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "cookkit",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "resizeMode": "contain"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": false,
+      "icon": "./assets/icon.png",
+      "supportsTablet": true,
       "bundleIdentifier": "app.cookkit.cookkit",
+      "buildNumber": "1",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera to capture ingredients",
@@ -26,7 +26,6 @@
       }
     },
     "android": {
-      "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -56,6 +55,17 @@
       [
         "expo-font",
         {
+          "fonts": [
+            "./assets/fonts/BowlbyOne-Regular.ttf",
+            "./assets/fonts/Urbanist-ExtraLight.ttf",
+            "./assets/fonts/Urbanist-Light.ttf",
+            "./assets/fonts/Urbanist-Regular.ttf",
+            "./assets/fonts/Urbanist-Medium.ttf",
+            "./assets/fonts/Urbanist-SemiBold.ttf",
+            "./assets/fonts/Urbanist-Bold.ttf",
+            "./assets/fonts/Urbanist-ExtraBold.ttf",
+            "./assets/fonts/Urbanist-Black.ttf"
+          ],
           "android": {
             "fonts": [
               {
@@ -70,10 +80,6 @@
               {
                 "fontFamily": "Urbanist",
                 "fontDefinitions": [
-                  {
-                    "path": "./assets/fonts/Urbanist-Thin.ttf",
-                    "weight": 100
-                  },
                   {
                     "path": "./assets/fonts/Urbanist-ExtraLight.ttf",
                     "weight": 200
@@ -113,7 +119,6 @@
           "ios": {
             "fonts": [
               "./assets/fonts/BowlbyOne-Regular.ttf",
-              "./assets/fonts/Urbanist-Thin.ttf",
               "./assets/fonts/Urbanist-ExtraLight.ttf",
               "./assets/fonts/Urbanist-Light.ttf",
               "./assets/fonts/Urbanist-Regular.ttf",
@@ -139,24 +144,27 @@
           "cameraPermission": "Allow Cookkit to use your camera to take photos of ingredients"
         }
       ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "react-native",
+          "organization": "cookkit-d6"
+        }
+      ],
       "expo-web-browser",
-      "expo-video"
+      "expo-video",
+      "expo-notifications"
     ],
-    "experiments": {
-      "typedRoutes": true,
-      "buildCacheProvider": {
-        "plugin": "expo-build-disk-cache"
-      }
-    },
     "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "191bf781-c649-4520-84d0-461f5b5a8427"
+      "llama": {
+        "modelName": "functiongemma-270m-it-Q4_K_M.gguf",
+        "modelUrl": "https://huggingface.co/unsloth/functiongemma-270m-it-GGUF/resolve/main/functiongemma-270m-it-Q4_K_M.gguf"
       }
     },
-    "runtimeVersion": "1.0.0",
-    "updates": {
-      "url": "https://u.expo.dev/191bf781-c649-4520-84d0-461f5b5a8427"
+    "experiments": {
+      "reactCompiler": true,
+      "typedRoutes": true
     }
   }
 }

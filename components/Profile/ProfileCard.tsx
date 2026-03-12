@@ -1,27 +1,20 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Card, CardContent } from "~/components/ui/card";
 import { View, StyleSheet } from "react-native";
 import { Image } from "expo-image";
 import { Separator } from "~/components/ui/separator";
 import { H2, H4, P } from "~/components/ui/typography";
-import { database, storage } from "~/data";
+import { storage } from "~/data";
 import { PROFILE_IMAGE_KEY, PROFILE_NAME_KEY } from "~/constants/storage-keys";
-import { useAsyncEffect } from "~/utils/use-async-effect";
+import { usePantryItems } from "~/hooks/queries/usePantryQueries";
+import { useCookingHistory } from "~/hooks/queries/useCookingHistoryQueries";
 
 export default function ProfileCard() {
-  const [ingredients, setIngredients] = React.useState(0);
-  const [recipes, setRecipes] = React.useState(0);
+  const { data: pantryItems = [] } = usePantryItems();
+  const { data: cookingHistory = [] } = useCookingHistory();
 
-  useAsyncEffect(
-    async () => {
-      const ingredientCount = await database.getStockCount();
-      setIngredients(ingredientCount);
-      const recipeCount = (await database.getCookingHistory()).length;
-      setRecipes(recipeCount);
-    },
-    async () => {},
-    []
-  );
+  const ingredients = pantryItems.length;
+  const recipes = cookingHistory.length;
 
   return (
     <Card className="mx-6 shadow-md shadow-foreground/10 rounded-3xl border-continuous">

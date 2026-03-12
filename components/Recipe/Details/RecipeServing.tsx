@@ -1,7 +1,7 @@
-import { MinusIcon, PlusIcon } from "lucide-nativewind";
+import { MinusIcon, PlusIcon } from "lucide-uniwind";
 import React from "react";
 import { View } from "react-native";
-import { SlidingNumber } from "~/components/SlidingNumber";
+import { SlidingNumber } from "~/components/Shared/SlidingNumber";
 import { P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";

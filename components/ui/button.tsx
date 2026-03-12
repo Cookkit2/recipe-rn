@@ -6,7 +6,7 @@ import {
   type Insets,
 } from "react-native";
 import { TextClassContext } from "~/components/ui/text";
-import { cn } from "~/lib/tw-merge";
+import { cn } from "~/lib/utils";
 import Animated from "react-native-reanimated";
 import useDebounce from "~/hooks/useDebounce";
 import useButtonAnimation from "~/hooks/animation/useButtonAnimations";

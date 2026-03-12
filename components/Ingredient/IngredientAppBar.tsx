@@ -1,15 +1,15 @@
 import { Alert, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "~/components/ui/button";
-import { ArrowLeftIcon, Trash2Icon } from "lucide-nativewind";
+import { ArrowLeftIcon, Trash2Icon } from "lucide-uniwind";
 import { useRouter } from "expo-router";
 import Animated, {
-  runOnJS,
   useAnimatedReaction,
   useAnimatedStyle,
   withTiming,
   type SharedValue,
 } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { CURVES } from "~/constants/curves";
 import { H4 } from "~/components/ui/typography";
 import { useDeletePantryItem } from "~/hooks/queries/usePantryQueries";
@@ -40,7 +40,7 @@ export default function IngredientAppBar({
     () => scrollOffset.value,
     (currentValue) => {
       const shouldUseDarkStyle = currentValue < width * 0.7;
-      runOnJS(updateStatusBarStyle)(shouldUseDarkStyle);
+      scheduleOnRN(updateStatusBarStyle, shouldUseDarkStyle);
     },
     [scrollOffset]
   );
@@ -50,15 +50,9 @@ export default function IngredientAppBar({
     // Animate translateY and opacity based on scroll threshold
     const isVisible = scrollOffset.value > width * 0.9;
 
-    const translateY = withTiming(
-      isVisible ? 0 : 5,
-      CURVES["expressive.fast.spatial"]
-    );
+    const translateY = withTiming(isVisible ? 0 : 5, CURVES["expressive.fast.spatial"]);
 
-    const opacity = withTiming(
-      isVisible ? 1 : 0,
-      CURVES["expressive.fast.effects"]
-    );
+    const opacity = withTiming(isVisible ? 1 : 0, CURVES["expressive.fast.effects"]);
 
     return { transform: [{ translateY }], opacity };
   });
@@ -66,10 +60,7 @@ export default function IngredientAppBar({
   const borderAnimatedStyle = useAnimatedStyle(() => {
     const isVisible = scrollOffset.value > width * 0.7;
 
-    const borderBottomWidth = withTiming(
-      isVisible ? 1 : 0,
-      CURVES["expressive.fast.effects"]
-    );
+    const borderBottomWidth = withTiming(isVisible ? 1 : 0, CURVES["expressive.fast.effects"]);
 
     return { borderBottomWidth };
   });
@@ -77,10 +68,7 @@ export default function IngredientAppBar({
   const backgroundOpacityStyle = useAnimatedStyle(() => {
     const isVisible = scrollOffset.value > width * 0.7;
 
-    const opacity = withTiming(
-      isVisible ? 1 : 0,
-      CURVES["expressive.fast.effects"]
-    );
+    const opacity = withTiming(isVisible ? 1 : 0, CURVES["expressive.fast.effects"]);
 
     return { opacity };
   });
@@ -107,38 +95,22 @@ export default function IngredientAppBar({
       className="absolute top-0 left-0 right-0 flex-row items-center justify-between px-6 py-2 z-[1] border-border"
       style={[{ paddingTop: top + 8 }, borderAnimatedStyle]}
     >
-      <Animated.View
-        className="absolute inset-0 bg-background"
-        style={backgroundOpacityStyle}
-      />
+      <Animated.View className="absolute inset-0 bg-background" style={backgroundOpacityStyle} />
       <Button
         size="icon"
         variant="secondary"
         className="rounded-full"
         onPress={() => router.back()}
       >
-        <ArrowLeftIcon
-          className="text-foreground"
-          size={20}
-          strokeWidth={2.618}
-        />
+        <ArrowLeftIcon className="text-foreground" size={20} strokeWidth={2.618} />
       </Button>
       <View className="overflow-hidden h-8 justify-center">
         <Animated.View style={titleAnimatedStyle}>
           <H4 className="font-urbanist-semibold tracking-wide">{title}</H4>
         </Animated.View>
       </View>
-      <Button
-        size="icon"
-        variant="secondary"
-        className="rounded-full"
-        onPress={onDelete}
-      >
-        <Trash2Icon
-          className="text-destructive"
-          size={20}
-          strokeWidth={2.618}
-        />
+      <Button size="icon" variant="secondary" className="rounded-full" onPress={onDelete}>
+        <Trash2Icon className="text-destructive" size={20} strokeWidth={2.618} />
       </Button>
     </Animated.View>
   );
