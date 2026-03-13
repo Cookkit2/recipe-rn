@@ -22,7 +22,8 @@
         "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera to capture ingredients",
         "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to access your microphone",
         "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos of ingredients",
-        "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location to locate your nearby grocery stores"
+        "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location to locate your nearby grocery stores",
+        "NSSpeechRecognitionUsageDescription": "$(PRODUCT_NAME) uses speech recognition so you can navigate recipes hands-free."
       }
     },
     "android": {

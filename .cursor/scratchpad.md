@@ -136,6 +136,7 @@ The core intelligence of this feature:
 - [x] Phase 5: Grocery List Page ✅
 - [x] Phase 6: Polish & UX ✅
 - [ ] 2026-03-12: Fix `SegmentedButtons` column layout regression caused by dynamic NativeWind basis classes.
+- [ ] 2026-03-12: Resolve iOS archive failure caused by building the CocoaPods app project without its workspace.
 
 ---
 
@@ -150,6 +151,12 @@ All phases have been implemented. The grocery list feature is now ready for test
 - Root cause: runtime-generated class names like ``basis-1/${columns}`` are not statically compiled by NativeWind, so the width class is dropped.
 - Plan: replace the dynamic basis class with a small static mapping helper and keep a regression test alongside it.
 - Blocker: `npm test` cannot run because the workspace does not currently have the `jest` binary installed, so automated red/green verification is limited to type/lint checks for this task.
+
+2026-03-12 executor update:
+- Investigated an iOS archive failure from the provided Xcode log.
+- Root cause: the build is running against `ios/Cookkit.xcodeproj` instead of `ios/Cookkit.xcworkspace`, so the target dependency graph contains only `Cookkit` and none of the CocoaPods targets that generate the Expo module maps referenced by `Pods-Cookkit.release.xcconfig`.
+- Evidence: the log shows `cd /Users/ming/Documents/GitHub/recipe-rn/ios/Cookkit.xcodeproj`, a one-target dependency graph, and missing files under `BuildProductsPath/Release-iphoneos/*/*.modulemap` such as `Expo/Expo.modulemap` and `EASClient/EASClient.modulemap`.
+- Recommended next step: archive from the workspace or change the build command to use `-workspace ios/Cookkit.xcworkspace -scheme Cookkit` so pod products are built before Swift compilation.
 
 ---
 
