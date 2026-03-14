@@ -6,3 +6,7 @@ declare const beforeEach: any;
 declare const afterEach: any;
 declare const beforeAll: any;
 declare const afterAll: any;
+
+declare namespace jest {
+  type Mock = any;
+}
