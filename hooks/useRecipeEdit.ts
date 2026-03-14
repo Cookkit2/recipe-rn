@@ -83,7 +83,7 @@ export function useRecipeEdit(
             name: ing.name,
             quantity: ing.quantity,
             unit: ing.unit,
-            notes: ing.notes,
+            notes: ing.notes ?? undefined,
           })
         ),
         steps: steps
@@ -127,8 +127,11 @@ export function useRecipeEdit(
       setWorkingCopy((prev) => {
         if (!prev) return prev;
         const newIngredients = [...prev.ingredients];
-        newIngredients[index] = { ...newIngredients[index], ...updates };
-        setHasUnsavedChanges(true);
+        const existing = newIngredients[index];
+        if (existing) {
+          newIngredients[index] = { ...existing, ...updates };
+          setHasUnsavedChanges(true);
+        }
         return { ...prev, ingredients: newIngredients };
       });
     },
@@ -175,8 +178,11 @@ export function useRecipeEdit(
       setWorkingCopy((prev) => {
         if (!prev) return prev;
         const newSteps = [...prev.steps];
-        newSteps[index] = { ...newSteps[index], ...updates };
-        setHasUnsavedChanges(true);
+        const existing = newSteps[index];
+        if (existing) {
+          newSteps[index] = { ...existing, ...updates };
+          setHasUnsavedChanges(true);
+        }
         return { ...prev, steps: newSteps };
       });
     },
@@ -226,12 +232,14 @@ export function useRecipeEdit(
       setWorkingCopy((prev) => {
         if (!prev) return prev;
         const newSteps = [...prev.steps];
-        const [movedStep] = newSteps.splice(fromIndex, 1);
+        const movedStep = newSteps[fromIndex];
+        if (!movedStep) return prev;
+        newSteps.splice(fromIndex, 1);
         newSteps.splice(toIndex, 0, movedStep);
 
         // Renumber all steps
         const renumberedSteps = newSteps.map((step, i) => ({
-          ...step,
+          ...(step as EditableStep),
           step: i + 1,
         }));
 
@@ -289,7 +297,8 @@ export function useRecipeEdit(
                   ing.name = ingredient.name;
                   ing.quantity = ingredient.quantity;
                   ing.unit = ingredient.unit;
-                  ing.notes = ingredient.notes;
+                  if (ingredient.notes !== undefined)
+                    ing.notes = ingredient.notes;
                 })
               );
             }
@@ -300,7 +309,8 @@ export function useRecipeEdit(
                 ing.name = ingredient.name;
                 ing.quantity = ingredient.quantity;
                 ing.unit = ingredient.unit;
-                ing.notes = ingredient.notes;
+                if (ingredient.notes !== undefined)
+                  ing.notes = ingredient.notes;
               })
             );
           }
