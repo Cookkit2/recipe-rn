@@ -248,87 +248,104 @@ export function useRecipeEdit(
 
     try {
       await database.write(async () => {
-        // Update recipe
-        await recipe.updateRecipe({
-          title: workingCopy.title,
-          description: workingCopy.description,
-          imageUrl: workingCopy.imageUrl,
-          prepMinutes: workingCopy.prepMinutes,
-          cookMinutes: workingCopy.cookMinutes,
-          difficultyStars: workingCopy.difficultyStars,
-          servings: workingCopy.servings,
-          tags: workingCopy.tags,
-        });
+        const batchOps: any[] = [];
 
-        // Handle ingredients
+        // 1. Prepare recipe update
+        batchOps.push(
+          recipe.prepareUpdate((r) => {
+            r.title = workingCopy.title;
+            r.description = workingCopy.description;
+            r.imageUrl = workingCopy.imageUrl;
+            r.prepMinutes = workingCopy.prepMinutes;
+            r.cookMinutes = workingCopy.cookMinutes;
+            r.difficultyStars = workingCopy.difficultyStars;
+            r.servings = workingCopy.servings;
+            r.tags = workingCopy.tags || [];
+          })
+        );
+
+        // 2. Handle ingredients
         const ingredientsCollection =
           database.collections.get<RecipeIngredient>("recipe_ingredient");
+        const existingIngredients = await recipe.ingredients.query().fetch();
+        const existingIngredientsMap = new Map(
+          existingIngredients.map((i) => [i.id, i])
+        );
 
         // Delete removed ingredients
-        const existingIngredients =
-          await recipe.ingredients.query().fetch();
         for (const existing of existingIngredients) {
-          if (
-            !workingCopy.ingredients.some((ing) => ing.id === existing.id)
-          ) {
-            await existing.destroyPermanently();
+          if (!workingCopy.ingredients.some((ing) => ing.id === existing.id)) {
+            batchOps.push(existing.prepareDestroyPermanently());
           }
         }
 
         // Update or create ingredients
         for (const ingredient of workingCopy.ingredients) {
           if (ingredient.id) {
-            // Update existing
-            const existing = await ingredientsCollection.find(ingredient.id);
-            await existing.updateRecipeIngredient({
-              name: ingredient.name,
-              quantity: ingredient.quantity,
-              unit: ingredient.unit,
-              notes: ingredient.notes,
-            });
+            const existing = existingIngredientsMap.get(ingredient.id);
+            if (existing) {
+              batchOps.push(
+                existing.prepareUpdate((ing) => {
+                  ing.name = ingredient.name;
+                  ing.quantity = ingredient.quantity;
+                  ing.unit = ingredient.unit;
+                  ing.notes = ingredient.notes;
+                })
+              );
+            }
           } else {
-            // Create new
-            await ingredientsCollection.create((ing) => {
-              ing.recipeId = recipe.id;
-              ing.name = ingredient.name;
-              ing.quantity = ingredient.quantity;
-              ing.unit = ingredient.unit;
-              ing.notes = ingredient.notes;
-            });
+            batchOps.push(
+              ingredientsCollection.prepareCreate((ing) => {
+                ing.recipeId = recipe.id;
+                ing.name = ingredient.name;
+                ing.quantity = ingredient.quantity;
+                ing.unit = ingredient.unit;
+                ing.notes = ingredient.notes;
+              })
+            );
           }
         }
 
-        // Handle steps
-        const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
+        // 3. Handle steps
+        const stepsCollection =
+          database.collections.get<RecipeStep>("recipe_step");
+        const existingSteps = await recipe.steps.query().fetch();
+        const existingStepsMap = new Map(existingSteps.map((s) => [s.id, s]));
 
         // Delete removed steps
-        const existingSteps = await recipe.steps.query().fetch();
         for (const existing of existingSteps) {
           if (!workingCopy.steps.some((step) => step.id === existing.id)) {
-            await existing.destroyPermanently();
+            batchOps.push(existing.prepareDestroyPermanently());
           }
         }
 
         // Update or create steps
         for (const step of workingCopy.steps) {
           if (step.id) {
-            // Update existing
-            const existing = await stepsCollection.find(step.id);
-            await existing.updateStep({
-              step: step.step,
-              title: step.title,
-              description: step.description,
-            });
+            const existing = existingStepsMap.get(step.id);
+            if (existing) {
+              batchOps.push(
+                existing.prepareUpdate((s) => {
+                  s.step = step.step;
+                  s.title = step.title;
+                  s.description = step.description;
+                })
+              );
+            }
           } else {
-            // Create new
-            await stepsCollection.create((s) => {
-              s.step = step.step;
-              s.title = step.title;
-              s.description = step.description;
-              s.recipeId = recipe.id;
-            });
+            batchOps.push(
+              stepsCollection.prepareCreate((s) => {
+                s.step = step.step;
+                s.title = step.title;
+                s.description = step.description;
+                s.recipeId = recipe.id;
+              })
+            );
           }
         }
+
+        // Execute all operations in a single batch
+        await database.batch(...batchOps);
       });
 
       setIsEditing(false);
