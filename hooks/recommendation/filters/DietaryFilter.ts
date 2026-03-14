@@ -150,7 +150,7 @@ export class DietaryFilter implements RecipeFilterStrategy {
     const customAllergens: string[] = [];
 
     // Standard allergens
-    const storedAllergens = storage.get(PREF_ALLERGENS_KEY);
+    const storedAllergens = storage.get<string | string[]>(PREF_ALLERGENS_KEY);
     if (Array.isArray(storedAllergens)) {
       standardAllergens.push(...(storedAllergens as Allergen[]));
     } else if (typeof storedAllergens === "string" && storedAllergens) {
@@ -158,7 +158,7 @@ export class DietaryFilter implements RecipeFilterStrategy {
     }
 
     // Custom allergens
-    const otherAllergens = storage.get(PREF_OTHER_ALLERGENS_KEY);
+    const otherAllergens = storage.get<string | string[]>(PREF_OTHER_ALLERGENS_KEY);
     if (Array.isArray(otherAllergens)) {
       customAllergens.push(...(otherAllergens as string[]));
     } else if (typeof otherAllergens === "string" && otherAllergens) {

@@ -807,27 +807,27 @@ export const recipeApi = {
     otherAllergens: string[];
     appliances: string[];
   } {
-    const diet = storage.get(PREF_DIET_KEY) as Diet | undefined;
+    const diet = storage.get<string>(PREF_DIET_KEY) as Diet | undefined;
     const allergens = (() => {
-      const stored = storage.get(PREF_ALLERGENS_KEY);
+      const stored = storage.get<string | string[]>(PREF_ALLERGENS_KEY);
       if (Array.isArray(stored)) return stored as Allergen[];
       if (typeof stored !== "string" || !stored) return [];
       return stored.split(",") as Allergen[];
     })();
     const otherAllergens = (() => {
-      const stored = storage.get(PREF_OTHER_ALLERGENS_KEY);
+      const stored = storage.get<string | string[]>(PREF_OTHER_ALLERGENS_KEY);
       if (Array.isArray(stored)) return stored as string[];
       if (typeof stored !== "string" || !stored) return [];
-      return stored
+      return (stored as string)
         .split(",")
         .map((a: string) => a.trim())
         .filter((a: string) => a.length > 0);
     })();
     const appliances = (() => {
-      const stored = storage.get(PREF_APPLIANCES_KEY);
+      const stored = storage.get<string | string[]>(PREF_APPLIANCES_KEY);
       if (Array.isArray(stored)) return stored as string[];
       if (typeof stored !== "string" || !stored) return [];
-      return stored
+      return (stored as string)
         .split(",")
         .map((a: string) => a.trim())
         .filter((a: string) => a.length > 0);
