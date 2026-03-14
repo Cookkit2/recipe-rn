@@ -130,7 +130,7 @@ export const mealPlanApi = {
               item.date instanceof Date
                 ? item.date
                 : new Date(
-                    (item as { date?: number }).date ?? Date.now()
+                    (item as unknown as { date?: number }).date ?? Date.now()
                   );
             const mealSlot = item.mealSlot ?? "dinner";
 
@@ -213,7 +213,7 @@ export const mealPlanApi = {
             item.date instanceof Date
               ? item.date
               : new Date(
-                  (item as { date?: number }).date ?? Date.now()
+                  (item as unknown as { date?: number }).date ?? Date.now()
                 );
           const mealSlot = item.mealSlot ?? "dinner";
 
@@ -429,7 +429,7 @@ export const mealPlanApi = {
           }
         }
 
-        const date = item.date instanceof Date ? item.date : new Date((item as { date?: number }).date ?? Date.now());
+        const date = item.date instanceof Date ? item.date : new Date((item as unknown as { date?: number }).date ?? Date.now());
         const mealSlot = item.mealSlot ?? "dinner";
 
         return {
@@ -506,7 +506,7 @@ export const mealPlanApi = {
         }
       }
 
-      const date = item.date instanceof Date ? item.date : new Date((item as { date?: number }).date ?? Date.now());
+      const date = item.date instanceof Date ? item.date : new Date((item as unknown as { date?: number }).date ?? Date.now());
       const mealSlot = item.mealSlot ?? "dinner";
 
       return {
@@ -692,7 +692,7 @@ export const mealPlanApi = {
             })),
           };
 
-          const date = item.date instanceof Date ? item.date : new Date((item as { date?: number }).date ?? Date.now());
+          const date = item.date instanceof Date ? item.date : new Date((item as unknown as { date?: number }).date ?? Date.now());
           const mealSlot = item.mealSlot ?? "dinner";
 
           itemsWithRecipes.push({
