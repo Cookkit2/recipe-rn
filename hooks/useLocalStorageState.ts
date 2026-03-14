@@ -1,7 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { storage } from "~/data";
-import { log } from '~/utils/logger';
+import { log } from "~/utils/logger";
 
 /**
  * In-memory fallback storage used when persistent storage throws an error.
@@ -82,12 +82,7 @@ export default function useLocalStorageState<T = undefined>(
 ): LocalStorageState<T | undefined> {
   const serializer = options?.serializer;
   const [defaultValue] = useState(options?.defaultValue);
-  return useAsyncStorage(
-    key,
-    defaultValue,
-    serializer?.parse,
-    serializer?.stringify
-  );
+  return useAsyncStorage(key, defaultValue, serializer?.parse, serializer?.stringify);
 }
 
 function useAsyncStorage<T>(
@@ -115,7 +110,7 @@ function useAsyncStorage<T>(
           return;
         }
 
-        const storedValue = storage.get<string>(key);
+        const storedValue = storage.getString(key);
 
         if (mounted) {
           if (storedValue !== null) {
@@ -162,8 +157,7 @@ function useAsyncStorage<T>(
   const setState = useCallback(
     (newValue: SetStateAction<T | undefined>): void => {
       setValue((currentValue) => {
-        const resolvedValue =
-          newValue instanceof Function ? newValue(currentValue) : newValue;
+        const resolvedValue = newValue instanceof Function ? newValue(currentValue) : newValue;
 
         // Async update to storage
         (async () => {

@@ -567,18 +567,28 @@ export default function DebugScreen() {
             <Button
               onPress={() => {
                 try {
-                  const appliances = storage.getString(PREF_APPLIANCES_KEY) ?? "";
-                  const diet = storage.getString(PREF_DIET_KEY) ?? "none";
-                  const allergens = storage.getString(PREF_ALLERGENS_KEY) ?? "";
-                  const otherAllergens = storage.getString(PREF_OTHER_ALLERGENS_KEY) ?? "";
+                  const appliances = storage.get(PREF_APPLIANCES_KEY);
+                  const diet = storage.get(PREF_DIET_KEY) ?? "none";
+                  const allergens = storage.get(PREF_ALLERGENS_KEY);
+                  const otherAllergens = storage.get(PREF_OTHER_ALLERGENS_KEY);
 
                   const preferences = {
-                    electricAppliances: appliances ? appliances?.split(",") : [],
+                    electricAppliances: Array.isArray(appliances)
+                      ? appliances
+                      : appliances
+                        ? appliances.split(",")
+                        : [],
                     dietaryPreference: diet,
-                    allergens: allergens ? allergens?.split(",") : [],
-                    otherAllergens: otherAllergens
-                      ? otherAllergens?.split(",").map((a: string) => a.trim())
-                      : [],
+                    allergens: Array.isArray(allergens)
+                      ? allergens
+                      : allergens
+                        ? allergens.split(",")
+                        : [],
+                    otherAllergens: Array.isArray(otherAllergens)
+                      ? otherAllergens
+                      : otherAllergens
+                        ? otherAllergens.split(",").map((a: string) => a.trim())
+                        : [],
                   };
 
                   const jsonOutput = JSON.stringify(preferences, null, 2);
