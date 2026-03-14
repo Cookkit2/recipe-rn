@@ -101,6 +101,7 @@ export default function IngredientAppBar({
         variant="secondary"
         className="rounded-full"
         onPress={() => router.back()}
+        accessibilityLabel="Go back"
       >
         <ArrowLeftIcon className="text-foreground" size={20} strokeWidth={2.618} />
       </Button>
@@ -109,7 +110,13 @@ export default function IngredientAppBar({
           <H4 className="font-urbanist-semibold tracking-wide">{title}</H4>
         </Animated.View>
       </View>
-      <Button size="icon" variant="secondary" className="rounded-full" onPress={onDelete}>
+      <Button
+        size="icon"
+        variant="secondary"
+        className="rounded-full"
+        onPress={onDelete}
+        accessibilityLabel="Delete ingredient"
+      >
         <Trash2Icon className="text-destructive" size={20} strokeWidth={2.618} />
       </Button>
     </Animated.View>
