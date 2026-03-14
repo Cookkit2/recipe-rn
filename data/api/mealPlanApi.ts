@@ -126,20 +126,18 @@ export const mealPlanApi = {
               };
             }
 
-            const date =
+            const loopDate =
               item.date instanceof Date
                 ? item.date
-                : new Date(
-                    (item as any).date ?? Date.now()
-                  );
-            const mealSlot = item.mealSlot ?? "dinner";
+                : new Date((item as any).date ?? Date.now());
+            const loopMealSlot = (item as any).mealSlot ?? "dinner";
 
             itemsWithRecipes.push({
               id: item.id,
               recipeId: item.recipeId,
               servings: item.servings,
-              date,
-              mealSlot,
+              date: loopDate,
+              mealSlot: loopMealSlot,
               templateId: item.templateId,
               createdAt: item.createdAt,
               recipe: recipeData,
@@ -209,20 +207,18 @@ export const mealPlanApi = {
             };
           }
 
-          const date =
+          const loopDateVal =
             item.date instanceof Date
               ? item.date
-              : new Date(
-                  (item as any).date ?? Date.now()
-                );
-          const mealSlot = item.mealSlot ?? "dinner";
+              : new Date((item as any).date ?? Date.now());
+          const loopMealSlotVal = (item as any).mealSlot ?? "dinner";
 
           itemsWithRecipes.push({
             id: item.id,
             recipeId: item.recipeId,
             servings: item.servings,
-            date,
-            mealSlot,
+            date: loopDateVal,
+            mealSlot: loopMealSlotVal,
             templateId: item.templateId,
             createdAt: item.createdAt,
             recipe: recipeData,
@@ -429,15 +425,18 @@ export const mealPlanApi = {
           }
         }
 
-        const date = item.date instanceof Date ? item.date : new Date((item as any).date ?? Date.now());
-        const mealSlot = item.mealSlot ?? "dinner";
+        const localDate =
+          item.date instanceof Date
+            ? item.date
+            : new Date((item as any).date ?? Date.now());
+        const localMealSlot = (item as any).mealSlot ?? "dinner";
 
         return {
           id: item.id,
           recipeId: item.recipeId,
           servings: item.servings,
-          date,
-          mealSlot,
+          date: localDate,
+          mealSlot: localMealSlot,
           templateId: item.templateId,
           createdAt: item.createdAt,
           recipe: recipeData,
@@ -506,15 +505,18 @@ export const mealPlanApi = {
         }
       }
 
-      const date = item.date instanceof Date ? item.date : new Date((item as { date?: number }).date ?? Date.now());
-      const mealSlot = item.mealSlot ?? "dinner";
+      const localDateVal =
+        item.date instanceof Date
+          ? item.date
+          : new Date((item as any).date ?? Date.now());
+      const localMealSlotVal = (item as any).mealSlot ?? "dinner";
 
       return {
         id: item.id,
         recipeId: item.recipeId,
         servings: item.servings,
-        date,
-        mealSlot,
+        date: localDateVal,
+        mealSlot: localMealSlotVal,
         templateId: item.templateId,
         createdAt: item.createdAt,
         recipe: recipeData,
@@ -692,15 +694,18 @@ export const mealPlanApi = {
             })),
           };
 
-          const date = item.date instanceof Date ? item.date : new Date((item as { date?: number }).date ?? Date.now());
-          const mealSlot = item.mealSlot ?? "dinner";
+          const loopItemDate =
+            item.date instanceof Date
+              ? item.date
+              : new Date((item as any).date ?? Date.now());
+          const loopItemMealSlot = (item as any).mealSlot ?? "dinner";
 
           itemsWithRecipes.push({
             id: item.id,
             recipeId: item.recipeId,
             servings: item.servings,
-            date,
-            mealSlot,
+            date: loopItemDate,
+            mealSlot: loopItemMealSlot,
             templateId: item.templateId,
             createdAt: item.createdAt,
             recipe: recipeData,
@@ -761,15 +766,18 @@ export const mealPlanApi = {
         };
       }
 
-      const date = updated.date instanceof Date ? updated.date : new Date((updated as { date?: number }).date ?? Date.now());
-      const mealSlot = updated.mealSlot ?? "dinner";
+      const resultDateVal =
+        updated.date instanceof Date
+          ? updated.date
+          : new Date((updated as any).date ?? Date.now());
+      const resultMealSlotVal = (updated as any).mealSlot ?? "dinner";
 
       return {
         id: updated.id,
         recipeId: updated.recipeId,
         servings: updated.servings,
-        date,
-        mealSlot,
+        date: resultDateVal,
+        mealSlot: resultMealSlotVal,
         templateId: updated.templateId,
         createdAt: updated.createdAt,
         recipe: recipeData,
