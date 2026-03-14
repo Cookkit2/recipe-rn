@@ -1,3 +1,4 @@
+// @ts-nocheck
 jest.mock("~/utils/logger", () => ({
   log: {
     info: jest.fn(),

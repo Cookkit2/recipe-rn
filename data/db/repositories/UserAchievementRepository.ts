@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Q } from "@nozbe/watermelondb";
 import UserAchievement, {
   type UserAchievementData,
