@@ -112,7 +112,7 @@ describe("pantryApi.addPantryItemsWithMetadata", () => {
     expect(result).toHaveLength(1);
     expect(result[0]!.name).toBe("Milk");
     expect(stocks).toHaveLength(1);
-    expect(stocks[0].quantity).toBe(1);
+    expect(stocks[0]!.quantity).toBe(1);
   });
 
   it("aggregates quantity for duplicate ingredient names (case-insensitive)", async () => {

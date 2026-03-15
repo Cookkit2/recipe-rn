@@ -87,15 +87,12 @@ export const mealPlanApi = {
         const mealPlanItems = await mealPlanRepo.getAllMealPlanItems();
         log.info(`Found ${mealPlanItems.length} raw meal plan items`);
 
-        const recipeIds = Array.from(new Set(mealPlanItems.map((item) => item.recipeId)));
-        const recipesDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
-
         const itemsWithRecipes: MealPlanItemWithRecipe[] = [];
 
         for (const item of mealPlanItems) {
           try {
-            log.info(`Processing recipe for item ${item.id} with recipeId ${item.recipeId}`);
-            const recipeDetails = recipesDetailsMap.get(item.recipeId);
+            log.info(`Fetching recipe for item ${item.id} with recipeId ${item.recipeId}`);
+            const recipeDetails = await databaseFacade.getRecipeWithDetails(item.recipeId);
 
             let recipeData: MealPlanItemWithRecipe["recipe"];
             if (recipeDetails && recipeDetails.recipe) {
@@ -164,15 +161,12 @@ export const mealPlanApi = {
       const mealPlanItems = await mealPlanRepo.getAllMealPlanItems();
       log.info(`Found ${mealPlanItems.length} raw meal plan items`);
 
-      const recipeIds = Array.from(new Set(mealPlanItems.map((item) => item.recipeId)));
-      const recipesDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
-
       const itemsWithRecipes: MealPlanItemWithRecipe[] = [];
 
       for (const item of mealPlanItems) {
         try {
-          log.info(`Processing recipe for item ${item.id} with recipeId ${item.recipeId}`);
-          const recipeDetails = recipesDetailsMap.get(item.recipeId);
+          log.info(`Fetching recipe for item ${item.id} with recipeId ${item.recipeId}`);
+          const recipeDetails = await databaseFacade.getRecipeWithDetails(item.recipeId);
 
           let recipeData: MealPlanItemWithRecipe["recipe"];
           if (recipeDetails && recipeDetails.recipe) {
@@ -669,14 +663,11 @@ export const mealPlanApi = {
       const mealPlanItems = await mealPlanRepo.getByDateRange(startDate, endDate);
       log.info(`Found ${mealPlanItems.length} meal plans in date range`);
 
-      const recipeIds = Array.from(new Set(mealPlanItems.map((item) => item.recipeId)));
-      const recipesDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
-
       const itemsWithRecipes: MealPlanItemWithRecipe[] = [];
 
       for (const item of mealPlanItems) {
         try {
-          const recipeDetails = recipesDetailsMap.get(item.recipeId);
+          const recipeDetails = await databaseFacade.getRecipeWithDetails(item.recipeId);
           if (!recipeDetails) {
             log.warn(`Recipe not found for meal plan item ${item.id}`);
             continue;
@@ -730,14 +721,14 @@ export const mealPlanApi = {
    */
   async assignToDateSlot(
     mealPlanId: string,
-    date: Date,
-    mealSlot: string
+    assignDate: Date,
+    assignMealSlot: string
   ): Promise<MealPlanItemWithRecipe | null> {
     try {
-      log.info("📅 Assigning meal plan to date slot:", mealPlanId, date, mealSlot);
+      log.info("📅 Assigning meal plan to date slot:", mealPlanId, assignDate, assignMealSlot);
 
       const mealPlanRepo = getMealPlanRepository();
-      const updated = await mealPlanRepo.updateDateAndSlot(mealPlanId, date, mealSlot);
+      const updated = await mealPlanRepo.updateDateAndSlot(mealPlanId, assignDate, assignMealSlot);
 
       if (!updated) {
         log.warn(`Meal plan ${mealPlanId} not found`);
@@ -772,18 +763,18 @@ export const mealPlanApi = {
         };
       }
 
-      const updatedDate =
+      const date =
         updated.date instanceof Date
           ? updated.date
           : new Date((updated as unknown as { date?: number }).date ?? Date.now());
-      const updatedMealSlot = updated.mealSlot ?? "dinner";
+      const mealSlot = updated.mealSlot ?? "dinner";
 
       return {
         id: updated.id,
         recipeId: updated.recipeId,
         servings: updated.servings,
-        date: updatedDate,
-        mealSlot: updatedMealSlot,
+        date,
+        mealSlot,
         templateId: updated.templateId,
         createdAt: updated.createdAt,
         recipe: recipeData,

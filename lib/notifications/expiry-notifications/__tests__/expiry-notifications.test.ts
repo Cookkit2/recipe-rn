@@ -1,4 +1,3 @@
-import { jest, describe, beforeEach, it, expect } from "@jest/globals";
 import { scheduleExpiryNotifications } from "../expiry-notifications";
 
 jest.mock("../../notification-service", () => ({
@@ -15,13 +14,13 @@ jest.mock("~/utils/notification-settings", () => ({
   },
 }));
 
-const getRecipeRecommendationsForExpiring = jest.fn(async (_url: any) => ({
+const getRecipeRecommendationsForExpiring = jest.fn(async () => ({
   recipes: [],
 }));
 
 jest.mock("~/data/api/recipeApi", () => ({
   recipeApi: {
-    getRecipeRecommendationsForExpiring: (url: any) => getRecipeRecommendationsForExpiring(url)
+    getRecipeRecommendationsForExpiring: () => getRecipeRecommendationsForExpiring(),
   },
 }));
 
@@ -56,8 +55,7 @@ describe("scheduleExpiryNotifications", () => {
 
     const calls = (scheduleNotification as jest.Mock).mock.calls;
     expect(calls.length).toBeGreaterThanOrEqual(1);
-    const ids = calls.map((c: any) => c[0].id);
+    const ids = calls.map((c) => c[0].id);
     expect(ids).toContain("expiry-future");
   });
 });
-
