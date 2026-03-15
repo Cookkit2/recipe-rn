@@ -1,74 +1,62 @@
-import { camelCaseToReadable, toKebabCase, toCamelCase } from "../text-formatter";
+import { sanitizeText, createSlug } from '../text-formatter';
 
-describe("camelCaseToReadable", () => {
-  it("converts camelCase to readable text", () => {
-    expect(camelCaseToReadable("ingredientName")).toBe("Ingredient Name");
-    expect(camelCaseToReadable("cookingTime")).toBe("Cooking Time");
+describe('text-formatter', () => {
+  describe('sanitizeText', () => {
+    it('returns empty string for empty input', () => {
+      expect(sanitizeText('')).toBe('');
+    });
+
+    it('returns empty string for null or undefined input', () => {
+      expect(sanitizeText(null as any)).toBe('');
+      expect(sanitizeText(undefined as any)).toBe('');
+    });
+
+    it('keeps alphanumeric characters and spaces', () => {
+      expect(sanitizeText('Hello World 123')).toBe('Hello World 123');
+    });
+
+    it('removes special characters', () => {
+      expect(sanitizeText('Hello, World! @#123')).toBe('Hello World 123');
+    });
+
+    it('trims leading and trailing spaces', () => {
+      expect(sanitizeText('  Hello World  ')).toBe('Hello World');
+    });
+
+    it('handles string with only special characters', () => {
+      expect(sanitizeText('!@#$%^&*()')).toBe('');
+    });
   });
 
-  it("converts PascalCase to readable text", () => {
-    expect(camelCaseToReadable("IngredientName")).toBe("Ingredient Name");
-  });
+  describe('createSlug', () => {
+    it('returns empty string for empty input', () => {
+      expect(createSlug('')).toBe('');
+    });
 
-  it("handles empty strings", () => {
-    expect(camelCaseToReadable("")).toBe("");
-  });
+    it('returns empty string for null or undefined input', () => {
+      expect(createSlug(null as any)).toBe('');
+      expect(createSlug(undefined as any)).toBe('');
+    });
 
-  it("handles single words", () => {
-    expect(camelCaseToReadable("recipe")).toBe("Recipe");
-  });
-});
+    it('converts normal sentence to lowercase slug with hyphens', () => {
+      expect(createSlug('Hello World 123')).toBe('hello-world-123');
+    });
 
-describe("toKebabCase", () => {
-  it("converts camelCase to kebab-case", () => {
-    expect(toKebabCase("helloWorld")).toBe("hello-world");
-    expect(toKebabCase("recipeName")).toBe("recipe-name");
-  });
+    it('replaces special characters with hyphens', () => {
+      expect(createSlug('Hello, World! @#123')).toBe('hello-world-123');
+    });
 
-  it("converts space-separated words to kebab-case", () => {
-    expect(toKebabCase("Hello World")).toBe("hello-world");
-    expect(toKebabCase("Cooking Time")).toBe("cooking-time");
-  });
+    it('handles multiple spaces/special characters to avoid consecutive hyphens', () => {
+      expect(createSlug('Hello   World!!!123')).toBe('hello-world-123');
+    });
 
-  it("converts snake_case to kebab-case", () => {
-    expect(toKebabCase("hello_world")).toBe("hello-world");
-  });
+    it('trims leading and trailing hyphens', () => {
+      expect(createSlug('---Hello World---')).toBe('hello-world');
+      expect(createSlug('  Hello World  ')).toBe('hello-world');
+    });
 
-  it("handles already kebab-cased strings", () => {
-    expect(toKebabCase("already-kebab")).toBe("already-kebab");
-  });
-
-  it("handles empty strings", () => {
-    expect(toKebabCase("")).toBe("");
-  });
-});
-
-describe("toCamelCase", () => {
-  it("converts space-separated words to camelCase", () => {
-    expect(toCamelCase("hello world")).toBe("helloWorld");
-    expect(toCamelCase("Cooking Time")).toBe("cookingTime");
-  });
-
-  it("converts kebab-case to camelCase", () => {
-    expect(toCamelCase("hello-world")).toBe("helloWorld");
-  });
-
-  it("converts snake_case to camelCase", () => {
-    // Note: The current implementation of toCamelCase maps "hello_world" to "helloworld"
-    // based on the test script we ran earlier.
-    // If the behavior is expected, we test it.
-    expect(toCamelCase("hello_world")).toBe("helloworld");
-  });
-
-  it("handles already camelCased strings", () => {
-    expect(toCamelCase("alreadyCamel")).toBe("alreadyCamel");
-  });
-
-  it("converts PascalCase to camelCase", () => {
-    expect(toCamelCase("PascalCase")).toBe("pascalCase");
-  });
-
-  it("handles empty strings", () => {
-    expect(toCamelCase("")).toBe("");
+    it('handles string with only special characters', () => {
+      expect(createSlug('!@#$%^&*()')).toBe('');
+    });
   });
 });
