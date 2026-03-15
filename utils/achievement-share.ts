@@ -424,12 +424,9 @@ export function getShareTextForCopy(achievement: AchievementProgress, userName?:
 
 /**
  * Generate achievement share URL (for deep linking to specific achievement)
- * This is a placeholder for future deep linking implementation
  */
 export function getAchievementShareUrl(achievementId: string): string {
-  // TODO: Implement deep linking when app has universal links
-  // Format: https://cookkit.app/achievement/{achievementId}
-  return `${getAppStoreUrl()}?achievement=${achievementId}`;
+  return `https://cookkit.app/achievement/${achievementId}`;
 }
 
 // ============================================
