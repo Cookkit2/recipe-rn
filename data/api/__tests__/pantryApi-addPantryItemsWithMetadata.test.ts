@@ -62,12 +62,20 @@ jest.mock("~/data/db/database", () => ({
             fetch: async () => [],
           }),
           create: jest.fn(async () => ({})),
+          prepareCreate: jest.fn((updater) => {
+            const draft = {};
+            updater(draft);
+            return draft;
+          }),
         };
       },
     },
     write: async (action: () => Promise<void> | void) => {
       await action();
     },
+    batch: jest.fn(async (...args: any[]) => {
+      return Promise.resolve();
+    }),
   },
 }));
 
@@ -185,4 +193,3 @@ describe("pantryApi.addPantryItemsWithMetadata", () => {
     expect(stocks).toHaveLength(0);
   });
 });
-

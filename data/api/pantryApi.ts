@@ -271,12 +271,13 @@ export const pantryApi = {
           }
 
           if (!existingStock && item.synonyms && item.synonyms.length > 0) {
-            for (const synonym of item.synonyms) {
-              await synonymCollection.create((syn) => {
+            const synonymOps = item.synonyms.map((synonym) =>
+              synonymCollection.prepareCreate((syn) => {
                 (syn as IngredientSynonym).stockId = stockItem.id;
                 (syn as IngredientSynonym).synonym = synonym.synonym.toLowerCase();
-              });
-            }
+              })
+            );
+            await database.batch(...synonymOps);
           }
 
           createdOrUpdatedStockRefs.push(stockItem);
