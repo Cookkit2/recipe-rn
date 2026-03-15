@@ -89,17 +89,6 @@ function AnimatedStack() {
     };
   }, [router]);
 
-  // const animatedStyle = useAnimatedStyle(() => {
-  //   return {
-  //     transform: [
-  //       { scale: scale.value },
-  //       {
-  //         translateY: (1 - scale.value) * -150,
-  //       },
-  //     ],
-  //   };
-  // });
-
   // Check onboarding status on mount
   useEffect(() => {
     // router.push("/profile/preferences/voice-settings");
@@ -464,8 +453,7 @@ const navigationIntegration = Sentry.reactNavigationIntegration({
 });
 
 const sentryDsn =
-  process.env.EXPO_PUBLIC_SENTRY_DSN ||
-  Constants.expoConfig?.extra?.EXPO_PUBLIC_SENTRY_DSN;
+  process.env.EXPO_PUBLIC_SENTRY_DSN || Constants.expoConfig?.extra?.EXPO_PUBLIC_SENTRY_DSN;
 const sentrySendPii =
   process.env.EXPO_PUBLIC_SENTRY_SEND_PII === "true" ||
   Constants.expoConfig?.extra?.EXPO_PUBLIC_SENTRY_SEND_PII === true;
