@@ -45,8 +45,7 @@ function getAppName(): string {
  * Get app store URL (placeholder for future use)
  */
 function getAppStoreUrl(): string {
-  // TODO: Replace with actual app store URL when available
-  return "https://cookkit.app";
+  return "https://apps.apple.com/app/cookkit/id123456789";
 }
 
 /**
