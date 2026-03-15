@@ -263,13 +263,23 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
 
   // Bulk expire challenges
   async expireChallenges(userChallengeIds: string[]): Promise<void> {
+    if (userChallengeIds.length === 0) {
+      return;
+    }
+
+    // Use Promise.all with find() to maintain the exact error-throwing behavior
+    // of the original code if an invalid ID is provided.
+    const records = await Promise.all(
+      userChallengeIds.map((id) => this.collection.find(id))
+    );
+
     await database.write(async () => {
-      for (const id of userChallengeIds) {
-        const record = await this.collection.find(id);
-        await record.update((r) => {
+      const batchOps = records.map((record) =>
+        record.prepareUpdate((r) => {
           r.status = "expired";
-        });
-      }
+        })
+      );
+      await database.batch(...batchOps);
     });
   }
 
