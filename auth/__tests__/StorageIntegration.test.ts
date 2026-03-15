@@ -1,4 +1,3 @@
-/// <reference types="jest" />
 import type { AuthSession } from "~/types/AuthTypes";
 
 // Mock storage config and factory to avoid real encrypted storage usage
