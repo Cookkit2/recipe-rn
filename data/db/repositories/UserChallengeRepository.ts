@@ -2,6 +2,7 @@ import { Q } from "@nozbe/watermelondb";
 import UserChallenge, {
   type UserChallengeData,
 } from "../models/UserChallenge";
+import Challenge from "../models/Challenge";
 import { BaseRepository, type SearchOptions } from "./BaseRepository";
 import { database } from "../database";
 
@@ -294,11 +295,32 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
       )
       .fetch();
 
+    if (allUserChallenges.length === 0) {
+      return [];
+    }
+
+    // Extract unique challenge IDs
+    const challengeIds = Array.from(
+      new Set(allUserChallenges.map((uc) => uc.challenge.id))
+    );
+
+    // Batch fetch all related challenges
+    const challengesCollection = this.collection.database.collections.get<Challenge>(Challenge.table);
+    const challenges = await challengesCollection
+      .query(Q.where("id", Q.oneOf(challengeIds)))
+      .fetch();
+
+    // Create a map for O(1) lookups
+    const challengeMap = new Map<string, Challenge>();
+    for (const challenge of challenges) {
+      challengeMap.set(challenge.id, challenge);
+    }
+
     const challengesToExpire: UserChallenge[] = [];
 
     for (const userChallenge of allUserChallenges) {
-      const challenge = await userChallenge.challenge.fetch();
-      if (challenge.isExpired) {
+      const challenge = challengeMap.get(userChallenge.challenge.id);
+      if (challenge && challenge.isExpired) {
         challengesToExpire.push(userChallenge);
       }
     }
