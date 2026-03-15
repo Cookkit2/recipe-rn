@@ -1,4 +1,5 @@
 import { Q } from "@nozbe/watermelondb";
+import Challenge from "../models/Challenge";
 import UserChallenge, { type UserChallengeData } from "../models/UserChallenge";
 import { BaseRepository, type SearchOptions } from "./BaseRepository";
 import { database } from "../database";
@@ -196,12 +197,24 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
   // Note: This requires joining with challenge table to get XP values
   async getTotalXPEarned(): Promise<number> {
     const completedChallenges = await this.getCompletedChallenges();
-    let totalXP = 0;
+    if (completedChallenges.length === 0) return 0;
 
+    // Extract unique challenge IDs
+    const challengeIds = [...new Set(completedChallenges.map((uc) => uc.challengeId))];
+
+    // Fetch all related challenges in one query to avoid N+1 problem
+    const challenges = await database.collections
+      .get<Challenge>("challenge")
+      .query(Q.where("id", Q.oneOf(challengeIds)))
+      .fetch();
+
+    // Create a lookup map for O(1) access
+    const challengeMap = new Map(challenges.map((c) => [c.id, c.xpValue]));
+
+    let totalXP = 0;
     for (const userChallenge of completedChallenges) {
-      // Need to fetch the related challenge to get XP
-      const challenge = await userChallenge.challenge.fetch();
-      totalXP += challenge.xpValue;
+      const xp = challengeMap.get(userChallenge.challengeId) || 0;
+      totalXP += xp;
     }
 
     return totalXP;
