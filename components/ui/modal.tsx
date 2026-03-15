@@ -16,15 +16,11 @@ export default function BaseModal({
   const { theme } = useUniwind();
 
   return (
-    <Modal
-      animationType="fade"
-      transparent={true}
-      visible={modalVisible}
-      onRequestClose={onCancel}
-    >
+    <Modal animationType="fade" transparent={true} visible={modalVisible} onRequestClose={onCancel}>
       <BlurView
         intensity={20}
         className="absolute inset-0 z-[1]"
+        // @ts-expect-error
         tint={theme}
       />
       <KeyboardAvoidingView

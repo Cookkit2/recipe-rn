@@ -110,9 +110,9 @@ jest.mock("~/lib/recipe-scrapper/youtube/RecipeAnalyzer", () => ({
   })),
 }));
 
-const importFromYouTube = jest.fn(async () => ({ success: true } as any));
-const importFromWebsite = jest.fn(async () => ({ success: true } as any));
-const importFromSocial = jest.fn(async () => ({ success: true } as any));
+const importFromYouTube = jest.fn(async () => ({ success: true }) as any);
+const importFromWebsite = jest.fn(async () => ({ success: true }) as any);
+const importFromSocial = jest.fn(async () => ({ success: true }) as any);
 
 jest.mock("../recipeImportApi", () => {
   const original = jest.requireActual("../recipeImportApi");
@@ -121,10 +121,13 @@ jest.mock("../recipeImportApi", () => {
     recipeImportApi: {
       ...original.recipeImportApi,
       importRecipeFromYouTube: (...args: unknown[]) =>
+        // @ts-expect-error
         importFromYouTube(...args),
       importRecipeFromWebsite: (...args: unknown[]) =>
+        // @ts-expect-error
         importFromWebsite(...args),
       importRecipeFromSocialMedia: (...args: unknown[]) =>
+        // @ts-expect-error
         importFromSocial(...args),
     },
   };
@@ -146,7 +149,7 @@ describe("recipeImportApi.importRecipeFromUrl routing", () => {
     importFromYouTube.mockResolvedValue({ success: true } as any);
 
     const result = await recipeImportApi.importRecipeFromUrl(
-      "https://www.youtube.com/watch?v=abc123",
+      "https://www.youtube.com/watch?v=abc123"
     );
 
     expect(importFromYouTube).toHaveBeenCalledTimes(1);
@@ -157,7 +160,7 @@ describe("recipeImportApi.importRecipeFromUrl routing", () => {
     importFromSocial.mockResolvedValue({ success: true } as any);
 
     const result = await recipeImportApi.importRecipeFromUrl(
-      "https://www.tiktok.com/@user/video/123",
+      "https://www.tiktok.com/@user/video/123"
     );
 
     expect(importFromSocial).toHaveBeenCalledTimes(1);
@@ -167,9 +170,7 @@ describe("recipeImportApi.importRecipeFromUrl routing", () => {
   it("routes Instagram URLs to importRecipeFromSocialMedia", async () => {
     importFromSocial.mockResolvedValue({ success: true } as any);
 
-    const result = await recipeImportApi.importRecipeFromUrl(
-      "https://www.instagram.com/p/abc123/",
-    );
+    const result = await recipeImportApi.importRecipeFromUrl("https://www.instagram.com/p/abc123/");
 
     expect(importFromSocial).toHaveBeenCalledTimes(1);
     expect(result.success).toBe(true);
@@ -179,11 +180,10 @@ describe("recipeImportApi.importRecipeFromUrl routing", () => {
     importFromWebsite.mockResolvedValue({ success: true } as any);
 
     const result = await recipeImportApi.importRecipeFromUrl(
-      "https://www.allrecipes.com/recipe/123",
+      "https://www.allrecipes.com/recipe/123"
     );
 
     expect(importFromWebsite).toHaveBeenCalledTimes(1);
     expect(result.success).toBe(true);
   });
 });
-

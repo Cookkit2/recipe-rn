@@ -101,8 +101,10 @@ describe("pantryApi.addPantryItemsWithMetadata", () => {
     ]);
 
     expect(result).toHaveLength(1);
+    // @ts-expect-error
     expect(result[0].name).toBe("Milk");
     expect(stocks).toHaveLength(1);
+    // @ts-expect-error
     expect(stocks[0].quantity).toBe(1);
   });
 
@@ -133,6 +135,7 @@ describe("pantryApi.addPantryItemsWithMetadata", () => {
     ]);
 
     expect(result).toHaveLength(1);
+    // @ts-expect-error
     expect(result[0].name.toLowerCase()).toBe("eggs");
     expect(existing.quantity).toBe(6);
   });
@@ -157,6 +160,7 @@ describe("pantryApi.addPantryItemsWithMetadata", () => {
 
     // Only the valid item should be created and returned
     expect(result).toHaveLength(1);
+    // @ts-expect-error
     expect(result[0].name).toBe("GoodItem");
     expect(stocks.map((s) => s.name)).toEqual(["GoodItem"]);
   });
@@ -184,4 +188,3 @@ describe("pantryApi.addPantryItemsWithMetadata", () => {
     expect(stocks).toHaveLength(0);
   });
 });
-

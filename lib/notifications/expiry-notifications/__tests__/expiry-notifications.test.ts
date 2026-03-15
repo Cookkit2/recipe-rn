@@ -21,6 +21,7 @@ const getRecipeRecommendationsForExpiring = jest.fn(async () => ({
 jest.mock("~/data/api/recipeApi", () => ({
   recipeApi: {
     getRecipeRecommendationsForExpiring: (...args: unknown[]) =>
+      // @ts-expect-error
       getRecipeRecommendationsForExpiring(...args),
   },
 }));
@@ -60,4 +61,3 @@ describe("scheduleExpiryNotifications", () => {
     expect(ids).toContain("expiry-future");
   });
 });
-

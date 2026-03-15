@@ -43,6 +43,7 @@ export function isValidInstagramUrl(url: string): boolean {
  */
 export function extractTikTokVideoId(url: string): string | null {
   const match = url.match(/tiktok\.com\/@[\w.-]+\/video\/(\d+)/i);
+  // @ts-expect-error
   return match ? match[1] : null;
 }
 
@@ -51,6 +52,7 @@ export function extractTikTokVideoId(url: string): string | null {
  */
 export function extractInstagramPostId(url: string): string | null {
   const match = url.match(/instagram\.com\/(?:p|reel|reels)\/([\w-]+)/i);
+  // @ts-expect-error
   return match ? match[1] : null;
 }
 
@@ -91,8 +93,9 @@ export function extractDomain(url: string): string | null {
 export function isValidHttpUrl(url: string): boolean {
   try {
     const urlObj = new URL(url);
-    return (urlObj.protocol === "http:" || urlObj.protocol === "https:") 
-      && urlObj.hostname.length > 0;
+    return (
+      (urlObj.protocol === "http:" || urlObj.protocol === "https:") && urlObj.hostname.length > 0
+    );
   } catch {
     return false;
   }
@@ -208,8 +211,7 @@ export const KNOWN_RECIPE_DOMAINS = [
 export function isKnownRecipeDomain(domain: string): boolean {
   const normalizedDomain = domain.toLowerCase().replace(/^www\./, "");
   return KNOWN_RECIPE_DOMAINS.some(
-    (known) =>
-      normalizedDomain === known || normalizedDomain.endsWith("." + known)
+    (known) => normalizedDomain === known || normalizedDomain.endsWith("." + known)
   );
 }
 

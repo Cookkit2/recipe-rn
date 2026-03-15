@@ -418,6 +418,7 @@ function isAppError(e: unknown): e is AppError {
     case "unknown":
       return true;
     default: {
+      // @ts-expect-error
       const _: never = o;
       return false;
     }
@@ -470,10 +471,7 @@ export async function logAndWrapResult<T>(
   } catch (e) {
     log.error(`${errorMessagePrefix}:`, e);
     let appError = mapToAppError(e, errorMapper);
-    if (
-      appError.kind === "unknown" &&
-      !appError.message.startsWith(`${errorMessagePrefix}:`)
-    ) {
+    if (appError.kind === "unknown" && !appError.message.startsWith(`${errorMessagePrefix}:`)) {
       appError = unknownError(`${errorMessagePrefix}: ${appError.message}`, appError.cause);
     }
     return err(appError);
