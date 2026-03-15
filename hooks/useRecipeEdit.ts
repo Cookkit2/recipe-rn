@@ -210,7 +210,7 @@ export function useRecipeEdit(recipe: Recipe | null, options: UseRecipeEditOptio
       setWorkingCopy((prev) => {
         if (!prev) return prev;
         const newIngredients = [...prev.ingredients];
-        newIngredients[index] = { ...newIngredients[index], ...updates };
+        newIngredients[index] = { ...newIngredients[index], ...updates } as EditableIngredient;
         setHasUnsavedChanges(true);
         return { ...prev, ingredients: newIngredients };
       });
@@ -258,7 +258,7 @@ export function useRecipeEdit(recipe: Recipe | null, options: UseRecipeEditOptio
       setWorkingCopy((prev) => {
         if (!prev) return prev;
         const newSteps = [...prev.steps];
-        newSteps[index] = { ...newSteps[index], ...updates };
+        newSteps[index] = { ...newSteps[index], ...updates } as EditableStep;
         setHasUnsavedChanges(true);
         return { ...prev, steps: newSteps };
       });
@@ -307,7 +307,7 @@ export function useRecipeEdit(recipe: Recipe | null, options: UseRecipeEditOptio
         if (!prev) return prev;
         const newSteps = [...prev.steps];
         const [movedStep] = newSteps.splice(fromIndex, 1);
-        newSteps.splice(toIndex, 0, movedStep);
+        newSteps.splice(toIndex, 0, movedStep as EditableStep);
 
         // Renumber all steps
         const renumberedSteps = newSteps.map((step, i) => ({
