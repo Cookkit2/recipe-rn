@@ -1,3 +1,5 @@
+/// <reference types="jest" />
+
 jest.mock("~/utils/logger", () => ({
   log: {
     info: jest.fn(),
