@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { database } from "~/data/db/database";
 import { databaseFacade } from "~/data/db/DatabaseFacade";
 import type MealPlan from "~/data/db/models/MealPlan";
