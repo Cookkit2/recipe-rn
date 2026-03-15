@@ -218,14 +218,12 @@ export default function DebugScreen() {
         onPress: async () => {
           try {
             setIsLoading(true);
-            // Note: clearAllData clears everything.
-            // TODO: Add clearRecipes() method to DatabaseFacade if needed
-            await databaseFacade.clearAllData();
+            await databaseFacade.clearRecipes();
 
             // Refresh contexts after clearing data
             await Promise.all([refresh()]);
 
-            Alert.alert("Success!", "All data cleared (recipes, stock, etc.)");
+            Alert.alert("Success!", "Recipes cleared");
             await checkStats();
           } catch (error) {
             Alert.alert("Error", "Failed to clear data");

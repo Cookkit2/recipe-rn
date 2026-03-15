@@ -1240,6 +1240,33 @@ export class DatabaseFacade {
   }
 
   /**
+   * Clear all recipes and related cooking history from the database
+   */
+  async clearRecipes(): Promise<void> {
+    if (!database) {
+      throw new Error("Database is not initialized");
+    }
+
+    const collections = ["recipe", "recipe_step", "recipe_ingredient", "cooking_history"];
+
+    // Batch all deletions in a single write to avoid flooding the write queue
+    await database.write(async () => {
+      for (const collectionName of collections) {
+        try {
+          const collection = database.collections.get(collectionName);
+          const allRecords = await collection.query().fetch();
+
+          if (allRecords.length > 0) {
+            await Promise.all(allRecords.map((record) => record.destroyPermanently()));
+          }
+        } catch (error) {
+          log.warn(`⚠️ Error clearing ${collectionName}:`, error);
+        }
+      }
+    });
+  }
+
+  /**
    * Clear all data from the database
    */
   async clearAllData(): Promise<void> {
