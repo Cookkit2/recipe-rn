@@ -231,27 +231,27 @@ export const pantryApi = {
 
         // Merge categories
         if (item.categories) {
-           existing.categories = [...(existing.categories || []), ...item.categories];
-           // Deduplicate by name
-           const seen = new Set<string>();
-           existing.categories = existing.categories.filter(c => {
-               if (seen.has(c.name)) return false;
-               seen.add(c.name);
-               return true;
-           });
+          existing.categories = [...(existing.categories || []), ...item.categories];
+          // Deduplicate by name
+          const seen = new Set<string>();
+          existing.categories = existing.categories.filter((c) => {
+            if (seen.has(c.name)) return false;
+            seen.add(c.name);
+            return true;
+          });
         }
 
         // Merge synonyms
         if (item.synonyms) {
-            existing.synonyms = [...(existing.synonyms || []), ...item.synonyms];
-            // Deduplicate by synonym string
-            const seen = new Set<string>();
-            existing.synonyms = existing.synonyms.filter(s => {
-                const lowerSyn = s.synonym.toLowerCase();
-                if (seen.has(lowerSyn)) return false;
-                seen.add(lowerSyn);
-                return true;
-            });
+          existing.synonyms = [...(existing.synonyms || []), ...item.synonyms];
+          // Deduplicate by synonym string
+          const seen = new Set<string>();
+          existing.synonyms = existing.synonyms.filter((s) => {
+            const lowerSyn = s.synonym.toLowerCase();
+            if (seen.has(lowerSyn)) return false;
+            seen.add(lowerSyn);
+            return true;
+          });
         }
       } else {
         aggregatedItems.set(lowerName, { ...item }); // clone to avoid mutating input directly if nested
@@ -531,7 +531,6 @@ const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
   try {
     // Add timeout to prevent hanging
     const synonymRecords = await Promise.race([
-
       stock.synonyms.fetch(),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("Synonym fetch timeout")), 3000)
