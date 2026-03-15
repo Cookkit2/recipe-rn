@@ -6,6 +6,7 @@
  */
 
 import { Share, Platform } from "react-native";
+import * as StoreReview from "expo-store-review";
 import type { AchievementProgress } from "~/types/achievements";
 import { ACHIEVEMENT_CATEGORY_DISPLAY } from "~/types/achievements";
 
@@ -42,11 +43,11 @@ function getAppName(): string {
 }
 
 /**
- * Get app store URL (placeholder for future use)
+ * Get app store URL or fallback to website
  */
 function getAppStoreUrl(): string {
-  // TODO: Replace with actual app store URL when available
-  return "https://cookkit.app";
+  const storeUrl = StoreReview.storeUrl();
+  return storeUrl || "https://cookkit.app";
 }
 
 /**
@@ -260,7 +261,7 @@ export async function shareAchievement(
       {
         title: content.title,
         message: content.message,
-        url: content.url,
+        url: content.url ?? undefined,
       },
       {
         dialogTitle: options?.dialogTitle || "Share Achievement",
@@ -306,7 +307,7 @@ export async function shareMultipleAchievements(
       {
         title: content.title,
         message: content.message,
-        url: content.url,
+        url: content.url ?? undefined,
       },
       {
         dialogTitle: options?.dialogTitle || "Share Achievements",
@@ -347,7 +348,7 @@ export async function shareStreak(
       {
         title: content.title,
         message: content.message,
-        url: content.url,
+        url: content.url ?? undefined,
       },
       {
         dialogTitle: options?.dialogTitle || "Share Streak",
@@ -392,7 +393,7 @@ export async function shareContent(
       {
         title: content.title,
         message: content.message,
-        url: content.url,
+        url: content.url ?? undefined,
       },
       {
         dialogTitle: options?.dialogTitle || "Share",
