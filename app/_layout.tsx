@@ -39,8 +39,6 @@ function AnimatedStack() {
   const router = useRouter();
   const colors = useColors();
 
-  // const [isModalActive, setIsModalActive] = useState(false);
-  // const [canBlur, setCanBlur] = useState(false);
 
   // Register the navigation container with Sentry for automatic route tracking
   const ref = useNavigationContainerRef();
