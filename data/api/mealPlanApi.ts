@@ -261,15 +261,31 @@ export const mealPlanApi = {
           const stockRepo = getStockRepository();
           const stockItems = await stockRepo.getAllWithSynonyms();
 
+          // Optimization: Pre-compute a map for exact name and synonym matches (O(1) lookup)
+          const stockMap = new Map<string, (typeof stockItems)[0]>();
+          for (const item of stockItems) {
+            stockMap.set(item.name.toLowerCase().trim(), item);
+            if (item.synonyms) {
+              for (const syn of item.synonyms) {
+                stockMap.set(syn.toLowerCase().trim(), item);
+              }
+            }
+          }
+
           const itemsToHide: { name: string; isDeleted: boolean }[] = [];
 
           for (const ingredient of result.recipe.ingredients) {
             const baseServings = result.recipe.servings || 1;
             const neededQuantity = (ingredient.quantity / baseServings) * result.servings;
+            const ingredientNameLower = ingredient.name.toLowerCase().trim();
 
-            const matchingStock = stockItems.find((p) =>
-              isIngredientMatch(p.name, ingredient.name, p.synonyms)
-            );
+            let matchingStock = stockMap.get(ingredientNameLower);
+
+            if (!matchingStock) {
+              matchingStock = stockItems.find((p) =>
+                isIngredientMatch(p.name, ingredient.name, p.synonyms)
+              );
+            }
 
             if (matchingStock) {
               // Check if we have enough
@@ -324,15 +340,31 @@ export const mealPlanApi = {
           const stockRepo = getStockRepository();
           const stockItems = await stockRepo.getAllWithSynonyms();
 
+          // Optimization: Pre-compute a map for exact name and synonym matches (O(1) lookup)
+          const stockMap = new Map<string, (typeof stockItems)[0]>();
+          for (const item of stockItems) {
+            stockMap.set(item.name.toLowerCase().trim(), item);
+            if (item.synonyms) {
+              for (const syn of item.synonyms) {
+                stockMap.set(syn.toLowerCase().trim(), item);
+              }
+            }
+          }
+
           const itemsToHide: { name: string; isDeleted: boolean }[] = [];
 
           for (const ingredient of result.recipe.ingredients) {
             const baseServings = result.recipe.servings || 1;
             const neededQuantity = (ingredient.quantity / baseServings) * result.servings;
+            const ingredientNameLower = ingredient.name.toLowerCase().trim();
 
-            const matchingStock = stockItems.find((p) =>
-              isIngredientMatch(p.name, ingredient.name, p.synonyms)
-            );
+            let matchingStock = stockMap.get(ingredientNameLower);
+
+            if (!matchingStock) {
+              matchingStock = stockItems.find((p) =>
+                isIngredientMatch(p.name, ingredient.name, p.synonyms)
+              );
+            }
 
             if (matchingStock && matchingStock.quantity >= neededQuantity) {
               itemsToHide.push({ name: ingredient.name, isDeleted: true });
