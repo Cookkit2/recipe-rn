@@ -17,7 +17,7 @@ export default function BaseModal({
 
   return (
     <Modal animationType="fade" transparent={true} visible={modalVisible} onRequestClose={onCancel}>
-      <BlurView intensity={20} className="absolute inset-0 z-[1]" tint={theme} />
+      <BlurView intensity={20} className="absolute inset-0 z-[1]" tint={theme === 'dark' ? 'dark' : 'light'} />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1 z-[2]"
