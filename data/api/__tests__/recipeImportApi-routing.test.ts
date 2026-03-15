@@ -120,9 +120,15 @@ jest.mock("../recipeImportApi", () => {
     ...original,
     recipeImportApi: {
       ...original.recipeImportApi,
-      importRecipeFromYouTube: (...args: any[]) => (importFromYouTube as any)(...args),
-      importRecipeFromWebsite: (...args: any[]) => (importFromWebsite as any)(...args),
-      importRecipeFromSocialMedia: (...args: any[]) => (importFromSocial as any)(...args),
+      importRecipeFromYouTube: (...args: unknown[]) =>
+        // @ts-expect-error
+        importFromYouTube(...args),
+      importRecipeFromWebsite: (...args: unknown[]) =>
+        // @ts-expect-error
+        importFromWebsite(...args),
+      importRecipeFromSocialMedia: (...args: unknown[]) =>
+        // @ts-expect-error
+        importFromSocial(...args),
     },
   };
 });

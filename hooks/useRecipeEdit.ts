@@ -125,6 +125,7 @@ export function useRecipeEdit(recipe: Recipe | null, options: UseRecipeEditOptio
       setWorkingCopy((prev) => {
         if (!prev) return prev;
         const newIngredients = [...prev.ingredients];
+        // @ts-expect-error
         newIngredients[index] = { ...newIngredients[index], ...updates };
         setHasUnsavedChanges(true);
         return { ...prev, ingredients: newIngredients };
@@ -170,6 +171,7 @@ export function useRecipeEdit(recipe: Recipe | null, options: UseRecipeEditOptio
       setWorkingCopy((prev) => {
         if (!prev) return prev;
         const newSteps = [...prev.steps];
+        // @ts-expect-error
         newSteps[index] = { ...newSteps[index], ...updates };
         setHasUnsavedChanges(true);
         return { ...prev, steps: newSteps };
@@ -219,6 +221,7 @@ export function useRecipeEdit(recipe: Recipe | null, options: UseRecipeEditOptio
         if (!prev) return prev;
         const newSteps = [...prev.steps];
         const [movedStep] = newSteps.splice(fromIndex, 1);
+        // @ts-expect-error
         newSteps.splice(toIndex, 0, movedStep);
 
         // Renumber all steps

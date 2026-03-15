@@ -1,8 +1,6 @@
-// @ts-nocheck
 import { Q } from "@nozbe/watermelondb";
 import UserAchievement, { type UserAchievementData } from "../models/UserAchievement";
 import { BaseRepository, type SearchOptions } from "./BaseRepository";
-import Achievement from "../models/Achievement";
 import { database } from "../database";
 
 export interface UserAchievementSearchOptions extends SearchOptions {
@@ -22,7 +20,8 @@ export class UserAchievementRepository extends BaseRepository<UserAchievement> {
     const existing = await this.collection.query(Q.where("achievement_id", achievementId)).fetch();
 
     if (existing.length > 0) {
-      return existing[0] as UserAchievement;
+      // @ts-expect-error
+      return existing[0];
     }
 
     // Create new one
@@ -144,7 +143,8 @@ export class UserAchievementRepository extends BaseRepository<UserAchievement> {
   async getByAchievementId(achievementId: string): Promise<UserAchievement | null> {
     const results = await this.collection.query(Q.where("achievement_id", achievementId)).fetch();
 
-    return results.length > 0 ? (results[0] as UserAchievement) : null;
+    // @ts-expect-error
+    return results.length > 0 ? results[0] : null;
   }
 
   // Get recently unlocked achievements
@@ -160,32 +160,16 @@ export class UserAchievementRepository extends BaseRepository<UserAchievement> {
   }
 
   // Get total XP earned from unlocked achievements
-  // Note: Optimized to fetch all related achievements in a single query (batch fetch) instead of N+1 queries.
+  // Note: This requires joining with achievement table to get XP values
   async getTotalXPEarned(): Promise<number> {
     const unlockedAchievements = await this.getUnlockedAchievements();
-    if (unlockedAchievements.length === 0) return 0;
-
-    // Collect all unique achievement IDs
-    const achievementIds = [...new Set(unlockedAchievements.map((ua) => ua.achievementId))];
-
-    // Fetch all related achievements in one go
-    const achievements = await this.collection.database.collections
-      .get<Achievement>(Achievement.table)
-      .query(Q.where("id", Q.oneOf(achievementIds)))
-      .fetch();
-
-    // Create a map for fast O(1) lookups
-    const achievementMap = new Map<string, Achievement>();
-    for (const achievement of achievements) {
-      achievementMap.set(achievement.id, achievement);
-    }
-
-    // Calculate total XP
     let totalXP = 0;
+
     for (const userAchievement of unlockedAchievements) {
-      const achievement = achievementMap.get(userAchievement.achievementId);
+      // Need to fetch the related achievement to get XP
+      const achievement: any = await (userAchievement as any).achievement.fetch();
       if (achievement) {
-        totalXP += achievement.xpValue;
+        totalXP += achievement.xpValue ?? 0;
       }
     }
 

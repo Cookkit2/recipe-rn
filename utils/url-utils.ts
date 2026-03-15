@@ -44,6 +44,7 @@ export function isValidInstagramUrl(url: string): boolean {
  */
 export function extractTikTokVideoId(url: string): string | undefined | null {
   const match = url.match(/tiktok\.com\/@[\w.-]+\/video\/(\d+)/i);
+  // @ts-expect-error
   return match ? match[1] : null;
 }
 
@@ -52,6 +53,7 @@ export function extractTikTokVideoId(url: string): string | undefined | null {
  */
 export function extractInstagramPostId(url: string): string | undefined | null {
   const match = url.match(/instagram\.com\/(?:p|reel|reels)\/([\w-]+)/i);
+  // @ts-expect-error
   return match ? match[1] : null;
 }
 

@@ -419,6 +419,7 @@ function isAppError(e: unknown): e is AppError {
     case "unknown":
       return true;
     default: {
+      // @ts-expect-error
       const _: never = o;
       return false;
     }

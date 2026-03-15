@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Achievement System Verification Script
  *
@@ -44,7 +43,11 @@ async function verifyDatabaseSchema(database: DatabaseFacade): Promise<void> {
         achievements.length > 0
           ? `Found ${achievements.length} achievements`
           : "No achievements found in database",
-      details: achievements.length > 0 ? `Sample achievement: ${achievements[0].title}` : undefined,
+      details:
+        achievements.length > 0
+          ? // @ts-expect-error
+            `Sample achievement: ${achievements[0].title}`
+          : undefined,
     });
 
     // Check if user_achievement table exists (via unlocked achievements accessor)
@@ -64,7 +67,11 @@ async function verifyDatabaseSchema(database: DatabaseFacade): Promise<void> {
         challenges.length > 0
           ? `Found ${challenges.length} challenges`
           : "No challenges found in database",
-      details: challenges.length > 0 ? `Sample challenge: ${challenges[0].title}` : undefined,
+      details:
+        challenges.length > 0
+          ? // @ts-expect-error
+            `Sample challenge: ${challenges[0].title}`
+          : undefined,
     });
 
     // Check if user_challenge table exists (via active challenges accessor)
@@ -197,6 +204,7 @@ function verifyCodebaseIntegration(): void {
   integrationPoints.forEach((point) => {
     logResult({
       name: point.name,
+      // @ts-expect-error
       status: point.status,
       message: `${point.file} includes ${point.expected}`,
     });

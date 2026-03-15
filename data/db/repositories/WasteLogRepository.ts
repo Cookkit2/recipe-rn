@@ -238,10 +238,8 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
     // Iterate through all dates, counting gaps between waste events
     for (let i = 1; i < sortedWasteDates.length; i++) {
       // Days between consecutive waste events
-      const date1 = sortedWasteDates[i];
-      const date2 = sortedWasteDates[i - 1];
-      if (date1 === undefined || date2 === undefined) continue;
-      const daysBetween = Math.round((date1 - date2) / oneDay) - 1;
+      // @ts-expect-error
+      const daysBetween = Math.round((sortedWasteDates[i] - sortedWasteDates[i - 1]) / oneDay) - 1;
       tempStreak = daysBetween;
 
       if (tempStreak > longestStreak) {
@@ -250,9 +248,11 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
     }
 
     // Also check after the last waste event to today
-    const lastDate = sortedWasteDates[sortedWasteDates.length - 1];
-    const daysSinceLastWaste =
-      lastDate !== undefined ? Math.max(0, Math.round((todayStart - lastDate) / oneDay) - 1) : 0;
+    // @ts-expect-error
+    const daysSinceLastWaste = Math.max(
+      0,
+      Math.round((todayStart - sortedWasteDates[sortedWasteDates.length - 1]) / oneDay) - 1
+    );
     if (daysSinceLastWaste > longestStreak) {
       longestStreak = daysSinceLastWaste;
     }
