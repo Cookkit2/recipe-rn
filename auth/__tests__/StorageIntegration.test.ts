@@ -51,7 +51,7 @@ import { StorageFactory } from "~/data/storage";
 import { AuthStorageManager } from "../StorageIntegration";
 
 const getMockStorage = (): typeof mockStorage =>
-  ((StorageFactory.initialize as jest.Mock).mock.results[0]?.value ??
+  ((StorageFactory.initialize as any).mock.results[0]?.value ??
     mockStorage) as typeof mockStorage;
 
 describe("AuthStorageManager", () => {
