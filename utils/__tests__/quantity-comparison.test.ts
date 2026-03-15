@@ -1,3 +1,4 @@
+import { jest, describe, beforeEach, it, expect } from "@jest/globals";
 // Unit tests for quantity comparison utilities
 import {
   compareQuantities,
