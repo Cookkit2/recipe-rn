@@ -51,7 +51,10 @@ function getAppStoreUrl(): string {
 /**
  * Format achievement share text with emojis and details
  */
-function formatAchievementText(achievement: AchievementProgress, userName?: string): string {
+function formatAchievementText(
+  achievement: AchievementProgress,
+  userName?: string
+): string {
   const { achievement: ach, progress, progressPercentage, isUnlocked } = achievement;
 
   // Header with emoji
@@ -159,7 +162,10 @@ export function generateMultiAchievementShareContent(
   const { userName, includeUrl = true } = options ?? {};
 
   const unlockedCount = achievements.filter((a) => a.isUnlocked).length;
-  const totalXP = achievements.reduce((sum, a) => sum + (a.achievement.xp || 0), 0);
+  const totalXP = achievements.reduce(
+    (sum, a) => sum + (a.achievement.xp || 0),
+    0
+  );
 
   const userPrefix = userName ? `${userName} ` : "I ";
   const icons = achievements.map((a) => a.achievement.icon).join(" ");
@@ -267,12 +273,11 @@ export async function shareAchievement(
       }
     );
 
-    const action: "shared" | "dismissed" =
-      result.action === "sharedAction" ? "shared" : "dismissed";
-    return {
-      action,
-      activityType: result.activityType,
-    };
+    if (result.action === "sharedAction") {
+      return { action: "shared", activityType: result.activityType || undefined };
+    } else {
+      return { action: "dismissed" };
+    }
   } catch (error) {
     // User cancelled the share sheet - this is expected behavior
     if (error instanceof Error && error.message.includes("cancelled")) {
@@ -313,12 +318,11 @@ export async function shareMultipleAchievements(
       }
     );
 
-    const action: "shared" | "dismissed" =
-      result.action === "sharedAction" ? "shared" : "dismissed";
-    return {
-      action,
-      activityType: result.activityType,
-    };
+    if (result.action === "sharedAction") {
+      return { action: "shared", activityType: result.activityType || undefined };
+    } else {
+      return { action: "dismissed" };
+    }
   } catch (error) {
     if (error instanceof Error && error.message.includes("cancelled")) {
       return { action: "dismissed" };
@@ -354,12 +358,11 @@ export async function shareStreak(
       }
     );
 
-    const action: "shared" | "dismissed" =
-      result.action === "sharedAction" ? "shared" : "dismissed";
-    return {
-      action,
-      activityType: result.activityType,
-    };
+    if (result.action === "sharedAction") {
+      return { action: "shared", activityType: result.activityType || undefined };
+    } else {
+      return { action: "dismissed" };
+    }
   } catch (error) {
     if (error instanceof Error && error.message.includes("cancelled")) {
       return { action: "dismissed" };
@@ -399,12 +402,11 @@ export async function shareContent(
       }
     );
 
-    const action: "shared" | "dismissed" =
-      result.action === "sharedAction" ? "shared" : "dismissed";
-    return {
-      action,
-      activityType: result.activityType,
-    };
+    if (result.action === "sharedAction") {
+      return { action: "shared", activityType: result.activityType || undefined };
+    } else {
+      return { action: "dismissed" };
+    }
   } catch (error) {
     if (error instanceof Error && error.message.includes("cancelled")) {
       return { action: "dismissed" };
@@ -420,9 +422,14 @@ export async function shareContent(
 /**
  * Get share text for copying to clipboard (if share sheet is not used)
  */
-export function getShareTextForCopy(achievement: AchievementProgress, userName?: string): string {
+export function getShareTextForCopy(
+  achievement: AchievementProgress,
+  userName?: string
+): string {
   const content = generateAchievementShareContent(achievement, { userName });
-  return [content.title, content.message, content.url].filter(Boolean).join("\n\n");
+  return [content.title, content.message, content.url]
+    .filter(Boolean)
+    .join("\n\n");
 }
 
 /**
