@@ -670,9 +670,13 @@ export const mealPlanApi = {
 
       const itemsWithRecipes: MealPlanItemWithRecipe[] = [];
 
+      // Extract unique recipe IDs to fetch them in a single batch query
+      const recipeIds = Array.from(new Set(mealPlanItems.map(item => item.recipeId)));
+      const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
+
       for (const item of mealPlanItems) {
         try {
-          const recipeDetails = await databaseFacade.getRecipeWithDetails(item.recipeId);
+          const recipeDetails = recipeDetailsMap.get(item.recipeId);
           if (!recipeDetails) {
             log.warn(`Recipe not found for meal plan item ${item.id}`);
             continue;
@@ -681,10 +685,10 @@ export const mealPlanApi = {
           const { recipe, ingredients } = recipeDetails;
 
           const recipeData = {
-            id: recipe.id,
-            title: recipe.title,
+            id: recipe.id || item.recipeId,
+            title: recipe.title || "Unknown Recipe",
             imageUrl: recipe.imageUrl || "",
-            servings: recipe.servings,
+            servings: recipe.servings || 0,
             ingredients: ingredients.map((ing: any) => ({
               name: ing.name,
               quantity: ing.quantity,
@@ -761,15 +765,15 @@ export const mealPlanApi = {
         };
       }
 
-      const date = updated.date instanceof Date ? updated.date : new Date((updated as { date?: number }).date ?? Date.now());
-      const mealSlot = updated.mealSlot ?? "dinner";
+      const itemDate = updated.date instanceof Date ? updated.date : new Date((updated as { date?: number }).date ?? Date.now());
+      const itemMealSlot = updated.mealSlot ?? "dinner";
 
       return {
         id: updated.id,
         recipeId: updated.recipeId,
         servings: updated.servings,
-        date,
-        mealSlot,
+        date: itemDate,
+        mealSlot: itemMealSlot,
         templateId: updated.templateId,
         createdAt: updated.createdAt,
         recipe: recipeData,
