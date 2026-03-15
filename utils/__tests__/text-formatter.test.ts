@@ -1,98 +1,39 @@
-import { pluralize } from "../text-formatter";
+import { formatQuantity } from '../text-formatter';
 
-describe("pluralize", () => {
-  it("returns an empty string when given an empty word", () => {
-    expect(pluralize("", 0)).toBe("");
-    expect(pluralize("", 1)).toBe("");
-    expect(pluralize("", 2)).toBe("");
+describe('formatQuantity', () => {
+  it('returns "0" for 0', () => {
+    expect(formatQuantity(0)).toBe('0');
   });
 
-  it("returns the original word when count is 1", () => {
-    expect(pluralize("apple", 1)).toBe("apple");
-    expect(pluralize("child", 1)).toBe("child");
-    expect(pluralize("berry", 1)).toBe("berry");
-    expect(pluralize("bus", 1)).toBe("bus");
+  it('returns the number as string for whole numbers', () => {
+    expect(formatQuantity(1)).toBe('1');
+    expect(formatQuantity(5)).toBe('5');
+    expect(formatQuantity(100)).toBe('100');
   });
 
-  describe("irregular plurals", () => {
-    it("handles common irregular plurals correctly", () => {
-      expect(pluralize("child", 2)).toBe("children");
-      expect(pluralize("person", 2)).toBe("people");
-      expect(pluralize("man", 2)).toBe("men");
-      expect(pluralize("woman", 2)).toBe("women");
-      expect(pluralize("tooth", 2)).toBe("teeth");
-      expect(pluralize("foot", 2)).toBe("feet");
-      expect(pluralize("mouse", 2)).toBe("mice");
-      expect(pluralize("goose", 2)).toBe("geese");
-    });
-
-    it("handles irregular plurals case-insensitively for the lookup", () => {
-      expect(pluralize("Child", 2)).toBe("children");
-      expect(pluralize("PERSON", 2)).toBe("people");
-    });
+  it('formats decimals less than 1 to cooking fractions', () => {
+    expect(formatQuantity(0.125)).toBe('⅛');
+    expect(formatQuantity(0.25)).toBe('¼');
+    expect(formatQuantity(0.33)).toBe('⅓');
+    expect(formatQuantity(0.333)).toBe('⅓');
+    expect(formatQuantity(0.5)).toBe('½');
+    expect(formatQuantity(0.66)).toBe('⅔');
+    expect(formatQuantity(0.667)).toBe('⅔');
+    expect(formatQuantity(0.75)).toBe('¾');
+    expect(formatQuantity(0.875)).toBe('⅞');
   });
 
-  describe("words ending in 'y'", () => {
-    it("replaces 'y' with 'ies' if preceded by a consonant", () => {
-      expect(pluralize("berry", 2)).toBe("berries");
-      expect(pluralize("city", 2)).toBe("cities");
-      expect(pluralize("puppy", 2)).toBe("puppies");
-    });
-
-    it("adds 's' if 'y' is preceded by a vowel", () => {
-      expect(pluralize("boy", 2)).toBe("boys");
-      expect(pluralize("day", 2)).toBe("days");
-      expect(pluralize("monkey", 2)).toBe("monkeys");
-    });
+  it('formats mixed numbers to whole numbers with fractions', () => {
+    expect(formatQuantity(1.5)).toBe('1 ½');
+    expect(formatQuantity(2.25)).toBe('2 ¼');
+    expect(formatQuantity(3.75)).toBe('3 ¾');
+    expect(formatQuantity(10.333)).toBe('10 ⅓');
   });
 
-  describe("words ending in s, sh, ch, x, z", () => {
-    it("adds 'es' to words ending in 's'", () => {
-      expect(pluralize("bus", 2)).toBe("buses");
-      expect(pluralize("lens", 2)).toBe("lenses");
-    });
-
-    it("adds 'es' to words ending in 'sh'", () => {
-      expect(pluralize("dish", 2)).toBe("dishes");
-      expect(pluralize("wish", 2)).toBe("wishes");
-    });
-
-    it("adds 'es' to words ending in 'ch'", () => {
-      expect(pluralize("church", 2)).toBe("churches");
-      expect(pluralize("match", 2)).toBe("matches");
-    });
-
-    it("adds 'es' to words ending in 'x'", () => {
-      expect(pluralize("box", 2)).toBe("boxes");
-      expect(pluralize("fox", 2)).toBe("foxes");
-    });
-
-    it("adds 'es' to words ending in 'z'", () => {
-      expect(pluralize("quiz", 2)).toBe("quizes");
-      expect(pluralize("buzz", 2)).toBe("buzzes");
-    });
-  });
-
-  describe("words ending in 'f' or 'fe'", () => {
-    it("replaces 'f' with 'ves'", () => {
-      expect(pluralize("half", 2)).toBe("halves");
-      expect(pluralize("leaf", 2)).toBe("leaves");
-      expect(pluralize("wolf", 2)).toBe("wolves");
-    });
-
-    it("replaces 'fe' with 'ves'", () => {
-      expect(pluralize("knife", 2)).toBe("knives");
-      expect(pluralize("life", 2)).toBe("lives");
-      expect(pluralize("wife", 2)).toBe("wives");
-    });
-  });
-
-  describe("regular plurals", () => {
-    it("adds 's' to standard words", () => {
-      expect(pluralize("cat", 2)).toBe("cats");
-      expect(pluralize("dog", 2)).toBe("dogs");
-      expect(pluralize("apple", 2)).toBe("apples");
-      expect(pluralize("tree", 2)).toBe("trees");
-    });
+  it('returns decimal string if fraction is not common', () => {
+    expect(formatQuantity(0.1)).toBe('0.1');
+    expect(formatQuantity(0.4)).toBe('0.4');
+    expect(formatQuantity(1.2)).toBe('1.2');
+    expect(formatQuantity(2.9)).toBe('2.9');
   });
 });

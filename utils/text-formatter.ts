@@ -226,7 +226,7 @@ export const formatQuantity = (quantity: number): string => {
     "0.875": "⅞",
   };
 
-  const decimal = (quantity % 1).toFixed(3);
+  const decimal = parseFloat((quantity % 1).toFixed(3)).toString();
   const whole = Math.floor(quantity);
   const fraction = fractionMap[decimal];
 
