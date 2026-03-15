@@ -1,12 +1,5 @@
 import React, { useState } from "react";
-import {
-  View,
-  Pressable,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-} from "react-native";
+import { View, Pressable, Alert, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { Link, router } from "expo-router";
 import { Text } from "~/components/ui/text";
 import { Button } from "~/components/ui/button";
@@ -48,8 +41,7 @@ export default function ForgotPasswordScreen() {
       } else {
         Alert.alert(
           "Reset Failed",
-          result.error?.message ||
-            "Failed to send reset email. Please try again."
+          result.error?.message || "Failed to send reset email. Please try again."
         );
       }
     } catch (error) {
@@ -66,10 +58,7 @@ export default function ForgotPasswordScreen() {
   if (emailSent) {
     return (
       <AuthContainer>
-        <AuthCard
-          title="Check Your Email"
-          subtitle="We've sent you a password reset link"
-        >
+        <AuthCard title="Check Your Email" subtitle="We've sent you a password reset link">
           <View className="space-y-6">
             {/* Success Icon */}
             <View className="items-center">
@@ -83,12 +72,10 @@ export default function ForgotPasswordScreen() {
               <Text className="text-center text-muted-foreground">
                 We've sent a password reset link to:
               </Text>
-              <Text className="text-center font-medium text-foreground">
-                {email}
-              </Text>
+              <Text className="text-center font-medium text-foreground">{email}</Text>
               <Text className="text-center text-sm text-muted-foreground">
-                Click the link in your email to reset your password. If you
-                don't see it, check your spam folder.
+                Click the link in your email to reset your password. If you don't see it, check your
+                spam folder.
               </Text>
             </View>
 
@@ -103,11 +90,7 @@ export default function ForgotPasswordScreen() {
                 <Text>Resend Email</Text>
               </Button>
 
-              <Button
-                onPress={handleBackToSignIn}
-                variant="ghost"
-                className="w-full"
-              >
+              <Button onPress={handleBackToSignIn} variant="ghost" className="w-full">
                 <Text>Back to Sign In</Text>
               </Button>
             </View>
@@ -128,10 +111,7 @@ export default function ForgotPasswordScreen() {
         showsVerticalScrollIndicator={false}
       >
         <AuthContainer>
-          <AuthCard
-            title="Reset Password"
-            subtitle="Enter your email to receive a reset link"
-          >
+          <AuthCard title="Reset Password" subtitle="Enter your email to receive a reset link">
             <View className="space-y-6">
               {/* Back Button */}
               <Pressable
@@ -139,9 +119,7 @@ export default function ForgotPasswordScreen() {
                 className="flex-row items-center space-x-2 -mt-2"
               >
                 <ArrowLeftIcon size={16} className="text-muted-foreground" />
-                <Text className="text-sm text-muted-foreground">
-                  Back to Sign In
-                </Text>
+                <Text className="text-sm text-muted-foreground">Back to Sign In</Text>
               </Pressable>
 
               {/* Email Input */}
@@ -158,30 +136,22 @@ export default function ForgotPasswordScreen() {
               {/* Instructions */}
               <View className="bg-muted/50 p-4 rounded-lg">
                 <Text className="text-sm text-muted-foreground leading-5">
-                  We'll send you a secure link to reset your password. The link
-                  will expire in 24 hours for your security.
+                  We'll send you a secure link to reset your password. The link will expire in 24
+                  hours for your security.
                 </Text>
               </View>
 
               {/* Reset Button */}
-              <Button
-                onPress={handleResetPassword}
-                disabled={isLoading}
-                className="w-full"
-              >
+              <Button onPress={handleResetPassword} disabled={isLoading} className="w-full">
                 <Text>{isLoading ? "Sending..." : "Send Reset Link"}</Text>
               </Button>
 
               {/* Sign Up Link */}
               <View className="flex-row justify-center items-center space-x-2 pt-4">
-                <Text className="text-sm text-muted-foreground">
-                  Don't have an account?
-                </Text>
+                <Text className="text-sm text-muted-foreground">Don't have an account?</Text>
                 <Link href="/(auth)/sign-up" asChild>
                   <Pressable>
-                    <Text className="text-sm text-primary font-medium">
-                      Sign Up
-                    </Text>
+                    <Text className="text-sm text-primary font-medium">Sign Up</Text>
                   </Pressable>
                 </Link>
               </View>

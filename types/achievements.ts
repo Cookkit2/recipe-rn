@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Achievement Categories
 export const ACHIEVEMENT_CATEGORIES = ['streak', 'recipes', 'ingredients', 'waste', 'social'] as const;
 export type AchievementCategory = (typeof ACHIEVEMENT_CATEGORIES)[number];

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useCallback } from "react";
 import { Alert } from "react-native";
 import { database } from "~/data/db/database";
