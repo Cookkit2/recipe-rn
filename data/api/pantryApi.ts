@@ -271,13 +271,12 @@ export const pantryApi = {
           }
 
           if (!existingStock && item.synonyms && item.synonyms.length > 0) {
-            const synonymOps = item.synonyms.map((synonym) =>
-              synonymCollection.prepareCreate((syn) => {
+            for (const synonym of item.synonyms) {
+              await synonymCollection.create((syn) => {
                 (syn as IngredientSynonym).stockId = stockItem.id;
                 (syn as IngredientSynonym).synonym = synonym.synonym.toLowerCase();
-              })
-            );
-            await database.batch(...synonymOps);
+              });
+            }
           }
 
           createdOrUpdatedStockRefs.push(stockItem);
@@ -473,23 +472,15 @@ const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
     log.warn("Could not fetch synonyms for stock:", stock.id);
   }
 
-  let steps_to_store: Array<{ id: string; title: string; description: string; sequence: number }> =
-    [];
+  let stepsToStore: any[] = [];
   try {
-    const stepsRecords = await Promise.race([
-      stock.stepsToStore.query().fetch(),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("StepsToStore fetch timeout")), 3000)
-      ),
-    ]);
-    steps_to_store = stepsRecords
-      .map((s) => ({
-        id: s.id,
-        title: s.title,
-        description: s.description,
-        sequence: s.sequence,
-      }))
-      .sort((a, b) => a.sequence - b.sequence);
+    const steps = await stock.stepsToStore.query().fetch();
+    stepsToStore = steps.map((s) => ({
+      id: s.id, // Ensure this maps to string if needed, or handle appropriately
+      title: s.title,
+      description: s.description,
+      sequence: s.sequence,
+    }));
   } catch (error) {
     log.warn("Could not fetch steps_to_store for stock:", stock.id);
   }
@@ -506,7 +497,7 @@ const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
     background_color: stock.backgroundColor,
     created_at: stock.createdAt,
     updated_at: stock.updatedAt,
-    steps_to_store,
+    steps_to_store: stepsToStore,
     synonyms,
   };
 };

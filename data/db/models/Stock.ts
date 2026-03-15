@@ -4,6 +4,7 @@ import type { Associations } from "@nozbe/watermelondb/Model";
 import type IngredientSynonym from "./IngredientSynonym";
 import type StockCategory from "./StockCategory";
 import type WasteLog from "./WasteLog";
+import type StepsToStore from "./StepsToStore";
 
 import type StepsToStore from "./StepsToStore";
 
@@ -23,6 +24,7 @@ export interface StockData {
 export default class Stock extends Model {
   static table = "stock";
   static associations: Associations = {
+    steps_to_store: { type: "has_many", foreignKey: "stock_id" },
     ingredient_synonym: { type: "has_many", foreignKey: "stock_id" },
     stock_category: { type: "has_many", foreignKey: "stock_id" },
     waste_log: { type: "has_many", foreignKey: "stock_id" },
