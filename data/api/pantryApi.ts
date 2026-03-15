@@ -543,13 +543,37 @@ const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
     log.warn("Could not fetch synonyms for stock:", stock.id);
   }
 
+  // Fetch categories if available
+  let categories: Array<{ id: string; name: string }> = [];
+  try {
+    const stockCategoryRecords = await Promise.race([
+      stock.stockCategories.query().fetch(),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("StockCategory fetch timeout")), 3000)
+      ),
+    ]);
+
+    // Fetch the actual category names
+    if (stockCategoryRecords.length > 0) {
+      const categoryPromises = stockCategoryRecords.map((sc) =>
+        // @ts-ignore - WatermelonDB relation typings might be missing fetch() but it exists at runtime
+        typeof sc.category?.fetch === "function" ? sc.category.fetch() : Promise.resolve(null)
+      );
+      const categoryRecords = await Promise.all(categoryPromises);
+      categories = categoryRecords.filter(Boolean).map((c: any) => ({ id: c.id, name: c.name }));
+    }
+  } catch (error) {
+    log.warn("Could not fetch categories for stock:", stock.id);
+  }
+
   return {
     id: stock.id,
     name: stock.name,
     quantity: stock.quantity,
     unit: stock.unit,
     expiry_date: stock.expiryDate || undefined,
-    category: "", // TODO: Load from BaseIngredient category if available
+    category: categories && categories.length > 0 ? categories[0]?.name || "" : "",
+    categories,
     type: mapDbTypeToType(stock.storageType),
     image_url: stock.imageUrl,
     background_color: stock.backgroundColor,
