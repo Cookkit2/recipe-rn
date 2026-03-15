@@ -1,6 +1,6 @@
-import type { ImageSourcePropType } from 'react-native';
+import type { ImageSourcePropType } from "react-native";
 
-export const ITEM_TYPES = ['all', 'fridge', 'cabinet', 'freezer'] as const;
+export const ITEM_TYPES = ["all", "fridge", "cabinet", "freezer"] as const;
 export type ItemType = (typeof ITEM_TYPES)[number];
 
 export type PantryItem = {
@@ -10,7 +10,7 @@ export type PantryItem = {
   unit: string;
   expiry_date?: Date;
   category: string;
-  type: Exclude<ItemType, 'all'>;
+  type: Exclude<ItemType, "all">;
   image_url: ImageSourcePropType | string | undefined;
   background_color: string | undefined;
   created_at: Date;
@@ -27,18 +27,21 @@ export type PantryItem = {
   categories?: Array<{ id: string; name: string }>;
 };
 
-export type PantryItemConfirmation = Pick<PantryItem, 'name' | 'quantity' | 'unit' | 'background_color' | 'image_url'>;
+export type PantryItemConfirmation = Pick<
+  PantryItem,
+  "name" | "quantity" | "unit" | "background_color" | "image_url"
+>;
 
 export type BaseIngredient = {
   days_to_expire: number;
   id: string;
   name: string;
   steps_to_store_id: string | null;
-  storage_type: Exclude<ItemType, 'all'>;
+  storage_type: Exclude<ItemType, "all">;
 };
 
 type StepsToStore = {
-  id: number;
+  id: string;
   title: string;
   description: string;
   sequence: number;
