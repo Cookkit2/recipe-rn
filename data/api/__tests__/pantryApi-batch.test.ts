@@ -58,7 +58,7 @@ describe("pantryApi.addPantryItems performance", () => {
       quantity: 1,
       unit: "pcs",
       type: "pantry" as any,
-      steps_to_store: "store",
+      steps_to_store: [],
       image_url: null,
       category: null,
       background_color: null,
