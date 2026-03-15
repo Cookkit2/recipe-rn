@@ -125,7 +125,7 @@ export function useRecipeEdit(recipe: Recipe | null, options: UseRecipeEditOptio
       setWorkingCopy((prev) => {
         if (!prev) return prev;
         const newIngredients = [...prev.ingredients];
-        newIngredients[index] = { ...newIngredients[index], ...updates } as EditableIngredient;
+        newIngredients[index] = { ...newIngredients[index], ...updates };
         setHasUnsavedChanges(true);
         return { ...prev, ingredients: newIngredients };
       });
@@ -170,7 +170,7 @@ export function useRecipeEdit(recipe: Recipe | null, options: UseRecipeEditOptio
       setWorkingCopy((prev) => {
         if (!prev) return prev;
         const newSteps = [...prev.steps];
-        newSteps[index] = { ...newSteps[index], ...updates } as EditableStep;
+        newSteps[index] = { ...newSteps[index], ...updates };
         setHasUnsavedChanges(true);
         return { ...prev, steps: newSteps };
       });
@@ -219,9 +219,7 @@ export function useRecipeEdit(recipe: Recipe | null, options: UseRecipeEditOptio
         if (!prev) return prev;
         const newSteps = [...prev.steps];
         const [movedStep] = newSteps.splice(fromIndex, 1);
-        if (movedStep) {
-          newSteps.splice(toIndex, 0, movedStep);
-        }
+        newSteps.splice(toIndex, 0, movedStep);
 
         // Renumber all steps
         const renumberedSteps = newSteps.map((step, i) => ({
@@ -260,9 +258,6 @@ export function useRecipeEdit(recipe: Recipe | null, options: UseRecipeEditOptio
 
         // Delete removed ingredients
         const existingIngredients = await recipe.ingredients.query().fetch();
-
-        const existingIngredientsMap = new Map(existingIngredients.map((i) => [i.id, i]));
-
         for (const existing of existingIngredients) {
           if (!workingCopy.ingredients.some((ing) => ing.id === existing.id)) {
             await existing.destroyPermanently();
@@ -273,8 +268,7 @@ export function useRecipeEdit(recipe: Recipe | null, options: UseRecipeEditOptio
         for (const ingredient of workingCopy.ingredients) {
           if (ingredient.id) {
             // Update existing
-            const existing = existingIngredientsMap.get(ingredient.id);
-            if (!existing) continue;
+            const existing = await ingredientsCollection.find(ingredient.id);
             await existing.updateRecipeIngredient({
               name: ingredient.name,
               quantity: ingredient.quantity,
@@ -298,9 +292,6 @@ export function useRecipeEdit(recipe: Recipe | null, options: UseRecipeEditOptio
 
         // Delete removed steps
         const existingSteps = await recipe.steps.query().fetch();
-
-        const existingStepsMap = new Map(existingSteps.map((s) => [s.id, s]));
-
         for (const existing of existingSteps) {
           if (!workingCopy.steps.some((step) => step.id === existing.id)) {
             await existing.destroyPermanently();
@@ -311,8 +302,7 @@ export function useRecipeEdit(recipe: Recipe | null, options: UseRecipeEditOptio
         for (const step of workingCopy.steps) {
           if (step.id) {
             // Update existing
-            const existing = existingStepsMap.get(step.id);
-            if (!existing) continue;
+            const existing = await stepsCollection.find(step.id);
             await existing.updateStep({
               step: step.step,
               title: step.title,

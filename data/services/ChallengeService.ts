@@ -446,7 +446,6 @@ export class ChallengeService {
         return metric === "new_recipes";
 
       case "cook_category":
-        // @ts-expect-error
         return (
           metric === "recipes_cooked" && requirement.constraints?.recipeCategory?.includes(metric)
         );

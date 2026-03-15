@@ -18,12 +18,7 @@ export default function BaseModal({
 
   return (
     <Modal animationType="fade" transparent={true} visible={modalVisible} onRequestClose={onCancel}>
-      <BlurView
-        intensity={20}
-        className="absolute inset-0 z-[1]"
-        // @ts-expect-error
-        tint={theme}
-      />
+      <BlurView intensity={20} className="absolute inset-0 z-[1]" tint={theme} />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1 z-[2]"

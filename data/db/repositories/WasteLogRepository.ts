@@ -239,7 +239,6 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
     // Iterate through all dates, counting gaps between waste events
     for (let i = 1; i < sortedWasteDates.length; i++) {
       // Days between consecutive waste events
-      // @ts-expect-error
       const daysBetween = Math.round((sortedWasteDates[i] - sortedWasteDates[i - 1]) / oneDay) - 1;
       tempStreak = daysBetween;
 
@@ -249,7 +248,6 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
     }
 
     // Also check after the last waste event to today
-    // @ts-expect-error
     const daysSinceLastWaste = Math.max(
       0,
       Math.round((todayStart - sortedWasteDates[sortedWasteDates.length - 1]) / oneDay) - 1
