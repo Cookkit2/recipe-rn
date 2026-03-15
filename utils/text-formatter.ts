@@ -55,10 +55,8 @@ export const toKebabCase = (str: string): string => {
 export const toCamelCase = (str: string): string => {
   if (!str) return "";
   return str
-    .replace(/(?:^\w|[A-Z]|\b\w)/g, (word, index) =>
-      index === 0 ? word.toLowerCase() : word.toUpperCase()
-    )
-    .replace(/[\s-_]+/g, "");
+    .replace(/[\s-_]+(\w)/g, (_, c) => c.toUpperCase())
+    .replace(/^[A-Z]/, (c) => c.toLowerCase());
 };
 
 // ========================
