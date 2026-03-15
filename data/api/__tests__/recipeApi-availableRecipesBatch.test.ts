@@ -64,10 +64,8 @@ describe("convertDbRecipesToUIRecipesBatch", () => {
     const uiRecipes = convertDbRecipesToUIRecipesBatch(dbRecipes as any, detailsMap);
 
     expect(uiRecipes.map((r) => r.id)).toEqual(["r1", "r2"]);
-    // @ts-expect-error
-    expect(uiRecipes[0].ingredients).toHaveLength(1);
-    // @ts-expect-error
-    expect(uiRecipes[0].instructions).toHaveLength(1);
+    expect(uiRecipes[0]!.ingredients).toHaveLength(1);
+    expect(uiRecipes[0]!.instructions).toHaveLength(1);
   });
 
   it("skips recipes that are missing from recipeDetailsMap", () => {
@@ -86,3 +84,4 @@ describe("convertDbRecipesToUIRecipesBatch", () => {
     expect(uiRecipes.map((r) => r.id)).toEqual(["r1"]);
   });
 });
+
