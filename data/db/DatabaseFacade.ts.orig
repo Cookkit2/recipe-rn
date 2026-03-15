@@ -1114,26 +1114,6 @@ export class DatabaseFacade {
         };
       });
 
-      // Pre-compute an index of pantry items and their synonyms for O(1) matching.
-      const pantryIndex = new Map<string, { name: string; synonyms: string[] }>();
-      for (const item of pantryItemsWithMetadata) {
-        const normalizedName = item.name.toLowerCase().trim();
-
-        // Index the main name
-        if (!pantryIndex.has(normalizedName)) {
-          pantryIndex.set(normalizedName, item);
-        }
-
-        // Index all synonyms and categories
-        for (const synonym of item.synonyms) {
-          const normalizedSynonym = synonym.toLowerCase().trim();
-
-          if (!pantryIndex.has(normalizedSynonym)) {
-            pantryIndex.set(normalizedSynonym, item);
-          }
-        }
-      }
-
       const allRecipes = await this.recipes.findAll();
 
       const canMake: Recipe[] = [];
@@ -1164,13 +1144,9 @@ export class DatabaseFacade {
 
           let availableCount = 0;
           for (const ingredient of recipeDetails.ingredients) {
-            const normalizedIngredientName = ingredient.name.toLowerCase().trim();
-            let matchingItem = pantryIndex.get(normalizedIngredientName);
-            if (!matchingItem) {
-              matchingItem = pantryItemsWithMetadata.find((pantryItem) =>
-                isIngredientMatch(pantryItem.name, ingredient.name, pantryItem.synonyms)
-              );
-            }
+            const matchingItem = pantryItemsWithMetadata.find((pantryItem) =>
+              isIngredientMatch(pantryItem.name, ingredient.name, pantryItem.synonyms)
+            );
 
             if (matchingItem) {
               availableCount++;
