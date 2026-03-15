@@ -1,5 +1,3 @@
-/// <reference types="jest" />
-
 import { scheduleExpiryNotifications } from "../expiry-notifications";
 
 jest.mock("../../notification-service", () => ({

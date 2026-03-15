@@ -312,9 +312,11 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
       return;
     }
 
-    const records = await this.collection
-      .query(Q.where("id", Q.oneOf(userChallengeIds)))
-      .fetch();
+    // Use Promise.all with find() to maintain the exact error-throwing behavior
+    // of the original code if an invalid ID is provided.
+    const records = await Promise.all(
+      userChallengeIds.map((id) => this.collection.find(id))
+    );
 
     await database.write(async () => {
       const batchOps = records.map((record) =>
