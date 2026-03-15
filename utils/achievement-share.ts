@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Achievement Share Utilities
  *
@@ -46,7 +45,8 @@ function getAppName(): string {
  * Get app store URL (placeholder for future use)
  */
 function getAppStoreUrl(): string {
-  return "https://apps.apple.com/app/cookkit/id123456789";
+  // TODO: Replace with actual app store URL when available
+  return "https://cookkit.app";
 }
 
 /**
@@ -268,11 +268,12 @@ export async function shareAchievement(
       }
     );
 
-    if (result.action === "sharedAction") {
-      return { action: "shared", activityType: result.activityType || undefined };
-    } else {
-      return { action: "dismissed" };
-    }
+    const action: "shared" | "dismissed" =
+      result.action === "sharedAction" ? "shared" : "dismissed";
+    return {
+      action,
+      activityType: result.activityType ?? undefined,
+    };
   } catch (error) {
     // User cancelled the share sheet - this is expected behavior
     if (error instanceof Error && error.message.includes("cancelled")) {
@@ -313,11 +314,12 @@ export async function shareMultipleAchievements(
       }
     );
 
-    if (result.action === "sharedAction") {
-      return { action: "shared", activityType: result.activityType || undefined };
-    } else {
-      return { action: "dismissed" };
-    }
+    const action: "shared" | "dismissed" =
+      result.action === "sharedAction" ? "shared" : "dismissed";
+    return {
+      action,
+      activityType: result.activityType ?? undefined,
+    };
   } catch (error) {
     if (error instanceof Error && error.message.includes("cancelled")) {
       return { action: "dismissed" };
@@ -353,11 +355,12 @@ export async function shareStreak(
       }
     );
 
-    if (result.action === "sharedAction") {
-      return { action: "shared", activityType: result.activityType || undefined };
-    } else {
-      return { action: "dismissed" };
-    }
+    const action: "shared" | "dismissed" =
+      result.action === "sharedAction" ? "shared" : "dismissed";
+    return {
+      action,
+      activityType: result.activityType ?? undefined,
+    };
   } catch (error) {
     if (error instanceof Error && error.message.includes("cancelled")) {
       return { action: "dismissed" };
@@ -397,11 +400,12 @@ export async function shareContent(
       }
     );
 
-    if (result.action === "sharedAction") {
-      return { action: "shared", activityType: result.activityType || undefined };
-    } else {
-      return { action: "dismissed" };
-    }
+    const action: "shared" | "dismissed" =
+      result.action === "sharedAction" ? "shared" : "dismissed";
+    return {
+      action,
+      activityType: result.activityType ?? undefined,
+    };
   } catch (error) {
     if (error instanceof Error && error.message.includes("cancelled")) {
       return { action: "dismissed" };
