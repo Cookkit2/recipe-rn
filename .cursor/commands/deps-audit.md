@@ -485,7 +485,7 @@ const analyzeBundleSize = async (dependencies) => {
     try {
       // Fetch package stats
       const response = await fetch(
-        `https://bundlephobia.com/api/size?package=${packageName}@${info.version}`,
+        `https://bundlephobia.com/api/size?package=${packageName}@${info.version}`
       );
       const data = await response.json();
 
