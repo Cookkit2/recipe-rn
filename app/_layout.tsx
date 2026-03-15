@@ -39,7 +39,6 @@ function AnimatedStack() {
   const router = useRouter();
   const colors = useColors();
 
-
   // Register the navigation container with Sentry for automatic route tracking
   const ref = useNavigationContainerRef();
 
@@ -462,8 +461,7 @@ const navigationIntegration = Sentry.reactNavigationIntegration({
 });
 
 const sentryDsn =
-  process.env.EXPO_PUBLIC_SENTRY_DSN ||
-  Constants.expoConfig?.extra?.EXPO_PUBLIC_SENTRY_DSN;
+  process.env.EXPO_PUBLIC_SENTRY_DSN || Constants.expoConfig?.extra?.EXPO_PUBLIC_SENTRY_DSN;
 const sentrySendPii =
   process.env.EXPO_PUBLIC_SENTRY_SEND_PII === "true" ||
   Constants.expoConfig?.extra?.EXPO_PUBLIC_SENTRY_SEND_PII === true;
