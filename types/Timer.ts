@@ -1,4 +1,4 @@
-export const TIMER_STATUSES = ['idle', 'running', 'paused', 'completed'] as const;
+export const TIMER_STATUSES = ["idle", "running", "paused", "completed"] as const;
 export type TimerStatus = (typeof TIMER_STATUSES)[number];
 
 export type Timer = {
@@ -16,9 +16,9 @@ export type Timer = {
   stepNumber?: number;
 };
 
-export type TimerCreateInput = Pick<Timer, 'name' | 'durationSeconds' | 'recipeId' | 'stepNumber'>;
+export type TimerCreateInput = Pick<Timer, "name" | "durationSeconds" | "recipeId" | "stepNumber">;
 
-export type TimerUpdateInput = Partial<Pick<Timer, 'name'>>;
+export type TimerUpdateInput = Partial<Pick<Timer, "name">>;
 
 export type TimerNotification = {
   timerId: string;

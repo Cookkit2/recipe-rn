@@ -12,11 +12,12 @@ type EditableTitleProps = {
   onSubmitEditing?: () => void;
   onBeginEditing?: () => void;
   onEndEditing?: () => void;
-  TextComponent?: "Title" |"H1" | "H2" | "H3" | "H4" | "P";
+  TextComponent?: "Title" | "H1" | "H2" | "H3" | "H4" | "P";
 };
 
 const TYPOGRAPHY_BASE = {
-  Title: "web:scroll-m-20 text-4xl text-foreground font-extrabold tracking-tight lg:text-5xl web:select-text font-bowlby-one pt-2",
+  Title:
+    "web:scroll-m-20 text-4xl text-foreground font-extrabold tracking-tight lg:text-5xl web:select-text font-bowlby-one pt-2",
   H1: "web:scroll-m-20 text-4xl text-foreground font-extrabold tracking-tight lg:text-5xl web:select-text",
   H2: "web:scroll-m-20 pb-2 text-3xl text-foreground font-semibold tracking-tight first:mt-0 web:select-text",
   H3: "web:scroll-m-20 text-2xl text-foreground font-semibold tracking-tight web:select-text",
@@ -96,11 +97,7 @@ export default function EditableTitle({
               endEditing();
             }}
             onBlur={endEditing}
-            className={cn(
-              "z-[1000] bg-transparent",
-              TYPOGRAPHY_BASE[TextComponent],
-              textClassName
-            )}
+            className={cn("z-[1000] bg-transparent", TYPOGRAPHY_BASE[TextComponent], textClassName)}
             style={inputStyle}
           />
         </>

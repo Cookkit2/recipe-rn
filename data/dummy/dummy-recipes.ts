@@ -4,8 +4,7 @@ export const dummyRecipesData: Recipe[] = [
   {
     id: "chicken-stir-fry",
     title: "Easy Chicken Stir-Fry",
-    description:
-      "A quick and healthy chicken stir-fry with fresh vegetables and a savory sauce.",
+    description: "A quick and healthy chicken stir-fry with fresh vegetables and a savory sauce.",
     imageUrl:
       "https://images.unsplash.com/photo-1621515554656-3da68ba128b1?q=80&w=3084&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     prepMinutes: 15,
@@ -143,8 +142,7 @@ export const dummyRecipesData: Recipe[] = [
   {
     id: "caprese-salad",
     title: "Simple Caprese Salad",
-    description:
-      "A classic Italian salad featuring fresh mozzarella, tomatoes, and basil.",
+    description: "A classic Italian salad featuring fresh mozzarella, tomatoes, and basil.",
     imageUrl:
       "https://images.unsplash.com/photo-1529312266912-b33cfce2eefd?q=80&w=3087&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     prepMinutes: 10,
@@ -197,8 +195,7 @@ export const dummyRecipesData: Recipe[] = [
       {
         step: 1,
         title: "Arrange the Ingredients",
-        description:
-          "Arrange alternating slices of **tomatoes** and **mozzarella** on a platter.",
+        description: "Arrange alternating slices of **tomatoes** and **mozzarella** on a platter.",
         relatedIngredientIds: ["1", "2"],
       },
       {
@@ -211,20 +208,17 @@ export const dummyRecipesData: Recipe[] = [
       {
         step: 3,
         title: "Drizzle with Oil",
-        description:
-          "Drizzle with **extra-virgin olive oil** and **balsamic glaze** (if using).",
+        description: "Drizzle with **extra-virgin olive oil** and **balsamic glaze** (if using).",
         relatedIngredientIds: ["4", "5"],
       },
       {
         step: 4,
         title: "Season and Serve",
-        description:
-          "Season with **salt** and **pepper** to taste. **Serve immediately**.",
+        description: "Season with **salt** and **pepper** to taste. **Serve immediately**.",
         relatedIngredientIds: ["6"],
       },
     ],
-    sourceUrl:
-      "https://www.foodnetwork.com/recipes/ina-garten/caprese-salad-recipe-1948534",
+    sourceUrl: "https://www.foodnetwork.com/recipes/ina-garten/caprese-salad-recipe-1948534",
     tags: ["salad", "italian", "vegetarian", "gluten-free", "light meal"],
     calories: 280,
   },

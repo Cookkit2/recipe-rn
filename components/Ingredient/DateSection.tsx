@@ -1,19 +1,10 @@
 import React, { useState } from "react";
-import {
-  Pressable,
-  Text,
-  Modal,
-  View,
-  StyleSheet,
-  Platform,
-} from "react-native";
+import { Pressable, Text, Modal, View, StyleSheet, Platform } from "react-native";
 import { Card, CardContent } from "~/components/ui/card";
 import { format } from "date-fns";
 import { H4, P } from "~/components/ui/typography";
 import { useIngredientDetailStore } from "~/store/IngredientDetailContext";
-import DateTimePicker, {
-  type DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
+import DateTimePicker, { type DateTimePickerEvent } from "@react-native-community/datetimepicker";
 
 export default function DateSection() {
   const { pantryItem, updatePantryItem } = useIngredientDetailStore();
@@ -24,10 +15,7 @@ export default function DateSection() {
     updatePantryItem({ ...pantryItem, [type]: date });
   };
 
-  const onExpiryDateChange = (
-    event: DateTimePickerEvent,
-    selectedDate?: Date
-  ) => {
+  const onExpiryDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
     if (Platform.OS === "android") {
       setExpiresDateOpen(false);
     }
@@ -36,10 +24,7 @@ export default function DateSection() {
     }
   };
 
-  const onPurchaseDateChange = (
-    event: DateTimePickerEvent,
-    selectedDate?: Date
-  ) => {
+  const onPurchaseDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
     if (Platform.OS === "android") {
       setPurchasedDateOpen(false);
     }
@@ -53,18 +38,11 @@ export default function DateSection() {
       return (
         <>
           {/* Expires Date Modal for iOS */}
-          <Modal
-            visible={expiresDateOpen}
-            transparent={true}
-            animationType="slide"
-          >
+          <Modal visible={expiresDateOpen} transparent={true} animationType="slide">
             <View className="flex-1 justify-end">
               <View className="bg-background rounded-t-3xl py-5 flex items-center shadow-md">
                 <View className="w-full flex-row justify-between items-center border-b border-border pb-3 px-5">
-                  <Pressable
-                    className="flex-[1]"
-                    onPress={() => setExpiresDateOpen(false)}
-                  >
+                  <Pressable className="flex-[1]" onPress={() => setExpiresDateOpen(false)}>
                     <P className="text-foreground/80">Cancel</P>
                   </Pressable>
                   <View className="flex-[2] flex items-center justify-center">
@@ -90,18 +68,11 @@ export default function DateSection() {
           </Modal>
 
           {/* Purchase Date Modal for iOS */}
-          <Modal
-            visible={purchasedDateOpen}
-            transparent={true}
-            animationType="slide"
-          >
+          <Modal visible={purchasedDateOpen} transparent={true} animationType="slide">
             <View className="flex-1 justify-end">
               <View className="bg-background rounded-t-3xl py-5 flex items-center shadow-md">
                 <View className="w-full flex-row justify-between items-center border-b border-border pb-3 px-5">
-                  <Pressable
-                    className="flex-[1]"
-                    onPress={() => setPurchasedDateOpen(false)}
-                  >
+                  <Pressable className="flex-[1]" onPress={() => setPurchasedDateOpen(false)}>
                     <P className="text-foreground/80">Cancel</P>
                   </Pressable>
                   <View className="flex-[2] flex items-center justify-center">

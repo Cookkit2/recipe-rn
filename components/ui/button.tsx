@@ -1,10 +1,6 @@
 import React, { useCallback, useMemo } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-import {
-  Pressable,
-  type GestureResponderEvent,
-  type Insets,
-} from "react-native";
+import { Pressable, type GestureResponderEvent, type Insets } from "react-native";
 import { TextClassContext } from "~/components/ui/text";
 import { cn } from "~/lib/utils";
 import Animated from "react-native-reanimated";
@@ -22,8 +18,7 @@ const buttonVariants = cva(
         outline:
           "border border-input bg-background web:hover:bg-accent web:hover:text-accent-foreground active:bg-accent",
         secondary: "bg-secondary web:hover:opacity-80 active:opacity-80",
-        ghost:
-          "web:hover:bg-accent web:hover:text-accent-foreground active:bg-accent",
+        ghost: "web:hover:bg-accent web:hover:text-accent-foreground active:bg-accent",
         link: "web:underline-offset-4 web:hover:underline web:focus:underline",
       },
       size: {
@@ -50,8 +45,7 @@ const buttonTextVariants = cva(
         default: "text-primary-foreground",
         destructive: "text-destructive-foreground",
         outline: "group-active:text-accent-foreground",
-        secondary:
-          "text-secondary-foreground group-active:text-secondary-foreground",
+        secondary: "text-secondary-foreground group-active:text-secondary-foreground",
         ghost: "group-active:text-accent-foreground",
         link: "text-primary group-active:underline",
       },
@@ -84,10 +78,7 @@ type ButtonProps = React.ComponentProps<typeof Pressable> &
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-const Button = React.forwardRef<
-  React.ComponentRef<typeof Pressable>,
-  ButtonProps
->(
+const Button = React.forwardRef<React.ComponentRef<typeof Pressable>, ButtonProps>(
   (
     {
       className,
@@ -154,10 +145,7 @@ const Button = React.forwardRef<
           className: "web:pointer-events-none",
         })}
       >
-        <Animated.View
-          style={animatedStyle}
-          className={cn(containerClassName, "overflow-hidden")}
-        >
+        <Animated.View style={animatedStyle} className={cn(containerClassName, "overflow-hidden")}>
           <AnimatedPressable
             className={cn(
               props.disabled && "opacity-50 web:pointer-events-none",

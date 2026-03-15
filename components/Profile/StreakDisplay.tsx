@@ -110,9 +110,7 @@ export default function StreakDisplay() {
               style={animatedStyle}
               className="rounded-full bg-orange-500 dark:bg-orange-600 px-4 py-2 shadow-md shadow-orange-500/30"
             >
-              <P className="text-white font-urbanist-bold text-lg text-center">
-                {currentStreak}
-              </P>
+              <P className="text-white font-urbanist-bold text-lg text-center">{currentStreak}</P>
             </AnimatedView>
           )}
         </View>

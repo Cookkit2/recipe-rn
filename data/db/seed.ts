@@ -33,11 +33,7 @@ async function saveImageAsset(
     }
 
     // Handle object-style ImageSourcePropType
-    if (
-      typeof imageAsset === "object" &&
-      "uri" in imageAsset &&
-      imageAsset.uri
-    ) {
+    if (typeof imageAsset === "object" && "uri" in imageAsset && imageAsset.uri) {
       return imageAsset.uri;
     }
 
@@ -115,10 +111,7 @@ function mapIngredientName(recipeName: string, pantryNames: string[]): string {
 
   // Try partial matching - if recipe ingredient contains a pantry ingredient name
   for (const pantryName of pantryNames) {
-    if (
-      lower.includes(pantryName.toLowerCase()) ||
-      pantryName.toLowerCase().includes(lower)
-    ) {
+    if (lower.includes(pantryName.toLowerCase()) || pantryName.toLowerCase().includes(lower)) {
       return pantryName;
     }
   }

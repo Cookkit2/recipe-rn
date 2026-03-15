@@ -12,13 +12,7 @@ interface AuthInputProps {
   secureTextEntry?: boolean;
   keyboardType?: "default" | "email-address" | "numeric" | "phone-pad";
   autoCapitalize?: "none" | "sentences" | "words" | "characters";
-  autoComplete?:
-    | "email"
-    | "password"
-    | "password-new"
-    | "current-password"
-    | "username"
-    | "off";
+  autoComplete?: "email" | "password" | "password-new" | "current-password" | "username" | "off";
   error?: string;
   className?: string;
   disabled?: boolean;
@@ -82,9 +76,7 @@ export function AuthInput({
           </Pressable>
         )}
       </View>
-      {error && (
-        <Text className="text-sm text-destructive font-medium">{error}</Text>
-      )}
+      {error && <Text className="text-sm text-destructive font-medium">{error}</Text>}
     </View>
   );
 }

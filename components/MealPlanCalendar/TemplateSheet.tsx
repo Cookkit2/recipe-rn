@@ -5,7 +5,12 @@ import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import SheetModalWrapper from "~/components/Shared/SheetModalWrapper";
 import { useMealPlanCalendar } from "~/store/MealPlanCalendarContext";
-import { useMealPlanTemplates, useSaveWeekAsTemplate, useApplyTemplate, useDeleteTemplate } from "~/hooks/queries/useMealPlanTemplateQueries";
+import {
+  useMealPlanTemplates,
+  useSaveWeekAsTemplate,
+  useApplyTemplate,
+  useDeleteTemplate,
+} from "~/hooks/queries/useMealPlanTemplateQueries";
 import { useCalendarMealPlans } from "~/hooks/queries/useCalendarMealPlans";
 import { useAddToMealPlan } from "~/hooks/queries/useMealPlanQueries";
 import { Button } from "~/components/ui/button";
@@ -111,7 +116,10 @@ export default function TemplateSheet({ onTemplateApplied, onClose }: TemplateSh
         setTemplateDescription("");
         Alert.alert("Success", "Template saved successfully!");
       } else {
-        Alert.alert("Error", "Failed to save template. Make sure you have meals planned for this week.");
+        Alert.alert(
+          "Error",
+          "Failed to save template. Make sure you have meals planned for this week."
+        );
       }
     } catch (error) {
       log.error("Error saving template:", error);
@@ -161,27 +169,23 @@ export default function TemplateSheet({ onTemplateApplied, onClose }: TemplateSh
 
   const handleDeleteTemplate = useCallback(
     (template: MealPlanTemplateData) => {
-      Alert.alert(
-        "Delete Template",
-        `Are you sure you want to delete "${template.name}"?`,
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Delete",
-            style: "destructive",
-            onPress: async () => {
-              try {
-                handleHapticFeedback();
-                await deleteTemplate.mutateAsync(template.id);
-                handleHapticFeedback();
-              } catch (error) {
-                log.error("Error deleting template:", error);
-                Alert.alert("Error", "Failed to delete template");
-              }
-            },
+      Alert.alert("Delete Template", `Are you sure you want to delete "${template.name}"?`, [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              handleHapticFeedback();
+              await deleteTemplate.mutateAsync(template.id);
+              handleHapticFeedback();
+            } catch (error) {
+              log.error("Error deleting template:", error);
+              Alert.alert("Error", "Failed to delete template");
+            }
           },
-        ]
-      );
+        },
+      ]);
     },
     [deleteTemplate, handleHapticFeedback]
   );
@@ -212,11 +216,13 @@ export default function TemplateSheet({ onTemplateApplied, onClose }: TemplateSh
           date: meal.date.toISOString(),
           mealSlot: meal.mealSlot,
           servings: meal.servings,
-          recipe: meal.recipe ? {
-            title: meal.recipe.title,
-            servings: meal.recipe.servings,
-            ingredients: meal.recipe.ingredients,
-          } : null,
+          recipe: meal.recipe
+            ? {
+                title: meal.recipe.title,
+                servings: meal.recipe.servings,
+                ingredients: meal.recipe.ingredients,
+              }
+            : null,
         })),
       };
 
@@ -242,20 +248,19 @@ export default function TemplateSheet({ onTemplateApplied, onClose }: TemplateSh
         // If share is dismissed or fails, show the JSON in an alert
         if ((shareError as any)?.code !== "SHARE_DISMISSED") {
           log.warn("Share failed, showing JSON in alert:", shareError);
-          Alert.alert(
-            "Meal Plan JSON",
-            "Copy this JSON to share your meal plan:",
-            [
-              { text: "Close", style: "cancel" },
-              {
-                text: "Copy",
-                onPress: () => {
-                  // Note: Clipboard API would need expo-clipboard
-                  Alert.alert("Info", "JSON ready to be copied manually (clipboard feature coming soon)");
-                },
+          Alert.alert("Meal Plan JSON", "Copy this JSON to share your meal plan:", [
+            { text: "Close", style: "cancel" },
+            {
+              text: "Copy",
+              onPress: () => {
+                // Note: Clipboard API would need expo-clipboard
+                Alert.alert(
+                  "Info",
+                  "JSON ready to be copied manually (clipboard feature coming soon)"
+                );
               },
-            ]
-          );
+            },
+          ]);
         }
       }
     } catch (error) {
@@ -342,11 +347,15 @@ export default function TemplateSheet({ onTemplateApplied, onClose }: TemplateSh
               handleHapticFeedback();
 
               if (errorCount === 0 && successCount > 0) {
-                Alert.alert("Import Success", `Imported ${successCount} meal${successCount !== 1 ? "s" : ""} to your plan!`);
+                Alert.alert(
+                  "Import Success",
+                  `Imported ${successCount} meal${successCount !== 1 ? "s" : ""} to your plan!`
+                );
                 onTemplateApplied?.();
               } else if (successCount > 0) {
                 const skippedList = skippedRecipes.slice(0, 3).join("\n");
-                const moreText = skippedRecipes.length > 3 ? `\n... and ${skippedRecipes.length - 3} more` : "";
+                const moreText =
+                  skippedRecipes.length > 3 ? `\n... and ${skippedRecipes.length - 3} more` : "";
                 Alert.alert(
                   "Import Partial",
                   `Imported ${successCount} meal${successCount !== 1 ? "s" : ""}, ${errorCount} skipped.\n\nSkipped recipes:\n${skippedList}${moreText}`
@@ -381,167 +390,159 @@ export default function TemplateSheet({ onTemplateApplied, onClose }: TemplateSh
             <Muted className="mt-1">Save and reuse weekly meal plans</Muted>
           </View>
 
-          <ScrollComponent
-            className="flex-1"
-            showsVerticalScrollIndicator={false}
-          >
+          <ScrollComponent className="flex-1" showsVerticalScrollIndicator={false}>
             <View className="p-6">
-            {/* Save Current Week as Template */}
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="flex-row items-center gap-2">
-                  <SaveIcon size={20} className="text-primary" />
-                  Save Current Week as Template
-                </CardTitle>
-                <CardDescription>
-                  Save your planned meals for this week to use later
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="gap-3">
-                <Input
-                  placeholder="Template name (e.g., 'Family Favorites')"
-                  value={templateName}
-                  onChangeText={setTemplateName}
-                  editable={!isSaving}
-                />
-                <Input
-                  placeholder="Description (optional)"
-                  value={templateDescription}
-                  onChangeText={setTemplateDescription}
-                  editable={!isSaving}
-                />
-                <Button
-                  onPress={handleSaveAsTemplate}
-                  disabled={isSaving || !templateName.trim() || saveWeekAsTemplate.isPending}
-                  variant="default"
-                  className="mt-2"
-                >
-                  <H4 className="text-primary-foreground font-urbanist font-semibold">
-                    {isSaving ? "Saving..." : "Save as Template"}
-                  </H4>
-                </Button>
-              </CardContent>
-            </Card>
+              {/* Save Current Week as Template */}
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle className="flex-row items-center gap-2">
+                    <SaveIcon size={20} className="text-primary" />
+                    Save Current Week as Template
+                  </CardTitle>
+                  <CardDescription>
+                    Save your planned meals for this week to use later
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="gap-3">
+                  <Input
+                    placeholder="Template name (e.g., 'Family Favorites')"
+                    value={templateName}
+                    onChangeText={setTemplateName}
+                    editable={!isSaving}
+                  />
+                  <Input
+                    placeholder="Description (optional)"
+                    value={templateDescription}
+                    onChangeText={setTemplateDescription}
+                    editable={!isSaving}
+                  />
+                  <Button
+                    onPress={handleSaveAsTemplate}
+                    disabled={isSaving || !templateName.trim() || saveWeekAsTemplate.isPending}
+                    variant="default"
+                    className="mt-2"
+                  >
+                    <H4 className="text-primary-foreground font-urbanist font-semibold">
+                      {isSaving ? "Saving..." : "Save as Template"}
+                    </H4>
+                  </Button>
+                </CardContent>
+              </Card>
 
-            {/* Templates List */}
-            <View className="mb-4">
-              <H3 className="mb-3 px-1">Your Templates</H3>
+              {/* Templates List */}
+              <View className="mb-4">
+                <H3 className="mb-3 px-1">Your Templates</H3>
 
-              {isLoading ? (
-                <View className="items-center justify-center py-8">
-                  <Muted>Loading templates...</Muted>
-                </View>
-              ) : !templates || templates.length === 0 ? (
-                <View className="items-center justify-center py-8">
-                  <Muted>No templates saved yet</Muted>
-                  <Muted className="text-sm mt-1">Create your first template above</Muted>
-                </View>
-              ) : (
-                <View className="gap-3">
-                  {templates.map((template) => (
-                    <Card key={template.id}>
-                      <CardContent className="p-4">
-                        <View className="flex-row items-start justify-between">
-                          <View className="flex-1 gap-1">
-                            <H4 className="text-foreground">{template.name}</H4>
-                            {template.description ? (
-                              <P className="text-sm text-muted-foreground">
-                                {template.description}
-                              </P>
-                            ) : null}
-                            <View className="flex-row items-center gap-1 mt-2">
-                              <CalendarIcon size={14} className="text-muted-foreground" />
-                              <Muted className="text-xs">
-                                {template.mealSlots.length} meals
-                              </Muted>
+                {isLoading ? (
+                  <View className="items-center justify-center py-8">
+                    <Muted>Loading templates...</Muted>
+                  </View>
+                ) : !templates || templates.length === 0 ? (
+                  <View className="items-center justify-center py-8">
+                    <Muted>No templates saved yet</Muted>
+                    <Muted className="text-sm mt-1">Create your first template above</Muted>
+                  </View>
+                ) : (
+                  <View className="gap-3">
+                    {templates.map((template) => (
+                      <Card key={template.id}>
+                        <CardContent className="p-4">
+                          <View className="flex-row items-start justify-between">
+                            <View className="flex-1 gap-1">
+                              <H4 className="text-foreground">{template.name}</H4>
+                              {template.description ? (
+                                <P className="text-sm text-muted-foreground">
+                                  {template.description}
+                                </P>
+                              ) : null}
+                              <View className="flex-row items-center gap-1 mt-2">
+                                <CalendarIcon size={14} className="text-muted-foreground" />
+                                <Muted className="text-xs">{template.mealSlots.length} meals</Muted>
+                              </View>
+                            </View>
+
+                            <View className="flex-row items-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onPress={() => handleApplyTemplate(template.id)}
+                                disabled={applyTemplate.isPending}
+                                className="flex-1"
+                              >
+                                <P className="text-foreground text-sm font-urbanist-medium">
+                                  Apply
+                                </P>
+                              </Button>
+                              <Button
+                                size="icon-sm"
+                                variant="ghost"
+                                onPress={() => handleDeleteTemplate(template)}
+                                disabled={deleteTemplate.isPending}
+                              >
+                                <Trash2Icon size={16} className="text-destructive" />
+                              </Button>
                             </View>
                           </View>
-
-                          <View className="flex-row items-center gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onPress={() => handleApplyTemplate(template.id)}
-                              disabled={applyTemplate.isPending}
-                              className="flex-1"
-                            >
-                              <P className="text-foreground text-sm font-urbanist-medium">
-                                Apply
-                              </P>
-                            </Button>
-                            <Button
-                              size="icon-sm"
-                              variant="ghost"
-                              onPress={() => handleDeleteTemplate(template)}
-                              disabled={deleteTemplate.isPending}
-                            >
-                              <Trash2Icon size={16} className="text-destructive" />
-                            </Button>
-                          </View>
-                        </View>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </View>
-              )}
-            </View>
-
-            {/* Share Section */}
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="flex-row items-center gap-2">
-                  <ShareIcon size={20} className="text-primary" />
-                  Share Meal Plan
-                </CardTitle>
-                <CardDescription>
-                  Export your current week's plan or import a shared plan
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="gap-3">
-                <View className="flex-row gap-3">
-                  <Button
-                    onPress={handleExportMealPlan}
-                    disabled={isExporting || !currentWeekMeals || currentWeekMeals.length === 0}
-                    variant="default"
-                    className="flex-1"
-                  >
-                    <ShareIcon size={16} className="text-primary-foreground mr-2" />
-                    <H4 className="text-primary-foreground font-urbanist font-semibold">
-                      {isExporting ? "Exporting..." : "Export"}
-                    </H4>
-                  </Button>
-                  <Button
-                    onPress={handleImportMealPlan}
-                    disabled={isImporting}
-                    variant="outline"
-                    className="flex-1"
-                  >
-                    <DownloadIcon size={16} className="text-foreground mr-2" />
-                    <H4 className="text-foreground font-urbanist font-semibold">
-                      {isImporting ? "Importing..." : "Import"}
-                    </H4>
-                  </Button>
-                </View>
-                {!currentWeekMeals || currentWeekMeals.length === 0 ? (
-                  <Muted className="text-xs text-center mt-1">
-                    Add meals to this week to enable export
-                  </Muted>
-                ) : (
-                  <Muted className="text-xs text-center mt-1">
-                    {currentWeekMeals.length} meal{currentWeekMeals.length !== 1 ? "s" : ""} this week
-                  </Muted>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </View>
                 )}
-              </CardContent>
-            </Card>
+              </View>
 
-            {/* Close Button */}
-            <Button
-              onPress={handleClose}
-              variant="outline"
-              className="mt-4"
-            >
-              <H4 className="text-foreground font-urbanist font-semibold">Close</H4>
-            </Button>
+              {/* Share Section */}
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle className="flex-row items-center gap-2">
+                    <ShareIcon size={20} className="text-primary" />
+                    Share Meal Plan
+                  </CardTitle>
+                  <CardDescription>
+                    Export your current week's plan or import a shared plan
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="gap-3">
+                  <View className="flex-row gap-3">
+                    <Button
+                      onPress={handleExportMealPlan}
+                      disabled={isExporting || !currentWeekMeals || currentWeekMeals.length === 0}
+                      variant="default"
+                      className="flex-1"
+                    >
+                      <ShareIcon size={16} className="text-primary-foreground mr-2" />
+                      <H4 className="text-primary-foreground font-urbanist font-semibold">
+                        {isExporting ? "Exporting..." : "Export"}
+                      </H4>
+                    </Button>
+                    <Button
+                      onPress={handleImportMealPlan}
+                      disabled={isImporting}
+                      variant="outline"
+                      className="flex-1"
+                    >
+                      <DownloadIcon size={16} className="text-foreground mr-2" />
+                      <H4 className="text-foreground font-urbanist font-semibold">
+                        {isImporting ? "Importing..." : "Import"}
+                      </H4>
+                    </Button>
+                  </View>
+                  {!currentWeekMeals || currentWeekMeals.length === 0 ? (
+                    <Muted className="text-xs text-center mt-1">
+                      Add meals to this week to enable export
+                    </Muted>
+                  ) : (
+                    <Muted className="text-xs text-center mt-1">
+                      {currentWeekMeals.length} meal{currentWeekMeals.length !== 1 ? "s" : ""} this
+                      week
+                    </Muted>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Close Button */}
+              <Button onPress={handleClose} variant="outline" className="mt-4">
+                <H4 className="text-foreground font-urbanist font-semibold">Close</H4>
+              </Button>
             </View>
           </ScrollComponent>
         </View>

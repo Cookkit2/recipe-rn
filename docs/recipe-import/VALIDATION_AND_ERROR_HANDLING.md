@@ -25,10 +25,11 @@ The recipe import system uses a multi-layered validation and error handling appr
 The `isValidRecipe()` function performs four critical validation checks:
 
 ```typescript
-export function isValidRecipe(recipe: Partial<GeneratedRecipe> | undefined): boolean
+export function isValidRecipe(recipe: Partial<GeneratedRecipe> | undefined): boolean;
 ```
 
 #### 1. Title Validation
+
 - **Required:** Yes
 - **Rules:**
   - Must exist
@@ -36,6 +37,7 @@ export function isValidRecipe(recipe: Partial<GeneratedRecipe> | undefined): boo
   - **Failure message:** `"Recipe validation failed: Missing title"`
 
 #### 2. Ingredients Validation
+
 - **Required:** Yes
 - **Rules:**
   - Must be an array
@@ -46,6 +48,7 @@ export function isValidRecipe(recipe: Partial<GeneratedRecipe> | undefined): boo
   - **Failure message:** `"Recipe validation failed: valid_ingredients=0"`
 
 #### 3. Steps Validation
+
 - **Required:** Yes
 - **Rules:**
   - Must be an array
@@ -55,6 +58,7 @@ export function isValidRecipe(recipe: Partial<GeneratedRecipe> | undefined): boo
   - **Failure message:** `"Recipe validation failed: valid_steps=0"`
 
 #### 4. Servings Validation
+
 - **Required:** No (optional but recommended)
 - **Rules:**
   - If provided, must be greater than 0
@@ -84,6 +88,7 @@ No strict URL validation - any URL is accepted and fetched. Content type is dete
 #### Social Media URLs
 
 **Supported:**
+
 - TikTok: `tiktok.com` URLs
 - Instagram: `instagram.com` URLs
 
@@ -100,12 +105,12 @@ No strict URL validation - any URL is accepted and fetched. Content type is dete
 ```typescript
 export class YouTubeServiceError extends Error {
   code:
-    | "VIDEO_NOT_FOUND"    // Video doesn't exist or is private
-    | "NO_CAPTIONS"        // No transcript available
-    | "NETWORK_ERROR"      // Network request failed
-    | "RATE_LIMITED"       // Rate limited by YouTube
-    | "API_ERROR"          // Generic API error
-    | "PARSE_ERROR"        // Failed to parse response
+    | "VIDEO_NOT_FOUND" // Video doesn't exist or is private
+    | "NO_CAPTIONS" // No transcript available
+    | "NETWORK_ERROR" // Network request failed
+    | "RATE_LIMITED" // Rate limited by YouTube
+    | "API_ERROR" // Generic API error
+    | "PARSE_ERROR"; // Failed to parse response
 }
 ```
 
@@ -115,10 +120,10 @@ export class YouTubeServiceError extends Error {
 
 ```typescript
 export interface RecipeAnalysisResult {
-  isCookingVideo: boolean;  // Whether content is a recipe
-  confidence: number;       // 0-1 confidence score
+  isCookingVideo: boolean; // Whether content is a recipe
+  confidence: number; // 0-1 confidence score
   recipe?: GeneratedRecipe; // Extracted recipe if valid
-  errorMessage?: string;    // Error message if failed
+  errorMessage?: string; // Error message if failed
 }
 ```
 
@@ -128,16 +133,17 @@ export interface RecipeAnalysisResult {
 
 **File:** `lib/recipe-scrapper/WebsiteRecipeService.ts`
 
-| Error Scenario | Handling Strategy |
-|----------------|-------------------|
-| HTTP error response | Throws `Error` with status code and status text |
-| HTML fetch timeout | Propagates network error |
-| JSON-LD parse error | Returns `undefined` structured data, falls back to AI |
-| No structured data found | Uses AI analysis on HTML content |
-| Gemini cleaning failure | Returns original uncleaned recipe data |
-| Invalid cleaned recipe | Logs warning, returns original recipe |
+| Error Scenario           | Handling Strategy                                     |
+| ------------------------ | ----------------------------------------------------- |
+| HTTP error response      | Throws `Error` with status code and status text       |
+| HTML fetch timeout       | Propagates network error                              |
+| JSON-LD parse error      | Returns `undefined` structured data, falls back to AI |
+| No structured data found | Uses AI analysis on HTML content                      |
+| Gemini cleaning failure  | Returns original uncleaned recipe data                |
+| Invalid cleaned recipe   | Logs warning, returns original recipe                 |
 
 **Key Pattern:**
+
 ```typescript
 try {
   const cleanedRecipe = JSON.parse(response);
@@ -156,14 +162,14 @@ try {
 
 **File:** `lib/recipe-scrapper/youtube/NoAuthYouTubeService.ts`
 
-| Error Scenario | Handling Strategy |
-|----------------|-------------------|
-| noembed.com HTTP error | Throws `YouTubeServiceError` with `NETWORK_ERROR` |
-| Video not found | Throws `YouTubeServiceError` with `VIDEO_NOT_FOUND` |
-| Transcript fetch failed (all methods) | Throws `YouTubeServiceError` with `NO_CAPTIONS` |
-| InnerTube API error | Returns `null`, tries next method |
-| Caption URL not found | Returns `null`, tries next method |
-| Caption parse failed | Throws `YouTubeServiceError` with `PARSE_ERROR` |
+| Error Scenario                        | Handling Strategy                                   |
+| ------------------------------------- | --------------------------------------------------- |
+| noembed.com HTTP error                | Throws `YouTubeServiceError` with `NETWORK_ERROR`   |
+| Video not found                       | Throws `YouTubeServiceError` with `VIDEO_NOT_FOUND` |
+| Transcript fetch failed (all methods) | Throws `YouTubeServiceError` with `NO_CAPTIONS`     |
+| InnerTube API error                   | Returns `null`, tries next method                   |
+| Caption URL not found                 | Returns `null`, tries next method                   |
+| Caption parse failed                  | Throws `YouTubeServiceError` with `PARSE_ERROR`     |
 
 **Multi-Method Transcript Fetching:**
 
@@ -215,12 +221,12 @@ async getVideoData(videoId: string): Promise<YouTubeDataResult> {
 
 **File:** `lib/recipe-scrapper/SocialRecipeService.ts`
 
-| Error Scenario | Handling Strategy |
-|----------------|-------------------|
-| Page fetch error | Returns empty metadata, continues to AI |
+| Error Scenario             | Handling Strategy                           |
+| -------------------------- | ------------------------------------------- |
+| Page fetch error           | Returns empty metadata, continues to AI     |
 | Metadata extraction failed | Returns empty strings for title/description |
-| Recipe validation failed | Returns `confidence: 0` with error message |
-| JSON parse error | Returns error result with `confidence: 0` |
+| Recipe validation failed   | Returns `confidence: 0` with error message  |
+| JSON parse error           | Returns error result with `confidence: 0`   |
 
 **Validation-First Approach:**
 
@@ -250,12 +256,12 @@ private parseResponse(response: string, sourceUrl: string): RecipeAnalysisResult
 
 **File:** `lib/recipe-scrapper/youtube/RecipeAnalyzer.ts`
 
-| Error Scenario | Handling Strategy |
-|----------------|-------------------|
-| Gemini API error | Returns error result with `confidence: 0` |
+| Error Scenario                 | Handling Strategy                             |
+| ------------------------------ | --------------------------------------------- |
+| Gemini API error               | Returns error result with `confidence: 0`     |
 | Missing `isCookingVideo` field | Throws error, caught and returns error result |
-| JSON parse error | Returns error result with `confidence: 0` |
-| No transcript available | Uses Gemini video understanding (direct URL) |
+| JSON parse error               | Returns error result with `confidence: 0`     |
+| No transcript available        | Uses Gemini video understanding (direct URL)  |
 
 **Normalization as Error Recovery:**
 
@@ -281,12 +287,14 @@ private normalizeIngredients(ingredients): GeneratedRecipe["ingredients"] {
 ### 1. Transcript Fetching Fallback Chain
 
 **Priority Order:**
+
 1. **InnerTube API** - Most reliable, mimics Android app
 2. **youtube-transcript package** - Community-maintained library
 3. **Proxy API** - Public transcript APIs
 4. **Direct scraping** - Last resort, parsing YouTube HTML
 
 If all methods fail:
+
 - YouTube analysis proceeds without transcript
 - Uses Gemini's video understanding capabilities instead
 
@@ -344,16 +352,16 @@ if (transcript?.text && transcript.text.length > 100) {
 
 ### User-Facing Error Messages
 
-| Error Type | Message | Context |
-|------------|---------|---------|
-| Invalid URL | `"Invalid YouTube URL"` | URL format check failed |
-| Video not found | `"Video not found or is private"` | noembed returned error |
-| Not a cooking video | `"This video does not appear to be a cooking/recipe video. Confidence: X%"` | AI analysis |
-| No recipe extracted | `"Could not extract recipe from video"` | AI returned no recipe |
-| Low confidence | `"Could not extract valid ingredients or steps from this post"` | Social media with validation failure |
-| Network error | `"Failed to fetch URL: HTTP XXX"` | HTTP error |
-| Parse error | `"Failed to parse AI response"` | JSON parse failed |
-| No captions | `"Could not fetch transcript using any method"` | All transcript methods failed |
+| Error Type          | Message                                                                     | Context                              |
+| ------------------- | --------------------------------------------------------------------------- | ------------------------------------ |
+| Invalid URL         | `"Invalid YouTube URL"`                                                     | URL format check failed              |
+| Video not found     | `"Video not found or is private"`                                           | noembed returned error               |
+| Not a cooking video | `"This video does not appear to be a cooking/recipe video. Confidence: X%"` | AI analysis                          |
+| No recipe extracted | `"Could not extract recipe from video"`                                     | AI returned no recipe                |
+| Low confidence      | `"Could not extract valid ingredients or steps from this post"`             | Social media with validation failure |
+| Network error       | `"Failed to fetch URL: HTTP XXX"`                                           | HTTP error                           |
+| Parse error         | `"Failed to parse AI response"`                                             | JSON parse failed                    |
+| No captions         | `"Could not fetch transcript using any method"`                             | All transcript methods failed        |
 
 ### Debug/Log Messages
 
@@ -372,38 +380,41 @@ if (transcript?.text && transcript.text.length > 100) {
 ### Unit Testing Validation Function
 
 ```typescript
-import { isValidRecipe } from '~/lib/recipe-scrapper/validation-utils';
+import { isValidRecipe } from "~/lib/recipe-scrapper/validation-utils";
 
-describe('isValidRecipe', () => {
-  it('rejects recipe with no title', () => {
-    const recipe = { ingredients: [{name: 'egg', quantity: 1, unit: 'piece'}], steps: [{step: 1, title: 'Cook', description: 'Cook it'}] };
+describe("isValidRecipe", () => {
+  it("rejects recipe with no title", () => {
+    const recipe = {
+      ingredients: [{ name: "egg", quantity: 1, unit: "piece" }],
+      steps: [{ step: 1, title: "Cook", description: "Cook it" }],
+    };
     expect(isValidRecipe(recipe)).toBe(false);
   });
 
   it('rejects recipe with "unknown ingredient"', () => {
     const recipe = {
-      title: 'Test',
-      ingredients: [{name: 'Unknown ingredient', quantity: 1, unit: 'piece'}],
-      steps: [{step: 1, title: 'Cook', description: 'Cook it'}]
+      title: "Test",
+      ingredients: [{ name: "Unknown ingredient", quantity: 1, unit: "piece" }],
+      steps: [{ step: 1, title: "Cook", description: "Cook it" }],
     };
     expect(isValidRecipe(recipe)).toBe(false);
   });
 
-  it('rejects recipe with empty steps', () => {
+  it("rejects recipe with empty steps", () => {
     const recipe = {
-      title: 'Test',
-      ingredients: [{name: 'egg', quantity: 1, unit: 'piece'}],
-      steps: [{step: 1, title: 'Step', description: '   '}]
+      title: "Test",
+      ingredients: [{ name: "egg", quantity: 1, unit: "piece" }],
+      steps: [{ step: 1, title: "Step", description: "   " }],
     };
     expect(isValidRecipe(recipe)).toBe(false);
   });
 
-  it('accepts valid recipe', () => {
+  it("accepts valid recipe", () => {
     const recipe = {
-      title: 'Scrambled Eggs',
-      ingredients: [{name: 'egg', quantity: 2, unit: 'piece'}],
-      steps: [{step: 1, title: 'Beat eggs', description: 'Beat the eggs in a bowl'}],
-      servings: 2
+      title: "Scrambled Eggs",
+      ingredients: [{ name: "egg", quantity: 2, unit: "piece" }],
+      steps: [{ step: 1, title: "Beat eggs", description: "Beat the eggs in a bowl" }],
+      servings: 2,
     };
     expect(isValidRecipe(recipe)).toBe(true);
   });
@@ -566,17 +577,17 @@ if (error.code === "NO_CAPTIONS") {
 
 ## 📝 Summary
 
-| Component | Validation | Error Handling | Fallback |
-|-----------|------------|----------------|----------|
-| **URL Input** | Regex pattern check | Return error immediately | None |
-| **Content Fetch** | HTTP status codes | Throw with context | None |
-| **Structured Data** | JSON parse, schema check | Return undefined | AI analysis |
-| **AI Analysis** | Schema validation, response parse | Return error result | Confidence = 0 |
-| **Recipe Output** | `isValidRecipe()` | Return error message | None (critical) |
-| **Transcript** | Parse multiple formats | Try next method | Video understanding |
-| **Gemini Cleaning** | `isValidRecipe()` | Log and use original | Original recipe |
+| Component           | Validation                        | Error Handling           | Fallback            |
+| ------------------- | --------------------------------- | ------------------------ | ------------------- |
+| **URL Input**       | Regex pattern check               | Return error immediately | None                |
+| **Content Fetch**   | HTTP status codes                 | Throw with context       | None                |
+| **Structured Data** | JSON parse, schema check          | Return undefined         | AI analysis         |
+| **AI Analysis**     | Schema validation, response parse | Return error result      | Confidence = 0      |
+| **Recipe Output**   | `isValidRecipe()`                 | Return error message     | None (critical)     |
+| **Transcript**      | Parse multiple formats            | Try next method          | Video understanding |
+| **Gemini Cleaning** | `isValidRecipe()`                 | Log and use original     | Original recipe     |
 
 ---
 
-*Created: February 2026*
-*Last Updated: February 2026*
+_Created: February 2026_
+_Last Updated: February 2026_

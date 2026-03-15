@@ -117,12 +117,7 @@ export default function ShapeContainer({
     >
       {currentShape}
       <View className="absolute inset-0 flex items-center justify-center">
-        <P
-          className={cn(
-            "text-primary-foreground font-bowlby-one text-center",
-            textClassname
-          )}
-        >
+        <P className={cn("text-primary-foreground font-bowlby-one text-center", textClassname)}>
           {text}
         </P>
       </View>

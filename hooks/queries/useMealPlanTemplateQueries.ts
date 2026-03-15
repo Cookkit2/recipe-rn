@@ -1,6 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { mealPlanTemplateQueryKeys } from "./mealPlanTemplateQueryKeys";
-import { mealPlanTemplateApi, type MealPlanTemplateData, type MealSlotTemplate } from "~/data/api/mealPlanTemplateApi";
+import {
+  mealPlanTemplateApi,
+  type MealPlanTemplateData,
+  type MealSlotTemplate,
+} from "~/data/api/mealPlanTemplateApi";
 import { mealPlanQueryKeys } from "./mealPlanQueryKeys";
 
 /**

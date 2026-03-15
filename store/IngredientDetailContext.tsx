@@ -1,11 +1,4 @@
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useUpdatePantryItem } from "~/hooks/queries/usePantryQueries";
 import type { PantryItem } from "~/types/PantryItem";
 import { queryClient } from "./QueryProvider";
@@ -17,8 +10,7 @@ interface IngredientDetailContextType {
   updatePantryItem: (pantryItem: PantryItem) => void;
 }
 
-const IngredientDetailContext =
-  createContext<IngredientDetailContextType | null>(null);
+const IngredientDetailContext = createContext<IngredientDetailContextType | null>(null);
 
 export function IngredientDetailProvider({
   children,
@@ -70,9 +62,7 @@ export function IngredientDetailProvider({
 export const useIngredientDetailStore = () => {
   const context = useContext(IngredientDetailContext);
   if (!context) {
-    throw new Error(
-      "useIngredientDetailStore must be used within a IngredientDetailProvider"
-    );
+    throw new Error("useIngredientDetailStore must be used within a IngredientDetailProvider");
   }
   return context;
 };

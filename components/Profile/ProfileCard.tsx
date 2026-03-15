@@ -20,29 +20,20 @@ export default function ProfileCard() {
     <Card className="mx-6 shadow-md shadow-foreground/10 rounded-3xl border-continuous">
       <CardContent className="flex-row py-6 gap-3">
         <View className="flex-1 items-center gap-1">
-          <View
-            className="rounded-full overflow-hidden"
-            style={styles.profileCard}
-          >
+          <View className="rounded-full overflow-hidden" style={styles.profileCard}>
             <Image
               source={{ uri: storage.get(PROFILE_IMAGE_KEY) || undefined }}
               style={styles.profileCard}
             />
           </View>
-          <H2 className="font-urbanist-semibold text-center">
-            {storage.get(PROFILE_NAME_KEY)}
-          </H2>
+          <H2 className="font-urbanist-semibold text-center">{storage.get(PROFILE_NAME_KEY)}</H2>
         </View>
         <View className="px-4 justify-center">
           <H4 className="font-urbanist-semibold">{ingredients}</H4>
-          <P className="text-sm text-foreground/80 font-urbanist-medium">
-            Ingredients
-          </P>
+          <P className="text-sm text-foreground/80 font-urbanist-medium">Ingredients</P>
           <Separator className="my-2" />
           <H4 className="font-urbanist-semibold">{recipes}</H4>
-          <P className="text-sm text-foreground/80 font-urbanist-medium">
-            Recipes cooked
-          </P>
+          <P className="text-sm text-foreground/80 font-urbanist-medium">Recipes cooked</P>
           {/* <Separator className="my-2" /> */}
           {/* <H4 className="font-urbanist-semibold">0</H4>
           <P className="text-sm text-foreground/80 font-urbanist-medium">

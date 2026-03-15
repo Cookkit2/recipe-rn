@@ -116,22 +116,15 @@ export default function VersionHistorySheet({
             ) : (
               <View className="gap-3">
                 {versions.map((version) => (
-                  <View
-                    key={version.id}
-                    className="bg-muted/50 rounded-xl p-4 gap-3"
-                  >
+                  <View key={version.id} className="bg-muted/50 rounded-xl p-4 gap-3">
                     {/* Version Header */}
                     <View className="flex-row items-start justify-between">
                       <View className="flex-1 gap-1">
                         <View className="flex-row items-center gap-2">
-                          <H3 className="text-base">
-                            Version {version.versionNumber}
-                          </H3>
+                          <H3 className="text-base">Version {version.versionNumber}</H3>
                           {version.versionNumber === versions[0]?.versionNumber && (
                             <View className="bg-primary/20 px-2 py-0.5 rounded-full">
-                              <P className="text-xs text-primary font-urbanist-medium">
-                                Latest
-                              </P>
+                              <P className="text-xs text-primary font-urbanist-medium">Latest</P>
                             </View>
                           )}
                         </View>
@@ -187,7 +180,8 @@ export default function VersionHistorySheet({
           {/* Footer Info */}
           <View className="px-6 pt-4 border-t border-border/50">
             <P className="text-xs text-muted-foreground text-center">
-              Versions are automatically created when you save changes. Old versions may be deleted to save space.
+              Versions are automatically created when you save changes. Old versions may be deleted
+              to save space.
             </P>
           </View>
         </BottomSheetView>

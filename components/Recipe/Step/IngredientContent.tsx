@@ -1,11 +1,5 @@
 import React, { useMemo } from "react";
-import {
-  FlatList,
-  View,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-} from "react-native";
+import { FlatList, View, StyleSheet, ScrollView, Pressable } from "react-native";
 import type { RecipeIngredient } from "~/types/Recipe";
 import { H2, P } from "~/components/ui/typography";
 import OutlinedImage from "~/components/ui/outlined-image";
@@ -27,9 +21,10 @@ export const IngredientsContent: React.FC<{
   const colors = useColors();
 
   return (
-    <View className="flex-1 h-full rounded-3xl border-continuous p-4 overflow-hidden"
-           shouldRasterizeIOS={true}
-        renderToHardwareTextureAndroid={true}
+    <View
+      className="flex-1 h-full rounded-3xl border-continuous p-4 overflow-hidden"
+      shouldRasterizeIOS={true}
+      renderToHardwareTextureAndroid={true}
     >
       <LinearGradient
         colors={[colors.foreground, colors.mutedForeground]}
@@ -54,11 +49,7 @@ export const IngredientsContent: React.FC<{
           scrollEnabled={false}
           keyExtractor={(item) => item.name}
           renderItem={({ item, index }) => (
-            <IngredientItem
-              key={item.relatedIngredientId}
-              ingredient={item}
-              index={index}
-            />
+            <IngredientItem key={item.relatedIngredientId} ingredient={item} index={index} />
           )}
           ItemSeparatorComponent={() => <View className="h-3" />}
         />

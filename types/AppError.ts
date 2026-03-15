@@ -33,12 +33,7 @@ export type UnknownError = {
   cause?: unknown;
 };
 
-export type AppError =
-  | InfraError
-  | ValidationError
-  | NotFoundError
-  | ConflictError
-  | UnknownError;
+export type AppError = InfraError | ValidationError | NotFoundError | ConflictError | UnknownError;
 
 export function infraError(message: string, cause?: unknown): InfraError {
   return { kind: "infra", message, cause };

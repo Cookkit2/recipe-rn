@@ -121,8 +121,12 @@ interface NotificationSettings {
     headerTransparent: true,
     headerTitle: "Notification",
     headerLargeTitleEnabled: true,
-    headerLargeTitleStyle: { /* match other profile screens */ },
-    headerTitleStyle: { /* match other profile screens */ },
+    headerLargeTitleStyle: {
+      /* match other profile screens */
+    },
+    headerTitleStyle: {
+      /* match other profile screens */
+    },
     headerTintColor: colors.foreground,
     headerBackButtonDisplayMode: "minimal",
   }}
@@ -142,4 +146,3 @@ interface NotificationSettings {
   - `scheduleNotification` will skip any scheduling calls regardless of category.
 
 - This design intentionally keeps the model coarse-grained; we can later extend `NotificationSettings` to include more specific channels without breaking the initial UI.
-

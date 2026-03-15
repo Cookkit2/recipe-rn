@@ -13,9 +13,11 @@
 ### Task 1: Enhance `useGroceryList` quantities and categories
 
 **Files:**
+
 - Modify: `hooks/queries/useGroceryList.ts`
 
 **Steps:**
+
 - Add a `purchased` variant to the `GroceryCategory` union and `CATEGORY_CONFIG`, and include an empty keyword array for it in `CATEGORY_KEYWORDS`.
 - Update `categorizeIngredient` to skip both `other` and `purchased` so ingredients never default to `purchased`.
 - Introduce a `combineIngredientWithConversion` helper (mirroring PR #55) that uses `convertToBaseUnit`, `areDimensionsCompatible`, and `roundToReasonablePrecision` to safely merge quantities with different units when aggregating recipe ingredients.
@@ -25,9 +27,11 @@
 ### Task 2: Update `GroceryListSection` UI for Purchased section
 
 **Files:**
+
 - Modify: `components/GroceryList/GroceryListSection.tsx`
 
 **Steps:**
+
 - Derive an `isPurchased` flag from `section.category === "purchased"`.
 - Apply reduced opacity to the outer `Animated.View` when `isPurchased` is true.
 - Swap header/title, divider, and item-count colors to muted variants for the Purchased section (e.g., `text-muted-foreground`, `bg-muted-foreground/30`, `text-muted-foreground/70`) while keeping existing styles for other sections.
@@ -36,9 +40,11 @@
 ### Task 3: Verification
 
 **Files:**
+
 - Source: `hooks/queries/useGroceryList.ts`, `components/GroceryList/GroceryListSection.tsx`
 
 **Steps:**
+
 - Run TypeScript/lint checks focused on the updated files (or the repo’s standard lint command) and fix any new issues.
 - Manually test the grocery list in the running app:
   - Create a scenario where the same ingredient appears in multiple recipes with different but compatible units (e.g., cups vs ml) and confirm the total is sensible and covered status matches pantry contents.

@@ -47,14 +47,15 @@ export default function WeeklyCalendar({ onMealSlotPress, onMealSlotDrop }: Week
       date.setDate(date.getDate() + i);
 
       // Find meal plans for this day
-      const dayMealPlans = mealPlans?.filter((plan) => {
-        const planDate = new Date(plan.date);
-        return (
-          planDate.getDate() === date.getDate() &&
-          planDate.getMonth() === date.getMonth() &&
-          planDate.getFullYear() === date.getFullYear()
-        );
-      }) || [];
+      const dayMealPlans =
+        mealPlans?.filter((plan) => {
+          const planDate = new Date(plan.date);
+          return (
+            planDate.getDate() === date.getDate() &&
+            planDate.getMonth() === date.getMonth() &&
+            planDate.getFullYear() === date.getFullYear()
+          );
+        }) || [];
 
       // Group by meal slot
       const meals: Record<MealSlot, any> = {} as any;

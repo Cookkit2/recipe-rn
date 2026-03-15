@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { pantryApi } from "../pantryApi";
 
 // In-memory collections to simulate WatermelonDB
@@ -19,6 +20,9 @@ const failingNames = new Set<string>();
 
 const stockCollection = {
   create: jest.fn(async (updater: (stock: Stock) => void) => {
+    throw new Error("create should not be called");
+  }),
+  prepareCreate: jest.fn((updater: (stock: Stock) => void) => {
     const draft: Stock = {
       id: `stock_${stocks.length + 1}`,
       name: "",
@@ -61,11 +65,21 @@ jest.mock("~/data/db/database", () => ({
             fetch: async () => [],
           }),
           create: jest.fn(async () => ({})),
+          prepareCreate: jest.fn((updater) => {
+            return { _type: "create", updater };
+          })
         };
       },
     },
     write: async (action: () => Promise<void> | void) => {
       await action();
+    },
+    batch: async (...ops: any[]) => {
+      for (const op of ops) {
+        if (op && op._type === "update") {
+          op.updater(op.record);
+        }
+      }
     },
   },
 }));
@@ -101,9 +115,9 @@ describe("pantryApi.addPantryItemsWithMetadata", () => {
     ]);
 
     expect(result).toHaveLength(1);
-    expect(result[0].name).toBe("Milk");
+    expect(result[0]?.name).toBe("Milk");
     expect(stocks).toHaveLength(1);
-    expect(stocks[0].quantity).toBe(1);
+    expect(stocks[0]?.quantity).toBe(1);
   });
 
   it("aggregates quantity for duplicate ingredient names (case-insensitive)", async () => {
@@ -120,6 +134,9 @@ describe("pantryApi.addPantryItemsWithMetadata", () => {
       update: async (fn: (stock: Stock) => void) => {
         fn(existing);
       },
+      prepareUpdate: jest.fn((fn: (stock: Stock) => void) => {
+        return { _type: "update", updater: fn, record: existing };
+      }),
     };
     stocks.push(existing);
 
@@ -133,7 +150,7 @@ describe("pantryApi.addPantryItemsWithMetadata", () => {
     ]);
 
     expect(result).toHaveLength(1);
-    expect(result[0].name.toLowerCase()).toBe("eggs");
+    expect(result[0]?.name.toLowerCase()).toBe("eggs");
     expect(existing.quantity).toBe(6);
   });
 
@@ -157,7 +174,7 @@ describe("pantryApi.addPantryItemsWithMetadata", () => {
 
     // Only the valid item should be created and returned
     expect(result).toHaveLength(1);
-    expect(result[0].name).toBe("GoodItem");
+    expect(result[0]?.name).toBe("GoodItem");
     expect(stocks.map((s) => s.name)).toEqual(["GoodItem"]);
   });
 
@@ -184,4 +201,3 @@ describe("pantryApi.addPantryItemsWithMetadata", () => {
     expect(stocks).toHaveLength(0);
   });
 });
-

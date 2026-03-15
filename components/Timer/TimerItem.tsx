@@ -65,11 +65,7 @@ function getStatusConfig(status: TimerStatus) {
 }
 
 export function TimerItem({ timer, onTogglePlay, onDelete, className }: TimerItemProps) {
-  const {
-    animatedStyle: pressStyle,
-    handlePressIn,
-    handlePressOut,
-  } = useOnPressScale();
+  const { animatedStyle: pressStyle, handlePressIn, handlePressOut } = useOnPressScale();
   const pulseScale = useSharedValue(1);
 
   const statusConfig = getStatusConfig(timer.status);
@@ -81,10 +77,7 @@ export function TimerItem({ timer, onTogglePlay, onDelete, className }: TimerIte
   useEffect(() => {
     if (isRunning) {
       pulseScale.value = withRepeat(
-        withSequence(
-          withTiming(1.05, { duration: 1000 }),
-          withTiming(1, { duration: 1000 })
-        ),
+        withSequence(withTiming(1.05, { duration: 1000 }), withTiming(1, { duration: 1000 })),
         -1,
         true
       );
@@ -123,9 +116,7 @@ export function TimerItem({ timer, onTogglePlay, onDelete, className }: TimerIte
           {/* Timer Name with Status Icon */}
           <View className="flex-row items-center gap-2">
             {statusConfig.icon}
-            <Text className="font-urbanist-semibold text-foreground text-base">
-              {timer.name}
-            </Text>
+            <Text className="font-urbanist-semibold text-foreground text-base">{timer.name}</Text>
           </View>
 
           {/* Countdown Display */}
@@ -151,9 +142,7 @@ export function TimerItem({ timer, onTogglePlay, onDelete, className }: TimerIte
               accessibilityRole="button"
               className={cn(
                 "w-12 h-12 rounded-full items-center justify-center",
-                isRunning
-                  ? "bg-muted"
-                  : "bg-primary"
+                isRunning ? "bg-muted" : "bg-primary"
               )}
             >
               {isRunning ? (

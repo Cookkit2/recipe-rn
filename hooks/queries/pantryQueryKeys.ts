@@ -19,10 +19,8 @@ export const pantryQueryKeys = {
   item: (id: string) => [...pantryQueryKeys.items(), id] as const,
 
   // Search results
-  search: (query: string) =>
-    [...pantryQueryKeys.items(), "search", query] as const,
+  search: (query: string) => [...pantryQueryKeys.items(), "search", query] as const,
 
   // Expiring items
-  expiring: (days: number = 3) =>
-    [...pantryQueryKeys.items(), "expiring", days] as const,
+  expiring: (days: number = 3) => [...pantryQueryKeys.items(), "expiring", days] as const,
 } as const;
