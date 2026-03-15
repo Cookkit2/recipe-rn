@@ -13,13 +13,13 @@ export interface UserRatingStrategyOptions {
 
 /**
  * Strategy that boosts recipes the user has rated highly.
- * 
+ *
  * When users rate a recipe after cooking, it reflects their
  * actual experience. High ratings indicate:
  * - They enjoyed cooking it
  * - The dish turned out well
  * - They'd likely want to make it again
- * 
+ *
  * Requires cookingHistory data (with ratings) in RankingContext.
  */
 export class UserRatingStrategy implements RecipeRankingStrategy {

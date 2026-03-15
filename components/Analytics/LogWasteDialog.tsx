@@ -45,7 +45,9 @@ export function LogWasteDialog({
   const [open, setOpen] = useState(false);
   const [stockId, setStockId] = useState(initialStockId);
   const [stockName, setStockName] = useState(initialStockName);
-  const [quantity, setQuantity] = useState(initialStockQuantity > 0 ? String(initialStockQuantity) : "");
+  const [quantity, setQuantity] = useState(
+    initialStockQuantity > 0 ? String(initialStockQuantity) : ""
+  );
   const [unit, setUnit] = useState(initialStockUnit);
   const [reason, setReason] = useState<WasteReason>(null);
   const [estimatedCost, setEstimatedCost] = useState("");
@@ -116,16 +118,15 @@ export function LogWasteDialog({
   const ReasonButton = ({ value, label }: { value: WasteReason; label: string }) => (
     <Button
       variant={reason === value ? "default" : "outline"}
-      className={cn(
-        "flex-1",
-        reason === value && "border-primary"
-      )}
+      className={cn("flex-1", reason === value && "border-primary")}
       onPress={() => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         setReason(value);
       }}
     >
-      <P className={cn(reason === value ? "text-primary-foreground" : "text-foreground")}>{label}</P>
+      <P className={cn(reason === value ? "text-primary-foreground" : "text-foreground")}>
+        {label}
+      </P>
     </Button>
   );
 
@@ -173,11 +174,7 @@ export function LogWasteDialog({
                 />
               </View>
               <View className="w-24">
-                <Input
-                  value={unit}
-                  onChangeText={setUnit}
-                  placeholder="unit"
-                />
+                <Input value={unit} onChangeText={setUnit} placeholder="unit" />
               </View>
             </View>
             {errors.quantity && (
@@ -217,18 +214,10 @@ export function LogWasteDialog({
 
       <DialogFooter>
         <View className="flex-row gap-2 w-full">
-          <Button
-            variant="outline"
-            className="flex-1"
-            onPress={() => setOpen(false)}
-          >
+          <Button variant="outline" className="flex-1" onPress={() => setOpen(false)}>
             <P className="text-foreground">Cancel</P>
           </Button>
-          <Button
-            className="flex-1"
-            onPress={handleSubmit}
-            disabled={recordWaste.isPending}
-          >
+          <Button className="flex-1" onPress={handleSubmit} disabled={recordWaste.isPending}>
             <P className="text-primary-foreground">Save</P>
           </Button>
         </View>

@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
-import type { ImageSourcePropType } from 'react-native';
-import useColors from './useColor';
-import { getColors } from 'react-native-image-colors';
-import { log } from '~/utils/logger';
+import { useEffect, useState } from "react";
+import type { ImageSourcePropType } from "react-native";
+import useColors from "./useColor";
+import { getColors } from "react-native-image-colors";
+import { log } from "~/utils/logger";
 
 export interface UseImageColorsOptions {
   /** Stable key for color cache (e.g. recipe id). Uses url.toString() when not set. */
@@ -44,7 +44,7 @@ const useImageColors = (
       try {
         const key =
           cacheKey ??
-          (typeof url === "string" ? url : (url as { uri?: string })?.uri ?? String(url));
+          (typeof url === "string" ? url : ((url as { uri?: string })?.uri ?? String(url)));
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const color = await getColors(url as any, {
           cache: true,
@@ -52,20 +52,20 @@ const useImageColors = (
         });
 
         switch (color.platform) {
-          case 'android':
+          case "android":
             setImageColor(color.vibrant);
             break;
-          case 'ios':
+          case "ios":
             setImageColor(color.background);
             break;
           default:
-            setImageColor(color.dominant || '#4ECDC4');
+            setImageColor(color.dominant || "#4ECDC4");
             break;
         }
       } catch (error) {
-        log.error('Error fetching image colors:', error);
+        log.error("Error fetching image colors:", error);
         // Fallback color
-        setImageColor('#4ECDC4');
+        setImageColor("#4ECDC4");
       }
     };
 

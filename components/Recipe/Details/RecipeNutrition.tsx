@@ -1,11 +1,6 @@
 import React from "react";
 import { View } from "react-native";
-import {
-  AppleIcon,
-  DrumstickIcon,
-  FlameIcon,
-  WheatIcon,
-} from "lucide-uniwind";
+import { AppleIcon, DrumstickIcon, FlameIcon, WheatIcon } from "lucide-uniwind";
 import type { Recipe } from "~/types/Recipe";
 import ListItem from "~/components/Shared/ListItem";
 

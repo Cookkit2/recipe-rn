@@ -426,12 +426,7 @@ describe("quantity-comparison", () => {
       const total = aggregateQuantities(quantities);
       expect(total).toBe(300);
 
-      const percentage = calculateAvailabilityPercentage(
-        total!,
-        "g",
-        400,
-        "g"
-      );
+      const percentage = calculateAvailabilityPercentage(total!, "g", 400, "g");
       expect(percentage).toBe(75);
     });
   });

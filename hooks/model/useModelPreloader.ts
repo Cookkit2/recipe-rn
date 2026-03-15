@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import allModel from "./allModel";
-import { log } from '~/utils/logger';
+import { log } from "~/utils/logger";
 
 function scheduleIdleTask(task: () => void, delayMs?: number) {
   const idleCallback = (globalThis as any).requestIdleCallback as
@@ -99,13 +99,7 @@ export const useModelPreloader = (options: ModelPreloaderOptions = {}) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const {
-    delay = 100,
-    priority = "low",
-    onLoadStart,
-    onLoadComplete,
-    onLoadError,
-  } = options;
+  const { delay = 100, priority = "low", onLoadStart, onLoadComplete, onLoadError } = options;
 
   useEffect(() => {
     const loadModel = async () => {
@@ -129,8 +123,7 @@ export const useModelPreloader = (options: ModelPreloaderOptions = {}) => {
           log.info("Model preload completed successfully");
         }
       } catch (err) {
-        const error =
-          err instanceof Error ? err : new Error("Model loading failed");
+        const error = err instanceof Error ? err : new Error("Model loading failed");
         setError(error);
         onLoadError?.(error);
 

@@ -137,10 +137,7 @@ export function postprocessOutputsYolo(
   return results;
 }
 
-function applyNMS(
-  detections: Detection[],
-  iouThreshold: number = 0.5
-): Detection[] {
+function applyNMS(detections: Detection[], iouThreshold: number = 0.5): Detection[] {
   if (detections.length === 0) {
     return detections;
   }
@@ -192,8 +189,7 @@ function applyNMS(
       const intersectionArea = intersectionWidth * intersectionHeight;
 
       // Calculate union area
-      const unionArea =
-        (areas[current] ?? 0) + (areas[idx] ?? 0) - intersectionArea;
+      const unionArea = (areas[current] ?? 0) + (areas[idx] ?? 0) - intersectionArea;
 
       // Calculate IoU
       const iou = intersectionArea / unionArea;

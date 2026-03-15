@@ -18,9 +18,7 @@ export const baseIngredientApi = {
   /**
    * Fetch a base ingredient by name with its synonyms and categories
    */
-  getBaseIngredientByName: async (
-    name: string
-  ): Promise<BaseIngredientWithRelations | null> => {
+  getBaseIngredientByName: async (name: string): Promise<BaseIngredientWithRelations | null> => {
     if (!guardSupabase()) return null;
     const { data: baseIngredient, error: baseError } = await supabase!
       .from("base_ingredient")
@@ -50,12 +48,11 @@ export const baseIngredientApi = {
       }
 
       // Fetch the base ingredient by ID from synonym match
-      const { data: ingredientFromSynonym, error: ingredientError } =
-        await supabase!
-          .from("base_ingredient")
-          .select("*")
-          .eq("id", synonymData.base_ingredient_id)
-          .single();
+      const { data: ingredientFromSynonym, error: ingredientError } = await supabase!
+        .from("base_ingredient")
+        .select("*")
+        .eq("id", synonymData.base_ingredient_id)
+        .single();
 
       if (ingredientError) throw ingredientError;
 
@@ -78,18 +75,14 @@ export const baseIngredientApi = {
 
   getAllSynonyms: async () => {
     if (!guardSupabase()) return [];
-    const { data, error } = await supabase!
-      .from("ingredient_synonym")
-      .select("*");
+    const { data, error } = await supabase!.from("ingredient_synonym").select("*");
     if (error) throw error;
     return data;
   },
 
   getAllCategories: async () => {
     if (!guardSupabase()) return [];
-    const { data, error } = await supabase!
-      .from("ingredient_category")
-      .select("*");
+    const { data, error } = await supabase!.from("ingredient_category").select("*");
     if (error) throw error;
     return data;
   },
@@ -98,19 +91,13 @@ export const baseIngredientApi = {
 /**
  * Helper to fetch synonyms and categories for a base ingredient
  */
-async function fetchRelatedData(
-  baseIngredientId: string
-): Promise<BaseIngredientWithRelations> {
+async function fetchRelatedData(baseIngredientId: string): Promise<BaseIngredientWithRelations> {
   const [
     { data: baseIngredient, error: baseError },
     { data: synonyms, error: synonymError },
     { data: categoryLinks, error: categoryError },
   ] = await Promise.all([
-    supabase!
-      .from("base_ingredient")
-      .select("*")
-      .eq("id", baseIngredientId)
-      .single(),
+    supabase!.from("base_ingredient").select("*").eq("id", baseIngredientId).single(),
     supabase!
       .from("ingredient_synonym")
       .select("id, synonym")
@@ -139,9 +126,7 @@ async function fetchRelatedData(
     ...baseIngredient,
     synonyms: synonyms || [],
     categories: categories.filter(
-      (
-        c: { id: string; name: string } | null
-      ): c is { id: string; name: string } => c !== null
+      (c: { id: string; name: string } | null): c is { id: string; name: string } => c !== null
     ),
   };
 }

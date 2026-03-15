@@ -54,9 +54,7 @@ export default function IngredientHeaderRow() {
   return (
     <View className="w-full flex flex-row justify-between items-center py-4">
       {processPantryItems.length === 0 && (
-        <P className="text-white pl-4 font-urbanist-regular">
-          Logged ingredients will appear here
-        </P>
+        <P className="text-white pl-4 font-urbanist-regular">Logged ingredients will appear here</P>
       )}
       <Animated.FlatList
         horizontal
@@ -76,12 +74,7 @@ export default function IngredientHeaderRow() {
           </Pressable>
         )}
       />
-      <Button
-        size="icon-sm"
-        variant="ghost"
-        className="rounded-full mx-4"
-        onPress={onBack}
-      >
+      <Button size="icon-sm" variant="ghost" className="rounded-full mx-4" onPress={onBack}>
         <XIcon className="text-white" size={20} />
       </Button>
     </View>

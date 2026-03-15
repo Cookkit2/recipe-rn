@@ -26,9 +26,7 @@ export default class StockCategory extends Model {
   @date("updated_at") updatedAt!: Date;
 
   // Update method
-  @writer async updateStockCategory(
-    data: Partial<StockCategoryData>
-  ): Promise<StockCategory> {
+  @writer async updateStockCategory(data: Partial<StockCategoryData>): Promise<StockCategory> {
     return this.update((sc) => {
       if (data.stockId !== undefined) sc.stockId = data.stockId;
       if (data.categoryId !== undefined) sc.categoryId = data.categoryId;

@@ -74,10 +74,7 @@ export function compareQuantities(
   const normalizedRequiredUnit = requiredUnit.toLowerCase().trim();
 
   // Check if units are compatible (same dimension)
-  const compatible = areDimensionsCompatible(
-    normalizedAvailableUnit,
-    normalizedRequiredUnit
-  );
+  const compatible = areDimensionsCompatible(normalizedAvailableUnit, normalizedRequiredUnit);
 
   if (!compatible) {
     return {
@@ -90,14 +87,8 @@ export function compareQuantities(
   }
 
   // Convert both quantities to base unit for comparison
-  const availableInBase = convertToBaseUnit(
-    availableQuantity,
-    normalizedAvailableUnit
-  );
-  const requiredInBase = convertToBaseUnit(
-    requiredQuantity,
-    normalizedRequiredUnit
-  );
+  const availableInBase = convertToBaseUnit(availableQuantity, normalizedAvailableUnit);
+  const requiredInBase = convertToBaseUnit(requiredQuantity, normalizedRequiredUnit);
 
   // Handle conversion failures
   if (
@@ -287,11 +278,7 @@ export function calculateAvailabilityPercentage(
   const availableInBase = convertToBaseUnit(availableQuantity, normalizedAvailableUnit);
   const requiredInBase = convertToBaseUnit(requiredQuantity, normalizedRequiredUnit);
 
-  if (
-    availableInBase == null ||
-    requiredInBase == null ||
-    requiredInBase === 0
-  ) {
+  if (availableInBase == null || requiredInBase == null || requiredInBase === 0) {
     return null;
   }
 

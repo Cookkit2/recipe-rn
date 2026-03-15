@@ -35,7 +35,11 @@ export default function StepBottomBar() {
 
   // Handle voice commands
   const handleVoiceCommand = useCallback(
-    async (command: VoiceCommand, transcript: string, context?: { recipe?: Recipe | null; currentStep?: RecipeStep }) => {
+    async (
+      command: VoiceCommand,
+      transcript: string,
+      context?: { recipe?: Recipe | null; currentStep?: RecipeStep }
+    ) => {
       // Use provided recipe from context or fall back to component's recipe
       const commandRecipe = context?.recipe ?? recipe;
 
@@ -53,10 +57,7 @@ export default function StepBottomBar() {
         case "previous":
         case "back": {
           goToPreviousStep();
-          const answer = voiceAnswerGenerator.generateNavigationConfirmation(
-            "back",
-            currentStep
-          );
+          const answer = voiceAnswerGenerator.generateNavigationConfirmation("back", currentStep);
           voiceAnswerGenerator.speakAnswer(answer);
           break;
         }
@@ -96,7 +97,9 @@ export default function StepBottomBar() {
             const answer = voiceAnswerGenerator.generateTemperatureInfo(tempInfo);
             voiceAnswerGenerator.speakAnswer(answer);
           } else {
-            const answer = voiceAnswerGenerator.generateNoTemperatureFound(commandRecipe?.title ?? recipe?.title ?? "this recipe");
+            const answer = voiceAnswerGenerator.generateNoTemperatureFound(
+              commandRecipe?.title ?? recipe?.title ?? "this recipe"
+            );
             voiceAnswerGenerator.speakAnswer(answer);
           }
           break;

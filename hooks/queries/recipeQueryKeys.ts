@@ -31,14 +31,11 @@ export const recipeQueryKeys = {
   availability: () => [...recipeQueryKeys.all, "availability"] as const,
 
   // Recipe recommendations based on pantry
-  recommendations: (options?: {
-    maxRecommendations?: number;
-    categories?: string[];
-  }) => [...recipeQueryKeys.all, "recommendations", options] as const,
+  recommendations: (options?: { maxRecommendations?: number; categories?: string[] }) =>
+    [...recipeQueryKeys.all, "recommendations", options] as const,
 
   // Shopping list for a specific recipe
-  shoppingList: (recipeId: string) =>
-    [...recipeQueryKeys.all, "shopping-list", recipeId] as const,
+  shoppingList: (recipeId: string) => [...recipeQueryKeys.all, "shopping-list", recipeId] as const,
 
   // Recipe tags (for filtering)
   tags: () => [...recipeQueryKeys.all, "tags"] as const,
@@ -48,8 +45,7 @@ export const recipeQueryKeys = {
     [...recipeQueryKeys.all, "expiring", options] as const,
 
   // Recipe version history
-  versions: (recipeId: string) =>
-    [...recipeQueryKeys.all, "versions", recipeId] as const,
+  versions: (recipeId: string) => [...recipeQueryKeys.all, "versions", recipeId] as const,
 
   // Latest recipe version metadata
   latestVersion: (recipeId: string) =>

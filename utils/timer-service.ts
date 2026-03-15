@@ -10,11 +10,7 @@ import { AppState, type AppStateStatus } from "react-native";
 import { log } from "~/utils/logger";
 import { storage } from "~/data";
 import { COOKING_TIMERS_KEY } from "~/constants/storage-keys";
-import type {
-  Timer,
-  TimerCreateInput,
-  TimerUpdateInput,
-} from "~/types/Timer";
+import type { Timer, TimerCreateInput, TimerUpdateInput } from "~/types/Timer";
 import { scheduleNotification, cancelNotification } from "~/lib/notifications/notification-service";
 
 // Interval for updating timers (in milliseconds)
@@ -232,7 +228,10 @@ class TimerService {
             }
           }
         } catch (notificationError) {
-          log.error("Failed to reconcile scheduled notifications with restored timers:", notificationError);
+          log.error(
+            "Failed to reconcile scheduled notifications with restored timers:",
+            notificationError
+          );
         }
 
         await this.persistTimers();

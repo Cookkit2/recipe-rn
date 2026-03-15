@@ -8,10 +8,10 @@ interface WeightedStrategy {
 
 /**
  * Composite strategy that combines multiple ranking strategies with configurable weights.
- * 
+ *
  * The final score is the sum of all weighted strategy scores:
  * totalScore = Σ(strategy.score(recipe) * weight)
- * 
+ *
  * @example
  * const composite = new CompositeRankingStrategy()
  *   .addStrategy(new DifficultyStrategy(), 1)

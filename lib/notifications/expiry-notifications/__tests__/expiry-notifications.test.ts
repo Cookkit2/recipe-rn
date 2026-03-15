@@ -61,4 +61,3 @@ describe("scheduleExpiryNotifications", () => {
     expect(ids).toContain("expiry-future");
   });
 });
-

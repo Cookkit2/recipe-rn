@@ -3,10 +3,10 @@ import type { RecipeFilterStrategy, FilterContext } from "./RecipeFilterStrategy
 
 /**
  * Composite filter that combines multiple filters.
- * 
+ *
  * By default, uses AND logic - recipe must pass ALL filters.
  * Can be configured to use OR logic - recipe must pass ANY filter.
- * 
+ *
  * @example
  * const filter = new CompositeFilterStrategy()
  *   .addFilter(new AvailabilityFilter({ minAvailability: 50 }))

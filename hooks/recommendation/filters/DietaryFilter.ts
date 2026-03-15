@@ -77,10 +77,10 @@ export class DietaryFilter implements RecipeFilterStrategy {
     // Check dietary preferences
     if (this.checkDietaryPreferences) {
       const userDiet = storage.get(PREF_DIET_KEY) as Diet | undefined;
-      
+
       if (userDiet && userDiet !== "none") {
         const recipeTags = recipe.tags?.map((tag) => tag.toLowerCase()) ?? [];
-        
+
         // Recipe must have matching dietary tag
         if (!recipeTags.includes(userDiet.toLowerCase())) {
           return false;
@@ -92,19 +92,19 @@ export class DietaryFilter implements RecipeFilterStrategy {
     if (this.checkAllergens) {
       const { standardAllergens, customAllergens } = this.getAllergens();
       const allAllergens = [...standardAllergens, ...customAllergens];
-      
+
       if (allAllergens.length > 0) {
         // Check recipe ingredients for allergens
         for (const ingredient of recipe.ingredients) {
           const ingredientName = ingredient.name.toLowerCase();
-          
+
           // Check against standard allergens using keyword mappings
           for (const allergen of standardAllergens) {
             if (this.containsStandardAllergen(ingredientName, allergen)) {
               return false;
             }
           }
-          
+
           // Check against custom allergens using smart ingredient matching
           for (const allergen of customAllergens) {
             if (isIngredientMatch(ingredientName, allergen.toLowerCase())) {
@@ -112,7 +112,7 @@ export class DietaryFilter implements RecipeFilterStrategy {
             }
           }
         }
-        
+
         // Also check recipe tags for allergen mentions
         if (this.checkTagsForAllergens) {
           const recipeTags = recipe.tags?.map((tag) => tag.toLowerCase()) ?? [];
@@ -137,7 +137,7 @@ export class DietaryFilter implements RecipeFilterStrategy {
   private containsStandardAllergen(ingredientName: string, allergen: Allergen): boolean {
     const keywords = ALLERGEN_KEYWORDS[allergen];
     if (!keywords) return false;
-    
+
     return keywords.some((keyword) => ingredientName.includes(keyword));
   }
 

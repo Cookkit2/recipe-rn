@@ -1,8 +1,4 @@
-import {
-  camelCaseToReadable,
-  toKebabCase,
-  toCamelCase,
-} from "../text-formatter";
+import { camelCaseToReadable, toKebabCase, toCamelCase } from "../text-formatter";
 
 describe("camelCaseToReadable", () => {
   it("converts camelCase to readable text", () => {

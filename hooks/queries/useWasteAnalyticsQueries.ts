@@ -50,11 +50,7 @@ export function useWasteOverTime(
   groupBy: "day" | "week" | "month" = "week"
 ) {
   return useQuery({
-    queryKey: [
-      ...wasteAnalyticsQueryKeys.trends(groupBy),
-      startDate,
-      endDate,
-    ],
+    queryKey: [...wasteAnalyticsQueryKeys.trends(groupBy), startDate, endDate],
     queryFn: () => databaseFacade.getWasteOverTime(startDate, endDate, groupBy),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -63,11 +59,7 @@ export function useWasteOverTime(
 /**
  * Hook to fetch most wasted items
  */
-export function useMostWastedItems(
-  limit: number = 10,
-  startDate?: number,
-  endDate?: number
-) {
+export function useMostWastedItems(limit: number = 10, startDate?: number, endDate?: number) {
   return useQuery({
     queryKey: [
       ...wasteAnalyticsQueryKeys.discardedItems(),
@@ -86,12 +78,7 @@ export function useMostWastedItems(
  */
 export function useTotalWasteCost(startDate?: number, endDate?: number) {
   return useQuery({
-    queryKey: [
-      ...wasteAnalyticsQueryKeys.moneySaved(),
-      "total",
-      startDate,
-      endDate,
-    ],
+    queryKey: [...wasteAnalyticsQueryKeys.moneySaved(), "total", startDate, endDate],
     queryFn: () => databaseFacade.getTotalWasteCost(startDate, endDate),
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
@@ -165,8 +152,7 @@ export function useDeleteWasteLogs() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (stockId: string) =>
-      databaseFacade.deleteWasteLogsByStockId(stockId),
+    mutationFn: (stockId: string) => databaseFacade.deleteWasteLogsByStockId(stockId),
     onSuccess: () => {
       // Invalidate all waste analytics queries
       queryClient.invalidateQueries({
