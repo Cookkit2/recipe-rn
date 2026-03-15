@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 jest.mock("~/utils/logger", () => ({
   log: {
     info: jest.fn(),
