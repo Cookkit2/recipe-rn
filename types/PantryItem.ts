@@ -41,7 +41,7 @@ export type BaseIngredient = {
 };
 
 type StepsToStore = {
-  id: number;
+  id: string;
   title: string;
   description: string;
   sequence: number;

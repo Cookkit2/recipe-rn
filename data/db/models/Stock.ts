@@ -1,9 +1,11 @@
-import { Model, Query, Collection } from "@nozbe/watermelondb";
+import { Model, Collection } from "@nozbe/watermelondb";
 import { field, date, writer, children } from "@nozbe/watermelondb/decorators";
 import type { Associations } from "@nozbe/watermelondb/Model";
 import type IngredientSynonym from "./IngredientSynonym";
 import type StockCategory from "./StockCategory";
 import type WasteLog from "./WasteLog";
+
+import type StepsToStore from "./StepsToStore";
 
 export interface StockData {
   name: string;
@@ -24,6 +26,7 @@ export default class Stock extends Model {
     ingredient_synonym: { type: "has_many", foreignKey: "stock_id" },
     stock_category: { type: "has_many", foreignKey: "stock_id" },
     waste_log: { type: "has_many", foreignKey: "stock_id" },
+    steps_to_store: { type: "has_many", foreignKey: "stock_id" },
   };
 
   @field("name") name!: string;
@@ -37,9 +40,10 @@ export default class Stock extends Model {
   @field("y") y?: number;
   @field("scale") scale?: number;
 
-  @children("ingredient_synonym") synonyms!: Query<IngredientSynonym>;
-  @children("stock_category") stockCategories!: Query<StockCategory>;
-  @children("waste_log") wasteLogs!: Query<WasteLog>;
+  @children("ingredient_synonym") synonyms!: Collection<IngredientSynonym>;
+  @children("stock_category") stockCategories!: Collection<StockCategory>;
+  @children("waste_log") wasteLogs!: Collection<WasteLog>;
+  @children("steps_to_store") stepsToStore!: Collection<StepsToStore>;
 
   @date("created_at") createdAt!: Date;
   @date("updated_at") updatedAt!: Date;
