@@ -4,6 +4,7 @@ import type { Associations } from "@nozbe/watermelondb/Model";
 import type IngredientSynonym from "./IngredientSynonym";
 import type StockCategory from "./StockCategory";
 import type WasteLog from "./WasteLog";
+import type StepsToStore from "./StepsToStore";
 
 export interface StockData {
   name: string;
@@ -21,6 +22,7 @@ export interface StockData {
 export default class Stock extends Model {
   static table = "stock";
   static associations: Associations = {
+    steps_to_store: { type: "has_many", foreignKey: "stock_id" },
     ingredient_synonym: { type: "has_many", foreignKey: "stock_id" },
     stock_category: { type: "has_many", foreignKey: "stock_id" },
     waste_log: { type: "has_many", foreignKey: "stock_id" },
@@ -40,6 +42,7 @@ export default class Stock extends Model {
   @children("ingredient_synonym") synonyms!: Collection<IngredientSynonym>;
   @children("stock_category") stockCategories!: Collection<StockCategory>;
   @children("waste_log") wasteLogs!: Collection<WasteLog>;
+  @children("steps_to_store") stepsToStore!: Collection<StepsToStore>;
 
   @date("created_at") createdAt!: Date;
   @date("updated_at") updatedAt!: Date;
@@ -76,8 +79,7 @@ export default class Stock extends Model {
       if (data.expiryDate !== undefined) stock.expiryDate = data.expiryDate;
       if (data.storageType !== undefined) stock.storageType = data.storageType;
       if (data.imageUrl !== undefined) stock.imageUrl = data.imageUrl;
-      if (data.backgroundColor !== undefined)
-        stock.backgroundColor = data.backgroundColor;
+      if (data.backgroundColor !== undefined) stock.backgroundColor = data.backgroundColor;
       if (data.x !== undefined) stock.x = data.x;
       if (data.y !== undefined) stock.y = data.y;
       if (data.scale !== undefined) stock.scale = data.scale;
