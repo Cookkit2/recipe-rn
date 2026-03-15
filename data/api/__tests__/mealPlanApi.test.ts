@@ -1,10 +1,10 @@
 /// <reference types="jest" />
 
 jest.mock("../../db/database", () => ({
-  database: {}
+  database: {},
 }));
 jest.mock("react-native", () => ({
-  Platform: { OS: 'ios' }
+  Platform: { OS: "ios" },
 }));
 jest.mock("@sentry/react-native", () => ({
   init: jest.fn(),
@@ -17,8 +17,8 @@ jest.mock("react-native-logs", () => ({
       warn: jest.fn(),
       error: console.error,
       debug: jest.fn(),
-    })
-  }
+    }),
+  },
 }));
 
 // We need to properly mock the whole MealPlanRepository file
@@ -26,9 +26,10 @@ jest.mock("../../db/repositories/MealPlanRepository", () => {
   const mockGetByDateRange = jest.fn();
   return {
     MealPlanRepository: jest.fn().mockImplementation(() => ({
-      getByDateRange: mockGetByDateRange
+      getByDateRange: mockGetByDateRange,
     })),
-    getMealPlanRepository: () => new (require("../../db/repositories/MealPlanRepository").MealPlanRepository)()
+    getMealPlanRepository: () =>
+      new (require("../../db/repositories/MealPlanRepository").MealPlanRepository)(),
   };
 });
 
@@ -72,17 +73,19 @@ describe("mealPlanApi.getMealPlansForDateRange performance", () => {
       };
     });
 
-    (databaseFacade.getRecipesWithDetails as jest.Mock).mockImplementation(async (ids: string[]) => {
-      await new Promise((resolve) => setTimeout(resolve, 10));
-      const map = new Map();
-      for (const id of ids) {
-        map.set(id, {
-          recipe: { id, title: `Recipe ${id}`, servings: 2, imageUrl: "" },
-          ingredients: [{ name: "Ingredient", quantity: 1, unit: "cup" }],
-        });
+    (databaseFacade.getRecipesWithDetails as jest.Mock).mockImplementation(
+      async (ids: string[]) => {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        const map = new Map();
+        for (const id of ids) {
+          map.set(id, {
+            recipe: { id, title: `Recipe ${id}`, servings: 2, imageUrl: "" },
+            ingredients: [{ name: "Ingredient", quantity: 1, unit: "cup" }],
+          });
+        }
+        return map;
       }
-      return map;
-    });
+    );
 
     const start = performance.now();
     const result = await mealPlanApi.getMealPlansForDateRange(new Date(), new Date());
