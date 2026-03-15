@@ -78,7 +78,7 @@ export default function RecipeDraggable({
 
   // Track if this component is actively dragging to prevent concurrent drags
   const isThisDragActive = useSharedValue(false);
-  const dragEndTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const dragEndTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Cleanup timeout on unmount
   useEffect(() => {
