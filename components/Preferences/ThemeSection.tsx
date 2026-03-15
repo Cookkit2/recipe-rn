@@ -32,7 +32,11 @@ const THEME_BUTTONS: GroupButton<Theme>[] = [
 
 export default function ThemeSection() {
   const { theme, hasAdaptiveThemes } = useUniwind();
-  const themePreference: "system" | "light" | "dark" = hasAdaptiveThemes ? "system" : (theme === "dark" ? "dark" : "light");
+  const themePreference: "system" | "light" | "dark" = hasAdaptiveThemes
+    ? "system"
+    : theme === "dark"
+      ? "dark"
+      : "light";
 
   const handleSelectTheme = useCallback(
     (scheme: "light" | "dark" | "system") => {
