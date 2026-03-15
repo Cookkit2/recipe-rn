@@ -53,7 +53,10 @@ function getAppStoreUrl(): string {
 /**
  * Format achievement share text with emojis and details
  */
-function formatAchievementText(achievement: AchievementProgress, userName?: string): string {
+function formatAchievementText(
+  achievement: AchievementProgress,
+  userName?: string
+): string {
   const { achievement: ach, progress, progressPercentage, isUnlocked } = achievement;
 
   // Header with emoji
@@ -161,7 +164,10 @@ export function generateMultiAchievementShareContent(
   const { userName, includeUrl = true } = options ?? {};
 
   const unlockedCount = achievements.filter((a) => a.isUnlocked).length;
-  const totalXP = achievements.reduce((sum, a) => sum + (a.achievement.xp || 0), 0);
+  const totalXP = achievements.reduce(
+    (sum, a) => sum + (a.achievement.xp || 0),
+    0
+  );
 
   const userPrefix = userName ? `${userName} ` : "I ";
   const icons = achievements.map((a) => a.achievement.icon).join(" ");
@@ -273,7 +279,7 @@ export async function shareAchievement(
       result.action === "sharedAction" ? "shared" : "dismissed";
     return {
       action,
-      activityType: result.activityType || undefined,
+      activityType: result.activityType,
     };
   } catch (error) {
     // User cancelled the share sheet - this is expected behavior
@@ -319,7 +325,7 @@ export async function shareMultipleAchievements(
       result.action === "sharedAction" ? "shared" : "dismissed";
     return {
       action,
-      activityType: result.activityType || undefined,
+      activityType: result.activityType,
     };
   } catch (error) {
     if (error instanceof Error && error.message.includes("cancelled")) {
@@ -360,7 +366,7 @@ export async function shareStreak(
       result.action === "sharedAction" ? "shared" : "dismissed";
     return {
       action,
-      activityType: result.activityType || undefined,
+      activityType: result.activityType,
     };
   } catch (error) {
     if (error instanceof Error && error.message.includes("cancelled")) {
@@ -405,7 +411,7 @@ export async function shareContent(
       result.action === "sharedAction" ? "shared" : "dismissed";
     return {
       action,
-      activityType: result.activityType || undefined,
+      activityType: result.activityType,
     };
   } catch (error) {
     if (error instanceof Error && error.message.includes("cancelled")) {
@@ -422,9 +428,14 @@ export async function shareContent(
 /**
  * Get share text for copying to clipboard (if share sheet is not used)
  */
-export function getShareTextForCopy(achievement: AchievementProgress, userName?: string): string {
+export function getShareTextForCopy(
+  achievement: AchievementProgress,
+  userName?: string
+): string {
   const content = generateAchievementShareContent(achievement, { userName });
-  return [content.title, content.message, content.url].filter(Boolean).join("\n\n");
+  return [content.title, content.message, content.url]
+    .filter(Boolean)
+    .join("\n\n");
 }
 
 /**
