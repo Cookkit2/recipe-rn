@@ -1,5 +1,7 @@
 import { Q } from "@nozbe/watermelondb";
-import UserChallenge, { type UserChallengeData } from "../models/UserChallenge";
+import UserChallenge, {
+  type UserChallengeData,
+} from "../models/UserChallenge";
 import { BaseRepository, type SearchOptions } from "./BaseRepository";
 import { database } from "../database";
 
@@ -16,9 +18,13 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
   }
 
   // Create or get user challenge for a specific challenge
-  async getOrCreateForChallenge(challengeId: string): Promise<UserChallenge> {
+  async getOrCreateForChallenge(
+    challengeId: string
+  ): Promise<UserChallenge> {
     // First try to find existing
-    const existing = await this.collection.query(Q.where("challenge_id", challengeId)).fetch();
+    const existing = await this.collection
+      .query(Q.where("challenge_id", challengeId))
+      .fetch();
 
     if (existing.length > 0) {
       return existing[0]!;
@@ -62,7 +68,10 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
   }
 
   // Increment progress for a user challenge
-  async incrementProgress(challengeId: string, amount: number = 1): Promise<UserChallenge> {
+  async incrementProgress(
+    challengeId: string,
+    amount: number = 1
+  ): Promise<UserChallenge> {
     const userChallenge = await this.getOrCreateForChallenge(challengeId);
 
     return await database.write(async () => {
@@ -98,7 +107,9 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
   }
 
   // Get user challenges with optional filters
-  async getUserChallenges(options: UserChallengeSearchOptions = {}): Promise<UserChallenge[]> {
+  async getUserChallenges(
+    options: UserChallengeSearchOptions = {}
+  ): Promise<UserChallenge[]> {
     let query = this.collection.query();
 
     // Filter by status
@@ -117,7 +128,11 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
     }
 
     // Apply sorting (most recently created first by default)
-    query = this.applySorting(query, options.sortBy || "created_at", options.sortOrder || "desc");
+    query = this.applySorting(
+      query,
+      options.sortBy || "created_at",
+      options.sortOrder || "desc"
+    );
 
     // Apply pagination
     if (options.offset) {
@@ -142,28 +157,40 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
   // Get available challenges
   async getAvailableChallenges(): Promise<UserChallenge[]> {
     return await this.collection
-      .query(Q.where("status", "available"), Q.sortBy("created_at", Q.desc))
+      .query(
+        Q.where("status", "available"),
+        Q.sortBy("created_at", Q.desc)
+      )
       .fetch();
   }
 
   // Get active (in progress) challenges
   async getActiveChallenges(): Promise<UserChallenge[]> {
     return await this.collection
-      .query(Q.where("status", "active"), Q.sortBy("started_at", Q.desc))
+      .query(
+        Q.where("status", "active"),
+        Q.sortBy("started_at", Q.desc)
+      )
       .fetch();
   }
 
   // Get completed challenges
   async getCompletedChallenges(): Promise<UserChallenge[]> {
     return await this.collection
-      .query(Q.where("status", "completed"), Q.sortBy("completed_at", Q.desc))
+      .query(
+        Q.where("status", "completed"),
+        Q.sortBy("completed_at", Q.desc)
+      )
       .fetch();
   }
 
   // Get expired challenges
   async getExpiredChallenges(): Promise<UserChallenge[]> {
     return await this.collection
-      .query(Q.where("status", "expired"), Q.sortBy("created_at", Q.desc))
+      .query(
+        Q.where("status", "expired"),
+        Q.sortBy("created_at", Q.desc)
+      )
       .fetch();
   }
 
@@ -174,8 +201,12 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
   }
 
   // Get user challenge for a specific challenge
-  async getByChallengeId(challengeId: string): Promise<UserChallenge | null> {
-    const results = await this.collection.query(Q.where("challenge_id", challengeId)).fetch();
+  async getByChallengeId(
+    challengeId: string
+  ): Promise<UserChallenge | null> {
+    const results = await this.collection
+      .query(Q.where("challenge_id", challengeId))
+      .fetch();
 
     return results.length > 0 ? results[0]! : null;
   }
@@ -183,13 +214,19 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
   // Get recently completed challenges
   async getRecentlyCompleted(limit: number = 10): Promise<UserChallenge[]> {
     return await this.collection
-      .query(Q.where("status", "completed"), Q.sortBy("completed_at", Q.desc), Q.take(limit))
+      .query(
+        Q.where("status", "completed"),
+        Q.sortBy("completed_at", Q.desc),
+        Q.take(limit)
+      )
       .fetch();
   }
 
   // Count challenges by status
   async countByStatus(status: string): Promise<number> {
-    return await this.collection.query(Q.where("status", status)).fetchCount();
+    return await this.collection
+      .query(Q.where("status", status))
+      .fetchCount();
   }
 
   // Get total XP earned from completed challenges
@@ -208,7 +245,10 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
   }
 
   // Update user challenge
-  async updateUserChallenge(id: string, data: Partial<UserChallengeData>): Promise<UserChallenge> {
+  async updateUserChallenge(
+    id: string,
+    data: Partial<UserChallengeData>
+  ): Promise<UserChallenge> {
     return await this.update(id, data);
   }
 
@@ -246,7 +286,12 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
   // (active or available challenges whose parent challenge has expired)
   async getChallengesToExpire(): Promise<UserChallenge[]> {
     const allUserChallenges = await this.collection
-      .query(Q.or(Q.where("status", "available"), Q.where("status", "active")))
+      .query(
+        Q.or(
+          Q.where("status", "available"),
+          Q.where("status", "active")
+        )
+      )
       .fetch();
 
     const challengesToExpire: UserChallenge[] = [];
@@ -267,7 +312,9 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
       return;
     }
 
-    const records = await this.collection.query(Q.where("id", Q.oneOf(userChallengeIds))).fetch();
+    const records = await this.collection
+      .query(Q.where("id", Q.oneOf(userChallengeIds)))
+      .fetch();
 
     await database.write(async () => {
       const batchOps = records.map((record) =>
