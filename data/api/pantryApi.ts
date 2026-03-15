@@ -546,7 +546,7 @@ const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
   let categories: Array<{ id: string; name: string }> = [];
   try {
     const stockCategoryRecords = await Promise.race([
-      stock.stockCategories.query().fetch(),
+      stock.stockCategories.fetch(),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("StockCategory fetch timeout")), 3000)
       ),
@@ -554,7 +554,7 @@ const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
 
     // Fetch the actual category names
     if (stockCategoryRecords.length > 0) {
-      const categoryPromises = stockCategoryRecords.map((sc) =>
+      const categoryPromises = stockCategoryRecords.map((sc: any) =>
         // @ts-ignore - WatermelonDB relation typings might be missing fetch() but it exists at runtime
         typeof sc.category?.fetch === "function" ? sc.category.fetch() : Promise.resolve(null)
       );
