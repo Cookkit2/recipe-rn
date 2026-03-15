@@ -223,7 +223,7 @@ export default function DebugScreen() {
             // Refresh contexts after clearing data
             await Promise.all([refresh()]);
 
-            Alert.alert("Success!", "Recipes cleared");
+            Alert.alert("Success!", "All recipes cleared");
             await checkStats();
           } catch (error) {
             Alert.alert("Error", "Failed to clear data");
@@ -565,28 +565,18 @@ export default function DebugScreen() {
             <Button
               onPress={() => {
                 try {
-                  const appliances = storage.get<string | string[]>(PREF_APPLIANCES_KEY);
-                  const diet = (storage.get(PREF_DIET_KEY) as string) ?? "none";
-                  const allergens = storage.get<string | string[]>(PREF_ALLERGENS_KEY);
-                  const otherAllergens = storage.get<string | string[]>(PREF_OTHER_ALLERGENS_KEY);
+                  const appliances = storage.getString(PREF_APPLIANCES_KEY) ?? "";
+                  const diet = storage.getString(PREF_DIET_KEY) ?? "none";
+                  const allergens = storage.getString(PREF_ALLERGENS_KEY) ?? "";
+                  const otherAllergens = storage.getString(PREF_OTHER_ALLERGENS_KEY) ?? "";
 
                   const preferences = {
-                    electricAppliances: Array.isArray(appliances)
-                      ? (appliances as string[])
-                      : typeof appliances === "string"
-                        ? (appliances as string).split(",")
-                        : [],
+                    electricAppliances: appliances ? appliances?.split(",") : [],
                     dietaryPreference: diet,
-                    allergens: Array.isArray(allergens)
-                      ? (allergens as string[])
-                      : typeof allergens === "string"
-                        ? (allergens as string).split(",")
-                        : [],
-                    otherAllergens: Array.isArray(otherAllergens)
-                      ? (otherAllergens as string[])
-                      : typeof otherAllergens === "string"
-                        ? (otherAllergens as string).split(",").map((a: string) => a.trim())
-                        : [],
+                    allergens: allergens ? allergens?.split(",") : [],
+                    otherAllergens: otherAllergens
+                      ? otherAllergens?.split(",").map((a: string) => a.trim())
+                      : [],
                   };
 
                   const jsonOutput = JSON.stringify(preferences, null, 2);
