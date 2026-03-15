@@ -46,7 +46,9 @@ function getAppName(): string {
  * Get app store URL (placeholder for future use)
  */
 function getAppStoreUrl(): string {
-  // TODO: Replace with actual app store URL when available
+  if (Platform.OS === "ios") {
+    return "https://apps.apple.com/us/app/cookkit/id6752543191";
+  }
   return "https://cookkit.app";
 }
 
@@ -273,7 +275,7 @@ export async function shareAchievement(
       result.action === "sharedAction" ? "shared" : "dismissed";
     return {
       action,
-      activityType: result.activityType,
+      activityType: result.activityType ?? undefined,
     };
   } catch (error) {
     // User cancelled the share sheet - this is expected behavior
@@ -319,7 +321,7 @@ export async function shareMultipleAchievements(
       result.action === "sharedAction" ? "shared" : "dismissed";
     return {
       action,
-      activityType: result.activityType,
+      activityType: result.activityType ?? undefined,
     };
   } catch (error) {
     if (error instanceof Error && error.message.includes("cancelled")) {
@@ -360,7 +362,7 @@ export async function shareStreak(
       result.action === "sharedAction" ? "shared" : "dismissed";
     return {
       action,
-      activityType: result.activityType,
+      activityType: result.activityType ?? undefined,
     };
   } catch (error) {
     if (error instanceof Error && error.message.includes("cancelled")) {
@@ -405,7 +407,7 @@ export async function shareContent(
       result.action === "sharedAction" ? "shared" : "dismissed";
     return {
       action,
-      activityType: result.activityType,
+      activityType: result.activityType ?? undefined,
     };
   } catch (error) {
     if (error instanceof Error && error.message.includes("cancelled")) {
