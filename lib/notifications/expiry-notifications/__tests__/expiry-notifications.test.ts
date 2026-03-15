@@ -54,7 +54,7 @@ describe("scheduleExpiryNotifications", () => {
       { id: "future", name: "Fresh", expiry_date: future } as any,
     ]);
 
-    const calls = (scheduleNotification as jest.Mock).mock.calls;
+    const calls = (scheduleNotification as any).mock.calls;
     expect(calls.length).toBeGreaterThanOrEqual(1);
     const ids = calls.map((c) => c[0].id);
     expect(ids).toContain("expiry-future");
