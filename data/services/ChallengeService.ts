@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Challenge Service
  *
@@ -447,7 +446,8 @@ export class ChallengeService {
 
       case "cook_category":
         return (
-          metric === "recipes_cooked" && requirement.constraints?.recipeCategory?.includes(metric)
+          metric === "recipes_cooked" &&
+          (requirement.constraints?.recipeCategory?.includes(metric) ?? false)
         );
 
       case "reduce_waste":

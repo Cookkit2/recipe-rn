@@ -229,8 +229,8 @@ export class AchievementService {
       return {
         achievement: {
           id: achievement.id,
-          type: achievement.type,
-          category: achievement.category,
+          type: achievement.type as any,
+          category: achievement.category as any,
           title: achievement.title,
           description: achievement.description,
           icon: achievement.icon,
@@ -244,7 +244,7 @@ export class AchievementService {
           ? {
               id: userAchievement.id,
               achievementId: userAchievement.achievementId,
-              status: userAchievement.status,
+              status: userAchievement.status as any,
               progress: userAchievement.progress,
               unlockedAt: userAchievement.unlockedAtDate,
               lastCheckedAt: userAchievement.lastCheckedAtDate,

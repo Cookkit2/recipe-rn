@@ -61,6 +61,7 @@ export class StreakService {
 
       for (let i = 1; i < sortedDates.length; i++) {
         const prevDate = sortedDates[i];
+        if (!prevDate) continue;
         const daysDiff = Math.floor(
           (currentDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24)
         );
@@ -152,7 +153,7 @@ export class StreakService {
 
       let lastCookingDate: Date | undefined;
       if (allHistory.length > 0) {
-        lastCookingDate = allHistory[0].cookedAtDate;
+        lastCookingDate = allHistory[0]?.cookedAtDate;
       }
 
       // Build streak history (all streaks with their dates)
@@ -202,7 +203,7 @@ export class StreakService {
         return null;
       }
 
-      const lastCookingDate = this.normalizeToDate(allHistory[0].cookedAtDate);
+      const lastCookingDate = this.normalizeToDate(allHistory[0]?.cookedAtDate as Date);
       const today = this.normalizeToDate(new Date());
 
       const daysSinceLastCooking = Math.floor(
@@ -274,6 +275,7 @@ export class StreakService {
     for (let i = 1; i < sortedDates.length; i++) {
       const prevDate = sortedDates[i - 1];
       const currDate = sortedDates[i];
+      if (!prevDate || !currDate) continue;
 
       const daysDiff = Math.floor(
         (currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24)
@@ -285,19 +287,19 @@ export class StreakService {
       } else {
         // Streak ended, record it
         streakHistory.push({
-          date: streakStartDate,
+          date: streakStartDate as Date,
           streakCount: currentStreak,
         });
 
         // Start new streak
         currentStreak = 1;
-        streakStartDate = currDate;
+        streakStartDate = currDate as Date;
       }
     }
 
     // Don't forget the last streak
     streakHistory.push({
-      date: streakStartDate,
+      date: streakStartDate as Date,
       streakCount: currentStreak,
     });
 

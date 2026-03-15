@@ -22,7 +22,7 @@ export class UserAchievementRepository extends BaseRepository<UserAchievement> {
     const existing = await this.collection.query(Q.where("achievement_id", achievementId)).fetch();
 
     if (existing.length > 0) {
-      return existing[0];
+      return existing[0] as UserAchievement;
     }
 
     // Create new one
@@ -144,7 +144,7 @@ export class UserAchievementRepository extends BaseRepository<UserAchievement> {
   async getByAchievementId(achievementId: string): Promise<UserAchievement | null> {
     const results = await this.collection.query(Q.where("achievement_id", achievementId)).fetch();
 
-    return results.length > 0 ? results[0] : null;
+    return results.length > 0 ? (results[0] as UserAchievement) : null;
   }
 
   // Get recently unlocked achievements
