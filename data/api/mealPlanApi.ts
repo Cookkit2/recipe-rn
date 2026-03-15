@@ -658,9 +658,15 @@ export const mealPlanApi = {
 
       const itemsWithRecipes: MealPlanItemWithRecipe[] = [];
 
+      // Extract unique recipe IDs to batch fetch
+      const recipeIds = Array.from(new Set(mealPlanItems.map((item) => item.recipeId)));
+
+      // Batch fetch all recipe details to avoid N+1 query problem
+      const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
+
       for (const item of mealPlanItems) {
         try {
-          const recipeDetails = await databaseFacade.getRecipeWithDetails(item.recipeId);
+          const recipeDetails = recipeDetailsMap.get(item.recipeId);
           if (!recipeDetails) {
             log.warn(`Recipe not found for meal plan item ${item.id}`);
             continue;
