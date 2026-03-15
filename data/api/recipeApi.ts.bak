@@ -901,7 +901,7 @@ const convertDbRecipeToUIRecipe = async (dbRecipe: DbRecipe): Promise<Recipe> =>
       step: step.step,
       title: step.title,
       description: step.description,
-      relatedIngredientIds: [],
+      relatedIngredientIds: [], // TODO: Map from database if needed
     })),
   };
 };
