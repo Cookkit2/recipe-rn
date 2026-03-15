@@ -58,10 +58,6 @@ describe("pantryApi.addPantryItems performance", () => {
       quantity: 1,
       unit: "pcs",
       type: "pantry" as any,
-      steps_to_store: [],
-      image_url: undefined,
-      category: "misc",
-      background_color: undefined,
     }));
 
     await pantryApi.addPantryItems(items);

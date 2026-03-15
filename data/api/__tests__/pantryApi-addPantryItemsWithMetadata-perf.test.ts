@@ -57,7 +57,7 @@ const otherCollection = {
         dbMetrics.creates++;
         return {};
     }),
-    prepareCreate: jest.fn((updater: any) => {
+    prepareCreate: jest.fn((updater) => {
         return {
           _isPrepared: true,
           _type: 'create',
