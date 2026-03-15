@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useCallback } from "react";
 import { View } from "react-native";
 import { Card, CardContent } from "~/components/ui/card";

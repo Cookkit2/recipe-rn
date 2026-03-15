@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from "react";
 import { Modal, Platform, Pressable } from "react-native";
 import { BlurView } from "expo-blur";

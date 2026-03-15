@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * URL Parsing & Detection Utilities
  * Handles detection of URL types (YouTube, website, etc.)

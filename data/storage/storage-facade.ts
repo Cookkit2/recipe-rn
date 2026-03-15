@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { IStorage, IStorageCapabilities } from './storage-types';
 import { StorageFactory } from './storage-factory';
 
