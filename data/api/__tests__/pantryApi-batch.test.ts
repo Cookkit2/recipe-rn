@@ -58,7 +58,7 @@ describe("pantryApi.addPantryItems performance", () => {
       quantity: 1,
       unit: "pcs",
       type: "pantry" as any,
-    }));
+    })) as Parameters<typeof pantryApi.addPantryItems>[0];
 
     await pantryApi.addPantryItems(items);
 
