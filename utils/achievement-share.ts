@@ -52,10 +52,7 @@ function getAppStoreUrl(): string {
 /**
  * Format achievement share text with emojis and details
  */
-function formatAchievementText(
-  achievement: AchievementProgress,
-  userName?: string
-): string {
+function formatAchievementText(achievement: AchievementProgress, userName?: string): string {
   const { achievement: ach, progress, progressPercentage, isUnlocked } = achievement;
 
   // Header with emoji
@@ -163,10 +160,7 @@ export function generateMultiAchievementShareContent(
   const { userName, includeUrl = true } = options ?? {};
 
   const unlockedCount = achievements.filter((a) => a.isUnlocked).length;
-  const totalXP = achievements.reduce(
-    (sum, a) => sum + (a.achievement.xp || 0),
-    0
-  );
+  const totalXP = achievements.reduce((sum, a) => sum + (a.achievement.xp || 0), 0);
 
   const userPrefix = userName ? `${userName} ` : "I ";
   const icons = achievements.map((a) => a.achievement.icon).join(" ");
@@ -427,24 +421,16 @@ export async function shareContent(
 /**
  * Get share text for copying to clipboard (if share sheet is not used)
  */
-export function getShareTextForCopy(
-  achievement: AchievementProgress,
-  userName?: string
-): string {
+export function getShareTextForCopy(achievement: AchievementProgress, userName?: string): string {
   const content = generateAchievementShareContent(achievement, { userName });
-  return [content.title, content.message, content.url]
-    .filter(Boolean)
-    .join("\n\n");
+  return [content.title, content.message, content.url].filter(Boolean).join("\n\n");
 }
 
 /**
  * Generate achievement share URL (for deep linking to specific achievement)
- * This is a placeholder for future deep linking implementation
  */
 export function getAchievementShareUrl(achievementId: string): string {
-  // TODO: Implement deep linking when app has universal links
-  // Format: https://cookkit.app/achievement/{achievementId}
-  return `${getAppStoreUrl()}?achievement=${achievementId}`;
+  return `https://cookkit.app/achievement/${achievementId}`;
 }
 
 // ============================================
