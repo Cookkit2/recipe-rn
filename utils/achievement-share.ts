@@ -261,7 +261,7 @@ export async function shareAchievement(
       {
         title: content.title,
         message: content.message,
-        url: content.url ?? undefined,
+        url: content.url,
       },
       {
         dialogTitle: options?.dialogTitle || "Share Achievement",
@@ -273,7 +273,7 @@ export async function shareAchievement(
       result.action === "sharedAction" ? "shared" : "dismissed";
     return {
       action,
-      activityType: result.activityType,
+      activityType: result.activityType || undefined,
     };
   } catch (error) {
     // User cancelled the share sheet - this is expected behavior
@@ -307,7 +307,7 @@ export async function shareMultipleAchievements(
       {
         title: content.title,
         message: content.message,
-        url: content.url ?? undefined,
+        url: content.url,
       },
       {
         dialogTitle: options?.dialogTitle || "Share Achievements",
@@ -319,7 +319,7 @@ export async function shareMultipleAchievements(
       result.action === "sharedAction" ? "shared" : "dismissed";
     return {
       action,
-      activityType: result.activityType,
+      activityType: result.activityType || undefined,
     };
   } catch (error) {
     if (error instanceof Error && error.message.includes("cancelled")) {
@@ -348,7 +348,7 @@ export async function shareStreak(
       {
         title: content.title,
         message: content.message,
-        url: content.url ?? undefined,
+        url: content.url,
       },
       {
         dialogTitle: options?.dialogTitle || "Share Streak",
@@ -360,7 +360,7 @@ export async function shareStreak(
       result.action === "sharedAction" ? "shared" : "dismissed";
     return {
       action,
-      activityType: result.activityType,
+      activityType: result.activityType || undefined,
     };
   } catch (error) {
     if (error instanceof Error && error.message.includes("cancelled")) {
@@ -393,7 +393,7 @@ export async function shareContent(
       {
         title: content.title,
         message: content.message,
-        url: content.url ?? undefined,
+        url: content.url,
       },
       {
         dialogTitle: options?.dialogTitle || "Share",
@@ -405,7 +405,7 @@ export async function shareContent(
       result.action === "sharedAction" ? "shared" : "dismissed";
     return {
       action,
-      activityType: result.activityType,
+      activityType: result.activityType || undefined,
     };
   } catch (error) {
     if (error instanceof Error && error.message.includes("cancelled")) {
