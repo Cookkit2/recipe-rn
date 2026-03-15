@@ -366,32 +366,48 @@ export const pantryApi = {
     items: Omit<PantryItem, "id" | "created_at" | "updated_at">[]
   ): Promise<PantryItem[]> {
     const createdItems: PantryItem[] = [];
+    const stockCollection = database.collections.get("stock");
+    const stockRecordsToCreate: any[] = [];
+
+    // Prepare all stock items directly in memory
+    for (const item of items) {
+      try {
+        const preparedStock = stockCollection.prepareCreate((stock) => {
+          (stock as Stock).name = item.name;
+          (stock as Stock).quantity = item.quantity;
+          (stock as Stock).unit = item.unit;
+          if (item.expiry_date) (stock as Stock).expiryDate = item.expiry_date;
+          if (item.type) (stock as Stock).storageType = item.type;
+          if (item.background_color) (stock as Stock).backgroundColor = item.background_color;
+          if (typeof item.image_url === "string") (stock as Stock).imageUrl = item.image_url;
+        });
+        stockRecordsToCreate.push(preparedStock);
+      } catch (error) {
+        log.error(`Failed to prepare pantry item ${item.name}:`, error);
+        // Continue with other items instead of failing completely
+      }
+    }
 
     // Process all items in a single transaction
-    await database.write(async () => {
-      const stockCollection = database.collections.get("stock");
+    if (stockRecordsToCreate.length > 0) {
+      try {
+        await database.write(async () => {
+          await database.batch(...stockRecordsToCreate);
+        });
 
-      for (const item of items) {
-        try {
-          // Create stock item directly in collection (within transaction)
-          const stockItem = await stockCollection.create((stock) => {
-            (stock as Stock).name = item.name;
-            (stock as Stock).quantity = item.quantity;
-            (stock as Stock).unit = item.unit;
-            if (item.expiry_date) (stock as Stock).expiryDate = item.expiry_date;
-            if (item.type) (stock as Stock).storageType = item.type;
-            if (item.background_color) (stock as Stock).backgroundColor = item.background_color;
-            if (typeof item.image_url === "string") (stock as Stock).imageUrl = item.image_url;
-          });
-
-          const convertedItem = await convertStockToPantryItem(stockItem as Stock);
-          createdItems.push(convertedItem);
-        } catch (error) {
-          log.error(`Failed to add pantry item ${item.name}:`, error);
-          // Continue with other items instead of failing completely
+        // After batch insert is successful, convert to PantryItem
+        for (const stockItem of stockRecordsToCreate) {
+          try {
+            const convertedItem = await convertStockToPantryItem(stockItem as Stock);
+            createdItems.push(convertedItem);
+          } catch (conversionError) {
+            log.error("Failed to convert created stock item to pantry item:", conversionError);
+          }
         }
+      } catch (batchError) {
+        log.error("Failed to execute batch insert for pantry items:", batchError);
       }
-    });
+    }
 
     return createdItems;
   },
