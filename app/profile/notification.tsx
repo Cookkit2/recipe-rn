@@ -27,19 +27,19 @@ export default function NotificationScreen() {
         <CardContent className="py-6">
           <H4 className="font-urbanist-semibold mb-2">Push Notifications</H4>
           <P className="font-urbanist-regular text-muted-foreground mb-4">
-            Control which Cookkit notifications you want to receive.
+            Control which DoneDish notifications you want to receive.
           </P>
 
           <SettingRow
             title="Enable Notifications"
-            description="Allow Cookkit to send notifications."
+            description="Allow DoneDish to send notifications."
           >
             <Switch value={settings.enabled} onValueChange={toggleEnabled} />
           </SettingRow>
 
           {permissionDenied && (
             <P className="font-urbanist-regular text-xs text-destructive mt-3">
-              System notifications are disabled for Cookkit. Enable them in your device settings
+              System notifications are disabled for DoneDish. Enable them in your device settings
               to receive alerts.
             </P>
           )}

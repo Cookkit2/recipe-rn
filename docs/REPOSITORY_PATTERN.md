@@ -33,7 +33,9 @@ The Repository Pattern provides a clean abstraction layer between the applicatio
 - **Maintainability**: Data access logic is centralized in one place
 - **Flexibility**: Can swap storage implementations without changing application code
 
-The facade may use `database.get()` (or repository internals) for batch reads (e.g. fetching synonyms or categories in bulk) to avoid N+1 queries. Callers still use only the facade API; batch behavior is an implementation detail.
+**Note on Database Access Rules**:
+The "no direct database access" rule applies primarily to **application code** (components, hooks, API layer). Application code must strictly interact through the Facade layer.
+However, **repositories** (and the Facade itself for specific performance-critical bulk operations like aggregate reads to avoid N+1 queries) are permitted to use `database.get()` or `this.collection.database.get()` internally as an implementation detail. Callers still consume the unified facade API.
 
 ### Architecture Diagram
 

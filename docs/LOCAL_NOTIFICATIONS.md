@@ -655,9 +655,10 @@ The `NotificationProvider` automatically handles cold-start scenarios in [Notifi
 
 Users can enable or disable notification categories (e.g. ingredient expiry) from the app. Settings are stored via the same key-value layer used elsewhere; the notification system reads them before scheduling.
 
-- **Storage**: Settings are read via `notificationSettingsService.getSettings()` (see [utils/notification-settings.ts](../utils/notification-settings.ts)). The storage key and shape are defined there.
-- **Effect on scheduling**: `scheduleExpiryNotifications` (and similar flows) call `getSettings()` at the start; if the user has disabled notifications or ingredient expiry, scheduling is skipped.
-- **UI**: The notification preferences screen is [app/profile/notification.tsx](../app/profile/notification.tsx). The hook [hooks/useNotificationSettings.ts](../hooks/useNotificationSettings.ts) is used to read and update these settings.
+- **Storage Key**: The storage key used is `NOTIFICATION_SETTINGS_KEY` located in `constants/storage-keys.ts`.
+- **Storage Service**: Settings are read via `notificationSettingsService.getSettings()` (see [utils/notification-settings.ts](../utils/notification-settings.ts)). The shape of `NotificationSettings` defines toggles like `enabled`, `ingredientExpiry`, `achievements`, and `challenges`.
+- **Effect on Scheduling**: In `notification-service.ts`, `scheduleNotification` checks both the master `enabled` flag and `notificationSettingsService.isNotificationDataEnabled(payload)` to determine if a category is permitted. If the user has disabled notifications or a specific channel, scheduling is skipped. Functions like `scheduleExpiryNotifications` also perform early returns based on these settings to avoid unnecessary processing.
+- **UI & Hooks**: The notification preferences screen is [app/profile/notification.tsx](../app/profile/notification.tsx). The hook [hooks/useNotificationSettings.ts](../hooks/useNotificationSettings.ts) is used to read and update these settings.
 
 ---
 

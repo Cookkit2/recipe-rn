@@ -168,11 +168,11 @@ export default function ProfileScreen() {
               icon={CalendarIcon}
               onPress={() => router.push("/meal-plan")}
             /> */}
-            {/* <ListButton
+            <ListButton
               title="Notification"
               icon={BellIcon}
               onPress={() => router.push("/profile/notification")}
-            /> */}
+            />
             <ListButton title="Contact Us" icon={MailIcon} onPress={handleContactUs} />
           </CardContent>
         </View>

@@ -220,13 +220,13 @@ Speech Recognition → Command Parsing → Action → TTS Feedback
 
 ```bash
 # Run tests
-npm test
+pnpm test
 
 # Type-check TypeScript
-npm run typecheck
+pnpm typecheck
 
 # Run linter + typecheck
-npm run lint
+pnpm lint
 ```
 
 ## 📦 Building for Production

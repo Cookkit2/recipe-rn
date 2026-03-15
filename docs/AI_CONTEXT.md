@@ -6,7 +6,7 @@
 
 ## 📱 App Overview
 
-**Cookkit** is a React Native mobile application built with Expo that helps users:
+**DoneDish** is a React Native mobile application built with Expo that helps users:
 1. **Manage Ingredient Inventory** - Track pantry items with expiration dates, quantities, and storage locations
 2. **Discover Recipes** - Get AI-powered recipe recommendations based on available ingredients
 3. **Streamline Cooking** - Follow step-by-step cooking guidance with integrated ingredient tracking
@@ -25,7 +25,7 @@
 
 | Layer | Technology |
 |-------|------------|
-| **Framework** | React Native with Expo SDK 55 |
+| **Framework** | React Native 0.83+ with Expo SDK 55 |
 | **Navigation** | Expo Router (file-based routing) |
 | **State Management** | React Query (server/async) + React Context (UI state) |
 | **Local Database** | WatermelonDB (SQLite) |
@@ -71,7 +71,7 @@
 ## 📁 Project Structure
 
 ```
-recipe-rn/
+fridgit/
 ├── app/                          # Expo Router screens (file-based routing)
 │   ├── _layout.tsx               # Root layout with providers
 │   ├── index.tsx                 # Main pantry screen
@@ -459,10 +459,10 @@ try {
 
 ### Scripts
 ```bash
-npm test                 # Run all tests
-npm run test:coverage    # Coverage report
-npm run typecheck        # TypeScript check
-npm run lint             # Prettier + typecheck
+pnpm test                 # Run all tests
+pnpm test:coverage        # Coverage report
+pnpm typecheck            # TypeScript check
+pnpm lint                 # Prettier + typecheck
 ```
 
 ---
@@ -471,16 +471,16 @@ npm run lint             # Prettier + typecheck
 
 ```bash
 # Development
-npm run dev              # Start Expo with cache clear
-npm run ios              # Run on iOS
-npm run android          # Run on Android
-npm run web              # Run in browser
+pnpm dev              # Start Expo with cache clear
+pnpm ios              # Run on iOS
+pnpm android          # Run on Android
+pnpm web              # Run in browser
 
 # Code Quality
-npm run typecheck        # TypeScript check
-npm run lint             # Prettier check + typecheck
-npm test                 # Run Jest tests
-npm run test:coverage     # Tests with coverage
+pnpm typecheck        # TypeScript check
+pnpm lint             # Prettier check + typecheck
+pnpm test                 # Run Jest tests
+pnpm test:coverage     # Tests with coverage
 ```
 
 ---

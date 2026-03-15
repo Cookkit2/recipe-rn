@@ -146,7 +146,7 @@ export function useRecipeEdit(
         ...prev,
         ingredients: [
           ...prev.ingredients,
-          { name: "", quantity: 1, unit: "unit" },
+          { id: undefined, name: "", quantity: 1, unit: "unit", notes: "" },
         ],
       };
     });
@@ -195,7 +195,7 @@ export function useRecipeEdit(
         ...prev,
         steps: [
           ...prev.steps,
-          { step: newStepNumber, title: "", description: "" },
+          { id: undefined, step: newStepNumber, title: "", description: "" },
         ],
       };
     });
@@ -376,8 +376,15 @@ export function useRecipeEdit(
       await database.write(async () => {
         await recipeRepository.createRecipeWithDetails({
           recipe: {
-            ...workingCopy,
             title: `${workingCopy.title} (Copy)`,
+            description: workingCopy.description,
+            imageUrl: workingCopy.imageUrl,
+            prepMinutes: workingCopy.prepMinutes,
+            cookMinutes: workingCopy.cookMinutes,
+            difficultyStars: workingCopy.difficultyStars,
+            servings: workingCopy.servings,
+            tags: workingCopy.tags,
+            // Add other required Recipe fields if necessary
           },
           steps: workingCopy.steps.map((s) => ({
             step: s.step,

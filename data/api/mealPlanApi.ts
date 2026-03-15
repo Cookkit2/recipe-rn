@@ -761,15 +761,15 @@ export const mealPlanApi = {
         };
       }
 
-      const date = updated.date instanceof Date ? updated.date : new Date((updated as { date?: number }).date ?? Date.now());
-      const mealSlot = updated.mealSlot ?? "dinner";
+      const resolvedDate = updated.date instanceof Date ? updated.date : new Date((updated as { date?: number }).date ?? Date.now());
+      const resolvedMealSlot = updated.mealSlot ?? "dinner";
 
       return {
         id: updated.id,
         recipeId: updated.recipeId,
         servings: updated.servings,
-        date,
-        mealSlot,
+        date: resolvedDate,
+        mealSlot: resolvedMealSlot,
         templateId: updated.templateId,
         createdAt: updated.createdAt,
         recipe: recipeData,

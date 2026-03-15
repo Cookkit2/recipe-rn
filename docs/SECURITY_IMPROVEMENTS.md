@@ -1,6 +1,6 @@
 # Security Improvements: Input Sanitization
 
-This document outlines the security enhancements made to the Recipe RN application to prevent SQL injection and other input-based vulnerabilities.
+This document outlines the security enhancements made to the DoneDish application to prevent SQL injection and other input-based vulnerabilities.
 
 ## Overview
 
