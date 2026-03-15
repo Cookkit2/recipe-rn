@@ -73,10 +73,7 @@ export class AuthYouTubeService implements IYouTubeService {
       const data = await response.json();
 
       if (!data.items || data.items.length === 0) {
-        throw new YouTubeServiceError(
-          "Video not found or is private",
-          "VIDEO_NOT_FOUND"
-        );
+        throw new YouTubeServiceError("Video not found or is private", "VIDEO_NOT_FOUND");
       }
 
       const video = data.items[0];
@@ -85,9 +82,7 @@ export class AuthYouTubeService implements IYouTubeService {
         videoId,
         title: video.snippet.title,
         channelName: video.snippet.channelTitle,
-        thumbnailUrl:
-          video.snippet.thumbnails.high?.url ||
-          video.snippet.thumbnails.default?.url,
+        thumbnailUrl: video.snippet.thumbnails.high?.url || video.snippet.thumbnails.default?.url,
         description: video.snippet.description,
         duration: video.contentDetails.duration, // ISO 8601 format
       };
@@ -126,10 +121,7 @@ export class AuthYouTubeService implements IYouTubeService {
 
     return {
       videoInfo: videoInfoResult.value,
-      transcript:
-        transcriptResult.status === "fulfilled"
-          ? transcriptResult.value
-          : undefined,
+      transcript: transcriptResult.status === "fulfilled" ? transcriptResult.value : undefined,
       hasFullMetadata: true, // Auth service provides full metadata
     };
   }

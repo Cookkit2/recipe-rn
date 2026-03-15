@@ -12,7 +12,7 @@ export interface FilterContext {
 
 /**
  * Strategy interface for recipe filtering
- * 
+ *
  * Implementations determine whether a recipe should be included
  * in the results based on specific criteria.
  */

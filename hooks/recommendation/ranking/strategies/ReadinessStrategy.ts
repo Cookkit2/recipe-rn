@@ -54,7 +54,7 @@ export class ReadinessStrategy implements RecipeRankingStrategy {
     }
 
     const completion = context.completionPercentages.get(recipe.id) ?? 0;
-    
+
     // Base score from completion percentage
     let score = completion * this.multiplier;
 

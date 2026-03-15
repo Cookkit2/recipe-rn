@@ -168,17 +168,9 @@ export default function EditProfileModal({
             className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center"
           >
             {showPassword ? (
-              <EyeOffIcon
-                className="text-muted-foreground"
-                size={20}
-                strokeWidth={2}
-              />
+              <EyeOffIcon className="text-muted-foreground" size={20} strokeWidth={2} />
             ) : (
-              <EyeIcon
-                className="text-muted-foreground"
-                size={20}
-                strokeWidth={2}
-              />
+              <EyeIcon className="text-muted-foreground" size={20} strokeWidth={2} />
             )}
           </Pressable>
         </View>
@@ -202,8 +194,4 @@ export default function EditProfileModal({
 }
 
 const ErrorText = ({ text }: { text: string | undefined }) =>
-  text && (
-    <P className="font-urbanist-regular text-destructive text-sm mb-3 self-center">
-      {text}
-    </P>
-  );
+  text && <P className="font-urbanist-regular text-destructive text-sm mb-3 self-center">{text}</P>;

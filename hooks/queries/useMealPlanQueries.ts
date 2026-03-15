@@ -25,7 +25,12 @@ export function useMealPlanItems() {
  */
 export function useCalendarMealPlans(startDate: Date, endDate: Date, enabled: boolean = true) {
   return useQuery({
-    queryKey: [...mealPlanQueryKeys.all, "dateRange", startDate.toISOString(), endDate.toISOString()],
+    queryKey: [
+      ...mealPlanQueryKeys.all,
+      "dateRange",
+      startDate.toISOString(),
+      endDate.toISOString(),
+    ],
     queryFn: () => mealPlanApi.getMealPlansForDateRange(startDate, endDate),
     enabled,
     staleTime: 30 * 1000,
@@ -125,8 +130,17 @@ export function useAddToMealPlan() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ recipeId, servings, date, mealSlot }: { recipeId: string; servings: number; date?: Date; mealSlot?: string }) =>
-      mealPlanApi.addToPlan(recipeId, servings, date, mealSlot),
+    mutationFn: ({
+      recipeId,
+      servings,
+      date,
+      mealSlot,
+    }: {
+      recipeId: string;
+      servings: number;
+      date?: Date;
+      mealSlot?: string;
+    }) => mealPlanApi.addToPlan(recipeId, servings, date, mealSlot),
     onMutate: async ({ recipeId }) => {
       // Cancel outgoing queries for this specific recipe
       await queryClient.cancelQueries({
@@ -499,8 +513,15 @@ export function useAssignToDateSlot() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ mealPlanId, date, mealSlot }: { mealPlanId: string; date: Date; mealSlot: string }) =>
-      mealPlanApi.assignToDateSlot(mealPlanId, date, mealSlot),
+    mutationFn: ({
+      mealPlanId,
+      date,
+      mealSlot,
+    }: {
+      mealPlanId: string;
+      date: Date;
+      mealSlot: string;
+    }) => mealPlanApi.assignToDateSlot(mealPlanId, date, mealSlot),
     onSuccess: () => {
       // Invalidate relevant queries after assignment
       queryClient.invalidateQueries({

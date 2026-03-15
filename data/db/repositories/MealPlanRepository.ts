@@ -132,10 +132,7 @@ export class MealPlanRepository extends BaseRepository<MealPlan> {
   }
 
   // Get meal plan for a specific date and meal slot
-  async getByDateAndMealSlot(
-    date: Date,
-    mealSlot: string
-  ): Promise<MealPlan | null> {
+  async getByDateAndMealSlot(date: Date, mealSlot: string): Promise<MealPlan | null> {
     if (!date || !mealSlot) {
       return null;
     }
@@ -160,11 +157,7 @@ export class MealPlanRepository extends BaseRepository<MealPlan> {
   }
 
   // Update date and meal slot for a meal plan entry
-  async updateDateAndSlot(
-    id: string,
-    date: Date,
-    mealSlot: string
-  ): Promise<MealPlan | null> {
+  async updateDateAndSlot(id: string, date: Date, mealSlot: string): Promise<MealPlan | null> {
     const record = await this.findById(id);
     if (!record) return null;
 

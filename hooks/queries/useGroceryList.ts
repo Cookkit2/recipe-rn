@@ -1,5 +1,9 @@
 import { useMemo } from "react";
-import { useMealPlanItems, useGroceryItemAttributes, useCalendarMealPlans } from "./useMealPlanQueries";
+import {
+  useMealPlanItems,
+  useGroceryItemAttributes,
+  useCalendarMealPlans,
+} from "./useMealPlanQueries";
 import { usePantryItems } from "./usePantryQueries";
 import { isIngredientMatch } from "~/utils/ingredient-matching";
 import {
@@ -13,13 +17,7 @@ import { aggregateQuantities, compareQuantities } from "~/utils/quantity-compari
 /**
  * Grocery category for organizing items
  */
-export type GroceryCategory =
-  | "produce"
-  | "dairy"
-  | "meat"
-  | "pantry"
-  | "other"
-  | "purchased";
+export type GroceryCategory = "produce" | "dairy" | "meat" | "pantry" | "other" | "purchased";
 
 /**
  * A grocery item with calculated quantities and metadata
@@ -498,7 +496,10 @@ export function useGroceryList(startDate?: Date, endDate?: Date) {
               totalPantryQuantity = pantryQuantityInRecipeUnit;
             } else {
               // Unknown units, fall back to simple sum
-              totalPantryQuantity = matchingPantryItems.reduce((sum, item) => sum + item.quantity, 0);
+              totalPantryQuantity = matchingPantryItems.reduce(
+                (sum, item) => sum + item.quantity,
+                0
+              );
               pantryQuantityInRecipeUnit = totalPantryQuantity;
             }
           } else {
@@ -598,7 +599,14 @@ export function useGroceryList(startDate?: Date, endDate?: Date) {
     }
 
     // Sort sections by predefined order (purchased will always be last due to when it's added)
-    const categoryOrder: GroceryCategory[] = ["produce", "dairy", "meat", "pantry", "other", "purchased"];
+    const categoryOrder: GroceryCategory[] = [
+      "produce",
+      "dairy",
+      "meat",
+      "pantry",
+      "other",
+      "purchased",
+    ];
     return sections.sort(
       (a, b) => categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category)
     );

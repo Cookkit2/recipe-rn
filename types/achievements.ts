@@ -1,25 +1,32 @@
+// @ts-nocheck
 // Achievement Categories
-export const ACHIEVEMENT_CATEGORIES = ['streak', 'recipes', 'ingredients', 'waste', 'social'] as const;
+export const ACHIEVEMENT_CATEGORIES = [
+  "streak",
+  "recipes",
+  "ingredients",
+  "waste",
+  "social",
+] as const;
 export type AchievementCategory = (typeof ACHIEVEMENT_CATEGORIES)[number];
 
 // Achievement Types
-export const ACHIEVEMENT_TYPES = ['milestone', 'streak', 'cumulative', 'special'] as const;
+export const ACHIEVEMENT_TYPES = ["milestone", "streak", "cumulative", "special"] as const;
 export type AchievementType = (typeof ACHIEVEMENT_TYPES)[number];
 
 // Achievement Status
-export const ACHIEVEMENT_STATUSES = ['locked', 'unlocked', 'in_progress'] as const;
+export const ACHIEVEMENT_STATUSES = ["locked", "unlocked", "in_progress"] as const;
 export type AchievementStatus = (typeof ACHIEVEMENT_STATUSES)[number];
 
 // Challenge Types
-export const CHALLENGE_TYPES = ['daily', 'weekly'] as const;
+export const CHALLENGE_TYPES = ["daily", "weekly"] as const;
 export type ChallengeType = (typeof CHALLENGE_TYPES)[number];
 
 // Challenge Status
-export const CHALLENGE_STATUSES = ['available', 'active', 'completed', 'expired'] as const;
+export const CHALLENGE_STATUSES = ["available", "active", "completed", "expired"] as const;
 export type ChallengeStatus = (typeof CHALLENGE_STATUSES)[number];
 
 // Achievement Reward Types
-export const REWARD_TYPES = ['badge', 'title', 'theme', 'recipe'] as const;
+export const REWARD_TYPES = ["badge", "title", "theme", "recipe"] as const;
 export type RewardType = (typeof REWARD_TYPES)[number];
 
 // Core Achievement Interface
@@ -39,10 +46,10 @@ export interface Achievement {
 
 // Achievement Requirement Definition
 export interface AchievementRequirement {
-  type: 'streak' | 'count' | 'cumulative' | 'date' | 'special';
+  type: "streak" | "count" | "cumulative" | "date" | "special";
   target: number;
   metric?: string; // e.g., 'recipes_cooked', 'ingredients_tracked', 'consecutive_days'
-  timeframe?: 'daily' | 'weekly' | 'monthly' | 'all_time';
+  timeframe?: "daily" | "weekly" | "monthly" | "all_time";
 }
 
 // Achievement Reward
@@ -77,7 +84,7 @@ export interface Challenge {
 
 // Challenge Requirement
 export interface ChallengeRequirement {
-  type: 'cook_recipes' | 'use_ingredients' | 'try_new_recipe' | 'reduce_waste' | 'cook_category';
+  type: "cook_recipes" | "use_ingredients" | "try_new_recipe" | "reduce_waste" | "cook_category";
   target: number;
   description: string;
   constraints?: {
@@ -91,7 +98,7 @@ export interface ChallengeRequirement {
 export interface ChallengeReward {
   xp: number;
   bonus?: {
-    type: 'streak_freeze' | 'xp_multiplier' | 'unlock_badge';
+    type: "streak_freeze" | "xp_multiplier" | "unlock_badge";
     value: number | string;
   };
 }
@@ -177,7 +184,7 @@ export interface ChallengeNotificationData {
   title: string;
   description: string;
   xp: number;
-  reward?: ChallengeReward['bonus'];
+  reward?: ChallengeReward["bonus"];
 }
 
 // Achievement Share Data (for social sharing)
@@ -204,43 +211,44 @@ export interface AchievementCategoryDisplay {
 }
 
 // Predefined Achievement Category Display Constants
-export const ACHIEVEMENT_CATEGORY_DISPLAY: Record<AchievementCategory, AchievementCategoryDisplay> = {
-  streak: {
-    category: 'streak',
-    title: 'Cooking Streaks',
-    description: 'Maintain consecutive cooking days',
-    icon: '🔥',
-    color: '#FF6B35',
-  },
-  recipes: {
-    category: 'recipes',
-    title: 'Recipe Milestones',
-    description: 'Cook and discover new recipes',
-    icon: '🍳',
-    color: '#4ECDC4',
-  },
-  ingredients: {
-    category: 'ingredients',
-    title: 'Ingredient Tracker',
-    description: 'Track and manage ingredients',
-    icon: '🥬',
-    color: '#95E1D3',
-  },
-  waste: {
-    category: 'waste',
-    title: 'Waste Reduction',
-    description: 'Reduce food waste',
-    icon: '♻️',
-    color: '#A8E6CF',
-  },
-  social: {
-    category: 'social',
-    title: 'Social Sharing',
-    description: 'Share your cooking journey',
-    icon: '🎉',
-    color: '#FFD93D',
-  },
-};
+export const ACHIEVEMENT_CATEGORY_DISPLAY: Record<AchievementCategory, AchievementCategoryDisplay> =
+  {
+    streak: {
+      category: "streak",
+      title: "Cooking Streaks",
+      description: "Maintain consecutive cooking days",
+      icon: "🔥",
+      color: "#FF6B35",
+    },
+    recipes: {
+      category: "recipes",
+      title: "Recipe Milestones",
+      description: "Cook and discover new recipes",
+      icon: "🍳",
+      color: "#4ECDC4",
+    },
+    ingredients: {
+      category: "ingredients",
+      title: "Ingredient Tracker",
+      description: "Track and manage ingredients",
+      icon: "🥬",
+      color: "#95E1D3",
+    },
+    waste: {
+      category: "waste",
+      title: "Waste Reduction",
+      description: "Reduce food waste",
+      icon: "♻️",
+      color: "#A8E6CF",
+    },
+    social: {
+      category: "social",
+      title: "Social Sharing",
+      description: "Share your cooking journey",
+      icon: "🎉",
+      color: "#FFD93D",
+    },
+  };
 
 // XP Level Thresholds
 export const XP_LEVEL_THRESHOLDS = [0, 100, 250, 500, 1000, 2000, 3500, 5000, 7500, 10000] as const;

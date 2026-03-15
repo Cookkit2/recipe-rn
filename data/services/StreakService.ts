@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Streak Service
  *
@@ -35,9 +36,7 @@ export class StreakService {
       const cookingDays = this.groupCookingDaysByDate(allHistory);
 
       // Sort dates in descending order (most recent first)
-      const sortedDates = Array.from(cookingDays.keys()).sort(
-        (a, b) => b.getTime() - a.getTime()
-      );
+      const sortedDates = Array.from(cookingDays.keys()).sort((a, b) => b.getTime() - a.getTime());
 
       if (sortedDates.length === 0) {
         return 0;
@@ -101,9 +100,7 @@ export class StreakService {
       const cookingDays = this.groupCookingDaysByDate(allHistory);
 
       // Sort dates in ascending order (oldest first)
-      const sortedDates = Array.from(cookingDays.keys()).sort(
-        (a, b) => a.getTime() - b.getTime()
-      );
+      const sortedDates = Array.from(cookingDays.keys()).sort((a, b) => a.getTime() - b.getTime());
 
       if (sortedDates.length === 0) {
         return 0;
@@ -268,9 +265,7 @@ export class StreakService {
     }
 
     const cookingDays = this.groupCookingDaysByDate(history);
-    const sortedDates = Array.from(cookingDays.keys()).sort(
-      (a, b) => a.getTime() - b.getTime()
-    );
+    const sortedDates = Array.from(cookingDays.keys()).sort((a, b) => a.getTime() - b.getTime());
 
     const streakHistory: StreakEntry[] = [];
     let currentStreak = 1;

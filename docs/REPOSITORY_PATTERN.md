@@ -84,6 +84,7 @@ The facade may use `database.get()` (or repository internals) for batch reads (e
 The data layer is organized into three tiers:
 
 **1. Complex Data - WatermelonDB** (`data/db/`)
+
 - Relational data with queries, relationships, and reactive updates
 - Schema: `data/db/schema.ts` (version 5)
 - Models: `data/db/models/` with decorators
@@ -91,12 +92,14 @@ The data layer is organized into three tiers:
 - Entry Point: `DatabaseFacade` (`data/db/DatabaseFacade.ts`)
 
 **2. Simple Key-Value - StorageFacade** (`data/storage/`)
+
 - Fast key-value storage via unified API
 - Factory pattern for storage backend selection
 - Storage implementations: `data/storage/implementations/`
 - Entry Point: `storage` from `data/index.ts`
 
 **3. Cloud Sync - Supabase APIs** (`data/supabase-api/`)
+
 - Cloud operations for recipes and ingredients
 - Auto-generated types in `lib/supabase/supabase-types.ts`
 - Recipes sync from Supabase to local WatermelonDB
@@ -131,29 +134,29 @@ The `BaseRepository` provides common CRUD operations for all repositories:
 ```typescript
 abstract class BaseRepository<T extends Model> {
   // Find by ID
-  async findById(id: string): Promise<T | null>
+  async findById(id: string): Promise<T | null>;
 
   // Get all records with pagination
-  async findAll(options?: PaginationOptions): Promise<T[]>
+  async findAll(options?: PaginationOptions): Promise<T[]>;
 
   // Count records
-  async count(): Promise<number>
+  async count(): Promise<number>;
 
   // Create a record
-  async create(data: Partial<T>): Promise<T>
+  async create(data: Partial<T>): Promise<T>;
 
   // Update a record
-  async update(id: string, data: Partial<T>): Promise<T>
+  async update(id: string, data: Partial<T>): Promise<T>;
 
   // Delete a record
-  async delete(id: string): Promise<void>
+  async delete(id: string): Promise<void>;
 
   // Delete multiple records
-  async deleteMany(ids: string[]): Promise<void>
+  async deleteMany(ids: string[]): Promise<void>;
 
   // Protected helpers for subclasses
-  protected buildSearchQuery(query: Query<T>, searchTerm: string, fields: string[]): Query<T>
-  protected applySorting(query: Query<T>, sortBy?: string, sortOrder?: 'asc' | 'desc'): Query<T>
+  protected buildSearchQuery(query: Query<T>, searchTerm: string, fields: string[]): Query<T>;
+  protected applySorting(query: Query<T>, sortBy?: string, sortOrder?: "asc" | "desc"): Query<T>;
 }
 ```
 
@@ -167,7 +170,7 @@ interface PaginationOptions {
 
 interface SearchOptions extends PaginationOptions {
   sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
   searchTerm?: string;
 }
 ```
@@ -175,36 +178,36 @@ interface SearchOptions extends PaginationOptions {
 ### Repository Example: StockRepository
 
 ```typescript
-import { databaseFacade } from '~/data';
+import { databaseFacade } from "~/data";
 
 // Get all stock items
 const allStock = await databaseFacade.getAllStock();
 
 // Get stock by ID
-const item = await databaseFacade.getStockById('abc-123');
+const item = await databaseFacade.getStockById("abc-123");
 
 // Create new stock
 const newItem = await databaseFacade.createStock({
-  name: 'Tomatoes',
+  name: "Tomatoes",
   quantity: 5,
-  unit: 'pieces',
-  storageType: 'fridge',
+  unit: "pieces",
+  storageType: "fridge",
 });
 
 // Update stock
-await databaseFacade.updateStock('abc-123', {
+await databaseFacade.updateStock("abc-123", {
   quantity: 3,
   expiryDate: Date.now() + 86400000,
 });
 
 // Delete stock
-await databaseFacade.deleteStock('abc-123');
+await databaseFacade.deleteStock("abc-123");
 
 // Search with filters
-const results = await databaseFacade.searchStock('tomato', {
-  storageType: 'fridge',
-  sortBy: 'expiry_date',
-  sortOrder: 'asc',
+const results = await databaseFacade.searchStock("tomato", {
+  storageType: "fridge",
+  sortBy: "expiry_date",
+  sortOrder: "asc",
 });
 ```
 
@@ -219,18 +222,16 @@ class RecipeRepository extends BaseRepository<Recipe> {
     let query = this.collection.query();
 
     if (options.searchTerm) {
-      query = this.buildSearchQuery(query, options.searchTerm, ['title', 'description']);
+      query = this.buildSearchQuery(query, options.searchTerm, ["title", "description"]);
     }
 
     if (options.tags?.length) {
-      const tagConditions = options.tags.map(tag =>
-        Q.where('tags', Q.like(`%"${tag}"%`))
-      );
+      const tagConditions = options.tags.map((tag) => Q.where("tags", Q.like(`%"${tag}"%`)));
       query = query.extend(Q.or(...tagConditions));
     }
 
     if (options.maxPrepTime) {
-      query = query.extend(Q.where('prep_minutes', Q.lte(options.maxPrepTime)));
+      query = query.extend(Q.where("prep_minutes", Q.lte(options.maxPrepTime)));
     }
 
     return await query.fetch();
@@ -262,8 +263,8 @@ Repositories handle WatermelonDB's `@relation` decorators:
 ```typescript
 // Model with relations
 class Recipe extends Model {
-  @children('recipe_step') steps
-  @children('recipe_ingredient') ingredients
+  @children("recipe_step") steps;
+  @children("recipe_ingredient") ingredients;
 }
 
 // Access through repository
@@ -292,21 +293,21 @@ StorageFactory (Backend Selection)
 ### Basic Usage
 
 ```typescript
-import { storage } from '~/data';
+import { storage } from "~/data";
 
 // Simple get/set
-const token = storage.get('auth_token');
-storage.set('auth_token', 'abc123');
+const token = storage.get("auth_token");
+storage.set("auth_token", "abc123");
 
 // With type safety
-const settings = storage.get<UserSettings>('settings');
-storage.set('settings', { theme: 'dark', language: 'en' });
+const settings = storage.get<UserSettings>("settings");
+storage.set("settings", { theme: "dark", language: "en" });
 
 // Delete
-storage.delete('auth_token');
+storage.delete("auth_token");
 
 // Check existence
-if (storage.contains('onboarding_completed')) {
+if (storage.contains("onboarding_completed")) {
   // User has completed onboarding
 }
 
@@ -321,17 +322,17 @@ const size = storage.size();
 
 ```typescript
 // Get multiple values
-const values = storage.getBatch(['key1', 'key2', 'key3']);
+const values = storage.getBatch(["key1", "key2", "key3"]);
 
 // Set multiple values
 storage.setBatch({
-  key1: 'value1',
-  key2: 'value2',
-  key3: 'value3',
+  key1: "value1",
+  key2: "value2",
+  key3: "value3",
 });
 
 // Delete multiple keys
-storage.deleteBatch(['key1', 'key2', 'key3']);
+storage.deleteBatch(["key1", "key2", "key3"]);
 ```
 
 ### Utility Methods
@@ -343,13 +344,13 @@ if (storage.isEmpty()) {
 }
 
 // Get with default value
-const theme = storage.getWithDefault('theme', 'light');
+const theme = storage.getWithDefault("theme", "light");
 
 // Set only if key doesn't exist
-storage.setIfNotExists('install_id', generateId());
+storage.setIfNotExists("install_id", generateId());
 
 // Update only if key exists
-const updated = storage.update('theme', 'dark');
+const updated = storage.update("theme", "dark");
 ```
 
 ### Storage Keys
@@ -357,9 +358,9 @@ const updated = storage.update('theme', 'dark');
 All storage keys are centralized in `constants/storage-keys.ts`:
 
 ```typescript
-export const ONBOARDING_COMPLETED_KEY = 'onboarding:completed';
-export const VOICE_COOKING_SETTINGS_KEY = 'voice:cooking_settings';
-export const USER_PREFERENCES_KEY = 'user:preferences';
+export const ONBOARDING_COMPLETED_KEY = "onboarding:completed";
+export const VOICE_COOKING_SETTINGS_KEY = "voice:cooking_settings";
+export const USER_PREFERENCES_KEY = "user:preferences";
 
 // Usage
 storage.set(ONBOARDING_COMPLETED_KEY, true);
@@ -371,6 +372,7 @@ const settings = storage.get(VOICE_COOKING_SETTINGS_KEY);
 **Location:** `data/storage/storage-facade.ts`
 
 The facade provides:
+
 - **Auto-detection** of sync vs async operations
 - **Fallback support** for missing methods
 - **Batch operations** for efficiency
@@ -383,13 +385,13 @@ The facade provides:
 Used for advanced scenarios:
 
 ```typescript
-import { StorageFactory } from '~/data/storage/storage-factory';
+import { StorageFactory } from "~/data/storage/storage-factory";
 
 // Initialize with specific config
 const storage = StorageFactory.initialize({
-  type: 'mmkv',
+  type: "mmkv",
   options: {
-    id: 'user-data',
+    id: "user-data",
     // In production, use a strong, randomly generated key from secure storage (env vars, Keychain, etc.).
     encryptionKey: process.env.MMKV_ENCRYPTION_KEY,
   },
@@ -397,7 +399,7 @@ const storage = StorageFactory.initialize({
 
 // Check capabilities
 if (StorageFactory.supportsAsync()) {
-  const value = await storage.getAsync('key', true);
+  const value = await storage.getAsync("key", true);
 }
 
 if (StorageFactory.supportsBatch()) {
@@ -406,8 +408,8 @@ if (StorageFactory.supportsBatch()) {
 
 // Migrate between storage backends
 await StorageFactory.migrateStorage(
-  { type: 'mmkv' },
-  { type: 'mmkv', options: { id: 'new-storage' } }
+  { type: "mmkv" },
+  { type: "mmkv", options: { id: "new-storage" } }
 );
 ```
 
@@ -421,12 +423,12 @@ await StorageFactory.migrateStorage(
 
 ```typescript
 // ✅ GOOD - Use facade
-import { databaseFacade } from '~/data';
+import { databaseFacade } from "~/data";
 
 const recipes = await databaseFacade.getAllRecipes();
 
 // ❌ BAD - Direct repository access
-import { recipeRepository } from '~/data/db/repositories';
+import { recipeRepository } from "~/data/db/repositories";
 const recipes = await recipeRepository.findAll();
 ```
 
@@ -435,13 +437,13 @@ const recipes = await recipeRepository.findAll();
 Combine repositories with React Query for server state:
 
 ```typescript
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { databaseFacade } from '~/data';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { databaseFacade } from "~/data";
 
 // Query hook
 function useStockItems() {
   return useQuery({
-    queryKey: ['stock'],
+    queryKey: ["stock"],
     queryFn: () => databaseFacade.getAllStock(),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -454,7 +456,7 @@ function useCreateStock() {
   return useMutation({
     mutationFn: (data: CreateStockData) => databaseFacade.createStock(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['stock'] });
+      queryClient.invalidateQueries({ queryKey: ["stock"] });
     },
   });
 }
@@ -465,15 +467,13 @@ function useCreateStock() {
 For real-time UI updates:
 
 ```typescript
-import { useCollection } from '~/data/db';
-import Stock from '~/data/db/models/Stock';
-import { Q } from '@nozbe/watermelondb';
+import { useCollection } from "~/data/db";
+import Stock from "~/data/db/models/Stock";
+import { Q } from "@nozbe/watermelondb";
 
 function useExpiringStock() {
-  return useCollection(Stock, collection =>
-    collection
-      .query(Q.where('expiry_date', Q.gt(Date.now())))
-      .fetch()
+  return useCollection(Stock, (collection) =>
+    collection.query(Q.where("expiry_date", Q.gt(Date.now()))).fetch()
   );
 }
 ```
@@ -499,7 +499,7 @@ const recipe = await databaseFacade.createRecipe({
 For custom transactions, use `database.write()`:
 
 ```typescript
-import { database } from '~/data/db/database';
+import { database } from "~/data/db/database";
 
 await database.write(async () => {
   await repository1.createRaw(data1);
@@ -509,6 +509,7 @@ await database.write(async () => {
 ```
 
 > Note: `createRaw` and `updateRaw` in this example are illustrative low-level repository methods used for demonstration. In your implementation, use the concrete repository methods that your repositories expose when performing custom transactions.
+
 ---
 
 ## Best Practices
@@ -521,8 +522,8 @@ const recipes = await databaseFacade.getAllRecipes();
 const recipe = await databaseFacade.getRecipeWithDetails(id);
 
 // ❌ BAD - Direct database access
-import { database } from '~/data/db/database';
-const recipes = await database.get('recipe').query().fetch();
+import { database } from "~/data/db/database";
+const recipes = await database.get("recipe").query().fetch();
 ```
 
 ### 2. Sanitize User Input
@@ -556,12 +557,12 @@ try {
 
 ```typescript
 // Import types from facade
-import type { CreateStockData, UpdateStockData, RecipeWithDetails } from '~/data';
+import type { CreateStockData, UpdateStockData, RecipeWithDetails } from "~/data";
 
 const data: CreateStockData = {
-  name: 'Tomatoes',
+  name: "Tomatoes",
   quantity: 5,
-  unit: 'pieces',
+  unit: "pieces",
 };
 ```
 
@@ -585,11 +586,11 @@ for (const item of items) {
 
 ```typescript
 // ✅ GOOD - Use constants
-import { ONBOARDING_COMPLETED_KEY } from '~/constants/storage-keys';
+import { ONBOARDING_COMPLETED_KEY } from "~/constants/storage-keys";
 storage.set(ONBOARDING_COMPLETED_KEY, true);
 
 // ❌ BAD - String literals
-storage.set('onboarding_completed', true); // Typo risk
+storage.set("onboarding_completed", true); // Typo risk
 ```
 
 ### 7. Avoid Circular Dependencies
@@ -611,10 +612,10 @@ Component → Repository → Component (via imports)
 ### Mocking the Facade
 
 ```typescript
-import { databaseFacade } from '~/data';
+import { databaseFacade } from "~/data";
 
 // Mock the facade
-jest.mock('~/data', () => ({
+jest.mock("~/data", () => ({
   databaseFacade: {
     getAllRecipes: jest.fn(),
     getRecipeById: jest.fn(),
@@ -623,11 +624,9 @@ jest.mock('~/data', () => ({
 }));
 
 // Use in tests
-describe('RecipeList', () => {
-  it('displays recipes', async () => {
-    (databaseFacade.getAllRecipes as jest.Mock).mockResolvedValue([
-      { id: '1', title: 'Pasta' },
-    ]);
+describe("RecipeList", () => {
+  it("displays recipes", async () => {
+    (databaseFacade.getAllRecipes as jest.Mock).mockResolvedValue([{ id: "1", title: "Pasta" }]);
 
     // ... test code
   });
@@ -637,22 +636,22 @@ describe('RecipeList', () => {
 ### Repository Unit Tests
 
 ```typescript
-import { RecipeRepository } from '~/data/db/repositories';
+import { RecipeRepository } from "~/data/db/repositories";
 
-describe('RecipeRepository', () => {
+describe("RecipeRepository", () => {
   let repository: RecipeRepository;
 
   beforeEach(() => {
     repository = new RecipeRepository();
   });
 
-  it('should search recipes by term', async () => {
+  it("should search recipes by term", async () => {
     const results = await repository.searchRecipes({
-      searchTerm: 'pasta',
+      searchTerm: "pasta",
     });
 
     expect(results).toHaveLength(1);
-    expect(results[0].title).toContain('pasta');
+    expect(results[0].title).toContain("pasta");
   });
 });
 ```
@@ -664,17 +663,19 @@ describe('RecipeRepository', () => {
 ### Migrating from Direct WatermelonDB Access
 
 **Before (Direct Access):**
-```typescript
-import { database } from '~/data/db/database';
-import Recipe from '~/data/db/models/Recipe';
 
-const recipes = await database.get<Recipe>('recipe').query().fetch();
-const recipe = await database.get<Recipe>('recipe').find(id);
+```typescript
+import { database } from "~/data/db/database";
+import Recipe from "~/data/db/models/Recipe";
+
+const recipes = await database.get<Recipe>("recipe").query().fetch();
+const recipe = await database.get<Recipe>("recipe").find(id);
 ```
 
 **After (Facade):**
+
 ```typescript
-import { databaseFacade } from '~/data';
+import { databaseFacade } from "~/data";
 
 const recipes = await databaseFacade.getAllRecipes();
 const recipe = await databaseFacade.getRecipeById(id);
@@ -683,19 +684,21 @@ const recipe = await databaseFacade.getRecipeById(id);
 ### Migrating from AsyncStorage
 
 **Before (AsyncStorage):**
-```typescript
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
-await AsyncStorage.setItem('key', 'value');
-const value = await AsyncStorage.getItem('key');
+```typescript
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+await AsyncStorage.setItem("key", "value");
+const value = await AsyncStorage.getItem("key");
 ```
 
 **After (StorageFacade):**
-```typescript
-import { storage } from '~/data';
 
-storage.set('key', 'value'); // Sync, no await needed
-const value = storage.get('key');
+```typescript
+import { storage } from "~/data";
+
+storage.set("key", "value"); // Sync, no await needed
+const value = storage.get("key");
 ```
 
 ### Adding a New Repository
@@ -704,19 +707,17 @@ const value = storage.get('key');
 
 ```typescript
 // data/db/repositories/MyEntityRepository.ts
-import { BaseRepository } from './BaseRepository';
-import MyEntity from '../models/MyEntity';
+import { BaseRepository } from "./BaseRepository";
+import MyEntity from "../models/MyEntity";
 
 export class MyEntityRepository extends BaseRepository<MyEntity> {
   constructor() {
-    super('my_entity');
+    super("my_entity");
   }
 
   // Add custom methods
   async findByCustomField(value: string): Promise<MyEntity[]> {
-    return await this.collection
-      .query(Q.where('custom_field', Q.like(`%${value}%`)))
-      .fetch();
+    return await this.collection.query(Q.where("custom_field", Q.like(`%${value}%`))).fetch();
   }
 }
 ```
@@ -725,7 +726,7 @@ export class MyEntityRepository extends BaseRepository<MyEntity> {
 
 ```typescript
 // data/db/repositories/index.ts
-export { MyEntityRepository } from './MyEntityRepository';
+export { MyEntityRepository } from "./MyEntityRepository";
 export let myEntityRepository: MyEntityRepository | null = null;
 
 export function initializeRepositories() {
@@ -785,15 +786,18 @@ export class DatabaseFacade {
 ## Resources
 
 ### Official Documentation
+
 - [WatermelonDB Docs](https://nozbe.github.io/WatermelonDB/)
 - [WatermelonDB Relationships](https://nozbe.github.io/WatermelonDB/Relations.html)
 - [MMKV Documentation](https://github.com/microsoft/react-native-mmkv)
 
 ### Design Patterns
+
 - [Repository Pattern (Martin Fowler)](https://martinfowler.com/eaaCatalog/repository.html)
 - [Facade Pattern (Gang of Four)](https://refactoring.guru/design-patterns/facade)
 
 ### DoneDish Specific
+
 - `data/db/DatabaseFacade.ts` - Main entry point for database operations
 - `data/storage/storage-facade.ts` - Main entry point for key-value operations
 - `CLAUDE.md` - Project architecture overview

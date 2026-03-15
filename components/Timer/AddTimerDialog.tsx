@@ -32,12 +32,7 @@ interface AddTimerDialogProps {
   stepNumber?: number;
 }
 
-export function AddTimerDialog({
-  open,
-  onOpenChange,
-  recipeId,
-  stepNumber,
-}: AddTimerDialogProps) {
+export function AddTimerDialog({ open, onOpenChange, recipeId, stepNumber }: AddTimerDialogProps) {
   const { createTimer } = useTimer();
   const [timerName, setTimerName] = useState("");
   const [hours, setHours] = useState("");
@@ -46,8 +41,7 @@ export function AddTimerDialog({
   const [isCreating, setIsCreating] = useState(false);
 
   const isValidName = timerName.trim().length > 0;
-  const hasValidDuration =
-    hours !== "" || minutes !== "" || seconds !== "";
+  const hasValidDuration = hours !== "" || minutes !== "" || seconds !== "";
 
   const getTotalSeconds = (): number => {
     const h = parseInt(hours || "0", 10);
@@ -86,8 +80,7 @@ export function AddTimerDialog({
       onOpenChange(false);
       resetForm();
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to create timer";
+      const errorMessage = error instanceof Error ? error.message : "Failed to create timer";
       toast.error(errorMessage);
     } finally {
       setIsCreating(false);
@@ -136,7 +129,6 @@ export function AddTimerDialog({
               <TextInput
                 className="flex-1 text-foreground"
                 placeholder="e.g., Pasta, Sauce, Oven..."
-                
                 value={timerName}
                 onChangeText={setTimerName}
                 autoCapitalize="words"
@@ -161,9 +153,7 @@ export function AddTimerDialog({
                   maxLength={2}
                   editable={!isCreating}
                 />
-                <Text className="text-xs text-muted-foreground text-center mt-1">
-                  Hours
-                </Text>
+                <Text className="text-xs text-muted-foreground text-center mt-1">Hours</Text>
               </View>
 
               <Text className="text-foreground text-lg font-semibold">:</Text>
@@ -179,9 +169,7 @@ export function AddTimerDialog({
                   maxLength={2}
                   editable={!isCreating}
                 />
-                <Text className="text-xs text-muted-foreground text-center mt-1">
-                  Minutes
-                </Text>
+                <Text className="text-xs text-muted-foreground text-center mt-1">Minutes</Text>
               </View>
 
               <Text className="text-foreground text-lg font-semibold">:</Text>
@@ -197,9 +185,7 @@ export function AddTimerDialog({
                   maxLength={2}
                   editable={!isCreating}
                 />
-                <Text className="text-xs text-muted-foreground text-center mt-1">
-                  Seconds
-                </Text>
+                <Text className="text-xs text-muted-foreground text-center mt-1">Seconds</Text>
               </View>
             </View>
 
@@ -240,15 +226,8 @@ export function AddTimerDialog({
               <Text>Cancel</Text>
             </Button>
           </DialogClose>
-          <Button
-            onPress={handleSubmit}
-            disabled={isCreating || !isValidName || !hasValidDuration}
-          >
-            {isCreating ? (
-              <ActivityIndicator size="small" color="white" />
-            ) : (
-              <Text>Add Timer</Text>
-            )}
+          <Button onPress={handleSubmit} disabled={isCreating || !isValidName || !hasValidDuration}>
+            {isCreating ? <ActivityIndicator size="small" color="white" /> : <Text>Add Timer</Text>}
           </Button>
         </DialogFooter>
       </DialogContent>

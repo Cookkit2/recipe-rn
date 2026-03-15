@@ -1,12 +1,7 @@
 import * as MenubarPrimitive from "@rn-primitives/menubar";
 import * as React from "react";
 import { Platform, Text, type TextProps, View } from "react-native";
-import {
-  CheckIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
-  ChevronUpIcon,
-} from "lucide-uniwind";
+import { CheckIcon, ChevronDownIcon, ChevronRightIcon, ChevronUpIcon } from "lucide-uniwind";
 import { cn } from "~/lib/utils";
 import { TextClassContext } from "~/components/ui/text";
 
@@ -70,12 +65,7 @@ function MenubarSubTrigger({
   children?: React.ReactNode;
 }) {
   const { open } = MenubarPrimitive.useSubContext();
-  const Icon =
-    Platform.OS === "web"
-      ? ChevronRightIcon
-      : open
-        ? ChevronUpIcon
-        : ChevronDownIcon;
+  const Icon = Platform.OS === "web" ? ChevronRightIcon : open ? ChevronUpIcon : ChevronDownIcon;
   return (
     <TextClassContext.Provider
       value={cn(
@@ -255,10 +245,7 @@ function MenubarSeparator({
   ref?: React.RefObject<MenubarPrimitive.SeparatorRef>;
 }) {
   return (
-    <MenubarPrimitive.Separator
-      className={cn("-mx-1 my-1 h-px bg-border", className)}
-      {...props}
-    />
+    <MenubarPrimitive.Separator className={cn("-mx-1 my-1 h-px bg-border", className)} {...props} />
   );
 }
 

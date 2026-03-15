@@ -36,9 +36,7 @@ export async function initializeNotifications(): Promise<void> {
  * Schedule a local notification.
  * Returns the notification identifier for later cancellation.
  */
-export async function scheduleNotification(
-  options: ScheduleNotificationOptions,
-): Promise<string> {
+export async function scheduleNotification(options: ScheduleNotificationOptions): Promise<string> {
   const { id, title, body, subtitle, data, trigger, sound = true, badge } = options;
 
   // Respect user notification preferences (single read; pass to channel check).

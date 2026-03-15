@@ -6,6 +6,7 @@ import { H4, P } from "~/components/ui/typography";
 import { MilkIcon, EggIcon, NutIcon, FishIcon, ShrimpIcon, WheatIcon } from "lucide-uniwind";
 import { toggleFromArray } from "~/utils/array-helper";
 import type { GroupButton } from "~/components/Shared/SegmentedButtons";
+import { storage } from "~/data";
 import { PREF_ALLERGENS_KEY, PREF_OTHER_ALLERGENS_KEY } from "~/constants/storage-keys";
 import { useQueryClient } from "@tanstack/react-query";
 import { recipeQueryKeys } from "~/hooks/queries/recipeQueryKeys";

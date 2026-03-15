@@ -852,10 +852,7 @@ export class DatabaseFacade {
   /**
    * Update progress for a challenge
    */
-  async updateChallengeProgress(
-    challengeId: string,
-    progress: number
-  ): Promise<UserChallenge> {
+  async updateChallengeProgress(challengeId: string, progress: number): Promise<UserChallenge> {
     return await this.userChallenges.updateProgress(challengeId, progress);
   }
 
@@ -918,7 +915,11 @@ export class DatabaseFacade {
   /**
    * Record a waste log entry for discarded ingredients
    */
-  async recordWaste(stockId: string, quantityWasted: number, data?: RecordWasteData): Promise<WasteLog> {
+  async recordWaste(
+    stockId: string,
+    quantityWasted: number,
+    data?: RecordWasteData
+  ): Promise<WasteLog> {
     return await this.wasteLog.recordWaste(stockId, quantityWasted, {
       wasteDate: data?.wasteDate,
       reason: data?.reason,
@@ -972,7 +973,9 @@ export class DatabaseFacade {
     limit?: number,
     startDate?: number,
     endDate?: number
-  ): Promise<Array<{ stockId: string; wasteCount: number; totalQuantity: number; totalCost: number }>> {
+  ): Promise<
+    Array<{ stockId: string; wasteCount: number; totalQuantity: number; totalCost: number }>
+  > {
     return await this.wasteLog.getMostWastedItems(limit, startDate, endDate);
   }
 
@@ -1237,6 +1240,33 @@ export class DatabaseFacade {
   }
 
   /**
+   * Clear all recipes and related cooking history from the database
+   */
+  async clearRecipes(): Promise<void> {
+    if (!database) {
+      throw new Error("Database is not initialized");
+    }
+
+    const collections = ["recipe", "recipe_step", "recipe_ingredient", "cooking_history"];
+
+    // Batch all deletions in a single write to avoid flooding the write queue
+    await database.write(async () => {
+      for (const collectionName of collections) {
+        try {
+          const collection = database.collections.get(collectionName);
+          const allRecords = await collection.query().fetch();
+
+          if (allRecords.length > 0) {
+            await Promise.all(allRecords.map((record) => record.destroyPermanently()));
+          }
+        } catch (error) {
+          log.warn(`⚠️ Error clearing ${collectionName}:`, error);
+        }
+      }
+    });
+  }
+
+  /**
    * Clear all data from the database
    */
   async clearAllData(): Promise<void> {
@@ -1296,9 +1326,15 @@ export class DatabaseFacade {
    */
   async isHealthy(): Promise<boolean> {
     try {
-      if (!this.recipes || !this.stocks || !this.cookingHistory ||
-          !this.achievements || !this.userAchievements ||
-          !this.challenges || !this.userChallenges) {
+      if (
+        !this.recipes ||
+        !this.stocks ||
+        !this.cookingHistory ||
+        !this.achievements ||
+        !this.userAchievements ||
+        !this.challenges ||
+        !this.userChallenges
+      ) {
         return false;
       }
 

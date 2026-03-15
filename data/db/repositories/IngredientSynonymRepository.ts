@@ -9,9 +9,7 @@ export class IngredientSynonymRepository extends BaseRepository<IngredientSynony
 
   // Find synonyms for a stock item
   async findByStockId(stockId: string): Promise<IngredientSynonym[]> {
-    return await this.collection
-      .query(Q.where("stock_id", Q.eq(stockId)))
-      .fetch();
+    return await this.collection.query(Q.where("stock_id", Q.eq(stockId))).fetch();
   }
 
   // Find stock IDs by synonym (for matching)
@@ -24,23 +22,15 @@ export class IngredientSynonymRepository extends BaseRepository<IngredientSynony
 
   // Find exact synonym match
   async findExactMatch(synonym: string): Promise<IngredientSynonym[]> {
-    return await this.collection
-      .query(Q.where("synonym", Q.eq(synonym.toLowerCase())))
-      .fetch();
+    return await this.collection.query(Q.where("synonym", Q.eq(synonym.toLowerCase()))).fetch();
   }
 
   // Add synonym to stock
-  async addSynonym(
-    stockId: string,
-    synonym: string
-  ): Promise<IngredientSynonym> {
+  async addSynonym(stockId: string, synonym: string): Promise<IngredientSynonym> {
     // Check if synonym already exists for this stock
     const existing = await this.collection
       .query(
-        Q.and(
-          Q.where("stock_id", Q.eq(stockId)),
-          Q.where("synonym", Q.eq(synonym.toLowerCase()))
-        )
+        Q.and(Q.where("stock_id", Q.eq(stockId)), Q.where("synonym", Q.eq(synonym.toLowerCase())))
       )
       .fetch();
 
@@ -60,10 +50,7 @@ export class IngredientSynonymRepository extends BaseRepository<IngredientSynony
   }
 
   // Batch add synonyms to stock
-  async addSynonymsToStock(
-    stockId: string,
-    synonyms: string[]
-  ): Promise<IngredientSynonym[]> {
+  async addSynonymsToStock(stockId: string, synonyms: string[]): Promise<IngredientSynonym[]> {
     const db = this.collection.database;
     const created: IngredientSynonym[] = [];
 
@@ -99,9 +86,7 @@ export class IngredientSynonymRepository extends BaseRepository<IngredientSynony
     const db = this.collection.database;
 
     await db.write(async () => {
-      const synonyms = await this.collection
-        .query(Q.where("stock_id", Q.eq(stockId)))
-        .fetch();
+      const synonyms = await this.collection.query(Q.where("stock_id", Q.eq(stockId))).fetch();
       await Promise.all(synonyms.map((syn) => syn.markAsDeleted()));
     });
   }

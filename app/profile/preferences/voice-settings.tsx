@@ -31,7 +31,10 @@ export default function VoiceSettingsScreen() {
             <CommandRow command="Set timer" description="Start a cooking timer" />
             <CommandRow command="Cancel" description="Cancel most recent timer" />
             <CommandRow command="Done" description="Finish cooking" />
-            <CommandRow command="How much [ingredient]" description="Ask about ingredient amounts" />
+            <CommandRow
+              command="How much [ingredient]"
+              description="Ask about ingredient amounts"
+            />
             <CommandRow command="What's the temperature" description="Get cooking temperature" />
             <CommandRow command="Explain step" description="Clarify current step" />
           </View>

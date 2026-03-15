@@ -65,9 +65,7 @@ export default function RateRecipeModal({
               onPress={() => handleStarPress(starValue)}
               className="p-1"
               accessibilityLabel={`Rate ${starValue} stars`}
-              accessibilityHint={
-                rating === starValue ? "Selected" : "Tap to rate"
-              }
+              accessibilityHint={rating === starValue ? "Selected" : "Tap to rate"}
             >
               <StarIcon
                 size={32}
@@ -96,9 +94,7 @@ export default function RateRecipeModal({
 
         {/* Notes Input */}
         <View className="mb-4">
-          <P className="text-sm font-urbanist-medium text-foreground mb-2">
-            Notes (optional)
-          </P>
+          <P className="text-sm font-urbanist-medium text-foreground mb-2">Notes (optional)</P>
           <TextInput
             value={notes}
             onChangeText={setNotes}

@@ -29,9 +29,7 @@ export default class MealPlan extends Model {
   @date("updated_at") updatedAt!: Date;
 
   // Update method
-  @writer async updateMealPlan(
-    data: Partial<MealPlanData>
-  ): Promise<MealPlan> {
+  @writer async updateMealPlan(data: Partial<MealPlanData>): Promise<MealPlan> {
     return this.update((record) => {
       if (data.recipeId !== undefined) record.recipeId = data.recipeId;
       if (data.servings !== undefined) record.servings = data.servings;

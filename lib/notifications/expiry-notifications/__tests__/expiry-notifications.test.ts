@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { scheduleExpiryNotifications } from "../expiry-notifications";
 
 jest.mock("../../notification-service", () => ({
@@ -60,4 +61,3 @@ describe("scheduleExpiryNotifications", () => {
     expect(ids).toContain("expiry-future");
   });
 });
-

@@ -85,7 +85,9 @@ export default class UserAchievement extends Model {
   }
 
   // Update method
-  @writer async updateUserAchievement(data: Partial<UserAchievementData>): Promise<UserAchievement> {
+  @writer async updateUserAchievement(
+    data: Partial<UserAchievementData>
+  ): Promise<UserAchievement> {
     return this.update((record) => {
       if (data.achievementId !== undefined) record.achievementId = data.achievementId;
       if (data.status !== undefined) record.status = data.status;

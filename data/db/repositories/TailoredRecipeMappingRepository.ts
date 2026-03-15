@@ -54,26 +54,24 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
     try {
       // Find mapping by hash that hasn't expired
       const mappings = await this.collection
-        .query(
-          Q.where("hash", pantryHash),
-          Q.where("expiry_datetime", Q.gt(Date.now()))
-        )
+        .query(Q.where("hash", pantryHash), Q.where("expiry_datetime", Q.gt(Date.now())))
         .fetch();
 
       if (!mappings.length) return null;
 
       // Get the recipe and verify it's linked to the base recipe
       const recipeCollection = database.collections.get<Recipe>("recipe");
-      
+
       for (const mapping of mappings) {
         try {
           const recipe = await recipeCollection.find(mapping.recipeId);
-          
+
           // Check if this recipe is a tailored version of the base recipe
           // We store baseRecipeId in the recipe's sourceUrl field for tailored recipes
           if (recipe && recipe.type === RecipeType.TAILORED && recipe.sourceUrl === baseRecipeId) {
             const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
-            const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
+            const ingredientsCollection =
+              database.collections.get<RecipeIngredient>("recipe_ingredient");
 
             const [steps, ingredients] = await Promise.all([
               stepsCollection.query(Q.where("recipe_id", recipe.id)).fetch(),
@@ -143,7 +141,8 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
 
       // Create ingredients
       if (data.ingredients && data.ingredients.length > 0) {
-        const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
+        const ingredientsCollection =
+          database.collections.get<RecipeIngredient>("recipe_ingredient");
         for (const ingredient of data.ingredients) {
           await ingredientsCollection.create((record) => {
             record.recipeId = recipe.id;
@@ -174,9 +173,7 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
   async deleteTailoredRecipe(recipeId: string): Promise<void> {
     await database.write(async () => {
       // Find and delete the mapping
-      const mappings = await this.collection
-        .query(Q.where("recipe_id", recipeId))
-        .fetch();
+      const mappings = await this.collection.query(Q.where("recipe_id", recipeId)).fetch();
 
       for (const mapping of mappings) {
         await mapping.destroyPermanently();
@@ -189,7 +186,7 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
 
       try {
         const recipe = await recipeCollection.find(recipeId);
-        
+
         const [steps, ingredients] = await Promise.all([
           stepsCollection.query(Q.where("recipe_id", recipeId)).fetch(),
           ingredientsCollection.query(Q.where("recipe_id", recipeId)).fetch(),
@@ -265,13 +262,10 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
    */
   async clearForBaseRecipe(baseRecipeId: string): Promise<void> {
     const recipeCollection = database.collections.get<Recipe>("recipe");
-    
+
     // Find all tailored recipes that reference this base recipe
     const tailoredRecipes = await recipeCollection
-      .query(
-        Q.where("type", "tailored"),
-        Q.where("source_url", baseRecipeId)
-      )
+      .query(Q.where("type", "tailored"), Q.where("source_url", baseRecipeId))
       .fetch();
 
     if (tailoredRecipes.length === 0) return;
@@ -284,9 +278,7 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
       for (const recipe of tailoredRecipes) {
         try {
           // Delete mapping
-          const mappings = await this.collection
-            .query(Q.where("recipe_id", recipe.id))
-            .fetch();
+          const mappings = await this.collection.query(Q.where("recipe_id", recipe.id)).fetch();
           await Promise.all(mappings.map((m) => m.destroyPermanently()));
 
           // Delete steps and ingredients

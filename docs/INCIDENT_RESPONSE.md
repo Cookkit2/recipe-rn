@@ -4,12 +4,12 @@ This document defines severity levels, contacts, and runbooks for common inciden
 
 ## Severity Definitions
 
-| Severity | Description | Response target |
-|----------|-------------|------------------|
+| Severity          | Description                                                              | Response target                     |
+| ----------------- | ------------------------------------------------------------------------ | ----------------------------------- |
 | **P0 / Critical** | App unusable for most users (crashes on launch, auth broken, data loss). | Immediate; page on-call if defined. |
-| **P1 / High** | Major feature broken (e.g. pantry not loading, recipes not opening). | Within hours. |
-| **P2 / Medium** | Degraded experience (slow loads, non-critical feature down). | Within 1 business day. |
-| **P3 / Low** | Minor bugs, cosmetic issues. | Backlog. |
+| **P1 / High**     | Major feature broken (e.g. pantry not loading, recipes not opening).     | Within hours.                       |
+| **P2 / Medium**   | Degraded experience (slow loads, non-critical feature down).             | Within 1 business day.              |
+| **P3 / Low**      | Minor bugs, cosmetic issues.                                             | Backlog.                            |
 
 ## Who to Contact
 

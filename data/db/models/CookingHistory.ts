@@ -73,16 +73,13 @@ export default class CookingHistory extends Model {
   }
 
   // Update method
-  @writer async updateCookingHistory(
-    data: Partial<CookingHistoryData>
-  ): Promise<CookingHistory> {
+  @writer async updateCookingHistory(data: Partial<CookingHistoryData>): Promise<CookingHistory> {
     return this.update((record) => {
       if (data.recipeId !== undefined) record.recipeId = data.recipeId;
       if (data.cookedAt !== undefined) record.cookedAt = data.cookedAt;
       if (data.rating !== undefined) record.rating = data.rating;
       if (data.notes !== undefined) record.notes = data.notes;
-      if (data.servingsMade !== undefined)
-        record.servingsMade = data.servingsMade;
+      if (data.servingsMade !== undefined) record.servingsMade = data.servingsMade;
       if (data.photoUrl !== undefined) record.photoUrl = data.photoUrl;
     });
   }

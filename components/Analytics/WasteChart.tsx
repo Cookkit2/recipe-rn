@@ -200,26 +200,14 @@ export function WasteChart({
                 strokeWidth={1}
                 strokeDasharray="4 4"
               />
-              <SvgText
-                x={PADDING - 5}
-                y={line.y + 4}
-                fontSize={10}
-                fill="#9ca3af"
-                textAnchor="end"
-              >
+              <SvgText x={PADDING - 5} y={line.y + 4} fontSize={10} fill="#9ca3af" textAnchor="end">
                 {formatValue(Math.round(line.value), metric)}
               </SvgText>
             </React.Fragment>
           ))}
 
           {/* Area fill under the line */}
-          {points.length > 1 && (
-            <Path
-              d={areaPathD}
-              fill={chartColor}
-              fillOpacity={0.1}
-            />
-          )}
+          {points.length > 1 && <Path d={areaPathD} fill={chartColor} fillOpacity={0.1} />}
 
           {/* Line chart */}
           <Path
@@ -242,14 +230,7 @@ export function WasteChart({
                 rx={6}
                 fill={chartColor}
               />
-              <Rect
-                x={point.x - 3}
-                y={point.y - 3}
-                width={6}
-                height={6}
-                rx={3}
-                fill="white"
-              />
+              <Rect x={point.x - 3} y={point.y - 3} width={6} height={6} rx={3} fill="white" />
             </React.Fragment>
           ))}
 
@@ -265,21 +246,22 @@ export function WasteChart({
               >
                 {points[0].label}
               </SvgText>
-              {points.length > 2 && (() => {
-                const midIndex = Math.floor(points.length / 2);
-                const midPoint = points[midIndex];
-                return midPoint ? (
-                  <SvgText
-                    x={midPoint.x}
-                    y={CHART_HEIGHT - 10}
-                    fontSize={10}
-                    fill="#6b7280"
-                    textAnchor="middle"
-                  >
-                    {midPoint.label}
-                  </SvgText>
-                ) : null;
-              })()}
+              {points.length > 2 &&
+                (() => {
+                  const midIndex = Math.floor(points.length / 2);
+                  const midPoint = points[midIndex];
+                  return midPoint ? (
+                    <SvgText
+                      x={midPoint.x}
+                      y={CHART_HEIGHT - 10}
+                      fontSize={10}
+                      fill="#6b7280"
+                      textAnchor="middle"
+                    >
+                      {midPoint.label}
+                    </SvgText>
+                  ) : null;
+                })()}
               {(() => {
                 const lastIndex = points.length - 1;
                 const lastPoint = points[lastIndex];
@@ -291,7 +273,7 @@ export function WasteChart({
                     fill="#6b7280"
                     textAnchor="end"
                   >
-                      {lastPoint.label}
+                    {lastPoint.label}
                   </SvgText>
                 ) : null;
               })()}
@@ -302,27 +284,23 @@ export function WasteChart({
         {/* Legend */}
         <View className="flex-row items-center justify-center mt-3 gap-2">
           <View style={[styles.legendDot, { backgroundColor: chartColor }]} />
-          <P className="text-xs text-muted-foreground">
-            {getMetricLabel()}
-          </P>
+          <P className="text-xs text-muted-foreground">{getMetricLabel()}</P>
         </View>
       </View>
     );
   };
 
   return (
-    <Card className={cn("mx-6 mt-6 rounded-3xl shadow-md shadow-foreground/10 border-none", className)}>
+    <Card
+      className={cn("mx-6 mt-6 rounded-3xl shadow-md shadow-foreground/10 border-none", className)}
+    >
       <CardHeader className="pb-2">
         <CardTitle className="font-urbanist-bold">{title}</CardTitle>
         {description && (
-          <P className="text-sm text-foreground/70 font-urbanist-medium mt-1">
-            {description}
-          </P>
+          <P className="text-sm text-foreground/70 font-urbanist-medium mt-1">{description}</P>
         )}
       </CardHeader>
-      <CardContent>
-        {renderChart()}
-      </CardContent>
+      <CardContent>{renderChart()}</CardContent>
     </Card>
   );
 }

@@ -96,8 +96,7 @@ export function useImagePreloader(options: UseImagePreloaderOptions = {}) {
           if (!mountedRef.current) {
             return;
           }
-          const normalizedError =
-            err instanceof Error ? err : new Error(String(err));
+          const normalizedError = err instanceof Error ? err : new Error(String(err));
           setError(normalizedError);
           setIsPreloading(false);
           onError?.(normalizedError);
