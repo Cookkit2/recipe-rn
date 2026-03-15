@@ -309,6 +309,9 @@ importers:
       '@babel/core':
         specifier: ^7.26.0
         version: 7.29.0
+      '@jest/globals':
+        specifier: ^30.3.0
+        version: 30.3.0
       '@types/jest':
         specifier: ^30.0.0
         version: 30.0.0

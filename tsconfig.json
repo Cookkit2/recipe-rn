@@ -13,18 +13,22 @@
     "downlevelIteration": true,
     "noErrorTruncation": true,
     "experimentalDecorators": true,
-    "types": ["jest"],
     "paths": {
       "~/*": [
         "*"
       ]
-    }
+    },
+    "types": [
+      "jest"
+    ]
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    "expo-env.d.ts",
+    "test_globals.d.ts",
+    "test-globals.d.ts"
   ],
   "exclude": [
     "node_modules"
