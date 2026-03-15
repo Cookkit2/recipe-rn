@@ -121,11 +121,11 @@ jest.mock("../recipeImportApi", () => {
     recipeImportApi: {
       ...original.recipeImportApi,
       importRecipeFromYouTube: (...args: unknown[]) =>
-        importFromYouTube(...args),
+        importFromYouTube.apply(null, args as any),
       importRecipeFromWebsite: (...args: unknown[]) =>
-        importFromWebsite(...args),
+        importFromWebsite.apply(null, args as any),
       importRecipeFromSocialMedia: (...args: unknown[]) =>
-        importFromSocial(...args),
+        importFromSocial.apply(null, args as any),
     },
   };
 });
