@@ -110,7 +110,7 @@ function useAsyncStorage<T>(
           return;
         }
 
-        const storedValue = storage.get<string>(key);
+        const storedValue = storage.getString(key);
 
         if (mounted) {
           if (storedValue !== null) {
@@ -124,7 +124,7 @@ function useAsyncStorage<T>(
           } else if (defaultValue !== undefined) {
             // Store default value if nothing is stored yet
             try {
-              storage.set(key, stringify(defaultValue));
+              storage.setString(key, stringify(defaultValue));
               setValue(defaultValue);
             } catch (error) {
               log.error(`Error storing default value for key "${key}":`, error);
@@ -162,7 +162,7 @@ function useAsyncStorage<T>(
         // Async update to storage
         (async () => {
           try {
-            storage.set(key, stringify(resolvedValue));
+            storage.setString(key, stringify(resolvedValue));
             inMemoryData.delete(key);
             setIsPersistent(true);
           } catch (error) {

@@ -1,5 +1,6 @@
 declare const describe: any;
 declare const it: any;
+declare const test: any;
 declare const expect: any;
 declare namespace jest {
   export type Mock = any;
