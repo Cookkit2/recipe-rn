@@ -1,3 +1,4 @@
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { UserChallengeRepository } from "../../../../data/db/repositories/UserChallengeRepository";
 
 // Create a realistic-ish mock
@@ -20,7 +21,7 @@ const mockUserChallenges = Array.from({ length: 100 }, (_, i) => ({
 // Mock the dependencies and model
 jest.mock("../../../../data/db/database", () => ({
   database: {
-    write: jest.fn(async (cb) => cb()),
+    write: jest.fn(async (cb: any) => cb()),
     collections: {
       get: jest.fn().mockReturnValue({
         query: jest.fn().mockReturnValue({
