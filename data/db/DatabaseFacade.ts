@@ -491,6 +491,13 @@ export class DatabaseFacade {
   }
 
   /**
+   * Clear all recipes from the database
+   */
+  async clearRecipes(): Promise<void> {
+    await this.recipes.clearAllRecipes();
+  }
+
+  /**
    * Toggle recipe favorite status
    */
   async toggleFavorite(recipeId: string): Promise<Recipe | null> {
