@@ -1,4 +1,4 @@
-// @ts-nocheck
+import { jest, describe, beforeEach, it, expect } from "@jest/globals";
 import { scheduleExpiryNotifications } from "../expiry-notifications";
 
 jest.mock("../../notification-service", () => ({
@@ -57,7 +57,8 @@ describe("scheduleExpiryNotifications", () => {
 
     const calls = (scheduleNotification as jest.Mock).mock.calls;
     expect(calls.length).toBeGreaterThanOrEqual(1);
-    const ids = calls.map((c) => c[0].id);
+    const ids = calls.map((c: any) => c[0].id);
     expect(ids).toContain("expiry-future");
   });
 });
+
