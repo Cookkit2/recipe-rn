@@ -6,6 +6,7 @@
  */
 
 import { Share, Platform } from "react-native";
+import * as StoreReview from "expo-store-review";
 import type { AchievementProgress } from "~/types/achievements";
 import { ACHIEVEMENT_CATEGORY_DISPLAY } from "~/types/achievements";
 
@@ -42,20 +43,17 @@ function getAppName(): string {
 }
 
 /**
- * Get app store URL (placeholder for future use)
+ * Get app store URL or fallback to website
  */
 function getAppStoreUrl(): string {
-  // TODO: Replace with actual app store URL when available
-  return "https://cookkit.app";
+  const storeUrl = StoreReview.storeUrl();
+  return storeUrl || "https://cookkit.app";
 }
 
 /**
  * Format achievement share text with emojis and details
  */
-function formatAchievementText(
-  achievement: AchievementProgress,
-  userName?: string
-): string {
+function formatAchievementText(achievement: AchievementProgress, userName?: string): string {
   const { achievement: ach, progress, progressPercentage, isUnlocked } = achievement;
 
   // Header with emoji
@@ -163,10 +161,7 @@ export function generateMultiAchievementShareContent(
   const { userName, includeUrl = true } = options ?? {};
 
   const unlockedCount = achievements.filter((a) => a.isUnlocked).length;
-  const totalXP = achievements.reduce(
-    (sum, a) => sum + (a.achievement.xp || 0),
-    0
-  );
+  const totalXP = achievements.reduce((sum, a) => sum + (a.achievement.xp || 0), 0);
 
   const userPrefix = userName ? `${userName} ` : "I ";
   const icons = achievements.map((a) => a.achievement.icon).join(" ");
@@ -266,7 +261,7 @@ export async function shareAchievement(
       {
         title: content.title,
         message: content.message,
-        url: content.url,
+        url: content.url ?? undefined,
       },
       {
         dialogTitle: options?.dialogTitle || "Share Achievement",
@@ -312,7 +307,7 @@ export async function shareMultipleAchievements(
       {
         title: content.title,
         message: content.message,
-        url: content.url,
+        url: content.url ?? undefined,
       },
       {
         dialogTitle: options?.dialogTitle || "Share Achievements",
@@ -353,7 +348,7 @@ export async function shareStreak(
       {
         title: content.title,
         message: content.message,
-        url: content.url,
+        url: content.url ?? undefined,
       },
       {
         dialogTitle: options?.dialogTitle || "Share Streak",
@@ -398,7 +393,7 @@ export async function shareContent(
       {
         title: content.title,
         message: content.message,
-        url: content.url,
+        url: content.url ?? undefined,
       },
       {
         dialogTitle: options?.dialogTitle || "Share",
@@ -427,14 +422,9 @@ export async function shareContent(
 /**
  * Get share text for copying to clipboard (if share sheet is not used)
  */
-export function getShareTextForCopy(
-  achievement: AchievementProgress,
-  userName?: string
-): string {
+export function getShareTextForCopy(achievement: AchievementProgress, userName?: string): string {
   const content = generateAchievementShareContent(achievement, { userName });
-  return [content.title, content.message, content.url]
-    .filter(Boolean)
-    .join("\n\n");
+  return [content.title, content.message, content.url].filter(Boolean).join("\n\n");
 }
 
 /**
