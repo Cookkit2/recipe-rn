@@ -25,7 +25,7 @@ export default function BaseModal({
       <BlurView
         intensity={20}
         className="absolute inset-0 z-[1]"
-        tint={theme}
+        tint={theme as any}
       />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}

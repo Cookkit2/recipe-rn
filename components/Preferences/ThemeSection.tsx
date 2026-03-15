@@ -39,7 +39,7 @@ export default function ThemeSection() {
       // Persist to MMKV and update UI
       storage.set(PREF_COLOR_SCHEME_KEY, scheme);
       Uniwind.setTheme(scheme);
-      setAndroidNavigationBar(theme);
+      setAndroidNavigationBar(theme as "light" | "dark");
     },
     [theme]
   );
@@ -52,7 +52,7 @@ export default function ThemeSection() {
         </View>
         <SegmentedButtons
           buttons={THEME_BUTTONS}
-          value={themePreference}
+          value={themePreference as "system" | "light" | "dark" | undefined}
           onValueChange={handleSelectTheme}
         />
       </CardContent>
