@@ -215,21 +215,67 @@ export const pantryApi = {
       (existingCategories as IngredientCategory[]).map((c) => [c.name, c])
     );
 
+    // Pre-aggregate input items to prevent calling prepareUpdate/prepareCreate multiple times
+    // for the same ingredient in the same batch, which causes WatermelonDB to throw an Invariant Violation.
+    const aggregatedItems = new Map<string, Omit<PantryItem, "id" | "created_at" | "updated_at">>();
+    for (const item of items) {
+      const lowerName = item.name.toLowerCase();
+      const existing = aggregatedItems.get(lowerName);
+      if (existing) {
+        existing.quantity += item.quantity;
+        if (item.image_url) existing.image_url = item.image_url;
+        if (item.unit) existing.unit = item.unit;
+        if (item.expiry_date) existing.expiry_date = item.expiry_date;
+        if (item.type) existing.type = item.type;
+        if (item.background_color) existing.background_color = item.background_color;
+
+        // Merge categories
+        if (item.categories) {
+           existing.categories = [...(existing.categories || []), ...item.categories];
+           // Deduplicate by name
+           const seen = new Set<string>();
+           existing.categories = existing.categories.filter(c => {
+               if (seen.has(c.name)) return false;
+               seen.add(c.name);
+               return true;
+           });
+        }
+
+        // Merge synonyms
+        if (item.synonyms) {
+            existing.synonyms = [...(existing.synonyms || []), ...item.synonyms];
+            // Deduplicate by synonym string
+            const seen = new Set<string>();
+            existing.synonyms = existing.synonyms.filter(s => {
+                const lowerSyn = s.synonym.toLowerCase();
+                if (seen.has(lowerSyn)) return false;
+                seen.add(lowerSyn);
+                return true;
+            });
+        }
+      } else {
+        aggregatedItems.set(lowerName, { ...item }); // clone to avoid mutating input directly if nested
+      }
+    }
+
+    const uniqueItems = Array.from(aggregatedItems.values());
+
     const createdOrUpdatedStockRefs: Stock[] = [];
+    const batchOps: any[] = [];
 
     await database.write(async () => {
       const stockCollection = database.collections.get("stock");
       const synonymCollection = database.collections.get("ingredient_synonym");
       const stockCategoryCollection = database.collections.get("stock_category");
 
-      for (const item of items) {
+      for (const item of uniqueItems) {
         try {
           const existingStock = stockMapByLowerName.get(item.name.toLowerCase());
 
           let stockItem: Stock;
 
           if (existingStock) {
-            await existingStock.update((stock) => {
+            const op = existingStock.prepareUpdate((stock) => {
               (stock as Stock).quantity = existingStock.quantity + item.quantity;
               if (typeof item.image_url === "string") {
                 (stock as Stock).imageUrl = item.image_url;
@@ -239,9 +285,10 @@ export const pantryApi = {
               if (item.type) (stock as Stock).storageType = item.type;
               if (item.background_color) (stock as Stock).backgroundColor = item.background_color;
             });
+            batchOps.push(op);
             stockItem = existingStock;
           } else {
-            stockItem = (await stockCollection.create((stock) => {
+            stockItem = stockCollection.prepareCreate((stock) => {
               (stock as Stock).name = item.name;
               (stock as Stock).quantity = item.quantity;
               (stock as Stock).unit = item.unit;
@@ -249,7 +296,8 @@ export const pantryApi = {
               if (item.type) (stock as Stock).storageType = item.type;
               if (item.background_color) (stock as Stock).backgroundColor = item.background_color;
               if (typeof item.image_url === "string") (stock as Stock).imageUrl = item.image_url;
-            })) as Stock;
+            }) as Stock;
+            batchOps.push(stockItem);
             stockMapByLowerName.set(item.name.toLowerCase(), stockItem);
           }
 
@@ -257,25 +305,28 @@ export const pantryApi = {
             for (const category of item.categories) {
               let categoryRecord = categoryMapByName.get(category.name);
               if (!categoryRecord) {
-                categoryRecord = (await categoryCollection.create((cat) => {
+                categoryRecord = categoryCollection.prepareCreate((cat) => {
                   (cat as IngredientCategory).name = category.name;
                   (cat as IngredientCategory).syncedAt = Date.now();
-                })) as IngredientCategory;
+                }) as IngredientCategory;
+                batchOps.push(categoryRecord);
                 categoryMapByName.set(category.name, categoryRecord);
               }
-              await stockCategoryCollection.create((sc) => {
+              const scOp = stockCategoryCollection.prepareCreate((sc) => {
                 (sc as StockCategory).stockId = stockItem.id;
                 (sc as StockCategory).categoryId = categoryRecord!.id;
               });
+              batchOps.push(scOp);
             }
           }
 
           if (!existingStock && item.synonyms && item.synonyms.length > 0) {
             for (const synonym of item.synonyms) {
-              await synonymCollection.create((syn) => {
+              const synOp = synonymCollection.prepareCreate((syn) => {
                 (syn as IngredientSynonym).stockId = stockItem.id;
                 (syn as IngredientSynonym).synonym = synonym.synonym.toLowerCase();
               });
+              batchOps.push(synOp);
             }
           }
 
@@ -283,6 +334,10 @@ export const pantryApi = {
         } catch (error) {
           log.error(`Failed to add/update pantry item ${item.name}:`, error);
         }
+      }
+
+      if (batchOps.length > 0) {
+        await database.batch(...batchOps);
       }
     });
 
@@ -311,32 +366,48 @@ export const pantryApi = {
     items: Omit<PantryItem, "id" | "created_at" | "updated_at">[]
   ): Promise<PantryItem[]> {
     const createdItems: PantryItem[] = [];
+    const stockCollection = database.collections.get("stock");
+    const stockRecordsToCreate: any[] = [];
+
+    // Prepare all stock items directly in memory
+    for (const item of items) {
+      try {
+        const preparedStock = stockCollection.prepareCreate((stock) => {
+          (stock as Stock).name = item.name;
+          (stock as Stock).quantity = item.quantity;
+          (stock as Stock).unit = item.unit;
+          if (item.expiry_date) (stock as Stock).expiryDate = item.expiry_date;
+          if (item.type) (stock as Stock).storageType = item.type;
+          if (item.background_color) (stock as Stock).backgroundColor = item.background_color;
+          if (typeof item.image_url === "string") (stock as Stock).imageUrl = item.image_url;
+        });
+        stockRecordsToCreate.push(preparedStock);
+      } catch (error) {
+        log.error(`Failed to prepare pantry item ${item.name}:`, error);
+        // Continue with other items instead of failing completely
+      }
+    }
 
     // Process all items in a single transaction
-    await database.write(async () => {
-      const stockCollection = database.collections.get("stock");
+    if (stockRecordsToCreate.length > 0) {
+      try {
+        await database.write(async () => {
+          await database.batch(...stockRecordsToCreate);
+        });
 
-      for (const item of items) {
-        try {
-          // Create stock item directly in collection (within transaction)
-          const stockItem = await stockCollection.create((stock) => {
-            (stock as Stock).name = item.name;
-            (stock as Stock).quantity = item.quantity;
-            (stock as Stock).unit = item.unit;
-            if (item.expiry_date) (stock as Stock).expiryDate = item.expiry_date;
-            if (item.type) (stock as Stock).storageType = item.type;
-            if (item.background_color) (stock as Stock).backgroundColor = item.background_color;
-            if (typeof item.image_url === "string") (stock as Stock).imageUrl = item.image_url;
-          });
-
-          const convertedItem = await convertStockToPantryItem(stockItem as Stock);
-          createdItems.push(convertedItem);
-        } catch (error) {
-          log.error(`Failed to add pantry item ${item.name}:`, error);
-          // Continue with other items instead of failing completely
+        // After batch insert is successful, convert to PantryItem
+        for (const stockItem of stockRecordsToCreate) {
+          try {
+            const convertedItem = await convertStockToPantryItem(stockItem as Stock);
+            createdItems.push(convertedItem);
+          } catch (conversionError) {
+            log.error("Failed to convert created stock item to pantry item:", conversionError);
+          }
         }
+      } catch (batchError) {
+        log.error("Failed to execute batch insert for pantry items:", batchError);
       }
-    });
+    }
 
     return createdItems;
   },
@@ -460,8 +531,8 @@ const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
   try {
     // Add timeout to prevent hanging
     const synonymRecords = await Promise.race([
-      // TODO: Check correct query syntax
-      stock.synonyms.query().fetch(),
+
+      stock.synonyms.fetch(),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("Synonym fetch timeout")), 3000)
       ),
@@ -472,17 +543,27 @@ const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
     log.warn("Could not fetch synonyms for stock:", stock.id);
   }
 
-  let stepsToStore: any[] = [];
+  // Fetch categories if available
+  let categories: Array<{ id: string; name: string }> = [];
   try {
-    const steps = await stock.stepsToStore.query().fetch();
-    stepsToStore = steps.map((s) => ({
-      id: s.id, // Ensure this maps to string if needed, or handle appropriately
-      title: s.title,
-      description: s.description,
-      sequence: s.sequence,
-    }));
+    const stockCategoryRecords = await Promise.race([
+      stock.stockCategories.fetch(),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("StockCategory fetch timeout")), 3000)
+      ),
+    ]);
+
+    // Fetch the actual category names
+    if (stockCategoryRecords.length > 0) {
+      const categoryPromises = stockCategoryRecords.map((sc: any) =>
+        // @ts-ignore - WatermelonDB relation typings might be missing fetch() but it exists at runtime
+        typeof sc.category?.fetch === "function" ? sc.category.fetch() : Promise.resolve(null)
+      );
+      const categoryRecords = await Promise.all(categoryPromises);
+      categories = categoryRecords.filter(Boolean).map((c: any) => ({ id: c.id, name: c.name }));
+    }
   } catch (error) {
-    log.warn("Could not fetch steps_to_store for stock:", stock.id);
+    log.warn("Could not fetch categories for stock:", stock.id);
   }
 
   return {
@@ -491,13 +572,14 @@ const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
     quantity: stock.quantity,
     unit: stock.unit,
     expiry_date: stock.expiryDate || undefined,
-    category: "", // TODO: Load from BaseIngredient category if available
+    category: categories && categories.length > 0 ? categories[0]?.name || "" : "",
+    categories,
     type: mapDbTypeToType(stock.storageType),
     image_url: stock.imageUrl,
     background_color: stock.backgroundColor,
     created_at: stock.createdAt,
     updated_at: stock.updatedAt,
-    steps_to_store: stepsToStore,
+    steps_to_store: [], // TODO: Load from StepsToStore model
     synonyms,
   };
 };

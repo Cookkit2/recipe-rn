@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useCallback } from "react";
 import { View } from "react-native";
 import { Card, CardContent } from "~/components/ui/card";
@@ -40,8 +39,7 @@ export default function ThemeSection() {
       // Persist to MMKV and update UI
       storage.set(PREF_COLOR_SCHEME_KEY, scheme);
       Uniwind.setTheme(scheme);
-      // @ts-expect-error
-      setAndroidNavigationBar(theme);
+      setAndroidNavigationBar(theme === "dark" ? "dark" : "light");
     },
     [theme]
   );
@@ -54,8 +52,7 @@ export default function ThemeSection() {
         </View>
         <SegmentedButtons
           buttons={THEME_BUTTONS}
-          // @ts-expect-error
-          value={themePreference}
+          value={themePreference as "system" | "light" | "dark"}
           onValueChange={handleSelectTheme}
         />
       </CardContent>
