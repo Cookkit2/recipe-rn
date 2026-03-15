@@ -20,7 +20,12 @@ export interface WasteStats {
   totalEstimatedCost: number;
   averageWastePerEntry: number;
   wasteByReason: Record<string, { count: number; quantity: number; cost: number }>;
-  mostWastedItems: Array<{ stockId: string; wasteCount: number; totalQuantity: number; totalCost: number }>;
+  mostWastedItems: Array<{
+    stockId: string;
+    wasteCount: number;
+    totalQuantity: number;
+    totalCost: number;
+  }>;
   currentStreak: number;
   longestStreak: number;
   periodStart?: number;
@@ -57,9 +62,7 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
   }
 
   // Get waste logs with optional filters
-  async getWasteLogs(
-    options: WasteLogSearchOptions = {}
-  ): Promise<WasteLog[]> {
+  async getWasteLogs(options: WasteLogSearchOptions = {}): Promise<WasteLog[]> {
     let query = this.collection.query();
 
     // Filter by stock item
@@ -89,11 +92,7 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
     }
 
     // Apply sorting (most recent first by default)
-    query = this.applySorting(
-      query,
-      options.sortBy || "waste_date",
-      options.sortOrder || "desc"
-    );
+    query = this.applySorting(query, options.sortBy || "waste_date", options.sortOrder || "desc");
 
     // Apply pagination
     if (options.offset) {
@@ -122,10 +121,7 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
   }
 
   // Get waste statistics for a specific time period
-  async getWasteStats(
-    startDate?: number,
-    endDate?: number
-  ): Promise<WasteStats> {
+  async getWasteStats(startDate?: number, endDate?: number): Promise<WasteStats> {
     let query = this.collection.query();
 
     if (startDate !== undefined) {
@@ -138,10 +134,7 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
     const records = await query.fetch();
 
     const totalWasteEntries = records.length;
-    const totalQuantityWasted = records.reduce(
-      (sum, r) => sum + r.quantityWasted,
-      0
-    );
+    const totalQuantityWasted = records.reduce((sum, r) => sum + r.quantityWasted, 0);
     const totalEstimatedCost = records.reduce((sum, r) => {
       return sum + (r.estimatedCost ?? 0);
     }, 0);
@@ -149,10 +142,7 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
       totalWasteEntries > 0 ? totalQuantityWasted / totalWasteEntries : 0;
 
     // Group by reason
-    const wasteByReason: Record<
-      string,
-      { count: number; quantity: number; cost: number }
-    > = {};
+    const wasteByReason: Record<string, { count: number; quantity: number; cost: number }> = {};
     for (const record of records) {
       const reason = record.reason || "unknown";
       if (!wasteByReason[reason]) {
@@ -232,8 +222,9 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
     const oneDay = 24 * 60 * 60 * 1000;
 
     // Check each day going backward from today
-    for (let i = 0; i < 36500; i++) { // Check up to 100 years back
-      const checkDate = todayStart - (i * oneDay);
+    for (let i = 0; i < 36500; i++) {
+      // Check up to 100 years back
+      const checkDate = todayStart - i * oneDay;
       if (wasteDates.has(checkDate)) {
         break; // Found a waste day, streak ends
       }
@@ -247,7 +238,10 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
     // Iterate through all dates, counting gaps between waste events
     for (let i = 1; i < sortedWasteDates.length; i++) {
       // Days between consecutive waste events
-      const daysBetween = Math.round((sortedWasteDates[i] - sortedWasteDates[i - 1]) / oneDay) - 1;
+      const date1 = sortedWasteDates[i];
+      const date2 = sortedWasteDates[i - 1];
+      if (date1 === undefined || date2 === undefined) continue;
+      const daysBetween = Math.round((date1 - date2) / oneDay) - 1;
       tempStreak = daysBetween;
 
       if (tempStreak > longestStreak) {
@@ -256,7 +250,9 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
     }
 
     // Also check after the last waste event to today
-    const daysSinceLastWaste = Math.max(0, Math.round((todayStart - sortedWasteDates[sortedWasteDates.length - 1]) / oneDay) - 1);
+    const lastDate = sortedWasteDates[sortedWasteDates.length - 1];
+    const daysSinceLastWaste =
+      lastDate !== undefined ? Math.max(0, Math.round((todayStart - lastDate) / oneDay) - 1) : 0;
     if (daysSinceLastWaste > longestStreak) {
       longestStreak = daysSinceLastWaste;
     }
@@ -335,10 +331,7 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
   }
 
   // Get total waste cost for a period
-  async getTotalWasteCost(
-    startDate?: number,
-    endDate?: number
-  ): Promise<number> {
+  async getTotalWasteCost(startDate?: number, endDate?: number): Promise<number> {
     let query = this.collection.query();
 
     if (startDate !== undefined) {
@@ -367,17 +360,13 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
 
   // Get waste count for a specific stock item
   async getStockWasteCount(stockId: string): Promise<number> {
-    const count = await this.collection
-      .query(Q.where("stock_id", stockId))
-      .fetchCount();
+    const count = await this.collection.query(Q.where("stock_id", stockId)).fetchCount();
     return count;
   }
 
   // Get total quantity wasted for a specific stock item
   async getStockTotalWasteQuantity(stockId: string): Promise<number> {
-    const records = await this.collection
-      .query(Q.where("stock_id", stockId))
-      .fetch();
+    const records = await this.collection.query(Q.where("stock_id", stockId)).fetch();
 
     return records.reduce((sum, r) => sum + r.quantityWasted, 0);
   }
@@ -385,19 +374,14 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
   // Delete waste logs for a specific stock item
   async deleteByStockId(stockId: string): Promise<void> {
     await database.write(async () => {
-      const records = await this.collection
-        .query(Q.where("stock_id", stockId))
-        .fetch();
+      const records = await this.collection.query(Q.where("stock_id", stockId)).fetch();
 
       await Promise.all(records.map((record) => record.destroyPermanently()));
     });
   }
 
   // Get waste logs for a date range
-  async getWasteForDateRange(
-    startDate: number,
-    endDate: number
-  ): Promise<WasteLog[]> {
+  async getWasteForDateRange(startDate: number, endDate: number): Promise<WasteLog[]> {
     return await this.collection
       .query(
         Q.where("waste_date", Q.gte(startDate)),

@@ -90,9 +90,7 @@ export class AchievementService {
   /**
    * Check a specific achievement and unlock if criteria is met
    */
-  async checkAndUnlockAchievement(
-    achievementId: string
-  ): Promise<{
+  async checkAndUnlockAchievement(achievementId: string): Promise<{
     newlyUnlocked: boolean;
     progressUpdated: boolean;
     currentProgress: number;
@@ -116,7 +114,9 @@ export class AchievementService {
           newlyUnlocked: false,
           progressUpdated: false,
           currentProgress: userAchievement.progress,
-          target: this.getTargetFromRequirement(achievement.parsedRequirement as AchievementRequirement),
+          target: this.getTargetFromRequirement(
+            achievement.parsedRequirement as AchievementRequirement
+          ),
         };
       }
 
@@ -136,7 +136,11 @@ export class AchievementService {
 
       // Update status to in_progress if progress > 0
       if (currentProgress > 0 && userAchievement?.status === "locked") {
-        await this.userAchievementRepo.updateProgress(achievementId, currentProgress, "in_progress");
+        await this.userAchievementRepo.updateProgress(
+          achievementId,
+          currentProgress,
+          "in_progress"
+        );
       }
 
       return { newlyUnlocked: false, progressUpdated: true, currentProgress, target };
@@ -224,8 +228,8 @@ export class AchievementService {
       return {
         achievement: {
           id: achievement.id,
-          type: achievement.type,
-          category: achievement.category,
+          type: achievement.type as any,
+          category: achievement.category as any,
           title: achievement.title,
           description: achievement.description,
           icon: achievement.icon,
@@ -239,7 +243,7 @@ export class AchievementService {
           ? {
               id: userAchievement.id,
               achievementId: userAchievement.achievementId,
-              status: userAchievement.status,
+              status: userAchievement.status as any,
               progress: userAchievement.progress,
               unlockedAt: userAchievement.unlockedAtDate,
               lastCheckedAt: userAchievement.lastCheckedAtDate,
