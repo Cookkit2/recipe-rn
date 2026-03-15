@@ -130,7 +130,7 @@ export const mealPlanApi = {
               item.date instanceof Date
                 ? item.date
                 : new Date(
-                    (item as { date?: number }).date ?? Date.now()
+                    (item as unknown as { date?: number }).date ?? Date.now()
                   );
             const mealSlot = item.mealSlot ?? "dinner";
 
@@ -213,7 +213,7 @@ export const mealPlanApi = {
             item.date instanceof Date
               ? item.date
               : new Date(
-                  (item as { date?: number }).date ?? Date.now()
+                  (item as unknown as { date?: number }).date ?? Date.now()
                 );
           const mealSlot = item.mealSlot ?? "dinner";
 
@@ -429,7 +429,7 @@ export const mealPlanApi = {
           }
         }
 
-        const date = item.date instanceof Date ? item.date : new Date((item as { date?: number }).date ?? Date.now());
+        const date = item.date instanceof Date ? item.date : new Date((item as unknown as { date?: number }).date ?? Date.now());
         const mealSlot = item.mealSlot ?? "dinner";
 
         return {
@@ -506,7 +506,7 @@ export const mealPlanApi = {
         }
       }
 
-      const date = item.date instanceof Date ? item.date : new Date((item as { date?: number }).date ?? Date.now());
+      const date = item.date instanceof Date ? item.date : new Date((item as unknown as { date?: number }).date ?? Date.now());
       const mealSlot = item.mealSlot ?? "dinner";
 
       return {
@@ -692,7 +692,7 @@ export const mealPlanApi = {
             })),
           };
 
-          const date = item.date instanceof Date ? item.date : new Date((item as { date?: number }).date ?? Date.now());
+          const date = item.date instanceof Date ? item.date : new Date((item as unknown as { date?: number }).date ?? Date.now());
           const mealSlot = item.mealSlot ?? "dinner";
 
           itemsWithRecipes.push({
@@ -740,10 +740,10 @@ export const mealPlanApi = {
 
       if (recipeDetails) {
         recipeData = {
-          id: recipeDetails.id,
-          title: recipeDetails.title,
-          imageUrl: recipeDetails.imageUrl || "",
-          servings: recipeDetails.servings,
+          id: recipeDetails.recipe.id,
+          title: recipeDetails.recipe.title,
+          imageUrl: recipeDetails.recipe.imageUrl || "",
+          servings: recipeDetails.recipe.servings,
           ingredients: recipeDetails.ingredients.map((ing: any) => ({
             name: ing.name,
             quantity: ing.quantity,
@@ -761,8 +761,8 @@ export const mealPlanApi = {
         };
       }
 
-      const date = updated.date instanceof Date ? updated.date : new Date((updated as { date?: number }).date ?? Date.now());
-      const mealSlot = updated.mealSlot ?? "dinner";
+      const newDate = updated.date instanceof Date ? updated.date : new Date((updated as unknown as { date?: number }).date ?? Date.now());
+      const newMealSlot = updated.mealSlot ?? "dinner";
 
       return {
         id: updated.id,
