@@ -21,7 +21,7 @@ const getRecipeRecommendationsForExpiring = jest.fn(async () => ({
 
 jest.mock("~/data/api/recipeApi", () => ({
   recipeApi: {
-    getRecipeRecommendationsForExpiring: (...args: unknown[]) =>
+    getRecipeRecommendationsForExpiring: (...args: [any]) =>
       getRecipeRecommendationsForExpiring(...args),
   },
 }));
