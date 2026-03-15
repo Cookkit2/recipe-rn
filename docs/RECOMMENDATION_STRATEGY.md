@@ -6,10 +6,10 @@ A flexible, composable strategy pattern implementation for recipe recommendation
 
 The Recommendation module (`hooks/recommendation/`) provides two complementary strategy patterns:
 
-| Phase | Purpose | Interface | Composite |
-|-------|---------|-----------|-----------|
-| **Filtering** | Include/exclude recipes based on criteria | `RecipeFilterStrategy` | `CompositeFilterStrategy` |
-| **Ranking** | Score and sort filtered recipes | `RecipeRankingStrategy` | `CompositeRankingStrategy` |
+| Phase         | Purpose                                   | Interface               | Composite                  |
+| ------------- | ----------------------------------------- | ----------------------- | -------------------------- |
+| **Filtering** | Include/exclude recipes based on criteria | `RecipeFilterStrategy`  | `CompositeFilterStrategy`  |
+| **Ranking**   | Score and sort filtered recipes           | `RecipeRankingStrategy` | `CompositeRankingStrategy` |
 
 Both use the **composite design pattern**, allowing individual strategies to be combined for customized behavior. The typical flow is:
 
@@ -64,12 +64,12 @@ Context passed to strategies containing additional data:
 ```typescript
 interface RankingContext {
   cookingHistory?: CookingHistoryData;
-  completionPercentages?: Map<string, number>;  // recipeId -> 0-100%
+  completionPercentages?: Map<string, number>; // recipeId -> 0-100%
 }
 
 interface CookingHistoryData {
   mostCooked: Map<string, { cookCount: number; lastCookedAt: number }>;
-  ratings: Map<string, number>;  // recipeId -> average rating
+  ratings: Map<string, number>; // recipeId -> average rating
 }
 ```
 
@@ -80,7 +80,7 @@ Combines multiple strategies with configurable weights:
 ```typescript
 const composite = new CompositeRankingStrategy()
   .addStrategy(new DifficultyStrategy(), 1)
-  .addStrategy(new TimeStrategy(), 2)      // Double weight
+  .addStrategy(new TimeStrategy(), 2) // Double weight
   .addStrategy(new UserRatingStrategy(), 1.5);
 
 const score = composite.score(recipe, context);
@@ -101,18 +101,18 @@ interface RecipeFilterStrategy {
 }
 
 interface FilterContext {
-  completionPercentages?: Map<string, number>;  // recipeId -> 0-100%
-  selectedCategories?: string[];                 // Dynamic category selection
+  completionPercentages?: Map<string, number>; // recipeId -> 0-100%
+  selectedCategories?: string[]; // Dynamic category selection
 }
 ```
 
 ### Available Filters
 
-| Filter | Description | Configuration |
-|--------|-------------|---------------|
-| `AvailabilityFilter` | Filter by ingredient availability | `minAvailability`, `maxAvailability` |
-| `CategoryFilter` | Filter by tags/categories | `categories`, `requireAll` |
-| `DietaryFilter` | Filter by dietary preferences & allergens | `checkDietaryPreferences`, `checkAllergens` |
+| Filter               | Description                               | Configuration                               |
+| -------------------- | ----------------------------------------- | ------------------------------------------- |
+| `AvailabilityFilter` | Filter by ingredient availability         | `minAvailability`, `maxAvailability`        |
+| `CategoryFilter`     | Filter by tags/categories                 | `categories`, `requireAll`                  |
+| `DietaryFilter`      | Filter by dietary preferences & allergens | `checkDietaryPreferences`, `checkAllergens` |
 
 ### CompositeFilterStrategy
 
@@ -145,16 +145,17 @@ new AvailabilityFilter({
 ```
 
 **Implementation:**
+
 - Requires `completionPercentages` map in `FilterContext`
 - Returns `true` if recipe's completion % is within the specified range
 - Returns `true` by default if no completion data available
 
 ```typescript
 // Example: Only show recipes where user has at least 50% of ingredients
-new AvailabilityFilter({ minAvailability: 50 })
+new AvailabilityFilter({ minAvailability: 50 });
 
 // Example: Show recipes missing some ingredients (for shopping suggestions)
-new AvailabilityFilter({ minAvailability: 0, maxAvailability: 99 })
+new AvailabilityFilter({ minAvailability: 0, maxAvailability: 99 });
 ```
 
 #### CategoryFilter
@@ -169,6 +170,7 @@ new CategoryFilter({
 ```
 
 **Implementation:**
+
 - Can use categories from constructor options OR from `FilterContext.selectedCategories`
 - Case-insensitive matching against recipe tags
 - `requireAll: false` (default) = recipe needs ANY matching tag
@@ -177,10 +179,10 @@ new CategoryFilter({
 
 ```typescript
 // Example: Show meals OR desserts
-new CategoryFilter({ categories: ["meal", "dessert"] })
+new CategoryFilter({ categories: ["meal", "dessert"] });
 
 // Example: Must be both vegetarian AND quick
-new CategoryFilter({ categories: ["vegetarian", "quick"], requireAll: true })
+new CategoryFilter({ categories: ["vegetarian", "quick"], requireAll: true });
 ```
 
 #### DietaryFilter
@@ -195,6 +197,7 @@ new DietaryFilter({
 ```
 
 **Implementation:**
+
 - Reads from storage keys: `PREF_DIET_KEY`, `PREF_ALLERGENS_KEY`, `PREF_OTHER_ALLERGENS_KEY`
 - **Dietary check**: Recipe must have a tag matching user's diet (vegetarian, vegan, etc.)
 - **Allergen check**: Recipe ingredients are scanned for allergen keywords
@@ -202,14 +205,15 @@ new DietaryFilter({
 
 ```typescript
 // Example: Apply both dietary and allergen filtering
-new DietaryFilter()
+new DietaryFilter();
 
 // Example: Only check allergens, allow any diet
-new DietaryFilter({ checkDietaryPreferences: false })
+new DietaryFilter({ checkDietaryPreferences: false });
 ```
 
 **Allergen Detection:**
 The filter checks ingredient names for allergen-related terms:
+
 - `milk` → milk, dairy, cheese, butter, cream, yogurt, lactose
 - `eggs` → egg, mayonnaise, mayo
 - `nuts` → nut, almond, walnut, pecan, cashew, pistachio, hazelnut, macadamia
@@ -223,35 +227,35 @@ Ranking strategies determine **how to order** the filtered recipes. Each strateg
 
 ### Basic Strategies
 
-| Strategy | Description | Default Score Range |
-|----------|-------------|---------------------|
-| `DifficultyStrategy` | Easier recipes score higher | 10-50 (based on 1-5 stars) |
-| `TimeStrategy` | Shorter total time scores higher | 0-12 (under 2 hours) |
-| `DietaryStrategy` | Matches user's dietary preference | 0 or +50 |
-| `RandomVarietyStrategy` | Random factor for variety | 0-20 |
+| Strategy                | Description                       | Default Score Range        |
+| ----------------------- | --------------------------------- | -------------------------- |
+| `DifficultyStrategy`    | Easier recipes score higher       | 10-50 (based on 1-5 stars) |
+| `TimeStrategy`          | Shorter total time scores higher  | 0-12 (under 2 hours)       |
+| `DietaryStrategy`       | Matches user's dietary preference | 0 or +50                   |
+| `RandomVarietyStrategy` | Random factor for variety         | 0-20                       |
 
 ### Cooking History Strategies
 
 These require `cookingHistory` data in the `RankingContext`:
 
-| Strategy | Description | Default Score |
-|----------|-------------|---------------|
-| `FamiliarityStrategy` | Boosts previously cooked recipes | +15 (1-2x), +25 (3+x) |
-| `RecencyPenaltyStrategy` | Penalizes recently cooked recipes | -20 (within 3 days) |
-| `UserRatingStrategy` | Boosts highly rated recipes | +30 (if rated 4+ stars) |
+| Strategy                 | Description                       | Default Score           |
+| ------------------------ | --------------------------------- | ----------------------- |
+| `FamiliarityStrategy`    | Boosts previously cooked recipes  | +15 (1-2x), +25 (3+x)   |
+| `RecencyPenaltyStrategy` | Penalizes recently cooked recipes | -20 (within 3 days)     |
+| `UserRatingStrategy`     | Boosts highly rated recipes       | +30 (if rated 4+ stars) |
 
 ### Pantry/Availability Strategies
 
 These require `completionPercentages` data in the `RankingContext`:
 
-| Strategy | Description | Default Score |
-|----------|-------------|---------------|
+| Strategy            | Description                       | Default Score             |
+| ------------------- | --------------------------------- | ------------------------- |
 | `ReadinessStrategy` | Scores by ingredient availability | 0-100 + 50 bonus for 100% |
 
 ### Sorting Strategies
 
-| Strategy | Description | Default Score |
-|----------|-------------|---------------|
+| Strategy               | Description                      | Default Score              |
+| ---------------------- | -------------------------------- | -------------------------- |
 | `AlphabeticalStrategy` | Alphabetical title sorting (A-Z) | 0-26 based on first letter |
 
 ## Factory Functions
@@ -276,11 +280,11 @@ Includes cooking history factors (default):
 
 ```typescript
 new CompositeRankingStrategy()
-    .addStrategy(new DifficultyStrategy(), 1)
-    .addStrategy(new TimeStrategy(), 1)
-    .addStrategy(new DietaryStrategy(), 1)
-    .addStrategy(new RecencyPenaltyStrategy(), 1.5)
-    .addStrategy(new RandomVarietyStrategy(), 0.5);
+  .addStrategy(new DifficultyStrategy(), 1)
+  .addStrategy(new TimeStrategy(), 1)
+  .addStrategy(new DietaryStrategy(), 1)
+  .addStrategy(new RecencyPenaltyStrategy(), 1.5)
+  .addStrategy(new RandomVarietyStrategy(), 0.5);
 ```
 
 ### createQuickAndEasyRankingStrategy()
@@ -317,7 +321,7 @@ import {
 
 const customStrategy = new CompositeRankingStrategy()
   .addStrategy(new DifficultyStrategy(), 1)
-  .addStrategy(new FamiliarityStrategy(), 3)   // Heavy familiarity weight
+  .addStrategy(new FamiliarityStrategy(), 3) // Heavy familiarity weight
   .addStrategy(new UserRatingStrategy(), 2);
 
 const recommendations = await recipeApi.getRecipeRecommendations({
@@ -332,9 +336,7 @@ import type { CookingHistoryData } from "~/hooks/recommendation";
 
 // Pre-fetch data (useful for performance optimization)
 const cookingHistory: CookingHistoryData = {
-  mostCooked: new Map([
-    ["recipe-1", { cookCount: 5, lastCookedAt: Date.now() - 86400000 }],
-  ]),
+  mostCooked: new Map([["recipe-1", { cookCount: 5, lastCookedAt: Date.now() - 86400000 }]]),
   ratings: new Map([["recipe-1", 4.5]]),
 };
 
@@ -509,8 +511,8 @@ const filterStrategy = new CompositeFilterStrategy()
 
 // Step 2: Rank - decide the order
 const rankingStrategy = new CompositeRankingStrategy()
-  .addStrategy(new ReadinessStrategy(), 2)      // Prioritize available ingredients
-  .addStrategy(new DifficultyStrategy(), 1);    // Then easier recipes
+  .addStrategy(new ReadinessStrategy(), 2) // Prioritize available ingredients
+  .addStrategy(new DifficultyStrategy(), 1); // Then easier recipes
 
 // Use with hook
 const { recipes } = useRecipeRecommendations({
@@ -525,8 +527,8 @@ The `useRecipeRecommendations` hook supports both filtering and ranking:
 
 ```typescript
 interface UseRecipeRecommendationsOptions {
-  maxRecommendations?: number;           // Limit results
-  categories?: string[];                 // Filter by tags
+  maxRecommendations?: number; // Limit results
+  categories?: string[]; // Filter by tags
   filterStrategy?: RecipeFilterStrategy; // Custom filter (use DietaryFilter for dietary preferences)
   rankingStrategy?: RecipeRankingStrategy; // Custom ranking (defaults to history-aware)
 }
@@ -552,8 +554,9 @@ import {
   AlphabeticalStrategy,
 } from "~/hooks/recommendation";
 
-const filterStrategy = new CompositeFilterStrategy()
-  .addFilter(new CategoryFilter({ categories: ["meal"] }));
+const filterStrategy = new CompositeFilterStrategy().addFilter(
+  new CategoryFilter({ categories: ["meal"] })
+);
 
 const rankingStrategy = new CompositeRankingStrategy()
   .addStrategy(new ReadinessStrategy(), 2)
@@ -574,7 +577,7 @@ The `recipeApi.getRecipeRecommendations()` method handles filtering and ranking:
 interface RecommendationOptions {
   maxRecommendations?: number;
   categories?: string[];
-  filterStrategy?: RecipeFilterStrategy;  // Apply custom filtering
+  filterStrategy?: RecipeFilterStrategy; // Apply custom filtering
   rankingStrategy?: RecipeRankingStrategy;
   rankingContext?: RankingContext;
   // Performance optimization: pre-fetched data (optional)
@@ -591,6 +594,7 @@ When `preFetchedAvailability` or `preFetchedCookingHistory` are provided, the me
 
 **Auto-fetched data (fallback):**
 When pre-fetched data is NOT provided, the method auto-fetches:
+
 - `getAvailableRecipes()` for ingredient availability data
 - `getMostCookedRecipes(100)` for cook counts and timestamps
 - `getCookingHistory(500)` for user ratings
@@ -636,11 +640,13 @@ const recommendationsQuery = useQuery({
 ```
 
 **Cache invalidation:**
+
 - **Pantry mutations** → invalidate `recipeQueryKeys.available()`
 - **Cooking record mutations** → invalidate `recipeQueryKeys.recommendations()` and cooking history queries
 - **Recipe mutations** → invalidate `recipeQueryKeys.available()` and `recipeQueryKeys.recipes()`
 
 This approach ensures:
+
 - Category changes only recompute recommendations (cache hit for underlying data)
 - Pantry changes trigger availability cache refresh
 - Cooking history updates trigger appropriate cache invalidations
@@ -650,42 +656,42 @@ This approach ensures:
 
 ### Recommendation Module
 
-| File | Purpose |
-|------|---------|
+| File                            | Purpose                                |
+| ------------------------------- | -------------------------------------- |
 | `hooks/recommendation/index.ts` | Main exports (exposes both submodules) |
 
 ### Ranking Submodule
 
-| File | Purpose |
-|------|---------|
-| `hooks/recommendation/ranking/index.ts` | Ranking exports and factory functions |
-| `hooks/recommendation/ranking/RecipeRankingStrategy.ts` | Core ranking interface and types |
-| `hooks/recommendation/ranking/CompositeRankingStrategy.ts` | Composite ranking implementation |
-| `hooks/recommendation/ranking/strategies/DifficultyStrategy.ts` | Difficulty-based scoring |
-| `hooks/recommendation/ranking/strategies/TimeStrategy.ts` | Time-based scoring |
-| `hooks/recommendation/ranking/strategies/DietaryStrategy.ts` | Dietary preference matching |
-| `hooks/recommendation/ranking/strategies/RandomVarietyStrategy.ts` | Random variety factor |
-| `hooks/recommendation/ranking/strategies/FamiliarityStrategy.ts` | Cook count-based scoring |
-| `hooks/recommendation/ranking/strategies/RecencyPenaltyStrategy.ts` | Recent cook penalty |
-| `hooks/recommendation/ranking/strategies/UserRatingStrategy.ts` | User rating-based scoring |
-| `hooks/recommendation/ranking/strategies/ReadinessStrategy.ts` | Ingredient availability scoring |
-| `hooks/recommendation/ranking/strategies/AlphabeticalStrategy.ts` | Alphabetical title sorting |
+| File                                                                | Purpose                               |
+| ------------------------------------------------------------------- | ------------------------------------- |
+| `hooks/recommendation/ranking/index.ts`                             | Ranking exports and factory functions |
+| `hooks/recommendation/ranking/RecipeRankingStrategy.ts`             | Core ranking interface and types      |
+| `hooks/recommendation/ranking/CompositeRankingStrategy.ts`          | Composite ranking implementation      |
+| `hooks/recommendation/ranking/strategies/DifficultyStrategy.ts`     | Difficulty-based scoring              |
+| `hooks/recommendation/ranking/strategies/TimeStrategy.ts`           | Time-based scoring                    |
+| `hooks/recommendation/ranking/strategies/DietaryStrategy.ts`        | Dietary preference matching           |
+| `hooks/recommendation/ranking/strategies/RandomVarietyStrategy.ts`  | Random variety factor                 |
+| `hooks/recommendation/ranking/strategies/FamiliarityStrategy.ts`    | Cook count-based scoring              |
+| `hooks/recommendation/ranking/strategies/RecencyPenaltyStrategy.ts` | Recent cook penalty                   |
+| `hooks/recommendation/ranking/strategies/UserRatingStrategy.ts`     | User rating-based scoring             |
+| `hooks/recommendation/ranking/strategies/ReadinessStrategy.ts`      | Ingredient availability scoring       |
+| `hooks/recommendation/ranking/strategies/AlphabeticalStrategy.ts`   | Alphabetical title sorting            |
 
 ### Filtering Submodule
 
-| File | Purpose |
-|------|---------|
-| `hooks/recommendation/filters/index.ts` | Filter exports |
-| `hooks/recommendation/filters/RecipeFilterStrategy.ts` | Core filter interface and types |
-| `hooks/recommendation/filters/CompositeFilterStrategy.ts` | Composite filter implementation |
-| `hooks/recommendation/filters/AvailabilityFilter.ts` | Filter by ingredient availability |
-| `hooks/recommendation/filters/CategoryFilter.ts` | Filter by tags/categories |
-| `hooks/recommendation/filters/DietaryFilter.ts` | Filter by dietary preferences |
+| File                                                      | Purpose                           |
+| --------------------------------------------------------- | --------------------------------- |
+| `hooks/recommendation/filters/index.ts`                   | Filter exports                    |
+| `hooks/recommendation/filters/RecipeFilterStrategy.ts`    | Core filter interface and types   |
+| `hooks/recommendation/filters/CompositeFilterStrategy.ts` | Composite filter implementation   |
+| `hooks/recommendation/filters/AvailabilityFilter.ts`      | Filter by ingredient availability |
+| `hooks/recommendation/filters/CategoryFilter.ts`          | Filter by tags/categories         |
+| `hooks/recommendation/filters/DietaryFilter.ts`           | Filter by dietary preferences     |
 
 ### Integration
 
-| File | Purpose |
-|------|---------|
-| `hooks/queries/useRecipeQueries.ts` | `useRecipeRecommendations` and `useRecipeAvailability` hooks |
-| `hooks/queries/recipeQueryKeys.ts` | Query key definitions for React Query cache management |
-| `data/api/recipeApi.ts` | `getRecipeRecommendations()` API with pre-fetched data support |
+| File                                | Purpose                                                        |
+| ----------------------------------- | -------------------------------------------------------------- |
+| `hooks/queries/useRecipeQueries.ts` | `useRecipeRecommendations` and `useRecipeAvailability` hooks   |
+| `hooks/queries/recipeQueryKeys.ts`  | Query key definitions for React Query cache management         |
+| `data/api/recipeApi.ts`             | `getRecipeRecommendations()` API with pre-fetched data support |

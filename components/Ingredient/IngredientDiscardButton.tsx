@@ -25,52 +25,44 @@ export default function IngredientDiscardButton() {
   const onDiscard = (reason: WasteReason) => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
 
-    Alert.alert(
-      "Mark as Discarded",
-      `Are you sure you want to mark ${item.name} as discarded?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Discard",
-          style: "destructive",
-          onPress: () => {
-            recordWaste.mutate(
-              {
-                stockId: item.id,
-                quantityWasted: item.quantity,
-                data: {
-                  reason: reason || undefined,
-                  wasteDate: Date.now(),
-                },
+    Alert.alert("Mark as Discarded", `Are you sure you want to mark ${item.name} as discarded?`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Discard",
+        style: "destructive",
+        onPress: () => {
+          recordWaste.mutate(
+            {
+              stockId: item.id,
+              quantityWasted: item.quantity,
+              data: {
+                reason: reason || undefined,
+                wasteDate: Date.now(),
               },
-              {
-                onSuccess: () => {
-                  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                  router.back();
-                },
-              }
-            );
-          },
+            },
+            {
+              onSuccess: () => {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                router.back();
+              },
+            }
+          );
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleDiscardPress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     // Show reason selection
-    Alert.alert(
-      "Why discard?",
-      "Select a reason for discarding this ingredient",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Expired", onPress: () => onDiscard("expired") },
-        { text: "Spoiled", onPress: () => onDiscard("spoiled") },
-        { text: "Too Much", onPress: () => onDiscard("excess") },
-        { text: "Other", onPress: () => onDiscard("accidental") },
-      ]
-    );
+    Alert.alert("Why discard?", "Select a reason for discarding this ingredient", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Expired", onPress: () => onDiscard("expired") },
+      { text: "Spoiled", onPress: () => onDiscard("spoiled") },
+      { text: "Too Much", onPress: () => onDiscard("excess") },
+      { text: "Other", onPress: () => onDiscard("accidental") },
+    ]);
   };
 
   return (
@@ -86,9 +78,7 @@ export default function IngredientDiscardButton() {
           </View>
           <View className="flex-1">
             <H4 className="font-urbanist-semibold text-destructive">Mark as Discarded</H4>
-            <P className="text-sm text-muted-foreground">
-              Track as waste
-            </P>
+            <P className="text-sm text-muted-foreground">Track as waste</P>
           </View>
         </Pressable>
       </CardContent>

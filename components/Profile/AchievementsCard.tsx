@@ -84,9 +84,7 @@ export default function AchievementsCard() {
             <View className="flex-row items-center gap-2 bg-primary/10 rounded-2xl px-4 py-3">
               <FlameIcon className="text-primary" size={20} strokeWidth={2.5} />
               <View className="flex-1">
-                <Small className="text-foreground/70 font-urbanist-medium">
-                  Current Streak
-                </Small>
+                <Small className="text-foreground/70 font-urbanist-medium">Current Streak</Small>
                 <H4 className="font-urbanist-bold text-lg">
                   {currentStreak} {currentStreak === 1 ? "day" : "days"}
                 </H4>
@@ -104,16 +102,10 @@ export default function AchievementsCard() {
                 >
                   <P className="text-xl">{achievement.achievement.icon}</P>
                   <View className="flex-1">
-                    <Small
-                      className="font-urbanist-semibold text-foreground"
-                      numberOfLines={1}
-                    >
+                    <Small className="font-urbanist-semibold text-foreground" numberOfLines={1}>
                       {achievement.achievement.title}
                     </Small>
-                    <Small
-                      className="text-muted-foreground font-urbanist-medium"
-                      numberOfLines={1}
-                    >
+                    <Small className="text-muted-foreground font-urbanist-medium" numberOfLines={1}>
                       {achievement.isUnlocked
                         ? "Unlocked!"
                         : `${achievement.progress}/${achievement.achievement.requirement.target}`}
@@ -130,9 +122,7 @@ export default function AchievementsCard() {
             </View>
           ) : (
             <View className="py-2">
-              <Small className="text-muted-foreground font-urbanist-medium">
-                Loading...
-              </Small>
+              <Small className="text-muted-foreground font-urbanist-medium">Loading...</Small>
             </View>
           )}
 

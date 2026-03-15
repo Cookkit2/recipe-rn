@@ -65,12 +65,7 @@ export default function EditStepItem({
   };
 
   return (
-    <View
-      className={cn(
-        "gap-3 py-4 px-4 bg-card rounded-xl border-continuous",
-        className
-      )}
-    >
+    <View className={cn("gap-3 py-4 px-4 bg-card rounded-xl border-continuous", className)}>
       {/* Header Row - Drag Handle, Step Number, Title Input, Delete */}
       <View className="flex-row items-center gap-3">
         {/* Drag Handle */}
@@ -82,9 +77,7 @@ export default function EditStepItem({
 
         {/* Step Number Badge */}
         <View className="min-w-8 h-8 flex items-center justify-center bg-muted rounded-lg">
-          <P className="text-center font-urbanist-bold text-base text-foreground">
-            {step.step}
-          </P>
+          <P className="text-center font-urbanist-bold text-base text-foreground">{step.step}</P>
         </View>
 
         {/* Title Input */}

@@ -9,15 +9,9 @@ import { LinearGradient } from "expo-linear-gradient";
 import { dummyPantryItems } from "~/data/dummy/dummy-data";
 import OutlinedImage from "~/components/ui/outlined-image";
 import RotationCard from "~/components/Shared/RotationCard";
-import {
-  SEED_INDEX_MULTIPLIER,
-  SEED_TOTAL_MULTIPLIER,
-} from "~/constants/seeds";
+import { SEED_INDEX_MULTIPLIER, SEED_TOTAL_MULTIPLIER } from "~/constants/seeds";
 
-const StepContent: React.FC<{ step: RecipeStep; totalSteps: number }> = ({
-  step,
-  totalSteps,
-}) => {
+const StepContent: React.FC<{ step: RecipeStep; totalSteps: number }> = ({ step, totalSteps }) => {
   const colors = useColors();
 
   const gradientCoords = React.useMemo(
@@ -112,8 +106,7 @@ const RelatedIngredients = ({ id, index }: { id: string; index: number }) => {
 
 const stableGradientAngle = (index: number, total: number): number => {
   // Simple seeded pseudo-random based on index + total for stability
-  const seed =
-    (index + 1) * SEED_INDEX_MULTIPLIER + total * SEED_TOTAL_MULTIPLIER;
+  const seed = (index + 1) * SEED_INDEX_MULTIPLIER + total * SEED_TOTAL_MULTIPLIER;
   const x = Math.sin(seed) * 10000;
   const rand = x - Math.floor(x);
   const deg = rand * 40 - 20; // -20..20

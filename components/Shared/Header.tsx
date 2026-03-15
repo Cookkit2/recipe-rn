@@ -5,11 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeftIcon } from "lucide-uniwind";
 import { Button } from "~/components/ui/button";
 import { H4 } from "~/components/ui/typography";
-import Animated, {
-  useAnimatedStyle,
-  withTiming,
-  type SharedValue,
-} from "react-native-reanimated";
+import Animated, { useAnimatedStyle, withTiming, type SharedValue } from "react-native-reanimated";
 import { CURVES } from "~/constants/curves";
 
 interface HeaderProps {
@@ -24,15 +20,9 @@ export default function Header({ title, scrollOffset }: HeaderProps) {
   const titleAnimatedStyle = useAnimatedStyle(() => {
     const isVisible = (scrollOffset?.value ?? 0) > 60;
 
-    const translateY = withTiming(
-      isVisible ? 0 : 5,
-      CURVES["expressive.fast.spatial"]
-    );
+    const translateY = withTiming(isVisible ? 0 : 5, CURVES["expressive.fast.spatial"]);
 
-    const opacity = withTiming(
-      isVisible ? 1 : 0,
-      CURVES["expressive.fast.effects"]
-    );
+    const opacity = withTiming(isVisible ? 1 : 0, CURVES["expressive.fast.effects"]);
 
     return { transform: [{ translateY }], opacity };
   });
@@ -40,10 +30,7 @@ export default function Header({ title, scrollOffset }: HeaderProps) {
   const borderAnimatedStyle = useAnimatedStyle(() => {
     const isVisible = (scrollOffset?.value ?? 0) > 20;
 
-    const borderBottomWidth = withTiming(
-      isVisible ? 1 : 0,
-      CURVES["expressive.fast.effects"]
-    );
+    const borderBottomWidth = withTiming(isVisible ? 1 : 0, CURVES["expressive.fast.effects"]);
     return { borderBottomWidth };
   });
 

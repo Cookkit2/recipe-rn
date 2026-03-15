@@ -27,9 +27,7 @@ export default class IngredientCategory extends Model {
   }
 
   // Update method
-  @writer async updateCategory(
-    data: Partial<IngredientCategoryData>
-  ): Promise<IngredientCategory> {
+  @writer async updateCategory(data: Partial<IngredientCategoryData>): Promise<IngredientCategory> {
     return this.update((category) => {
       if (data.name !== undefined) category.name = data.name;
     });

@@ -21,8 +21,7 @@ export default function AddToPlanHeaderButton() {
     }
   };
 
-  const isDisabled =
-    isCheckingPlan || removeFromMealPlan.isPending || !recipeId;
+  const isDisabled = isCheckingPlan || removeFromMealPlan.isPending || !recipeId;
 
   return (
     <Pressable

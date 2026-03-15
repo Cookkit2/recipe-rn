@@ -24,7 +24,7 @@ export interface RankingContext {
 
 /**
  * Strategy interface for recipe ranking algorithms
- * 
+ *
  * Implementations calculate a numeric score for a recipe.
  * Higher scores indicate higher priority in recommendations.
  */

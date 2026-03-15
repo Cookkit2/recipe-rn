@@ -59,9 +59,7 @@ export default function PreferencePage() {
             <H4 className="font-urbanist-semibold text-foreground">Skip</H4>
           </Button>
           <Button size="lg" className="rounded-full px-6" onPress={onComplete}>
-            <H4 className="font-urbanist-semibold text-primary-foreground">
-              Cook
-            </H4>
+            <H4 className="font-urbanist-semibold text-primary-foreground">Cook</H4>
           </Button>
         </View>
       </View>

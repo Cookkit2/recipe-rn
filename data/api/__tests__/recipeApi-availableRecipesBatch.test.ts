@@ -85,4 +85,3 @@ describe("convertDbRecipesToUIRecipesBatch", () => {
     expect(uiRecipes.map((r) => r.id)).toEqual(["r1"]);
   });
 });
-

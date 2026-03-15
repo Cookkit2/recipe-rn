@@ -42,9 +42,7 @@ export default function WasteMetricsCard({
 
         <View className="flex-row justify-between gap-2">
           <View className="flex-1 bg-primary/5 rounded-2xl p-4 items-center">
-            <P className="text-3xl font-urbanist-bold text-primary mb-1">
-              {itemsWasted}
-            </P>
+            <P className="text-3xl font-urbanist-bold text-primary mb-1">{itemsWasted}</P>
             <P className="text-xs text-foreground/70 font-urbanist-medium text-center">
               Items Wasted
             </P>
@@ -61,7 +59,8 @@ export default function WasteMetricsCard({
 
           <View className="flex-1 bg-accent/5 rounded-2xl p-4 items-center">
             <P className="text-3xl font-urbanist-bold text-accent mb-1">
-              {formatCO2(co2FromWaste)}{"kg"}
+              {formatCO2(co2FromWaste)}
+              {"kg"}
             </P>
             <P className="text-xs text-foreground/70 font-urbanist-medium text-center">
               CO₂ Impact

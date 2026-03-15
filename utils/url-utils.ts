@@ -92,8 +92,9 @@ export function extractDomain(url: string): string | null {
 export function isValidHttpUrl(url: string): boolean {
   try {
     const urlObj = new URL(url);
-    return (urlObj.protocol === "http:" || urlObj.protocol === "https:") 
-      && urlObj.hostname.length > 0;
+    return (
+      (urlObj.protocol === "http:" || urlObj.protocol === "https:") && urlObj.hostname.length > 0
+    );
   } catch {
     return false;
   }
@@ -209,8 +210,7 @@ export const KNOWN_RECIPE_DOMAINS = [
 export function isKnownRecipeDomain(domain: string): boolean {
   const normalizedDomain = domain.toLowerCase().replace(/^www\./, "");
   return KNOWN_RECIPE_DOMAINS.some(
-    (known) =>
-      normalizedDomain === known || normalizedDomain.endsWith("." + known)
+    (known) => normalizedDomain === known || normalizedDomain.endsWith("." + known)
   );
 }
 

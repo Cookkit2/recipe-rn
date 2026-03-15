@@ -173,8 +173,7 @@ export default function RecipeEdit() {
         }
 
         // Handle steps
-        const stepsCollection =
-          database.collections.get<RecipeStepModel>("recipe_step");
+        const stepsCollection = database.collections.get<RecipeStepModel>("recipe_step");
 
         // Delete removed steps
         const existingSteps = await dbRecipe.steps.query().fetch();

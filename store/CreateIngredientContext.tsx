@@ -1,10 +1,4 @@
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useRef,
-  useState,
-} from "react";
+import React, { createContext, useCallback, useContext, useRef, useState } from "react";
 import type { ItemType, PantryItem } from "~/types/PantryItem";
 import { useWindowDimensions } from "react-native";
 import { baseIngredientApi } from "~/data/supabase-api/BaseIngredientApi";
@@ -42,28 +36,18 @@ interface CreateIngredientContextType {
   framePosition: { x: number; y: number };
   updateFramePosition: (framePosition: { x: number; y: number }) => void;
   // Process image immediately (fire and forget, runs in parallel)
-  processImage: (
-    imagePath: string,
-    framePosition: { x: number; y: number }
-  ) => void;
+  processImage: (imagePath: string, framePosition: { x: number; y: number }) => void;
   removeItem: (id: string) => void;
   retryItem: (id: string) => void;
   clearFailedItems: () => void;
 }
 
-const CreateIngredientContext =
-  createContext<CreateIngredientContextType | null>(null);
+const CreateIngredientContext = createContext<CreateIngredientContextType | null>(null);
 
-export function CreateIngredientProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function CreateIngredientProvider({ children }: { children: React.ReactNode }) {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [processPantryItems, setProcessPantryItems] = useState<
-    CreatePantryItem[]
-  >([]);
+  const [processPantryItems, setProcessPantryItems] = useState<CreatePantryItem[]>([]);
 
   const { width, height } = useWindowDimensions();
   const [framePosition, setFramePosition] = useState({
@@ -71,26 +55,17 @@ export function CreateIngredientProvider({
     y: height / 2 - 48, // Center vertically (minus half frame height: 96px / 2 = 48px)
   });
 
-  const updateFramePosition = useCallback(
-    (framePosition: { x: number; y: number }) => {
-      setFramePosition(framePosition);
-    },
-    []
-  );
+  const updateFramePosition = useCallback((framePosition: { x: number; y: number }) => {
+    setFramePosition(framePosition);
+  }, []);
 
   // Process a single item (runs independently, updates state when done)
   const processItem = useCallback(
-    async (
-      itemId: string,
-      imagePath: string,
-      itemFramePosition: { x: number; y: number }
-    ) => {
+    async (itemId: string, imagePath: string, itemFramePosition: { x: number; y: number }) => {
       try {
         const normalizedFramePosition = {
           x: (itemFramePosition.x / width) * CAMERA_RESOLUTION.width,
-          y:
-            (itemFramePosition.y / ((width * 4) / 3)) *
-            CAMERA_RESOLUTION.height,
+          y: (itemFramePosition.y / ((width * 4) / 3)) * CAMERA_RESOLUTION.height,
         };
 
         const skImage = await loadImageIntoSkia(imagePath);
@@ -100,10 +75,7 @@ export function CreateIngredientProvider({
         }
 
         // Step 1: Segment the image first
-        const segmentedImage = await segmentStaticImage(
-          skImage,
-          normalizedFramePosition
-        );
+        const segmentedImage = await segmentStaticImage(skImage, normalizedFramePosition);
 
         if (!segmentedImage) {
           throw new Error("Segmentation failed");
@@ -113,10 +85,7 @@ export function CreateIngredientProvider({
         const filename = `masked-${Date.now()}-${itemId}.png`;
         const file = new File(Paths.cache, filename);
 
-        const { finalImage: trimmedImage } = trimTransparentBorders(
-          segmentedImage.skImage,
-          2
-        );
+        const { finalImage: trimmedImage } = trimTransparentBorders(segmentedImage.skImage, 2);
         const { base64 } = resizeImagePreserveAlpha(trimmedImage, 300);
 
         file.write(base64, { encoding: "base64" });
@@ -165,10 +134,9 @@ export function CreateIngredientProvider({
 
         // Step 6: Fetch base ingredient data in the background
         try {
-          const baseIngredient =
-            await baseIngredientApi.getBaseIngredientByName(
-              titleCase(content.name)
-            );
+          const baseIngredient = await baseIngredientApi.getBaseIngredientByName(
+            titleCase(content.name)
+          );
 
           if (baseIngredient) {
             const newExpiryDate = new Date(
@@ -182,10 +150,7 @@ export function CreateIngredientProvider({
                     ...i,
                     name: baseIngredient.name,
                     expiry_date: newExpiryDate,
-                    type: baseIngredient.storage_type as Exclude<
-                      ItemType,
-                      "all"
-                    >,
+                    type: baseIngredient.storage_type as Exclude<ItemType, "all">,
                     base_ingredient_id: baseIngredient.id,
                     base_ingredient_name: baseIngredient.name,
                     synonyms: baseIngredient.synonyms,
@@ -213,10 +178,7 @@ export function CreateIngredientProvider({
               ? {
                   ...i,
                   status: "failed" as const,
-                  error:
-                    error instanceof Error
-                      ? error.message
-                      : "Processing failed",
+                  error: error instanceof Error ? error.message : "Processing failed",
                 }
               : i
           )
@@ -275,9 +237,7 @@ export function CreateIngredientProvider({
           // Restart processing
           processItem(id, item.imagePath, item.framePosition);
           return prev.map((i) =>
-            i.id === id
-              ? { ...i, status: "processing" as const, error: undefined }
-              : i
+            i.id === id ? { ...i, status: "processing" as const, error: undefined } : i
           );
         }
         return prev;
@@ -288,9 +248,7 @@ export function CreateIngredientProvider({
 
   // Clear all failed items
   const clearFailedItems = useCallback(() => {
-    setProcessPantryItems((prev) =>
-      prev.filter((item) => item.status !== "failed")
-    );
+    setProcessPantryItems((prev) => prev.filter((item) => item.status !== "failed"));
   }, []);
 
   const updateProcessPantryItems = useCallback((currentItem: PantryItem) => {
@@ -306,9 +264,7 @@ export function CreateIngredientProvider({
     // Fetch base ingredient data after debounce
     timeoutRef.current = setTimeout(async () => {
       try {
-        const baseIngredient = await baseIngredientApi.getBaseIngredientByName(
-          currentItem.name
-        );
+        const baseIngredient = await baseIngredientApi.getBaseIngredientByName(currentItem.name);
 
         if (baseIngredient) {
           const expiryDate = new Date(
@@ -368,9 +324,7 @@ export function CreateIngredientProvider({
 export const useCreateIngredientStore = () => {
   const context = useContext(CreateIngredientContext);
   if (!context) {
-    throw new Error(
-      "useCreateIngredientStore must be used within a CreateIngredientProvider"
-    );
+    throw new Error("useCreateIngredientStore must be used within a CreateIngredientProvider");
   }
   return context;
 };

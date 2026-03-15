@@ -14,11 +14,7 @@ export const wasteAnalyticsQueryKeys = {
 
   // Discarded items filtered by date range
   discardedItemsByDateRange: (startDate: string, endDate: string) =>
-    [
-      ...wasteAnalyticsQueryKeys.discardedItems(),
-      "range",
-      { startDate, endDate },
-    ] as const,
+    [...wasteAnalyticsQueryKeys.discardedItems(), "range", { startDate, endDate }] as const,
 
   // Money saved metrics
   moneySaved: () => [...wasteAnalyticsQueryKeys.all, "moneySaved"] as const,
@@ -32,8 +28,7 @@ export const wasteAnalyticsQueryKeys = {
     [...wasteAnalyticsQueryKeys.all, "trends", period] as const,
 
   // Environmental impact metrics
-  environmentalImpact: () =>
-    [...wasteAnalyticsQueryKeys.all, "environmentalImpact"] as const,
+  environmentalImpact: () => [...wasteAnalyticsQueryKeys.all, "environmentalImpact"] as const,
 
   // CO2 emissions saved
   co2Saved: () => [...wasteAnalyticsQueryKeys.environmentalImpact(), "co2"] as const,
@@ -45,12 +40,10 @@ export const wasteAnalyticsQueryKeys = {
   achievements: () => [...wasteAnalyticsQueryKeys.all, "achievements"] as const,
 
   // Unlocked achievements
-  unlockedAchievements: () =>
-    [...wasteAnalyticsQueryKeys.achievements(), "unlocked"] as const,
+  unlockedAchievements: () => [...wasteAnalyticsQueryKeys.achievements(), "unlocked"] as const,
 
   // Available achievements (not yet unlocked)
-  availableAchievements: () =>
-    [...wasteAnalyticsQueryKeys.achievements(), "available"] as const,
+  availableAchievements: () => [...wasteAnalyticsQueryKeys.achievements(), "available"] as const,
 
   // Streak tracking
   streaks: () => [...wasteAnalyticsQueryKeys.all, "streaks"] as const,

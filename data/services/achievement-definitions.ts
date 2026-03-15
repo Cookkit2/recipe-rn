@@ -422,10 +422,7 @@ export function createStreakRequirement(days: number): AchievementRequirement {
  * @param metric - Metric to count (e.g., "recipes_cooked", "achievements_shared")
  * @returns Achievement requirement for count
  */
-export function createCountRequirement(
-  target: number,
-  metric: string
-): AchievementRequirement {
+export function createCountRequirement(target: number, metric: string): AchievementRequirement {
   return {
     type: "count",
     target,
@@ -458,10 +455,7 @@ export function createCumulativeRequirement(
  * @param threshold - Target threshold
  * @returns True if threshold is reached or exceeded
  */
-export function isStreakThresholdReached(
-  currentStreak: number,
-  threshold: number
-): boolean {
+export function isStreakThresholdReached(currentStreak: number, threshold: number): boolean {
   return currentStreak >= threshold;
 }
 
@@ -480,10 +474,7 @@ export function getReachedStreakThresholds(currentStreak: number): number[] {
  * @param threshold - Target threshold
  * @returns True if threshold is reached or exceeded
  */
-export function isRecipeThresholdReached(
-  recipeCount: number,
-  threshold: number
-): boolean {
+export function isRecipeThresholdReached(recipeCount: number, threshold: number): boolean {
   return recipeCount >= threshold;
 }
 
@@ -502,10 +493,7 @@ export function getReachedRecipeMilestones(recipeCount: number): number[] {
  * @param threshold - Target threshold
  * @returns True if threshold is reached or exceeded
  */
-export function isIngredientThresholdReached(
-  ingredientCount: number,
-  threshold: number
-): boolean {
+export function isIngredientThresholdReached(ingredientCount: number, threshold: number): boolean {
   return ingredientCount >= threshold;
 }
 
@@ -536,9 +524,7 @@ export function isWasteReductionThresholdReached(
  * @param wasteReductionCount - Current waste reduction count
  * @returns Array of reached milestone values
  */
-export function getReachedWasteReductionMilestones(
-  wasteReductionCount: number
-): number[] {
+export function getReachedWasteReductionMilestones(wasteReductionCount: number): number[] {
   return WASTE_REDUCTION_THRESHOLDS.filter((threshold) => wasteReductionCount >= threshold);
 }
 
@@ -548,10 +534,7 @@ export function getReachedWasteReductionMilestones(
  * @param threshold - Target threshold
  * @returns True if threshold is reached or exceeded
  */
-export function isSocialSharingThresholdReached(
-  shareCount: number,
-  threshold: number
-): boolean {
+export function isSocialSharingThresholdReached(shareCount: number, threshold: number): boolean {
   return shareCount >= threshold;
 }
 
@@ -611,33 +594,33 @@ export const ACHIEVEMENT_METRICS = {
  */
 export const ACHIEVEMENT_XP_REWARDS = {
   STREAK: {
-    BRONZE: 50,   // 3 days
-    SILVER: 100,  // 7 days
-    GOLD: 200,    // 14 days
+    BRONZE: 50, // 3 days
+    SILVER: 100, // 7 days
+    GOLD: 200, // 14 days
     PLATINUM: 500, // 30 days
     DIAMOND: 2000, // 100 days
   },
   RECIPES: {
-    FIRST: 25,    // 1 recipe
-    BRONZE: 75,   // 5 recipes
-    SILVER: 250,  // 25 recipes
-    GOLD: 500,    // 50 recipes
+    FIRST: 25, // 1 recipe
+    BRONZE: 75, // 5 recipes
+    SILVER: 250, // 25 recipes
+    GOLD: 500, // 50 recipes
     PLATINUM: 1000, // 100 recipes
   },
   INGREDIENTS: {
-    BRONZE: 30,   // 10 ingredients
-    SILVER: 100,  // 50 ingredients
-    GOLD: 200,    // 100 ingredients
+    BRONZE: 30, // 10 ingredients
+    SILVER: 100, // 50 ingredients
+    GOLD: 200, // 100 ingredients
     PLATINUM: 500, // 250 ingredients
   },
   WASTE: {
-    BRONZE: 50,   // 10 ingredients
-    SILVER: 200,  // 50 ingredients
-    GOLD: 500,    // 100 ingredients
+    BRONZE: 50, // 10 ingredients
+    SILVER: 200, // 50 ingredients
+    GOLD: 500, // 100 ingredients
   },
   SOCIAL: {
-    BRONZE: 25,   // 1 share
-    SILVER: 75,   // 5 shares
-    GOLD: 150,    // 10 shares
+    BRONZE: 25, // 1 share
+    SILVER: 75, // 5 shares
+    GOLD: 150, // 10 shares
   },
 } as const;

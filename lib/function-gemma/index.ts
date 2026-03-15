@@ -8,7 +8,7 @@ export {
   MODEL_CONFIG,
   downloadModelIfNeeded,
   checkModelExists,
-} from './FunctionGemmaService';
+} from "./FunctionGemmaService";
 
 export type {
   FridgitTool,
@@ -16,4 +16,4 @@ export type {
   CompletionResult,
   ModelConfig,
   ToolExecutor,
-} from './FunctionGemmaService';
+} from "./FunctionGemmaService";

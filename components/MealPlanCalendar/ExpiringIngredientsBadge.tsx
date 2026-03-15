@@ -70,7 +70,13 @@ export default function ExpiringIngredientsBadge({
 
     for (const expiringItem of expiringItems) {
       for (const recipeIngredient of recipeIngredientNames) {
-        if (isIngredientMatch(expiringItem.name, recipeIngredient, expiringItem.synonyms?.map((s: any) => s.synonym))) {
+        if (
+          isIngredientMatch(
+            expiringItem.name,
+            recipeIngredient,
+            expiringItem.synonyms?.map((s: any) => s.synonym)
+          )
+        ) {
           matchedExpiringItems.add(expiringItem.name);
           break; // Found a match, no need to check other ingredients
         }
@@ -86,9 +92,7 @@ export default function ExpiringIngredientsBadge({
   }
 
   // Size configurations
-  const sizeClasses = size === "sm"
-    ? "min-w-5 h-5 px-1"
-    : "min-w-6 h-6 px-1.5";
+  const sizeClasses = size === "sm" ? "min-w-5 h-5 px-1" : "min-w-6 h-6 px-1.5";
 
   const textSizeClasses = size === "sm" ? "text-xs" : "text-sm";
   const iconSize = size === "sm" ? 10 : 12;
@@ -139,7 +143,13 @@ export function useExpiringIngredientsCount(
 
     for (const expiringItem of expiringItems) {
       for (const recipeIngredient of recipeIngredientNames) {
-        if (isIngredientMatch(expiringItem.name, recipeIngredient, expiringItem.synonyms?.map((s: any) => s.synonym))) {
+        if (
+          isIngredientMatch(
+            expiringItem.name,
+            recipeIngredient,
+            expiringItem.synonyms?.map((s: any) => s.synonym)
+          )
+        ) {
           matchedExpiringItems.add(expiringItem.name);
           break;
         }

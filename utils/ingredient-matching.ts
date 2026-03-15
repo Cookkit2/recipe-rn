@@ -28,18 +28,13 @@ export const isIngredientMatch = (
   if (pantryItemSynonyms.length > 0) {
     const isSynonymMatch = pantryItemSynonyms.some((synonym) => {
       const syn = synonym.toLowerCase().trim();
-      return (
-        syn === recipeName ||
-        recipeName.includes(syn) ||
-        syn.includes(recipeName)
-      );
+      return syn === recipeName || recipeName.includes(syn) || syn.includes(recipeName);
     });
     if (isSynonymMatch) return true;
   }
 
   // Contains match (existing logic)
-  if (pantryName.includes(recipeName) || recipeName.includes(pantryName))
-    return true;
+  if (pantryName.includes(recipeName) || recipeName.includes(pantryName)) return true;
 
   // Extract key words and remove common modifiers
   const extractKeyWords = (name: string): string[] => {
@@ -79,18 +74,10 @@ export const isIngredientMatch = (
 
   // Check synonyms
   for (const [baseWord, synonyms] of Object.entries(synonymMap)) {
-    const pantryContainsBase = pantryWords.some((word) =>
-      word.includes(baseWord)
-    );
-    const recipeContainsBase = recipeWords.some((word) =>
-      word.includes(baseWord)
-    );
-    const pantryContainsSynonym = synonyms.some((synonym) =>
-      pantryName.includes(synonym)
-    );
-    const recipeContainsSynonym = synonyms.some((synonym) =>
-      recipeName.includes(synonym)
-    );
+    const pantryContainsBase = pantryWords.some((word) => word.includes(baseWord));
+    const recipeContainsBase = recipeWords.some((word) => word.includes(baseWord));
+    const pantryContainsSynonym = synonyms.some((synonym) => pantryName.includes(synonym));
+    const recipeContainsSynonym = synonyms.some((synonym) => recipeName.includes(synonym));
 
     if (
       (pantryContainsBase || pantryContainsSynonym) &&

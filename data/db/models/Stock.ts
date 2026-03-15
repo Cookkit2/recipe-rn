@@ -76,8 +76,7 @@ export default class Stock extends Model {
       if (data.expiryDate !== undefined) stock.expiryDate = data.expiryDate;
       if (data.storageType !== undefined) stock.storageType = data.storageType;
       if (data.imageUrl !== undefined) stock.imageUrl = data.imageUrl;
-      if (data.backgroundColor !== undefined)
-        stock.backgroundColor = data.backgroundColor;
+      if (data.backgroundColor !== undefined) stock.backgroundColor = data.backgroundColor;
       if (data.x !== undefined) stock.x = data.x;
       if (data.y !== undefined) stock.y = data.y;
       if (data.scale !== undefined) stock.scale = data.scale;
