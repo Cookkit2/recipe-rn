@@ -1,4 +1,3 @@
-/// <reference types="jest" />
 jest.mock("~/utils/logger", () => ({
   log: {
     info: jest.fn(),
@@ -121,9 +120,9 @@ jest.mock("../recipeImportApi", () => {
     ...original,
     recipeImportApi: {
       ...original.recipeImportApi,
-      importRecipeFromYouTube: (...args: unknown[]) => importFromYouTube(...args),
-      importRecipeFromWebsite: (...args: unknown[]) => importFromWebsite(...args),
-      importRecipeFromSocialMedia: (...args: unknown[]) => importFromSocial(...args),
+      importRecipeFromYouTube: (...args: any[]) => (importFromYouTube as any)(...args),
+      importRecipeFromWebsite: (...args: any[]) => (importFromWebsite as any)(...args),
+      importRecipeFromSocialMedia: (...args: any[]) => (importFromSocial as any)(...args),
     },
   };
 });

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { database } from "~/data/db/database";
 import { databaseFacade } from "~/data/db/DatabaseFacade";
 import type MealPlan from "~/data/db/models/MealPlan";
@@ -90,21 +89,15 @@ export const mealPlanApi = {
 
         const itemsWithRecipes: MealPlanItemWithRecipe[] = [];
 
-        // Extract unique recipe IDs
-        const recipeIds = [...new Set(mealPlanItems.map(item => item.recipeId))];
-
-        log.info(`Batch fetching details for ${recipeIds.length} unique recipes`);
-
-        // Fetch all recipe details in a single batch query
-        const recipesDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
-
         for (const item of mealPlanItems) {
           try {
-            const recipeDetails = recipesDetailsMap.get(item.recipeId);
+            log.info(`Fetching recipe for item ${item.id} with recipeId ${item.recipeId}`);
+            const recipeDetails = await databaseFacade.getRecipeWithDetails(item.recipeId);
 
             let recipeData: MealPlanItemWithRecipe["recipe"];
             if (recipeDetails && recipeDetails.recipe) {
               const { recipe, ingredients } = recipeDetails;
+              log.info(`Found recipe ${recipe.id}: ${recipe.title}`);
               recipeData = {
                 id: recipe.id,
                 title: recipe.title,
@@ -168,18 +161,15 @@ export const mealPlanApi = {
 
       const itemsWithRecipes: MealPlanItemWithRecipe[] = [];
 
-      const recipeIds = [...new Set(mealPlanItems.map(item => item.recipeId))];
-      log.info(`Batch fetching details for ${recipeIds.length} unique recipes`);
-
-      const recipesDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
-
       for (const item of mealPlanItems) {
         try {
-          const recipeDetails = recipesDetailsMap.get(item.recipeId);
+          log.info(`Fetching recipe for item ${item.id} with recipeId ${item.recipeId}`);
+          const recipeDetails = await databaseFacade.getRecipeWithDetails(item.recipeId);
 
           let recipeData: MealPlanItemWithRecipe["recipe"];
           if (recipeDetails && recipeDetails.recipe) {
             const { recipe, ingredients } = recipeDetails;
+            log.info(`Found recipe ${recipe.id}: ${recipe.title}`);
             recipeData = {
               id: recipe.id,
               title: recipe.title,
@@ -272,34 +262,19 @@ export const mealPlanApi = {
 
           const itemsToHide: { name: string; isDeleted: boolean }[] = [];
 
-          // Pre-compute map for O(1) exact name and synonym lookups
-          const stockMap = new Map<string, (typeof stockItems)[0]>();
-          for (const item of stockItems) {
-            stockMap.set(item.name.toLowerCase().trim(), item);
-            if (item.synonyms && item.synonyms.length > 0) {
-              for (const syn of item.synonyms) {
-                stockMap.set(syn.toLowerCase().trim(), item);
-              }
-            }
-          }
-
           for (const ingredient of result.recipe.ingredients) {
             const baseServings = result.recipe.servings || 1;
             const neededQuantity = (ingredient.quantity / baseServings) * result.servings;
 
-            // 1. Try O(1) fast path first
-            const ingredientKey = ingredient.name.toLowerCase().trim();
-            let matchingStock = stockMap.get(ingredientKey);
+            const matchingStock = stockItems.find((p) =>
+              isIngredientMatch(p.name, ingredient.name, p.synonyms)
+            );
 
-            // 2. Fallback to O(N) fuzzy search if not found
-            if (!matchingStock) {
-              matchingStock = stockItems.find((p) =>
-                isIngredientMatch(p.name, ingredient.name, p.synonyms)
-              );
-            }
-
-            if (matchingStock && matchingStock.quantity >= neededQuantity) {
-              itemsToHide.push({ name: ingredient.name, isDeleted: true });
+            if (matchingStock) {
+              // Check if we have enough
+              if (matchingStock.quantity >= neededQuantity) {
+                itemsToHide.push({ name: ingredient.name, isDeleted: true });
+              }
             }
           }
 
@@ -350,31 +325,13 @@ export const mealPlanApi = {
 
           const itemsToHide: { name: string; isDeleted: boolean }[] = [];
 
-          // Pre-compute map for O(1) exact name and synonym lookups
-          const stockMap = new Map<string, (typeof stockItems)[0]>();
-          for (const item of stockItems) {
-            stockMap.set(item.name.toLowerCase().trim(), item);
-            if (item.synonyms && item.synonyms.length > 0) {
-              for (const syn of item.synonyms) {
-                stockMap.set(syn.toLowerCase().trim(), item);
-              }
-            }
-          }
-
           for (const ingredient of result.recipe.ingredients) {
             const baseServings = result.recipe.servings || 1;
             const neededQuantity = (ingredient.quantity / baseServings) * result.servings;
 
-            // 1. Try O(1) fast path first
-            const ingredientKey = ingredient.name.toLowerCase().trim();
-            let matchingStock = stockMap.get(ingredientKey);
-
-            // 2. Fallback to O(N) fuzzy search if not found
-            if (!matchingStock) {
-              matchingStock = stockItems.find((p) =>
-                isIngredientMatch(p.name, ingredient.name, p.synonyms)
-              );
-            }
+            const matchingStock = stockItems.find((p) =>
+              isIngredientMatch(p.name, ingredient.name, p.synonyms)
+            );
 
             if (matchingStock && matchingStock.quantity >= neededQuantity) {
               itemsToHide.push({ name: ingredient.name, isDeleted: true });
@@ -700,14 +657,9 @@ export const mealPlanApi = {
 
       const itemsWithRecipes: MealPlanItemWithRecipe[] = [];
 
-      const recipeIds = [...new Set(mealPlanItems.map(item => item.recipeId))];
-      log.info(`Batch fetching details for ${recipeIds.length} unique recipes`);
-
-      const recipesDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
-
       for (const item of mealPlanItems) {
         try {
-          const recipeDetails = recipesDetailsMap.get(item.recipeId);
+          const recipeDetails = await databaseFacade.getRecipeWithDetails(item.recipeId);
           if (!recipeDetails) {
             log.warn(`Recipe not found for meal plan item ${item.id}`);
             continue;
@@ -759,14 +711,14 @@ export const mealPlanApi = {
    */
   async assignToDateSlot(
     mealPlanId: string,
-    date: Date,
-    mealSlot: string
+    _date: Date,
+    _mealSlot: string
   ): Promise<MealPlanItemWithRecipe | null> {
     try {
-      log.info("📅 Assigning meal plan to date slot:", mealPlanId, date, mealSlot);
+      log.info("📅 Assigning meal plan to date slot:", mealPlanId, _date, _mealSlot);
 
       const mealPlanRepo = getMealPlanRepository();
-      const updated = await mealPlanRepo.updateDateAndSlot(mealPlanId, date, mealSlot);
+      const updated = await mealPlanRepo.updateDateAndSlot(mealPlanId, _date, _mealSlot);
 
       if (!updated) {
         log.warn(`Meal plan ${mealPlanId} not found`);
@@ -802,17 +754,15 @@ export const mealPlanApi = {
       }
 
       const date =
-        updated.date instanceof Date
-          ? updated.date
-          : new Date((updated as unknown as { date?: number }).date ?? Date.now());
+        updated.date instanceof Date ? updated.date : new Date((updated as any).date ?? Date.now());
       const mealSlot = updated.mealSlot ?? "dinner";
 
       return {
         id: updated.id,
         recipeId: updated.recipeId,
         servings: updated.servings,
-        date: updatedDate,
-        mealSlot: updatedMealSlot,
+        date,
+        mealSlot,
         templateId: updated.templateId,
         createdAt: updated.createdAt,
         recipe: recipeData,
