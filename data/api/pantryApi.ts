@@ -515,8 +515,8 @@ const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
   try {
     // Add timeout to prevent hanging
     const synonymRecords = await Promise.race([
-      // TODO: Check correct query syntax
-      stock.synonyms.query().fetch(),
+
+      stock.synonyms.fetch(),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("Synonym fetch timeout")), 3000)
       ),

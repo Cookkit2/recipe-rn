@@ -1,4 +1,4 @@
-import { Model, Collection } from "@nozbe/watermelondb";
+import { Model, Query, Collection } from "@nozbe/watermelondb";
 import { field, date, writer, children } from "@nozbe/watermelondb/decorators";
 import type { Associations } from "@nozbe/watermelondb/Model";
 import type IngredientSynonym from "./IngredientSynonym";
@@ -37,9 +37,9 @@ export default class Stock extends Model {
   @field("y") y?: number;
   @field("scale") scale?: number;
 
-  @children("ingredient_synonym") synonyms!: Collection<IngredientSynonym>;
-  @children("stock_category") stockCategories!: Collection<StockCategory>;
-  @children("waste_log") wasteLogs!: Collection<WasteLog>;
+  @children("ingredient_synonym") synonyms!: Query<IngredientSynonym>;
+  @children("stock_category") stockCategories!: Query<StockCategory>;
+  @children("waste_log") wasteLogs!: Query<WasteLog>;
 
   @date("created_at") createdAt!: Date;
   @date("updated_at") updatedAt!: Date;
