@@ -19,6 +19,9 @@ const failingNames = new Set<string>();
 
 const stockCollection = {
   create: jest.fn(async (updater: (stock: Stock) => void) => {
+    throw new Error("create should not be called");
+  }),
+  prepareCreate: jest.fn((updater: (stock: Stock) => void) => {
     const draft: Stock = {
       id: `stock_${stocks.length + 1}`,
       name: "",
@@ -61,11 +64,21 @@ jest.mock("~/data/db/database", () => ({
             fetch: async () => [],
           }),
           create: jest.fn(async () => ({})),
+          prepareCreate: jest.fn((updater) => {
+            return { _type: "create", updater };
+          })
         };
       },
     },
     write: async (action: () => Promise<void> | void) => {
       await action();
+    },
+    batch: async (...ops: any[]) => {
+      for (const op of ops) {
+        if (op && op._type === "update") {
+          op.updater(op.record);
+        }
+      }
     },
   },
 }));
@@ -120,6 +133,9 @@ describe("pantryApi.addPantryItemsWithMetadata", () => {
       update: async (fn: (stock: Stock) => void) => {
         fn(existing);
       },
+      prepareUpdate: jest.fn((fn: (stock: Stock) => void) => {
+        return { _type: "update", updater: fn, record: existing };
+      }),
     };
     stocks.push(existing);
 
