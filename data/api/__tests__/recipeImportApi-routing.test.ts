@@ -111,22 +111,22 @@ jest.mock("~/lib/recipe-scrapper/youtube/RecipeAnalyzer", () => ({
   })),
 }));
 
-const importFromYouTube = jest.fn(async () => ({ success: true } as any));
-const importFromWebsite = jest.fn(async () => ({ success: true } as any));
-const importFromSocial = jest.fn(async () => ({ success: true } as any));
+const importFromYouTube = jest.fn(async (_url: any) => ({ success: true } as any));
+const importFromWebsite = jest.fn(async (_url: any) => ({ success: true } as any));
+const importFromSocial = jest.fn(async (_url: any) => ({ success: true } as any));
 
 jest.mock("../recipeImportApi", () => {
-  const original = jest.requireActual("../recipeImportApi");
+  const original = jest.requireActual("../recipeImportApi") as any;
   return {
     ...original,
     recipeImportApi: {
       ...original.recipeImportApi,
-      importRecipeFromYouTube: (...args: [any]) =>
-        importFromYouTube(...args),
-      importRecipeFromWebsite: (...args: [any]) =>
-        importFromWebsite(...args),
-      importRecipeFromSocialMedia: (...args: [any]) =>
-        importFromSocial(...args),
+      importRecipeFromYouTube: (url: any) =>
+        importFromYouTube(url),
+      importRecipeFromWebsite: (url: any) =>
+        importFromWebsite(url),
+      importRecipeFromSocialMedia: (url: any) =>
+        importFromSocial(url),
     },
   };
 });

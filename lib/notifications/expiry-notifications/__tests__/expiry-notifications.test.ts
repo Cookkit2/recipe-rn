@@ -15,14 +15,13 @@ jest.mock("~/utils/notification-settings", () => ({
   },
 }));
 
-const getRecipeRecommendationsForExpiring = jest.fn(async () => ({
+const getRecipeRecommendationsForExpiring = jest.fn(async (_url: any) => ({
   recipes: [],
 }));
 
 jest.mock("~/data/api/recipeApi", () => ({
   recipeApi: {
-    getRecipeRecommendationsForExpiring: (...args: [any]) =>
-      getRecipeRecommendationsForExpiring(...args),
+    getRecipeRecommendationsForExpiring: (url: any) => getRecipeRecommendationsForExpiring(url)
   },
 }));
 
