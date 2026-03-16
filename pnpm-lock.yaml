@@ -320,12 +320,18 @@ importers:
       "@types/react":
         specifier: ~19.2.10
         version: 19.2.14
+      jest:
+        specifier: ^30.3.0
+        version: 30.3.0(@types/node@25.5.0)
       prettier:
         specifier: ^3.6.2
         version: 3.8.1
       prettier-plugin-tailwindcss:
         specifier: ^0.6.14
         version: 0.6.14(prettier@3.8.1)
+      ts-jest:
+        specifier: ^29.4.6
+        version: 29.4.6(@babel/core@7.29.0)(@jest/transform@30.3.0)(@jest/types@30.3.0)(babel-jest@30.3.0(@babel/core@7.29.0))(jest-util@30.3.0)(jest@30.3.0(@types/node@25.5.0))(typescript@5.9.3)
       typescript:
         specifier: ~5.9.2
         version: 5.9.3
