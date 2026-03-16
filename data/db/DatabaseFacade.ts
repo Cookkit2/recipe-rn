@@ -1133,6 +1133,8 @@ export class DatabaseFacade {
 
         for (let j = 0; j < recipeBatch.length; j++) {
           const recipe = recipeBatch[j];
+          if (!recipe) continue;
+
           const recipeDetails = batchDetailsMap.get(recipe.id);
 
           if (!recipeDetails || !recipeDetails.ingredients.length) {
