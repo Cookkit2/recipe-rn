@@ -10,10 +10,10 @@ The DoneDish recipe import system uses **Google Gemini 2.0 Flash** for intellige
 
 ### AI Model Used
 
-| Model | Purpose | Features |
-|-------|---------|----------|
-| **Gemini 2.0 Flash** | Primary recipe extraction | Fast response, structured output, native video understanding |
-| **Gemini 2.0 Flash Lite** | Fallback for simple tasks | Lower cost, faster for basic text generation |
+| Model                     | Purpose                   | Features                                                     |
+| ------------------------- | ------------------------- | ------------------------------------------------------------ |
+| **Gemini 2.0 Flash**      | Primary recipe extraction | Fast response, structured output, native video understanding |
+| **Gemini 2.0 Flash Lite** | Fallback for simple tasks | Lower cost, faster for basic text generation                 |
 
 ### Key Features
 
@@ -28,23 +28,23 @@ The DoneDish recipe import system uses **Google Gemini 2.0 Flash** for intellige
 
 ### Temperature Guidelines
 
-| Temperature | Use Case | Rationale |
-|-------------|----------|-----------|
-| **0.0 - 0.2** | Data cleaning, normalization | Minimal variation, consistent output |
-| **0.3 - 0.4** | Recipe extraction from structured content | Balanced creativity and accuracy |
-| **0.4 - 0.5** | Recipe inference from sparse text | Higher creativity for missing data |
+| Temperature   | Use Case                                  | Rationale                            |
+| ------------- | ----------------------------------------- | ------------------------------------ |
+| **0.0 - 0.2** | Data cleaning, normalization              | Minimal variation, consistent output |
+| **0.3 - 0.4** | Recipe extraction from structured content | Balanced creativity and accuracy     |
+| **0.4 - 0.5** | Recipe inference from sparse text         | Higher creativity for missing data   |
 
 ### Current Configuration
 
 ```typescript
 // RecipeAnalyzer - Transcript/Video Analysis
-temperature: 0.3  // Balanced accuracy for well-structured content
+temperature: 0.3; // Balanced accuracy for well-structured content
 
 // SocialRecipeService - Text-only from metadata
-temperature: 0.4  // Higher creativity due to sparse input data
+temperature: 0.4; // Higher creativity due to sparse input data
 
 // WebsiteRecipeService - Data cleaning
-temperature: 0.2  // Minimal variation for normalization tasks
+temperature: 0.2; // Minimal variation for normalization tasks
 ```
 
 ### Why These Values?
@@ -234,6 +234,7 @@ Return a valid JSON response matching the schema provided.
 ```
 
 **Key Strategies**:
+
 - Transcript is truncated at 15,000 characters to stay within token limits
 - Explicit instruction to estimate missing values rather than leave blank
 - Singular/plural normalization for ingredients
@@ -307,6 +308,7 @@ Return a valid JSON response matching the schema provided.
 ```
 
 **Key Strategies**:
+
 - Uses Gemini's multimodal capabilities to "watch" the video
 - Emphasizes visual attention to measurements
 - Falls back to transcript analysis when video is unavailable
@@ -374,6 +376,7 @@ Use this structured data as the primary source, supplemented by the page content
 ```
 
 **Key Strategies**:
+
 - HTML is pre-processed to remove scripts, styles, navigation
 - Content is truncated at 20,000 characters
 - Structured data (JSON-LD) is highlighted when found
@@ -430,6 +433,7 @@ Return a valid JSON response matching the schema.
 ```
 
 **Key Strategies**:
+
 - Higher temperature (0.4) due to sparse input data
 - Explicit instruction to return low confidence rather than fake data
 - Post-processing validation filters out "Unknown ingredient"
@@ -485,6 +489,7 @@ Return the cleaned recipe as valid JSON with the exact same structure as the inp
 ```
 
 **Key Strategies**:
+
 - Lowest temperature (0.2) for deterministic normalization
 - Explicit rules for removing clickbait titles
 - Fallback to original recipe if cleaning produces invalid output
@@ -593,17 +598,18 @@ export function isValidRecipe(recipe: Partial<GeneratedRecipe>): boolean {
   }
 
   // 2. Check ingredients (exclude "Unknown ingredient")
-  const validIngredients = Array.isArray(recipe.ingredients) &&
+  const validIngredients =
+    Array.isArray(recipe.ingredients) &&
     recipe.ingredients.filter(
-      (i) => i.name && i.name.trim().length > 0 &&
-           i.name.toLowerCase() !== "unknown ingredient"
+      (i) => i.name && i.name.trim().length > 0 && i.name.toLowerCase() !== "unknown ingredient"
     );
   if (!validIngredients || validIngredients.length === 0) {
     return false;
   }
 
   // 3. Check steps
-  const validSteps = Array.isArray(recipe.steps) &&
+  const validSteps =
+    Array.isArray(recipe.steps) &&
     recipe.steps.filter((s) => s.description && s.description.trim().length > 0);
   if (!validSteps || validSteps.length === 0) {
     return false;
@@ -625,7 +631,7 @@ export function isValidRecipe(recipe: Partial<GeneratedRecipe>): boolean {
 if (!isValidRecipe(potentialRecipe)) {
   return {
     isCookingVideo: true,
-    confidence: 0,  // Force error to user
+    confidence: 0, // Force error to user
     errorMessage: "Could not extract valid ingredients or steps from this post.",
   };
 }
@@ -684,13 +690,13 @@ try {
 
   if (!isValidRecipe(cleanedRecipe)) {
     log.warn("Gemini produced invalid recipe, falling back to original");
-    return recipe;  // Return original structured data
+    return recipe; // Return original structured data
   }
 
   return cleanedRecipe;
 } catch (error) {
   log.warn("Failed to clean recipe, using original data");
-  return recipe;  // Return original on error
+  return recipe; // Return original on error
 }
 ```
 
@@ -703,8 +709,8 @@ try {
 ```typescript
 // utils/gemini-api.ts
 const PRICING = {
-  prompt: 0.075,      // $0.075 per 1M tokens
-  candidates: 0.30,   // $0.30 per 1M tokens
+  prompt: 0.075, // $0.075 per 1M tokens
+  candidates: 0.3, // $0.30 per 1M tokens
 } as const;
 
 export const calculateTokenCost = (usage): TokenUsage => {
@@ -806,13 +812,13 @@ Gemini API Token Usage - Prompt: 1,234, Candidates: 567, Total: 1,801, Est. Cost
 
 ### Common Pitfalls
 
-| Pitfall | Solution |
-|---------|----------|
-| AI invents ingredients | Add explicit instruction to return `confidence: 0` when data is missing |
-| Title includes clickbait | Add cleaning step to remove emotional words |
-| Ingredients pluralized | Post-process to singular form |
-| Units inconsistent | Normalize in cleaning step |
-| Steps too vague | Add instruction to create actionable titles |
+| Pitfall                  | Solution                                                                |
+| ------------------------ | ----------------------------------------------------------------------- |
+| AI invents ingredients   | Add explicit instruction to return `confidence: 0` when data is missing |
+| Title includes clickbait | Add cleaning step to remove emotional words                             |
+| Ingredients pluralized   | Post-process to singular form                                           |
+| Units inconsistent       | Normalize in cleaning step                                              |
+| Steps too vague          | Add instruction to create actionable titles                             |
 
 ### Prompt Optimization Checklist
 
@@ -828,21 +834,22 @@ Gemini API Token Usage - Prompt: 1,234, Candidates: 567, Total: 1,801, Est. Cost
 
 ## 📚 Related Documentation
 
-| Document | Purpose |
-|----------|---------|
-| [RECIPE_IMPORT_ARCHITECTURE.md](./RECIPE_IMPORT_ARCHITECTURE.md) | System architecture overview |
-| [../AI_CONTEXT.md](../AI_CONTEXT.md) | General project context for AI |
-| [lib/recipe-scrapper/youtube/RecipeAnalyzer.ts](../../lib/recipe-scrapper/youtube/RecipeAnalyzer.ts) | Source: YouTube prompts |
-| [lib/recipe-scrapper/SocialRecipeService.ts](../../lib/recipe-scrapper/SocialRecipeService.ts) | Source: Social media prompts |
-| [lib/recipe-scrapper/WebsiteRecipeService.ts](../../lib/recipe-scrapper/WebsiteRecipeService.ts) | Source: Website prompts |
-| [lib/recipe-scrapper/validation-utils.ts](../../lib/recipe-scrapper/validation-utils.ts) | Source: Validation logic |
-| [utils/gemini-api.ts](../../utils/gemini-api.ts) | Source: API wrapper and pricing |
+| Document                                                                                             | Purpose                         |
+| ---------------------------------------------------------------------------------------------------- | ------------------------------- |
+| [RECIPE_IMPORT_ARCHITECTURE.md](./RECIPE_IMPORT_ARCHITECTURE.md)                                     | System architecture overview    |
+| [../AI_CONTEXT.md](../AI_CONTEXT.md)                                                                 | General project context for AI  |
+| [lib/recipe-scrapper/youtube/RecipeAnalyzer.ts](../../lib/recipe-scrapper/youtube/RecipeAnalyzer.ts) | Source: YouTube prompts         |
+| [lib/recipe-scrapper/SocialRecipeService.ts](../../lib/recipe-scrapper/SocialRecipeService.ts)       | Source: Social media prompts    |
+| [lib/recipe-scrapper/WebsiteRecipeService.ts](../../lib/recipe-scrapper/WebsiteRecipeService.ts)     | Source: Website prompts         |
+| [lib/recipe-scrapper/validation-utils.ts](../../lib/recipe-scrapper/validation-utils.ts)             | Source: Validation logic        |
+| [utils/gemini-api.ts](../../utils/gemini-api.ts)                                                     | Source: API wrapper and pricing |
 
 ---
 
 ## 📝 Changelog
 
 ### February 2026
+
 - Initial documentation of all prompt templates
 - Documented JSON schemas for each service
 - Added temperature setting guidelines
@@ -850,5 +857,5 @@ Gemini API Token Usage - Prompt: 1,234, Candidates: 567, Total: 1,801, Est. Cost
 
 ---
 
-*Created: February 2026*
-*Last Updated: February 2026*
+_Created: February 2026_
+_Last Updated: February 2026_

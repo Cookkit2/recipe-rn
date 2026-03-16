@@ -65,20 +65,14 @@ export abstract class BaseRepository<T extends Model> {
     });
   }
 
-  async update(
-    id: string,
-    data: Partial<T> & Record<string, unknown>
-  ): Promise<T> {
+  async update(id: string, data: Partial<T> & Record<string, unknown>): Promise<T> {
     return await database.write(async () => {
       return await this.updateRaw(id, data);
     });
   }
 
   // Raw update method that works within existing transactions
-  async updateRaw(
-    id: string,
-    data: Partial<T> & Record<string, unknown>
-  ): Promise<T> {
+  async updateRaw(id: string, data: Partial<T> & Record<string, unknown>): Promise<T> {
     const record = await this.collection.find(id);
     return await record.update((r: T) => {
       Object.keys(data).forEach((key) => {
@@ -99,12 +93,8 @@ export abstract class BaseRepository<T extends Model> {
   async deleteMany(ids: string[]): Promise<void> {
     await database.write(async () => {
       const records = await this.collection.query().fetch();
-      const recordsToDelete = records.filter((record) =>
-        ids.includes(record.id)
-      );
-      await Promise.all(
-        recordsToDelete.map((record) => record.destroyPermanently())
-      );
+      const recordsToDelete = records.filter((record) => ids.includes(record.id));
+      await Promise.all(recordsToDelete.map((record) => record.destroyPermanently()));
     });
   }
 
@@ -121,9 +111,7 @@ export abstract class BaseRepository<T extends Model> {
     // Comprehensive sanitization for search terms
     const sanitizedTerm = this.sanitizeSearchTerm(searchTerm);
 
-    const conditions = searchFields.map((field) =>
-      Q.where(field, Q.like(sanitizedTerm))
-    );
+    const conditions = searchFields.map((field) => Q.where(field, Q.like(sanitizedTerm)));
 
     return query.extend(Q.or(...conditions));
   }

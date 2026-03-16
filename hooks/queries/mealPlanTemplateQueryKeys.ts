@@ -10,12 +10,10 @@ export const mealPlanTemplateQueryKeys = {
   templates: () => [...mealPlanTemplateQueryKeys.all, "templates"] as const,
 
   // Single template by ID
-  byId: (templateId: string) =>
-    [...mealPlanTemplateQueryKeys.all, "template", templateId] as const,
+  byId: (templateId: string) => [...mealPlanTemplateQueryKeys.all, "template", templateId] as const,
 
   // Search templates
-  search: (searchTerm: string) =>
-    [...mealPlanTemplateQueryKeys.all, "search", searchTerm] as const,
+  search: (searchTerm: string) => [...mealPlanTemplateQueryKeys.all, "search", searchTerm] as const,
 
   // Template application status
   application: (templateId: string, startDate: string) =>

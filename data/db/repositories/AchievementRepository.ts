@@ -1,7 +1,5 @@
 import { Q } from "@nozbe/watermelondb";
-import Achievement, {
-  type AchievementModelData,
-} from "../models/Achievement";
+import Achievement, { type AchievementModelData } from "../models/Achievement";
 import { BaseRepository, type SearchOptions } from "./BaseRepository";
 import { database } from "../database";
 
@@ -17,9 +15,7 @@ export class AchievementRepository extends BaseRepository<Achievement> {
   }
 
   // Create a new achievement
-  async createAchievement(
-    data: AchievementModelData
-  ): Promise<Achievement> {
+  async createAchievement(data: AchievementModelData): Promise<Achievement> {
     return await database.write(async () => {
       return await this.collection.create((record) => {
         record.type = data.type;
@@ -37,9 +33,7 @@ export class AchievementRepository extends BaseRepository<Achievement> {
   }
 
   // Get achievements with optional filters
-  async getAchievements(
-    options: AchievementSearchOptions = {}
-  ): Promise<Achievement[]> {
+  async getAchievements(options: AchievementSearchOptions = {}): Promise<Achievement[]> {
     let query = this.collection.query();
 
     // Filter by type
@@ -58,11 +52,7 @@ export class AchievementRepository extends BaseRepository<Achievement> {
     }
 
     // Apply sorting (sort order by default)
-    query = this.applySorting(
-      query,
-      options.sortBy || "sort_order",
-      options.sortOrder || "asc"
-    );
+    query = this.applySorting(query, options.sortBy || "sort_order", options.sortOrder || "asc");
 
     // Apply pagination
     if (options.offset) {
@@ -80,10 +70,7 @@ export class AchievementRepository extends BaseRepository<Achievement> {
     category: string,
     includeHidden: boolean = false
   ): Promise<Achievement[]> {
-    let query = this.collection.query(
-      Q.where("category", category),
-      Q.sortBy("sort_order", Q.asc)
-    );
+    let query = this.collection.query(Q.where("category", category), Q.sortBy("sort_order", Q.asc));
 
     if (!includeHidden) {
       query = query.extend(Q.where("hidden", 0));
@@ -97,10 +84,7 @@ export class AchievementRepository extends BaseRepository<Achievement> {
     type: string,
     includeHidden: boolean = false
   ): Promise<Achievement[]> {
-    let query = this.collection.query(
-      Q.where("type", type),
-      Q.sortBy("sort_order", Q.asc)
-    );
+    let query = this.collection.query(Q.where("type", type), Q.sortBy("sort_order", Q.asc));
 
     if (!includeHidden) {
       query = query.extend(Q.where("hidden", 0));
@@ -111,43 +95,23 @@ export class AchievementRepository extends BaseRepository<Achievement> {
 
   // Get visible achievements (not hidden)
   async getVisibleAchievements(): Promise<Achievement[]> {
-    return await this.collection
-      .query(
-        Q.where("hidden", 0),
-        Q.sortBy("sort_order", Q.asc)
-      )
-      .fetch();
+    return await this.collection.query(Q.where("hidden", 0), Q.sortBy("sort_order", Q.asc)).fetch();
   }
 
   // Get hidden achievements
   async getHiddenAchievements(): Promise<Achievement[]> {
-    return await this.collection
-      .query(
-        Q.where("hidden", 1),
-        Q.sortBy("sort_order", Q.asc)
-      )
-      .fetch();
+    return await this.collection.query(Q.where("hidden", 1), Q.sortBy("sort_order", Q.asc)).fetch();
   }
 
   // Get achievement by type and category
-  async getByTypeAndCategory(
-    type: string,
-    category: string
-  ): Promise<Achievement[]> {
+  async getByTypeAndCategory(type: string, category: string): Promise<Achievement[]> {
     return await this.collection
-      .query(
-        Q.where("type", type),
-        Q.where("category", category),
-        Q.sortBy("sort_order", Q.asc)
-      )
+      .query(Q.where("type", type), Q.where("category", category), Q.sortBy("sort_order", Q.asc))
       .fetch();
   }
 
   // Update achievement
-  async updateAchievement(
-    id: string,
-    data: Partial<AchievementModelData>
-  ): Promise<Achievement> {
+  async updateAchievement(id: string, data: Partial<AchievementModelData>): Promise<Achievement> {
     return await this.update(id, data);
   }
 
@@ -161,9 +125,7 @@ export class AchievementRepository extends BaseRepository<Achievement> {
 
   // Get XP available for a specific category
   async getCategoryXPAvailable(category: string): Promise<number> {
-    const achievements = await this.collection
-      .query(Q.where("category", category))
-      .fetch();
+    const achievements = await this.collection.query(Q.where("category", category)).fetch();
     return achievements.reduce((total, achievement) => {
       return total + (achievement.xp ?? 0);
     }, 0);

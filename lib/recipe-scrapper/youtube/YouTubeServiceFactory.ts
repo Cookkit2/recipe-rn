@@ -12,16 +12,12 @@ export type YouTubeServiceType = "noauth" | "auth";
 /**
  * Create a YouTube service instance of the specified type
  */
-export function createYouTubeService(
-  type: YouTubeServiceType = "noauth"
-): IYouTubeService {
+export function createYouTubeService(type: YouTubeServiceType = "noauth"): IYouTubeService {
   switch (type) {
     case "noauth":
       return new NoAuthYouTubeService();
     case "auth":
-      throw new Error(
-        "AuthYouTubeService not yet implemented. Use 'noauth' for MVP."
-      );
+      throw new Error("AuthYouTubeService not yet implemented. Use 'noauth' for MVP.");
     default:
       return new NoAuthYouTubeService();
   }

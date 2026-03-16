@@ -1,11 +1,13 @@
 # Implementation Plan: Full-Review Phase 3 & Phase 4 (Testing, Docs, Best Practices, DevOps)
 
 ## Task Type
+
 - [x] Fullstack (Testing, Documentation, Config, CI/CD)
 
 ## Scope
 
 Address **Critical/High** and selected **Medium** findings from:
+
 - `.full-review/03-best-practices-standards.md` (Language, Framework, Deprecations, Modernization, Package, Build)
 - `.full-review/03-testing-documentation.md` (Test coverage + Documentation findings)
 - `.full-review/03-testing-strategy-coverage.md` (Test strategy, pyramid, security/performance test gaps)
@@ -29,46 +31,54 @@ Address **Critical/High** and selected **Medium** findings from:
 ## Implementation Steps
 
 ### Step 1: Add npm scripts and fix README
+
 - **Deliverable**: `npm test`, `npm run lint`, `npm run typecheck` exist; README matches.
 - In `package.json` scripts: add `"typecheck": "tsc --noEmit"`, `"lint": "prettier --check . && npx tsc --noEmit"` (or ESLint if adopted), `"test": "jest"`, optionally `"test:coverage": "jest --coverage"`.
 - In README: Update "Testing" and "Code Style" to reference the actual script names; remove or qualify any claim that implies lint/test without scripts.
 - Verify: `npm run typecheck` and `npm test` succeed (existing quantity-comparison test passes).
 
 ### Step 2: Input sanitization tests (Critical)
+
 - **Deliverable**: Security-critical sanitization covered by tests.
 - Create `utils/__tests__/input-sanitization.test.ts`: test `sanitizeForDatabase` (SQL-like inputs, maxLength, non-string), `sanitizeSearchTerm` (wildcards for LIKE), `sanitizeEmail` (valid/invalid). Follow example from `.full-review/03-testing-strategy-coverage.md` Section 6.
 - Verify: All tests pass; no injection patterns in output.
 
 ### Step 3: Auth and secure storage tests (Critical)
+
 - **Deliverable**: Session store/retrieve/clear and error paths tested with mocked storage.
 - Create `auth/__tests__/StorageIntegration.test.ts` (or equivalent for AuthStorageManager): mock storage; test store session, get session, clear session, expired session (clear on get), get/set throws. Do not commit raw tokens; assert clearSession when get fails or data invalid.
 - Verify: Tests pass with mocks; document migration steps if key change is ever required.
 
 ### Step 4: Bulk pantry import tests (High)
+
 - **Deliverable**: addPantryItemsWithMetadata behavior covered; transaction and duplicate handling asserted.
 - Add unit or integration tests for `data/api/pantryApi.ts` `addPantryItemsWithMetadata`: empty list, single item, duplicates (update vs create), one invalid item (rest succeed), all invalid. Assert returned list shape and that one failure does not prevent others.
 - Prefer in-memory or mocked DB; after O(n²) refactor (from fix-full-review-issues plan), add check that no full-table fetch per item.
 - Verify: Tests pass; transaction boundaries documented or asserted.
 
 ### Step 5: Recipe API and batch conversion tests (High)
+
 - **Deliverable**: convertDbRecipesToUIRecipesBatch and availability path covered.
 - Unit tests for `convertDbRecipesToUIRecipesBatch`: empty recipeDetailsMap, missing IDs for some recipes, empty ingredients/steps; assert skipped recipes and correct count.
 - Regression: availability uses batch API (no N+1).
 - Verify: Tests pass.
 
 ### Step 6: Recipe import pipeline and expiry notifications tests (High)
+
 - **Deliverable**: URL/validation and expiry grouping and “recommendation once per run” covered.
 - Unit tests for `lib/recipe-scrapper/validation-utils.ts` (`isValidRecipe`) and URL analysis/routing in `data/api/recipeImportApi.ts` (invalid URL, unsupported type).
 - Unit tests for `lib/notifications/expiry-notifications/expiry-notifications.ts`: mock `recipeApi.getRecipeRecommendationsForExpiring` and `scheduleNotification`; assert grouping, skip when past, and that recommendation is called once per run for multiple groups.
 - Verify: All tests pass.
 
 ### Step 7: Jest coverage scope and CI workflow
+
 - **Deliverable**: Coverage includes data/lib/auth; CI runs on push/PR.
 - In `jest.config.js`: expand `collectCoverageFrom` to include `data/**`, `lib/**`, `auth/**` with exclusions for `*.d.ts`, `__tests__`, and heavy native/generated code as needed.
 - Create `.github/workflows/ci.yml`: on push and pull_request to main (or default branch), checkout, install deps (`npm ci`), run `npm run typecheck`, `npm run lint`, `npm test`; optionally `npx expo export` and `npm audit --audit-level=high` (fail or warn). Gate merge on success.
 - Verify: CI runs and passes; coverage report available if test:coverage added.
 
 ### Step 8: Documentation – README, ADRs, AI_CONTEXT, LOCAL_NOTIFICATIONS, CHANGELOG
+
 - **Deliverable**: Docs accurate and key decisions recorded.
 - README: Already updated in Step 1 for test/lint.
 - Create `docs/adr/` (or `docs/architecture/decisions/`): add 2–3 ADRs (e.g. facade-only data access, notification handler registry, three-tier storage).
@@ -82,6 +92,7 @@ Address **Critical/High** and selected **Medium** findings from:
 - Verify: New contributors can follow README and ADRs; LOCAL_NOTIFICATIONS describes settings.
 
 ### Step 9: Best practices – StorageFacade types, typography, exhaustive switch, list, app.json
+
 - **Deliverable**: Less `any`; typography and switches type-safe; meal plan virtualized; single expo-font.
 - **StorageFacade**: Replace `(this.storage as any)[methodName]` with typed capability: extend IStorage with optional `getAsync?`, `setAsync?` (or IStorageCapabilities); use `'getAsync' in this.storage` and narrow. Same for StorageFactory.storageSupportsMethod if used.
 - **Typography**: In `components/ui/typography.tsx`, replace `@ts-ignore` for `role="blockquote"` and `role="code"` with `@ts-expect-error` and short comment, or Platform.select / conditional type for web.
@@ -91,8 +102,9 @@ Address **Critical/High** and selected **Medium** findings from:
 - Verify: `npm run typecheck` passes; no new regressions.
 
 ### Step 10: DevOps – EAS config, .env.example, runbooks, rollback, Sentry docs
+
 - **Deliverable**: EAS and env documented; incident/rollback and Sentry docs in place.
-- Run `eas build:configure` and commit `eas.json`; document required EAS env vars in README or `docs/DEPLOYMENT.md` (e.g. EXPO_PUBLIC_*, SENTRY_AUTH_TOKEN).
+- Run `eas build:configure` and commit `eas.json`; document required EAS env vars in README or `docs/DEPLOYMENT.md` (e.g. EXPO*PUBLIC*\*, SENTRY_AUTH_TOKEN).
 - Add `.env.example`: list all `EXPO_PUBLIC_*` (and other) vars with placeholder values and short comments; document in README.
 - Add `docs/runbooks/` or `docs/INCIDENT_RESPONSE.md`: severity definitions, who to contact, steps for "app crash spike", "bad OTA", "Supabase down", "Sentry DSN leak"; link to Sentry and TROUBLESHOOTING.
 - Document rollback: EAS Update (revert to previous update or disable); store rollback (previous binary, when, data compatibility); who can execute.
@@ -104,51 +116,51 @@ Address **Critical/High** and selected **Medium** findings from:
 
 ## Key Files
 
-| File | Operation | Description |
-|------|-----------|-------------|
-| `package.json` | Modify | Add test, lint, typecheck, test:coverage scripts |
-| `README.md` | Modify | Fix test/lint references; link CHANGELOG; env/setup |
-| `jest.config.js` | Modify | Expand collectCoverageFrom to data/, lib/, auth/ |
-| `utils/__tests__/input-sanitization.test.ts` | Create | Sanitization unit tests |
-| `auth/__tests__/StorageIntegration.test.ts` | Create | Auth storage tests with mocks |
-| `data/api/pantryApi.ts` | Test | Tests for addPantryItemsWithMetadata (new test file) |
-| `data/api/recipeApi.ts` / recipe conversion | Test | New test file for batch conversion |
-| `lib/recipe-scrapper/validation-utils.ts` | Test | New test file for isValidRecipe |
-| `data/api/recipeImportApi.ts` | Test | URL/routing tests |
-| `lib/notifications/expiry-notifications/expiry-notifications.ts` | Test | New test file with mocks |
-| `.github/workflows/ci.yml` | Create | CI: typecheck, lint, test, optional export, audit |
-| `docs/adr/` | Create | 2–3 ADRs |
-| `docs/AI_CONTEXT.md` | Modify | DoneDish, Expo 55, Uniwind, remove stale refs |
-| `docs/LOCAL_NOTIFICATIONS.md` | Modify | User notification settings section |
-| `CHANGELOG.md` | Create | Keep a Changelog style |
-| `utils/ingredient-matching.ts` | Modify | JSDoc for isIngredientMatch |
-| `data/db/DatabaseFacade.ts` | Modify | Block comment getAvailableRecipes |
-| `docs/REPOSITORY_PATTERN.md` | Modify | Clarify facade batch reads |
-| `docs/COOKKIT_APP_DOCUMENTATION.md` | Modify | DoneDish (legacy Cookkit) note |
-| `data/storage/storage-facade.ts` | Modify | Typed capability detection, async/await |
-| `data/storage/storage-types.ts` | Modify | Optional IStorage methods if needed |
-| `components/ui/typography.tsx` | Modify | @ts-expect-error or web prop types |
-| `utils/api-error-handler.ts` | Modify | Exhaustive switch default |
-| `components/Recipe/Step/StepCard.tsx` | Modify | Exhaustive switch default |
-| `data/services/ChallengeService.ts` | Modify | Exhaustive switch default |
-| `app/meal-plan/index.tsx` | Modify | FlatList/FlashList |
-| `app.json` | Modify | Remove duplicate expo-font |
-| `eas.json` | Create | From eas build:configure |
-| `.env.example` | Create | EXPO_PUBLIC_* and comments |
-| `docs/runbooks/` or `docs/INCIDENT_RESPONSE.md` | Create | Severity, contacts, steps |
-| `docs/DEPLOYMENT.md` | Create or modify | EAS env vars, rollback link |
-| `docs/SENTRY_SETUP.md` | Modify | No real DSNs; alerting; PII/sampling |
+| File                                                             | Operation        | Description                                          |
+| ---------------------------------------------------------------- | ---------------- | ---------------------------------------------------- |
+| `package.json`                                                   | Modify           | Add test, lint, typecheck, test:coverage scripts     |
+| `README.md`                                                      | Modify           | Fix test/lint references; link CHANGELOG; env/setup  |
+| `jest.config.js`                                                 | Modify           | Expand collectCoverageFrom to data/, lib/, auth/     |
+| `utils/__tests__/input-sanitization.test.ts`                     | Create           | Sanitization unit tests                              |
+| `auth/__tests__/StorageIntegration.test.ts`                      | Create           | Auth storage tests with mocks                        |
+| `data/api/pantryApi.ts`                                          | Test             | Tests for addPantryItemsWithMetadata (new test file) |
+| `data/api/recipeApi.ts` / recipe conversion                      | Test             | New test file for batch conversion                   |
+| `lib/recipe-scrapper/validation-utils.ts`                        | Test             | New test file for isValidRecipe                      |
+| `data/api/recipeImportApi.ts`                                    | Test             | URL/routing tests                                    |
+| `lib/notifications/expiry-notifications/expiry-notifications.ts` | Test             | New test file with mocks                             |
+| `.github/workflows/ci.yml`                                       | Create           | CI: typecheck, lint, test, optional export, audit    |
+| `docs/adr/`                                                      | Create           | 2–3 ADRs                                             |
+| `docs/AI_CONTEXT.md`                                             | Modify           | DoneDish, Expo 55, Uniwind, remove stale refs        |
+| `docs/LOCAL_NOTIFICATIONS.md`                                    | Modify           | User notification settings section                   |
+| `CHANGELOG.md`                                                   | Create           | Keep a Changelog style                               |
+| `utils/ingredient-matching.ts`                                   | Modify           | JSDoc for isIngredientMatch                          |
+| `data/db/DatabaseFacade.ts`                                      | Modify           | Block comment getAvailableRecipes                    |
+| `docs/REPOSITORY_PATTERN.md`                                     | Modify           | Clarify facade batch reads                           |
+| `docs/COOKKIT_APP_DOCUMENTATION.md`                              | Modify           | DoneDish (legacy Cookkit) note                       |
+| `data/storage/storage-facade.ts`                                 | Modify           | Typed capability detection, async/await              |
+| `data/storage/storage-types.ts`                                  | Modify           | Optional IStorage methods if needed                  |
+| `components/ui/typography.tsx`                                   | Modify           | @ts-expect-error or web prop types                   |
+| `utils/api-error-handler.ts`                                     | Modify           | Exhaustive switch default                            |
+| `components/Recipe/Step/StepCard.tsx`                            | Modify           | Exhaustive switch default                            |
+| `data/services/ChallengeService.ts`                              | Modify           | Exhaustive switch default                            |
+| `app/meal-plan/index.tsx`                                        | Modify           | FlatList/FlashList                                   |
+| `app.json`                                                       | Modify           | Remove duplicate expo-font                           |
+| `eas.json`                                                       | Create           | From eas build:configure                             |
+| `.env.example`                                                   | Create           | EXPO*PUBLIC*\* and comments                          |
+| `docs/runbooks/` or `docs/INCIDENT_RESPONSE.md`                  | Create           | Severity, contacts, steps                            |
+| `docs/DEPLOYMENT.md`                                             | Create or modify | EAS env vars, rollback link                          |
+| `docs/SENTRY_SETUP.md`                                           | Modify           | No real DSNs; alerting; PII/sampling                 |
 
 ---
 
 ## Risks and Mitigation
 
-| Risk | Mitigation |
-|------|------------|
+| Risk                            | Mitigation                                                                                                                  |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | New tests flaky (timers, async) | Use fake timers and fixed "now" for expiry; document mock boundaries (e.g. StorageFactory mocked, AuthStorageManager real). |
-| CI too slow | Run typecheck and lint first; test in parallel if matrix needed; optional expo export as separate job. |
-| EAS config differs per dev | Document that eas.json is canonical; secrets only in EAS dashboard or .env (gitignored). |
-| Documentation drift | Link from README to CHANGELOG and ADRs; one-time pass to align AI_CONTEXT with CLAUDE. |
+| CI too slow                     | Run typecheck and lint first; test in parallel if matrix needed; optional expo export as separate job.                      |
+| EAS config differs per dev      | Document that eas.json is canonical; secrets only in EAS dashboard or .env (gitignored).                                    |
+| Documentation drift             | Link from README to CHANGELOG and ADRs; one-time pass to align AI_CONTEXT with CLAUDE.                                      |
 
 ---
 

@@ -50,9 +50,7 @@ export default function DayColumn({
       style={{ minWidth }}
     >
       {/* Day Header */}
-      <View
-        className={`px-3 py-2 ${isToday ? "bg-primary/10" : "bg-muted/30"}`}
-      >
+      <View className={`px-3 py-2 ${isToday ? "bg-primary/10" : "bg-muted/30"}`}>
         <View className="items-center">
           <P className="text-xs font-urbanist-medium text-muted-foreground">
             {dayMealPlan.date.toLocaleDateString("en-US", { weekday: "short" })}

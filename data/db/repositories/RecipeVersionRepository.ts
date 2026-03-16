@@ -47,16 +47,10 @@ export class RecipeVersionRepository extends BaseRepository<RecipeVersion> {
   }
 
   // Get a specific version for a recipe
-  async getVersionByNumber(
-    recipeId: string,
-    versionNumber: number
-  ): Promise<RecipeVersion | null> {
+  async getVersionByNumber(recipeId: string, versionNumber: number): Promise<RecipeVersion | null> {
     try {
       const versions = await this.collection
-        .query(
-          Q.where("recipe_id", recipeId),
-          Q.where("version_number", versionNumber)
-        )
+        .query(Q.where("recipe_id", recipeId), Q.where("version_number", versionNumber))
         .fetch();
 
       const [version] = versions;
@@ -67,9 +61,7 @@ export class RecipeVersionRepository extends BaseRepository<RecipeVersion> {
   }
 
   // Search recipe versions with filters
-  async searchVersions(
-    options: RecipeVersionSearchOptions = {}
-  ): Promise<RecipeVersion[]> {
+  async searchVersions(options: RecipeVersionSearchOptions = {}): Promise<RecipeVersion[]> {
     let query = this.collection.query();
 
     // Filter by recipe ID
@@ -79,22 +71,15 @@ export class RecipeVersionRepository extends BaseRepository<RecipeVersion> {
 
     // Filter by version number range
     if (options.minVersionNumber) {
-      query = query.extend(
-        Q.where("version_number", Q.gte(options.minVersionNumber))
-      );
+      query = query.extend(Q.where("version_number", Q.gte(options.minVersionNumber)));
     }
     if (options.maxVersionNumber) {
-      query = query.extend(
-        Q.where("version_number", Q.lte(options.maxVersionNumber))
-      );
+      query = query.extend(Q.where("version_number", Q.lte(options.maxVersionNumber)));
     }
 
     // Text search
     if (options.searchTerm) {
-      query = this.buildSearchQuery(query, options.searchTerm, [
-        "title",
-        "description",
-      ]);
+      query = this.buildSearchQuery(query, options.searchTerm, ["title", "description"]);
     }
 
     // Apply sorting
@@ -116,18 +101,14 @@ export class RecipeVersionRepository extends BaseRepository<RecipeVersion> {
   }
 
   // Create a new version for a recipe
-  async createVersion(
-    data: RecipeVersionData
-  ): Promise<RecipeVersion> {
+  async createVersion(data: RecipeVersionData): Promise<RecipeVersion> {
     return await database.write(async () => {
       return await this.createVersionRaw(data);
     });
   }
 
   // Raw create method that works within existing transactions
-  async createVersionRaw(
-    data: RecipeVersionData
-  ): Promise<RecipeVersion> {
+  async createVersionRaw(data: RecipeVersionData): Promise<RecipeVersion> {
     return await this.collection.create((version) => {
       version.recipeId = data.recipeId;
       version.versionNumber = data.versionNumber;
@@ -141,10 +122,7 @@ export class RecipeVersionRepository extends BaseRepository<RecipeVersion> {
   }
 
   // Update an existing version
-  async updateVersion(
-    id: string,
-    data: Partial<RecipeVersionData>
-  ): Promise<RecipeVersion> {
+  async updateVersion(id: string, data: Partial<RecipeVersionData>): Promise<RecipeVersion> {
     return await database.write(async () => {
       const version = await this.findById(id);
       if (!version) {
@@ -163,17 +141,13 @@ export class RecipeVersionRepository extends BaseRepository<RecipeVersion> {
   async deleteVersionsForRecipe(recipeId: string): Promise<void> {
     await database.write(async () => {
       const versions = await this.getVersionsForRecipe(recipeId);
-      await Promise.all(
-        versions.map((version) => version.destroyPermanently())
-      );
+      await Promise.all(versions.map((version) => version.destroyPermanently()));
     });
   }
 
   // Get the total number of versions for a recipe
   async countVersionsForRecipe(recipeId: string): Promise<number> {
-    return await this.collection
-      .query(Q.where("recipe_id", recipeId))
-      .fetchCount();
+    return await this.collection.query(Q.where("recipe_id", recipeId)).fetchCount();
   }
 
   // Get the next version number for a recipe

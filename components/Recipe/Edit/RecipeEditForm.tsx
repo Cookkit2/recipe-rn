@@ -1,12 +1,5 @@
 import React, { useRef, useState } from "react";
-import {
-  View,
-  ScrollView,
-  TextInput,
-  KeyboardAvoidingView,
-  Platform,
-  Alert,
-} from "react-native";
+import { View, ScrollView, TextInput, KeyboardAvoidingView, Platform, Alert } from "react-native";
 import { Button } from "~/components/ui/button";
 import { Text } from "~/components/ui/text";
 import { H2, H4, P } from "~/components/ui/typography";
@@ -332,12 +325,7 @@ export default function RecipeEditForm({
         )}
       >
         <View className="flex-row gap-3">
-          <Button
-            variant="outline"
-            onPress={onCancel}
-            disabled={isSaving}
-            className="flex-1"
-          >
+          <Button variant="outline" onPress={onCancel} disabled={isSaving} className="flex-1">
             <Text>Cancel</Text>
           </Button>
           {onSaveAsCopy && (
@@ -350,11 +338,7 @@ export default function RecipeEditForm({
               <Text>{isSaving ? "Saving..." : "Save as Copy"}</Text>
             </Button>
           )}
-          <Button
-            onPress={onSave}
-            disabled={isSaving || !recipe.title.trim()}
-            className="flex-1"
-          >
+          <Button onPress={onSave} disabled={isSaving || !recipe.title.trim()} className="flex-1">
             <Text>{isSaving ? "Saving..." : "Save Changes"}</Text>
           </Button>
         </View>

@@ -182,7 +182,7 @@ class DiscountCalculator:
 class Rectangle {
   constructor(
     protected width: number,
-    protected height: number,
+    protected height: number
   ) {}
 
   setWidth(width: number) {
@@ -215,7 +215,7 @@ interface Shape {
 class Rectangle implements Shape {
   constructor(
     private width: number,
-    private height: number,
+    private height: number
   ) {}
   area(): number {
     return this.width * this.height;
@@ -428,7 +428,7 @@ function createUser(
   address: string,
   city: string,
   state: string,
-  zipCode: string,
+  zipCode: string
 ) {}
 
 // AFTER: Parameter Object

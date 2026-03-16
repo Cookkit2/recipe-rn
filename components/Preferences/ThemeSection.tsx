@@ -32,14 +32,14 @@ const THEME_BUTTONS: GroupButton<Theme>[] = [
 
 export default function ThemeSection() {
   const { theme, hasAdaptiveThemes } = useUniwind();
-  const themePreference = hasAdaptiveThemes ? "system" : theme;
+  const themePreference = hasAdaptiveThemes ? "system" : theme === "dark" ? "dark" : "light";
 
   const handleSelectTheme = useCallback(
     (scheme: "light" | "dark" | "system") => {
       // Persist to MMKV and update UI
       storage.set(PREF_COLOR_SCHEME_KEY, scheme);
       Uniwind.setTheme(scheme);
-      setAndroidNavigationBar(theme);
+      setAndroidNavigationBar(theme === "dark" ? "dark" : "light");
     },
     [theme]
   );
@@ -52,7 +52,7 @@ export default function ThemeSection() {
         </View>
         <SegmentedButtons
           buttons={THEME_BUTTONS}
-          value={themePreference}
+          value={themePreference as Theme}
           onValueChange={handleSelectTheme}
         />
       </CardContent>

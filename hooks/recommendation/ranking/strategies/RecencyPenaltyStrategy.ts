@@ -13,10 +13,10 @@ export interface RecencyPenaltyStrategyOptions {
 
 /**
  * Strategy that penalizes recently cooked recipes to encourage variety.
- * 
+ *
  * If a user just made a recipe recently, they probably don't want
  * to make it again right away. This helps surface different options.
- * 
+ *
  * Requires cookingHistory data in RankingContext.
  */
 export class RecencyPenaltyStrategy implements RecipeRankingStrategy {

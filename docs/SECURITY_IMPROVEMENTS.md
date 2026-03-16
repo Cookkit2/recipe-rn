@@ -119,38 +119,38 @@ Comprehensive sanitization functions for different types of input:
 const searchResults = await this.buildSearchQuery(
   this.collection.query(),
   userInput, // Automatically sanitized
-  ['name', 'description']
+  ["name", "description"]
 );
 ```
 
 ### User Input Processing
 
 ```typescript
-import { sanitizeForDatabase, sanitizeEmail } from '~/utils/input-sanitization';
+import { sanitizeForDatabase, sanitizeEmail } from "~/utils/input-sanitization";
 
 // Sanitize user form input
 const cleanInput = sanitizeForDatabase(userInput, {
   maxLength: 255,
   allowHtml: false,
-  allowSpecialChars: true
+  allowSpecialChars: true,
 });
 
 // Validate and sanitize email
 const cleanEmail = sanitizeEmail(userEmail);
 if (!cleanEmail) {
-  throw new Error('Invalid email format');
+  throw new Error("Invalid email format");
 }
 ```
 
 ### Object Sanitization
 
 ```typescript
-import { sanitizeObject } from '~/utils/input-sanitization';
+import { sanitizeObject } from "~/utils/input-sanitization";
 
 // Sanitize entire objects (e.g., API request bodies)
 const cleanData = sanitizeObject(requestBody, {
   maxLength: 1000,
-  allowHtml: false
+  allowHtml: false,
 });
 ```
 

@@ -17,5 +17,3 @@ export function LeafIcon({ size = 20, ...props }: LeafIconProps) {
 }
 
 export default LeafIcon;
-
-

@@ -9,9 +9,7 @@ export class IngredientSynonymRepository extends BaseRepository<IngredientSynony
 
   // Find synonyms for a stock item
   async findByStockId(stockId: string): Promise<IngredientSynonym[]> {
-    return await this.collection
-      .query(Q.where("stock_id", Q.eq(stockId)))
-      .fetch();
+    return await this.collection.query(Q.where("stock_id", Q.eq(stockId))).fetch();
   }
 
   // Find stock IDs by synonym (for matching)
@@ -24,23 +22,15 @@ export class IngredientSynonymRepository extends BaseRepository<IngredientSynony
 
   // Find exact synonym match
   async findExactMatch(synonym: string): Promise<IngredientSynonym[]> {
-    return await this.collection
-      .query(Q.where("synonym", Q.eq(synonym.toLowerCase())))
-      .fetch();
+    return await this.collection.query(Q.where("synonym", Q.eq(synonym.toLowerCase()))).fetch();
   }
 
   // Add synonym to stock
-  async addSynonym(
-    stockId: string,
-    synonym: string
-  ): Promise<IngredientSynonym> {
+  async addSynonym(stockId: string, synonym: string): Promise<IngredientSynonym> {
     // Check if synonym already exists for this stock
     const existing = await this.collection
       .query(
-        Q.and(
-          Q.where("stock_id", Q.eq(stockId)),
-          Q.where("synonym", Q.eq(synonym.toLowerCase()))
-        )
+        Q.and(Q.where("stock_id", Q.eq(stockId)), Q.where("synonym", Q.eq(synonym.toLowerCase())))
       )
       .fetch();
 
@@ -60,38 +50,55 @@ export class IngredientSynonymRepository extends BaseRepository<IngredientSynony
   }
 
   // Batch add synonyms to stock
-  async addSynonymsToStock(
-    stockId: string,
-    synonyms: string[]
-  ): Promise<IngredientSynonym[]> {
+  async addSynonymsToStock(stockId: string, synonyms: string[]): Promise<IngredientSynonym[]> {
+    if (!synonyms || synonyms.length === 0) {
+      return [];
+    }
+
     const db = this.collection.database;
-    const created: IngredientSynonym[] = [];
+
+    // Deduplicate and lowercase input to avoid Invariant Violation in batch create
+    const uniqueLowerSynonyms = Array.from(new Set(synonyms.map((s) => s.toLowerCase())));
+
+    let result: IngredientSynonym[] = [];
 
     await db.write(async () => {
-      for (const synonym of synonyms) {
-        // Check if synonym already exists for this stock (inline to avoid nested write)
-        const existing = await this.collection
-          .query(
-            Q.and(
-              Q.where("stock_id", Q.eq(stockId)),
-              Q.where("synonym", Q.eq(synonym.toLowerCase()))
-            )
-          )
-          .fetch();
+      // Chunk the queries to stay within SQLite parameter limits (using a conservative chunk size)
+      const CHUNK_SIZE = 500;
+      const existingRecords: IngredientSynonym[] = [];
 
-        if (existing.length > 0) {
-          created.push(existing[0]!);
-        } else {
-          const syn = await this.collection.create((record: any) => {
-            record.stockId = stockId;
-            record.synonym = synonym.toLowerCase();
-          });
-          created.push(syn);
-        }
+      for (let i = 0; i < uniqueLowerSynonyms.length; i += CHUNK_SIZE) {
+        const chunk = uniqueLowerSynonyms.slice(i, i + CHUNK_SIZE);
+        const chunkRecords = await this.collection
+          .query(Q.and(Q.where("stock_id", Q.eq(stockId)), Q.where("synonym", Q.oneOf(chunk))))
+          .fetch();
+        existingRecords.push(...chunkRecords);
       }
+
+      const existingSynonymsSet = new Set(existingRecords.map((r) => r.synonym));
+
+      // Find synonyms that don't exist yet
+      const toCreate = uniqueLowerSynonyms.filter((s) => !existingSynonymsSet.has(s));
+
+      // Prepare records for batch creation
+      const newRecords = toCreate.map((syn) =>
+        this.collection.prepareCreate((record: any) => {
+          record.stockId = stockId;
+          record.synonym = syn;
+        })
+      );
+
+      // Execute batch create if there are any new records
+      if (newRecords.length > 0) {
+        // WatermelonDB batch accepts an array of prepared operations
+        await db.batch(...newRecords);
+      }
+
+      // Combine existing and newly created records
+      result = [...existingRecords, ...(newRecords as unknown as IngredientSynonym[])];
     });
 
-    return created;
+    return result;
   }
 
   // Remove all synonyms for a stock
@@ -99,9 +106,7 @@ export class IngredientSynonymRepository extends BaseRepository<IngredientSynony
     const db = this.collection.database;
 
     await db.write(async () => {
-      const synonyms = await this.collection
-        .query(Q.where("stock_id", Q.eq(stockId)))
-        .fetch();
+      const synonyms = await this.collection.query(Q.where("stock_id", Q.eq(stockId))).fetch();
       await Promise.all(synonyms.map((syn) => syn.markAsDeleted()));
     });
   }

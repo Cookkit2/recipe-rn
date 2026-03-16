@@ -1,17 +1,12 @@
 import { Q } from "@nozbe/watermelondb";
 import Recipe, { type RecipeData } from "../models/Recipe";
 import RecipeStep, { type RecipeStepData } from "../models/RecipeStep";
-import RecipeIngredient, {
-  type RecipeIngredientData,
-} from "../models/RecipeIngredient";
+import RecipeIngredient, { type RecipeIngredientData } from "../models/RecipeIngredient";
 import { BaseRepository, type SearchOptions } from "./BaseRepository";
 import { database } from "../database";
-import {
-  recipeApi,
-  type SupabaseRecipeWithDetails,
-} from "~/data/supabase-api/RecipeApi";
+import { recipeApi, type SupabaseRecipeWithDetails } from "~/data/supabase-api/RecipeApi";
 import type { Tables } from "~/lib/supabase/supabase-types";
-import { log } from '~/utils/logger';
+import { log } from "~/utils/logger";
 
 export interface RecipeSearchOptions extends SearchOptions {
   tags?: string[];
@@ -57,16 +52,13 @@ export class RecipeRepository extends BaseRepository<Recipe> {
 
     // Text search
     if (options.searchTerm) {
-      query = this.buildSearchQuery(query, options.searchTerm, [
-        "title",
-        "description",
-      ]);
+      query = this.buildSearchQuery(query, options.searchTerm, ["title", "description"]);
     }
 
     // Filter by tags
     if (options.tags && options.tags.length > 0) {
       const tagConditions = options.tags.map((tag) =>
-        Q.where("tags", Q.like(`%"${tag}"%`))
+        Q.where("tags", Q.like(`%"${Q.sanitizeLikeString(tag)}"%`))
       );
       query = query.extend(Q.or(...tagConditions));
     }
@@ -83,9 +75,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
 
     // Filter by difficulty
     if (options.maxDifficulty) {
-      query = query.extend(
-        Q.where("difficulty_stars", Q.lte(options.maxDifficulty))
-      );
+      query = query.extend(Q.where("difficulty_stars", Q.lte(options.maxDifficulty)));
     }
 
     // Filter by servings
@@ -97,11 +87,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
     }
 
     // Apply sorting
-    query = this.applySorting(
-      query,
-      options.sortBy || "created_at",
-      options.sortOrder
-    );
+    query = this.applySorting(query, options.sortBy || "created_at", options.sortOrder);
 
     // Apply pagination
     if (options.offset) {
@@ -119,11 +105,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
     let query = this.collection.query(Q.where("is_favorite", true));
 
     // Apply sorting
-    query = this.applySorting(
-      query,
-      options.sortBy || "title",
-      options.sortOrder || "asc"
-    );
+    query = this.applySorting(query, options.sortBy || "title", options.sortOrder || "asc");
 
     // Apply pagination
     if (options.offset) {
@@ -146,10 +128,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
   }
 
   // Set recipe favorite status
-  async setFavorite(
-    recipeId: string,
-    isFavorite: boolean
-  ): Promise<Recipe | null> {
+  async setFavorite(recipeId: string, isFavorite: boolean): Promise<Recipe | null> {
     const recipe = await this.findById(recipeId);
     if (!recipe) return null;
 
@@ -178,10 +157,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
         return await this.getRecipeWithDetailsDirectQuery(id);
       }
 
-      if (
-        !recipe.ingredients ||
-        typeof recipe.ingredients.query !== "function"
-      ) {
+      if (!recipe.ingredients || typeof recipe.ingredients.query !== "function") {
         // Fallback: query collections directly
         return await this.getRecipeWithDetailsDirectQuery(id);
       }
@@ -228,11 +204,16 @@ export class RecipeRepository extends BaseRepository<Recipe> {
    * const details = await recipeRepository.getRecipesWithDetails([singleId]);
    * const singleRecipe = details.get(singleId);
    */
-  async getRecipesWithDetails(recipeIds: string[]): Promise<Map<string, {
-    recipe: Recipe;
-    steps: RecipeStep[];
-    ingredients: RecipeIngredient[];
-  }>> {
+  async getRecipesWithDetails(recipeIds: string[]): Promise<
+    Map<
+      string,
+      {
+        recipe: Recipe;
+        steps: RecipeStep[];
+        ingredients: RecipeIngredient[];
+      }
+    >
+  > {
     // Handle empty input
     if (recipeIds.length === 0) {
       return new Map();
@@ -240,9 +221,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
 
     try {
       // Batch fetch all recipes using Q.oneOf
-      const recipes = await this.collection
-        .query(Q.where('id', Q.oneOf(recipeIds)))
-        .fetch();
+      const recipes = await this.collection.query(Q.where("id", Q.oneOf(recipeIds))).fetch();
 
       if (recipes.length === 0) {
         return new Map();
@@ -251,21 +230,24 @@ export class RecipeRepository extends BaseRepository<Recipe> {
       // Batch fetch all steps for these recipes in a single query
       const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
       const allSteps = await stepsCollection
-        .query(Q.where('recipe_id', Q.oneOf(recipeIds)))
+        .query(Q.where("recipe_id", Q.oneOf(recipeIds)))
         .fetch();
 
       // Batch fetch all ingredients for these recipes in a single query
       const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
       const allIngredients = await ingredientsCollection
-        .query(Q.where('recipe_id', Q.oneOf(recipeIds)))
+        .query(Q.where("recipe_id", Q.oneOf(recipeIds)))
         .fetch();
 
       // Build the result Map
-      const resultMap = new Map<string, {
-        recipe: Recipe;
-        steps: RecipeStep[];
-        ingredients: RecipeIngredient[];
-      }>();
+      const resultMap = new Map<
+        string,
+        {
+          recipe: Recipe;
+          steps: RecipeStep[];
+          ingredients: RecipeIngredient[];
+        }
+      >();
 
       // Initialize map with recipes
       recipes.forEach((recipe) => {
@@ -299,7 +281,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
 
       return resultMap;
     } catch (error) {
-      log.error('Error in getRecipesWithDetails:', error);
+      log.error("Error in getRecipesWithDetails:", error);
       return new Map();
     }
   }
@@ -307,22 +289,16 @@ export class RecipeRepository extends BaseRepository<Recipe> {
   async clearAllRecipes(): Promise<void> {
     await database.write(async () => {
       const allRecipes = await this.collection.query().fetch();
-      await Promise.all(
-        allRecipes.map((recipe) => recipe.destroyPermanently())
-      );
+      await Promise.all(allRecipes.map((recipe) => recipe.destroyPermanently()));
 
       // Also clear related steps and ingredients
-      const stepsCollection =
-        database.collections.get<RecipeStep>("recipe_step");
+      const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
       const allSteps = await stepsCollection.query().fetch();
       await Promise.all(allSteps.map((step) => step.destroyPermanently()));
 
-      const ingredientsCollection =
-        database.collections.get<RecipeIngredient>("recipe_ingredient");
+      const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
       const allIngredients = await ingredientsCollection.query().fetch();
-      await Promise.all(
-        allIngredients.map((ingredient) => ingredient.destroyPermanently())
-      );
+      await Promise.all(allIngredients.map((ingredient) => ingredient.destroyPermanently()));
     });
   }
 
@@ -336,10 +312,8 @@ export class RecipeRepository extends BaseRepository<Recipe> {
       const recipe = await this.findById(id);
       if (!recipe) return null;
 
-      const stepsCollection =
-        database.collections.get<RecipeStep>("recipe_step");
-      const ingredientsCollection =
-        database.collections.get<RecipeIngredient>("recipe_ingredient");
+      const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
+      const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
 
       const [steps, ingredients] = await Promise.all([
         stepsCollection.query(Q.where("recipe_id", id)).fetch(),
@@ -357,26 +331,17 @@ export class RecipeRepository extends BaseRepository<Recipe> {
   }
 
   // Create recipe with steps and ingredients
-  async createRecipeWithDetails(
-    data: CreateRecipeWithDetailsData
-  ): Promise<Recipe> {
+  async createRecipeWithDetails(data: CreateRecipeWithDetailsData): Promise<Recipe> {
     return await database.write(async () => {
       return await this.createRecipeWithDetailsRaw(data);
     });
   }
 
   // Get recipes by tag
-  async getRecipesByTag(
-    tag: string,
-    options: SearchOptions = {}
-  ): Promise<Recipe[]> {
-    let query = this.collection.query(Q.where("tags", Q.like(`%"${tag}"%`)));
+  async getRecipesByTag(tag: string, options: SearchOptions = {}): Promise<Recipe[]> {
+    let query = this.collection.query(Q.where("tags", Q.like(`%"${Q.sanitizeLikeString(tag)}"%`)));
 
-    query = this.applySorting(
-      query,
-      options.sortBy || "created_at",
-      options.sortOrder
-    );
+    query = this.applySorting(query, options.sortBy || "created_at", options.sortOrder);
 
     if (options.offset) {
       query = query.extend(Q.skip(options.offset));
@@ -414,16 +379,13 @@ export class RecipeRepository extends BaseRepository<Recipe> {
     // Note: WatermelonDB doesn't support computed columns in queries directly
     // So we'll fetch and filter in JavaScript
     const recipes = await this.collection.query().fetch();
-    return recipes.filter(
-      (recipe) => recipe.prepMinutes + recipe.cookMinutes <= maxTotalMinutes
-    );
+    return recipes.filter((recipe) => recipe.prepMinutes + recipe.cookMinutes <= maxTotalMinutes);
   }
 
   // Sync recipes from Supabase
   async syncFromSupabase(limit: number = 1000): Promise<void> {
     try {
-      const recipesWithDetails =
-        await recipeApi.getRecipesWithDetailsSupabase(limit);
+      const recipesWithDetails = await recipeApi.getRecipesWithDetailsSupabase(limit);
       log.info(`Syncing ${recipesWithDetails.length} recipes from Supabase...`);
       // log.info("First recipe preview:", recipesWithDetails[0]?.ingredients);
 
@@ -464,10 +426,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
             await this.syncSingleRecipe(supabaseRecipe);
             // log.info(`Created new recipe: ${supabaseRecipe.recipe.title}`);
           } catch (error) {
-            log.error(
-              `Failed to create recipe ${supabaseRecipe.recipe.title}:`,
-              error
-            );
+            log.error(`Failed to create recipe ${supabaseRecipe.recipe.title}:`, error);
           }
         }
 
@@ -477,10 +436,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
             await this.updateExistingRecipe(supabaseRecipe);
             // log.info(`Updated existing recipe: ${supabaseRecipe.recipe.title}`);
           } catch (error) {
-            log.error(
-              `Failed to update recipe ${supabaseRecipe.recipe.title}:`,
-              error
-            );
+            log.error(`Failed to update recipe ${supabaseRecipe.recipe.title}:`, error);
           }
         }
       });
@@ -495,15 +451,11 @@ export class RecipeRepository extends BaseRepository<Recipe> {
   }
 
   // Helper method to transform and sync a single recipe (must be called within a database.write transaction)
-  private async syncSingleRecipe(
-    supabaseRecipe: SupabaseRecipeWithDetails
-  ): Promise<Recipe> {
+  private async syncSingleRecipe(supabaseRecipe: SupabaseRecipeWithDetails): Promise<Recipe> {
     // Since we've already filtered out existing recipes, just create the new one
     return await this.createRecipeWithDetailsRaw({
       recipe: this.transformSupabaseRecipe(supabaseRecipe.recipe),
-      steps: supabaseRecipe.steps.map((step) =>
-        this.transformSupabaseStep(step)
-      ),
+      steps: supabaseRecipe.steps.map((step) => this.transformSupabaseStep(step)),
       ingredients: supabaseRecipe.ingredients.map((ingredient) =>
         this.transformSupabaseIngredient(ingredient)
       ),
@@ -511,37 +463,28 @@ export class RecipeRepository extends BaseRepository<Recipe> {
   }
 
   // Helper method to update an existing recipe with Supabase data (must be called within a database.write transaction)
-  private async updateExistingRecipe(
-    supabaseRecipe: SupabaseRecipeWithDetails
-  ): Promise<void> {
+  private async updateExistingRecipe(supabaseRecipe: SupabaseRecipeWithDetails): Promise<void> {
     const recipeId = supabaseRecipe.recipe.id;
 
     // Update the main recipe record
     const existingRecipe = await this.collection.find(recipeId);
     await existingRecipe.update((recipe) => {
-      const transformedRecipe = this.transformSupabaseRecipe(
-        supabaseRecipe.recipe
-      );
+      const transformedRecipe = this.transformSupabaseRecipe(supabaseRecipe.recipe);
       recipe.title = transformedRecipe.title;
       recipe.description = transformedRecipe.description;
-      if (transformedRecipe.imageUrl)
-        recipe.imageUrl = transformedRecipe.imageUrl;
+      if (transformedRecipe.imageUrl) recipe.imageUrl = transformedRecipe.imageUrl;
       recipe.prepMinutes = transformedRecipe.prepMinutes;
       recipe.cookMinutes = transformedRecipe.cookMinutes;
       recipe.difficultyStars = transformedRecipe.difficultyStars;
       recipe.servings = transformedRecipe.servings;
-      if (transformedRecipe.sourceUrl)
-        recipe.sourceUrl = transformedRecipe.sourceUrl;
-      if (transformedRecipe.calories)
-        recipe.calories = transformedRecipe.calories;
+      if (transformedRecipe.sourceUrl) recipe.sourceUrl = transformedRecipe.sourceUrl;
+      if (transformedRecipe.calories) recipe.calories = transformedRecipe.calories;
       if (transformedRecipe.tags) recipe.tags = transformedRecipe.tags;
     });
 
     // Update steps - delete existing and create new ones
     const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
-    const existingSteps = await stepsCollection
-      .query(Q.where("recipe_id", recipeId))
-      .fetch();
+    const existingSteps = await stepsCollection.query(Q.where("recipe_id", recipeId)).fetch();
 
     // Delete existing steps
     await Promise.all(existingSteps.map((step) => step.destroyPermanently()));
@@ -562,24 +505,20 @@ export class RecipeRepository extends BaseRepository<Recipe> {
     }
 
     // Update ingredients - delete existing and create new ones
-    const ingredientsCollection =
-      database.collections.get<RecipeIngredient>("recipe_ingredient");
+    const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
     const existingIngredients = await ingredientsCollection
       .query(Q.where("recipe_id", recipeId))
       .fetch();
 
     // Delete existing ingredients
-    await Promise.all(
-      existingIngredients.map((ingredient) => ingredient.destroyPermanently())
-    );
+    await Promise.all(existingIngredients.map((ingredient) => ingredient.destroyPermanently()));
 
     // Create new ingredients
     if (supabaseRecipe.ingredients && supabaseRecipe.ingredients.length > 0) {
       await Promise.all(
         supabaseRecipe.ingredients.map((ingredientData) =>
           ingredientsCollection.create((ingredient) => {
-            const transformedIngredient =
-              this.transformSupabaseIngredient(ingredientData);
+            const transformedIngredient = this.transformSupabaseIngredient(ingredientData);
             ingredient.recipeId = recipeId;
             ingredient.name = transformedIngredient.name;
             ingredient.quantity = transformedIngredient.quantity;
@@ -615,8 +554,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
 
     // Create steps if provided
     if (data.steps && data.steps.length > 0) {
-      const stepsCollection =
-        database.collections.get<RecipeStep>("recipe_step");
+      const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
       await Promise.all(
         data.steps.map((stepData) =>
           stepsCollection.create((step) => {
@@ -631,8 +569,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
 
     // Create ingredients if provided
     if (data.ingredients && data.ingredients.length > 0) {
-      const ingredientsCollection =
-        database.collections.get<RecipeIngredient>("recipe_ingredient");
+      const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
       await Promise.all(
         data.ingredients.map((ingredientData) =>
           ingredientsCollection.create((ingredient) => {
@@ -650,9 +587,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
   }
 
   // Transform Supabase recipe to local format
-  private transformSupabaseRecipe(
-    supabaseRecipe: Tables<"recipe">
-  ): RecipeData & { id: string } {
+  private transformSupabaseRecipe(supabaseRecipe: Tables<"recipe">): RecipeData & { id: string } {
     return {
       id: supabaseRecipe.id, // Preserve the Supabase ID
       title: supabaseRecipe.title,
@@ -669,9 +604,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
   }
 
   // Transform Supabase recipe step to local format
-  private transformSupabaseStep(
-    supabaseStep: Tables<"recipe_step">
-  ): RecipeStepData {
+  private transformSupabaseStep(supabaseStep: Tables<"recipe_step">): RecipeStepData {
     return {
       step: supabaseStep.step,
       title: supabaseStep.title || "",
@@ -708,16 +641,11 @@ export class RecipeRepository extends BaseRepository<Recipe> {
 
       // Update steps if provided
       if (data.steps) {
-        const stepsCollection =
-          database.collections.get<RecipeStep>("recipe_step");
-        const existingSteps = await stepsCollection
-          .query(Q.where("recipe_id", recipeId))
-          .fetch();
+        const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
+        const existingSteps = await stepsCollection.query(Q.where("recipe_id", recipeId)).fetch();
 
         // Delete existing steps
-        await Promise.all(
-          existingSteps.map((step) => step.destroyPermanently())
-        );
+        await Promise.all(existingSteps.map((step) => step.destroyPermanently()));
 
         // Create new steps
         if (data.steps.length > 0) {
@@ -743,11 +671,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
           .fetch();
 
         // Delete existing ingredients
-        await Promise.all(
-          existingIngredients.map((ingredient) =>
-            ingredient.destroyPermanently()
-          )
-        );
+        await Promise.all(existingIngredients.map((ingredient) => ingredient.destroyPermanently()));
 
         // Create new ingredients
         if (data.ingredients.length > 0) {
@@ -778,10 +702,8 @@ export class RecipeRepository extends BaseRepository<Recipe> {
       const originalRecipe = await this.collection.find(recipeId);
 
       // Fetch original steps and ingredients
-      const stepsCollection =
-        database.collections.get<RecipeStep>("recipe_step");
-      const ingredientsCollection =
-        database.collections.get<RecipeIngredient>("recipe_ingredient");
+      const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
+      const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
 
       const [originalSteps, originalIngredients] = await Promise.all([
         stepsCollection.query(Q.where("recipe_id", recipeId)).fetch(),
@@ -793,22 +715,14 @@ export class RecipeRepository extends BaseRepository<Recipe> {
         title: modifications?.recipe?.title
           ? modifications.recipe.title
           : `${originalRecipe.title} (Copy)`,
-        description:
-          modifications?.recipe?.description ?? originalRecipe.description,
+        description: modifications?.recipe?.description ?? originalRecipe.description,
         imageUrl: modifications?.recipe?.imageUrl ?? originalRecipe.imageUrl,
-        prepMinutes:
-          modifications?.recipe?.prepMinutes ?? originalRecipe.prepMinutes,
-        cookMinutes:
-          modifications?.recipe?.cookMinutes ?? originalRecipe.cookMinutes,
-        difficultyStars:
-          modifications?.recipe?.difficultyStars ??
-          originalRecipe.difficultyStars,
-        servings:
-          modifications?.recipe?.servings ?? originalRecipe.servings,
-        sourceUrl:
-          modifications?.recipe?.sourceUrl ?? originalRecipe.sourceUrl,
-        calories:
-          modifications?.recipe?.calories ?? originalRecipe.calories,
+        prepMinutes: modifications?.recipe?.prepMinutes ?? originalRecipe.prepMinutes,
+        cookMinutes: modifications?.recipe?.cookMinutes ?? originalRecipe.cookMinutes,
+        difficultyStars: modifications?.recipe?.difficultyStars ?? originalRecipe.difficultyStars,
+        servings: modifications?.recipe?.servings ?? originalRecipe.servings,
+        sourceUrl: modifications?.recipe?.sourceUrl ?? originalRecipe.sourceUrl,
+        calories: modifications?.recipe?.calories ?? originalRecipe.calories,
         tags: modifications?.recipe?.tags ?? originalRecipe.tags,
         type: modifications?.recipe?.type,
         isFavorite: false, // Copies are not favorited by default

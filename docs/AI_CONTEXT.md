@@ -7,11 +7,13 @@
 ## 📱 App Overview
 
 **Cookkit** is a React Native mobile application built with Expo that helps users:
+
 1. **Manage Ingredient Inventory** - Track pantry items with expiration dates, quantities, and storage locations
 2. **Discover Recipes** - Get AI-powered recipe recommendations based on available ingredients
 3. **Streamline Cooking** - Follow step-by-step cooking guidance with integrated ingredient tracking
 
 ### Core Value Proposition
+
 - **Smart Pantry Tracking**: Visual inventory with expiration monitoring
 - **Recipe Matching**: Recommends recipes based on what you have in stock
 - **Offline Support**: Local database (WatermelonDB) synced with cloud (Supabase)
@@ -23,17 +25,17 @@
 
 ### Technology Stack
 
-| Layer | Technology |
-|-------|------------|
-| **Framework** | React Native with Expo SDK 55 |
-| **Navigation** | Expo Router (file-based routing) |
-| **State Management** | React Query (server/async) + React Context (UI state) |
-| **Local Database** | WatermelonDB (SQLite) |
-| **Cloud Backend** | Supabase (PostgreSQL + Auth + Storage) |
-| **Key-Value Storage** | MMKV (primary) / AsyncStorage (fallback) |
-| **Styling** | Tailwind CSS v4 via Uniwind |
-| **Animations** | React Native Reanimated |
-| **UI Components** | @rn-primitives (shadcn-style accessible components) |
+| Layer                 | Technology                                            |
+| --------------------- | ----------------------------------------------------- |
+| **Framework**         | React Native with Expo SDK 55                         |
+| **Navigation**        | Expo Router (file-based routing)                      |
+| **State Management**  | React Query (server/async) + React Context (UI state) |
+| **Local Database**    | WatermelonDB (SQLite)                                 |
+| **Cloud Backend**     | Supabase (PostgreSQL + Auth + Storage)                |
+| **Key-Value Storage** | MMKV (primary) / AsyncStorage (fallback)              |
+| **Styling**           | Tailwind CSS v4 via Uniwind                           |
+| **Animations**        | React Native Reanimated                               |
+| **UI Components**     | @rn-primitives (shadcn-style accessible components)   |
 
 ### High-Level Data Flow
 
@@ -210,35 +212,37 @@ cooking_history {
 ### Key Database Patterns
 
 **Repository Pattern**: Each table has a repository class
+
 ```typescript
 // data/db/repositories/StockRepository.ts
 class StockRepository extends BaseRepository<Stock> {
-  findAll(): Promise<Stock[]>
-  create(data): Promise<Stock>
-  update(id, data): Promise<Stock>
-  delete(id): Promise<void>
-  searchStock(options): Promise<Stock[]>
+  findAll(): Promise<Stock[]>;
+  create(data): Promise<Stock>;
+  update(id, data): Promise<Stock>;
+  delete(id): Promise<void>;
+  searchStock(options): Promise<Stock[]>;
 }
 ```
 
 **Facade Pattern**: Single entry point for database operations
+
 ```typescript
 // data/db/DatabaseFacade.ts
 class DatabaseFacade {
   // Stock (Pantry) operations
-  getAllStock(): Promise<Stock[]>
-  createStock(data): Promise<Stock>
-  updateStock(id, data): Promise<Stock>
-  deleteStock(id): Promise<void>
+  getAllStock(): Promise<Stock[]>;
+  createStock(data): Promise<Stock>;
+  updateStock(id, data): Promise<Stock>;
+  deleteStock(id): Promise<void>;
 
   // Recipe operations
-  getAllRecipes(): Promise<Recipe[]>
-  getRecipeWithDetails(id): Promise<RecipeWithDetails>
-  searchRecipes(term, options): Promise<Recipe[]>
+  getAllRecipes(): Promise<Recipe[]>;
+  getRecipeWithDetails(id): Promise<RecipeWithDetails>;
+  searchRecipes(term, options): Promise<Recipe[]>;
 
   // Smart features
-  getAvailableRecipes(): Promise<AvailableRecipesResult>
-  getShoppingListForRecipe(id): Promise<ShoppingListResult>
+  getAvailableRecipes(): Promise<AvailableRecipesResult>;
+  getShoppingListForRecipe(id): Promise<ShoppingListResult>;
 }
 ```
 
@@ -251,22 +255,23 @@ Uses **Strategy Pattern** for flexible auth implementations:
 ```typescript
 // auth/AuthStrategy.ts - Interface contract
 interface AuthStrategy {
-  getCurrentUser(): Promise<User | null>
-  signInWithEmail(credentials): Promise<AuthResult>
-  signInWithProvider(config): Promise<AuthResult>  // Google, Apple, Facebook
-  signInAnonymously(): Promise<AuthResult>
-  signUpWithEmail(credentials): Promise<AuthResult>
-  signOut(): Promise<AuthResult>
-  linkAnonymousAccount(credentials): Promise<AuthResult>
-  onAuthStateChange(callback): () => void
+  getCurrentUser(): Promise<User | null>;
+  signInWithEmail(credentials): Promise<AuthResult>;
+  signInWithProvider(config): Promise<AuthResult>; // Google, Apple, Facebook
+  signInAnonymously(): Promise<AuthResult>;
+  signUpWithEmail(credentials): Promise<AuthResult>;
+  signOut(): Promise<AuthResult>;
+  linkAnonymousAccount(credentials): Promise<AuthResult>;
+  onAuthStateChange(callback): () => void;
 }
 
 // Implementations
-- SupabaseAuthStrategy.ts  // Production (Supabase Auth)
-- MockAuthStrategy.ts      // Testing/Development
+-SupabaseAuthStrategy.ts - // Production (Supabase Auth)
+  MockAuthStrategy.ts; // Testing/Development
 ```
 
 ### Usage Pattern
+
 ```typescript
 import { useAuth } from "~/auth";
 
@@ -316,10 +321,10 @@ export function useAddPantryItem() {
 ```typescript
 // store/PantryContext.tsx
 interface PantryContextType {
-  selectedItemType: ItemType;           // "all" | "fridge" | "cabinet" | "freezer"
+  selectedItemType: ItemType; // "all" | "fridge" | "cabinet" | "freezer"
   changeItemType: (type) => void;
   isRecipeOpen: boolean;
-  translateY: SharedValue<number>;      // Animation values
+  translateY: SharedValue<number>; // Animation values
   snapToExpanded: () => void;
 }
 ```
@@ -333,12 +338,14 @@ interface PantryContextType {
 **User Story**: Users can add ingredients to their virtual pantry, track quantities and expiration dates, and organize by storage location.
 
 **Key Files**:
+
 - `app/index.tsx` - Main pantry screen
 - `components/Pantry/` - Pantry UI components
 - `data/api/pantryApi.ts` - Pantry operations
 - `hooks/queries/usePantryQueries.ts` - React Query hooks
 
 **Data Type**:
+
 ```typescript
 interface PantryItem {
   id: string;
@@ -349,7 +356,9 @@ interface PantryItem {
   type: "fridge" | "cabinet" | "freezer";
   image_url?: string;
   background_color?: string;
-  x, y, scale: number;  // Position in visual display
+  x;
+  y;
+  scale: number; // Position in visual display
   categories?: Array<{ id: string; name: string }>;
   synonyms?: Array<{ id: string; synonym: string }>;
 }
@@ -360,6 +369,7 @@ interface PantryItem {
 **User Story**: Users can browse recipes, search by name/tag, and see which recipes they can make with current pantry items.
 
 **Key Files**:
+
 - `app/recipes/` - Recipe screens
 - `components/Recipe/` - Recipe UI components
 - `data/api/recipeApi.ts` - Recipe operations
@@ -372,10 +382,12 @@ interface PantryItem {
 **User Story**: Users can photograph ingredients, which are processed to identify and add to pantry.
 
 **Key Files**:
+
 - `components/Camera/` - Camera components
 - `store/CreateIngredientContext.tsx` - Capture flow state
 
 **Processing Queue** (Planned):
+
 - Non-blocking background processing
 - Users can continuously capture photos
 - Skeleton placeholders while processing
@@ -385,6 +397,7 @@ interface PantryItem {
 **User Story**: Track when recipes were cooked, add ratings and notes.
 
 **Key Files**:
+
 - `data/db/models/CookingHistory.ts`
 - `data/db/repositories/CookingHistoryRepository.ts`
 - `hooks/queries/useCookingHistoryQueries.ts`
@@ -394,7 +407,9 @@ interface PantryItem {
 ## 🔧 Development Patterns
 
 ### Import Aliasing
+
 Always use `~/` alias:
+
 ```typescript
 import { useAuth } from "~/auth";
 import { PantryItem } from "~/types/PantryItem";
@@ -417,8 +432,8 @@ function PantryList() {
   const { selectedItemType } = usePantryStore();
 
   // Filter locally
-  const filteredItems = items?.filter(item => 
-    selectedItemType === "all" || item.type === selectedItemType
+  const filteredItems = items?.filter(
+    (item) => selectedItemType === "all" || item.type === selectedItemType
   );
 }
 ```
@@ -440,9 +455,7 @@ try {
 
 ```tsx
 <View className="flex-1 bg-background p-4">
-  <Text className="text-lg font-semibold text-foreground">
-    {item.name}
-  </Text>
+  <Text className="text-lg font-semibold text-foreground">{item.name}</Text>
 </View>
 ```
 
@@ -451,6 +464,7 @@ try {
 ## 🧪 Testing Strategy
 
 ### Test Files Location
+
 - `utils/__tests__/` - Utility tests (e.g. input sanitization, quantity comparison)
 - `auth/__tests__/` - Auth storage integration tests
 - `data/api/__tests__/` - API tests (pantry, recipe, import)
@@ -458,6 +472,7 @@ try {
 - `lib/notifications/expiry-notifications/__tests__/` - Expiry notification tests
 
 ### Scripts
+
 ```bash
 npm test                 # Run all tests
 npm run test:coverage    # Coverage report
@@ -487,14 +502,14 @@ npm run test:coverage     # Tests with coverage
 
 ## 📚 Related Documentation
 
-| Document | Purpose |
-|----------|---------|
-| `COOKKIT_APP_DOCUMENTATION.md` | Full app design system & features |
-| `DATABASE_REFACTORING_PLAN.md` | Database API simplification |
-| `PANTRY_MIGRATION.md` | Migration to React Query |
-| `RECIPE_MIGRATION.md` | Recipe context restructuring |
-| `CATEGORY_SYNONYM_MIGRATION.md` | Normalized categories/synonyms |
-| `CAMERA_BACKGROUND_PROCESSING_PLAN.md` | Camera queue system |
+| Document                               | Purpose                           |
+| -------------------------------------- | --------------------------------- |
+| `COOKKIT_APP_DOCUMENTATION.md`         | Full app design system & features |
+| `DATABASE_REFACTORING_PLAN.md`         | Database API simplification       |
+| `PANTRY_MIGRATION.md`                  | Migration to React Query          |
+| `RECIPE_MIGRATION.md`                  | Recipe context restructuring      |
+| `CATEGORY_SYNONYM_MIGRATION.md`        | Normalized categories/synonyms    |
+| `CAMERA_BACKGROUND_PROCESSING_PLAN.md` | Camera queue system               |
 
 ---
 
@@ -542,4 +557,4 @@ See `CLAUDE.md` and the repo README for up-to-date setup and commands. Key areas
 
 ---
 
-*Last Updated: March 2026*
+_Last Updated: March 2026_

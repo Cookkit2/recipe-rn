@@ -76,8 +76,7 @@ const GroupButton = React.memo(function GroupButton<T>({
   selected?: boolean;
   onPress?: () => void;
 }) {
-  const { animatedStyle, roundedStyle, onPressIn, onPressOut } =
-    useButtonAnimation(true);
+  const { animatedStyle, roundedStyle, onPressIn, onPressOut } = useButtonAnimation(true);
 
   return (
     <AnimatedPressable

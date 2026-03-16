@@ -1,9 +1,5 @@
 import React, { createContext, useCallback, useContext, useState } from "react";
-import type {
-  CalendarDropTarget,
-  MealPlanDragData,
-  RecipeDragData,
-} from "~/types/MealPlan";
+import type { CalendarDropTarget, MealPlanDragData, RecipeDragData } from "~/types/MealPlan";
 
 /**
  * Drag state for the meal planning calendar
@@ -31,11 +27,7 @@ interface MealPlanCalendarContextType {
 
 const MealPlanCalendarContext = createContext<MealPlanCalendarContextType | null>(null);
 
-export function MealPlanCalendarProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function MealPlanCalendarProvider({ children }: { children: React.ReactNode }) {
   // Initialize with current week (Sunday as start of week)
   const getWeekStart = (date: Date): Date => {
     const d = new Date(date);
@@ -80,9 +72,7 @@ export function MealPlanCalendarProvider({
 export const useMealPlanCalendar = () => {
   const context = useContext(MealPlanCalendarContext);
   if (!context) {
-    throw new Error(
-      "useMealPlanCalendar must be used within a MealPlanCalendarProvider"
-    );
+    throw new Error("useMealPlanCalendar must be used within a MealPlanCalendarProvider");
   }
   return context;
 };

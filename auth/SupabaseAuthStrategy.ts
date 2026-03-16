@@ -8,16 +8,12 @@ import type {
   AuthSession,
   AuthProvider,
 } from "~/types/AuthTypes";
-import type {
-  Session,
-  User as SupabaseUser,
-  AuthError,
-} from "@supabase/supabase-js";
+import type { Session, User as SupabaseUser, AuthError } from "@supabase/supabase-js";
 import * as ExpoAuthSession from "expo-auth-session";
 import * as Linking from "expo-linking";
 import { APP_CONFIG } from "~/lib/constants";
 import { supabase } from "~/lib/supabase/supabase-client";
-import { log } from '~/utils/logger';
+import { log } from "~/utils/logger";
 
 /**
  * Supabase authentication strategy implementation
@@ -67,16 +63,12 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
         supabaseUser.user_metadata?.name ||
         supabaseUser.user_metadata?.full_name ||
         supabaseUser.email?.split("@")[0],
-      avatar:
-        supabaseUser.user_metadata?.avatar_url ||
-        supabaseUser.user_metadata?.picture,
+      avatar: supabaseUser.user_metadata?.avatar_url || supabaseUser.user_metadata?.picture,
       isAnonymous,
       provider,
       metadata: supabaseUser.user_metadata || {},
       createdAt: new Date(supabaseUser.created_at),
-      lastSignIn: new Date(
-        supabaseUser.last_sign_in_at || supabaseUser.created_at
-      ),
+      lastSignIn: new Date(supabaseUser.last_sign_in_at || supabaseUser.created_at),
     };
   }
 
@@ -105,9 +97,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
     return {
       accessToken: session.access_token,
       refreshToken: session.refresh_token,
-      expiresAt: new Date(
-        session.expires_at ? session.expires_at * 1000 : Date.now() + 3600000
-      ),
+      expiresAt: new Date(session.expires_at ? session.expires_at * 1000 : Date.now() + 3600000),
       tokenType: session.token_type || "Bearer",
     };
   }
@@ -128,8 +118,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
       friendlyMessage = "An account with this email already exists";
       retryable = false;
     } else if (error.message?.includes("Email not confirmed")) {
-      friendlyMessage =
-        "Please check your email and click the confirmation link";
+      friendlyMessage = "Please check your email and click the confirmation link";
       retryable = false;
     } else if (error.message?.includes("Too many requests")) {
       friendlyMessage = "Too many attempts. Please try again later";
@@ -190,7 +179,8 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async signInWithEmail(credentials: SignInCredentials): Promise<AuthResult> {
-    if (!supabase) return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
+    if (!supabase)
+      return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: credentials.email,
@@ -228,7 +218,8 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async signInWithProvider(config: SocialAuthConfig): Promise<AuthResult> {
-    if (!supabase) return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
+    if (!supabase)
+      return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
     try {
       const scheme = Linking.createURL("").split(":")[0] || "recipe-app";
       const redirectUrl = ExpoAuthSession.makeRedirectUri({ scheme });
@@ -263,7 +254,8 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
 
   async signInAnonymously(): Promise<AuthResult> {
     try {
-      if (!supabase) return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
+      if (!supabase)
+        return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
       const { data, error } = await supabase.auth.signInAnonymously();
 
       if (error) {
@@ -297,7 +289,8 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async signUpWithEmail(credentials: SignInCredentials): Promise<AuthResult> {
-    if (!supabase) return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
+    if (!supabase)
+      return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
     try {
       const { data, error } = await supabase.auth.signUp({
         email: credentials.email,
@@ -347,16 +340,15 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async signOut(): Promise<AuthResult> {
-    if (!supabase) return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
+    if (!supabase)
+      return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
     try {
       log.info("About to call supabase.auth.signOut()");
       const { error } = await supabase.auth.signOut();
       log.info("supabase.auth.signOut() completed, error:", error);
 
       if (error) {
-        log.info(
-          "Supabase signOut returned error, clearing local state anyway"
-        );
+        log.info("Supabase signOut returned error, clearing local state anyway");
         // Still clear local state even if remote sign out failed
         this.currentUser = null;
         this.currentSession = null;
@@ -395,7 +387,8 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async refreshSession(): Promise<AuthResult> {
-    if (!supabase) return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
+    if (!supabase)
+      return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
     try {
       const { data, error } = await supabase.auth.refreshSession();
 
@@ -429,17 +422,12 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
     }
   }
 
-  async linkAnonymousAccount(
-    credentials: LinkAccountCredentials
-  ): Promise<AuthResult> {
-    if (!supabase) return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
+  async linkAnonymousAccount(credentials: LinkAccountCredentials): Promise<AuthResult> {
+    if (!supabase)
+      return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
     try {
       if (!this.currentUser || !this.currentUser.isAnonymous) {
-        return this.createErrorResult(
-          "NOT_ANONYMOUS",
-          "Current user is not anonymous",
-          false
-        );
+        return this.createErrorResult("NOT_ANONYMOUS", "Current user is not anonymous", false);
       }
 
       // In Supabase, we need to update the user's email and password
@@ -479,7 +467,8 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async resetPassword(email: string): Promise<AuthResult> {
-    if (!supabase) return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
+    if (!supabase)
+      return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${APP_CONFIG.DEEP_LINK_SCHEME}://${APP_CONFIG.DEEP_LINK_PATHS.RESET_PASSWORD}`,

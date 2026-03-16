@@ -9,9 +9,7 @@ export class IngredientCategoryRepository extends BaseRepository<IngredientCateg
 
   // Find category by name
   async findByName(name: string): Promise<IngredientCategory | undefined> {
-    const results = await this.collection
-      .query(Q.where("name", Q.eq(name)))
-      .fetch();
+    const results = await this.collection.query(Q.where("name", Q.eq(name))).fetch();
     return results[0];
   }
 
@@ -28,20 +26,14 @@ export class IngredientCategoryRepository extends BaseRepository<IngredientCateg
   }
 
   // Search categories
-  async searchCategories(
-    options: SearchOptions = {}
-  ): Promise<IngredientCategory[]> {
+  async searchCategories(options: SearchOptions = {}): Promise<IngredientCategory[]> {
     let query = this.collection.query();
 
     if (options.searchTerm) {
       query = this.buildSearchQuery(query, options.searchTerm, ["name"]);
     }
 
-    query = this.applySorting(
-      query,
-      options.sortBy || "name",
-      options.sortOrder || "asc"
-    );
+    query = this.applySorting(query, options.sortBy || "name", options.sortOrder || "asc");
 
     if (options.offset) {
       query = query.extend(Q.skip(options.offset));
@@ -60,9 +52,7 @@ export class IngredientCategoryRepository extends BaseRepository<IngredientCateg
   }
 
   // Sync categories from Supabase
-  async syncFromSupabase(
-    categories: Array<{ id: string; name: string }>
-  ): Promise<void> {
+  async syncFromSupabase(categories: Array<{ id: string; name: string }>): Promise<void> {
     const db = this.collection.database;
 
     await db.write(async () => {

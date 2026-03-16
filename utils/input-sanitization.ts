@@ -59,20 +59,12 @@ export interface SanitizationOptions {
  * @param options - Sanitization options
  * @returns Sanitized string safe for database operations
  */
-export function sanitizeForDatabase(
-  input: string,
-  options: SanitizationOptions = {}
-): string {
+export function sanitizeForDatabase(input: string, options: SanitizationOptions = {}): string {
   if (!input || typeof input !== "string") {
     return "";
   }
 
-  const {
-    maxLength = 255,
-    allowHtml = false,
-    allowSpecialChars = true,
-    removePattern,
-  } = options;
+  const { maxLength = 255, allowHtml = false, allowSpecialChars = true, removePattern } = options;
 
   let sanitized = input.trim();
 
@@ -131,10 +123,7 @@ export function sanitizeForDatabase(
  * @param options - Sanitization options
  * @returns Sanitized search term ready for LIKE queries
  */
-export function sanitizeSearchTerm(
-  searchTerm: string,
-  options: SanitizationOptions = {}
-): string {
+export function sanitizeSearchTerm(searchTerm: string, options: SanitizationOptions = {}): string {
   const sanitized = sanitizeForDatabase(searchTerm, {
     maxLength: 100,
     allowHtml: false,
@@ -189,8 +178,7 @@ export function sanitizeNumber(
     return null;
   }
 
-  const { min = Number.MIN_SAFE_INTEGER, max = Number.MAX_SAFE_INTEGER } =
-    options;
+  const { min = Number.MIN_SAFE_INTEGER, max = Number.MAX_SAFE_INTEGER } = options;
 
   // Convert to number
   let num: number;
@@ -299,15 +287,8 @@ export function sanitizeObject<T extends Record<string, unknown>>(
   for (const [key, value] of Object.entries(sanitized)) {
     if (typeof value === "string") {
       sanitized[key] = sanitizeForDatabase(value, options);
-    } else if (
-      typeof value === "object" &&
-      value !== null &&
-      !Array.isArray(value)
-    ) {
-      sanitized[key] = sanitizeObject(
-        value as Record<string, unknown>,
-        options
-      );
+    } else if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+      sanitized[key] = sanitizeObject(value as Record<string, unknown>, options);
     } else if (Array.isArray(value)) {
       sanitized[key] = value.map((item) =>
         typeof item === "string"

@@ -2,10 +2,7 @@ import React from "react";
 import { Button } from "~/components/ui/button";
 import { P } from "~/components/ui/typography";
 import { View } from "react-native";
-import {
-  ArrowUpRightIcon,
-  type LucidePropsWithClassName,
-} from "lucide-uniwind";
+import { ArrowUpRightIcon, type LucidePropsWithClassName } from "lucide-uniwind";
 
 export default function ListButton({
   title,
@@ -31,13 +28,7 @@ export default function ListButton({
       {icon && <Icon className="text-foreground" size={24} strokeWidth={2} />}
       <P className="text-lg font-urbanist-semibold">{title}</P>
       <View className="flex-1" />
-      {external && (
-        <ArrowUpRightIcon
-          className="text-foreground"
-          size={18}
-          strokeWidth={1.618}
-        />
-      )}
+      {external && <ArrowUpRightIcon className="text-foreground" size={18} strokeWidth={1.618} />}
     </Button>
   );
 }

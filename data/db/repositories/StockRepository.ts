@@ -284,6 +284,83 @@ export class StockRepository extends BaseRepository<Stock> {
    * Optimized method to fetch all stocks with their synonyms in just 2 queries.
    * This is crucial to avoid N+1 performance issues when checking ingredients.
    */
+  /**
+   * Optimized method to fetch specific stocks by names or synonyms in just 2 queries.
+   * This is crucial to avoid N+1 performance issues when checking ingredients,
+   * without loading the entire stock table into memory.
+   */
+  async getStocksByNamesOrSynonyms(
+    names: string[]
+  ): Promise<{ id: string; name: string; quantity: number; unit: string; synonyms: string[] }[]> {
+    if (!names || names.length === 0) return [];
+
+    const lowerNames = names.map((n) => n.toLowerCase());
+
+    // 1. Fetch matching synonyms to get their stock IDs
+    const synonymCollection = this.collection.database.collections.get("ingredient_synonym");
+
+    // We can't easily do a full wildcard search in WatermelonDB across an array of terms,
+    // but we can at least get exact synonym matches, which is what the original N+1 query did.
+    // The previous N+1 logic called: getStockBySynonym(synonym.toLowerCase()) -> query(Q.where("synonym", Q.eq(synonym.toLowerCase())))
+    const matchingSynonyms = await synonymCollection
+      .query(Q.where("synonym", Q.oneOf(lowerNames)))
+      .fetch();
+
+    const stockIdsFromSynonyms = matchingSynonyms.map((syn: any) => syn.stockId);
+
+    // 2. Fetch stocks that either match the name exactly OR match a synonym
+    let stockQuery = this.collection.query(
+      Q.or(
+        Q.where("name", Q.oneOf(names)),
+        stockIdsFromSynonyms.length > 0
+          ? Q.where("id", Q.oneOf(stockIdsFromSynonyms))
+          : Q.where("id", "impossible_id")
+      )
+    );
+
+    // Since isIngredientMatch does substring matching, it's safer to fetch all stocks
+    // if we really want to preserve 100% of the isIngredientMatch functionality.
+    // However, the original loop did:
+    // const stockItems = await this.stocks.findByNameOrSynonym(ingredient.name);
+    // which only did EXACT name or EXACT synonym matches in SQL.
+    // So the query above perfectly matches the original SQL functionality but batched!
+
+    const stocks = await stockQuery.fetch();
+
+    if (stocks.length === 0) return [];
+
+    const stockIds = stocks.map((s) => s.id);
+
+    // 3. Fetch all synonyms for the matching stocks so we can return them
+    const allSynonymsForStocks = await synonymCollection
+      .query(Q.where("stock_id", Q.oneOf(stockIds)))
+      .fetch();
+
+    // 4. Create a map of stockId -> synonyms[]
+    const synonymsMap = new Map<string, string[]>();
+    for (const syn of allSynonymsForStocks) {
+      const raw = (syn as any)._raw;
+      const stockId = raw.stock_id;
+      const val = raw.synonym;
+
+      if (stockId && val) {
+        if (!synonymsMap.has(stockId)) {
+          synonymsMap.set(stockId, []);
+        }
+        synonymsMap.get(stockId)?.push(val);
+      }
+    }
+
+    // 5. Map results
+    return stocks.map((stock) => ({
+      id: stock.id,
+      name: stock.name,
+      quantity: stock.quantity,
+      unit: stock.unit,
+      synonyms: synonymsMap.get(stock.id) || [],
+    }));
+  }
+
   async getAllWithSynonyms(): Promise<
     { id: string; name: string; quantity: number; synonyms: string[] }[]
   > {

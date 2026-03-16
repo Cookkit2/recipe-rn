@@ -35,7 +35,7 @@ let defaultHandler: NotificationResponseHandler | null = null;
  */
 export function registerNotificationHandler(
   type: string,
-  handler: NotificationResponseHandler,
+  handler: NotificationResponseHandler
 ): void {
   handlerRegistry.set(type, handler);
 }
@@ -58,26 +58,21 @@ export function registerDefaultHandler(handler: NotificationResponseHandler): vo
  * Dispatch a notification response to the appropriate handler
  * based on `data.type`.
  */
-export function dispatchNotificationResponse(
-  response: Notifications.NotificationResponse,
-): void {
+export function dispatchNotificationResponse(response: Notifications.NotificationResponse): void {
   const type = extractNotificationType(response);
 
-  const handler =
-    (type && handlerRegistry.has(type)) ? handlerRegistry.get(type)! : defaultHandler;
+  const handler = type && handlerRegistry.has(type) ? handlerRegistry.get(type)! : defaultHandler;
 
   if (!handler) {
     return;
   }
 
-  void Promise
-    .resolve(handler(response))
-    .catch((error) => {
-      // Prevent unhandled promise rejections from async handlers.
-      if (typeof console !== "undefined" && typeof console.error === "function") {
-        log.error("[notifications] Error in NotificationResponseHandler:", error);
-      }
-    });
+  void Promise.resolve(handler(response)).catch((error) => {
+    // Prevent unhandled promise rejections from async handlers.
+    if (typeof console !== "undefined" && typeof console.error === "function") {
+      log.error("[notifications] Error in NotificationResponseHandler:", error);
+    }
+  });
 }
 
 // ============================================
@@ -88,7 +83,7 @@ export function dispatchNotificationResponse(
  * Extract the full data payload from a notification response.
  */
 export function extractNotificationData(
-  response: Notifications.NotificationResponse,
+  response: Notifications.NotificationResponse
 ): NotificationData | undefined {
   const data = response.notification.request.content.data;
   if (data && typeof data === "object" && "type" in data) {
@@ -101,7 +96,7 @@ export function extractNotificationData(
  * Extract the notification type from a response.
  */
 export function extractNotificationType(
-  response: Notifications.NotificationResponse,
+  response: Notifications.NotificationResponse
 ): string | undefined {
   return extractNotificationData(response)?.type;
 }
@@ -110,7 +105,7 @@ export function extractNotificationType(
  * Extract the screen path from a response.
  */
 export function extractScreenPath(
-  response: Notifications.NotificationResponse,
+  response: Notifications.NotificationResponse
 ): string | undefined {
   return extractNotificationData(response)?.screen as string | undefined;
 }

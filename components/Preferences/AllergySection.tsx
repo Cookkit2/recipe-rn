@@ -1,28 +1,17 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { View, TextInput, Platform } from "react-native";
 import GridButtons from "~/components/Shared/GridButtons";
 import { Card, CardContent } from "~/components/ui/card";
 import { H4, P } from "~/components/ui/typography";
-import {
-  MilkIcon,
-  EggIcon,
-  NutIcon,
-  FishIcon,
-  ShrimpIcon,
-  WheatIcon,
-} from "lucide-uniwind";
+import { MilkIcon, EggIcon, NutIcon, FishIcon, ShrimpIcon, WheatIcon } from "lucide-uniwind";
 import { toggleFromArray } from "~/utils/array-helper";
 import type { GroupButton } from "~/components/Shared/SegmentedButtons";
 import { storage } from "~/data";
-import {
-  PREF_ALLERGENS_KEY,
-  PREF_OTHER_ALLERGENS_KEY,
-} from "~/constants/storage-keys";
+import { PREF_ALLERGENS_KEY, PREF_OTHER_ALLERGENS_KEY } from "~/constants/storage-keys";
 import { useQueryClient } from "@tanstack/react-query";
 import { recipeQueryKeys } from "~/hooks/queries/recipeQueryKeys";
-
-// NOTE: State-only for now. TODO: persist to storage later.
-export type Allergen = "milk" | "eggs" | "nuts" | "fish" | "shellfish" | "wheat";
+import useLocalStorageState from "~/hooks/useLocalStorageState";
+import type { Allergen } from "~/types/Allergen";
 
 const ALLERGEN_OPTIONS: GroupButton<Allergen>[] = [
   { label: "Milk (dairy)", icon: <MilkIcon />, value: "milk" },
@@ -36,46 +25,38 @@ const ALLERGEN_OPTIONS: GroupButton<Allergen>[] = [
 export default function AllergySection() {
   const queryClient = useQueryClient();
 
-  const [allergens, setAllergens] = useState<Allergen[]>(
-    (() => {
-      const stored = storage.get(PREF_ALLERGENS_KEY);
-      if (typeof stored !== "string" || !stored) return [];
-      return stored.split(",") as Allergen[];
-    })()
+  const [allergens, setAllergens] = useLocalStorageState<Allergen[]>(PREF_ALLERGENS_KEY, {
+    defaultValue: [],
+  });
+  const [otherAllergens, setOtherAllergens] = useLocalStorageState<string>(
+    PREF_OTHER_ALLERGENS_KEY,
+    {
+      defaultValue: "",
+    }
   );
-  const [otherAllergens, setOtherAllergens] = useState<string>(
-    storage.get(PREF_OTHER_ALLERGENS_KEY) || ""
-  );
+
+  // Invalidate queries when allergens change
+  useEffect(() => {
+    queryClient.invalidateQueries({
+      queryKey: recipeQueryKeys.recommendations(),
+    });
+    queryClient.invalidateQueries({
+      queryKey: recipeQueryKeys.expiringRecipes(),
+    });
+  }, [allergens, otherAllergens, queryClient]);
 
   const handleToggleAllergens = useCallback(
     (allergen: Allergen) => {
-      setAllergens((prev) => {
-        const currentAllergens = toggleFromArray(prev, allergen);
-        storage.set(PREF_ALLERGENS_KEY, currentAllergens.join(","));
-        return currentAllergens;
-      });
-      queryClient.invalidateQueries({
-        queryKey: recipeQueryKeys.recommendations(),
-      });
-      queryClient.invalidateQueries({
-        queryKey: recipeQueryKeys.expiringRecipes(),
-      });
+      setAllergens((prev = []) => toggleFromArray(prev, allergen));
     },
-    [queryClient]
+    [setAllergens]
   );
 
   const updateOtherAllergens = useCallback(
     (text: string) => {
       setOtherAllergens(text);
-      storage.set(PREF_OTHER_ALLERGENS_KEY, text);
-      queryClient.invalidateQueries({
-        queryKey: recipeQueryKeys.recommendations(),
-      });
-      queryClient.invalidateQueries({
-        queryKey: recipeQueryKeys.expiringRecipes(),
-      });
     },
-    [queryClient]
+    [setOtherAllergens]
   );
 
   return (
