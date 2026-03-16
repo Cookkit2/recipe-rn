@@ -1,12 +1,12 @@
-const fs = require('fs');
-let packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+const fs = require("fs");
+let packageJson = JSON.parse(fs.readFileSync("package.json", "utf8"));
 packageJson.devDependencies = {
   ...packageJson.devDependencies,
   "@types/jest": "^29.5.12",
-  "jest": "^29.7.0",
-  "ts-jest": "^29.1.2"
+  jest: "^29.7.0",
+  "ts-jest": "^29.1.2",
 };
-fs.writeFileSync('package.json', JSON.stringify(packageJson, null, 2));
+fs.writeFileSync("package.json", JSON.stringify(packageJson, null, 2));
 
 // Only run the test
 const testFile = `import { sanitizeText, createSlug } from '../text-formatter';
@@ -72,4 +72,4 @@ describe('text-formatter', () => {
   });
 });
 `;
-fs.writeFileSync('utils/__tests__/text-formatter.test.ts', testFile);
+fs.writeFileSync("utils/__tests__/text-formatter.test.ts", testFile);
