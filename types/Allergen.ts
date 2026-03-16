@@ -1,1 +1,1 @@
-export type Allergen = "milk" | "eggs" | "nuts" | "fish" | "shellfish" | "wheat";
+export type Allergen = 'milk' | 'eggs' | 'nuts' | 'fish' | 'shellfish' | 'wheat';

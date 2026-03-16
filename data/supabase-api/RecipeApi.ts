@@ -27,7 +27,9 @@ export const recipeApi = {
    * Get newest recipes from Supabase (ordered by creation/modification date)
    * @param limit - Maximum number of recipes to fetch (default: 1000)
    */
-  getNewestRecipes: async (limit: number = 1000): Promise<Tables<"recipe">[]> => {
+  getNewestRecipes: async (
+    limit: number = 1000
+  ): Promise<Tables<"recipe">[]> => {
     if (!guardSupabase()) return [];
     const { data, error } = await supabase!
       .from("recipe")
@@ -65,7 +67,8 @@ export const recipeApi = {
     const currentRecipe: SupabaseRecipeWithDetails = {
       recipe: data,
       steps: (data.recipe_step || []) as Tables<"recipe_step">[],
-      ingredients: (data.pivot_recipe_ingredient || []) as Tables<"pivot_recipe_ingredient">[],
+      ingredients: (data.pivot_recipe_ingredient ||
+        []) as Tables<"pivot_recipe_ingredient">[],
     };
 
     return currentRecipe;
@@ -98,7 +101,8 @@ export const recipeApi = {
     return data.map((recipe) => ({
       recipe,
       steps: (recipe.recipe_step || []) as Tables<"recipe_step">[],
-      ingredients: (recipe.pivot_recipe_ingredient || []) as Tables<"pivot_recipe_ingredient">[],
+      ingredients: (recipe.pivot_recipe_ingredient ||
+        []) as Tables<"pivot_recipe_ingredient">[],
     }));
   },
 
@@ -108,7 +112,10 @@ export const recipeApi = {
   getRecipesByIds: async (recipeIds: string[]): Promise<Tables<"recipe">[]> => {
     if (recipeIds.length === 0 || !guardSupabase()) return [];
 
-    const { data, error } = await supabase!.from("recipe").select("*").in("id", recipeIds);
+    const { data, error } = await supabase!
+      .from("recipe")
+      .select("*")
+      .in("id", recipeIds);
 
     if (error) throw error;
     return data;

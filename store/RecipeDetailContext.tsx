@@ -52,7 +52,9 @@ export function RecipeDetailProvider({
 export const useRecipeDetailStore = () => {
   const context = useContext(RecipeDetailContext);
   if (!context) {
-    throw new Error("useRecipeDetailStore must be used within a RecipeDetailProvider");
+    throw new Error(
+      "useRecipeDetailStore must be used within a RecipeDetailProvider"
+    );
   }
   return context;
 };

@@ -3,12 +3,17 @@ import { Alert, Pressable, View } from "react-native";
 import { P } from "~/components/ui/typography";
 import { useIngredientDetailStore } from "~/store/IngredientDetailContext";
 import { titleCase } from "~/utils/text-formatter";
-import { PANTRY_ITEM_TYPE_OPTIONS, PANTRY_ITEM_TYPES } from "~/constants/pantry-item-type";
+import {
+  PANTRY_ITEM_TYPE_OPTIONS,
+  PANTRY_ITEM_TYPES,
+} from "~/constants/pantry-item-type";
 
 export default function IngredientMeta() {
   const { pantryItem, updatePantryItem } = useIngredientDetailStore();
 
-  const pantryItemType = PANTRY_ITEM_TYPES.find((option) => option.type === pantryItem.type);
+  const pantryItemType = PANTRY_ITEM_TYPES.find(
+    (option) => option.type === pantryItem.type
+  );
 
   const buttons = [
     ...PANTRY_ITEM_TYPE_OPTIONS.map((option) => ({
@@ -28,7 +33,10 @@ export default function IngredientMeta() {
 
   return (
     <View className="flex-row items-center justify-center mb-12">
-      <Pressable className="flex-row items-center gap-1" onPress={showUnitPicker}>
+      <Pressable
+        className="flex-row items-center gap-1"
+        onPress={showUnitPicker}
+      >
         {React.cloneElement(pantryItemType!.icon, {
           className: "text-foreground/70",
         })}
@@ -38,7 +46,10 @@ export default function IngredientMeta() {
       </Pressable>
       {pantryItem.category && (
         <>
-          <P key="separator" className="text-foreground/70 font-urbanist-medium">
+          <P
+            key="separator"
+            className="text-foreground/70 font-urbanist-medium"
+          >
             {"  •  "}
           </P>
           <P key="category" className="text-foreground/70 font-urbanist-medium">

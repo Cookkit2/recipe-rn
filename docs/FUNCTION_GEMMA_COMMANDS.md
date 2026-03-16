@@ -34,29 +34,26 @@ Complete reference for all AI assistant commands available in DoneDish via Funct
 
 Add a food item to the pantry inventory. This is the **default command** when the user says "add", "put", "store", or "I have" followed by a food name.
 
-| Parameter     | Type     | Required | Default    | Description                                                        |
-| ------------- | -------- | -------- | ---------- | ------------------------------------------------------------------ |
-| `name`        | `string` | Yes      | —          | Name of the food item (e.g. "milk", "cheese", "apples")            |
-| `quantity`    | `number` | No       | `1`        | Quantity of the item                                               |
-| `unit`        | `string` | No       | `"piece"`  | Unit of measurement (e.g. "liters", "kg", "pieces", "cartons")     |
-| `location`    | `string` | No       | `"fridge"` | Storage location. One of: `fridge`, `freezer`, `cabinet`, `pantry` |
-| `expiry_date` | `string` | No       | —          | Expiry date in `YYYY-MM-DD` format                                 |
+| Parameter     | Type     | Required | Default   | Description                                                 |
+|---------------|----------|----------|-----------|-------------------------------------------------------------|
+| `name`        | `string` | Yes      | —         | Name of the food item (e.g. "milk", "cheese", "apples")    |
+| `quantity`    | `number` | No       | `1`       | Quantity of the item                                        |
+| `unit`        | `string` | No       | `"piece"` | Unit of measurement (e.g. "liters", "kg", "pieces", "cartons") |
+| `location`    | `string` | No       | `"fridge"`| Storage location. One of: `fridge`, `freezer`, `cabinet`, `pantry` |
+| `expiry_date` | `string` | No       | —         | Expiry date in `YYYY-MM-DD` format                          |
 
 **Example natural language triggers:**
-
 - "Add 2 cartons of milk to my fridge"
 - "I have 3 apples"
 - "Put chicken in the freezer"
 - "Store rice in the pantry, expires 2026-06-01"
 
 **Example tool call:**
-
 ```
 add_item(name="milk", quantity=2, unit="cartons", location="fridge")
 ```
 
 **Example response:**
-
 ```json
 {
   "success": true,
@@ -73,25 +70,22 @@ add_item(name="milk", quantity=2, unit="cartons", location="fridge")
 
 Remove or consume a food item from inventory. Can do partial removal (reduce quantity) or full removal (delete the item).
 
-| Parameter  | Type     | Required | Default | Description                                                                   |
-| ---------- | -------- | -------- | ------- | ----------------------------------------------------------------------------- |
-| `item_id`  | `string` | Yes      | —       | ID of the item to remove (WatermelonDB record ID)                             |
+| Parameter  | Type     | Required | Default | Description                                              |
+|------------|----------|----------|---------|----------------------------------------------------------|
+| `item_id`  | `string` | Yes      | —       | ID of the item to remove (WatermelonDB record ID)        |
 | `quantity` | `number` | No       | all     | Quantity to remove. If omitted or >= current stock, deletes the item entirely |
 
 **Example natural language triggers:**
-
 - "Remove the milk"
 - "I used 2 eggs"
 - "Delete the expired yogurt"
 
 **Example tool call:**
-
 ```
 remove_item(item_id="abc123", quantity=2)
 ```
 
 **Example response (partial removal):**
-
 ```json
 {
   "success": true,
@@ -100,7 +94,6 @@ remove_item(item_id="abc123", quantity=2)
 ```
 
 **Example response (full removal):**
-
 ```json
 {
   "success": true,
@@ -116,26 +109,23 @@ remove_item(item_id="abc123", quantity=2)
 
 Retrieve a list of all items currently in the pantry, optionally filtered by storage location.
 
-| Parameter  | Type     | Required | Default | Description                                                                 |
-| ---------- | -------- | -------- | ------- | --------------------------------------------------------------------------- |
+| Parameter  | Type     | Required | Default | Description                                                        |
+|------------|----------|----------|---------|--------------------------------------------------------------------|
 | `location` | `string` | No       | `"all"` | Filter by location. One of: `fridge`, `freezer`, `cabinet`, `pantry`, `all` |
-| `category` | `string` | No       | —       | Filter by category (e.g. "dairy", "vegetables", "meat")                     |
+| `category` | `string` | No       | —       | Filter by category (e.g. "dairy", "vegetables", "meat")            |
 
 **Example natural language triggers:**
-
 - "What's in my fridge?"
 - "Show me my pantry"
 - "List all my ingredients"
 - "What do I have in the freezer?"
 
 **Example tool call:**
-
 ```
 get_inventory(location="fridge")
 ```
 
 **Example response:**
-
 ```json
 {
   "success": true,
@@ -171,25 +161,22 @@ get_inventory(location="fridge")
 
 Get items that will expire within a given number of days. Results are sorted by expiry date (soonest first).
 
-| Parameter    | Type     | Required | Default | Description                              |
-| ------------ | -------- | -------- | ------- | ---------------------------------------- |
+| Parameter    | Type     | Required | Default | Description                            |
+|--------------|----------|----------|---------|----------------------------------------|
 | `days_ahead` | `number` | No       | `3`     | Number of days ahead to check for expiry |
 
 **Example natural language triggers:**
-
 - "What's expiring soon?"
 - "Any food going bad this week?"
 - "Check expiry dates"
 - "What should I use up first?"
 
 **Example tool call:**
-
 ```
 get_expiring_items(days_ahead=7)
 ```
 
 **Example response:**
-
 ```json
 {
   "success": true,
@@ -221,18 +208,16 @@ get_expiring_items(days_ahead=7)
 
 Set a reminder/alert for an expiring item.
 
-| Parameter    | Type     | Required | Default | Description                                          |
-| ------------ | -------- | -------- | ------- | ---------------------------------------------------- |
-| `item_id`    | `string` | Yes      | —       | ID of the item to set the alert for                  |
+| Parameter    | Type     | Required | Default | Description                                       |
+|--------------|----------|----------|---------|---------------------------------------------------|
+| `item_id`    | `string` | Yes      | —       | ID of the item to set the alert for               |
 | `alert_time` | `string` | Yes      | —       | When to send the alert, in `YYYY-MM-DD HH:MM` format |
 
 **Example natural language triggers:**
-
 - "Remind me about the chicken expiring tomorrow"
 - "Set an alert for the milk on Friday"
 
 **Example tool call:**
-
 ```
 set_expiry_alert(item_id="abc123", alert_time="2026-02-18 09:00")
 ```
@@ -247,26 +232,23 @@ set_expiry_alert(item_id="abc123", alert_time="2026-02-18 09:00")
 
 Add an item to the shopping/grocery list. Only triggered when the user **explicitly** mentions "grocery list", "shopping list", or "need to buy".
 
-| Parameter  | Type     | Required | Default    | Description                                     |
-| ---------- | -------- | -------- | ---------- | ----------------------------------------------- |
-| `name`     | `string` | Yes      | —          | Name of the item to buy                         |
-| `quantity` | `number` | No       | `1`        | Quantity to buy                                 |
+| Parameter  | Type     | Required | Default    | Description                            |
+|------------|----------|----------|------------|----------------------------------------|
+| `name`     | `string` | Yes      | —          | Name of the item to buy                |
+| `quantity` | `number` | No       | `1`        | Quantity to buy                        |
 | `priority` | `string` | No       | `"medium"` | Priority level. One of: `low`, `medium`, `high` |
 
 **Example natural language triggers:**
-
 - "Add milk to my grocery list"
 - "I need to buy eggs"
 - "Put bread on the shopping list"
 
 **Example tool call:**
-
 ```
 add_to_grocery_list(name="milk", quantity=2, priority="high")
 ```
 
 **Example response:**
-
 ```json
 {
   "success": true,
@@ -283,24 +265,21 @@ add_to_grocery_list(name="milk", quantity=2, priority="high")
 
 Retrieve the current grocery/shopping list.
 
-| Parameter | Type     | Required | Default | Description                                                |
-| --------- | -------- | -------- | ------- | ---------------------------------------------------------- |
+| Parameter | Type     | Required | Default | Description                                    |
+|-----------|----------|----------|---------|------------------------------------------------|
 | `filter`  | `string` | No       | `"all"` | Filter by priority. One of: `all`, `high`, `medium`, `low` |
 
 **Example natural language triggers:**
-
 - "Show my grocery list"
 - "What do I need to buy?"
 - "What's on my shopping list?"
 
 **Example tool call:**
-
 ```
 get_grocery_list(filter="high")
 ```
 
 **Example response:**
-
 ```json
 {
   "success": true,
@@ -322,26 +301,23 @@ get_grocery_list(filter="high")
 
 Search for recipes, optionally filtered by ingredients you want to use.
 
-| Parameter     | Type       | Required | Default | Description                                                          |
-| ------------- | ---------- | -------- | ------- | -------------------------------------------------------------------- |
+| Parameter     | Type       | Required | Default | Description                                                  |
+|---------------|------------|----------|---------|--------------------------------------------------------------|
 | `ingredients` | `string[]` | No       | —       | List of ingredient names to search for in recipe titles/descriptions |
-| `meal_type`   | `string`   | No       | —       | Type of meal. One of: `breakfast`, `lunch`, `dinner`, `snack`        |
+| `meal_type`   | `string`   | No       | —       | Type of meal. One of: `breakfast`, `lunch`, `dinner`, `snack` |
 
 **Example natural language triggers:**
-
 - "What can I make with chicken and rice?"
 - "Find me a breakfast recipe"
 - "Recipes with eggs and cheese"
 - "What can I cook tonight?"
 
 **Example tool call:**
-
 ```
 find_recipes(ingredients=["chicken", "rice"], meal_type="dinner")
 ```
 
 **Example response:**
-
 ```json
 {
   "success": true,
@@ -375,26 +351,23 @@ find_recipes(ingredients=["chicken", "rice"], meal_type="dinner")
 
 Suggest meals based on what's currently in your pantry inventory. This command automatically reads your inventory first, then searches for matching recipes.
 
-| Parameter   | Type     | Required | Default | Description                                          |
-| ----------- | -------- | -------- | ------- | ---------------------------------------------------- |
+| Parameter   | Type     | Required | Default | Description                                        |
+|-------------|----------|----------|---------|----------------------------------------------------|
 | `meal_type` | `string` | No       | —       | Type of meal. One of: `breakfast`, `lunch`, `dinner` |
-| `days`      | `number` | No       | `1`     | Number of days to plan meals for                     |
+| `days`      | `number` | No       | `1`     | Number of days to plan meals for                   |
 
 **Example natural language triggers:**
-
 - "What should I cook tonight?"
 - "Suggest meals for this week"
 - "What can I make with what I have?"
 - "Meal suggestions"
 
 **Example tool call:**
-
 ```
 suggest_meals(meal_type="dinner", days=3)
 ```
 
 **Example response:**
-
 ```json
 {
   "success": true,
@@ -412,7 +385,6 @@ suggest_meals(meal_type="dinner", days=3)
 ```
 
 **How it works internally:**
-
 1. Calls `get_inventory()` to get all current pantry items
 2. Extracts ingredient names from the inventory
 3. Calls `find_recipes()` with those ingredient names
@@ -428,23 +400,20 @@ suggest_meals(meal_type="dinner", days=3)
 
 Look up a product by its barcode/UPC code using the Supabase base ingredient database.
 
-| Parameter | Type     | Required | Default | Description                |
-| --------- | -------- | -------- | ------- | -------------------------- |
+| Parameter | Type     | Required | Default | Description              |
+|-----------|----------|----------|---------|--------------------------|
 | `barcode` | `string` | Yes      | —       | Barcode or UPC code string |
 
 **Example natural language triggers:**
-
 - "Scan this barcode: 012345678901"
 - "Look up barcode 5901234123457"
 
 **Example tool call:**
-
 ```
 scan_barcode(barcode="012345678901")
 ```
 
 **Example response (found):**
-
 ```json
 {
   "success": true,
@@ -457,7 +426,6 @@ scan_barcode(barcode="012345678901")
 ```
 
 **Example response (not found):**
-
 ```json
 {
   "success": false,
@@ -486,13 +454,13 @@ scan_barcode(barcode="012345678901")
 
 ## Known Limitations
 
-| Area                  | Limitation                                                                            | Status                       |
-| --------------------- | ------------------------------------------------------------------------------------- | ---------------------------- |
-| `add_to_grocery_list` | Redirects to `add_item` (pantry) since standalone grocery items aren't supported      | Workaround active            |
-| `set_expiry_alert`    | Stub — no real push notifications yet                                                 | Planned (expo-notifications) |
-| `category` filter     | Defined in `get_inventory` schema but not implemented in executor                     | Planned                      |
-| `meal_type` filter    | Defined in `find_recipes` / `suggest_meals` schema but not used                       | Planned                      |
-| `priority` filter     | Defined in `get_grocery_list` schema but not used in executor                         | Planned                      |
-| `scan_barcode`        | Uses name lookup instead of a dedicated barcode field                                 | Needs adjustment             |
-| Multi-tool calls      | Model only executes the **first** valid tool call to prevent hallucinations           | By design                    |
-| Recipe matching       | Matches ingredient names against recipe title/description only (not ingredient lists) | Planned improvement          |
+| Area | Limitation | Status |
+|------|-----------|--------|
+| `add_to_grocery_list` | Redirects to `add_item` (pantry) since standalone grocery items aren't supported | Workaround active |
+| `set_expiry_alert` | Stub — no real push notifications yet | Planned (expo-notifications) |
+| `category` filter | Defined in `get_inventory` schema but not implemented in executor | Planned |
+| `meal_type` filter | Defined in `find_recipes` / `suggest_meals` schema but not used | Planned |
+| `priority` filter | Defined in `get_grocery_list` schema but not used in executor | Planned |
+| `scan_barcode` | Uses name lookup instead of a dedicated barcode field | Needs adjustment |
+| Multi-tool calls | Model only executes the **first** valid tool call to prevent hallucinations | By design |
+| Recipe matching | Matches ingredient names against recipe title/description only (not ingredient lists) | Planned improvement |

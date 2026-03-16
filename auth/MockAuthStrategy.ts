@@ -1,5 +1,5 @@
 import { BaseAuthStrategy } from "./AuthStrategy";
-import { log } from "~/utils/logger";
+import { log } from '~/utils/logger';
 import type {
   User,
   AuthResult,
@@ -85,7 +85,11 @@ export class MockAuthStrategy extends BaseAuthStrategy {
     }
 
     if (userData.password !== credentials.password) {
-      return this.createErrorResult("INVALID_CREDENTIALS", "Invalid password", true);
+      return this.createErrorResult(
+        "INVALID_CREDENTIALS",
+        "Invalid password",
+        true
+      );
     }
 
     // Update last sign in
@@ -196,7 +200,11 @@ export class MockAuthStrategy extends BaseAuthStrategy {
     await this.simulateDelay();
 
     if (!this.currentUser || !this.currentSession) {
-      return this.createErrorResult("NO_SESSION", "No active session to refresh", false);
+      return this.createErrorResult(
+        "NO_SESSION",
+        "No active session to refresh",
+        false
+      );
     }
 
     // Create new session
@@ -205,11 +213,17 @@ export class MockAuthStrategy extends BaseAuthStrategy {
     return this.createSuccessResult(this.currentUser, this.currentSession);
   }
 
-  async linkAnonymousAccount(credentials: LinkAccountCredentials): Promise<AuthResult> {
+  async linkAnonymousAccount(
+    credentials: LinkAccountCredentials
+  ): Promise<AuthResult> {
     await this.simulateDelay();
 
     if (!this.currentUser || !this.currentUser.isAnonymous) {
-      return this.createErrorResult("NOT_ANONYMOUS", "Current user is not anonymous", false);
+      return this.createErrorResult(
+        "NOT_ANONYMOUS",
+        "Current user is not anonymous",
+        false
+      );
     }
 
     if (this.users.has(credentials.email)) {
@@ -289,7 +303,11 @@ export class MockAuthStrategy extends BaseAuthStrategy {
     this.users.clear();
   }
 
-  public addTestUser(email: string, password: string, userData?: Partial<User>) {
+  public addTestUser(
+    email: string,
+    password: string,
+    userData?: Partial<User>
+  ) {
     const user: User = {
       id: `mock-${email}`,
       email,

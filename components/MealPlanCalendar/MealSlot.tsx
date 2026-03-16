@@ -9,11 +9,7 @@ import Animated, {
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { P } from "~/components/ui/typography";
-import type {
-  CalendarMealPlan,
-  MealSlot as MealSlotType,
-  CalendarDropTarget,
-} from "~/types/MealPlan";
+import type { CalendarMealPlan, MealSlot as MealSlotType, CalendarDropTarget } from "~/types/MealPlan";
 import { useMealPlanCalendar } from "~/store/MealPlanCalendarContext";
 import { log } from "~/utils/logger";
 
@@ -49,7 +45,13 @@ interface MealSlotProps {
  * Displays an individual meal slot in the calendar.
  * Shows planned recipe or empty state with drop zone visual for drag-and-drop.
  */
-export default function MealSlot({ date, mealSlot, mealPlan, onPress, onDrop }: MealSlotProps) {
+export default function MealSlot({
+  date,
+  mealSlot,
+  mealPlan,
+  onPress,
+  onDrop,
+}: MealSlotProps) {
   const { dragState, updateDragState } = useMealPlanCalendar();
 
   // Animation values
@@ -91,7 +93,8 @@ export default function MealSlot({ date, mealSlot, mealPlan, onPress, onDrop }: 
 
     // Check if this slot already has the same meal plan
     if (mealPlan) {
-      const currentRecipeId = "recipeId" in mealPlan ? mealPlan.recipeId : undefined;
+      const currentRecipeId =
+        "recipeId" in mealPlan ? mealPlan.recipeId : undefined;
 
       if (currentRecipeId && "recipeId" in dragState.data) {
         if (currentRecipeId === dragState.data.recipeId) {
@@ -134,7 +137,13 @@ export default function MealSlot({ date, mealSlot, mealPlan, onPress, onDrop }: 
     setTimeout(() => {
       isProcessingDropRef.current = false;
     }, DROP_DEBOUNCE_MS);
-  }, [date, mealSlot, onDrop, handleHapticFeedback, isValidDrop]);
+  }, [
+    date,
+    mealSlot,
+    onDrop,
+    handleHapticFeedback,
+    isValidDrop,
+  ]);
 
   // Drop zone gesture - detects when something is being dragged over this slot
   const dropZoneGesture = Gesture.LongPress()
@@ -185,14 +194,13 @@ export default function MealSlot({ date, mealSlot, mealPlan, onPress, onDrop }: 
                 <P className="text-xs font-urbanist-medium text-muted-foreground capitalize">
                   {mealSlot}
                 </P>
-                <P
-                  className="text-sm font-urbanist-semibold text-foreground mt-1"
-                  numberOfLines={2}
-                >
+                <P className="text-sm font-urbanist-semibold text-foreground mt-1" numberOfLines={2}>
                   {mealPlan.recipe?.title || "Recipe"}
                 </P>
                 {mealPlan.servings > 1 && (
-                  <P className="text-xs text-muted-foreground mt-1">{mealPlan.servings} servings</P>
+                  <P className="text-xs text-muted-foreground mt-1">
+                    {mealPlan.servings} servings
+                  </P>
                 )}
               </View>
             ) : (

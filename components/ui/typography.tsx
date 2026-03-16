@@ -70,7 +70,10 @@ function H4({ className, asChild = false, ...props }: TypographyProps) {
 function P({ className, asChild = false, ...props }: TypographyProps) {
   const Component = asChild ? Slot.Text : RNText;
   return (
-    <Component className={cn("text-base text-foreground web:select-text", className)} {...props} />
+    <Component
+      className={cn("text-base text-foreground web:select-text", className)}
+      {...props}
+    />
   );
 }
 
@@ -118,7 +121,10 @@ function Large({ className, asChild = false, ...props }: TypographyProps) {
   const Component = asChild ? Slot.Text : RNText;
   return (
     <Component
-      className={cn("text-xl text-foreground font-semibold web:select-text", className)}
+      className={cn(
+        "text-xl text-foreground font-semibold web:select-text",
+        className
+      )}
       {...props}
     />
   );
@@ -128,7 +134,10 @@ function Small({ className, asChild = false, ...props }: TypographyProps) {
   const Component = asChild ? Slot.Text : RNText;
   return (
     <Component
-      className={cn("text-sm text-foreground font-medium leading-none web:select-text", className)}
+      className={cn(
+        "text-sm text-foreground font-medium leading-none web:select-text",
+        className
+      )}
       {...props}
     />
   );

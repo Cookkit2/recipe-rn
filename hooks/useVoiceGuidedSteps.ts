@@ -131,11 +131,7 @@ export function useVoiceGuidedSteps({
           break;
 
         case "step":
-          const stepContent = currentPage.content as {
-            step: number;
-            title: string;
-            description: string;
-          };
+          const stepContent = currentPage.content as { step: number; title: string; description: string };
           await voiceCookingService.speakStep(
             stepContent.step,
             stepContent.title,
@@ -153,6 +149,7 @@ export function useVoiceGuidedSteps({
           await voiceCookingService.speak(completionMessage, { interrupt: true });
           break;
       }
+
     } catch (error) {
       log.error("[VoiceGuidedSteps] Error speaking step:", error);
     } finally {
@@ -255,7 +252,7 @@ export function useVoiceGuidedSteps({
   }, []);
 
   /**
-   * Cleanup on unmount
+ * Cleanup on unmount
    */
   useEffect(() => {
     return () => {

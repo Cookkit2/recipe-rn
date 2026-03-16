@@ -14,7 +14,7 @@ export interface RecipeStep {
 }
 
 export type StepPageData = {
-  type: "ingredients" | "step" | "congratulations";
+  type: 'ingredients' | 'step' | 'congratulations';
   step: number;
   content: RecipeIngredient[] | RecipeStep | null;
 };
@@ -44,5 +44,5 @@ export type {
   RecipeWithMatchInfo,
   ShoppingListItem,
   AvailableIngredientItem,
-} from "./RecipeMatching";
-export { RECIPE_MATCH_CATEGORY_LABELS, getRecipeMatchCategory } from "./RecipeMatching";
+} from './RecipeMatching';
+export { RECIPE_MATCH_CATEGORY_LABELS, getRecipeMatchCategory } from './RecipeMatching';

@@ -24,14 +24,14 @@ This document provides solutions to common issues encountered when developing an
 
 The most frequently encountered issues and their quick fixes:
 
-| Issue                          | Quick Fix                                        |
-| ------------------------------ | ------------------------------------------------ |
+| Issue | Quick Fix |
+|-------|-----------|
 | Camera doesn't work in Expo Go | Use `npx expo run:ios` or `npx expo run:android` |
-| iOS build fails                | Run `cd ios && pod install`                      |
-| Database not syncing           | Check Supabase credentials in `.env`             |
-| Voice recognition not working  | Requires physical device, not simulator          |
-| Recipes not appearing          | Run database seed from `/debug` screen           |
-| Development server won't start | Run `npm run clean` and restart                  |
+| iOS build fails | Run `cd ios && pod install` |
+| Database not syncing | Check Supabase credentials in `.env` |
+| Voice recognition not working | Requires physical device, not simulator |
+| Recipes not appearing | Run database seed from `/debug` screen |
+| Development server won't start | Run `npm run clean` and restart |
 
 ---
 
@@ -42,15 +42,12 @@ The most frequently encountered issues and their quick fixes:
 **Problem**: Installation fails with `ERESOLVE unable to resolve dependency tree`
 
 **Solutions**:
-
 1. Use `--legacy-peer-deps` flag:
-
    ```bash
    npm install --legacy-peer-deps
    ```
 
 2. Clear npm cache and try again:
-
    ```bash
    npm cache clean --force
    rm -rf node_modules package-lock.json
@@ -67,16 +64,13 @@ The most frequently encountered issues and their quick fixes:
 **Problem**: Running `npm run dev` hangs or shows errors
 
 **Solutions**:
-
 1. Clear Expo and Metro cache:
-
    ```bash
    npm run clean
    rm -rf .expo
    ```
 
 2. Kill existing Metro bundler:
-
    ```bash
    # macOS/Linux
    pkill -f "metro"
@@ -87,7 +81,6 @@ The most frequently encountered issues and their quick fixes:
    ```
 
 3. Check port 8081 is available:
-
    ```bash
    # macOS/Linux
    lsof -i :8081
@@ -101,11 +94,9 @@ The most frequently encountered issues and their quick fixes:
 **Problem**: Device shows "Cannot connect to development server"
 
 **Solutions**:
-
 1. Ensure device and computer are on same network
 2. Check firewall settings allow port 8081
 3. Try using tunnel mode:
-
    ```bash
    npx expo start --tunnel
    ```
@@ -124,9 +115,7 @@ The most frequently encountered issues and their quick fixes:
 **Problem**: Build fails during Xcode build with CocoaPods or script phase errors
 
 **Solutions**:
-
 1. Reinstall CocoaPods:
-
    ```bash
    cd ios
    rm -rf Pods Podfile.lock
@@ -149,9 +138,7 @@ The most frequently encountered issues and their quick fixes:
 **Problem**: Cannot find iOS simulator to run
 
 **Solutions**:
-
 1. List available simulators:
-
    ```bash
    xcrun simctl list devices
    ```
@@ -170,10 +157,8 @@ The most frequently encountered issues and their quick fixes:
 **Problem**: Build fails with architecture-related errors
 
 **Solutions**:
-
 1. Ensure `newArchEnabled: true` in `app.json`
 2. Clean and rebuild:
-
    ```bash
    npm run clean
    npm run ios
@@ -193,9 +178,7 @@ The most frequently encountered issues and their quick fixes:
 **Problem**: Gradle cannot find Android SDK
 
 **Solutions**:
-
 1. Set `ANDROID_HOME` or `ANDROID_SDK_ROOT` environment variable:
-
    ```bash
    # macOS (add to ~/.zshrc or ~/.bash_profile)
    export ANDROID_HOME=$HOME/Library/Android/sdk
@@ -218,9 +201,7 @@ The most frequently encountered issues and their quick fixes:
 **Problem**: Build fails with Java heap space error
 
 **Solutions**:
-
 1. Increase Gradle memory in `android/gradle.properties`:
-
    ```properties
    org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=512m
    ```
@@ -237,15 +218,12 @@ The most frequently encountered issues and their quick fixes:
 **Problem**: APK fails to install on emulator/device
 
 **Solutions**:
-
 1. Uninstall existing app:
-
    ```bash
    adb uninstall com.fridgit.app
    ```
 
 2. Check device has sufficient storage:
-
    ```bash
    adb shell df
    ```
@@ -266,7 +244,6 @@ The most frequently encountered issues and their quick fixes:
 **Explanation**: `react-native-vision-camera` requires native code compilation and **does not work** in Expo Go.
 
 **Solution**: Use development build instead:
-
 ```bash
 # Create development build
 npx expo run:ios
@@ -281,7 +258,6 @@ npx expo run:android
 **Explanation**: `expo-speech-recognition` requires native modules not available in Expo Go.
 
 **Solution**: Use development build:
-
 ```bash
 npx expo run:ios
 npx expo run:android
@@ -292,14 +268,12 @@ npx expo run:android
 **Problem**: Various modules fail to load
 
 **Common modules that don't work in Expo Go**:
-
 - `react-native-vision-camera`
 - `expo-speech-recognition`
 - `react-native-fast-tflite`
 - `@sentry/react-native` (certain features)
 
 **Solution**: Use development build for full feature testing:
-
 ```bash
 # iOS
 npm run ios
@@ -319,14 +293,12 @@ npm run android
 **Solutions**:
 
 1. **iOS** - Check `ios/fridgit/Info.plist` has:
-
    ```xml
    <key>NSCameraUsageDescription</key>
    <string>DoneDish needs camera access to scan ingredients</string>
    ```
 
 2. **Android** - Check `android/app/src/main/AndroidManifest.xml` has:
-
    ```xml
    <uses-permission android:name="android.permission.CAMERA" />
    ```
@@ -340,16 +312,13 @@ npm run android
 **Problem**: Ingredient recognition fails or model doesn't load
 
 **Solutions**:
-
 1. Ensure model files exist in `assets/models/`:
-
    ```bash
    ls assets/models/
    # Should see .tflite files
    ```
 
 2. Check `app.json` bundles assets:
-
    ```json
    {
      "expo": {
@@ -369,16 +338,13 @@ npm run android
 **Problem**: Camera view is black on physical device
 
 **Solutions**:
-
 1. Check device has multiple cameras:
-
    ```typescript
    const devices = cameraState.devices;
    // Ensure you're using 'back' camera
    ```
 
 2. Ensure camera permission is granted before mounting:
-
    ```typescript
    const { cameraPermission } = useCameraPermissions();
    if (!cameraPermission) return <PermissionRequestScreen />;
@@ -386,7 +352,7 @@ npm run android
 
 3. Try switching camera position:
    ```typescript
-   const device = cameras.find((d) => d.position === "back");
+   const device = cameras.find((d) => d.position === 'back');
    ```
 
 ---
@@ -398,21 +364,18 @@ npm run android
 **Problem**: Text-to-speech doesn't produce audio
 
 **Solutions**:
-
 1. Check device volume is not muted
 2. Check voice settings in app:
-
    ```typescript
    // Settings > Voice Cooking
    // Ensure voice is enabled
    ```
 
 3. Test with simple TTS call:
-
    ```typescript
-   import * as Speech from "expo-speech";
+   import * as Speech from 'expo-speech';
 
-   Speech.speak("Hello world", { start: true });
+   Speech.speak('Hello world', { start: true });
    ```
 
 4. On iOS, check VoiceOver isn't interfering:
@@ -423,15 +386,13 @@ npm run android
 **Problem**: App doesn't respond to voice commands
 
 **Solutions**:
-
 1. Check microphone permission:
    - iOS: Settings > DoneDish > Microphone
    - Android: Settings > Apps > DoneDish > Permissions
 
 2. Verify device supports speech recognition:
-
    ```typescript
-   import { isRecognitionAvailable } from "expo-speech-recognition";
+   import { isRecognitionAvailable } from 'expo-speech-recognition';
 
    const available = await isRecognitionAvailable();
    if (!available) {
@@ -450,10 +411,8 @@ npm run android
 **Problem**: Commands like "next" or "previous" not detected
 
 **Solutions**:
-
 1. Speak clearly and wait for prompt
 2. Check supported commands in code:
-
    ```typescript
    // hooks/useSpeechRecognition.ts
    // Valid: next, previous, repeat, stop, ingredients
@@ -473,21 +432,18 @@ npm run android
 **Problem**: Changes not persisting or not updating UI
 
 **Solutions**:
-
 1. Check database is initialized:
-
    ```typescript
-   import { database } from "~/data/db/database";
+   import { database } from '~/data/db/database';
 
    // Should be called on app start
-   database.get("pantry_items").query().fetch();
+   database.get('pantry_items').query().fetch();
    ```
 
 2. Verify collections are observed:
-
    ```typescript
    // Use @Nozbe/watermelondb/react
-   import { useDatabase } from "@Nozbe/watermelondb/react";
+   import { useDatabase } from '@Nozbe/watermelondb/react';
 
    const database = useDatabase();
    // Components should be wrapped in DatabaseProvider
@@ -495,10 +451,9 @@ npm run android
 
 3. Check for batch commit:
    ```typescript
-   await database
-     .batch
+   await database.batch(
      // Always use database.batch() for multiple writes
-     ();
+   );
    ```
 
 ### Database schema version mismatch
@@ -506,9 +461,7 @@ npm run android
 **Problem**: `Database version mismatch` error
 
 **Solutions**:
-
 1. Increment schema version in `data/db/schema.ts`:
-
    ```typescript
    export default new Database({
      version: 8, // Increment this
@@ -516,7 +469,6 @@ npm run android
    ```
 
 2. Provide migration for version change:
-
    ```typescript
    // See docs/PANTRY_MIGRATION.md for examples
    ```
@@ -532,18 +484,15 @@ npm run android
 **Problem**: Querying a table that doesn't exist
 
 **Solutions**:
-
 1. Ensure table is defined in schema:
-
    ```typescript
    // data/db/schema.ts
-   export const myTable = app.table("my_table", {
+   export const myTable = app.table('my_table', {
      // columns
    });
    ```
 
 2. Re-run database setup:
-
    ```typescript
    // Uninstall app or clear data
    // Database will be recreated on next launch
@@ -559,16 +508,13 @@ npm run android
 **Problem**: WatermelonDB fails to load with migration error on app launch
 
 **Solutions**:
-
 1. **Clear app data (development)**: Delete the app from simulator/device and reinstall. This resets the database to a fresh state.
-
    ```bash
    # iOS Simulator: long-press app icon → Delete App
    # Then: bun ios  (or npm run ios)
    ```
 
 2. **Rebuild native app**: After schema/migration changes, rebuild:
-
    ```bash
    bun ios  # or: npx expo run ios
    ```
@@ -586,9 +532,7 @@ npm run android
 **Problem**: `Failed to fetch` or network errors when calling Supabase
 
 **Solutions**:
-
 1. Verify environment variables are set:
-
    ```bash
    # .env
    EXPO_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
@@ -596,7 +540,6 @@ npm run android
    ```
 
 2. Test Supabase connection:
-
    ```bash
    curl https://your-project.supabase.co/rest/v1/
    ```
@@ -614,16 +557,13 @@ npm run android
 **Problem**: `Invalid API key` or auth failures
 
 **Solutions**:
-
 1. Check `anon` key (not `service_role`):
-
    ```typescript
    // lib/supabase/client.ts
    // Should use EXPO_PUBLIC_SUPABASE_ANON_KEY
    ```
 
 2. Verify Row Level Security (RLS) policies:
-
    ```sql
    -- In Supabase SQL Editor
    select * from pg_policies where tablename = 'recipes';
@@ -640,25 +580,21 @@ npm run android
 **Problem**: Local database doesn't show recipes from cloud
 
 **Solutions**:
-
 1. Check sync is triggered:
-
    ```typescript
    // hooks/queries/useRecipeSync.ts
    // Sync should run on app launch and periodically
    ```
 
 2. Verify Supabase has recipes:
-
    ```sql
    select count(*) from recipes;
    ```
 
 3. Check API call succeeds:
-
    ```typescript
    const { data, error } = await recipeApi.getAll();
-   console.log("Recipes:", data?.length, "Error:", error);
+   console.log('Recipes:', data?.length, 'Error:', error);
    ```
 
 4. Use debug screen to inspect database:
@@ -674,24 +610,21 @@ npm run android
 **Problem**: UI shows stale data after mutations
 
 **Solutions**:
-
 1. Invalidate queries after mutations:
-
    ```typescript
    const mutation = useMutation({
      mutationFn: (item) => pantryApi.create(item),
      onSuccess: () => {
-       queryClient.invalidateQueries({ queryKey: ["pantry"] });
+       queryClient.invalidateQueries({ queryKey: ['pantry'] });
      },
    });
    ```
 
 2. Check query keys match:
-
    ```typescript
    // Both must use same key
-   useQuery({ queryKey: ["pantry"] });
-   invalidateQueries({ queryKey: ["pantry"] });
+   useQuery({ queryKey: ['pantry'] })
+   invalidateQueries({ queryKey: ['pantry'] })
    ```
 
 3. Verify QueryClient is properly configured:
@@ -705,9 +638,7 @@ npm run android
 **Problem**: Context state changes not reflected in other components
 
 **Solutions**:
-
 1. Ensure context wraps all screens:
-
    ```typescript
    // app/_layout.tsx
    <PantryProvider>
@@ -718,7 +649,6 @@ npm run android
    ```
 
 2. Check for multiple context instances:
-
    ```typescript
    // Only create one provider at root level
    // Don't wrap individual screens in providers
@@ -735,34 +665,30 @@ npm run android
 **Problem**: WatermelonDB changes not triggering UI updates
 
 **Solutions**:
-
 1. Use `withObservables` HOC or `useDatabase` hook:
-
    ```typescript
-   import { useDatabase } from "@nozbe/watermelondb/react";
+   import { useDatabase } from '@nozbe/watermelondb/react';
 
    const database = useDatabase();
    // Components will re-render on database changes
    ```
 
 2. Ensure queries are observed:
-
    ```typescript
-   import { observe } from "@nozbe/watermelondb";
+   import { observe } from '@nozbe/watermelondb';
 
    const items = observe(pantryQuery);
    // This creates an observable that triggers updates
    ```
 
 3. Check you're not mutating state directly:
-
    ```typescript
    // ❌ Wrong
    items.push(newItem);
 
    // ✅ Correct
    await database.write(async () => {
-     await collection.create((record) => {
+     await collection.create(record => {
        // create record
      });
    });
@@ -777,9 +703,7 @@ npm run android
 **Problem**: UI stutters or animations are choppy
 
 **Solutions**:
-
 1. Check for expensive operations in render:
-
    ```typescript
    // ❌ Don't do this in render
    const expensive = heavyComputation(data);
@@ -789,14 +713,12 @@ npm run android
    ```
 
 2. Optimize Reanimated worklets:
-
    ```typescript
    "worklet";
    // All animation code should be in worklets
    ```
 
 3. Use React.memo for expensive components:
-
    ```typescript
    export const ExpensiveComponent = React.memo(({ data }) => {
      // component
@@ -814,9 +736,7 @@ npm run android
 **Problem**: App crashes or slows down over time
 
 **Solutions**:
-
 1. Clean up subscriptions:
-
    ```typescript
    useEffect(() => {
      const subscription = observable.subscribe();
@@ -828,10 +748,9 @@ npm run android
    ```
 
 2. Remove listeners on unmount:
-
    ```typescript
    useEffect(() => {
-     const subscription = Keyboard.addListener("keyboardDidShow", handler);
+     const subscription = Keyboard.addListener('keyboardDidShow', handler);
 
      return () => subscription.remove();
    }, []);
@@ -849,23 +768,19 @@ npm run android
 **Problem**: App takes long to load or install
 
 **Solutions**:
-
 1. Analyze bundle:
-
    ```bash
    npx expo bundle-size
    ```
 
 2. Remove unused dependencies:
-
    ```bash
    npx depcheck
    ```
 
 3. Use lazy loading for large features:
-
    ```typescript
-   const VoiceSettings = lazy(() => import("./VoiceSettings"));
+   const VoiceSettings = lazy(() => import('./VoiceSettings'));
    ```
 
 4. Enable Hermes for Android:
@@ -885,7 +800,6 @@ npm run android
 ### Debug Screen
 
 Navigate to `/debug` in the app for:
-
 - Database statistics
 - Health checks
 - Data seeding
@@ -905,7 +819,6 @@ npx react-devtools
 ### Flipper (Advanced)
 
 For iOS/Android native debugging:
-
 ```bash
 # Install Flipper
 brew install flipper
@@ -917,7 +830,6 @@ brew install flipper
 ### Sentry Error Tracking
 
 The app integrates Sentry for error tracking. Check your Sentry dashboard for:
-
 - Crash reports
 - Performance metrics
 - Release health
@@ -927,7 +839,6 @@ The app integrates Sentry for error tracking. Check your Sentry dashboard for:
 ## Still Having Issues?
 
 1. **Check logs**:
-
    ```bash
    # iOS Simulator
    Cmd+D > Debug
@@ -959,12 +870,12 @@ The app integrates Sentry for error tracking. Check your Sentry dashboard for:
 
 ## Common Error Messages
 
-| Error                                                | Cause                      | Solution                                    |
-| ---------------------------------------------------- | -------------------------- | ------------------------------------------- |
-| `Unable to resolve module`                           | Missing dependency         | `npm install <package>`                     |
-| `Network request failed`                             | Network/CORS issue         | Check API URL, CORS settings                |
-| `undefined is not an object`                         | Null/undefined access      | Add optional chaining `?.`                  |
-| `VirtualizedList should not be nested`               | FlatList inside ScrollView | Use FlatList only or change structure       |
-| `Each child in a list should have a unique key prop` | Missing keys               | Add `key={item.id}` to list items           |
-| `SyntaxError: Unexpected token`                      | Syntax error               | Check for missing brackets, quotes          |
-| `TypeError: null is not an object`                   | Null reference             | Add null checks before accessing properties |
+| Error | Cause | Solution |
+|-------|-------|----------|
+| `Unable to resolve module` | Missing dependency | `npm install <package>` |
+| `Network request failed` | Network/CORS issue | Check API URL, CORS settings |
+| `undefined is not an object` | Null/undefined access | Add optional chaining `?.` |
+| `VirtualizedList should not be nested` | FlatList inside ScrollView | Use FlatList only or change structure |
+| `Each child in a list should have a unique key prop` | Missing keys | Add `key={item.id}` to list items |
+| `SyntaxError: Unexpected token` | Syntax error | Check for missing brackets, quotes |
+| `TypeError: null is not an object` | Null reference | Add null checks before accessing properties |

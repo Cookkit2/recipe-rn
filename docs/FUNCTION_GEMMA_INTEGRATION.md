@@ -57,46 +57,40 @@ DoneDish now includes an AI-powered assistant powered by Google's Function Gemma
 
 ## Tech Stack
 
-| Component        | Technology                          |
-| ---------------- | ----------------------------------- |
+| Component | Technology |
+|-----------|------------|
 | Mobile Framework | React Native 0.83+ with Expo SDK 55 |
-| AI Model         | Function Gemma 270M IT              |
-| Model Format     | GGUF (Q4_K_M quantization)          |
-| Native Binding   | llama.rn                            |
-| Local Database   | WatermelonDB                        |
-| Cloud Backend    | Supabase                            |
+| AI Model | Function Gemma 270M IT |
+| Model Format | GGUF (Q4_K_M quantization) |
+| Native Binding | llama.rn |
+| Local Database | WatermelonDB |
+| Cloud Backend | Supabase |
 
 ## Available Tools
 
 ### Inventory Management
-
 - `add_item` - Add food to pantry
 - `remove_item` - Remove/consume food
 - `get_inventory` - List items in pantry
 
 ### Expiration Tracking
-
 - `get_expiring_items` - Get items expiring soon
 - `set_expiry_alert` - Set reminder for expiring items
 
 ### Grocery List
-
 - `add_to_grocery_list` - Add item to grocery list
 - `get_grocery_list` - Get current grocery list
 
 ### Recipe & Meal Planning
-
 - `find_recipes` - Find recipes by ingredients
 - `suggest_meals` - Suggest meals based on inventory
 
 ### Product Identification
-
 - `scan_barcode` - Identify product from barcode
 
 ## Usage Examples
 
 ### Adding Items
-
 **User says:** "Add 2 cartons of milk to my fridge"
 
 **Model calls:** `add_item(name="milk", quantity=2, unit="cartons", location="fridge")`
@@ -104,28 +98,23 @@ DoneDish now includes an AI-powered assistant powered by Google's Function Gemma
 **Response:** Added 2 cartons of milk to fridge.
 
 ### Checking Expiry
-
 **User says:** "What's expiring soon?"
 
 **Model calls:** `get_expiring_items(days_ahead=3)`
 
 **Response:** Here's what's expiring in the next 3 days:
-
 - Milk (2 days)
 - Yogurt (1 day)
 - Chicken (3 days)
 
 ### Finding Recipes
-
 **User says:** "What can I make with eggs and cheese?"
 
 **Model calls:**
-
 1. `get_inventory(location="fridge")` - Get available ingredients
 2. `find_recipes(ingredients=["eggs", "cheese"], meal_type="dinner")` - Find recipes
 
 **Response:** Based on what you have, here are some recipe suggestions:
-
 1. Cheese Omelette
 2. Scrambled Eggs
 3. Egg and Cheese Sandwich
@@ -147,25 +136,22 @@ app/ai-assistant/
 
 ## Performance
 
-| Metric          | Value                     |
-| --------------- | ------------------------- |
-| Model Size      | ~250MB (Q4_K_M)           |
-| RAM Usage       | 250-550MB                 |
-| Inference Speed | ~50 tokens/second         |
+| Metric | Value |
+|--------|-------|
+| Model Size | ~250MB (Q4_K_M) |
+| RAM Usage | 250-550MB |
+| Inference Speed | ~50 tokens/second |
 | First Load Time | ~30-60 seconds (download) |
 
 ## Installation
 
 ### 1. Install Dependencies
-
 ```bash
 npm install llama.rn react-native-fs axios --legacy-peer-deps
 ```
 
 ### 2. Update app.json
-
 The llama.rn plugin is already configured in app.json:
-
 ```json
 [
   "llama.rn",
@@ -179,7 +165,6 @@ The llama.rn plugin is already configured in app.json:
 ```
 
 ### 3. Run the App
-
 ```bash
 # Development
 npm run dev
@@ -196,7 +181,6 @@ npm run android
 There are two ways to interact with the AI assistant:
 
 **A) AI Search Bar (Recommended - Main Pantry)**
-
 - Navigate to the main pantry screen (home)
 - Type naturally in the search bar at the top
 - AI analyzes your query and calls appropriate functions
@@ -204,7 +188,6 @@ There are two ways to interact with the AI assistant:
 - Tap on a result to view full details in a bottom sheet
 
 **B) Dedicated Chat Screen**
-
 - Navigate to `/ai-assistant` route for full chat experience
 - View conversation history
 - See detailed tool call information
@@ -212,7 +195,6 @@ There are two ways to interact with the AI assistant:
 ## Development
 
 ### Using the Hook
-
 ```typescript
 import { useFunctionGemma } from '~/lib/function-gemma/useFunctionGemma';
 
@@ -235,26 +217,25 @@ function MyComponent() {
 ```
 
 ### Adding Custom Tools
-
 To add a new tool, edit `lib/function-gemma/FunctionGemmaService.ts`:
 
 ```typescript
 export const FRIDGIT_TOOLS: FridgitTool[] = [
   // ... existing tools
   {
-    type: "function",
+    type: 'function',
     function: {
-      name: "my_custom_tool",
-      description: "Description of what the tool does",
+      name: 'my_custom_tool',
+      description: 'Description of what the tool does',
       parameters: {
-        type: "object",
+        type: 'object',
         properties: {
           param1: {
-            type: "string",
-            description: "Parameter description",
+            type: 'string',
+            description: 'Parameter description',
           },
         },
-        required: ["param1"],
+        required: ['param1'],
       },
     },
   },
@@ -273,24 +254,20 @@ async myCustomTool(params: any): Promise<any> {
 ## Troubleshooting
 
 ### Model Download Fails
-
 - Check network connection
 - Ensure Hugging Face URL is accessible
 - Try clearing app cache and reinstalling
 
 ### Out of Memory
-
 - Reduce `n_gpu_layers` in `FunctionGemmaService.ts`
 - Use more aggressive quantization (Q3_K or Q2_K)
 
 ### Slow Inference
-
 - Increase `n_gpu_layers` if GPU available
 - Reduce `n_ctx` (context window size)
 - Ensure device has adequate RAM
 
 ### Tool Calling Not Working
-
 - Verify `DoneDishToolExecutor` is connected to `FunctionGemmaService`
 - Check WatermelonDB schema matches expected models
 - Enable debug logging in `FunctionGemmaService.ts`
@@ -298,7 +275,6 @@ async myCustomTool(params: any): Promise<any> {
 ## Next Steps
 
 ### Phase 1: Base Model (Current)
-
 ✅ Integrate base Function Gemma
 ✅ Implement tool calling
 ✅ Connect to WatermelonDB and Supabase
@@ -306,14 +282,12 @@ async myCustomTool(params: any): Promise<any> {
 ⏳️ Gather feedback
 
 ### Phase 2: Fine-Tuning
-
 - Generate training data based on user interactions
 - Fine-tune Function Gemma with DoneDish-specific examples
 - Validate improved tool selection accuracy
 - Deploy fine-tuned model
 
 ### Phase 3: Enhancements
-
 - Add streaming responses
 - Implement multi-turn conversations with context
 - Add voice input integration

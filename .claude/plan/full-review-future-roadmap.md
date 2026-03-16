@@ -95,15 +95,15 @@ These remain as follow-up when capacity allows:
 
 ## 4. Key Files (P2 / P3)
 
-| Area                 | File(s)                                                                        | Operation                                                            |
-| -------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
-| DatabaseFacade       | `data/db/DatabaseFacade.ts`, `data/api/recipeApi.ts`                           | Refactor getAvailableRecipes; createRecipe return value; batch usage |
-| DoneDishToolExecutor | `lib/function-gemma/DoneDishToolExecutor.ts`                                   | Typed params/results; logging                                        |
-| Repositories         | `data/db/repositories/*.ts`                                                    | Replace `(record: any)` with model types                             |
-| Storage              | `data/storage/storage-facade.ts`                                               | async/await (if not in Phase 3/4)                                    |
-| Tests                | `lib/notifications/*`, `utils/api-error-handler.ts`, `utils/unit-converter.ts` | New test files                                                       |
-| Docs                 | `docs/API_OVERVIEW.md`, `docs/ARCHITECTURE_OVERVIEW.md`, `docs/DEPLOYMENT.md`  | Create or expand                                                     |
-| E2E                  | New (Detox/Maestro)                                                            | Configure and add critical flows                                     |
+| Area | File(s) | Operation |
+|------|---------|-----------|
+| DatabaseFacade | `data/db/DatabaseFacade.ts`, `data/api/recipeApi.ts` | Refactor getAvailableRecipes; createRecipe return value; batch usage |
+| DoneDishToolExecutor | `lib/function-gemma/DoneDishToolExecutor.ts` | Typed params/results; logging |
+| Repositories | `data/db/repositories/*.ts` | Replace `(record: any)` with model types |
+| Storage | `data/storage/storage-facade.ts` | async/await (if not in Phase 3/4) |
+| Tests | `lib/notifications/*`, `utils/api-error-handler.ts`, `utils/unit-converter.ts` | New test files |
+| Docs | `docs/API_OVERVIEW.md`, `docs/ARCHITECTURE_OVERVIEW.md`, `docs/DEPLOYMENT.md` | Create or expand |
+| E2E | New (Detox/Maestro) | Configure and add critical flows |
 
 ---
 

@@ -7,9 +7,7 @@
 ## 📋 Feature Overview
 
 ### User Story
-
 As a user, I want to paste a YouTube link and have the app:
-
 1. **Validate** that the video is cooking-related
 2. **Analyze** the video content to extract recipe information
 3. **Generate** a complete recipe with ingredients and steps
@@ -26,12 +24,10 @@ As a user, I want to paste a YouTube link and have the app:
 > See [ARCHITECTURE_DECISION.md](./ARCHITECTURE_DECISION.md) for options considered and rationale.
 
 **Implementation Strategy:**
-
 - MVP uses NoAuth (noembed) + transcript scraping
 - Future upgrade path to YouTube Data API v3
 
 **Flow:**
-
 ```
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐     ┌─────────────────┐
 │  User pastes    │ ──▶ │  YouTube Service │ ──▶ │  Fetch metadata │ ──▶ │  Fetch transcript│
@@ -129,15 +125,15 @@ export interface GeneratedRecipe {
 }
 
 export type YouTubeImportStatus =
-  | "idle"
-  | "validating-url"
-  | "fetching-metadata"
-  | "fetching-transcript"
-  | "analyzing"
-  | "generating-recipe"
-  | "comparing-pantry"
-  | "complete"
-  | "error";
+  | 'idle'
+  | 'validating-url'
+  | 'fetching-metadata'
+  | 'fetching-transcript'
+  | 'analyzing'
+  | 'generating-recipe'
+  | 'comparing-pantry'
+  | 'complete'
+  | 'error';
 
 export interface YouTubeImportState {
   status: YouTubeImportStatus;
@@ -199,8 +195,8 @@ export interface YouTubeVideoInfo {
   title: string;
   channelName: string;
   thumbnailUrl: string;
-  description?: string; // Only available with auth
-  duration?: string; // Only available with auth
+  description?: string;  // Only available with auth
+  duration?: string;     // Only available with auth
 }
 
 /**
@@ -241,18 +237,18 @@ export interface IYouTubeService {
 **File:** `data/youtube/YouTubeServiceFactory.ts`
 
 ```typescript
-import type { IYouTubeService } from "./types";
-import { NoAuthYouTubeService } from "./NoAuthYouTubeService";
+import type { IYouTubeService } from './types';
+import { NoAuthYouTubeService } from './NoAuthYouTubeService';
 // import { AuthYouTubeService } from './AuthYouTubeService'; // Future
 
-export type YouTubeServiceType = "noauth" | "auth";
+export type YouTubeServiceType = 'noauth' | 'auth';
 
-export function createYouTubeService(type: YouTubeServiceType = "noauth"): IYouTubeService {
+export function createYouTubeService(type: YouTubeServiceType = 'noauth'): IYouTubeService {
   switch (type) {
-    case "noauth":
+    case 'noauth':
       return new NoAuthYouTubeService();
-    case "auth":
-      throw new Error("AuthYouTubeService not yet implemented");
+    case 'auth':
+      throw new Error('AuthYouTubeService not yet implemented');
     default:
       return new NoAuthYouTubeService();
   }
@@ -261,7 +257,7 @@ export function createYouTubeService(type: YouTubeServiceType = "noauth"): IYouT
 export function getDefaultYouTubeService(): IYouTubeService {
   const hasApiKey = !!process.env.EXPO_PUBLIC_YOUTUBE_API_KEY;
   // For MVP, always use noauth
-  return createYouTubeService("noauth");
+  return createYouTubeService('noauth');
 }
 ```
 
@@ -270,16 +266,11 @@ export function getDefaultYouTubeService(): IYouTubeService {
 **File:** `data/youtube/NoAuthYouTubeService.ts`
 
 ```typescript
-import type {
-  IYouTubeService,
-  YouTubeVideoInfo,
-  YouTubeTranscript,
-  YouTubeDataResult,
-} from "./types";
-import { log } from "~/utils/logger";
+import type { IYouTubeService, YouTubeVideoInfo, YouTubeTranscript, YouTubeDataResult } from './types';
+import { log } from '~/utils/logger';
 
 export class NoAuthYouTubeService implements IYouTubeService {
-  private readonly NOEMBED_URL = "https://noembed.com/embed";
+  private readonly NOEMBED_URL = 'https://noembed.com/embed';
 
   async getVideoInfo(videoId: string): Promise<YouTubeVideoInfo> {
     const url = `${this.NOEMBED_URL}?url=https://www.youtube.com/watch?v=${videoId}`;
@@ -292,9 +283,9 @@ export class NoAuthYouTubeService implements IYouTubeService {
 
     return {
       videoId,
-      title: data.title || "Untitled Video",
-      channelName: data.author_name || "Unknown Channel",
-      thumbnailUrl: data.thumbnail_url || "",
+      title: data.title || 'Untitled Video',
+      channelName: data.author_name || 'Unknown Channel',
+      thumbnailUrl: data.thumbnail_url || '',
       // description, duration NOT available in noembed
     };
   }
@@ -309,13 +300,13 @@ export class NoAuthYouTubeService implements IYouTubeService {
       this.getTranscript(videoId),
     ]);
 
-    if (videoInfo.status === "rejected") {
+    if (videoInfo.status === 'rejected') {
       throw new Error(`Failed to fetch video: ${videoInfo.reason}`);
     }
 
     return {
       videoInfo: videoInfo.value,
-      transcript: transcript.status === "fulfilled" ? transcript.value : undefined,
+      transcript: transcript.status === 'fulfilled' ? transcript.value : undefined,
       hasFullMetadata: false,
     };
   }
@@ -335,7 +326,7 @@ export class NoAuthYouTubeService implements IYouTubeService {
 
     // 2. Extract caption URL from ytInitialPlayerResponse
     const captionUrl = this.extractCaptionUrl(pageHtml);
-    if (!captionUrl) throw new Error("No captions available");
+    if (!captionUrl) throw new Error('No captions available');
 
     // 3. Fetch and parse XML transcript
     const captionResponse = await fetch(captionUrl);
@@ -354,8 +345,8 @@ export class NoAuthYouTubeService implements IYouTubeService {
       if (!captions?.length) return null;
 
       // Prefer English
-      const englishTrack = captions.find(
-        (t: { languageCode: string }) => t.languageCode === "en" || t.languageCode?.startsWith("en")
+      const englishTrack = captions.find((t: { languageCode: string }) =>
+        t.languageCode === 'en' || t.languageCode?.startsWith('en')
       );
       return (englishTrack || captions[0])?.baseUrl || null;
     } catch {
@@ -364,7 +355,7 @@ export class NoAuthYouTubeService implements IYouTubeService {
   }
 
   private parseTranscriptXml(xml: string): YouTubeTranscript {
-    const segments: YouTubeTranscript["segments"] = [];
+    const segments: YouTubeTranscript['segments'] = [];
     const matches = xml.matchAll(/<text start="([\d.]+)" dur="([\d.]+)"[^>]*>([^<]*)<\/text>/g);
 
     for (const match of matches) {
@@ -376,20 +367,20 @@ export class NoAuthYouTubeService implements IYouTubeService {
     }
 
     return {
-      text: segments.map((s) => s.text).join(" "),
+      text: segments.map(s => s.text).join(' '),
       segments,
-      language: "en",
+      language: 'en',
     };
   }
 
   private decodeHtmlEntities(text: string): string {
     return text
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
       .replace(/&quot;/g, '"')
       .replace(/&#39;/g, "'")
-      .replace(/\n/g, " ")
+      .replace(/\n/g, ' ')
       .trim();
   }
 }
@@ -400,12 +391,7 @@ export class NoAuthYouTubeService implements IYouTubeService {
 **File:** `data/youtube/AuthYouTubeService.ts`
 
 ```typescript
-import type {
-  IYouTubeService,
-  YouTubeVideoInfo,
-  YouTubeTranscript,
-  YouTubeDataResult,
-} from "./types";
+import type { IYouTubeService, YouTubeVideoInfo, YouTubeTranscript, YouTubeDataResult } from './types';
 
 /**
  * YouTube Data API v3 implementation (requires API key)
@@ -413,17 +399,17 @@ import type {
  */
 export class AuthYouTubeService implements IYouTubeService {
   private readonly API_KEY = process.env.EXPO_PUBLIC_YOUTUBE_API_KEY;
-  private readonly BASE_URL = "https://www.googleapis.com/youtube/v3";
+  private readonly BASE_URL = 'https://www.googleapis.com/youtube/v3';
 
   async getVideoInfo(videoId: string): Promise<YouTubeVideoInfo> {
     const response = await fetch(
       `${this.BASE_URL}/videos?part=snippet,contentDetails&id=${videoId}&key=${this.API_KEY}`
     );
 
-    if (!response.ok) throw new Error("Failed to fetch video info");
+    if (!response.ok) throw new Error('Failed to fetch video info');
 
     const data = await response.json();
-    if (!data.items?.length) throw new Error("Video not found");
+    if (!data.items?.length) throw new Error('Video not found');
 
     const video = data.items[0];
     return {
@@ -439,11 +425,11 @@ export class AuthYouTubeService implements IYouTubeService {
   async getTranscript(videoId: string): Promise<YouTubeTranscript> {
     // Transcript still needs scraping - YouTube API doesn't provide it
     // Reuse NoAuthYouTubeService scraping logic
-    throw new Error("Not implemented - use NoAuth scraping");
+    throw new Error('Not implemented - use NoAuth scraping');
   }
 
   async getVideoData(videoId: string): Promise<YouTubeDataResult> {
-    throw new Error("Not implemented");
+    throw new Error('Not implemented');
   }
 
   hasFullMetadata(): boolean {
@@ -459,7 +445,7 @@ export class AuthYouTubeService implements IYouTubeService {
 **File:** `data/youtube/RecipeAnalyzer.ts`
 
 ```typescript
-import { GeminiAPI } from "~/utils/gemini-api";
+import { GeminiAPI } from '~/utils/gemini-api';
 
 export class RecipeAnalyzer {
   private gemini = new GeminiAPI();
@@ -475,24 +461,25 @@ export class RecipeAnalyzer {
     const prompt = this.buildAnalysisPrompt(videoInfo, transcript);
 
     const response = await this.gemini.generateContent(
-      "gemini-2.0-flash",
+      'gemini-2.0-flash',
       JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: prompt }],
-          },
-        ],
+        contents: [{
+          parts: [{ text: prompt }]
+        }],
         generationConfig: {
-          responseMimeType: "application/json",
+          responseMimeType: 'application/json',
           responseSchema: this.getRecipeSchema(),
-        },
+        }
       })
     );
 
     return this.parseResponse(response);
   }
 
-  private buildAnalysisPrompt(videoInfo: YouTubeVideoInfo, transcript?: YouTubeTranscript): string {
+  private buildAnalysisPrompt(
+    videoInfo: YouTubeVideoInfo,
+    transcript?: YouTubeTranscript
+  ): string {
     return `
 You are a recipe extraction assistant. Analyze the following YouTube video information and determine if it's a cooking/recipe video.
 
@@ -503,7 +490,7 @@ CHANNEL: ${videoInfo.channelName}
 DESCRIPTION:
 ${videoInfo.description}
 
-${transcript ? `TRANSCRIPT:\n${transcript.text}` : "No transcript available."}
+${transcript ? `TRANSCRIPT:\n${transcript.text}` : 'No transcript available.'}
 
 INSTRUCTIONS:
 1. First, determine if this is a cooking/recipe video (isCookingVideo: true/false)
@@ -529,51 +516,51 @@ Return a valid JSON response matching the schema.
 
   private getRecipeSchema() {
     return {
-      type: "object",
+      type: 'object',
       properties: {
-        isCookingVideo: { type: "boolean" },
-        confidence: { type: "number" },
-        errorMessage: { type: "string" },
+        isCookingVideo: { type: 'boolean' },
+        confidence: { type: 'number' },
+        errorMessage: { type: 'string' },
         recipe: {
-          type: "object",
+          type: 'object',
           properties: {
-            title: { type: "string" },
-            description: { type: "string" },
-            prepMinutes: { type: "integer" },
-            cookMinutes: { type: "integer" },
-            servings: { type: "integer" },
-            difficultyStars: { type: "integer" },
-            calories: { type: "integer" },
-            tags: { type: "array", items: { type: "string" } },
+            title: { type: 'string' },
+            description: { type: 'string' },
+            prepMinutes: { type: 'integer' },
+            cookMinutes: { type: 'integer' },
+            servings: { type: 'integer' },
+            difficultyStars: { type: 'integer' },
+            calories: { type: 'integer' },
+            tags: { type: 'array', items: { type: 'string' } },
             ingredients: {
-              type: "array",
+              type: 'array',
               items: {
-                type: "object",
+                type: 'object',
                 properties: {
-                  name: { type: "string" },
-                  quantity: { type: "number" },
-                  unit: { type: "string" },
-                  notes: { type: "string" },
+                  name: { type: 'string' },
+                  quantity: { type: 'number' },
+                  unit: { type: 'string' },
+                  notes: { type: 'string' },
                 },
-                required: ["name", "quantity", "unit"],
+                required: ['name', 'quantity', 'unit'],
               },
             },
             steps: {
-              type: "array",
+              type: 'array',
               items: {
-                type: "object",
+                type: 'object',
                 properties: {
-                  step: { type: "integer" },
-                  title: { type: "string" },
-                  description: { type: "string" },
+                  step: { type: 'integer' },
+                  title: { type: 'string' },
+                  description: { type: 'string' },
                 },
-                required: ["step", "title", "description"],
+                required: ['step', 'title', 'description'],
               },
             },
           },
         },
       },
-      required: ["isCookingVideo", "confidence"],
+      required: ['isCookingVideo', 'confidence'],
     };
   }
 }
@@ -586,13 +573,13 @@ Return a valid JSON response matching the schema.
 **File:** `data/api/youtubeRecipeApi.ts`
 
 ```typescript
-import { getDefaultYouTubeService } from "~/data/youtube/YouTubeServiceFactory";
-import { RecipeAnalyzer } from "~/data/youtube/RecipeAnalyzer";
-import { databaseFacade } from "~/data/db/DatabaseFacade";
-import { extractYouTubeVideoId, isValidYouTubeUrl } from "~/utils/youtube-utils";
-import type { Recipe } from "~/types/Recipe";
-import type { YouTubeImportStatus, GeneratedRecipe } from "~/types/YouTubeRecipe";
-import type { ShoppingListResult } from "~/data/db/DatabaseFacade";
+import { getDefaultYouTubeService } from '~/data/youtube/YouTubeServiceFactory';
+import { RecipeAnalyzer } from '~/data/youtube/RecipeAnalyzer';
+import { databaseFacade } from '~/data/db/DatabaseFacade';
+import { extractYouTubeVideoId, isValidYouTubeUrl } from '~/utils/youtube-utils';
+import type { Recipe } from '~/types/Recipe';
+import type { YouTubeImportStatus, GeneratedRecipe } from '~/types/YouTubeRecipe';
+import type { ShoppingListResult } from '~/data/db/DatabaseFacade';
 
 const recipeAnalyzer = new RecipeAnalyzer();
 
@@ -611,42 +598,42 @@ export const youtubeRecipeApi = {
   }> {
     try {
       // Step 1: Validate URL
-      onStatusChange?.("validating-url");
+      onStatusChange?.('validating-url');
       if (!isValidYouTubeUrl(url)) {
-        throw new Error("Invalid YouTube URL");
+        throw new Error('Invalid YouTube URL');
       }
 
       const videoId = extractYouTubeVideoId(url);
-      if (!videoId) throw new Error("Could not extract video ID");
+      if (!videoId) throw new Error('Could not extract video ID');
 
       // Step 2: Get YouTube service (uses factory pattern)
       const youtubeService = getDefaultYouTubeService();
 
       // Step 3: Fetch video data (metadata + transcript)
-      onStatusChange?.("fetching-metadata");
+      onStatusChange?.('fetching-metadata');
       const { videoInfo, transcript, hasFullMetadata } = await youtubeService.getVideoData(videoId);
 
       if (!hasFullMetadata) {
-        console.log("Using limited metadata (noembed) - transcript will be primary source");
+        console.log('Using limited metadata (noembed) - transcript will be primary source');
       }
 
       // Step 4: Analyze with Gemini
-      onStatusChange?.("analyzing");
+      onStatusChange?.('analyzing');
       const analysisResult = await recipeAnalyzer.analyzeForRecipe(videoInfo, transcript);
 
       if (!analysisResult.isCookingVideo) {
         throw new Error(
           `This video does not appear to be a cooking/recipe video. ` +
-            `Confidence: ${(analysisResult.confidence * 100).toFixed(0)}%`
+          `Confidence: ${(analysisResult.confidence * 100).toFixed(0)}%`
         );
       }
 
       if (!analysisResult.recipe) {
-        throw new Error("Could not extract recipe from video");
+        throw new Error('Could not extract recipe from video');
       }
 
       // Step 5: Store recipe in database
-      onStatusChange?.("generating-recipe");
+      onStatusChange?.('generating-recipe');
       const recipe = await this.saveRecipeToDatabase(
         analysisResult.recipe,
         url,
@@ -654,16 +641,17 @@ export const youtubeRecipeApi = {
       );
 
       // Step 6: Compare with pantry and generate shopping list
-      onStatusChange?.("comparing-pantry");
+      onStatusChange?.('comparing-pantry');
       const shoppingList = await databaseFacade.getShoppingListForRecipe(recipe.id);
 
-      onStatusChange?.("complete");
+      onStatusChange?.('complete');
       return { success: true, recipe, shoppingList };
+
     } catch (error) {
-      onStatusChange?.("error");
+      onStatusChange?.('error');
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
   },
@@ -714,22 +702,12 @@ export const youtubeRecipeApi = {
 
     // Quick keyword-based validation
     const cookingKeywords = [
-      "recipe",
-      "cook",
-      "cooking",
-      "bake",
-      "baking",
-      "chef",
-      "kitchen",
-      "food",
-      "meal",
-      "dish",
-      "ingredient",
-      "how to make",
+      'recipe', 'cook', 'cooking', 'bake', 'baking', 'chef',
+      'kitchen', 'food', 'meal', 'dish', 'ingredient', 'how to make'
     ];
 
     const text = videoInfo.title.toLowerCase();
-    const matches = cookingKeywords.filter((kw) => text.includes(kw));
+    const matches = cookingKeywords.filter(kw => text.includes(kw));
     const confidence = Math.min(matches.length / 3, 1);
 
     return {
@@ -750,13 +728,13 @@ export const youtubeRecipeApi = {
 **File:** `hooks/queries/useYouTubeRecipeQueries.ts`
 
 ```typescript
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { youtubeRecipeApi } from "~/data/api/youtubeRecipeApi";
-import { recipeQueryKeys } from "./recipeQueryKeys";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { youtubeRecipeApi } from '~/data/api/youtubeRecipeApi';
+import { recipeQueryKeys } from './recipeQueryKeys';
 
 export const youtubeQueryKeys = {
-  all: ["youtube"] as const,
-  validate: (url: string) => [...youtubeQueryKeys.all, "validate", url] as const,
+  all: ['youtube'] as const,
+  validate: (url: string) => [...youtubeQueryKeys.all, 'validate', url] as const,
 } as const;
 
 /**
@@ -780,7 +758,7 @@ export function useImportYouTubeRecipe() {
   return useMutation({
     mutationFn: ({
       url,
-      onStatusChange,
+      onStatusChange
     }: {
       url: string;
       onStatusChange?: (status: string) => void;
@@ -790,10 +768,10 @@ export function useImportYouTubeRecipe() {
       if (result.success && result.recipe) {
         // Invalidate recipe queries to include new recipe
         queryClient.invalidateQueries({
-          queryKey: recipeQueryKeys.recipes(),
+          queryKey: recipeQueryKeys.recipes()
         });
         queryClient.invalidateQueries({
-          queryKey: recipeQueryKeys.available(),
+          queryKey: recipeQueryKeys.available()
         });
       }
     },
@@ -881,16 +859,16 @@ async getDetailedShoppingList(recipeId: string): Promise<DetailedShoppingList> {
 
 ## 🛡️ Error Handling & Edge Cases
 
-| Scenario                       | Handling                                              |
-| ------------------------------ | ----------------------------------------------------- |
-| Invalid YouTube URL            | Return error immediately with helpful message         |
-| Video not found                | Display "Video not found or is private"               |
-| No transcript available        | Proceed with metadata-only analysis (lower accuracy)  |
-| Not a cooking video            | Show confidence score, suggest trying different video |
-| Gemini API error               | Retry with exponential backoff, then show error       |
-| Recipe extraction fails        | Show partial data if available, allow manual edit     |
-| Network error                  | Show offline message, suggest retry                   |
-| Rate limiting (YouTube/Gemini) | Queue requests, show wait time                        |
+| Scenario | Handling |
+|----------|----------|
+| Invalid YouTube URL | Return error immediately with helpful message |
+| Video not found | Display "Video not found or is private" |
+| No transcript available | Proceed with metadata-only analysis (lower accuracy) |
+| Not a cooking video | Show confidence score, suggest trying different video |
+| Gemini API error | Retry with exponential backoff, then show error |
+| Recipe extraction fails | Show partial data if available, allow manual edit |
+| Network error | Show offline message, suggest retry |
+| Rate limiting (YouTube/Gemini) | Queue requests, show wait time |
 
 ---
 
@@ -909,7 +887,6 @@ async getDetailedShoppingList(recipeId: string): Promise<DetailedShoppingList> {
 ## 🎯 Implementation Priority
 
 ### Phase 1: Core Functionality (MVP)
-
 1. ✅ YouTube URL validation (`youtube-utils.ts`)
 2. ✅ Video metadata fetching (`YouTubeService.ts`)
 3. ✅ Gemini recipe analysis (`RecipeAnalyzer.ts`)
@@ -917,14 +894,12 @@ async getDetailedShoppingList(recipeId: string): Promise<DetailedShoppingList> {
 5. ✅ Shopping list (use existing `databaseFacade.getShoppingListForRecipe`)
 
 ### Phase 2: Enhanced Features
-
 1. Transcript fetching for better accuracy
 2. Progress status callbacks
 3. Recipe preview before saving
 4. Edit generated recipe before save
 
 ### Phase 3: Polish
-
 1. Offline support (queue imports for later)
 2. Batch import (multiple URLs)
 3. Import history
@@ -957,26 +932,25 @@ When implementing UI, consider these screens/components:
 ## 🧪 Testing Strategy
 
 ### Unit Tests
-
 ```typescript
 // __tests__/youtube/youtube-utils.test.ts
-describe("extractYouTubeVideoId", () => {
-  it("extracts ID from standard URL", () => {
-    expect(extractYouTubeVideoId("https://www.youtube.com/watch?v=dQw4w9WgXcQ")).toBe(
-      "dQw4w9WgXcQ"
-    );
+describe('extractYouTubeVideoId', () => {
+  it('extracts ID from standard URL', () => {
+    expect(extractYouTubeVideoId('https://www.youtube.com/watch?v=dQw4w9WgXcQ'))
+      .toBe('dQw4w9WgXcQ');
   });
 
-  it("extracts ID from short URL", () => {
-    expect(extractYouTubeVideoId("https://youtu.be/dQw4w9WgXcQ")).toBe("dQw4w9WgXcQ");
+  it('extracts ID from short URL', () => {
+    expect(extractYouTubeVideoId('https://youtu.be/dQw4w9WgXcQ'))
+      .toBe('dQw4w9WgXcQ');
   });
 
   // ... more URL format tests
 });
 
 // __tests__/youtube/RecipeAnalyzer.test.ts
-describe("RecipeAnalyzer", () => {
-  it("identifies cooking videos correctly", async () => {
+describe('RecipeAnalyzer', () => {
+  it('identifies cooking videos correctly', async () => {
     // Mock Gemini response
     // Test analysis logic
   });
@@ -984,13 +958,12 @@ describe("RecipeAnalyzer", () => {
 ```
 
 ### Integration Tests
-
 ```typescript
 // __tests__/youtube/youtubeRecipeApi.test.ts
-describe("youtubeRecipeApi", () => {
-  it("imports recipe from valid cooking video", async () => {
+describe('youtubeRecipeApi', () => {
+  it('imports recipe from valid cooking video', async () => {
     const result = await youtubeRecipeApi.importRecipeFromYouTube(
-      "https://www.youtube.com/watch?v=COOKING_VIDEO_ID"
+      'https://www.youtube.com/watch?v=COOKING_VIDEO_ID'
     );
 
     expect(result.success).toBe(true);
@@ -1018,5 +991,5 @@ describe("youtubeRecipeApi", () => {
 
 ---
 
-_Created: January 2026_
-_Last Updated: January 2026_
+*Created: January 2026*
+*Last Updated: January 2026*

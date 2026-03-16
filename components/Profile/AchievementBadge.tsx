@@ -24,14 +24,8 @@ export default function AchievementBadge({
   size = "medium",
   showShareButton = true,
 }: AchievementBadgeProps) {
-  const {
-    achievement: ach,
-    progress,
-    progressPercentage,
-    isUnlocked,
-    isLocked,
-    isInProgress,
-  } = achievement;
+  const { achievement: ach, progress, progressPercentage, isUnlocked, isLocked, isInProgress } =
+    achievement;
 
   const iconSize = size === "small" ? 32 : size === "medium" ? 40 : 48;
   const padding = size === "small" ? "py-3" : size === "medium" ? "py-4" : "py-5";
@@ -100,7 +94,10 @@ export default function AchievementBadge({
               )}
             </View>
           </View>
-          <Small className="text-foreground/70 font-urbanist-medium" numberOfLines={2}>
+          <Small
+            className="text-foreground/70 font-urbanist-medium"
+            numberOfLines={2}
+          >
             {ach.description}
           </Small>
         </View>

@@ -45,7 +45,11 @@ export const scaleRecipeIngredients = <T extends { quantity: number }>(
 
   return ingredients.map((ingredient) => ({
     ...ingredient,
-    quantity: scaleIngredientQuantity(ingredient.quantity, originalServings, newServings),
+    quantity: scaleIngredientQuantity(
+      ingredient.quantity,
+      originalServings,
+      newServings
+    ),
   }));
 };
 
@@ -55,7 +59,10 @@ export const scaleRecipeIngredients = <T extends { quantity: number }>(
  * @param newServings - The new number of servings
  * @returns The scaling factor (e.g., 2 means double, 0.5 means half)
  */
-export const calculateScalingFactor = (originalServings: number, newServings: number): number => {
+export const calculateScalingFactor = (
+  originalServings: number,
+  newServings: number
+): number => {
   if (originalServings <= 0) return 1;
   if (newServings <= 0) return 0;
   if (originalServings === newServings) return 1;
@@ -84,7 +91,10 @@ export const getScalingDirection = (
  * @param newServings - The new number of servings
  * @returns A string like "Double (2x)", "Half (0.5x)", or "No change"
  */
-export const formatScalingChange = (originalServings: number, newServings: number): string => {
+export const formatScalingChange = (
+  originalServings: number,
+  newServings: number
+): string => {
   if (originalServings === newServings) return "No change";
 
   const factor = calculateScalingFactor(originalServings, newServings);
@@ -117,7 +127,12 @@ export const formatScalingChange = (originalServings: number, newServings: numbe
  * @returns true if valid, false otherwise
  */
 export const isValidServingSize = (servings: number): boolean => {
-  return typeof servings === "number" && !isNaN(servings) && isFinite(servings) && servings > 0;
+  return (
+    typeof servings === "number" &&
+    !isNaN(servings) &&
+    isFinite(servings) &&
+    servings > 0
+  );
 };
 
 /**

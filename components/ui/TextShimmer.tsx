@@ -41,7 +41,10 @@ export default function TextShimmer({
   };
 
   const gradientWidth = useMemo(() => {
-    const width = Math.max(120, Math.floor(String(children).length * spread * 8));
+    const width = Math.max(
+      120,
+      Math.floor(String(children).length * spread * 8)
+    );
     // Ensure a minimum width to cover short strings and look smooth
     return width;
   }, [children, spread]);
@@ -83,7 +86,10 @@ export default function TextShimmer({
         {/* Moving highlight gradient */}
         <Animated.View
           className="absolute top-0 bottom-0"
-          style={[{ left: -gradientWidth, right: -gradientWidth }, animatedStyle]}
+          style={[
+            { left: -gradientWidth, right: -gradientWidth },
+            animatedStyle,
+          ]}
         >
           <LinearGradient
             // 45° diagonal sweep

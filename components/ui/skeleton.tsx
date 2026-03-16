@@ -8,7 +8,13 @@ import Animated, {
 } from "react-native-reanimated";
 import useColors from "~/hooks/useColor";
 
-export default function Skeleton({ className, style }: { className?: string; style?: object }) {
+export default function Skeleton({
+  className,
+  style,
+}: {
+  className?: string;
+  style?: object;
+}) {
   const colors = useColors();
   const opacity = useSharedValue(0.3);
 

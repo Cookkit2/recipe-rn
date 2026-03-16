@@ -9,7 +9,7 @@ import type {
   AuthSession,
 } from "~/types/AuthTypes";
 import type { AuthStrategy } from "./AuthStrategy";
-import { log } from "~/utils/logger";
+import { log } from '~/utils/logger';
 
 interface AuthStore {
   // State
@@ -29,7 +29,9 @@ interface AuthStore {
   signUpWithEmail: (credentials: SignInCredentials) => Promise<AuthResult>;
   signOut: () => Promise<AuthResult>;
   refreshSession: () => Promise<AuthResult>;
-  linkAnonymousAccount: (credentials: LinkAccountCredentials) => Promise<AuthResult>;
+  linkAnonymousAccount: (
+    credentials: LinkAccountCredentials
+  ) => Promise<AuthResult>;
   resetPassword: (email: string) => Promise<AuthResult>;
 
   // Utility Actions
@@ -99,7 +101,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
       return result;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
       get()._setAuthState("error");
       get()._setError(errorMessage);
       return {
@@ -141,7 +144,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
       return result;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
       get()._setAuthState("error");
       get()._setError(errorMessage);
       return {
@@ -187,7 +191,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
       return result;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
       get()._setAuthState("error");
       get()._setError(errorMessage);
       return {
@@ -233,7 +238,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
       return result;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
       get()._setAuthState("error");
       get()._setError(errorMessage);
       return {
@@ -272,7 +278,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       return result;
     } catch (error) {
       log.error("Error in AuthStore.signOut():", error);
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
       get()._setError(errorMessage);
 
       // Still clear local state even if remote sign out failed
@@ -322,7 +329,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
       return result;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
       get()._setAuthState("error");
       get()._setError(errorMessage);
       return {
@@ -367,7 +375,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
       return result;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
       get()._setAuthState("error");
       get()._setError(errorMessage);
       return {
@@ -407,7 +416,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
       return result;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
       get()._setError(errorMessage);
       return {
         success: false,

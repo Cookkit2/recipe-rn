@@ -10,12 +10,12 @@ The recipe import system enables users to add recipes to DoneDish by pasting URL
 
 ### Supported Sources
 
-| Source        | Service                                   | Data Extraction                                     |
-| ------------- | ----------------------------------------- | --------------------------------------------------- |
-| **YouTube**   | `NoAuthYouTubeService` + `RecipeAnalyzer` | noembed metadata + InnerTube transcript + Gemini AI |
-| **TikTok**    | `SocialRecipeService`                     | Page metadata + Gemini AI text analysis             |
-| **Instagram** | `SocialRecipeService`                     | Page metadata + JSON-LD + Gemini AI text analysis   |
-| **Websites**  | `WebsiteRecipeService`                    | JSON-LD structured data + Gemini AI cleaning        |
+| Source | Service | Data Extraction |
+|--------|---------|-----------------|
+| **YouTube** | `NoAuthYouTubeService` + `RecipeAnalyzer` | noembed metadata + InnerTube transcript + Gemini AI |
+| **TikTok** | `SocialRecipeService` | Page metadata + Gemini AI text analysis |
+| **Instagram** | `SocialRecipeService` | Page metadata + JSON-LD + Gemini AI text analysis |
+| **Websites** | `WebsiteRecipeService` | JSON-LD structured data + Gemini AI cleaning |
 
 ### Key Features
 
@@ -81,11 +81,11 @@ The system first identifies the source platform from the URL:
 
 ```typescript
 // Typical implementation (not shown in code)
-function detectPlatform(url: string): "youtube" | "tiktok" | "instagram" | "website" | null {
-  if (url.includes("youtube.com") || url.includes("youtu.be")) return "youtube";
-  if (url.includes("tiktok.com")) return "tiktok";
-  if (url.includes("instagram.com")) return "instagram";
-  if (url.startsWith("http")) return "website";
+function detectPlatform(url: string): 'youtube' | 'tiktok' | 'instagram' | 'website' | null {
+  if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
+  if (url.includes('tiktok.com')) return 'tiktok';
+  if (url.includes('instagram.com')) return 'instagram';
+  if (url.startsWith('http')) return 'website';
   return null;
 }
 ```
@@ -97,7 +97,6 @@ function detectPlatform(url: string): "youtube" | "tiktok" | "instagram" | "webs
 **File**: `lib/recipe-scrapper/SocialRecipeService.ts`
 
 **Strategy**:
-
 1. Fetch page HTML with mobile User-Agent
 2. Extract Open Graph metadata (og:title, og:description)
 3. For Instagram: Parse JSON-LD for full caption
@@ -105,13 +104,11 @@ function detectPlatform(url: string): "youtube" | "tiktok" | "instagram" | "webs
 5. Validate results before returning
 
 **Key Methods**:
-
 - `analyzeForRecipe(content: SocialMediaContent)` - Main entry point
 - `fetchPageMetadata(url: string)` - Extract HTML metadata
 - `buildAnalysisPrompt(content, metadata)` - Construct AI prompt
 
 **Limitations**:
-
 - Cannot directly analyze video (social URLs aren't direct video files)
 - Relies on text description being present in caption
 - Lower confidence when description is sparse
@@ -123,26 +120,23 @@ function detectPlatform(url: string): "youtube" | "tiktok" | "instagram" | "webs
 **File**: `lib/recipe-scrapper/WebsiteRecipeService.ts`
 
 **Strategy**:
-
 1. Fetch website HTML
 2. Extract JSON-LD `schema.org/Recipe` data if present
 3. Fall back to AI analysis if structured data is incomplete
 4. Clean and normalize results with Gemini
 
 **Key Methods**:
-
 - `fetchWebsiteContent(url: string)` - Fetch HTML + structured data
 - `convertStructuredDataToRecipe(data, url)` - Parse schema.org/Recipe
 - `cleanRecipeWithGemini(recipe)` - Normalize ingredients, steps
 
 **Structured Data Handling**:
-
 ```typescript
 interface StructuredRecipeData {
   name: string;
   description?: string;
   image?: string | string[];
-  prepTime?: string; // ISO 8601 duration
+  prepTime?: string;        // ISO 8601 duration
   cookTime?: string;
   recipeYield?: string;
   recipeIngredient?: string[];
@@ -154,7 +148,6 @@ interface StructuredRecipeData {
 ```
 
 **Cleaning Process**:
-
 1. Normalize ingredient names to singular form
 2. Standardize units (cup, tablespoon, teaspoon, gram)
 3. Create actionable step titles
@@ -177,14 +170,11 @@ export interface IYouTubeService {
 ```
 
 **Factory Function**:
-
 ```typescript
 export function createYouTubeService(type: YouTubeServiceType = "noauth"): IYouTubeService {
   switch (type) {
-    case "noauth":
-      return new NoAuthYouTubeService();
-    case "auth":
-      throw new Error("AuthYouTubeService not yet implemented");
+    case "noauth": return new NoAuthYouTubeService();
+    case "auth": throw new Error("AuthYouTubeService not yet implemented");
   }
 }
 ```
@@ -194,7 +184,6 @@ export function createYouTubeService(type: YouTubeServiceType = "noauth"): IYouT
 **File**: `lib/recipe-scrapper/youtube/NoAuthYouTubeService.ts`
 
 **Metadata Fetching**: Uses noembed.com for basic video info
-
 - Title
 - Channel name
 - Thumbnail URL
@@ -203,15 +192,14 @@ export function createYouTubeService(type: YouTubeServiceType = "noauth"): IYouT
 
 **Transcript Fetching**: Multiple fallback strategies:
 
-| Strategy           | Method                        | Reliability   |
-| ------------------ | ----------------------------- | ------------- |
-| InnerTube API      | YouTube's Android client API  | ⭐⭐⭐⭐ Best |
-| youtube-transcript | npm package                   | ⭐⭐⭐ Good   |
-| Proxy API          | lemnoslife.com public API     | ⭐⭐ Fair     |
-| Direct scraping    | Parse ytInitialPlayerResponse | ⭐⭐ Fallback |
+| Strategy | Method | Reliability |
+|----------|--------|-------------|
+| InnerTube API | YouTube's Android client API | ⭐⭐⭐⭐ Best |
+| youtube-transcript | npm package | ⭐⭐⭐ Good |
+| Proxy API | lemnoslife.com public API | ⭐⭐ Fair |
+| Direct scraping | Parse ytInitialPlayerResponse | ⭐⭐ Fallback |
 
 **InnerTube API Flow**:
-
 ```typescript
 POST https://www.youtube.com/youtubei/v1/player
 Headers:
@@ -244,7 +232,6 @@ Response:
    - Fills gaps from incomplete schema.org data
 
 **Recipe Schema**:
-
 ```typescript
 {
   isCookingVideo: boolean;      // Is this cooking content?
@@ -284,7 +271,7 @@ export function isValidRecipe(recipe: Partial<GeneratedRecipe>): boolean {
   // 2. Check has valid ingredients (excludes "Unknown ingredient")
   // 3. Check has valid steps with descriptions
   // 4. Check servings is positive
-  return true / false;
+  return true/false;
 }
 ```
 
@@ -438,12 +425,12 @@ export class YouTubeServiceError extends Error {
   constructor(
     message: string,
     public readonly code:
-      | "VIDEO_NOT_FOUND" // Video doesn't exist or is private
-      | "NO_CAPTIONS" // No transcript available
-      | "NETWORK_ERROR" // Fetch failed
-      | "RATE_LIMITED" // Too many requests
-      | "API_ERROR" // YouTube API error
-      | "PARSE_ERROR" // Failed to parse response
+      | "VIDEO_NOT_FOUND"     // Video doesn't exist or is private
+      | "NO_CAPTIONS"         // No transcript available
+      | "NETWORK_ERROR"       // Fetch failed
+      | "RATE_LIMITED"        // Too many requests
+      | "API_ERROR"           // YouTube API error
+      | "PARSE_ERROR"         // Failed to parse response
   ) {
     super(message);
     this.name = "YouTubeServiceError";
@@ -473,12 +460,12 @@ export class YouTubeServiceError extends Error {
 
 ### Recipe Content Validation
 
-| Field           | Validation Rule                                          |
-| --------------- | -------------------------------------------------------- |
-| **Title**       | Must be non-empty string                                 |
+| Field | Validation Rule |
+|-------|-----------------|
+| **Title** | Must be non-empty string |
 | **Ingredients** | Must have ≥1 valid ingredient (not "Unknown ingredient") |
-| **Steps**       | Must have ≥1 step with non-empty description             |
-| **Servings**    | Must be positive number                                  |
+| **Steps** | Must have ≥1 step with non-empty description |
+| **Servings** | Must be positive number |
 
 ### Post-AI Validation
 
@@ -487,8 +474,8 @@ export class YouTubeServiceError extends Error {
 if (!isValidRecipe(recipe)) {
   return {
     isCookingVideo: true,
-    confidence: 0, // Force error to user
-    errorMessage: "Could not extract valid recipe",
+    confidence: 0,  // Force error to user
+    errorMessage: "Could not extract valid recipe"
   };
 }
 ```
@@ -497,10 +484,10 @@ if (!isValidRecipe(recipe)) {
 
 ## 🔐 API Keys Required
 
-| API         | Environment Variable         | Purpose                                                |
-| ----------- | ---------------------------- | ------------------------------------------------------ |
-| **Gemini**  | `EXPO_PUBLIC_GEMINI_API_KEY` | Recipe analysis from video/text                        |
-| **YouTube** | (None - MVP uses noembed)    | Video metadata (future: `EXPO_PUBLIC_YOUTUBE_API_KEY`) |
+| API | Environment Variable | Purpose |
+|-----|---------------------|---------|
+| **Gemini** | `EXPO_PUBLIC_GEMINI_API_KEY` | Recipe analysis from video/text |
+| **YouTube** | (None - MVP uses noembed) | Video metadata (future: `EXPO_PUBLIC_YOUTUBE_API_KEY`) |
 
 ---
 
@@ -550,5 +537,5 @@ if (!isValidRecipe(recipe)) {
 
 ---
 
-_Created: February 2026_
-_Last Updated: February 2026_
+*Created: February 2026*
+*Last Updated: February 2026*

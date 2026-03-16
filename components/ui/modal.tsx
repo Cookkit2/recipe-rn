@@ -16,8 +16,17 @@ export default function BaseModal({
   const { theme } = useUniwind();
 
   return (
-    <Modal animationType="fade" transparent={true} visible={modalVisible} onRequestClose={onCancel}>
-      <BlurView intensity={20} className="absolute inset-0 z-[1]" tint={theme === "dark" ? "dark" : "light"} />
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={modalVisible}
+      onRequestClose={onCancel}
+    >
+      <BlurView
+        intensity={20}
+        className="absolute inset-0 z-[1]"
+        tint={theme}
+      />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1 z-[2]"

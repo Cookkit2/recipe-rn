@@ -1,9 +1,21 @@
 import React, { useState } from "react";
-import { View, Pressable, Alert, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import {
+  View,
+  Pressable,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from "react-native";
 import { Link, router } from "expo-router";
 import { Text } from "~/components/ui/text";
 import { Button } from "~/components/ui/button";
-import { AuthContainer, AuthCard, AuthInput, SocialAuthButton } from "~/components/auth";
+import {
+  AuthContainer,
+  AuthCard,
+  AuthInput,
+  SocialAuthButton,
+} from "~/components/auth";
 import { useAuth } from "~/auth";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -92,7 +104,9 @@ export default function SignUpScreen() {
       setPasswordError("Password must be at least 8 characters");
       isValid = false;
     } else if (getPasswordStrength(password) < 3) {
-      setPasswordError("Password is too weak. Include uppercase, lowercase, numbers, and symbols");
+      setPasswordError(
+        "Password is too weak. Include uppercase, lowercase, numbers, and symbols"
+      );
       isValid = false;
     }
 
@@ -136,7 +150,10 @@ export default function SignUpScreen() {
           );
         }
       } else {
-        Alert.alert("Sign Up Failed", result.error?.message || "Please try again");
+        Alert.alert(
+          "Sign Up Failed",
+          result.error?.message || "Please try again"
+        );
       }
     } catch (error) {
       Alert.alert("Error", "An unexpected error occurred");
@@ -156,7 +173,10 @@ export default function SignUpScreen() {
       if (result.success) {
         router.replace("/");
       } else {
-        Alert.alert("Sign Up Failed", result.error?.message || `${provider} sign up failed`);
+        Alert.alert(
+          "Sign Up Failed",
+          result.error?.message || `${provider} sign up failed`
+        );
       }
     } catch (error) {
       Alert.alert("Error", "An unexpected error occurred");
@@ -178,7 +198,10 @@ export default function SignUpScreen() {
         showsVerticalScrollIndicator={false}
       >
         <AuthContainer>
-          <AuthCard title="Create Account" subtitle="Join us to start your cooking journey">
+          <AuthCard
+            title="Create Account"
+            subtitle="Join us to start your cooking journey"
+          >
             <View className="space-y-4">
               {/* Email Input */}
               <AuthInput
@@ -205,7 +228,9 @@ export default function SignUpScreen() {
                 {password.length > 0 && (
                   <View className="mt-2">
                     <View className="flex-row justify-between items-center">
-                      <Text className="text-xs text-muted-foreground">Password strength:</Text>
+                      <Text className="text-xs text-muted-foreground">
+                        Password strength:
+                      </Text>
                       <Text
                         className={`text-xs font-medium ${getPasswordStrengthColor(
                           passwordStrength
@@ -223,8 +248,8 @@ export default function SignUpScreen() {
                               ? level <= 2
                                 ? "bg-red-500"
                                 : level <= 3
-                                  ? "bg-yellow-500"
-                                  : "bg-green-500"
+                                ? "bg-yellow-500"
+                                : "bg-green-500"
                               : "bg-gray-200"
                           }`}
                         />
@@ -251,7 +276,9 @@ export default function SignUpScreen() {
                 disabled={isLoading || !!socialLoading}
                 className="w-full"
               >
-                <Text>{isLoading ? "Creating Account..." : "Create Account"}</Text>
+                <Text>
+                  {isLoading ? "Creating Account..." : "Create Account"}
+                </Text>
               </Button>
 
               {/* Terms Text */}
@@ -289,10 +316,14 @@ export default function SignUpScreen() {
 
               {/* Sign In Link */}
               <View className="flex-row justify-center items-center space-x-2 pt-4">
-                <Text className="text-sm text-muted-foreground">Already have an account?</Text>
+                <Text className="text-sm text-muted-foreground">
+                  Already have an account?
+                </Text>
                 <Link href="/(auth)/sign-in" asChild>
                   <Pressable>
-                    <Text className="text-sm text-primary font-medium">Sign In</Text>
+                    <Text className="text-sm text-primary font-medium">
+                      Sign In
+                    </Text>
                   </Pressable>
                 </Link>
               </View>

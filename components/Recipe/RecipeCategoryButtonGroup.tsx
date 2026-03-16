@@ -1,8 +1,8 @@
-import React from "react";
-import useColors from "~/hooks/useColor";
-import { P } from "~/components/ui/typography";
-import { Pressable, View } from "react-native";
-import { SymbolView } from "expo-symbols";
+import React from 'react';
+import useColors from '~/hooks/useColor';
+import { P } from '~/components/ui/typography';
+import { Pressable, View } from 'react-native';
+import { SymbolView } from 'expo-symbols';
 
 const RECIPE_TAGS: {
   label: string;
@@ -10,19 +10,19 @@ const RECIPE_TAGS: {
   tag: string;
 }[] = [
   {
-    label: "Meal",
+    label: 'Meal',
     icon: <SymbolView name="fork.knife" size={18} />,
-    tag: "meal",
+    tag: 'meal',
   },
   {
-    label: "Dessert",
+    label: 'Dessert',
     icon: <SymbolView name="cup.and.saucer" size={18} />,
-    tag: "dessert",
+    tag: 'dessert',
   },
   {
-    label: "Drink",
+    label: 'Drink',
     icon: <SymbolView name="wineglass" size={18} />,
-    tag: "drink",
+    tag: 'drink',
   },
 ];
 
@@ -40,14 +40,13 @@ export default function RecipeCategoryButtonGroup({
       {RECIPE_TAGS.map(({ label, icon, tag }) => (
         <Pressable
           key={tag}
-          className={"border-continuous flex-row items-center gap-2 rounded-2xl"}
+          className={'border-continuous flex-row items-center gap-2 rounded-2xl'}
           style={{
             backgroundColor: selectedRecipeTags.includes(tag)
               ? colors.primary
               : colors.mutedForeground,
           }}
-          onPress={() => updateRecipeTag(tag)}
-        >
+          onPress={() => updateRecipeTag(tag)}>
           {React.cloneElement(icon, {
             style: {
               color: selectedRecipeTags.includes(tag)
@@ -56,13 +55,12 @@ export default function RecipeCategoryButtonGroup({
             },
           })}
           <P
-            className={"font-urbanist-semibold text-lg leading-snug"}
+            className={'font-urbanist-semibold text-lg leading-snug'}
             style={{
               color: selectedRecipeTags.includes(tag)
                 ? colors.primaryForeground
                 : colors.background,
-            }}
-          >
+            }}>
             {label}
           </P>
         </Pressable>

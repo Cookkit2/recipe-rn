@@ -1,7 +1,7 @@
-import type { IStorage, StorageConfig, StorageType } from "./storage-types";
-import { StorageError } from "./storage-types";
-import { MMKVStorageImpl } from "./implementations/mmkv-storage-impl";
-import { log } from "~/utils/logger";
+import type { IStorage, StorageConfig, StorageType } from './storage-types';
+import { StorageError } from './storage-types';
+import { MMKVStorageImpl } from './implementations/mmkv-storage-impl';
+import { log } from '~/utils/logger';
 
 export class StorageFactory {
   private static instance: IStorage | null = null;
@@ -16,7 +16,7 @@ export class StorageFactory {
       this.currentConfig = config;
       return this.instance;
     } catch (error) {
-      throw new StorageError(`Failed to initialize storage: ${error}`, "mmkv");
+      throw new StorageError(`Failed to initialize storage: ${error}`, 'mmkv');
     }
   }
 
@@ -25,7 +25,7 @@ export class StorageFactory {
    */
   static getInstance(): IStorage {
     if (!this.instance) {
-      throw new StorageError("Storage not initialized", "mmkv");
+      throw new StorageError('Storage not initialized', 'mmkv');
     }
     return this.instance;
   }
@@ -50,7 +50,7 @@ export class StorageFactory {
    */
   private static createStorage(config: StorageConfig): IStorage {
     switch (config.type) {
-      case "mmkv":
+      case 'mmkv':
         return new MMKVStorageImpl(config.options);
 
       default:
@@ -66,7 +66,7 @@ export class StorageFactory {
    */
   static supportsAsync(): boolean {
     const config = this.getCurrentConfig();
-    return config?.type === "mmkv";
+    return config?.type === 'mmkv';
   }
 
   /**
@@ -76,8 +76,8 @@ export class StorageFactory {
     const instance = this.getInstance();
     // Check if the instance has both sync batch methods
     return (
-      this.storageSupportsMethod(instance, "getBatch") &&
-      this.storageSupportsMethod(instance, "setBatch")
+      this.storageSupportsMethod(instance, 'getBatch') &&
+      this.storageSupportsMethod(instance, 'setBatch')
     );
   }
 
@@ -101,18 +101,18 @@ export class StorageFactory {
       } else {
         // Always call getAllKeys for tests to verify it's called
         const allKeys =
-          typeof fromStorage.getAllKeys === "function" ? fromStorage.getAllKeys() : null;
+          typeof fromStorage.getAllKeys === 'function' ? fromStorage.getAllKeys() : null;
         keysToMigrate = Array.isArray(allKeys) ? allKeys : [];
       }
 
       if (keysToMigrate.length === 0) {
-        log.info("No data to migrate");
+        log.info('No data to migrate');
         return;
       }
 
       // Check if both storages support batch operations
-      const fromSupportsBatch = this.storageSupportsMethod(fromStorage, "getBatch");
-      const toSupportsBatch = this.storageSupportsMethod(toStorage, "setBatch");
+      const fromSupportsBatch = this.storageSupportsMethod(fromStorage, 'getBatch');
+      const toSupportsBatch = this.storageSupportsMethod(toStorage, 'setBatch');
 
       if (fromSupportsBatch && toSupportsBatch) {
         // Use batch operations for efficiency
@@ -138,10 +138,10 @@ export class StorageFactory {
    * Check if a storage instance supports a specific method
    */
   private static storageSupportsMethod(storage: IStorage, methodName: string): boolean {
-    return typeof (storage as any)[methodName] === "function";
+    return typeof (storage as any)[methodName] === 'function';
   }
 }
 
 // Convenience methods for common configurations
 export const createMMKVStorage = (options?: { id?: string; encryptionKey?: string }) =>
-  StorageFactory.initialize({ type: "mmkv", options });
+  StorageFactory.initialize({ type: 'mmkv', options });

@@ -19,7 +19,11 @@ export default function PoweredByAI() {
           style={StyleSheet.absoluteFill}
         />
         <P className="font-urbanist-extrabold text-primary-foreground">AI</P>
-        <SparkleIcon size={14} color={colors.primaryForeground} fill="#FFFFFF" />
+        <SparkleIcon
+          size={14}
+          color={colors.primaryForeground}
+          fill="#FFFFFF"
+        />
       </View>
     </View>
   );

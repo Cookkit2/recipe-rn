@@ -9,7 +9,12 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
-import { CheckIcon, ChevronDownIcon, ChevronRightIcon, ChevronUpIcon } from "lucide-uniwind";
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  ChevronUpIcon,
+} from "lucide-uniwind";
 import { cn } from "~/lib/utils";
 import { TextClassContext } from "~/components/ui/text";
 
@@ -37,7 +42,12 @@ function DropdownMenuSubTrigger({
   children?: React.ReactNode;
 }) {
   const { open } = DropdownMenuPrimitive.useSubContext();
-  const Icon = Platform.OS === "web" ? ChevronRightIcon : open ? ChevronUpIcon : ChevronDownIcon;
+  const Icon =
+    Platform.OS === "web"
+      ? ChevronRightIcon
+      : open
+        ? ChevronUpIcon
+        : ChevronDownIcon;
   return (
     <TextClassContext.Provider
       value={cn(

@@ -13,12 +13,10 @@
 ## Task 1: Storage Key and Settings Service
 
 **Files:**
-
 - Modify: `constants/storage-keys.ts`
 - Create: `utils/notification-settings.ts`
 
 **Steps:**
-
 1. Add `NOTIFICATION_SETTINGS_KEY = "notifications:settings"` under the user preferences / settings section.
 2. Create `NotificationSettings` interface and defaults (master + three categories) in `notification-settings.ts`.
 3. Implement `notificationSettingsService` with:
@@ -29,11 +27,9 @@
 ## Task 2: Hook for React Components
 
 **Files:**
-
 - Create: `hooks/useNotificationSettings.ts`
 
 **Steps:**
-
 1. Implement stateful hook similar to `useVoiceCookingSettings`:
    - Local `settings` state seeded from `notificationSettingsService.getSettings()`.
    - `updateSettings(partial)` delegating to service and refreshing state.
@@ -47,12 +43,10 @@
 ## Task 3: Wire Scheduling Gating
 
 **Files:**
-
 - Modify: `lib/notifications/notification-service.ts`
 - (Optional defensive guard): `lib/notifications/expiry-notifications/expiry-notifications.ts`
 
 **Steps:**
-
 1. Import `notificationSettingsService` into `notification-service.ts`.
 2. In `scheduleNotification`:
    - If master `enabled` is false, short-circuit and return a synthetic identifier without calling `expo-notifications`.
@@ -62,11 +56,9 @@
 ## Task 4: Notification Settings Screen UI
 
 **Files:**
-
 - Create: `app/profile/notification.tsx`
 
 **Steps:**
-
 1. Build a `NotificationScreen` using `ScrollView`, `Card`, `CardContent`, and typography components to match `voice-settings.tsx`.
 2. Use `useNotificationSettings` to drive:
    - Master “Enable Notifications” switch (with disabled state and optional inline text if OS permissions are denied).
@@ -79,12 +71,10 @@
 ## Task 5: Navigation and Entry Point
 
 **Files:**
-
 - Modify: `app/profile/index.tsx`
 - Modify: `app/_layout.tsx`
 
 **Steps:**
-
 1. In `ProfileScreen`:
    - Import `BellIcon` from `lucide-uniwind`.
    - Add/uncomment a `ListButton` under “General” with `title="Notification"`, `icon={BellIcon}`, and `onPress={() => router.push("/profile/notification")}`.
@@ -94,11 +84,9 @@
 ## Task 6: Verification
 
 **Files:**
-
 - (No new files; run app and exercise flows)
 
 **Steps:**
-
 1. Run the app on a device/simulator with notifications enabled.
 2. Manually verify:
    - Profile → “Notification” opens the new screen and switches persist across reloads.

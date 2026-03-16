@@ -68,7 +68,11 @@ export const toCamelCase = (str: string): string => {
 /**
  * Truncates text to specified length and adds ellipsis
  */
-export const truncate = (str: string, length: number, suffix: string = "..."): string => {
+export const truncate = (
+  str: string,
+  length: number,
+  suffix: string = "..."
+): string => {
   if (!str || str.length <= length) return str;
   return str.substring(0, length - suffix.length) + suffix;
 };
@@ -76,7 +80,11 @@ export const truncate = (str: string, length: number, suffix: string = "..."): s
 /**
  * Truncates text to specified number of words
  */
-export const truncateWords = (str: string, wordCount: number, suffix: string = "..."): string => {
+export const truncateWords = (
+  str: string,
+  wordCount: number,
+  suffix: string = "..."
+): string => {
   if (!str) return "";
   const words = str.split(" ");
   if (words.length <= wordCount) return str;
@@ -268,5 +276,8 @@ export const formatServings = (servings: number): string => {
  */
 export const formatDifficulty = (level: number): string => {
   const difficulties = ["Easy", "Medium", "Hard", "Expert"];
-  return difficulties[Math.max(0, Math.min(level - 1, difficulties.length - 1))] || "Easy";
+  return (
+    difficulties[Math.max(0, Math.min(level - 1, difficulties.length - 1))] ||
+    "Easy"
+  );
 };

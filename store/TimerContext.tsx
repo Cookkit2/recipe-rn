@@ -136,9 +136,12 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const getTimersForStep = useCallback((recipeId: string, stepNumber: number): Timer[] => {
-    return timerService.getTimersForStep(recipeId, stepNumber);
-  }, []);
+  const getTimersForStep = useCallback(
+    (recipeId: string, stepNumber: number): Timer[] => {
+      return timerService.getTimersForStep(recipeId, stepNumber);
+    },
+    []
+  );
 
   // Derived state: active timers (running or paused)
   const activeTimers = timers.filter(

@@ -26,7 +26,10 @@ export default function RecipeCarousel({
   const dataRef = useRef({ recipes, prefetch });
   dataRef.current = { recipes, prefetch };
 
-  const viewabilityConfig = useMemo(() => ({ viewAreaCoveragePercentThreshold: 60 }), []);
+  const viewabilityConfig = useMemo(
+    () => ({ viewAreaCoveragePercentThreshold: 60 }),
+    []
+  );
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: Array<{ index: number | null }> }) => {
       const first = viewableItems.find((v) => v.index != null);
@@ -66,7 +69,10 @@ export default function RecipeCarousel({
       onViewableItemsChanged={onViewableItemsChanged.current}
       viewabilityConfig={viewabilityConfig}
       renderItem={({ item, index }) => (
-        <Pressable onPress={() => onPressItem?.(item, index)} style={{ width: ITEM_WIDTH }}>
+        <Pressable
+          onPress={() => onPressItem?.(item, index)}
+          style={{ width: ITEM_WIDTH }}
+        >
           <Image
             source={{ uri: item.imageUrl }}
             style={styles.image}

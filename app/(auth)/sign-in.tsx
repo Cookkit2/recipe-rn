@@ -1,9 +1,21 @@
 import React, { useState } from "react";
-import { View, Pressable, Alert, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import {
+  View,
+  Pressable,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from "react-native";
 import { Link, router } from "expo-router";
 import { Text } from "~/components/ui/text";
 import { Button } from "~/components/ui/button";
-import { AuthContainer, AuthCard, AuthInput, SocialAuthButton } from "~/components/auth";
+import {
+  AuthContainer,
+  AuthCard,
+  AuthInput,
+  SocialAuthButton,
+} from "~/components/auth";
 import { useAuth } from "~/auth";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -60,7 +72,10 @@ export default function SignInScreen() {
       if (result.success) {
         router.replace("/");
       } else {
-        Alert.alert("Sign In Failed", result.error?.message || "Please try again");
+        Alert.alert(
+          "Sign In Failed",
+          result.error?.message || "Please try again"
+        );
       }
     } catch (error) {
       Alert.alert("Error", "An unexpected error occurred");
@@ -80,7 +95,10 @@ export default function SignInScreen() {
       if (result.success) {
         router.replace("/");
       } else {
-        Alert.alert("Sign In Failed", result.error?.message || `${provider} sign in failed`);
+        Alert.alert(
+          "Sign In Failed",
+          result.error?.message || `${provider} sign in failed`
+        );
       }
     } catch (error) {
       Alert.alert("Error", "An unexpected error occurred");
@@ -117,7 +135,10 @@ export default function SignInScreen() {
         showsVerticalScrollIndicator={false}
       >
         <AuthContainer>
-          <AuthCard title="Welcome Back" subtitle="Sign in to your account to continue">
+          <AuthCard
+            title="Welcome Back"
+            subtitle="Sign in to your account to continue"
+          >
             <View className="space-y-4">
               {/* Email Input */}
               <AuthInput
@@ -145,7 +166,9 @@ export default function SignInScreen() {
               <View className="items-end">
                 <Link href="/(auth)/forgot-password" asChild>
                   <Pressable>
-                    <Text className="text-sm text-primary font-medium">Forgot password?</Text>
+                    <Text className="text-sm text-primary font-medium">
+                      Forgot password?
+                    </Text>
                   </Pressable>
                 </Link>
               </View>
@@ -197,10 +220,14 @@ export default function SignInScreen() {
 
               {/* Sign Up Link */}
               <View className="flex-row justify-center items-center space-x-2 pt-4">
-                <Text className="text-sm text-muted-foreground">Don't have an account?</Text>
+                <Text className="text-sm text-muted-foreground">
+                  Don't have an account?
+                </Text>
                 <Link href="/(auth)/sign-up" asChild>
                   <Pressable>
-                    <Text className="text-sm text-primary font-medium">Sign Up</Text>
+                    <Text className="text-sm text-primary font-medium">
+                      Sign Up
+                    </Text>
                   </Pressable>
                 </Link>
               </View>

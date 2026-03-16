@@ -1,7 +1,13 @@
 import React, { useRef, useState } from "react";
 import { View, StyleSheet } from "react-native";
-import Animated, { Easing, FadeInDown, useSharedValue } from "react-native-reanimated";
-import Carousel, { type ICarouselInstance } from "react-native-reanimated-carousel";
+import Animated, {
+  Easing,
+  FadeInDown,
+  useSharedValue,
+} from "react-native-reanimated";
+import Carousel, {
+  type ICarouselInstance,
+} from "react-native-reanimated-carousel";
 import { Image } from "expo-image";
 import { window } from "~/constants/sizes";
 import { useSafeAreaInsets } from "react-native-safe-area-context";

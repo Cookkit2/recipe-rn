@@ -9,13 +9,16 @@ interface UploadPictureIconProps {
   onImageSelected?: (imageUri: string) => void;
 }
 
-export default function UploadPictureIcon({ onImageSelected }: UploadPictureIconProps) {
+export default function UploadPictureIcon({
+  onImageSelected,
+}: UploadPictureIconProps) {
   const { animatedStyle, handlePressIn, handlePressOut } = useOnPressScale();
   const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
 
   const pickImage = async () => {
     // Request permission
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (permissionResult.granted === false) {
       alert("Permission to access camera roll is required!");
@@ -44,8 +47,6 @@ export default function UploadPictureIcon({ onImageSelected }: UploadPictureIcon
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         onPress={pickImage}
-        accessibilityLabel="Upload profile picture"
-        accessibilityRole="button"
       >
         {selectedImage ? (
           <Image
@@ -54,7 +55,11 @@ export default function UploadPictureIcon({ onImageSelected }: UploadPictureIcon
             resizeMode="cover"
           />
         ) : (
-          <UploadCloudIcon className="text-foreground" size={24} strokeWidth={2.618} />
+          <UploadCloudIcon
+            className="text-foreground"
+            size={24}
+            strokeWidth={2.618}
+          />
         )}
       </Pressable>
     </Animated.View>

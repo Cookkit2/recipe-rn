@@ -27,15 +27,21 @@ function StarburstParticle({
       })
     );
 
-    const translateX = withTiming(triggerAnimation.value * Math.cos(angle) * 30, {
-      duration: 500,
-      easing: CURVES["expressive.default.effects"].easing,
-    });
+    const translateX = withTiming(
+      triggerAnimation.value * Math.cos(angle) * 30,
+      {
+        duration: 500,
+        easing: CURVES["expressive.default.effects"].easing,
+      }
+    );
 
-    const translateY = withTiming(triggerAnimation.value * Math.sin(angle) * 30, {
-      duration: 500,
-      easing: CURVES["expressive.default.effects"].easing,
-    });
+    const translateY = withTiming(
+      triggerAnimation.value * Math.sin(angle) * 30,
+      {
+        duration: 500,
+        easing: CURVES["expressive.default.effects"].easing,
+      }
+    );
 
     return {
       transform: [

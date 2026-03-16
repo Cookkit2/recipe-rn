@@ -99,6 +99,7 @@ export async function scheduleExpiryNotifications(items: ExpiryItem[]): Promise<
   const recipeIds = recipes.slice(0, 3).map((r) => r.recipe.id);
 
   for (const group of futureGroups) {
+
     const triggerDate = group.notificationDate;
     const firstItem = group.items[0]!;
 

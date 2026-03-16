@@ -11,39 +11,42 @@ import { cn } from "~/lib/utils";
 import RateRecipeModal from "~/components/Recipe/Step/RateRecipeModal";
 
 const CongratulationsContent = () => {
-  const {
-    recipe,
-    duration,
-    showRatingModal,
-    closeRatingModal,
-    saveRatingAndComplete,
-    skipRatingAndComplete,
-    isCompletingRecipe,
-  } = useRecipeSteps();
+  const { recipe, duration, showRatingModal, closeRatingModal, saveRatingAndComplete, skipRatingAndComplete, isCompletingRecipe } = useRecipeSteps();
   const { theme } = useUniwind();
 
   return (
     <>
       <View
         className={cn(
-          "flex-1 flex bg-black rounded-3xl border-continuous p-4 justify-center items-center border-2 border-foreground"
+          "flex-1 flex bg-black rounded-3xl border-continuous p-4 justify-center items-center border-2 border-foreground",
         )}
       >
         <P className="text-lg text-center text-white/90 font-urbanist-medium mb-2">
           You've completed
         </P>
-        <H2 className="text-primary font-bowlby-one px-6 text-center">{recipe.title}</H2>
+        <H2 className="text-primary font-bowlby-one px-6 text-center">
+          {recipe.title}
+        </H2>
 
         <View className="w-[80%] aspect-square mb-4">
           <MaskedView
             style={styles.fill}
-            maskElement={<ShapeContainer index={12} text="" width="100%" height="100%" />}
+            maskElement={
+              <ShapeContainer index={12} text="" width="100%" height="100%" />
+            }
           >
-            <Image source={{ uri: recipe.imageUrl }} style={styles.fill} contentFit="cover" />
+            <Image
+              source={{ uri: recipe.imageUrl }}
+              style={styles.fill}
+              contentFit="cover"
+            />
           </MaskedView>
         </View>
         <P className="text-lg text-center text-white/80 font-urbanist-extrabold mb-1">
-          Completed in <P className="text-primary">{duration ? formatDuration(duration) : "..."}</P>
+          Completed in{" "}
+          <P className="text-primary">
+            {duration ? formatDuration(duration) : "..."}
+          </P>
           ! 🎉
         </P>
         <P className="text-center text-white/80 font-urbanist-semibold">

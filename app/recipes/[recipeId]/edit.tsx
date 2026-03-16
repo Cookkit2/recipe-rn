@@ -151,12 +151,10 @@ export default function RecipeEdit() {
           }
         }
 
-        const existingIngredientsMap = new Map(existingIngredients.map((ing) => [ing.id, ing]));
-
         // Update or create ingredients
         for (const ingredient of editable.ingredients) {
-          if (ingredient.id && existingIngredientsMap.has(ingredient.id)) {
-            const existing = existingIngredientsMap.get(ingredient.id)!;
+          if (ingredient.id) {
+            const existing = await ingredientsCollection.find(ingredient.id);
             await existing.updateRecipeIngredient({
               name: ingredient.name,
               quantity: ingredient.quantity,
@@ -175,7 +173,8 @@ export default function RecipeEdit() {
         }
 
         // Handle steps
-        const stepsCollection = database.collections.get<RecipeStepModel>("recipe_step");
+        const stepsCollection =
+          database.collections.get<RecipeStepModel>("recipe_step");
 
         // Delete removed steps
         const existingSteps = await dbRecipe.steps.query().fetch();
@@ -185,12 +184,10 @@ export default function RecipeEdit() {
           }
         }
 
-        const existingStepsMap = new Map(existingSteps.map((step) => [step.id, step]));
-
         // Update or create steps
         for (const step of editable.steps) {
-          if (step.id && existingStepsMap.has(step.id)) {
-            const existing = existingStepsMap.get(step.id)!;
+          if (step.id) {
+            const existing = await stepsCollection.find(step.id);
             await existing.updateStep({
               step: step.step,
               title: step.title,

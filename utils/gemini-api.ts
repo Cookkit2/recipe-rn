@@ -4,14 +4,15 @@ import { log } from "~/utils/logger";
 const GEMINI_REQUEST_TIMEOUT_MS = 60_000;
 
 const API_KEY =
-  process.env.EXPO_PUBLIC_GEMINI_API_KEY || Constants.expoConfig?.extra?.EXPO_PUBLIC_GEMINI_API_KEY;
+  process.env.EXPO_PUBLIC_GEMINI_API_KEY ||
+  Constants.expoConfig?.extra?.EXPO_PUBLIC_GEMINI_API_KEY;
 
 const BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 
 // Gemini 2.0 Flash pricing (per 1M tokens)
 const PRICING = {
   prompt: 0.075, // $0.075 per 1M tokens
-  candidates: 0.3, // $0.30 per 1M tokens
+  candidates: 0.30, // $0.30 per 1M tokens
 } as const;
 
 interface TokenUsage {
@@ -106,15 +107,18 @@ export class GeminiAPI {
     const effectiveSignal = signal ?? controller!.signal;
 
     try {
-      const response = await fetch(`${BASE_URL}/models/${model}:generateContent`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-goog-api-key": API_KEY,
-        },
-        body: body,
-        signal: effectiveSignal,
-      });
+      const response = await fetch(
+        `${BASE_URL}/models/${model}:generateContent`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-goog-api-key": API_KEY,
+          },
+          body: body,
+          signal: effectiveSignal,
+        }
+      );
       if (timeoutId !== undefined) clearTimeout(timeoutId);
 
       if (!response.ok) {

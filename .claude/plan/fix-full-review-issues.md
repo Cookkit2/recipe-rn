@@ -1,13 +1,11 @@
 # Implementation Plan: Fix Full-Review Issues (Quality, Architecture, Security, Performance)
 
 ## Task Type
-
 - [x] Fullstack (Backend + Frontend + Config)
 
 ## Enhanced Requirement (from Phase 1)
 
 Address all **Critical/High** and selected **Medium** findings from:
-
 - `.full-review/01-quality-architecture.md` (Code Quality & Architecture)
 - `.full-review/02-security-performance.md` (Security & Performance)
 
@@ -32,7 +30,6 @@ Address all **Critical/High** and selected **Medium** findings from:
 ## Implementation Steps
 
 ### Step 1: Notification type constants and handler alignment
-
 - **Deliverable**: One source of truth for notification types; deep links work for achievement/challenge.
 - Create or extend a single module (e.g. `lib/notifications/notification-types.ts` or keep `notification-handler.ts`) that exports:
   - `ACHIEVEMENT_UNLOCKED_TYPE = "achievement_unlocked"`
@@ -45,14 +42,12 @@ Address all **Critical/High** and selected **Medium** findings from:
 - Verify: Tap on achievement/challenge notifications navigates to profile/achievements.
 
 ### Step 2: Consolidate ingredient_expiry handler (single registration)
-
 - **Deliverable**: Only one handler for `ingredient_expiry`; it implements full deep-link (recipe first, else pantry).
 - In `app/_layout.tsx`: Remove the duplicate `ingredient_expiry` registration from `RootLayout` (the one that only does `router.push("/")`). Keep the handler in `AnimatedStack` that uses `extractNotificationData`, checks `recipeIds`, and navigates to first recipe or "/".
 - Ensure `AnimatedStack` is mounted inside a tree that has `NotificationProvider` and router context so the handler runs in the right order and is the only one registered for `ingredient_expiry`.
 - Verify: Tapping expiry notification with recipe suggestions opens recipe; without suggestions opens pantry.
 
 ### Step 3: Encryption key from config / secure store
-
 - **Deliverable**: No hard-coded encryption key in source; production uses env or secure storage.
 - In `data/storage/storage-config.ts`: Remove literal `"donedish-secure-key"`. Read encryption key from:
   - Option A: `process.env.EXPO_PUBLIC_MMKV_ENCRYPTION_KEY` or `Constants.expoConfig?.extra?.EXPO_PUBLIC_MMKV_ENCRYPTION_KEY` (build-time secret; not ideal but better than committed key).
@@ -62,7 +57,6 @@ Address all **Critical/High** and selected **Medium** findings from:
 - Document in README or env example: required env var or secure-store key name for encrypted storage.
 
 ### Step 4: Bulk pantry import – pre-fetch and thin transaction
-
 - **Deliverable**: `addPantryItemsWithMetadata` no longer does O(n²) fetches inside the transaction; write block is minimal.
 - In `data/api/pantryApi.ts` (`addPantryItemsWithMetadata`):
   - **Before** `database.write`: Fetch all existing stocks, ingredient categories, and synonyms once (via facade if available, or one-off collection queries). Build `Map<string, Stock>` by name (lowercased), and maps for category name → IngredientCategory, etc.
@@ -72,7 +66,6 @@ Address all **Critical/High** and selected **Medium** findings from:
 - Verify: Bulk import of N items does not perform N full-table fetches; transaction time grows roughly O(n) for the write portion.
 
 ### Step 5: Sentry – env config and safer defaults
-
 - **Deliverable**: DSN and PII/sampling from env; production sampling reduced.
 - In `app/_layout.tsx`: Read Sentry DSN from `process.env.EXPO_PUBLIC_SENTRY_DSN` or `Constants.expoConfig?.extra?.EXPO_PUBLIC_SENTRY_DSN`. If missing in production, consider disabling Sentry or logging a warning.
 - Set `sendDefaultPii: false` by default; allow override via env (e.g. `EXPO_PUBLIC_SENTRY_SEND_PII=true` for debugging).
@@ -80,7 +73,6 @@ Address all **Critical/High** and selected **Medium** findings from:
 - Document in `docs/SENTRY_SETUP.md`: env vars, PII/sampling behavior, and recommendation to configure data scrubbing in Sentry project settings.
 
 ### Step 6: Supabase client – no import-time throw
-
 - **Deliverable**: App starts even when Supabase env is missing; dependent code handles missing client.
 - In `lib/supabase/supabase-client.ts`: Do not throw at top level. Instead:
   - Read `SUPABASE_URL` and `SUPABASE_ANON_KEY` as now.
@@ -90,13 +82,11 @@ Address all **Critical/High** and selected **Medium** findings from:
 - Document: expected behavior when env is missing (e.g. offline-only mode).
 
 ### Step 7: Expiry notifications – recommend once per run
-
 - **Deliverable**: `getRecipeRecommendationsForExpiring` called once per scheduling run.
 - In `lib/notifications/expiry-notifications/expiry-notifications.ts`: Before the `for (const group of groups)` loop, call `recipeApi.getRecipeRecommendationsForExpiring(...)` once. Store `recipes` (and derived `recipeNames`, `recipeIds` for top 3). Inside the loop, use that single result for all groups (same recommendation set for every group, or slice/filter by group if product requires group-specific suggestions later).
 - Verify: Scheduling 10 groups triggers one recommendation call, not 10.
 
 ### Step 8: Network timeouts (Gemini + scraper)
-
 - **Deliverable**: Fetch calls abort after a configured timeout.
 - Add a small utility (e.g. `utils/fetch-with-timeout.ts`): `fetchWithTimeout(url, options, timeoutMs)` using `AbortController` and `setTimeout` to abort after `timeoutMs`.
 - In `utils/gemini-api.ts`: Use this helper for `generateContent` and `listModels` (e.g. 30–60 s timeout).
@@ -104,7 +94,6 @@ Address all **Critical/High** and selected **Medium** findings from:
 - Verify: Timeout triggers and errors are handled without leaving requests hanging.
 
 ### Step 9: @babel/runtime vulnerability
-
 - **Deliverable**: Resolved version ≥ 7.26.10; no known ReDoS from GHSA-968p-4wvh-cqc8.
 - Run `npm ls @babel/runtime` and confirm version. If WatermelonDB pulls in an older version, add an override in `package.json` if using npm overrides (or resolutions in Yarn/PNPM) to force `@babel/runtime@>=7.26.10`.
 - Document in a short “Dependencies” or “Security” note: keep @babel/runtime at or above 7.26.10; plan WatermelonDB upgrade when a version with patched dependency is available.
@@ -113,36 +102,36 @@ Address all **Critical/High** and selected **Medium** findings from:
 
 ## Key Files
 
-| File                                                             | Operation     | Description                                                                                                                                                        |
-| ---------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `lib/notifications/notification-handler.ts`                      | Reference     | Already exports ACHIEVEMENT_UNLOCKED_TYPE, CHALLENGE_COMPLETED_TYPE                                                                                                |
-| `lib/notifications/achievement-notifications.ts`                 | Modify        | Use handler-type constants for `data.type`; align with handler names                                                                                               |
-| `lib/notifications/notification-types.ts`                        | Modify or add | Centralize INGREDIENT_EXPIRY_TYPE and re-export for scheduling/handlers                                                                                            |
-| `app/_layout.tsx`                                                | Modify        | Use imported type constants; remove duplicate ingredient_expiry handler; Sentry from env, sendDefaultPii false, lower sampling                                     |
-| `utils/notification-settings.ts`                                 | Modify        | mapTypeToChannel: handle achievement_unlocked, challenge_completed (and existing achievement_unlock/challenge_complete if kept for backward compat during rollout) |
-| `data/storage/storage-config.ts`                                 | Modify        | Encryption key from env or expo-secure-store; no hard-coded key                                                                                                    |
-| `auth/StorageIntegration.ts`                                     | Optional      | Only if config must be passed differently for lazy key                                                                                                             |
-| `data/api/pantryApi.ts`                                          | Modify        | addPantryItemsWithMetadata: pre-fetch, maps, thin write, convert outside                                                                                           |
-| `data/db/DatabaseFacade.ts`                                      | Optional      | Add batch getter for stocks/categories/synonyms if facade-only access required                                                                                     |
-| `lib/supabase/supabase-client.ts`                                | Modify        | No import-time throw; export supabase or null and supabaseAvailable                                                                                                |
-| `lib/notifications/expiry-notifications/expiry-notifications.ts` | Modify        | Call getRecipeRecommendationsForExpiring once before group loop                                                                                                    |
-| `utils/gemini-api.ts`                                            | Modify        | Use fetchWithTimeout for all fetch calls                                                                                                                           |
-| `lib/recipe-scrapper/WebsiteRecipeService.ts`                    | Modify        | Use fetchWithTimeout for fetch                                                                                                                                     |
-| `utils/fetch-with-timeout.ts`                                    | Create        | AbortController-based fetch wrapper                                                                                                                                |
-| `package.json`                                                   | Modify        | Overrides/resolutions for @babel/runtime if needed                                                                                                                 |
-| `docs/SENTRY_SETUP.md`                                           | Modify        | Document env, PII, sampling, scrubbing                                                                                                                             |
+| File | Operation | Description |
+|------|-----------|-------------|
+| `lib/notifications/notification-handler.ts` | Reference | Already exports ACHIEVEMENT_UNLOCKED_TYPE, CHALLENGE_COMPLETED_TYPE |
+| `lib/notifications/achievement-notifications.ts` | Modify | Use handler-type constants for `data.type`; align with handler names |
+| `lib/notifications/notification-types.ts` | Modify or add | Centralize INGREDIENT_EXPIRY_TYPE and re-export for scheduling/handlers |
+| `app/_layout.tsx` | Modify | Use imported type constants; remove duplicate ingredient_expiry handler; Sentry from env, sendDefaultPii false, lower sampling |
+| `utils/notification-settings.ts` | Modify | mapTypeToChannel: handle achievement_unlocked, challenge_completed (and existing achievement_unlock/challenge_complete if kept for backward compat during rollout) |
+| `data/storage/storage-config.ts` | Modify | Encryption key from env or expo-secure-store; no hard-coded key |
+| `auth/StorageIntegration.ts` | Optional | Only if config must be passed differently for lazy key |
+| `data/api/pantryApi.ts` | Modify | addPantryItemsWithMetadata: pre-fetch, maps, thin write, convert outside |
+| `data/db/DatabaseFacade.ts` | Optional | Add batch getter for stocks/categories/synonyms if facade-only access required |
+| `lib/supabase/supabase-client.ts` | Modify | No import-time throw; export supabase or null and supabaseAvailable |
+| `lib/notifications/expiry-notifications/expiry-notifications.ts` | Modify | Call getRecipeRecommendationsForExpiring once before group loop |
+| `utils/gemini-api.ts` | Modify | Use fetchWithTimeout for all fetch calls |
+| `lib/recipe-scrapper/WebsiteRecipeService.ts` | Modify | Use fetchWithTimeout for fetch |
+| `utils/fetch-with-timeout.ts` | Create | AbortController-based fetch wrapper |
+| `package.json` | Modify | Overrides/resolutions for @babel/runtime if needed |
+| `docs/SENTRY_SETUP.md` | Modify | Document env, PII, sampling, scrubbing |
 
 ---
 
 ## Risks and Mitigation
 
-| Risk                                                                | Mitigation                                                                                                                                                                                        |
-| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Risk | Mitigation |
+|------|------------|
 | Changing notification types breaks existing scheduled notifications | Use new type names only for new schedules; existing notifications may open pantry/profile until they expire. Optional: migration path (e.g. handler accepts both old and new type for a release). |
-| Encrypted storage key migration                                     | If moving to per-device key, document one-time migration: read with old key, re-write with new key, or require re-login.                                                                          |
-| Supabase null causes runtime errors in callers                      | Audit imports of `supabase`; add null checks or lazy init at first use and document offline behavior.                                                                                             |
-| Bulk import behavior change                                         | Add or run existing tests for addPantryItemsWithMetadata; test with duplicate names, categories, synonyms.                                                                                        |
-| Sentry sampling too low to debug production                         | Document how to temporarily increase sampling via env for incident investigation.                                                                                                                 |
+| Encrypted storage key migration | If moving to per-device key, document one-time migration: read with old key, re-write with new key, or require re-login. |
+| Supabase null causes runtime errors in callers | Audit imports of `supabase`; add null checks or lazy init at first use and document offline behavior. |
+| Bulk import behavior change | Add or run existing tests for addPantryItemsWithMetadata; test with duplicate names, categories, synonyms. |
+| Sentry sampling too low to debug production | Document how to temporarily increase sampling via env for incident investigation. |
 
 ---
 

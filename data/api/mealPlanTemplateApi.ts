@@ -278,13 +278,9 @@ export const mealPlanTemplateApi = {
             if (overwriteExisting) {
               // Update the existing meal plan
               await mealPlanRepo.updateServings(existing.recipeId, slot.servings);
-              log.info(
-                `Updated existing meal plan for ${slotDate.toISOString()} - ${slot.mealSlot}`
-              );
+              log.info(`Updated existing meal plan for ${slotDate.toISOString()} - ${slot.mealSlot}`);
             } else {
-              log.info(
-                `Skipped existing meal plan for ${slotDate.toISOString()} - ${slot.mealSlot}`
-              );
+              log.info(`Skipped existing meal plan for ${slotDate.toISOString()} - ${slot.mealSlot}`);
               continue;
             }
           } else {

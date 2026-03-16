@@ -41,7 +41,11 @@ export class ChallengeRepository extends BaseRepository<Challenge> {
     }
 
     // Apply sorting (start date descending by default to show newest first)
-    query = this.applySorting(query, options.sortBy || "start_date", options.sortOrder || "desc");
+    query = this.applySorting(
+      query,
+      options.sortBy || "start_date",
+      options.sortOrder || "desc"
+    );
 
     // Apply pagination
     if (options.offset) {
@@ -97,12 +101,16 @@ export class ChallengeRepository extends BaseRepository<Challenge> {
 
   // Get daily challenges
   async getDailyChallenges(): Promise<Challenge[]> {
-    return await this.collection.query(Q.where("type", "daily")).fetch();
+    return await this.collection
+      .query(Q.where("type", "daily"))
+      .fetch();
   }
 
   // Get weekly challenges
   async getWeeklyChallenges(): Promise<Challenge[]> {
-    return await this.collection.query(Q.where("type", "weekly")).fetch();
+    return await this.collection
+      .query(Q.where("type", "weekly"))
+      .fetch();
   }
 
   // Get active daily challenges
@@ -118,7 +126,10 @@ export class ChallengeRepository extends BaseRepository<Challenge> {
   }
 
   // Update challenge
-  async updateChallenge(id: string, data: Partial<ChallengeData>): Promise<Challenge> {
+  async updateChallenge(
+    id: string,
+    data: Partial<ChallengeData>
+  ): Promise<Challenge> {
     return await this.update(id, data);
   }
 

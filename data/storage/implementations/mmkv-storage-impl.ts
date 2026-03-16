@@ -1,6 +1,6 @@
-import { createMMKV } from "react-native-mmkv";
-import type { IStorage } from "../storage-types";
-import { StorageError, JSONSerializer } from "../storage-types";
+import { createMMKV } from 'react-native-mmkv';
+import type { IStorage } from '../storage-types';
+import { StorageError, JSONSerializer } from '../storage-types';
 
 export class MMKVStorageImpl implements IStorage {
   private storage: ReturnType<typeof createMMKV>;
@@ -14,7 +14,7 @@ export class MMKVStorageImpl implements IStorage {
         readOnly: false,
       });
     } catch (error) {
-      throw new StorageError(`Failed to initialize MMKV: ${error}`, "mmkv");
+      throw new StorageError(`Failed to initialize MMKV: ${error}`, 'mmkv');
     }
   }
 
@@ -35,7 +35,7 @@ export class MMKVStorageImpl implements IStorage {
       const value = this.storage.getString(key);
       return value ? (this.serializer.deserialize(value) as T) : null;
     } catch (error) {
-      throw new StorageError(`Failed to get key "${key}": ${error}`, "mmkv");
+      throw new StorageError(`Failed to get key "${key}": ${error}`, 'mmkv');
     }
   }
 
@@ -53,7 +53,7 @@ export class MMKVStorageImpl implements IStorage {
     try {
       this.storage.set(key, this.serializer.serialize(value));
     } catch (error) {
-      throw new StorageError(`Failed to set key "${key}": ${error}`, "mmkv");
+      throw new StorageError(`Failed to set key "${key}": ${error}`, 'mmkv');
     }
   }
 
@@ -71,7 +71,7 @@ export class MMKVStorageImpl implements IStorage {
     try {
       this.storage.remove(key);
     } catch (error) {
-      throw new StorageError(`Failed to delete key "${key}": ${error}`, "mmkv");
+      throw new StorageError(`Failed to delete key "${key}": ${error}`, 'mmkv');
     }
   }
 
@@ -89,7 +89,7 @@ export class MMKVStorageImpl implements IStorage {
     try {
       this.storage.clearAll();
     } catch (error) {
-      throw new StorageError(`Failed to clear storage: ${error}`, "mmkv");
+      throw new StorageError(`Failed to clear storage: ${error}`, 'mmkv');
     }
   }
 
@@ -109,7 +109,7 @@ export class MMKVStorageImpl implements IStorage {
     try {
       return this.storage.getString(key) || null;
     } catch (error) {
-      throw new StorageError(`Failed to get string for key "${key}": ${error}`, "mmkv");
+      throw new StorageError(`Failed to get string for key "${key}": ${error}`, 'mmkv');
     }
   }
 
@@ -127,7 +127,7 @@ export class MMKVStorageImpl implements IStorage {
     try {
       this.storage.set(key, value);
     } catch (error) {
-      throw new StorageError(`Failed to set string for key "${key}": ${error}`, "mmkv");
+      throw new StorageError(`Failed to set string for key "${key}": ${error}`, 'mmkv');
     }
   }
 
@@ -147,7 +147,7 @@ export class MMKVStorageImpl implements IStorage {
     try {
       return this.storage.contains(key);
     } catch (error) {
-      throw new StorageError(`Failed to check if key "${key}" exists: ${error}`, "mmkv");
+      throw new StorageError(`Failed to check if key "${key}" exists: ${error}`, 'mmkv');
     }
   }
 
@@ -165,7 +165,7 @@ export class MMKVStorageImpl implements IStorage {
     try {
       return this.storage.getAllKeys();
     } catch (error) {
-      throw new StorageError(`Failed to get all keys: ${error}`, "mmkv");
+      throw new StorageError(`Failed to get all keys: ${error}`, 'mmkv');
     }
   }
 
@@ -183,7 +183,7 @@ export class MMKVStorageImpl implements IStorage {
     try {
       return this.storage.getAllKeys().length;
     } catch (error) {
-      throw new StorageError(`Failed to get storage size: ${error}`, "mmkv");
+      throw new StorageError(`Failed to get storage size: ${error}`, 'mmkv');
     }
   }
 
@@ -253,7 +253,7 @@ export class MMKVStorageImpl implements IStorage {
     isAsync: boolean;
   } {
     return {
-      type: "mmkv",
+      type: 'mmkv',
       size: this._sizeSyncImpl(),
       supportsAsync: true, // MMKV can provide async wrapper
       supportsBatch: true,

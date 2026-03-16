@@ -1,6 +1,10 @@
 import { useEffect, useRef } from "react";
 import type { LayoutChangeEvent, LayoutRectangle } from "react-native";
-import { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
+import {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
 import { SPRING_CONFIG } from "~/constants/spring-config";
 
 /**

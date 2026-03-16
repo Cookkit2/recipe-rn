@@ -39,8 +39,8 @@ export default function NotificationScreen() {
 
           {permissionDenied && (
             <P className="font-urbanist-regular text-xs text-destructive mt-3">
-              System notifications are disabled for Cookkit. Enable them in your device settings to
-              receive alerts.
+              System notifications are disabled for Cookkit. Enable them in your device settings
+              to receive alerts.
             </P>
           )}
         </CardContent>

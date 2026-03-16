@@ -193,8 +193,8 @@ const recipIngredient = "roma tomatoes";
 
 // OLD WAY (JSON) - Had to loop through all stocks
 const allStocks = await stockRepo.findAll();
-const match = allStocks.find((stock) => {
-  const synonyms = JSON.parse(stock.synonym || "[]");
+const match = allStocks.find(stock => {
+  const synonyms = JSON.parse(stock.synonym || '[]');
   return synonyms.includes(recipIngredient.toLowerCase());
 });
 
@@ -246,11 +246,11 @@ const stock = await stockRepo.createStockWithMetadata(
     name: "Tomato",
     quantity: 5,
     unit: "pieces",
-    storageType: "fridge",
+    storageType: "fridge"
   },
   {
     categoryIds: ["vegetable-id", "nightshade-id"],
-    synonyms: ["roma tomato", "plum tomato", "fresh tomatoes"],
+    synonyms: ["roma tomato", "plum tomato", "fresh tomatoes"]
   }
 );
 ```
@@ -281,7 +281,10 @@ const { stock, categories } = await stockRepo.getStockWithCategories(stockId);
 
 ```typescript
 // Add synonyms to existing stock
-await synonymRepo.addSynonymsToStock(stockId, ["cherry tomato", "grape tomato"]);
+await synonymRepo.addSynonymsToStock(stockId, [
+  "cherry tomato",
+  "grape tomato"
+]);
 
 // Find all synonyms for a stock
 const synonyms = await synonymRepo.findByStockId(stockId);
@@ -304,13 +307,13 @@ const stockIds = await synonymRepo.findStockIdsBySynonym("cherry tomato");
 
 ## 📊 Performance Comparison
 
-| Operation         | Before (JSON)       | After (Normalized)      |
-| ----------------- | ------------------- | ----------------------- |
-| Find by synonym   | O(n) - scan all     | O(log n) - index lookup |
-| Get by category   | O(n) - scan all     | O(log n) - index lookup |
-| Add synonym       | Update stock record | Insert synonym row      |
-| Storage           | More compact        | Slightly more rows      |
-| Query flexibility | Limited             | High                    |
+| Operation | Before (JSON) | After (Normalized) |
+|-----------|--------------|-------------------|
+| Find by synonym | O(n) - scan all | O(log n) - index lookup |
+| Get by category | O(n) - scan all | O(log n) - index lookup |
+| Add synonym | Update stock record | Insert synonym row |
+| Storage | More compact | Slightly more rows |
+| Query flexibility | Limited | High |
 
 ---
 

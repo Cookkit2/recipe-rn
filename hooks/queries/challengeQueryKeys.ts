@@ -27,7 +27,8 @@ export const challengeQueryKeys = {
   unclaimed: () => [...challengeQueryKeys.all, "unclaimed"] as const,
 
   // Single challenge progress
-  progress: (challengeId: string) => [...challengeQueryKeys.all, "progress", challengeId] as const,
+  progress: (challengeId: string) =>
+    [...challengeQueryKeys.all, "progress", challengeId] as const,
 
   // Challenges expiring soon (within 24 hours)
   expiringSoon: () => [...challengeQueryKeys.all, "expiring-soon"] as const,

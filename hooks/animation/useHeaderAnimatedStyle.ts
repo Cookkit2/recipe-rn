@@ -30,7 +30,7 @@ export default function useHeaderAnimatedStyle(
           translateY: interpolate(
             scrollOffset.value,
             [-windowWidth, 0, windowWidth],
-            [-windowWidth / 2, 0, windowWidth * 0.75]
+            [-windowWidth / 2, 0, windowWidth * 0.75],
           ),
         },
         {

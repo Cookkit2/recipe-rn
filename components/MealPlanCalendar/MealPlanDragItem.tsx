@@ -134,7 +134,10 @@ export default function MealPlanDragItem({
     .onUpdate((event) => {
       "worklet";
       // Check if we've moved beyond threshold to consider this a drag
-      if (Math.abs(event.translationX) > 10 || Math.abs(event.translationY) > 10) {
+      if (
+        Math.abs(event.translationX) > 10 ||
+        Math.abs(event.translationY) > 10
+      ) {
         if (!isDragGesture.value) {
           isDragGesture.value = true;
           runOnJS(handleDragStart)();
@@ -214,13 +217,18 @@ export default function MealPlanDragItem({
                     {mealPlan.recipe?.title || "Recipe"}
                   </P>
                   {mealPlan.recipe?.description && (
-                    <P className="text-muted-foreground text-xs mt-1" numberOfLines={1}>
+                    <P
+                      className="text-muted-foreground text-xs mt-1"
+                      numberOfLines={1}
+                    >
                       {mealPlan.recipe.description}
                     </P>
                   )}
                   <View className="flex flex-row items-center mt-2 gap-2">
                     <View className="bg-primary/20 px-2 py-1 rounded-full">
-                      <P className="text-primary text-xs capitalize">{mealPlan.mealSlot}</P>
+                      <P className="text-primary text-xs capitalize">
+                        {mealPlan.mealSlot}
+                      </P>
                     </View>
                     {mealPlan.servings > 1 && (
                       <View className="bg-muted px-2 py-1 rounded-full">
@@ -259,7 +267,10 @@ export default function MealPlanDragItem({
                   <P className="text-xs font-urbanist-medium text-muted-foreground capitalize">
                     {mealPlan.mealSlot}
                   </P>
-                  <P className="text-sm font-urbanist-semibold text-foreground" numberOfLines={2}>
+                  <P
+                    className="text-sm font-urbanist-semibold text-foreground"
+                    numberOfLines={2}
+                  >
                     {mealPlan.recipe?.title || "Recipe"}
                   </P>
                   {mealPlan.servings > 1 && (

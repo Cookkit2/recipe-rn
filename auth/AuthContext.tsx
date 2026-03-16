@@ -29,7 +29,9 @@ interface AuthContextValue {
   signUpWithEmail: (credentials: SignInCredentials) => Promise<AuthResult>;
   signOut: () => Promise<AuthResult>;
   refreshSession: () => Promise<AuthResult>;
-  linkAnonymousAccount: (credentials: LinkAccountCredentials) => Promise<AuthResult>;
+  linkAnonymousAccount: (
+    credentials: LinkAccountCredentials
+  ) => Promise<AuthResult>;
   resetPassword: (email: string) => Promise<AuthResult>;
   clearError: () => void;
   validateSession: () => Promise<boolean>;
@@ -96,7 +98,11 @@ export function AuthProvider({
         clearInterval(intervalId);
       }
     };
-  }, [autoRefresh, authSelectors.isAuthenticated, authSelectors.hasValidSession]);
+  }, [
+    autoRefresh,
+    authSelectors.isAuthenticated,
+    authSelectors.hasValidSession,
+  ]);
 
   const contextValue: AuthContextValue = {
     // State
@@ -124,7 +130,9 @@ export function AuthProvider({
     validateSession: authStore.validateSession,
   };
 
-  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
+  );
 }
 
 /**
@@ -219,7 +227,10 @@ interface GuestOnlyRouteProps {
   fallback?: ReactNode;
 }
 
-export function GuestOnlyRoute({ children, fallback = null }: GuestOnlyRouteProps) {
+export function GuestOnlyRoute({
+  children,
+  fallback = null,
+}: GuestOnlyRouteProps) {
   const { isAuthenticated, isInitialized } = useAuthState();
 
   if (!isInitialized) {

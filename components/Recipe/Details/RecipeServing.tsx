@@ -24,7 +24,9 @@ export default function RecipeServing() {
       <Separator orientation="vertical" />
       <View className="flex-row gap-1">
         <SlidingNumber value={servings} />
-        <P className="font-urbanist-semibold text-foreground/80 pt-1">servings</P>
+        <P className="font-urbanist-semibold text-foreground/80 pt-1">
+          servings
+        </P>
       </View>
       <Separator orientation="vertical" />
       <Button

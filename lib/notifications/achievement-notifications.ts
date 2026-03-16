@@ -7,8 +7,14 @@
 
 import { scheduleNotification } from "./notification-service";
 import type { NotificationData } from "./notification-types";
-import { ACHIEVEMENT_UNLOCKED_TYPE, CHALLENGE_COMPLETED_TYPE } from "./notification-handler";
-import type { AchievementNotificationData, ChallengeNotificationData } from "~/types/achievements";
+import {
+  ACHIEVEMENT_UNLOCKED_TYPE,
+  CHALLENGE_COMPLETED_TYPE,
+} from "./notification-handler";
+import type {
+  AchievementNotificationData,
+  ChallengeNotificationData,
+} from "~/types/achievements";
 
 // ============================================
 // Notification Types (other than achievement/challenge)
@@ -65,7 +71,11 @@ function getChallengeTitle(): string {
 /**
  * Get challenge notification body with details
  */
-function getChallengeBody(challengeTitle: string, xp: number, bonus?: string): string {
+function getChallengeBody(
+  challengeTitle: string,
+  xp: number,
+  bonus?: string
+): string {
   const bonusText = bonus ? `\nBonus: ${bonus}` : "";
   return `${challengeTitle}\n+${xp} XP${bonusText}`;
 }
@@ -119,7 +129,10 @@ export async function scheduleAchievementUnlock(
 ): Promise<string> {
   const notificationId = id ?? `achievement_${data.achievementId}`;
 
-  const title = getAchievementTitle(data.achievementId.split("_")[0] || "general", data.title);
+  const title = getAchievementTitle(
+    data.achievementId.split("_")[0] || "general",
+    data.title
+  );
   const body = getAchievementBody(data.title, data.description, data.xp);
 
   const notificationData: NotificationData = {
@@ -148,7 +161,9 @@ export async function scheduleAchievementUnlock(
 export async function scheduleMultipleAchievementUnlocks(
   achievements: AchievementNotificationData[]
 ): Promise<string[]> {
-  const promises = achievements.map((achievement) => scheduleAchievementUnlock(achievement));
+  const promises = achievements.map((achievement) =>
+    scheduleAchievementUnlock(achievement)
+  );
   return Promise.all(promises);
 }
 
@@ -170,7 +185,11 @@ export async function scheduleChallengeComplete(
   const notificationId = id ?? `challenge_${data.challengeId}`;
 
   const title = getChallengeTitle();
-  const body = getChallengeBody(data.title, data.xp, data.reward?.value.toString());
+  const body = getChallengeBody(
+    data.title,
+    data.xp,
+    data.reward?.value.toString()
+  );
 
   const notificationData: NotificationData = {
     type: CHALLENGE_COMPLETED_TYPE,
@@ -299,7 +318,10 @@ export async function scheduleLevelUp(
  * @param id - Optional notification identifier
  * @returns Notification identifier
  */
-export async function scheduleStreakMilestone(streakDays: number, id?: string): Promise<string> {
+export async function scheduleStreakMilestone(
+  streakDays: number,
+  id?: string
+): Promise<string> {
   const notificationId = id ?? `streak_milestone_${streakDays}`;
 
   const title = getStreakMilestoneTitle(streakDays);
@@ -377,7 +399,9 @@ export async function scheduleChallengeExpiryReminder(
   };
 
   const bodyText =
-    hoursRemaining <= 1 ? "Less than 1 hour remaining!" : `${hoursRemaining} hours remaining`;
+    hoursRemaining <= 1
+      ? "Less than 1 hour remaining!"
+      : `${hoursRemaining} hours remaining`;
 
   return scheduleNotification({
     id: notificationId,

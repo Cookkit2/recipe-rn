@@ -1,4 +1,4 @@
-import { Model, Query, Collection } from "@nozbe/watermelondb";
+import { Model, Collection } from "@nozbe/watermelondb";
 import { field, date, writer, children } from "@nozbe/watermelondb/decorators";
 import type { Associations } from "@nozbe/watermelondb/Model";
 import type IngredientSynonym from "./IngredientSynonym";
@@ -37,9 +37,9 @@ export default class Stock extends Model {
   @field("y") y?: number;
   @field("scale") scale?: number;
 
-  @children("ingredient_synonym") synonyms!: Query<IngredientSynonym>;
-  @children("stock_category") stockCategories!: Query<StockCategory>;
-  @children("waste_log") wasteLogs!: Query<WasteLog>;
+  @children("ingredient_synonym") synonyms!: Collection<IngredientSynonym>;
+  @children("stock_category") stockCategories!: Collection<StockCategory>;
+  @children("waste_log") wasteLogs!: Collection<WasteLog>;
 
   @date("created_at") createdAt!: Date;
   @date("updated_at") updatedAt!: Date;
@@ -76,7 +76,8 @@ export default class Stock extends Model {
       if (data.expiryDate !== undefined) stock.expiryDate = data.expiryDate;
       if (data.storageType !== undefined) stock.storageType = data.storageType;
       if (data.imageUrl !== undefined) stock.imageUrl = data.imageUrl;
-      if (data.backgroundColor !== undefined) stock.backgroundColor = data.backgroundColor;
+      if (data.backgroundColor !== undefined)
+        stock.backgroundColor = data.backgroundColor;
       if (data.x !== undefined) stock.x = data.x;
       if (data.y !== undefined) stock.y = data.y;
       if (data.scale !== undefined) stock.scale = data.scale;

@@ -86,7 +86,10 @@ export class NoAuthYouTubeService implements IYouTubeService {
       const data = await response.json();
 
       if (data.error) {
-        throw new YouTubeServiceError(data.error || "Video not found", "VIDEO_NOT_FOUND");
+        throw new YouTubeServiceError(
+          data.error || "Video not found",
+          "VIDEO_NOT_FOUND"
+        );
       }
 
       return {
@@ -133,10 +136,16 @@ export class NoAuthYouTubeService implements IYouTubeService {
     }
 
     // Transcript is optional - log warning if it failed
-    const transcript = transcriptResult.status === "fulfilled" ? transcriptResult.value : undefined;
+    const transcript =
+      transcriptResult.status === "fulfilled"
+        ? transcriptResult.value
+        : undefined;
 
     if (transcriptResult.status === "rejected") {
-      log.warn(`Could not fetch transcript for ${videoId}:`, transcriptResult.reason);
+      log.warn(
+        `Could not fetch transcript for ${videoId}:`,
+        transcriptResult.reason
+      );
     }
 
     return {
@@ -174,7 +183,10 @@ export class NoAuthYouTubeService implements IYouTubeService {
       }
     }
 
-    throw new YouTubeServiceError("Could not fetch transcript using any method", "NO_CAPTIONS");
+    throw new YouTubeServiceError(
+      "Could not fetch transcript using any method",
+      "NO_CAPTIONS"
+    );
   }
 
   /**
@@ -191,7 +203,7 @@ export class NoAuthYouTubeService implements IYouTubeService {
         headers: {
           "Content-Type": "application/json",
           "User-Agent": "com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip",
-          Accept: "application/json",
+          "Accept": "application/json",
           "Accept-Language": "en-US,en;q=0.9",
           "X-YouTube-Client-Name": "3", // ANDROID
           "X-YouTube-Client-Version": "19.09.37",
@@ -229,10 +241,9 @@ export class NoAuthYouTubeService implements IYouTubeService {
 
       // Fallback to first available or auto-generated
       if (!captionTrack) {
-        captionTrack =
-          captions.find(
-            (track: { kind?: string }) => track.kind === "asr" // Auto-generated
-          ) || captions[0];
+        captionTrack = captions.find(
+          (track: { kind?: string }) => track.kind === "asr" // Auto-generated
+        ) || captions[0];
       }
 
       if (!captionTrack?.baseUrl) {
@@ -240,9 +251,7 @@ export class NoAuthYouTubeService implements IYouTubeService {
         return null;
       }
 
-      log.debug(
-        `Transcript: Using caption track: ${captionTrack.languageCode} (${captionTrack.kind || "manual"})`
-      );
+      log.debug(`Transcript: Using caption track: ${captionTrack.languageCode} (${captionTrack.kind || 'manual'})`);
 
       // Step 3: Fetch the transcript - try JSON first, fall back to XML
       const segments = await this.fetchAndParseCaptions(captionTrack.baseUrl);
@@ -253,9 +262,7 @@ export class NoAuthYouTubeService implements IYouTubeService {
       }
 
       const fullText = segments.map((s) => s.text).join(" ");
-      log.debug(
-        `Transcript: InnerTube parsed ${segments.length} segments, ${fullText.length} chars`
-      );
+      log.debug(`Transcript: InnerTube parsed ${segments.length} segments, ${fullText.length} chars`);
 
       return {
         text: fullText,
@@ -340,17 +347,13 @@ export class NoAuthYouTubeService implements IYouTubeService {
         transcriptItems = await YoutubeTranscript.fetchTranscript(videoId, {
           lang: "en",
         });
-        log.debug(
-          `Transcript: youtube-transcript (en) returned ${transcriptItems?.length || 0} items`
-        );
+        log.debug(`Transcript: youtube-transcript (en) returned ${transcriptItems?.length || 0} items`);
       } catch (enError) {
         log.debug(`Transcript: youtube-transcript (en) failed: ${enError}`);
         // Try without language specification (gets default/auto-generated)
         try {
           transcriptItems = await YoutubeTranscript.fetchTranscript(videoId);
-          log.debug(
-            `Transcript: youtube-transcript (default) returned ${transcriptItems?.length || 0} items`
-          );
+          log.debug(`Transcript: youtube-transcript (default) returned ${transcriptItems?.length || 0} items`);
         } catch (defaultError) {
           log.debug(`Transcript: youtube-transcript (default) failed: ${defaultError}`);
           throw defaultError;
@@ -403,7 +406,7 @@ export class NoAuthYouTubeService implements IYouTubeService {
       log.debug(`Transcript: Trying proxy API for ${videoId}`);
       const response = await fetch(apiUrl, {
         headers: {
-          Accept: "application/json",
+          "Accept": "application/json",
         },
       });
 
@@ -413,7 +416,7 @@ export class NoAuthYouTubeService implements IYouTubeService {
       }
 
       const data = await response.json();
-      log.debug(`Transcript: Proxy API response keys: ${Object.keys(data).join(", ")}`);
+      log.debug(`Transcript: Proxy API response keys: ${Object.keys(data).join(', ')}`);
 
       // Handle the lemnoslife API response format
       if (data.captions && Array.isArray(data.captions)) {
@@ -432,7 +435,7 @@ export class NoAuthYouTubeService implements IYouTubeService {
         if (segments.length > 0) {
           log.debug(`Transcript: Parsed ${segments.length} segments from proxy`);
           return {
-            text: segments.map((s) => s.text).join(" "),
+            text: segments.map(s => s.text).join(" "),
             segments,
             language: "en",
           };
@@ -443,13 +446,11 @@ export class NoAuthYouTubeService implements IYouTubeService {
       if (data.subtitles || data.transcript) {
         const items = data.subtitles || data.transcript;
         if (Array.isArray(items)) {
-          const segments = items
-            .map((item: { text?: string; start?: number; dur?: number }) => ({
-              start: item.start || 0,
-              duration: item.dur || 0,
-              text: item.text || "",
-            }))
-            .filter((s: { text: string }) => s.text);
+          const segments = items.map((item: { text?: string; start?: number; dur?: number }) => ({
+            start: item.start || 0,
+            duration: item.dur || 0,
+            text: item.text || "",
+          })).filter((s: { text: string }) => s.text);
 
           if (segments.length > 0) {
             return {
@@ -480,7 +481,7 @@ export class NoAuthYouTubeService implements IYouTubeService {
           "User-Agent":
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
           "Accept-Language": "en-US,en;q=0.9",
-          Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         },
       });
 
@@ -496,9 +497,7 @@ export class NoAuthYouTubeService implements IYouTubeService {
       if (!captionUrl) {
         const hasPlayerResponse = pageHtml.includes("ytInitialPlayerResponse");
         const hasCaptions = pageHtml.includes("captionTracks");
-        log.warn(
-          `Transcript debug: hasPlayerResponse=${hasPlayerResponse}, hasCaptions=${hasCaptions}`
-        );
+        log.warn(`Transcript debug: hasPlayerResponse=${hasPlayerResponse}, hasCaptions=${hasCaptions}`);
         return null;
       }
 
@@ -509,9 +508,9 @@ export class NoAuthYouTubeService implements IYouTubeService {
           "User-Agent":
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
           "Accept-Language": "en-US,en;q=0.9",
-          Accept: "*/*",
-          Referer: pageUrl,
-          Origin: "https://www.youtube.com",
+          "Accept": "*/*",
+          "Referer": pageUrl,
+          "Origin": "https://www.youtube.com",
         },
       });
 
@@ -554,9 +553,7 @@ export class NoAuthYouTubeService implements IYouTubeService {
       const match = html.match(pattern);
       if (match?.[1]) {
         playerResponseJson = match[1];
-        log.debug(
-          `Transcript: Found player response with pattern ${patterns.indexOf(pattern) + 1}`
-        );
+        log.debug(`Transcript: Found player response with pattern ${patterns.indexOf(pattern) + 1}`);
         break;
       }
     }
@@ -565,7 +562,7 @@ export class NoAuthYouTubeService implements IYouTubeService {
       log.warn("Could not find ytInitialPlayerResponse in page");
 
       // Try to extract JSON directly between markers
-      const startMarker = "ytInitialPlayerResponse = ";
+      const startMarker = 'ytInitialPlayerResponse = ';
       const startIdx = html.indexOf(startMarker);
       if (startIdx !== -1) {
         const jsonStart = startIdx + startMarker.length;
@@ -573,8 +570,8 @@ export class NoAuthYouTubeService implements IYouTubeService {
         let braceCount = 0;
         let jsonEnd = jsonStart;
         for (let i = jsonStart; i < html.length && i < jsonStart + 500000; i++) {
-          if (html[i] === "{") braceCount++;
-          else if (html[i] === "}") {
+          if (html[i] === '{') braceCount++;
+          else if (html[i] === '}') {
             braceCount--;
             if (braceCount === 0) {
               jsonEnd = i + 1;
@@ -584,9 +581,7 @@ export class NoAuthYouTubeService implements IYouTubeService {
         }
         if (jsonEnd > jsonStart) {
           playerResponseJson = html.substring(jsonStart, jsonEnd);
-          log.debug(
-            `Transcript: Extracted player response via brace matching, length: ${playerResponseJson.length}`
-          );
+          log.debug(`Transcript: Extracted player response via brace matching, length: ${playerResponseJson.length}`);
         }
       }
     }
@@ -598,29 +593,23 @@ export class NoAuthYouTubeService implements IYouTubeService {
     try {
       const playerResponse = JSON.parse(playerResponseJson);
 
-      const captions = playerResponse?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
+      const captions =
+        playerResponse?.captions?.playerCaptionsTracklistRenderer
+          ?.captionTracks;
 
       if (!captions || captions.length === 0) {
         log.warn("No caption tracks found in player response");
-        log.debug(
-          `Transcript: Player response keys: ${Object.keys(playerResponse || {}).join(", ")}`
-        );
+        log.debug(`Transcript: Player response keys: ${Object.keys(playerResponse || {}).join(', ')}`);
         if (playerResponse?.captions) {
-          log.debug(
-            `Transcript: Captions keys: ${Object.keys(playerResponse.captions).join(", ")}`
-          );
+          log.debug(`Transcript: Captions keys: ${Object.keys(playerResponse.captions).join(', ')}`);
         }
         return null;
       }
 
       log.debug(`Transcript: Found ${captions.length} caption tracks`);
-      captions.forEach(
-        (track: { languageCode: string; name?: { simpleText?: string } }, i: number) => {
-          log.debug(
-            `Transcript: Track ${i}: ${track.languageCode} - ${track.name?.simpleText || "unknown"}`
-          );
-        }
-      );
+      captions.forEach((track: { languageCode: string; name?: { simpleText?: string } }, i: number) => {
+        log.debug(`Transcript: Track ${i}: ${track.languageCode} - ${track.name?.simpleText || 'unknown'}`);
+      });
 
       // Prefer English captions
       const englishTrack = captions.find(
@@ -640,9 +629,7 @@ export class NoAuthYouTubeService implements IYouTubeService {
       return baseUrl || null;
     } catch (error) {
       log.error("Error parsing player response:", error);
-      log.debug(
-        `Transcript: JSON parse failed, first 500 chars: ${playerResponseJson.substring(0, 500)}`
-      );
+      log.debug(`Transcript: JSON parse failed, first 500 chars: ${playerResponseJson.substring(0, 500)}`);
       return null;
     }
   }
@@ -655,14 +642,14 @@ export class NoAuthYouTubeService implements IYouTubeService {
     const segments: YouTubeTranscript["segments"] = [];
 
     // Check if it's JSON format (srv3)
-    if (data.trim().startsWith("{")) {
+    if (data.trim().startsWith('{')) {
       try {
         const json = JSON.parse(data);
         // srv3 format has events array
         if (json.events) {
           for (const event of json.events) {
             if (event.segs) {
-              const text = event.segs.map((s: { utf8?: string }) => s.utf8 || "").join("");
+              const text = event.segs.map((s: { utf8?: string }) => s.utf8 || '').join('');
               if (text.trim()) {
                 segments.push({
                   start: (event.tStartMs || 0) / 1000,
@@ -701,8 +688,7 @@ export class NoAuthYouTubeService implements IYouTubeService {
 
       // Pattern 2: Handle CDATA or nested content for <text> elements
       if (segments.length === 0) {
-        const xmlPattern2 =
-          /<text[^>]*start="([\d.]+)"[^>]*dur="([\d.]+)"[^>]*>([\s\S]*?)<\/text>/g;
+        const xmlPattern2 = /<text[^>]*start="([\d.]+)"[^>]*dur="([\d.]+)"[^>]*>([\s\S]*?)<\/text>/g;
         matches = data.matchAll(xmlPattern2);
 
         for (const match of matches) {
@@ -722,13 +708,13 @@ export class NoAuthYouTubeService implements IYouTubeService {
 
       // Pattern 3: <timedtext> format with nested <s> elements
       // Format: <p t="0" d="1000"><s>Hello</s><s> world</s></p>
-      if (segments.length === 0 && data.includes("<timedtext")) {
+      if (segments.length === 0 && data.includes('<timedtext')) {
         const timedtextPattern = /<p\s+([^>]*)>([\s\S]*?)<\/p>/g;
         matches = data.matchAll(timedtextPattern);
 
         for (const match of matches) {
-          const attrs = match[1] || "";
-          const innerContent = match[2] || "";
+          const attrs = match[1] || '';
+          const innerContent = match[2] || '';
 
           // Extract t and d from attributes
           const tMatch = attrs.match(/\bt="(\d+)"/);
@@ -737,18 +723,18 @@ export class NoAuthYouTubeService implements IYouTubeService {
           if (!tMatch?.[1] || !dMatch?.[1]) continue;
 
           // Extract text from nested <s> elements, or use direct content
-          let textStr = "";
-          if (innerContent.includes("<s")) {
+          let textStr = '';
+          if (innerContent.includes('<s')) {
             // Extract text from all <s> elements
             const sMatches = innerContent.matchAll(/<s[^>]*>([^<]*)<\/s>/g);
             const texts: string[] = [];
             for (const sMatch of sMatches) {
               if (sMatch[1]) texts.push(sMatch[1]);
             }
-            textStr = texts.join("");
+            textStr = texts.join('');
           } else {
             // No <s> elements, use direct content
-            textStr = innerContent.replace(/<[^>]*>/g, ""); // Strip any tags
+            textStr = innerContent.replace(/<[^>]*>/g, ''); // Strip any tags
           }
 
           if (textStr.trim()) {
@@ -761,9 +747,7 @@ export class NoAuthYouTubeService implements IYouTubeService {
         }
 
         if (segments.length > 0) {
-          log.debug(
-            `Transcript: Parsed timedtext <p><s> format, found ${segments.length} segments`
-          );
+          log.debug(`Transcript: Parsed timedtext <p><s> format, found ${segments.length} segments`);
         }
       }
 
@@ -772,16 +756,15 @@ export class NoAuthYouTubeService implements IYouTubeService {
 
     if (segments.length === 0) {
       // Log sample of data for debugging
-      const hasText = data.includes("<text");
-      const hasP = data.includes("<p ");
-      const hasTimedtext = data.includes("<timedtext");
-      log.warn(
-        `Transcript: No segments found. Format detection: JSON=${data.trim().startsWith("{")}, <text>=${hasText}, <p>=${hasP}, <timedtext>=${hasTimedtext}`
+      const hasText = data.includes('<text');
+      const hasP = data.includes('<p ');
+      const hasTimedtext = data.includes('<timedtext');
+      log.warn(`Transcript: No segments found. Format detection: JSON=${data.trim().startsWith('{')}, <text>=${hasText}, <p>=${hasP}, <timedtext>=${hasTimedtext}`);
+      log.debug(`Transcript: Sample (200 chars after <body> or start): ${data.includes('<body>') ? data.substring(data.indexOf('<body>'), data.indexOf('<body>') + 200) : data.substring(0, 200)}`);
+      throw new YouTubeServiceError(
+        "Could not parse any transcript segments",
+        "PARSE_ERROR"
       );
-      log.debug(
-        `Transcript: Sample (200 chars after <body> or start): ${data.includes("<body>") ? data.substring(data.indexOf("<body>"), data.indexOf("<body>") + 200) : data.substring(0, 200)}`
-      );
-      throw new YouTubeServiceError("Could not parse any transcript segments", "PARSE_ERROR");
     }
 
     // Combine all segments into full text

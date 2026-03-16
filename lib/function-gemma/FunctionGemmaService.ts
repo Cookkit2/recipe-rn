@@ -8,20 +8,20 @@
  * - Response formatting
  */
 
-import { initLlama, releaseAllLlama } from "llama.rn";
-import { File, Paths } from "expo-file-system";
+import { initLlama, releaseAllLlama } from 'llama.rn';
+import { File, Paths } from 'expo-file-system';
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 export interface FridgitTool {
-  type: "function";
+  type: 'function';
   function: {
     name: string;
     description: string;
     parameters: {
-      type: "object";
+      type: 'object';
       properties: Record<string, any>;
       required?: string[];
     };
@@ -30,7 +30,7 @@ export interface FridgitTool {
 
 export interface ToolCall {
   id: string;
-  type: "function";
+  type: 'function';
   function: {
     name: string;
     arguments: Record<string, any>;
@@ -63,76 +63,76 @@ export interface ModelConfig {
 export const FRIDGIT_TOOLS: FridgitTool[] = [
   // Inventory Management
   {
-    type: "function",
+    type: 'function',
     function: {
-      name: "add_item",
+      name: 'add_item',
       description:
         'Add a food item to the pantry. DEFAULT tool when user says "add", "put", "store", or "I have" followed by a food name. Adds ingredients to the kitchen inventory.',
       parameters: {
-        type: "object",
+        type: 'object',
         properties: {
           name: {
-            type: "string",
+            type: 'string',
             description: 'Name of the food item (e.g., "milk", "cheese", "apples", "chicken")',
           },
           quantity: {
-            type: "number",
-            description: "Quantity of the item (default 1)",
+            type: 'number',
+            description: 'Quantity of the item (default 1)',
           },
           unit: {
-            type: "string",
+            type: 'string',
             description: 'Unit of measurement (e.g., "liters", "kg", "pieces", "cartons")',
           },
           location: {
-            type: "string",
-            enum: ["fridge", "freezer", "cabinet", "pantry"],
-            description: "Where the item is stored (default: fridge)",
+            type: 'string',
+            enum: ['fridge', 'freezer', 'cabinet', 'pantry'],
+            description: 'Where the item is stored (default: fridge)',
           },
           expiry_date: {
-            type: "string",
-            description: "Expiry date in YYYY-MM-DD format (optional)",
+            type: 'string',
+            description: 'Expiry date in YYYY-MM-DD format (optional)',
           },
         },
-        required: ["name"],
+        required: ['name'],
       },
     },
   },
   {
-    type: "function",
+    type: 'function',
     function: {
-      name: "remove_item",
-      description: "Remove or consume a food item from inventory",
+      name: 'remove_item',
+      description: 'Remove or consume a food item from inventory',
       parameters: {
-        type: "object",
+        type: 'object',
         properties: {
           item_id: {
-            type: "string",
-            description: "ID of the item to remove",
+            type: 'string',
+            description: 'ID of the item to remove',
           },
           quantity: {
-            type: "number",
-            description: "Quantity to remove (defaults to all if not specified)",
+            type: 'number',
+            description: 'Quantity to remove (defaults to all if not specified)',
           },
         },
-        required: ["item_id"],
+        required: ['item_id'],
       },
     },
   },
   {
-    type: "function",
+    type: 'function',
     function: {
-      name: "get_inventory",
-      description: "Get list of all items in the pantry",
+      name: 'get_inventory',
+      description: 'Get list of all items in the pantry',
       parameters: {
-        type: "object",
+        type: 'object',
         properties: {
           location: {
-            type: "string",
-            enum: ["fridge", "freezer", "cabinet", "pantry", "all"],
-            description: "Filter by location (default: all)",
+            type: 'string',
+            enum: ['fridge', 'freezer', 'cabinet', 'pantry', 'all'],
+            description: 'Filter by location (default: all)',
           },
           category: {
-            type: "string",
+            type: 'string',
             description: 'Filter by category (e.g., "dairy", "vegetables", "meat")',
           },
         },
@@ -142,16 +142,16 @@ export const FRIDGIT_TOOLS: FridgitTool[] = [
 
   // Expiration Tracking
   {
-    type: "function",
+    type: 'function',
     function: {
-      name: "get_expiring_items",
-      description: "Get items that will expire soon",
+      name: 'get_expiring_items',
+      description: 'Get items that will expire soon',
       parameters: {
-        type: "object",
+        type: 'object',
         properties: {
           days_ahead: {
-            type: "number",
-            description: "Number of days ahead to check (default: 3)",
+            type: 'number',
+            description: 'Number of days ahead to check (default: 3)',
             default: 3,
           },
         },
@@ -159,68 +159,68 @@ export const FRIDGIT_TOOLS: FridgitTool[] = [
     },
   },
   {
-    type: "function",
+    type: 'function',
     function: {
-      name: "set_expiry_alert",
-      description: "Set a reminder for an expiring item",
+      name: 'set_expiry_alert',
+      description: 'Set a reminder for an expiring item',
       parameters: {
-        type: "object",
+        type: 'object',
         properties: {
           item_id: {
-            type: "string",
-            description: "ID of the item to set alert for",
+            type: 'string',
+            description: 'ID of the item to set alert for',
           },
           alert_time: {
-            type: "string",
-            description: "Time to send alert in YYYY-MM-DD HH:MM format",
+            type: 'string',
+            description: 'Time to send alert in YYYY-MM-DD HH:MM format',
           },
         },
-        required: ["item_id", "alert_time"],
+        required: ['item_id', 'alert_time'],
       },
     },
   },
 
   // Grocery List
   {
-    type: "function",
+    type: 'function',
     function: {
-      name: "add_to_grocery_list",
+      name: 'add_to_grocery_list',
       description:
         'Add an item to the shopping/grocery list for buying later. ONLY use when the user explicitly says "grocery list", "shopping list", or "need to buy". Do NOT use for general "add" commands.',
       parameters: {
-        type: "object",
+        type: 'object',
         properties: {
           name: {
-            type: "string",
-            description: "Name of the item to buy at the store",
+            type: 'string',
+            description: 'Name of the item to buy at the store',
           },
           quantity: {
-            type: "number",
-            description: "Quantity to buy",
+            type: 'number',
+            description: 'Quantity to buy',
           },
           priority: {
-            type: "string",
-            enum: ["low", "medium", "high"],
-            description: "Priority level (default: medium)",
-            default: "medium",
+            type: 'string',
+            enum: ['low', 'medium', 'high'],
+            description: 'Priority level (default: medium)',
+            default: 'medium',
           },
         },
-        required: ["name"],
+        required: ['name'],
       },
     },
   },
   {
-    type: "function",
+    type: 'function',
     function: {
-      name: "get_grocery_list",
-      description: "Get the current grocery list",
+      name: 'get_grocery_list',
+      description: 'Get the current grocery list',
       parameters: {
-        type: "object",
+        type: 'object',
         properties: {
           filter: {
-            type: "string",
-            enum: ["all", "high", "medium", "low"],
-            description: "Filter by priority",
+            type: 'string',
+            enum: ['all', 'high', 'medium', 'low'],
+            description: 'Filter by priority',
           },
         },
       },
@@ -229,43 +229,43 @@ export const FRIDGIT_TOOLS: FridgitTool[] = [
 
   // Recipe & Meal Planning
   {
-    type: "function",
+    type: 'function',
     function: {
-      name: "find_recipes",
-      description: "Find recipes using available ingredients",
+      name: 'find_recipes',
+      description: 'Find recipes using available ingredients',
       parameters: {
-        type: "object",
+        type: 'object',
         properties: {
           ingredients: {
-            type: "array",
-            items: { type: "string" },
-            description: "List of ingredients to use",
+            type: 'array',
+            items: { type: 'string' },
+            description: 'List of ingredients to use',
           },
           meal_type: {
-            type: "string",
-            enum: ["breakfast", "lunch", "dinner", "snack"],
-            description: "Type of meal",
+            type: 'string',
+            enum: ['breakfast', 'lunch', 'dinner', 'snack'],
+            description: 'Type of meal',
           },
         },
       },
     },
   },
   {
-    type: "function",
+    type: 'function',
     function: {
-      name: "suggest_meals",
-      description: "Suggest meals based on current inventory",
+      name: 'suggest_meals',
+      description: 'Suggest meals based on current inventory',
       parameters: {
-        type: "object",
+        type: 'object',
         properties: {
           meal_type: {
-            type: "string",
-            enum: ["breakfast", "lunch", "dinner"],
-            description: "Type of meal to suggest",
+            type: 'string',
+            enum: ['breakfast', 'lunch', 'dinner'],
+            description: 'Type of meal to suggest',
           },
           days: {
-            type: "number",
-            description: "Number of days to plan for (default: 1)",
+            type: 'number',
+            description: 'Number of days to plan for (default: 1)',
             default: 1,
           },
         },
@@ -275,19 +275,19 @@ export const FRIDGIT_TOOLS: FridgitTool[] = [
 
   // Product Identification
   {
-    type: "function",
+    type: 'function',
     function: {
-      name: "scan_barcode",
-      description: "Identify a product from its barcode",
+      name: 'scan_barcode',
+      description: 'Identify a product from its barcode',
       parameters: {
-        type: "object",
+        type: 'object',
         properties: {
           barcode: {
-            type: "string",
-            description: "Barcode or UPC code",
+            type: 'string',
+            description: 'Barcode or UPC code',
           },
         },
-        required: ["barcode"],
+        required: ['barcode'],
       },
     },
   },
@@ -301,16 +301,16 @@ export const FRIDGIT_TOOLS: FridgitTool[] = [
  * Valid tool names from FRIDGIT_TOOLS for validation
  */
 const VALID_TOOL_NAMES = new Set([
-  "add_item",
-  "remove_item",
-  "get_inventory",
-  "get_expiring_items",
-  "set_expiry_alert",
-  "add_to_grocery_list",
-  "get_grocery_list",
-  "find_recipes",
-  "suggest_meals",
-  "scan_barcode",
+  'add_item',
+  'remove_item',
+  'get_inventory',
+  'get_expiring_items',
+  'set_expiry_alert',
+  'add_to_grocery_list',
+  'get_grocery_list',
+  'find_recipes',
+  'suggest_meals',
+  'scan_barcode',
 ]);
 
 /**
@@ -323,9 +323,9 @@ function castValue(v: string): string | number | boolean {
   if (!isNaN(asInt) && String(asInt) === trimmed) return asInt;
   const asFloat = parseFloat(trimmed);
   if (!isNaN(asFloat)) return asFloat;
-  if (trimmed.toLowerCase() === "true") return true;
-  if (trimmed.toLowerCase() === "false") return false;
-  return trimmed.replace(/^['"]|['"]$/g, "");
+  if (trimmed.toLowerCase() === 'true') return true;
+  if (trimmed.toLowerCase() === 'false') return false;
+  return trimmed.replace(/^['"]|['"]$/g, '');
 }
 
 /**
@@ -346,13 +346,13 @@ export function parseFunctionCalls(
 
   let callMatch: RegExpExecArray | null;
   while ((callMatch = callRegex.exec(text)) !== null) {
-    const name = callMatch[1] ?? "";
-    const argsStr = callMatch[2] ?? "";
+    const name = callMatch[1] ?? '';
+    const argsStr = callMatch[2] ?? '';
     const args: Record<string, any> = {};
 
     let argMatch: RegExpExecArray | null;
     while ((argMatch = argRegex.exec(argsStr)) !== null) {
-      const key = argMatch[1] ?? "";
+      const key = argMatch[1] ?? '';
       if (!key) continue;
       if (argMatch[2] !== undefined) {
         // <escape>string_value<escape>
@@ -364,7 +364,7 @@ export function parseFunctionCalls(
         const itemRegex = /<escape>(.*?)<escape>|([^,\[\]]+)/g;
         let itemMatch: RegExpExecArray | null;
         while ((itemMatch = itemRegex.exec(arrayContent)) !== null) {
-          const val = itemMatch[1] ?? itemMatch[2] ?? "";
+          const val = itemMatch[1] ?? itemMatch[2] ?? '';
           if (val.trim()) items.push(castValue(val));
         }
         args[key] = items;
@@ -408,8 +408,8 @@ export interface ToolExecutor {
 // ============================================================================
 
 export const MODEL_CONFIG: ModelConfig = {
-  fileName: "functiongemma-270m-it-Q4_K_M.gguf",
-  url: "https://huggingface.co/unsloth/functiongemma-270m-it-GGUF/resolve/main/functiongemma-270m-it-Q4_K_M.gguf",
+  fileName: 'functiongemma-270m-it-Q4_K_M.gguf',
+  url: 'https://huggingface.co/unsloth/functiongemma-270m-it-GGUF/resolve/main/functiongemma-270m-it-Q4_K_M.gguf',
   size: 250 * 1024 * 1024, // ~250MB
 };
 
@@ -447,23 +447,23 @@ export class FunctionGemmaService {
     try {
       // Check if model exists
       const modelFile = new File(this.modelPath);
-      console.log("[FunctionGemma] initialize: checking model file:", {
+      console.log('[FunctionGemma] initialize: checking model file:', {
         path: this.modelPath,
         exists: modelFile.exists,
       });
       if (!modelFile.exists) {
-        console.error("[FunctionGemma] Model file not found:", this.modelPath);
+        console.error('[FunctionGemma] Model file not found:', this.modelPath);
         return false;
       }
 
       // Release any existing context
       if (this.context) {
-        console.log("[FunctionGemma] initialize: releasing existing context");
+        console.log('[FunctionGemma] initialize: releasing existing context');
         await releaseAllLlama();
       }
 
       // Initialize Function Gemma context
-      console.log("[FunctionGemma] initialize: calling initLlama...");
+      console.log('[FunctionGemma] initialize: calling initLlama...');
       const initStart = Date.now();
       const ctx = await initLlama({
         model: this.modelPath,
@@ -473,20 +473,20 @@ export class FunctionGemmaService {
       });
 
       if (!ctx) {
-        console.error("[FunctionGemma] initLlama returned null/undefined");
+        console.error('[FunctionGemma] initLlama returned null/undefined');
         this.isInitialized = false;
         return false;
       }
 
       this.context = ctx;
-      console.log("[FunctionGemma] Model initialized successfully", {
+      console.log('[FunctionGemma] Model initialized successfully', {
         elapsedMs: Date.now() - initStart,
         hasToolExecutor: !!this.toolExecutor,
       });
       this.isInitialized = true;
       return true;
     } catch (error) {
-      console.error("[FunctionGemma] Failed to initialize:", error);
+      console.error('[FunctionGemma] Failed to initialize:', error);
       this.isInitialized = false;
       return false;
     }
@@ -513,7 +513,7 @@ export class FunctionGemmaService {
     userMessage: string,
     conversationHistory: Array<{ role: string; content: string }> = []
   ): Promise<{ text: string; tool_calls?: ToolCall[] }> {
-    console.log("[FunctionGemma] processMessage called:", {
+    console.log('[FunctionGemma] processMessage called:', {
       userMessage,
       historyLength: conversationHistory.length,
       hasContext: !!this.context,
@@ -521,29 +521,23 @@ export class FunctionGemmaService {
     });
 
     if (!this.context) {
-      throw new Error("Function Gemma not initialized. Call initialize() first.");
+      throw new Error('Function Gemma not initialized. Call initialize() first.');
     }
 
     // FunctionGemma requires this specific developer prompt to activate function calling
     const messages = [
       {
-        role: "system",
-        content: "You are a model that can do function calling with the following functions",
+        role: 'system',
+        content: 'You are a model that can do function calling with the following functions',
       },
       ...conversationHistory,
       {
-        role: "user",
+        role: 'user',
         content: userMessage,
       },
     ];
 
-    console.log(
-      "[FunctionGemma] Starting first completion with",
-      messages.length,
-      "messages and",
-      FRIDGIT_TOOLS.length,
-      "tools"
-    );
+    console.log('[FunctionGemma] Starting first completion with', messages.length, 'messages and', FRIDGIT_TOOLS.length, 'tools');
     const completionStart = Date.now();
 
     // Generate completion with tool definitions and stop tokens.
@@ -552,14 +546,14 @@ export class FunctionGemmaService {
       messages,
       n_predict: 256,
       tools: FRIDGIT_TOOLS,
-      tool_choice: "auto",
+      tool_choice: 'auto',
       temperature: 0.7,
       top_p: 0.95,
       top_k: 64,
-      stop: ["<end_function_call>", "<end_of_turn>"],
+      stop: ['<end_function_call>', '<end_of_turn>'],
     });
 
-    console.log("[FunctionGemma] First completion returned:", {
+    console.log('[FunctionGemma] First completion returned:', {
       textLength: result.text?.length ?? 0,
       textPreview: result.text?.slice(0, 300),
       hasToolCalls: !!result.tool_calls,
@@ -574,14 +568,14 @@ export class FunctionGemmaService {
     if (!toolCalls || toolCalls.length === 0) {
       // The stop token trims <end_function_call> from result.text,
       // so re-append it for parsing
-      const textToParse = result.text.includes("<end_function_call>")
+      const textToParse = result.text.includes('<end_function_call>')
         ? result.text
-        : result.text + "<end_function_call>";
+        : result.text + '<end_function_call>';
 
-      console.log("[FunctionGemma] Attempting manual parse of raw text...");
+      console.log('[FunctionGemma] Attempting manual parse of raw text...');
       const parsedCalls = parseFunctionCalls(textToParse);
 
-      console.log("[FunctionGemma] Manual parse result:", {
+      console.log('[FunctionGemma] Manual parse result:', {
         parsedCount: parsedCalls.length,
         parsedCalls,
       });
@@ -589,7 +583,7 @@ export class FunctionGemmaService {
       if (parsedCalls.length > 0) {
         toolCalls = parsedCalls.map((call, i) => ({
           id: `call_${Date.now()}_${i}`,
-          type: "function" as const,
+          type: 'function' as const,
           function: {
             name: call.name,
             arguments: call.arguments,
@@ -600,10 +594,10 @@ export class FunctionGemmaService {
 
     // Execute tool calls if we found any (from llama.rn or our parser)
     if (toolCalls && toolCalls.length > 0) {
-      console.log("[FunctionGemma] Executing", toolCalls.length, "tool calls...");
+      console.log('[FunctionGemma] Executing', toolCalls.length, 'tool calls...');
       const toolExecStart = Date.now();
       const toolResults = await this.executeToolCalls(toolCalls);
-      console.log("[FunctionGemma] Tool execution complete:", {
+      console.log('[FunctionGemma] Tool execution complete:', {
         results: toolResults,
         elapsedMs: Date.now() - toolExecStart,
       });
@@ -617,27 +611,27 @@ export class FunctionGemmaService {
         const messagesWithTools = [
           ...messages,
           {
-            role: "assistant",
+            role: 'assistant',
             content: result.text,
           },
           ...toolResults.map((tr) => ({
-            role: "tool",
+            role: 'tool',
             tool_call_id: tr.id,
             content: JSON.stringify(tr.result),
           })),
         ];
 
-        console.log("[FunctionGemma] Starting final completion with tool results...");
+        console.log('[FunctionGemma] Starting final completion with tool results...');
         const finalStart = Date.now();
 
         const finalResult: CompletionResult = await this.context.completion({
           messages: messagesWithTools,
           n_predict: 256,
           temperature: 0.7,
-          stop: ["<end_of_turn>", "<start_function_call>"],
+          stop: ['<end_of_turn>', '<start_function_call>'],
         });
 
-        console.log("[FunctionGemma] Final completion returned:", {
+        console.log('[FunctionGemma] Final completion returned:', {
           textLength: finalResult.text?.length ?? 0,
           textPreview: finalResult.text?.slice(0, 300),
           timings: finalResult.timings,
@@ -647,7 +641,7 @@ export class FunctionGemmaService {
         finalText = finalResult.text;
       } catch (secondCompletionError) {
         console.warn(
-          "[FunctionGemma] Second completion failed, using formatted tool result:",
+          '[FunctionGemma] Second completion failed, using formatted tool result:',
           secondCompletionError
         );
         // Fall back to a formatted response from the tool results
@@ -660,7 +654,7 @@ export class FunctionGemmaService {
       };
     }
 
-    console.log("[FunctionGemma] No tool calls found, returning text response");
+    console.log('[FunctionGemma] No tool calls found, returning text response');
     return {
       text: result.text,
     };
@@ -675,11 +669,11 @@ export class FunctionGemmaService {
     const results: Array<{ id: string; result: any }> = [];
 
     if (!this.toolExecutor) {
-      console.warn("[FunctionGemma] No tool executor set, returning mock results");
+      console.warn('[FunctionGemma] No tool executor set, returning mock results');
       for (const toolCall of toolCalls) {
         results.push({
           id: toolCall.id,
-          result: { message: "Tool executor not set", call: toolCall },
+          result: { message: 'Tool executor not set', call: toolCall },
         });
       }
       return results;
@@ -695,34 +689,34 @@ export class FunctionGemmaService {
 
         // Map function names to tool executor methods
         switch (name) {
-          case "add_item":
+          case 'add_item':
             result = await this.toolExecutor.addItem(args);
             break;
-          case "remove_item":
+          case 'remove_item':
             result = await this.toolExecutor.removeItem(args);
             break;
-          case "get_inventory":
+          case 'get_inventory':
             result = await this.toolExecutor.getInventory(args);
             break;
-          case "get_expiring_items":
+          case 'get_expiring_items':
             result = await this.toolExecutor.getExpiringItems(args);
             break;
-          case "set_expiry_alert":
+          case 'set_expiry_alert':
             result = await this.toolExecutor.setExpiryAlert(args);
             break;
-          case "add_to_grocery_list":
+          case 'add_to_grocery_list':
             result = await this.toolExecutor.addToGroceryList(args);
             break;
-          case "get_grocery_list":
+          case 'get_grocery_list':
             result = await this.toolExecutor.getGroceryList(args);
             break;
-          case "find_recipes":
+          case 'find_recipes':
             result = await this.toolExecutor.findRecipes(args);
             break;
-          case "suggest_meals":
+          case 'suggest_meals':
             result = await this.toolExecutor.suggestMeals(args);
             break;
-          case "scan_barcode":
+          case 'scan_barcode':
             result = await this.toolExecutor.scanBarcode(args);
             break;
           default:
@@ -762,7 +756,7 @@ export class FunctionGemmaService {
     const parts: string[] = [];
     for (const tr of toolResults) {
       const call = toolCalls.find((tc) => tc.id === tr.id);
-      const funcName = call?.function.name ?? "unknown";
+      const funcName = call?.function.name ?? 'unknown';
       const res = tr.result;
 
       if (res?.success && res?.message) {
@@ -775,7 +769,7 @@ export class FunctionGemmaService {
         parts.push(`${funcName}: ${JSON.stringify(res)}`);
       }
     }
-    return parts.join("\n");
+    return parts.join('\n');
   }
 
   /**
@@ -815,11 +809,11 @@ export async function downloadModelIfNeeded(
 
   // Check if model already exists
   if (destFile.exists) {
-    console.log("[FunctionGemma] Model already exists");
+    console.log('[FunctionGemma] Model already exists');
     return destFile.uri;
   }
 
-  console.log("[FunctionGemma] Downloading model...");
+  console.log('[FunctionGemma] Downloading model...');
 
   try {
     // Download using the new File API
@@ -830,11 +824,11 @@ export async function downloadModelIfNeeded(
       downloadedFile.move(destFile);
     }
 
-    console.log("[FunctionGemma] Model downloaded successfully");
+    console.log('[FunctionGemma] Model downloaded successfully');
     onProgress?.(100);
     return destFile.uri;
   } catch (error) {
-    console.error("[FunctionGemma] Download failed:", error);
+    console.error('[FunctionGemma] Download failed:', error);
     return null;
   }
 }

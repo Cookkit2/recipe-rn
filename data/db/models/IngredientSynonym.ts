@@ -23,7 +23,9 @@ export default class IngredientSynonym extends Model {
   @date("updated_at") updatedAt!: Date;
 
   // Update method
-  @writer async updateSynonym(data: Partial<IngredientSynonymData>): Promise<IngredientSynonym> {
+  @writer async updateSynonym(
+    data: Partial<IngredientSynonymData>
+  ): Promise<IngredientSynonym> {
     return this.update((syn) => {
       if (data.stockId !== undefined) syn.stockId = data.stockId;
       if (data.synonym !== undefined) syn.synonym = data.synonym;

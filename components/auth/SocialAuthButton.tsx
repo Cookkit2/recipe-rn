@@ -64,7 +64,9 @@ export function SocialAuthButton({
       >
         <View className="flex-row items-center space-x-3">
           <View className="w-5 h-5 items-center justify-center">
-            <Text className={cn("font-bold text-lg", config.textColor)}>{config.icon}</Text>
+            <Text className={cn("font-bold text-lg", config.textColor)}>
+              {config.icon}
+            </Text>
           </View>
           <Text className={cn("font-medium", config.textColor)}>
             {loading ? "Connecting..." : config.label}

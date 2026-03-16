@@ -18,13 +18,17 @@ export default function AuthLoadingScreen() {
           <Text className="text-3xl font-bold text-primary-foreground">🍳</Text>
         </View>
         <Text className="text-2xl font-bold text-foreground">Recipe</Text>
-        <Text className="text-base text-muted-foreground">Your cooking companion</Text>
+        <Text className="text-base text-muted-foreground">
+          Your cooking companion
+        </Text>
       </View>
 
       {/* Loading Indicator */}
       <View className="items-center space-y-4">
         <LoadingSpinner size="lg" />
-        <Text className="text-base text-muted-foreground">Setting up your kitchen...</Text>
+        <Text className="text-base text-muted-foreground">
+          Setting up your kitchen...
+        </Text>
       </View>
     </View>
   );

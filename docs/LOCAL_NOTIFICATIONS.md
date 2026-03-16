@@ -91,7 +91,7 @@ npx expo run:android
 
 ### 3. Wrap Your App with NotificationProvider
 
-The `NotificationProvider` is already integrated in [app/\_layout.tsx](../app/_layout.tsx):
+The `NotificationProvider` is already integrated in [app/_layout.tsx](../app/_layout.tsx):
 
 ```tsx
 import { NotificationProvider } from "~/lib/notifications";
@@ -99,7 +99,9 @@ import { NotificationProvider } from "~/lib/notifications";
 export default function RootLayout() {
   return (
     <NotificationProvider>
-      <KeyboardProvider>{/* Rest of your app */}</KeyboardProvider>
+      <KeyboardProvider>
+        {/* Rest of your app */}
+      </KeyboardProvider>
     </NotificationProvider>
   );
 }
@@ -107,7 +109,7 @@ export default function RootLayout() {
 
 ### 4. Register Notification Handlers
 
-Handlers are registered in [app/\_layout.tsx](../app/_layout.tsx):
+Handlers are registered in [app/_layout.tsx](../app/_layout.tsx):
 
 ```tsx
 import { registerNotificationHandler, unregisterNotificationHandler } from "~/lib/notifications";
@@ -141,20 +143,20 @@ Every notification can include a `data` payload used for routing and navigation:
 
 ```typescript
 interface NotificationData {
-  type: string; // Required for handler routing
-  screen?: string; // Optional: screen path for navigation
+  type: string;      // Required for handler routing
+  screen?: string;   // Optional: screen path for navigation
   [key: string]: unknown; // Additional custom data
 }
 ```
 
 ### Trigger Types
 
-| Trigger Type          | Description                 | Example                                             |
-| --------------------- | --------------------------- | --------------------------------------------------- |
-| `TimeIntervalTrigger` | Fire after X seconds        | `{ seconds: 60, repeats: false }`                   |
-| `DateTrigger`         | Fire at specific date/time  | `{ date: new Date('2025-01-15') }`                  |
-| `DailyTrigger`        | Fire daily at specific time | `{ hour: 9, minute: 0, repeats: true }`             |
-| `WeeklyTrigger`       | Fire weekly on specific day | `{ weekday: 1, hour: 9, minute: 0, repeats: true }` |
+| Trigger Type | Description | Example |
+|--------------|-------------|---------|
+| `TimeIntervalTrigger` | Fire after X seconds | `{ seconds: 60, repeats: false }` |
+| `DateTrigger` | Fire at specific date/time | `{ date: new Date('2025-01-15') }` |
+| `DailyTrigger` | Fire daily at specific time | `{ hour: 9, minute: 0, repeats: true }` |
+| `WeeklyTrigger` | Fire weekly on specific day | `{ weekday: 1, hour: 9, minute: 0, repeats: true }` |
 
 ### Handler Registry
 
@@ -194,17 +196,17 @@ Schedule a local notification.
 import { scheduleNotification } from "~/lib/notifications";
 
 const notificationId = await scheduleNotification({
-  id: "reminder-123", // Optional: custom ID for cancellation
+  id: "reminder-123",        // Optional: custom ID for cancellation
   title: "Reminder",
   body: "Don't forget to check your pantry!",
-  subtitle: "DoneDish", // iOS only
+  subtitle: "DoneDish",      // iOS only
   data: {
     type: "reminder",
     screen: "/pantry",
   },
   trigger: { seconds: 3600 }, // Fire in 1 hour
-  sound: true, // Default: true
-  badge: 1, // iOS badge count
+  sound: true,               // Default: true
+  badge: 1,                  // iOS badge count
 });
 ```
 
@@ -365,7 +367,7 @@ import { NotificationProvider } from "~/lib/notifications";
   })}
 >
   {children}
-</NotificationProvider>;
+</NotificationProvider>
 ```
 
 #### `useNotificationContext()`
@@ -421,7 +423,6 @@ await scheduleExpiryNotifications(items);
 ```
 
 **Features:**
-
 - Automatically skips items without `expiry_date`
 - Skips items where notification time is already in the past
 - Groups items expiring within 6 hours to prevent notification spam
@@ -459,7 +460,7 @@ await rescheduleExpiryNotification({
 
 ### Example 1: Integration with Pantry Save Flow
 
-See [app/ingredient/(create)/confirmation.tsx](<../app/ingredient/(create)/confirmation.tsx>):
+See [app/ingredient/(create)/confirmation.tsx](../app/ingredient/(create)/confirmation.tsx):
 
 ```tsx
 const onSaveAllIngredients = useCallback(async () => {
@@ -494,7 +495,6 @@ const onSaveAllIngredients = useCallback(async () => {
 ```
 
 **Key implementation details:**
-
 - Captures `savedItems` (with DB-assigned IDs) instead of `completedItems` (client-side temp IDs)
 - Requests permissions before first schedule
 - Wraps notification scheduling in try/catch to avoid blocking critical save flow
@@ -591,7 +591,7 @@ await scheduleNotification({
   title: "Plan Your Meals",
   body: "What's for dinner tonight?",
   trigger: {
-    hour: 17, // 5 PM
+    hour: 17,  // 5 PM
     minute: 0,
     repeats: true,
   },
@@ -634,10 +634,10 @@ useEffect(() => {
 
 The notification system handles three app states:
 
-| State                       | Behavior                                                                            |
-| --------------------------- | ----------------------------------------------------------------------------------- |
-| **Foreground**              | Notification appears as banner (configurable via `onForegroundNotification` prop)   |
-| **Background**              | System shows notification; tap triggers registered handler                          |
+| State | Behavior |
+|-------|----------|
+| **Foreground** | Notification appears as banner (configurable via `onForegroundNotification` prop) |
+| **Background** | System shows notification; tap triggers registered handler |
 | **Terminated (Cold Start)** | App launches, `NotificationProvider` checks for last response and routes to handler |
 
 ### Cold Start Handling
@@ -751,8 +751,7 @@ try {
 ```
 
 This pattern is used in:
-
-- [confirmation.tsx](<../app/ingredient/(create)/confirmation.tsx>) — save flow
+- [confirmation.tsx](../app/ingredient/(create)/confirmation.tsx) — save flow
 - [usePantryQueries.ts](../hooks/queries/usePantryQueries.ts) — delete/update flows
 
 ### 6. Use DB-Assigned IDs for Notifications
@@ -783,7 +782,7 @@ await scheduleExpiryNotifications(completedItems); // Wrong IDs!
 ### Handler Not Executing
 
 1. **Type mismatch**: Ensure `data.type` in the notification matches the registered handler type
-2. **Provider missing**: Confirm `NotificationProvider` wraps your app in [app/\_layout.tsx](../app/_layout.tsx)
+2. **Provider missing**: Confirm `NotificationProvider` wraps your app in [app/_layout.tsx](../app/_layout.tsx)
 3. **Handler registration timing**: Register handlers before notifications might be received
 4. **Cleanup**: Ensure handlers are unregistered on unmount to prevent memory leaks
 
@@ -814,7 +813,6 @@ const itemsWithExpiry = items.filter(
 ### Permission Denied on First Save
 
 The permission request happens before the first save. If denied, notifications won't schedule but the save will continue. To prompt again, the user must:
-
 - iOS: Go to Settings → DoneDish → Notifications
 - Android: Go to Settings → Apps → DoneDish → Notifications
 
@@ -848,7 +846,11 @@ interface WeeklyTrigger {
   repeats: true;
 }
 
-type NotificationTrigger = TimeIntervalTrigger | DateTrigger | DailyTrigger | WeeklyTrigger;
+type NotificationTrigger =
+  | TimeIntervalTrigger
+  | DateTrigger
+  | DailyTrigger
+  | WeeklyTrigger;
 
 // Scheduling options
 interface ScheduleNotificationOptions {
@@ -890,24 +892,24 @@ interface ExpiryItem {
 
 ### Files Created
 
-| File                                                                                                                                | Purpose                   |
-| ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
-| [lib/notifications/index.ts](../lib/notifications/index.ts)                                                                         | Public API exports        |
-| [lib/notifications/notification-types.ts](../lib/notifications/notification-types.ts)                                               | TypeScript interfaces     |
-| [lib/notifications/notification-service.ts](../lib/notifications/notification-service.ts)                                           | Core scheduling functions |
-| [lib/notifications/notification-handler.ts](../lib/notifications/notification-handler.ts)                                           | Handler registry          |
-| [lib/notifications/NotificationProvider.tsx](../lib/notifications/NotificationProvider.tsx)                                         | React context             |
-| [lib/notifications/expiry-notifications/expiry-notifications.ts](../lib/notifications/expiry-notifications/expiry-notifications.ts) | Ingredient expiry logic   |
-| [constants/notifications.ts](../constants/notifications.ts)                                                                         | Configuration constants   |
+| File | Purpose |
+|------|---------|
+| [lib/notifications/index.ts](../lib/notifications/index.ts) | Public API exports |
+| [lib/notifications/notification-types.ts](../lib/notifications/notification-types.ts) | TypeScript interfaces |
+| [lib/notifications/notification-service.ts](../lib/notifications/notification-service.ts) | Core scheduling functions |
+| [lib/notifications/notification-handler.ts](../lib/notifications/notification-handler.ts) | Handler registry |
+| [lib/notifications/NotificationProvider.tsx](../lib/notifications/NotificationProvider.tsx) | React context |
+| [lib/notifications/expiry-notifications/expiry-notifications.ts](../lib/notifications/expiry-notifications/expiry-notifications.ts) | Ingredient expiry logic |
+| [constants/notifications.ts](../constants/notifications.ts) | Configuration constants |
 
 ### Files Modified
 
-| File                                                                                      | Changes                                                                     |
-| ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| [app.json](../app.json)                                                                   | Added `expo-notifications` plugin                                           |
-| [app/\_layout.tsx](../app/_layout.tsx)                                                    | Wrapped with `NotificationProvider`, registered `ingredient_expiry` handler |
-| [app/ingredient/(create)/confirmation.tsx](<../app/ingredient/(create)/confirmation.tsx>) | Schedule notifications on save with permission request                      |
-| [hooks/queries/usePantryQueries.ts](../hooks/queries/usePantryQueries.ts)                 | Cancel on delete, reschedule on update                                      |
+| File | Changes |
+|------|---------|
+| [app.json](../app.json) | Added `expo-notifications` plugin |
+| [app/_layout.tsx](../app/_layout.tsx) | Wrapped with `NotificationProvider`, registered `ingredient_expiry` handler |
+| [app/ingredient/(create)/confirmation.tsx](../app/ingredient/(create)/confirmation.tsx) | Schedule notifications on save with permission request |
+| [hooks/queries/usePantryQueries.ts](../hooks/queries/usePantryQueries.ts) | Cancel on delete, reschedule on update |
 
 ### Key Improvements Over Original Plan
 
@@ -947,7 +949,6 @@ Potential improvements for future iterations:
 ## Support
 
 For issues or questions about the notification system:
-
 1. Check the [Troubleshooting](#troubleshooting) section
 2. Review the [best practices](#best-practices)
 3. Examine the implementation in the files listed above

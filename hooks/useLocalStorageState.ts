@@ -1,7 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { storage } from "~/data";
-import { log } from "~/utils/logger";
+import { log } from '~/utils/logger';
 
 /**
  * In-memory fallback storage used when persistent storage throws an error.
@@ -82,7 +82,12 @@ export default function useLocalStorageState<T = undefined>(
 ): LocalStorageState<T | undefined> {
   const serializer = options?.serializer;
   const [defaultValue] = useState(options?.defaultValue);
-  return useAsyncStorage(key, defaultValue, serializer?.parse, serializer?.stringify);
+  return useAsyncStorage(
+    key,
+    defaultValue,
+    serializer?.parse,
+    serializer?.stringify
+  );
 }
 
 function useAsyncStorage<T>(
@@ -110,7 +115,7 @@ function useAsyncStorage<T>(
           return;
         }
 
-        const storedValue = storage.getString(key);
+        const storedValue = storage.get<string>(key);
 
         if (mounted) {
           if (storedValue !== null) {
@@ -124,7 +129,7 @@ function useAsyncStorage<T>(
           } else if (defaultValue !== undefined) {
             // Store default value if nothing is stored yet
             try {
-              storage.setString(key, stringify(defaultValue));
+              storage.set(key, stringify(defaultValue));
               setValue(defaultValue);
             } catch (error) {
               log.error(`Error storing default value for key "${key}":`, error);
@@ -157,12 +162,13 @@ function useAsyncStorage<T>(
   const setState = useCallback(
     (newValue: SetStateAction<T | undefined>): void => {
       setValue((currentValue) => {
-        const resolvedValue = newValue instanceof Function ? newValue(currentValue) : newValue;
+        const resolvedValue =
+          newValue instanceof Function ? newValue(currentValue) : newValue;
 
         // Async update to storage
         (async () => {
           try {
-            storage.setString(key, stringify(resolvedValue));
+            storage.set(key, stringify(resolvedValue));
             inMemoryData.delete(key);
             setIsPersistent(true);
           } catch (error) {

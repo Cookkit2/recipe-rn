@@ -22,7 +22,7 @@ const {
   getAvailableRecipes,
   getShoppingListForRecipe,
   selectedRecipeTags,
-  updateRecipeTag,
+  updateRecipeTag
 } = useRecipeStore();
 ```
 
@@ -72,7 +72,7 @@ addRecipeMutation.mutate(newRecipe, {
   },
   onError: (error) => {
     // Handle error
-  },
+  }
 });
 ```
 
@@ -85,14 +85,11 @@ await updateRecipe(recipeId, updates);
 
 // After
 const updateRecipeMutation = useUpdateRecipe();
-updateRecipeMutation.mutate(
-  { id: recipeId, updates },
-  {
-    onSuccess: () => {
-      // Handle success
-    },
+updateRecipeMutation.mutate({ id: recipeId, updates }, {
+  onSuccess: () => {
+    // Handle success
   }
-);
+});
 ```
 
 ### 4. Searching Recipes
@@ -171,9 +168,13 @@ const { data: availableRecipes, isLoading } = useAvailableRecipes();
 ## Complete Component Example
 
 ```tsx
-import React from "react";
-import { useRecipes, useAddRecipe, useDeleteRecipe } from "~/hooks/queries/useRecipeQueries";
-import { useRecipeStore } from "~/store/RecipeContext";
+import React from 'react';
+import {
+  useRecipes,
+  useAddRecipe,
+  useDeleteRecipe
+} from '~/hooks/queries/useRecipeQueries';
+import { useRecipeStore } from '~/store/RecipeContext';
 
 export function RecipeList() {
   // Data hooks
@@ -184,15 +185,15 @@ export function RecipeList() {
   // UI state hooks
   const { selectedRecipeTags, filteredRecipes } = useRecipeStore();
 
-  const handleAddRecipe = (recipe: Omit<Recipe, "id">) => {
+  const handleAddRecipe = (recipe: Omit<Recipe, 'id'>) => {
     addRecipeMutation.mutate(recipe, {
       onSuccess: () => {
         // Recipe automatically added to cache
-        console.log("Recipe added successfully!");
+        console.log('Recipe added successfully!');
       },
       onError: (error) => {
-        console.error("Failed to add recipe:", error);
-      },
+        console.error('Failed to add recipe:', error);
+      }
     });
   };
 
@@ -200,8 +201,8 @@ export function RecipeList() {
     deleteRecipeMutation.mutate(id, {
       onSuccess: () => {
         // Recipe automatically removed from cache
-        console.log("Recipe deleted successfully!");
-      },
+        console.log('Recipe deleted successfully!');
+      }
     });
   };
 
@@ -212,14 +213,14 @@ export function RecipeList() {
 
   return (
     <div>
-      {recipesToShow.map((recipe) => (
+      {recipesToShow.map(recipe => (
         <div key={recipe.id}>
           <h3>{recipe.title}</h3>
           <button
             onClick={() => handleDeleteRecipe(recipe.id)}
             disabled={deleteRecipeMutation.isPending}
           >
-            {deleteRecipeMutation.isPending ? "Deleting..." : "Delete"}
+            {deleteRecipeMutation.isPending ? 'Deleting...' : 'Delete'}
           </button>
         </div>
       ))}

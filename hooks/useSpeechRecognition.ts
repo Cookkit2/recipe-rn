@@ -18,11 +18,7 @@ import type { Recipe, RecipeStep } from "~/types/Recipe";
 
 interface UseSpeechRecognitionOptions {
   /** Callback to process recognized voice commands */
-  onCommand: (
-    command: VoiceCommand,
-    transcript: string,
-    context?: { recipe?: Recipe | null; currentStep?: RecipeStep }
-  ) => void | Promise<void>;
+  onCommand: (command: VoiceCommand, transcript: string, context?: { recipe?: Recipe | null; currentStep?: RecipeStep }) => void | Promise<void>;
   /** Optional recipe context for advanced command parsing */
   recipe?: Recipe | null;
   /** Optional current step context for step-specific commands */
@@ -34,11 +30,7 @@ const CONFIDENCE_THRESHOLD = 0.5; // Only process commands with 50%+ confidence
 const MIN_TRANSCRIPT_LENGTH = 2; // Minimum characters to process (filters short noise)
 const COMMAND_DEBOUNCE_MS = 300; // Wait before processing to ensure user finished speaking
 
-export function useSpeechRecognition({
-  onCommand,
-  recipe,
-  currentStep,
-}: UseSpeechRecognitionOptions) {
+export function useSpeechRecognition({ onCommand, recipe, currentStep }: UseSpeechRecognitionOptions) {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const shouldBeListeningRef = useRef(false);
@@ -165,8 +157,8 @@ export function useSpeechRecognition({
     if (voiceCookingService.getIsSpeaking() || isPausedDueToTTSRef.current) {
       log.debug(
         `[SpeechRecognition] Ignoring command "${text}" - ` +
-          `TTS speaking: ${voiceCookingService.getIsSpeaking()}, ` +
-          `Paused due to TTS: ${isPausedDueToTTSRef.current}`
+        `TTS speaking: ${voiceCookingService.getIsSpeaking()}, ` +
+        `Paused due to TTS: ${isPausedDueToTTSRef.current}`
       );
       return;
     }
@@ -175,7 +167,7 @@ export function useSpeechRecognition({
     if (confidence < CONFIDENCE_THRESHOLD) {
       log.debug(
         `[SpeechRecognition] Ignoring low-confidence result "${text}" ` +
-          `(confidence: ${confidence.toFixed(2)} < threshold: ${CONFIDENCE_THRESHOLD})`
+        `(confidence: ${confidence.toFixed(2)} < threshold: ${CONFIDENCE_THRESHOLD})`
       );
       return;
     }
@@ -184,7 +176,7 @@ export function useSpeechRecognition({
     if (text.trim().length < MIN_TRANSCRIPT_LENGTH) {
       log.debug(
         `[SpeechRecognition] Ignoring short transcription "${text}" ` +
-          `(length: ${text.trim().length} < minimum: ${MIN_TRANSCRIPT_LENGTH})`
+        `(length: ${text.trim().length} < minimum: ${MIN_TRANSCRIPT_LENGTH})`
       );
       return;
     }
@@ -203,7 +195,7 @@ export function useSpeechRecognition({
 
         log.info(
           `[SpeechRecognition] Heard "${text}", parsed as "${command}" ` +
-            `(confidence: ${confidence.toFixed(2)}, last command: "${lastCommandRef.current}")`
+          `(confidence: ${confidence.toFixed(2)}, last command: "${lastCommandRef.current}")`
         );
 
         if (command === "unknown") {

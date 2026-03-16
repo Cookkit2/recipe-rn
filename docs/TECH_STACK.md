@@ -22,21 +22,17 @@ This document provides detailed technical documentation for the technologies use
 ## Core Framework
 
 ### React Native 0.83+
-
 **Why React Native?**
-
 - Cross-platform development with native performance
 - Large ecosystem and community support
 - Hot reload for fast development
 
 **Expo SDK 55 (Preview)**
-
 - Managed workflow with ability to use native modules
 - Over-the-air updates via EAS
 - Consistent API across iOS, Android, Web
 
 **Configuration**
-
 ```json
 {
   "expo": {
@@ -47,7 +43,6 @@ This document provides detailed technical documentation for the technologies use
 ```
 
 **New Architecture (Hermes & Fabric)**
-
 - Hermes V1 JavaScript engine for better performance
 - Fabric renderer for improved UI rendering
 - Enabled via `reanimated.staticFeatureFlags` and build properties
@@ -59,14 +54,12 @@ This document provides detailed technical documentation for the technologies use
 ### Expo Router (File-based Routing)
 
 **Why Expo Router?**
-
 - Type-safe navigation with TypeScript
 - File-based routing (no configuration needed)
 - Deep linking and web URL handling built-in
 - Seamless integration with Expo ecosystem
 
 **Route Structure**
-
 ```
 app/
 ├── (auth)/              # Authenticated routes group
@@ -82,22 +75,20 @@ app/
 ```
 
 **Key Patterns**
-
 - Route groups `(auth)` - shared layouts without affecting URL
 - Dynamic routes `[id]` - typed parameters
 - Stack navigation - default for nested routes
 - Tab navigation - for profile/preferences sections
 
 **Navigation Hooks**
-
 ```typescript
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter, useLocalSearchParams } from 'expo-router';
 
 // Navigate
 const router = useRouter();
-router.push("/ingredient/create");
+router.push('/ingredient/create');
 router.back();
-router.replace("/recipes/123");
+router.replace('/recipes/123');
 
 // Get params
 const { id } = useLocalSearchParams<{ id: string }>();
@@ -110,14 +101,12 @@ const { id } = useLocalSearchParams<{ id: string }>();
 ### React Query (TanStack Query)
 
 **Why React Query?**
-
 - Server state management with caching
 - Automatic refetching and stale data handling
 - Optimistic updates
 - DevTools for debugging
 
 **Configuration**
-
 ```typescript
 // store/QueryProvider.tsx
 <QueryClientProvider client={queryClient}>
@@ -126,28 +115,25 @@ const { id } = useLocalSearchParams<{ id: string }>();
 ```
 
 **Query Defaults**
-
 - `staleTime: 5 * 60 * 1000` - 5 minutes
 - `cacheTime: 10 * 60 * 1000` - 10 minutes
 - `networkMode: 'offlineFirst'` - Prefer cache over network
 - `retry: 1` - Retry failed requests once
 
 **Example Query**
-
 ```typescript
 const { data, isLoading, error } = useQuery({
-  queryKey: ["pantry"],
+  queryKey: ['pantry'],
   queryFn: () => pantryRepository.getAll(),
 });
 ```
 
 **Example Mutation**
-
 ```typescript
 const mutation = useMutation({
   mutationFn: (item: PantryItem) => pantryRepository.create(item),
   onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ["pantry"] });
+    queryClient.invalidateQueries({ queryKey: ['pantry'] });
   },
 });
 ```
@@ -155,13 +141,11 @@ const mutation = useMutation({
 ### React Context
 
 **Why Context?**
-
 - Prop drilling for shared state
 - Simple state that doesn't need complex management
 - UI state (not server state)
 
 **Contexts in DoneDish**
-
 - `PantryContext` - Pantry filter, sheet animations
 - `RecipeContext` - Recipe list state
 - `RecipeDetailContext` - Single recipe detail
@@ -170,7 +154,6 @@ const mutation = useMutation({
 - `IngredientDetailContext` - Ingredient detail state
 
 **Pattern Example**
-
 ```typescript
 // store/PantryContext.tsx
 export const PantryProvider = ({ children }: { children: ReactNode }) => {
@@ -193,38 +176,35 @@ export const usePantry = () => useContext(PantryContext);
 ### WatermelonDB (Local Database)
 
 **Why WatermelonDB?**
-
 - Reactive queries (auto-update UI when data changes)
 - Offline-first architecture
 - Fast SQLite database
 - Supports relationships and aggregations
 
 **Schema Definition**
-
 ```typescript
 // data/db/schema.ts
-import { app } from "@nozbe/watermelondb";
+import { app } from '@nozbe/watermelondb';
 
 export default new Database({
-  name: "DoneDishDB",
+  name: 'DoneDishDB',
   version: 5,
   adapter: new SQLiteAdapter(),
 });
 
-export const pantryItem = app.table("pantry_items", {
+export const pantryItem = app.table('pantry_items', {
   name: t.string,
   quantity: t.number,
   unit: t.string,
   expiry_date: t.date,
   category: t.string,
-  type: t.string as SchemaType<"fridge" | "cabinet" | "freezer">,
+  type: t.string as SchemaType<'fridge' | 'cabinet' | 'freezer'>,
   image_url: t.string,
   steps_to_store: t.json, // Array stored as JSON
 });
 ```
 
 **Repository Pattern**
-
 ```typescript
 // data/db/repositories/PantryRepository.ts
 class PantryRepository {
@@ -239,39 +219,35 @@ class PantryRepository {
 ```
 
 **Reactive Queries**
-
 ```typescript
 // UI automatically updates when data changes
-const items = useCollection(PantryItem, (collection) =>
-  collection.query(Q.where("expiry_date", Q.gt(new Date()))).fetch()
+const items = useCollection(PantryItem, collection =>
+  collection.query(Q.where('expiry_date', Q.gt(new Date()))).fetch()
 );
 ```
 
 ### MMKV (Key-Value Storage)
 
 **Why MMKV?**
-
 - Very fast read/write performance
 - Synchronous API (no async/await needed)
 - Better than AsyncStorage for many small reads
 
 **Usage Pattern**
-
 ```typescript
-import { storage } from "~/data";
+import { storage } from '~/data';
 
 // Get value
-const token = storage.get("auth_token");
+const token = storage.get('auth_token');
 
 // Set value
-storage.set("auth_token", "abc123");
+storage.set('auth_token', 'abc123');
 
 // Remove value
-storage.delete("auth_token");
+storage.delete('auth_token');
 ```
 
 **Storage Keys**
-
 ```typescript
 // constants/storage-keys.ts
 export const ONBOARDING_COMPLETED_KEY = "onboarding:completed";
@@ -286,7 +262,6 @@ export const VOICE_COOKING_SETTINGS_KEY = "voice:cooking_settings";
 ### Supabase
 
 **Why Supabase?**
-
 - Full-stack backend in minutes
 - PostgreSQL database
 - Real-time subscriptions
@@ -294,10 +269,9 @@ export const VOICE_COOKING_SETTINGS_KEY = "voice:cooking_settings";
 - File storage for images
 
 **Configuration**
-
 ```typescript
 // lib/supabase/client.ts
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
@@ -306,10 +280,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 ```
 
 **Auth Integration**
-
 ```typescript
-import { supabase } from "~/lib/supabase/client";
-import { AuthStrategy } from "~/auth/AuthStrategy";
+import { supabase } from '~/lib/supabase/client';
+import { AuthStrategy } from '~/auth/AuthStrategy';
 
 export class SupabaseAuthStrategy implements AuthStrategy {
   async signIn(email: string, password: string) {
@@ -324,7 +297,6 @@ export class SupabaseAuthStrategy implements AuthStrategy {
 ```
 
 **Data Sync**
-
 - WatermelonDB is primary (offline-first)
 - Supabase syncs on app launch and network changes
 - Recipes are cached locally for offline cooking
@@ -338,35 +310,32 @@ export class SupabaseAuthStrategy implements AuthStrategy {
 **Purpose**: AI-powered recipe recommendations and intelligent features
 
 **Features**
-
 - **Recipe Recommendations**: Suggest recipes based on available ingredients
 - **Ingredient Classification**: Identify ingredients from camera photos
 - **Smart Matching**: Match pantry items to recipe requirements
 - **Personalized Suggestions**: Tailor recipes based on user preferences
 
 **Configuration**
-
 ```typescript
 // lib/google-ai/client.ts
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY!;
 const genAI = new GoogleGenerativeAI(apiKey);
 
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 ```
 
 **Recipe Recommendation Flow**
-
 ```typescript
 // 1. Get pantry ingredients
 const pantryItems = await pantryRepository.getAll();
 
 // 2. Build context
 const context = `
-  Available ingredients: ${pantryItems.map((i) => i.name).join(", ")}
+  Available ingredients: ${pantryItems.map(i => i.name).join(', ')}
   Dietary preferences: ${userPreferences.diet}
-  Allergens to avoid: ${userPreferences.allergies.join(", ")}
+  Allergens to avoid: ${userPreferences.allergies.join(', ')}
 `;
 
 // 3. Request recommendations
@@ -377,10 +346,9 @@ const response = await model.generateContent(`
 ```
 
 **Ingredient Classification**
-
 ```typescript
 // Camera capture → ML inference → ingredient name
-import { classifyIngredient } from "~/hooks/model/classifyModel";
+import { classifyIngredient } from '~/hooks/model/classifyModel';
 
 const predictedIngredient = await classifyIngredient(imageUri);
 // Returns: { name: 'tomato', confidence: 0.92 }
@@ -391,14 +359,12 @@ const predictedIngredient = await classifyIngredient(imageUri);
 **Purpose**: On-device machine learning inference
 
 **Why TensorFlow Lite?**
-
 - Runs locally (no network needed)
 - Fast inference for camera features
 - Privacy-focused (data stays on device)
 - Small model size
 
 **Configuration**
-
 ```json
 [
   "react-native-fast-tflite",
@@ -409,45 +375,41 @@ const predictedIngredient = await classifyIngredient(imageUri);
 ```
 
 **Usage**
-
 ```typescript
-import Tflite from "react-native-fast-tflite";
+import Tflite from 'react-native-fast-tflite';
 
 // Load model
 const tflite = new Tflite();
 await tflite.loadModel({
-  model: require("./assets/models/ingredient_classifier.tflite"),
+  model: require('./assets/models/ingredient_classifier.tflite'),
 });
 
 // Run inference
 const result = await tflite.runModel({
   input: imageTensor,
-  output: ["prediction"],
+  output: ['prediction'],
 });
 ```
 
 ### AI Integration Patterns
 
 **Offline-First AI**
-
 - Primary ML (TF Lite) works offline
 - Fallback to cloud AI (Gemini) for complex tasks
 - Cache AI responses in local database
 
 **Optimistic UI**
-
 - Show loading state while AI processes
 - Display results incrementally as they arrive
 - Provide manual override for critical features
 
 **Error Handling**
-
 ```typescript
 try {
   const recommendations = await getRecommendations(pantryItems);
 } catch (error) {
   // Fallback to cached recommendations
-  const cached = storage.get("cached_recommendations");
+  const cached = storage.get('cached_recommendations');
   if (cached) return JSON.parse(cached);
 
   // Show default popular recipes
@@ -462,14 +424,12 @@ try {
 ### Tailwind CSS v4 (Uniwind)
 
 **Why Tailwind?**
-
 - Utility-first CSS
 - Consistent design tokens
 - Easy theming with CSS variables
 - No style prop spaghetti
 
 **Configuration**
-
 ```javascript
 // tailwind.config.js
 /** @type {import('tailwindcss').Config} */
@@ -478,21 +438,20 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: "hsl(12 100% 50%)",
+        primary: 'hsl(12 100% 50%)',
         // ... more colors
       },
       fontFamily: {
-        urbanist: ["Urbanist", "sans-serif"],
-        display: ["Bowlby One", "cursive"],
+        urbanist: ['Urbanist', 'sans-serif'],
+        display: ['Bowlby One', 'cursive'],
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require('tailwindcss-animate')],
 };
 ```
 
 **Theme System**
-
 - Light and dark mode via CSS variables
 - Automatic theme switching based on system preference
 - Consistent color tokens across components
@@ -500,21 +459,18 @@ export default {
 ### @rn-primitives (shadcn-style Components)
 
 **Why @rn-primitives?**
-
 - Accessible UI primitives
 - Consistent design language
 - Composition API for custom components
 - Cross-platform behavior
 
 **Available Components**
-
 - `Button`, `Card`, `Input`, `Text`, `Switch`
 - `Dialog`, `AlertDialog`, `DropdownMenu`
 - `Tabs`, `Collapsible`, `Select`
 - `Progress`, `Slider`, `Avatar`
 
 **Usage Example**
-
 ```typescript
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
@@ -535,13 +491,11 @@ import { Card, CardContent } from "~/components/ui/card";
 ### React Native Reanimated 4
 
 **Why Reanimated?**
-
 - 60fps animations on the UI thread
 - Shared values for smooth gestures
 - Complex animations made simple
 
 **Configuration**
-
 ```json
 {
   "reanimated": {
@@ -558,19 +512,17 @@ import { Card, CardContent } from "~/components/ui/card";
 **Animation Patterns**
 
 **Spring Animation**
-
 ```typescript
-import Animated, { useSharedValue, withSpring } from "react-native-reanimated";
+import Animated, { useSharedValue, withSpring } from 'react-native-reanimated';
 
 const scale = useSharedValue(0);
 scale.value = withSpring(1, { damping: 15, stiffness: 150 });
 ```
 
 **Gesture Animation**
-
 ```typescript
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { useAnimatedStyle, withSpring, useSharedValue } from "react-native-reanimated";
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { useAnimatedStyle, withSpring, useSharedValue } from 'react-native-reanimated';
 
 const translateX = useSharedValue(0);
 const gesture = Gesture.Pan()
@@ -595,7 +547,6 @@ const animatedStyle = useAnimatedStyle(() => ({
 **Purpose**: Hands-free voice commands during cooking
 
 **Configuration**
-
 ```json
 [
   "expo-speech-recognition",
@@ -607,11 +558,10 @@ const animatedStyle = useAnimatedStyle(() => ({
 ```
 
 **Usage Pattern**
-
 ```typescript
-import { useSpeechRecognitionEvent } from "expo-speech-recognition";
+import { useSpeechRecognitionEvent } from 'expo-speech-recognition';
 
-useSpeechRecognitionEvent("result", (event) => {
+useSpeechRecognitionEvent('result', (event) => {
   const transcript = event.results[0]?.transcript;
   // Process command
 });
@@ -622,14 +572,13 @@ useSpeechRecognitionEvent("result", (event) => {
 **Purpose**: Text-to-speech for reading recipe steps
 
 **Usage Pattern**
-
 ```typescript
-import * as Speech from "expo-speech";
+import * as Speech from 'expo-speech';
 
-Speech.speak("Step 1. Heat the pan.", {
-  language: "en-US",
+Speech.speak('Step 1. Heat the pan.', {
+  language: 'en-US',
   rate: 0.9,
-  onDone: () => console.log("Finished speaking"),
+  onDone: () => console.log('Finished speaking'),
 });
 ```
 
@@ -638,7 +587,6 @@ Speech.speak("Step 1. Heat the pan.", {
 **Purpose**: Camera capture for ingredient photos
 
 **Configuration**
-
 ```json
 [
   "react-native-vision-camera",
@@ -649,7 +597,6 @@ Speech.speak("Step 1. Heat the pan.", {
 ```
 
 **Usage Pattern**
-
 ```typescript
 import { Camera, useCameraDevice } from 'react-native-vision-camera';
 
@@ -662,7 +609,6 @@ const device = useCameraDevice('back');
 **Purpose**: Machine learning inference on device (ingredient classification)
 
 **Configuration**
-
 ```json
 [
   "react-native-fast-tflite",
@@ -673,13 +619,12 @@ const device = useCameraDevice('back');
 ```
 
 **Usage Pattern**
-
 ```typescript
-import Tflite from "react-native-fast-tflite";
+import Tflite from 'react-native-fast-tflite';
 
 const tflite = new Tflite();
 await tflite.loadModel({
-  model: require("./assets/model.tflite"),
+  model: require('./assets/model.tflite'),
 });
 const result = await tflite.runModel(input);
 ```
@@ -693,7 +638,6 @@ const result = await tflite.runModel(input);
 **Purpose**: In-app purchases and subscription management
 
 **Configuration**
-
 ```json
 {
   "dependencies": {
@@ -704,18 +648,17 @@ const result = await tflite.runModel(input);
 ```
 
 **Usage Pattern**
-
 ```typescript
-import Purchases from "react-native-purchases";
-import RevenueCatUI from "react-native-purchases-ui";
+import Purchases from 'react-native-purchases';
+import RevenueCatUI from 'react-native-purchases-ui';
 
 // Check entitlements
 const customerInfo = await Purchases.getCustomerInfo();
-const hasPro = customerInfo.entitlements.active["DoneDish Pro"];
+const hasPro = customerInfo.entitlements.active['DoneDish Pro'];
 
 // Show paywall
 const result = await RevenueCatUI.presentPaywallIfNeeded({
-  requiredEntitlementIdentifier: "DoneDish Pro",
+  requiredEntitlementIdentifier: 'DoneDish Pro',
 });
 ```
 
@@ -724,7 +667,6 @@ const result = await RevenueCatUI.presentPaywallIfNeeded({
 **Purpose**: User authentication
 
 **Features**
-
 - Email/password authentication
 - OAuth providers (Google, etc.)
 - Session management
@@ -737,7 +679,6 @@ const result = await RevenueCatUI.presentPaywallIfNeeded({
 ### Prettier
 
 **Configuration**
-
 ```json
 {
   "semi": false,
@@ -750,7 +691,6 @@ const result = await RevenueCatUI.presentPaywallIfNeeded({
 ### TypeScript
 
 **Configuration**
-
 ```json
 {
   "compilerOptions": {
@@ -772,7 +712,6 @@ const result = await RevenueCatUI.presentPaywallIfNeeded({
 ### Expo DevTools
 
 **Features**
-
 - Component inspector
 - Network inspector
 - Logs viewer
@@ -783,7 +722,6 @@ const result = await RevenueCatUI.presentPaywallIfNeeded({
 **Purpose**: Error tracking and performance monitoring
 
 **Configuration**
-
 ```json
 [
   "@sentry/react-native/expo",
@@ -796,13 +734,12 @@ const result = await RevenueCatUI.presentPaywallIfNeeded({
 ```
 
 **Usage Pattern**
-
 ```typescript
-import * as Sentry from "@sentry/react-native";
+import * as Sentry from '@sentry/react-native';
 
 Sentry.init({
-  dsn: "your-dsn",
-  environment: __DEV__ ? "development" : "production",
+  dsn: 'your-dsn',
+  environment: __DEV__ ? 'development' : 'production',
 });
 
 // Capture errors
@@ -836,7 +773,6 @@ EXPO_PUBLIC_SENTRY_DSN=your-sentry-dsn
 ## Version Management
 
 **Current Versions**
-
 - React Native: 0.83.1
 - Expo SDK: 55.0.0-preview.9
 - React: 19.2.0
@@ -845,7 +781,6 @@ EXPO_PUBLIC_SENTRY_DSN=your-sentry-dsn
 - Reanimated: 4.2.1
 
 **Upgrade Strategy**
-
 - Follow Expo SDK release notes
 - Test iOS/Android after upgrades
 - Use EAS Build for production builds
@@ -856,25 +791,21 @@ EXPO_PUBLIC_SENTRY_DSN=your-sentry-dsn
 ## Performance Optimizations
 
 ### WatermelonDB
-
 - Use `observe()` for reactive queries instead of polling
 - Batch operations with `db.batch()`
 - Lazy load large datasets
 
 ### React Query
-
 - Set appropriate `staleTime` for each query
 - Use `queryClient.setQueryData` for optimistic updates
 - Prefetch data likely to be needed
 
 ### Reanimated
-
 - Use `useDerivedValue` for computed animations
 - Avoid worklet closures when possible
 - Use `runOnJS` sparingly (expensive bridge crossing)
 
 ### Images
-
 - Use `expo-image` for better memory management
 - Optimize images with proper dimensions
 - Cache network images
@@ -884,19 +815,16 @@ EXPO_PUBLIC_SENTRY_DSN=your-sentry-dsn
 ## Security Considerations
 
 ### API Keys
-
 - Never commit `.env` files
 - Use Expo's environment variables system
 - Rotate keys regularly
 
 ### Authentication
-
 - Secure tokens with MMKV
 - Implement session timeouts
 - Use Supabase Row-Level Security (RLS)
 
 ### Payments
-
 - Validate receipts with RevenueCat
 - Use server-side verification for production
 - Store entitlement state locally for offline check
@@ -910,28 +838,24 @@ For comprehensive troubleshooting guides, FAQs, and solutions to common issues, 
 ### Quick Reference
 
 **Camera not working**
-
 - Check permissions in Info.plist / AndroidManifest.xml
 - Ensure physical device (not simulator)
 - Restart app after permissions grant
 - See TROUBLESHOOTING.md for detailed camera troubleshooting
 
 **WatermelonDB not updating**
-
 - Check database schema version mismatch
 - Ensure collection is observed for changes
 - Clear app data and reinstall
 - See TROUBLESHOOTING.md for database issues
 
 **Reanimated errors**
-
 - Check staticFeatureFlags configuration
 - Ensure Hermes V1 is enabled
 - Rebuild native app
 - See TROUBLESHOOTING.md for animation troubleshooting
 
 **Supabase sync failing**
-
 - Check network connectivity
 - Verify API keys are correct
 - Check RLS policies in Supabase dashboard
@@ -942,7 +866,6 @@ For comprehensive troubleshooting guides, FAQs, and solutions to common issues, 
 ## Resources
 
 ### Official Documentation
-
 - [Expo Docs](https://docs.expo.dev/)
 - [React Native Docs](https://reactnative.dev/)
 - [WatermelonDB](https://nozbe.github.io/WatermelonDB/)
@@ -951,7 +874,6 @@ For comprehensive troubleshooting guides, FAQs, and solutions to common issues, 
 - [Tailwind](https://tailwindcss.com/)
 
 ### Community
-
 - [Expo Discord](https://discord.com/invite/expo)
 - [React Native Reddit](https://www.reddit.com/r/reactnative/)
 - [WatermelonDB Discord](https://discord.gg/NWpSjC)

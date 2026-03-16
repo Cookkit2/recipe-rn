@@ -29,7 +29,10 @@ export {
 } from "./strategies/UserRatingStrategy";
 
 // Pantry/availability-based strategies
-export { ReadinessStrategy, type ReadinessStrategyOptions } from "./strategies/ReadinessStrategy";
+export {
+  ReadinessStrategy,
+  type ReadinessStrategyOptions,
+} from "./strategies/ReadinessStrategy";
 export {
   ExpiringIngredientsRankingStrategy,
   type ExpiringIngredientsRankingStrategyOptions,
@@ -74,9 +77,9 @@ export function createHistoryAwareRankingStrategy(): CompositeRankingStrategy {
     .addStrategy(new DifficultyStrategy(), 1)
     .addStrategy(new TimeStrategy(), 1)
     .addStrategy(new DietaryStrategy(), 1)
-    .addStrategy(new RecencyPenaltyStrategy(), 2);
-  // .addStrategy(new FamiliarityStrategy(), 1.5)
-  // .addStrategy(new UserRatingStrategy(), 1.5)
+    .addStrategy(new RecencyPenaltyStrategy(), 2)
+    // .addStrategy(new FamiliarityStrategy(), 1.5)
+    // .addStrategy(new UserRatingStrategy(), 1.5)
 }
 
 /**

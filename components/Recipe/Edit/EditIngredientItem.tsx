@@ -102,7 +102,9 @@ export default function EditIngredientItem({
         onPress={showUnitPicker}
         className="min-w-12 h-10 flex items-center justify-center bg-muted rounded-lg border-continuous"
       >
-        <P className="text-center font-urbanist-medium text-base">{ingredient.unit}</P>
+        <P className="text-center font-urbanist-medium text-base">
+          {ingredient.unit}
+        </P>
       </Pressable>
 
       {/* Name Input - Uses EditableTitle pattern */}

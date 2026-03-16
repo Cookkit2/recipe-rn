@@ -105,14 +105,22 @@ function parseLogAttributes(args: any[]): LogAttributes {
     if (typeof arg === "object" && arg !== null && !Array.isArray(arg)) {
       // If it's already an object, merge its properties
       Object.entries(arg).forEach(([key, value]) => {
-        if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+        if (
+          typeof value === "string" ||
+          typeof value === "number" ||
+          typeof value === "boolean"
+        ) {
           attributes[key] = value;
         } else if (value !== null && value !== undefined) {
           // Convert non-primitive values to string
           attributes[key] = String(value);
         }
       });
-    } else if (typeof arg === "string" || typeof arg === "number" || typeof arg === "boolean") {
+    } else if (
+      typeof arg === "string" ||
+      typeof arg === "number" ||
+      typeof arg === "boolean"
+    ) {
       // Add primitive values as indexed attributes
       attributes[`arg_${index}`] = arg;
     } else if (arg !== null && arg !== undefined) {

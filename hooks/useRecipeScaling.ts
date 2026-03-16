@@ -34,7 +34,9 @@ export default function useRecipeScaling(
     // Default values if recipe or servings are not provided
     const originalServings = recipe?.servings ?? 1;
     const effectiveServings =
-      currentServings && isValidServingSize(currentServings) ? currentServings : originalServings;
+      currentServings && isValidServingSize(currentServings)
+        ? currentServings
+        : originalServings;
     const ingredients = recipe?.ingredients ?? [];
 
     // Calculate scaling metadata

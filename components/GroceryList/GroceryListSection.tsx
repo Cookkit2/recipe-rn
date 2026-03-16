@@ -9,14 +9,15 @@ interface GroceryListSectionProps {
   index: number;
 }
 
-export default function GroceryListSection({ section, index }: GroceryListSectionProps) {
+export default function GroceryListSection({
+  section,
+  index,
+}: GroceryListSectionProps) {
   const isPurchased = section.category === "purchased";
 
   return (
     <Animated.View
-      entering={FadeInDown.delay(index * 100)
-        .springify()
-        .damping(20)}
+      entering={FadeInDown.delay(index * 100).springify().damping(20)}
       className={`mb-6 ${isPurchased ? "opacity-70" : ""}`}
     >
       {/* Grocery List Header */}
@@ -30,7 +31,9 @@ export default function GroceryListSection({ section, index }: GroceryListSectio
           {section.title}
         </H4>
         <View
-          className={`flex-1 h-px ml-2 ${isPurchased ? "bg-muted-foreground/30" : "bg-border"}`}
+          className={`flex-1 h-px ml-2 ${
+            isPurchased ? "bg-muted-foreground/30" : "bg-border"
+          }`}
         />
         <P
           className={`text-sm ${

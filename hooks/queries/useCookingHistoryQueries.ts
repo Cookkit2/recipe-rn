@@ -8,9 +8,12 @@ import { recipeQueryKeys } from "./recipeQueryKeys";
  */
 export const cookingHistoryQueryKeys = {
   all: ["cookingHistory"] as const,
-  history: (limit?: number) => [...cookingHistoryQueryKeys.all, "list", limit] as const,
-  recentRecipes: (limit?: number) => [...cookingHistoryQueryKeys.all, "recent", limit] as const,
-  mostCooked: (limit?: number) => [...cookingHistoryQueryKeys.all, "mostCooked", limit] as const,
+  history: (limit?: number) =>
+    [...cookingHistoryQueryKeys.all, "list", limit] as const,
+  recentRecipes: (limit?: number) =>
+    [...cookingHistoryQueryKeys.all, "recent", limit] as const,
+  mostCooked: (limit?: number) =>
+    [...cookingHistoryQueryKeys.all, "mostCooked", limit] as const,
   recipeCookCount: (recipeId: string) =>
     [...cookingHistoryQueryKeys.all, "cookCount", recipeId] as const,
 };
@@ -125,8 +128,13 @@ export function useRecordCooking() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ recipeId, data }: { recipeId: string; data?: RecordCookingData }) =>
-      databaseFacade.recordCooking(recipeId, data),
+    mutationFn: ({
+      recipeId,
+      data,
+    }: {
+      recipeId: string;
+      data?: RecordCookingData;
+    }) => databaseFacade.recordCooking(recipeId, data),
     onSuccess: (_, { recipeId }) => {
       // Invalidate all cooking history queries
       queryClient.invalidateQueries({

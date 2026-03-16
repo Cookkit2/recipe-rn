@@ -18,13 +18,11 @@ Frequently asked questions about DoneDish development, architecture, and common 
 ### What are the prerequisites for developing DoneDish?
 
 **Required:**
-
 - Node.js 18+ ([Download](https://nodejs.org/))
 - npm, yarn, or pnpm
 - macOS with Xcode (for iOS development) OR Android Studio (for Android)
 
 **Recommended:**
-
 - Physical iOS or Android device (camera/voice features don't work well in simulators)
 - Expo Go app (for quick testing)
 
@@ -43,7 +41,6 @@ npm run dev
 ```
 
 Then:
-
 - **iOS**: Run `npm run ios` (Mac only)
 - **Android**: Run `npm run android`
 - **Expo Go**: Scan the QR code in terminal
@@ -119,7 +116,6 @@ The app uses WatermelonDB as the primary database and syncs with Supabase when o
 ### Why isn't voice recognition working?
 
 Voice recognition requires:
-
 1. **Physical device** (doesn't work in most simulators)
 2. **Microphone permission** granted
 3. **Development build** (not Expo Go)
@@ -134,7 +130,6 @@ Yes, run `npm run web`. However, **camera and voice features are not available**
 ### How do recipe imports work?
 
 The app can import recipes from:
-
 - **YouTube videos** (via transcript parsing)
 - **Recipe websites** (via HTML scraping)
 - **Manual entry**
@@ -144,7 +139,6 @@ See [TECH_STACK.md](./TECH_STACK.md#backend-services) for implementation details
 ### What are the voice commands?
 
 Supported voice commands during cooking mode:
-
 - **"next"** - Go to next step
 - **"previous"** - Go to previous step
 - **"repeat"** - Re-read current step
@@ -159,23 +153,23 @@ See [VOICE_GUIDED_COOKING.md](./VOICE_GUIDED_COOKING.md) for details.
 
 ### Expo Go Limitations
 
-| Feature           | Works in Expo Go? | Solution                               |
-| ----------------- | ----------------- | -------------------------------------- |
-| Camera            | ❌ No             | Use `npm run ios` or `npm run android` |
-| Voice Recognition | ❌ No             | Use development build                  |
-| ML Features       | ❌ No             | Use development build                  |
-| Basic UI          | ✅ Yes            | Expo Go is fine                        |
+| Feature | Works in Expo Go? | Solution |
+|---------|-------------------|----------|
+| Camera | ❌ No | Use `npm run ios` or `npm run android` |
+| Voice Recognition | ❌ No | Use development build |
+| ML Features | ❌ No | Use development build |
+| Basic UI | ✅ Yes | Expo Go is fine |
 
 ### Quick Fixes for Common Issues
 
-| Issue                          | Quick Fix                                               |
-| ------------------------------ | ------------------------------------------------------- |
-| Camera permission denied       | Settings > DoneDish > Enable Camera/Microphone          |
-| Development server won't start | Run `npm run clean`                                     |
-| iOS build fails                | Run `cd ios && pod install`                             |
-| Database not syncing           | Check `.env` has valid Supabase credentials             |
-| Voice commands not recognized  | Ensure device language is English                       |
-| Recipes not appearing          | Check Supabase connection and use `/debug` to seed data |
+| Issue | Quick Fix |
+|-------|-----------|
+| Camera permission denied | Settings > DoneDish > Enable Camera/Microphone |
+| Development server won't start | Run `npm run clean` |
+| iOS build fails | Run `cd ios && pod install` |
+| Database not syncing | Check `.env` has valid Supabase credentials |
+| Voice commands not recognized | Ensure device language is English |
+| Recipes not appearing | Check Supabase connection and use `/debug` to seed data |
 
 For detailed solutions, see the [Troubleshooting Guide](./TROUBLESHOOTING.md).
 
@@ -186,7 +180,6 @@ For detailed solutions, see the [Troubleshooting Guide](./TROUBLESHOOTING.md).
 ### Why use Expo Router instead of React Navigation?
 
 Expo Router provides:
-
 - **File-based routing** (no navigation config needed)
 - **Type-safe navigation** with TypeScript
 - **Deep linking** built-in
@@ -204,7 +197,6 @@ The pattern: Query Supabase → Cache in WatermelonDB → UI reads from Watermel
 ### Why use MMKV instead of AsyncStorage?
 
 MMKV is:
-
 - **Faster** (synchronous, no async/await needed)
 - **More reliable** (better thread safety)
 - Used for simple key-value pairs (settings, tokens)
@@ -213,14 +205,14 @@ WatermelonDB is used for complex relational data.
 
 ### What's the difference between Context providers?
 
-| Provider                  | Purpose                         |
-| ------------------------- | ------------------------------- |
-| `PantryContext`           | Pantry filter, sheet animations |
-| `RecipeContext`           | Recipe list state               |
-| `RecipeDetailContext`     | Single recipe detail            |
-| `RecipeStepsContext`      | Cooking mode navigation         |
-| `CreateIngredientContext` | Ingredient creation flow        |
-| `IngredientDetailContext` | Ingredient detail state         |
+| Provider | Purpose |
+|----------|---------|
+| `PantryContext` | Pantry filter, sheet animations |
+| `RecipeContext` | Recipe list state |
+| `RecipeDetailContext` | Single recipe detail |
+| `RecipeStepsContext` | Cooking mode navigation |
+| `CreateIngredientContext` | Ingredient creation flow |
+| `IngredientDetailContext` | Ingredient detail state |
 
 ---
 
@@ -229,7 +221,6 @@ WatermelonDB is used for complex relational data.
 ### Do I need a Mac for iOS development?
 
 **Yes**, for iOS development you need:
-
 - macOS
 - Xcode from the App Store
 
@@ -238,7 +229,6 @@ For Android development, you can use Windows, macOS, or Linux.
 ### Why does the app look different on iOS vs Android?
 
 The app uses platform-specific components and styles for a native feel. Differences include:
-
 - Navigation bars (UINavigationBar vs Toolbar)
 - Font rendering
 - Animations timing

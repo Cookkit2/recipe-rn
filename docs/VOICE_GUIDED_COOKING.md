@@ -5,7 +5,6 @@ This feature adds hands-free, voice-guided cooking using Expo Speech for text-to
 ## Overview
 
 Users can now:
-
 - Have steps read aloud automatically as they navigate
 - Control navigation with voice commands
 - Customize speech rate and pitch
@@ -60,7 +59,12 @@ import { VoiceFAB } from "~/components/VoiceCooking/VoiceControlButton";
 function RecipeStepsScreen() {
   const { currentStep, goToNextStep, goToPreviousStep, stepPages, recipe } = useRecipeSteps();
 
-  const { isSpeaking, voiceEnabled, toggleVoice, speakCurrentStep } = useVoiceGuidedSteps({
+  const {
+    isSpeaking,
+    voiceEnabled,
+    toggleVoice,
+    speakCurrentStep,
+  } = useVoiceGuidedSteps({
     currentStep,
     totalSteps: stepPages.length,
     onNext: () => goToNextStep(recipe.servings),
@@ -112,14 +116,14 @@ function SettingsScreen() {
 
 The system can parse these voice commands (for future speech recognition integration):
 
-| Command       | Aliases                              | Action                            |
-| ------------- | ------------------------------------ | --------------------------------- |
-| `next`        | "continue", "forward", "go"          | Go to next step                   |
-| `previous`    | "back", "go back", "last step"       | Go to previous step               |
-| `repeat`      | "again", "say again", "read again"   | Repeat current step               |
-| `stop`        | "quiet", "silence", "shut up"        | Stop speaking                     |
-| `ingredients` | "what do I need", "list ingredients" | Read all ingredients              |
-| `done`        | "finish", "complete"                 | Complete recipe (if on last step) |
+| Command | Aliases | Action |
+|---------|---------|--------|
+| `next` | "continue", "forward", "go" | Go to next step |
+| `previous` | "back", "go back", "last step" | Go to previous step |
+| `repeat` | "again", "say again", "read again" | Repeat current step |
+| `stop` | "quiet", "silence", "shut up" | Stop speaking |
+| `ingredients` | "what do I need", "list ingredients" | Read all ingredients |
+| `done` | "finish", "complete" | Complete recipe (if on last step) |
 
 ## Settings Storage
 
@@ -127,32 +131,28 @@ Settings are stored in MMKV under key `voice:cooking_settings`:
 
 ```typescript
 interface VoiceCookingSettings {
-  enabled: boolean; // Master toggle
-  autoReadSteps: boolean; // Auto-read on navigation
-  speechRate: number; // 0.5 - 1.5 (1.0 = normal)
-  speechPitch: number; // 0.5 - 1.5 (1.0 = normal)
-  language: string; // e.g., "en-US"
-  voice?: string; // Specific voice identifier
+  enabled: boolean;        // Master toggle
+  autoReadSteps: boolean;  // Auto-read on navigation
+  speechRate: number;      // 0.5 - 1.5 (1.0 = normal)
+  speechPitch: number;     // 0.5 - 1.5 (1.0 = normal)
+  language: string;        // e.g., "en-US"
+  voice?: string;          // Specific voice identifier
 }
 ```
 
 ## Features
 
 ### Auto-Read Steps
-
 When enabled, each step is automatically read aloud when the user navigates to it.
 
 ### Speech Customization
-
 - **Speed**: Slower for beginners, faster for experienced cooks
 - **Pitch**: Customize voice tone preference
 
 ### Speaking Animation
-
 The voice button pulses when speaking, providing visual feedback.
 
 ### App State Handling
-
 Speech automatically stops when the app goes to background.
 
 ## Dependencies

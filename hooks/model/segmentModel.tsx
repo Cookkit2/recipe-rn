@@ -10,7 +10,7 @@ import {
 } from "@shopify/react-native-skia";
 import allModel from "./allModel";
 import { getColors } from "react-native-image-colors";
-import { log } from "~/utils/logger";
+import { log } from '~/utils/logger';
 
 const MAGIC_TOUCH_MODEL_INPUT_SIZE = 512;
 
@@ -26,7 +26,9 @@ export const segmentStaticImage = async (
   const { magicTouchModel } = await allModel.get();
   const modelLoadEnd = performance.now();
   const modelLoadDuration = modelLoadEnd - modelLoadStart;
-  log.info(`📊 [Profiling] Model loading took ${modelLoadDuration.toFixed(2)}ms`);
+  log.info(
+    `📊 [Profiling] Model loading took ${modelLoadDuration.toFixed(2)}ms`
+  );
 
   try {
     // Step 2: Preprocessing Input
@@ -37,24 +39,33 @@ export const segmentStaticImage = async (
     }); // Float32Array length 512*512*4
     const preprocessEnd = performance.now();
     const preprocessDuration = preprocessEnd - preprocessStart;
-    log.info(`📊 [Profiling] Preprocessing took ${preprocessDuration.toFixed(2)}ms`);
+    log.info(
+      `📊 [Profiling] Preprocessing took ${preprocessDuration.toFixed(2)}ms`
+    );
     log.info(
       `📊 [Profiling] Input array size: ${input.length} (${((input.length * 4) / 1024).toFixed(2)} KB)`
     );
 
     // Step 3: Model Inference
     const inferenceStart = performance.now();
-    const magicTouchOutputs = magicTouchModel.runSync([input]) as Float32Array[];
+    const magicTouchOutputs = magicTouchModel.runSync([
+      input,
+    ]) as Float32Array[];
     const inferenceEnd = performance.now();
     const inferenceDuration = inferenceEnd - inferenceStart;
-    log.info(`📊 [Profiling] Model inference took ${inferenceDuration.toFixed(2)}ms`);
+    log.info(
+      `📊 [Profiling] Model inference took ${inferenceDuration.toFixed(2)}ms`
+    );
 
     let returnSkImage: SkImage = skImage;
 
     // Step 4: Applying Mask
     const maskStart = performance.now();
     if (magicTouchOutputs[0]) {
-      const magicMaskOutputs = applyMagicTouchMaskAndExport(skImage, magicTouchOutputs[0]);
+      const magicMaskOutputs = applyMagicTouchMaskAndExport(
+        skImage,
+        magicTouchOutputs[0]
+      );
 
       if (magicMaskOutputs?.finalImage) {
         returnSkImage = magicMaskOutputs?.finalImage;
@@ -71,15 +82,21 @@ export const segmentStaticImage = async (
     const url = `data:image/png;base64,${thumbnailBase64}`;
     const thumbnailEnd = performance.now();
     const thumbnailDuration = thumbnailEnd - thumbnailStart;
-    log.info(`📊 [Profiling] Thumbnail creation took ${thumbnailDuration.toFixed(2)}ms`);
-    log.info(`📊 [Profiling] Thumbnail size: ${thumbnailBase64.length} characters (vs full image)`);
+    log.info(
+      `📊 [Profiling] Thumbnail creation took ${thumbnailDuration.toFixed(2)}ms`
+    );
+    log.info(
+      `📊 [Profiling] Thumbnail size: ${thumbnailBase64.length} characters (vs full image)`
+    );
 
     // Step 6: Color Extraction
     const colorStart = performance.now();
     const backgroundColor = await fetchColors(url);
     const colorEnd = performance.now();
     const colorDuration = colorEnd - colorStart;
-    log.info(`📊 [Profiling] Color extraction took ${colorDuration.toFixed(2)}ms`);
+    log.info(
+      `📊 [Profiling] Color extraction took ${colorDuration.toFixed(2)}ms`
+    );
 
     // Overall timing
     const endTime = performance.now();
@@ -162,7 +179,10 @@ export const fetchColors = async (url: string) => {
  * Create a small thumbnail for fast color extraction
  * Using a tiny 32x32 PNG is much faster than encoding larger images
  */
-const createThumbnailForColors = (image: SkImage, size: number = 32): string => {
+const createThumbnailForColors = (
+  image: SkImage,
+  size: number = 32
+): string => {
   "worklet";
   const surface = Skia.Surface.MakeOffscreen(size, size);
   if (!surface) {
@@ -242,7 +262,12 @@ export const preprocessMagicTouchInput = (
     if (gSurface && gCanvas) {
       gCanvas.clear(Skia.Color("transparent"));
       const gPaint = Skia.Paint();
-      const filter = Skia.ImageFilter.MakeBlur(blurSigma, blurSigma, TileMode.Clamp, null);
+      const filter = Skia.ImageFilter.MakeBlur(
+        blurSigma,
+        blurSigma,
+        TileMode.Clamp,
+        null
+      );
       gPaint.setImageFilter(filter);
       gPaint.setAntiAlias(true);
       const radius = Math.max(2, Math.round(imageSize * 0.01));
@@ -391,7 +416,12 @@ const applyMagicTouchMaskAndExport = (image: SkImage, mask: Float32Array) => {
     // Draw upscaled processed mask, then composite with source image
     const upscalePaint = Skia.Paint();
     upscalePaint.setAntiAlias(false);
-    auxiliaryCanvas?.drawImageRect(processedMask, srcRect, dstRect, upscalePaint);
+    auxiliaryCanvas?.drawImageRect(
+      processedMask,
+      srcRect,
+      dstRect,
+      upscalePaint
+    );
     auxiliaryCanvas?.drawImage(image, 0, 0, paintSrcIn);
     const snapshot = auxiliarySkiaSurface?.makeImageSnapshot();
 
@@ -407,7 +437,8 @@ const applyMagicTouchMaskAndExport = (image: SkImage, mask: Float32Array) => {
       return null;
     }
 
-    const pixelBytes = pixels instanceof Uint8Array ? pixels : new Uint8Array(pixels.buffer);
+    const pixelBytes =
+      pixels instanceof Uint8Array ? pixels : new Uint8Array(pixels.buffer);
     const pixelData = Skia.Data.fromBytes(pixelBytes);
 
     const finalImage = Skia.Image.MakeImage(

@@ -26,7 +26,12 @@ function CardHeader({
 }: ViewProps & {
   ref?: React.RefObject<View>;
 }) {
-  return <View className={cn("flex flex-col space-y-1.5 p-6", className)} {...props} />;
+  return (
+    <View
+      className={cn("flex flex-col space-y-1.5 p-6", className)}
+      {...props}
+    />
+  );
 }
 
 function CardTitle({
@@ -54,7 +59,12 @@ function CardDescription({
 }: TextProps & {
   ref?: React.RefObject<Text>;
 }) {
-  return <Text className={cn("text-sm text-muted-foreground", className)} {...props} />;
+  return (
+    <Text
+      className={cn("text-sm text-muted-foreground", className)}
+      {...props}
+    />
+  );
 }
 
 function CardContent({
@@ -76,7 +86,19 @@ function CardFooter({
 }: ViewProps & {
   ref?: React.RefObject<View>;
 }) {
-  return <View className={cn("flex flex-row items-center p-6 pt-0", className)} {...props} />;
+  return (
+    <View
+      className={cn("flex flex-row items-center p-6 pt-0", className)}
+      {...props}
+    />
+  );
 }
 
-export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle };
+export {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+};

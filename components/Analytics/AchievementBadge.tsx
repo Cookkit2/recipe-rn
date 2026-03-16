@@ -20,7 +20,10 @@ export interface AchievementBadgeProps {
   className?: string;
 }
 
-function AchievementBadge({ achievement, className }: AchievementBadgeProps) {
+function AchievementBadge({
+  achievement,
+  className,
+}: AchievementBadgeProps) {
   const { title, description, icon, unlocked, progress, target } = achievement;
 
   const progressPercentage = React.useMemo(() => {
@@ -32,7 +35,11 @@ function AchievementBadge({ achievement, className }: AchievementBadgeProps) {
 
   return (
     <Card
-      className={cn("relative overflow-hidden", unlocked ? "bg-card" : "bg-muted/50", className)}
+      className={cn(
+        "relative overflow-hidden",
+        unlocked ? "bg-card" : "bg-muted/50",
+        className
+      )}
     >
       <CardContent className="p-4 gap-3">
         <View className="flex-row items-center gap-3">
@@ -40,7 +47,9 @@ function AchievementBadge({ achievement, className }: AchievementBadgeProps) {
           <View
             className={cn(
               "h-12 w-12 rounded-full items-center justify-center",
-              unlocked ? "bg-amber-100 dark:bg-amber-900/30" : "bg-muted-foreground/10"
+              unlocked
+                ? "bg-amber-100 dark:bg-amber-900/30"
+                : "bg-muted-foreground/10"
             )}
           >
             <P className="text-2xl">{icon}</P>
@@ -59,11 +68,15 @@ function AchievementBadge({ achievement, className }: AchievementBadgeProps) {
               </P>
               {!unlocked && (
                 <View className="rounded-full bg-muted-foreground/20 px-2 py-0.5">
-                  <P className="text-xs text-muted-foreground font-urbanist-medium">Locked</P>
+                  <P className="text-xs text-muted-foreground font-urbanist-medium">
+                    Locked
+                  </P>
                 </View>
               )}
             </View>
-            <P className="text-sm text-muted-foreground font-urbanist-medium">{description}</P>
+            <P className="text-sm text-muted-foreground font-urbanist-medium">
+              {description}
+            </P>
           </View>
         </View>
 
@@ -82,7 +95,9 @@ function AchievementBadge({ achievement, className }: AchievementBadgeProps) {
               <View
                 className={cn(
                   "h-full rounded-full",
-                  unlocked ? "bg-amber-500" : "bg-muted-foreground/30"
+                  unlocked
+                    ? "bg-amber-500"
+                    : "bg-muted-foreground/30"
                 )}
                 style={{ width: `${progressPercentage}%` }}
               />

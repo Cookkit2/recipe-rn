@@ -67,12 +67,19 @@ class VoiceCommandParser {
    * @param currentStep - The current step (optional)
    * @returns Parsed command with extracted information
    */
-  parseCommand(text: string, recipe: Recipe | null, currentStep?: RecipeStep): ParsedVoiceCommand {
+  parseCommand(
+    text: string,
+    recipe: Recipe | null,
+    currentStep?: RecipeStep
+  ): ParsedVoiceCommand {
     const normalizedText = text.toLowerCase().trim();
 
     // Try to parse as ingredient amount query
     if (this.isIngredientQuery(normalizedText)) {
-      const ingredient = this.extractIngredient(normalizedText, recipe?.ingredients ?? []);
+      const ingredient = this.extractIngredient(
+        normalizedText,
+        recipe?.ingredients ?? []
+      );
       if (ingredient) {
         log.info("Parsed ingredient amount query:", ingredient.name);
         return {
@@ -231,7 +238,9 @@ class VoiceCommandParser {
     const matchingWords = spokenWords.filter((spokenWord) =>
       ingredientWords.some(
         (ingWord) =>
-          spokenWord === ingWord || spokenWord.includes(ingWord) || ingWord.includes(spokenWord)
+          spokenWord === ingWord ||
+          spokenWord.includes(ingWord) ||
+          ingWord.includes(spokenWord)
       )
     );
 
@@ -283,7 +292,10 @@ class VoiceCommandParser {
     const simpleSpokenWords = spoken.toLowerCase().split(/\s+/);
     const simpleIngredientWords = ingredientName.toLowerCase().split(/\s+/);
 
-    const simpleScore = this.calculateFuzzyScore(simpleSpokenWords, simpleIngredientWords);
+    const simpleScore = this.calculateFuzzyScore(
+      simpleSpokenWords,
+      simpleIngredientWords
+    );
     if (simpleScore > 0) {
       return simpleScore * 0.7; // Lower score for simple match
     }
@@ -304,7 +316,9 @@ class VoiceCommandParser {
 
     // Search in instructions for temperature mentions
     for (const step of recipe.instructions) {
-      const temps = this.extractTemperaturesFromText(`${step.title} ${step.description}`);
+      const temps = this.extractTemperaturesFromText(
+        `${step.title} ${step.description}`
+      );
       if (temps.length > 0) {
         return temps[0]; // Return first found temperature
       }
@@ -327,7 +341,9 @@ class VoiceCommandParser {
     const allTemps: TemperatureInfo[] = [];
 
     for (const step of recipe.instructions) {
-      const temps = this.extractTemperaturesFromText(`${step.title} ${step.description}`);
+      const temps = this.extractTemperaturesFromText(
+        `${step.title} ${step.description}`
+      );
       allTemps.push(...temps);
     }
 
@@ -352,7 +368,7 @@ class VoiceCommandParser {
     }
 
     // from C to F
-    return Math.round((value * 9) / 5 + 32);
+    return Math.round((value * 9 / 5) + 32);
   }
 
   /**
@@ -399,7 +415,11 @@ class VoiceCommandParser {
 
     const contextSuggestions: Record<string, string[]> = {
       ingredients: ["Try saying 'how much [ingredient]'"],
-      step: ["Try saying 'explain this step'", "Try saying 'what do I do'", "Try saying 'repeat'"],
+      step: [
+        "Try saying 'explain this step'",
+        "Try saying 'what do I do'",
+        "Try saying 'repeat'",
+      ],
     };
 
     if (currentContext && contextSuggestions[currentContext]) {

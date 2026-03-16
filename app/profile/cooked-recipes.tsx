@@ -8,7 +8,11 @@ import CookedRecipeCard from "~/components/Profile/CookedRecipes/CookedRecipeCar
 
 export default function CookedRecipes() {
   // Fetch recently cooked recipes
-  const { data: cookedRecipes, isLoading, error } = useRecentlyCookedRecipes(50);
+  const {
+    data: cookedRecipes,
+    isLoading,
+    error,
+  } = useRecentlyCookedRecipes(50);
 
   if (isLoading) {
     return (

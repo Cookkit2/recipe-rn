@@ -63,17 +63,17 @@ Rework the camera ingredient capture page to support **non-blocking background p
 
 ```typescript
 // Processing status for queue items
-type ProcessingStatus = "queued" | "processing" | "completed" | "failed";
+type ProcessingStatus = 'queued' | 'processing' | 'completed' | 'failed';
 
 // Queue item representing an image being processed
 interface QueuedItem {
-  id: string; // Unique identifier
-  imagePath: string; // Path to captured image
+  id: string;                              // Unique identifier
+  imagePath: string;                       // Path to captured image
   framePosition: { x: number; y: number }; // Focus point for segmentation
-  status: ProcessingStatus; // Current processing state
-  result?: PantryItemConfirmation; // Result when completed
-  error?: string; // Error message if failed
-  timestamp: number; // When added to queue
+  status: ProcessingStatus;                // Current processing state
+  result?: PantryItemConfirmation;         // Result when completed
+  error?: string;                          // Error message if failed
+  timestamp: number;                       // When added to queue
 }
 
 // New context properties
@@ -108,10 +108,10 @@ const addToQueue = useCallback((imagePath: string, framePosition: { x: number; y
     id: `queue-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     imagePath,
     framePosition,
-    status: "queued",
+    status: 'queued',
     timestamp: Date.now(),
   };
-  setProcessingQueue((prev) => [...prev, newItem]);
+  setProcessingQueue(prev => [...prev, newItem]);
 }, []);
 
 // Process queue sequentially
@@ -119,14 +119,16 @@ useEffect(() => {
   const processNext = async () => {
     if (isProcessingRef.current) return;
 
-    const nextItem = processingQueue.find((item) => item.status === "queued");
+    const nextItem = processingQueue.find(item => item.status === 'queued');
     if (!nextItem) return;
 
     isProcessingRef.current = true;
 
     // Update status to processing
-    setProcessingQueue((prev) =>
-      prev.map((item) => (item.id === nextItem.id ? { ...item, status: "processing" } : item))
+    setProcessingQueue(prev =>
+      prev.map(item =>
+        item.id === nextItem.id ? { ...item, status: 'processing' } : item
+      )
     );
 
     try {
@@ -140,7 +142,7 @@ useEffect(() => {
 
         const { finalImage: trimmedImage } = trimTransparentBorders(result.skImage, 2);
         const { base64 } = resizeImagePreserveAlpha(trimmedImage, 300);
-        await file.write(base64, { encoding: "base64" });
+        await file.write(base64, { encoding: 'base64' });
 
         // Add to processed items
         addProcessPantryItems({
@@ -152,16 +154,18 @@ useEffect(() => {
         });
 
         // Remove from queue
-        setProcessingQueue((prev) => prev.filter((item) => item.id !== nextItem.id));
+        setProcessingQueue(prev => prev.filter(item => item.id !== nextItem.id));
 
         // Haptic feedback for success
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
     } catch (error) {
       // Mark as failed
-      setProcessingQueue((prev) =>
-        prev.map((item) =>
-          item.id === nextItem.id ? { ...item, status: "failed", error: error.message } : item
+      setProcessingQueue(prev =>
+        prev.map(item =>
+          item.id === nextItem.id
+            ? { ...item, status: 'failed', error: error.message }
+            : item
         )
       );
     } finally {
@@ -220,7 +224,7 @@ const takePicture = async () => {
   data={[...processingQueue, ...processPantryItems]}
   renderItem={({ item }) => {
     // Check if it's a queue item (has 'status' property)
-    if ("status" in item) {
+    if ('status' in item) {
       return (
         <SkeletonThumbnail
           key={item.id}
@@ -248,17 +252,17 @@ const takePicture = async () => {
 **File:** `components/Ingredient/SkeletonThumbnail.tsx` (NEW)
 
 ```tsx
-import { View, ActivityIndicator, Pressable } from "react-native";
+import { View, ActivityIndicator, Pressable } from 'react-native';
 import Animated, {
   BounceIn,
   useAnimatedStyle,
   withRepeat,
   withTiming,
   useSharedValue,
-} from "react-native-reanimated";
-import { AlertCircleIcon, RefreshCwIcon } from "lucide-nativewind";
+} from 'react-native-reanimated';
+import { AlertCircleIcon, RefreshCwIcon } from 'lucide-nativewind';
 
-type ProcessingStatus = "queued" | "processing" | "failed";
+type ProcessingStatus = 'queued' | 'processing' | 'failed';
 
 interface SkeletonThumbnailProps {
   status: ProcessingStatus;
@@ -268,13 +272,21 @@ interface SkeletonThumbnailProps {
 
 const THUMBNAIL_SIZE = 32;
 
-export default function SkeletonThumbnail({ status, onRetry, onRemove }: SkeletonThumbnailProps) {
+export default function SkeletonThumbnail({
+  status,
+  onRetry,
+  onRemove
+}: SkeletonThumbnailProps) {
   const opacity = useSharedValue(0.3);
 
   // Pulsing animation for queued/processing states
   useEffect(() => {
-    if (status === "queued" || status === "processing") {
-      opacity.value = withRepeat(withTiming(0.7, { duration: 800 }), -1, true);
+    if (status === 'queued' || status === 'processing') {
+      opacity.value = withRepeat(
+        withTiming(0.7, { duration: 800 }),
+        -1,
+        true
+      );
     }
   }, [status]);
 
@@ -282,7 +294,7 @@ export default function SkeletonThumbnail({ status, onRetry, onRemove }: Skeleto
     opacity: opacity.value,
   }));
 
-  if (status === "failed") {
+  if (status === 'failed') {
     return (
       <Animated.View
         entering={BounceIn}
@@ -303,10 +315,15 @@ export default function SkeletonThumbnail({ status, onRetry, onRemove }: Skeleto
   return (
     <Animated.View
       entering={BounceIn.springify().damping(15).mass(1).stiffness(150)}
-      style={[{ width: THUMBNAIL_SIZE, height: THUMBNAIL_SIZE }, animatedStyle]}
+      style={[
+        { width: THUMBNAIL_SIZE, height: THUMBNAIL_SIZE },
+        animatedStyle,
+      ]}
       className="ml-3 rounded-lg bg-white/40 items-center justify-center"
     >
-      {status === "processing" && <ActivityIndicator size="small" color="white" />}
+      {status === 'processing' && (
+        <ActivityIndicator size="small" color="white" />
+      )}
     </Animated.View>
   );
 }
@@ -341,52 +358,52 @@ const onConfirm = () => {
 **Option B - Show banner on confirmation page:**
 
 ```tsx
-{
-  processingQueue.length > 0 && (
-    <View className="bg-yellow-500/20 p-3 rounded-lg mb-4">
-      <P className="text-yellow-200">Processing {processingQueue.length} more item(s)...</P>
-    </View>
-  );
-}
+{processingQueue.length > 0 && (
+  <View className="bg-yellow-500/20 p-3 rounded-lg mb-4">
+    <P className="text-yellow-200">
+      Processing {processingQueue.length} more item(s)...
+    </P>
+  </View>
+)}
 ```
 
 ---
 
 ### 6. Edge Cases & Error Handling
 
-| Scenario                   | Solution                                              |
-| -------------------------- | ----------------------------------------------------- |
-| **App backgrounded**       | Queue persists in memory, continues when foregrounded |
-| **Processing fails**       | Show red skeleton with retry option                   |
-| **Memory pressure**        | Process one item at a time (sequential queue)         |
-| **User navigates away**    | Queue continues processing in background              |
-| **Duplicate photos**       | Each has unique ID, processed independently           |
-| **Clear all failed**       | Provide "Clear failed" action                         |
-| **Network error (Gemini)** | Retry with exponential backoff, then mark failed      |
+| Scenario | Solution |
+|----------|----------|
+| **App backgrounded** | Queue persists in memory, continues when foregrounded |
+| **Processing fails** | Show red skeleton with retry option |
+| **Memory pressure** | Process one item at a time (sequential queue) |
+| **User navigates away** | Queue continues processing in background |
+| **Duplicate photos** | Each has unique ID, processed independently |
+| **Clear all failed** | Provide "Clear failed" action |
+| **Network error (Gemini)** | Retry with exponential backoff, then mark failed |
 
 ---
 
 ### 7. Visual Feedback Summary
 
-| Event               | Feedback                           |
-| ------------------- | ---------------------------------- |
-| Photo captured      | Light haptic + skeleton appears    |
-| Processing starts   | Skeleton shows spinner             |
+| Event | Feedback |
+|-------|----------|
+| Photo captured | Light haptic + skeleton appears |
+| Processing starts | Skeleton shows spinner |
 | Processing complete | Success haptic + thumbnail appears |
-| Processing failed   | Warning haptic + red skeleton      |
-| Retry tapped        | Light haptic + back to processing  |
+| Processing failed | Warning haptic + red skeleton |
+| Retry tapped | Light haptic + back to processing |
 
 ---
 
 ### 8. File Changes Summary
 
-| File                                          | Action | Description                                  |
-| --------------------------------------------- | ------ | -------------------------------------------- |
-| `store/CreateIngredientContext.tsx`           | Modify | Add queue state, processor, new methods      |
-| `app/ingredient/(create)/create.tsx`          | Modify | Remove confirmation UI, update shutter logic |
-| `components/Ingredient/SkeletonThumbnail.tsx` | Create | New skeleton placeholder component           |
-| `app/ingredient/confirmation.tsx`             | Modify | Handle in-progress queue items               |
-| `types/PantryItem.ts`                         | Modify | Add QueuedItem type (optional)               |
+| File | Action | Description |
+|------|--------|-------------|
+| `store/CreateIngredientContext.tsx` | Modify | Add queue state, processor, new methods |
+| `app/ingredient/(create)/create.tsx` | Modify | Remove confirmation UI, update shutter logic |
+| `components/Ingredient/SkeletonThumbnail.tsx` | Create | New skeleton placeholder component |
+| `app/ingredient/confirmation.tsx` | Modify | Handle in-progress queue items |
+| `types/PantryItem.ts` | Modify | Add QueuedItem type (optional) |
 
 ---
 
@@ -403,15 +420,15 @@ const onConfirm = () => {
 
 ## Estimated Timeline
 
-| Task                     | Effort    | Priority |
-| ------------------------ | --------- | -------- |
-| Queue state & types      | 1 hour    | High     |
-| Queue processor logic    | 2 hours   | High     |
-| Update create.tsx UI     | 2 hours   | High     |
-| Skeleton component       | 1 hour    | High     |
-| Update confirmation page | 1 hour    | Medium   |
-| Edge case handling       | 1-2 hours | Medium   |
-| Testing & polish         | 1-2 hours | High     |
+| Task | Effort | Priority |
+|------|--------|----------|
+| Queue state & types | 1 hour | High |
+| Queue processor logic | 2 hours | High |
+| Update create.tsx UI | 2 hours | High |
+| Skeleton component | 1 hour | High |
+| Update confirmation page | 1 hour | Medium |
+| Edge case handling | 1-2 hours | Medium |
+| Testing & polish | 1-2 hours | High |
 
 **Total:** ~8-10 hours
 

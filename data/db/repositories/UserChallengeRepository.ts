@@ -1,8 +1,8 @@
 import { Q } from "@nozbe/watermelondb";
-import Challenge from "../models/Challenge";
-import UserChallenge, { type UserChallengeData } from "../models/UserChallenge";
+import UserChallenge, {
+  type UserChallengeData,
+} from "../models/UserChallenge";
 import { BaseRepository, type SearchOptions } from "./BaseRepository";
-import Challenge from "../models/Challenge";
 import { database } from "../database";
 
 export interface UserChallengeSearchOptions extends SearchOptions {
@@ -18,9 +18,13 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
   }
 
   // Create or get user challenge for a specific challenge
-  async getOrCreateForChallenge(challengeId: string): Promise<UserChallenge> {
+  async getOrCreateForChallenge(
+    challengeId: string
+  ): Promise<UserChallenge> {
     // First try to find existing
-    const existing = await this.collection.query(Q.where("challenge_id", challengeId)).fetch();
+    const existing = await this.collection
+      .query(Q.where("challenge_id", challengeId))
+      .fetch();
 
     if (existing.length > 0) {
       return existing[0]!;
@@ -64,7 +68,10 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
   }
 
   // Increment progress for a user challenge
-  async incrementProgress(challengeId: string, amount: number = 1): Promise<UserChallenge> {
+  async incrementProgress(
+    challengeId: string,
+    amount: number = 1
+  ): Promise<UserChallenge> {
     const userChallenge = await this.getOrCreateForChallenge(challengeId);
 
     return await database.write(async () => {
@@ -100,7 +107,9 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
   }
 
   // Get user challenges with optional filters
-  async getUserChallenges(options: UserChallengeSearchOptions = {}): Promise<UserChallenge[]> {
+  async getUserChallenges(
+    options: UserChallengeSearchOptions = {}
+  ): Promise<UserChallenge[]> {
     let query = this.collection.query();
 
     // Filter by status
@@ -119,7 +128,11 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
     }
 
     // Apply sorting (most recently created first by default)
-    query = this.applySorting(query, options.sortBy || "created_at", options.sortOrder || "desc");
+    query = this.applySorting(
+      query,
+      options.sortBy || "created_at",
+      options.sortOrder || "desc"
+    );
 
     // Apply pagination
     if (options.offset) {
@@ -144,28 +157,40 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
   // Get available challenges
   async getAvailableChallenges(): Promise<UserChallenge[]> {
     return await this.collection
-      .query(Q.where("status", "available"), Q.sortBy("created_at", Q.desc))
+      .query(
+        Q.where("status", "available"),
+        Q.sortBy("created_at", Q.desc)
+      )
       .fetch();
   }
 
   // Get active (in progress) challenges
   async getActiveChallenges(): Promise<UserChallenge[]> {
     return await this.collection
-      .query(Q.where("status", "active"), Q.sortBy("started_at", Q.desc))
+      .query(
+        Q.where("status", "active"),
+        Q.sortBy("started_at", Q.desc)
+      )
       .fetch();
   }
 
   // Get completed challenges
   async getCompletedChallenges(): Promise<UserChallenge[]> {
     return await this.collection
-      .query(Q.where("status", "completed"), Q.sortBy("completed_at", Q.desc))
+      .query(
+        Q.where("status", "completed"),
+        Q.sortBy("completed_at", Q.desc)
+      )
       .fetch();
   }
 
   // Get expired challenges
   async getExpiredChallenges(): Promise<UserChallenge[]> {
     return await this.collection
-      .query(Q.where("status", "expired"), Q.sortBy("created_at", Q.desc))
+      .query(
+        Q.where("status", "expired"),
+        Q.sortBy("created_at", Q.desc)
+      )
       .fetch();
   }
 
@@ -176,8 +201,12 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
   }
 
   // Get user challenge for a specific challenge
-  async getByChallengeId(challengeId: string): Promise<UserChallenge | null> {
-    const results = await this.collection.query(Q.where("challenge_id", challengeId)).fetch();
+  async getByChallengeId(
+    challengeId: string
+  ): Promise<UserChallenge | null> {
+    const results = await this.collection
+      .query(Q.where("challenge_id", challengeId))
+      .fetch();
 
     return results.length > 0 ? results[0]! : null;
   }
@@ -185,50 +214,41 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
   // Get recently completed challenges
   async getRecentlyCompleted(limit: number = 10): Promise<UserChallenge[]> {
     return await this.collection
-      .query(Q.where("status", "completed"), Q.sortBy("completed_at", Q.desc), Q.take(limit))
+      .query(
+        Q.where("status", "completed"),
+        Q.sortBy("completed_at", Q.desc),
+        Q.take(limit)
+      )
       .fetch();
   }
 
   // Count challenges by status
   async countByStatus(status: string): Promise<number> {
-    return await this.collection.query(Q.where("status", status)).fetchCount();
+    return await this.collection
+      .query(Q.where("status", status))
+      .fetchCount();
   }
 
   // Get total XP earned from completed challenges
-  // Note: Optimized to fetch all related challenges in a single query (batch fetch) instead of N+1 queries.
+  // Note: This requires joining with challenge table to get XP values
   async getTotalXPEarned(): Promise<number> {
     const completedChallenges = await this.getCompletedChallenges();
-    if (completedChallenges.length === 0) return 0;
-
-    // Collect all unique challenge IDs
-    const challengeIds = [...new Set(completedChallenges.map((uc) => uc.challengeId))];
-
-    // Fetch all related challenges in one go
-    const challenges = await this.collection.database.collections
-      .get<Challenge>(Challenge.table)
-      .query(Q.where("id", Q.oneOf(challengeIds)))
-      .fetch();
-
-    // Create a map for fast O(1) lookups
-    const challengeMap = new Map<string, Challenge>();
-    for (const challenge of challenges) {
-      challengeMap.set(challenge.id, challenge);
-    }
-
-    // Calculate total XP
     let totalXP = 0;
+
     for (const userChallenge of completedChallenges) {
-      const challenge = challengeMap.get(userChallenge.challengeId);
-      if (challenge) {
-        totalXP += challenge.xpValue;
-      }
+      // Need to fetch the related challenge to get XP
+      const challenge = await userChallenge.challenge.fetch();
+      totalXP += challenge.xpValue;
     }
 
     return totalXP;
   }
 
   // Update user challenge
-  async updateUserChallenge(id: string, data: Partial<UserChallengeData>): Promise<UserChallenge> {
+  async updateUserChallenge(
+    id: string,
+    data: Partial<UserChallengeData>
+  ): Promise<UserChallenge> {
     return await this.update(id, data);
   }
 
@@ -266,7 +286,12 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
   // (active or available challenges whose parent challenge has expired)
   async getChallengesToExpire(): Promise<UserChallenge[]> {
     const allUserChallenges = await this.collection
-      .query(Q.or(Q.where("status", "available"), Q.where("status", "active")))
+      .query(
+        Q.or(
+          Q.where("status", "available"),
+          Q.where("status", "active")
+        )
+      )
       .fetch();
 
     const challengesToExpire: UserChallenge[] = [];
@@ -283,21 +308,13 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
 
   // Bulk expire challenges
   async expireChallenges(userChallengeIds: string[]): Promise<void> {
-    if (userChallengeIds.length === 0) {
-      return;
-    }
-
-    // Use Promise.all with find() to maintain the exact error-throwing behavior
-    // of the original code if an invalid ID is provided.
-    const records = await Promise.all(userChallengeIds.map((id) => this.collection.find(id)));
-
     await database.write(async () => {
-      const batchOps = records.map((record) =>
-        record.prepareUpdate((r) => {
+      for (const id of userChallengeIds) {
+        const record = await this.collection.find(id);
+        await record.update((r) => {
           r.status = "expired";
-        })
-      );
-      await database.batch(...batchOps);
+        });
+      }
     });
   }
 

@@ -10,7 +10,10 @@ export default function SetupProfileCard() {
 
   return (
     <>
-      <EditProfileModal modalVisible={modalVisible} onCancel={() => setModalVisible(false)} />
+      <EditProfileModal
+        modalVisible={modalVisible}
+        onCancel={() => setModalVisible(false)}
+      />
       <Card className="mx-6 shadow-md shadow-foreground/10 rounded-3xl border-continuous">
         <CardContent className="flex-row py-6 gap-3">
           <View className="flex-1 gap-1">

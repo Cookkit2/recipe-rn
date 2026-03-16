@@ -184,7 +184,10 @@ export default function RecipeDraggable({
     .onUpdate((event) => {
       "worklet";
       // Check if we've moved beyond threshold to consider this a drag
-      if (Math.abs(event.translationX) > 10 || Math.abs(event.translationY) > 10) {
+      if (
+        Math.abs(event.translationX) > 10 ||
+        Math.abs(event.translationY) > 10
+      ) {
         if (!isDragGesture.value && !isThisDragActive.value) {
           isDragGesture.value = true;
           runOnJS(handleDragStart)();
@@ -245,7 +248,11 @@ export default function RecipeDraggable({
             >
               {/* Recipe Image */}
               <View style={styles.imageContainer}>
-                <Image source={{ uri: recipe.imageUrl }} contentFit="cover" style={styles.image} />
+                <Image
+                  source={{ uri: recipe.imageUrl }}
+                  contentFit="cover"
+                  style={styles.image}
+                />
                 {/* Drag Handle Indicator */}
                 <View className="bg-black/20 px-2 py-1 rounded-full absolute top-2 right-2">
                   <P className="text-white text-xs">⋮⋮</P>
@@ -261,14 +268,19 @@ export default function RecipeDraggable({
                   {recipe.title}
                 </P>
                 {recipe.description && (
-                  <P className="text-muted-foreground text-xs mt-1" numberOfLines={1}>
+                  <P
+                    className="text-muted-foreground text-xs mt-1"
+                    numberOfLines={1}
+                  >
                     {recipe.description}
                   </P>
                 )}
                 <View className="flex flex-row items-center mt-2 gap-2">
                   {recipe.prepMinutes && (
                     <View className="bg-muted px-2 py-1 rounded-full">
-                      <P className="text-muted-foreground text-xs">{recipe.prepMinutes}m</P>
+                      <P className="text-muted-foreground text-xs">
+                        {recipe.prepMinutes}m
+                      </P>
                     </View>
                   )}
                   {recipe.difficultyStars && (

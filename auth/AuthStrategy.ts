@@ -55,7 +55,9 @@ export interface AuthStrategy {
   /**
    * Link an anonymous account to a permanent account
    */
-  linkAnonymousAccount(credentials: LinkAccountCredentials): Promise<AuthResult>;
+  linkAnonymousAccount(
+    credentials: LinkAccountCredentials
+  ): Promise<AuthResult>;
 
   /**
    * Reset password for email account
@@ -96,7 +98,9 @@ export abstract class BaseAuthStrategy implements AuthStrategy {
   abstract signUpWithEmail(credentials: SignInCredentials): Promise<AuthResult>;
   abstract signOut(): Promise<AuthResult>;
   abstract refreshSession(): Promise<AuthResult>;
-  abstract linkAnonymousAccount(credentials: LinkAccountCredentials): Promise<AuthResult>;
+  abstract linkAnonymousAccount(
+    credentials: LinkAccountCredentials
+  ): Promise<AuthResult>;
   abstract resetPassword(email: string): Promise<AuthResult>;
   abstract validateSession(): Promise<boolean>;
   abstract getProviderInfo(): {

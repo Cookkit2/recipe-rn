@@ -49,7 +49,7 @@ const WasteLogItem = ({ wasteLog, onPress }: WasteLogItemProps) => {
   // Format quantity with unit
   const formatQuantity = () => {
     const unit = wasteLog.stock?.unit;
-    return `${wasteLog.quantityWasted} ${unit || ""}`;
+    return `${wasteLog.quantityWasted} ${unit || ''}`;
   };
 
   const content = (
@@ -74,7 +74,7 @@ const WasteLogItem = ({ wasteLog, onPress }: WasteLogItemProps) => {
           {/* Content */}
           <View className="flex-1 gap-1">
             <H4 className="text-foreground font-urbanist-semibold">
-              {wasteLog.stock?.name || "Unknown Item"}
+              {wasteLog.stock?.name || 'Unknown Item'}
             </H4>
             <View className="flex-row items-center gap-2">
               <P className="text-muted-foreground font-urbanist-regular text-sm">

@@ -35,7 +35,7 @@ export function useLastNotificationResponse() {
 interface NotificationProviderProps {
   children: React.ReactNode;
   onForegroundNotification?: (
-    notification: Notifications.Notification
+    notification: Notifications.Notification,
   ) => ForegroundNotificationBehavior;
 }
 

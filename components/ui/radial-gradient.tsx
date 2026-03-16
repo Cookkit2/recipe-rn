@@ -1,4 +1,10 @@
-import { Defs, Stop, Svg, RadialGradient as SVGRadialGradient, Path } from "react-native-svg";
+import {
+  Defs,
+  Stop,
+  Svg,
+  RadialGradient as SVGRadialGradient,
+  Path,
+} from "react-native-svg";
 
 export function RadialGradient() {
   return (

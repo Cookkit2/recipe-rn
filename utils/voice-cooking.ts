@@ -55,7 +55,14 @@ const COMMAND_KEYWORDS: Record<VoiceCommand, string[]> = {
   stop: ["stop", "quiet", "silence", "shut up", "be quiet"],
   pause: ["pause", "wait", "hold on"],
   ingredients: ["ingredients", "what do I need", "list ingredients"],
-  ingredient_amount: ["how much", "how many", "amount", "quantity", "how much of", "how many of"],
+  ingredient_amount: [
+    "how much",
+    "how many",
+    "amount",
+    "quantity",
+    "how much of",
+    "how many of",
+  ],
   timer: ["timer", "set timer", "start timer", "how long"],
   temperature: [
     "temperature",

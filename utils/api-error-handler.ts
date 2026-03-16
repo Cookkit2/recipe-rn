@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * API Error Handler Utilities
  *
@@ -409,7 +408,7 @@ export function createErrorHandler(defaultConfig: { context?: string }) {
 
 function isAppError(e: unknown): e is AppError {
   if (typeof e !== "object" || e === null) return false;
-  const o = e as { kind?: any; message?: unknown };
+  const o = e as { kind?: unknown; message?: unknown };
   if (typeof o.kind !== "string" || typeof o.message !== "string") return false;
   switch (o.kind) {
     case "infra":
@@ -471,7 +470,10 @@ export async function logAndWrapResult<T>(
   } catch (e) {
     log.error(`${errorMessagePrefix}:`, e);
     let appError = mapToAppError(e, errorMapper);
-    if (appError.kind === "unknown" && !appError.message.startsWith(`${errorMessagePrefix}:`)) {
+    if (
+      appError.kind === "unknown" &&
+      !appError.message.startsWith(`${errorMessagePrefix}:`)
+    ) {
       appError = unknownError(`${errorMessagePrefix}: ${appError.message}`, appError.cause);
     }
     return err(appError);

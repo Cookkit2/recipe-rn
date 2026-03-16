@@ -10,7 +10,10 @@
 // Filtering Submodule
 // -----------------------------------------------------------------------------
 // Types
-export type { RecipeFilterStrategy, FilterContext } from "./filters";
+export type {
+  RecipeFilterStrategy,
+  FilterContext,
+} from "./filters";
 
 // Composite filter
 export { CompositeFilterStrategy } from "./filters";
@@ -29,7 +32,11 @@ export {
 // Ranking Submodule
 // -----------------------------------------------------------------------------
 // Types
-export type { RecipeRankingStrategy, RankingContext, CookingHistoryData } from "./ranking";
+export type {
+  RecipeRankingStrategy,
+  RankingContext,
+  CookingHistoryData,
+} from "./ranking";
 
 // Composite strategy
 export { CompositeRankingStrategy } from "./ranking";
@@ -61,7 +68,10 @@ export {
 } from "./ranking";
 
 // Sorting strategies
-export { AlphabeticalStrategy, type AlphabeticalStrategyOptions } from "./ranking";
+export {
+  AlphabeticalStrategy,
+  type AlphabeticalStrategyOptions,
+} from "./ranking";
 
 // Factory functions
 export {

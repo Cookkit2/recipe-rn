@@ -30,7 +30,7 @@ Sentry is now fully configured and integrated with your DoneDish app for error t
 ### Method 2: Manual Test in Code
 
 ```typescript
-import { testSentryIntegration } from "~/utils/sentry-test";
+import { testSentryIntegration } from '~/utils/sentry-test';
 
 // Call this anywhere in your app
 testSentryIntegration();
@@ -39,34 +39,34 @@ testSentryIntegration();
 ### Method 3: Use Logger
 
 ```typescript
-import { log } from "~/utils/logger";
+import { log } from '~/utils/logger';
 
 // These all send to Sentry now:
-log.info("User logged in");
-log.warn("Low memory warning");
-log.error("Failed to load data", { userId: 123 });
+log.info('User logged in');
+log.warn('Low memory warning');
+log.error('Failed to load data', { userId: 123 });
 ```
 
 ### Method 4: Direct Sentry Calls
 
 ```typescript
-import * as Sentry from "@sentry/react-native";
+import * as Sentry from '@sentry/react-native';
 
 // Capture exception
 try {
-  throw new Error("Something went wrong");
+  throw new Error('Something went wrong');
 } catch (error) {
   Sentry.captureException(error);
 }
 
 // Capture message
-Sentry.captureMessage("User completed onboarding", "info");
+Sentry.captureMessage('User completed onboarding', 'info');
 
 // Add breadcrumb
 Sentry.addBreadcrumb({
-  category: "navigation",
-  message: "User navigated to Recipe Details",
-  level: "info",
+  category: 'navigation',
+  message: 'User navigated to Recipe Details',
+  level: 'info',
 });
 ```
 
@@ -76,10 +76,10 @@ Sentry.addBreadcrumb({
 
 Sentry is configured via environment variables (or `app.json` / `app.config.js` `extra`):
 
-| Variable                      | Description                                                                                              |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `EXPO_PUBLIC_SENTRY_DSN`      | Sentry project DSN. If unset in production, error reporting is disabled and a console warning is logged. |
-| `EXPO_PUBLIC_SENTRY_SEND_PII` | Set to `"true"` to enable `sendDefaultPii` (IP, cookies, user context). Default is `false` for privacy.  |
+| Variable | Description |
+|----------|-------------|
+| `EXPO_PUBLIC_SENTRY_DSN` | Sentry project DSN. If unset in production, error reporting is disabled and a console warning is logged. |
+| `EXPO_PUBLIC_SENTRY_SEND_PII` | Set to `"true"` to enable `sendDefaultPii` (IP, cookies, user context). Default is `false` for privacy. |
 
 Example `.env`:
 
@@ -121,10 +121,10 @@ EXPO_PUBLIC_SENTRY_DSN=https://your-dsn@ingest.sentry.io/project-id
 2. **Verify initialization**
 
    ```typescript
-   import * as Sentry from "@sentry/react-native";
+   import * as Sentry from '@sentry/react-native';
 
    const client = Sentry.getClient();
-   console.log("Sentry enabled:", !!client);
+   console.log('Sentry enabled:', !!client);
    ```
 
 3. **Check network**

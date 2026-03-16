@@ -131,7 +131,10 @@ export function useRecipeVersioning(options: UseRecipeVersioningOptions) {
         throw new Error("RecipeVersionRepository not initialized");
       }
 
-      const version = await recipeVersionRepository.getVersionByNumber(recipeId, versionNumber);
+      const version = await recipeVersionRepository.getVersionByNumber(
+        recipeId,
+        versionNumber
+      );
 
       if (!version) {
         throw new Error(`Version ${versionNumber} not found`);

@@ -11,17 +11,31 @@ export const PANTRY_ITEM_TYPE_OPTIONS: Array<{
   {
     type: "fridge",
     label: "Fridge",
-    icon: <RefrigeratorIcon className="text-foreground" size={16} strokeWidth={2.618} />,
+    icon: (
+      <RefrigeratorIcon
+        className="text-foreground"
+        size={16}
+        strokeWidth={2.618}
+      />
+    ),
   },
   {
     type: "cabinet",
     label: "Cabinet",
-    icon: <CabinetIcon className="text-foreground" size={16} strokeWidth={2.618} />,
+    icon: (
+      <CabinetIcon className="text-foreground" size={16} strokeWidth={2.618} />
+    ),
   },
   {
     type: "freezer",
     label: "Freezer",
-    icon: <SnowflakeIcon className="text-foreground" size={16} strokeWidth={2.618} />,
+    icon: (
+      <SnowflakeIcon
+        className="text-foreground"
+        size={16}
+        strokeWidth={2.618}
+      />
+    ),
   },
 ] as const;
 
@@ -33,7 +47,9 @@ export const PANTRY_ITEM_TYPES: Array<{
   {
     type: "all",
     label: "All",
-    icon: <AppleIcon className="text-foreground" size={16} strokeWidth={2.618} />,
+    icon: (
+      <AppleIcon className="text-foreground" size={16} strokeWidth={2.618} />
+    ),
   },
   ...PANTRY_ITEM_TYPE_OPTIONS,
 ] as const;

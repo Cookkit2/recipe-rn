@@ -138,7 +138,7 @@ export interface StorageConfig {
   options?: Record<string, any>;
 }
 
-export type StorageType = "mmkv";
+export type StorageType = 'mmkv';
 
 // Error types
 export class StorageError extends Error {
@@ -147,7 +147,7 @@ export class StorageError extends Error {
     public readonly storageType: StorageType
   ) {
     super(message);
-    this.name = "StorageError";
+    this.name = 'StorageError';
   }
 }
 

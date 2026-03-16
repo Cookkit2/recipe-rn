@@ -3,7 +3,6 @@
 ## Background and Motivation
 
 The user wants to implement a grocery list feature that allows them to:
-
 1. Add recipes to a "meal plan" from the recipe detail view
 2. Access a grocery list page from the home pantry page
 3. View aggregated ingredients needed from all planned recipes (minus what's already in pantry)
@@ -15,7 +14,6 @@ This feature will help users plan their shopping trips efficiently by showing th
 ## Key Challenges and Analysis
 
 ### Data Architecture
-
 - **New Database Tables Required:**
   - `meal_plan`: Stores recipes that users want to cook
     - `recipe_id` (string, indexed)
@@ -29,9 +27,7 @@ This feature will help users plan their shopping trips efficiently by showing th
     - `updated_at` (number)
 
 ### Smart Grocery List Logic
-
 The core intelligence of this feature:
-
 1. **Aggregate ingredients** across all planned recipes
 2. **Combine duplicates** - "Onions" from 3 recipes → "Onions (4 total)"
 3. **Smart unit conversion** - Combine compatible units (cups, ml, etc.)
@@ -63,28 +59,27 @@ The core intelligence of this feature:
 
 ### Key Components to Create/Modify
 
-| Component                                | Action | Description                                  |
-| ---------------------------------------- | ------ | -------------------------------------------- |
-| `TopBar.tsx`                             | MODIFY | Add "add to plan" button with serving picker |
-| `AddToPlanModal.tsx`                     | CREATE | Modal to select servings before adding       |
-| `MenuDropdown.tsx`                       | MODIFY | Change to person icon                        |
-| `GroceryListButton.tsx`                  | CREATE | Shopping cart button with badge              |
-| `app/grocery-list/index.tsx`             | CREATE | Grocery list page                            |
-| `GroceryListWrapper.tsx`                 | CREATE | Main wrapper with grouped list               |
-| `GroceryListSection.tsx`                 | CREATE | Category section (Produce, Dairy, etc.)      |
-| `GroceryListItem.tsx`                    | CREATE | Individual item with checkbox                |
-| `data/db/schema.ts`                      | MODIFY | Add meal_plan + grocery_item_check tables    |
-| `data/db/models/MealPlan.ts`             | CREATE | MealPlan model                               |
-| `data/db/models/GroceryItemCheck.ts`     | CREATE | Checked state persistence                    |
-| `hooks/queries/useMealPlanQueries.ts`    | CREATE | React Query hooks                            |
-| `hooks/queries/useGroceryListQueries.ts` | CREATE | Computed grocery list hook                   |
+| Component | Action | Description |
+|-----------|--------|-------------|
+| `TopBar.tsx` | MODIFY | Add "add to plan" button with serving picker |
+| `AddToPlanModal.tsx` | CREATE | Modal to select servings before adding |
+| `MenuDropdown.tsx` | MODIFY | Change to person icon |
+| `GroceryListButton.tsx` | CREATE | Shopping cart button with badge |
+| `app/grocery-list/index.tsx` | CREATE | Grocery list page |
+| `GroceryListWrapper.tsx` | CREATE | Main wrapper with grouped list |
+| `GroceryListSection.tsx` | CREATE | Category section (Produce, Dairy, etc.) |
+| `GroceryListItem.tsx` | CREATE | Individual item with checkbox |
+| `data/db/schema.ts` | MODIFY | Add meal_plan + grocery_item_check tables |
+| `data/db/models/MealPlan.ts` | CREATE | MealPlan model |
+| `data/db/models/GroceryItemCheck.ts` | CREATE | Checked state persistence |
+| `hooks/queries/useMealPlanQueries.ts` | CREATE | React Query hooks |
+| `hooks/queries/useGroceryListQueries.ts` | CREATE | Computed grocery list hook |
 
 ---
 
 ## High-Level Task Breakdown
 
 ### Phase 1: Database Schema & Models
-
 - [ ] 1.1 Add `meal_plan` table to schema.ts
 - [ ] 1.2 Add `grocery_item_check` table to schema.ts (for persistent check state)
 - [ ] 1.3 Create MealPlan model (`data/db/models/MealPlan.ts`)
@@ -95,7 +90,6 @@ The core intelligence of this feature:
 - [ ] 1.8 Increment schema version and handle migration
 
 ### Phase 2: Data Access Layer & Business Logic
-
 - [ ] 2.1 Create `useMealPlanQueries.ts` - fetch all planned recipes
 - [ ] 2.2 Create mutations: addToPlan, removeFromPlan, updateServings
 - [ ] 2.3 Create `useGroceryList.ts` - the smart aggregation hook
@@ -106,20 +100,17 @@ The core intelligence of this feature:
 - [ ] 2.4 Create `useGroceryItemCheck.ts` - toggle checked state
 
 ### Phase 3: UI - Pantry Header Changes
-
 - [ ] 3.1 Modify `MenuDropdown.tsx` - Change EllipsisIcon → UserIcon
 - [ ] 3.2 Create `GroceryListButton.tsx` - ShoppingCartIcon with badge
 - [ ] 3.3 Update `PantryWrapper.tsx` - Insert GroceryListButton between buttons
 
 ### Phase 4: UI - Recipe Detail "Add to Plan"
-
 - [ ] 4.1 Create `AddToPlanModal.tsx` - Serving picker modal
 - [ ] 4.2 Modify `TopBar.tsx` - Add plan button with state indicator
 - [ ] 4.3 Show toast on successful add: "Added to grocery list!"
 - [ ] 4.4 Handle "already planned" state - show option to remove
 
 ### Phase 5: Grocery List Page
-
 - [ ] 5.1 Create `app/grocery-list/index.tsx` - Main page with header
 - [ ] 5.2 Create `components/GroceryList/GroceryListWrapper.tsx` - Container
 - [ ] 5.3 Create `components/GroceryList/GroceryListSection.tsx` - Category group
@@ -128,7 +119,6 @@ The core intelligence of this feature:
 - [ ] 5.6 Add empty state: "No recipes planned yet!"
 
 ### Phase 6: Polish & UX
-
 - [ ] 6.1 Add satisfying checkbox animation (strikethrough + scale)
 - [ ] 6.2 Add "Covered" state for items you already have
 - [ ] 6.3 Add "Clear Checked" and "Clear All" actions
@@ -157,14 +147,12 @@ The core intelligence of this feature:
 All phases have been implemented. The grocery list feature is now ready for testing.
 
 2026-03-12 executor update:
-
 - Investigating a UI regression where `DietarySection` passes `columns={3}` but `SegmentedButtons` renders each option full-width.
-- Root cause: runtime-generated class names like `basis-1/${columns}` are not statically compiled by NativeWind, so the width class is dropped.
+- Root cause: runtime-generated class names like ``basis-1/${columns}`` are not statically compiled by NativeWind, so the width class is dropped.
 - Plan: replace the dynamic basis class with a small static mapping helper and keep a regression test alongside it.
 - Blocker: `npm test` cannot run because the workspace does not currently have the `jest` binary installed, so automated red/green verification is limited to type/lint checks for this task.
 
 2026-03-12 executor update:
-
 - Investigated an iOS archive failure from the provided Xcode log.
 - Root cause: the build is running against `ios/Cookkit.xcodeproj` instead of `ios/Cookkit.xcworkspace`, so the target dependency graph contains only `Cookkit` and none of the CocoaPods targets that generate the Expo module maps referenced by `Pods-Cookkit.release.xcconfig`.
 - Evidence: the log shows `cd /Users/ming/Documents/GitHub/recipe-rn/ios/Cookkit.xcodeproj`, a one-target dependency graph, and missing files under `BuildProductsPath/Release-iphoneos/*/*.modulemap` such as `Expo/Expo.modulemap` and `EASClient/EASClient.modulemap`.
@@ -175,14 +163,12 @@ All phases have been implemented. The grocery list feature is now ready for test
 ## Technical Notes
 
 ### Icon Choices (from lucide-uniwind)
-
 - **Add to Plan (Recipe Detail)**: `CalendarPlusIcon` (outline) / `CalendarCheckIcon` (filled/planned)
 - **Shopping Cart (Pantry Header)**: `ShoppingCartIcon`
 - **Profile (Pantry Header)**: `UserIcon`
 - **Checkbox**: `CheckIcon` / `SquareIcon`
 
 ### Grocery List Calculation Logic
-
 ```typescript
 interface GroceryItem {
   name: string;
@@ -190,7 +176,7 @@ interface GroceryItem {
   unit: string;
   neededQuantity: number; // after subtracting pantry
   fromRecipes: string[]; // recipe titles
-  category: "produce" | "dairy" | "meat" | "pantry" | "other";
+  category: 'produce' | 'dairy' | 'meat' | 'pantry' | 'other';
   isChecked: boolean;
   isCovered: boolean; // neededQuantity <= 0
 }
@@ -212,7 +198,6 @@ function computeGroceryList(
 ```
 
 ### Category Mapping
-
 ```typescript
 const CATEGORY_MAP: Record<string, GroceryCategory> = {
   // Will use ingredient_category from database
@@ -220,16 +205,15 @@ const CATEGORY_MAP: Record<string, GroceryCategory> = {
 };
 
 const CATEGORY_ICONS = {
-  produce: "🥬",
-  dairy: "🥛",
-  meat: "🥩",
-  pantry: "🥫",
-  other: "📦",
+  produce: '🥬',
+  dairy: '🥛',
+  meat: '🥩',
+  pantry: '🥫',
+  other: '📦',
 };
 ```
 
 ### Navigation Flow
-
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ PANTRY PAGE                                                 │
@@ -271,7 +255,7 @@ const CATEGORY_ICONS = {
 
 ## Lessons Learned
 
-_(To be updated during implementation)_
+*(To be updated during implementation)*
 
 ---
 

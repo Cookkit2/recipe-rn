@@ -37,9 +37,19 @@ export interface AuthSession {
   tokenType: string;
 }
 
-export type AuthProvider = "email" | "google" | "facebook" | "apple" | "anonymous";
+export type AuthProvider =
+  | "email"
+  | "google"
+  | "facebook"
+  | "apple"
+  | "anonymous";
 
-export type AuthState = "idle" | "loading" | "authenticated" | "unauthenticated" | "error";
+export type AuthState =
+  | "idle"
+  | "loading"
+  | "authenticated"
+  | "unauthenticated"
+  | "error";
 
 // Social login configuration
 export interface SocialAuthConfig {

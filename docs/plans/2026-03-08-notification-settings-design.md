@@ -121,12 +121,8 @@ interface NotificationSettings {
     headerTransparent: true,
     headerTitle: "Notification",
     headerLargeTitleEnabled: true,
-    headerLargeTitleStyle: {
-      /* match other profile screens */
-    },
-    headerTitleStyle: {
-      /* match other profile screens */
-    },
+    headerLargeTitleStyle: { /* match other profile screens */ },
+    headerTitleStyle: { /* match other profile screens */ },
     headerTintColor: colors.foreground,
     headerBackButtonDisplayMode: "minimal",
   }}

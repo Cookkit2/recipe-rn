@@ -30,23 +30,19 @@ Each task below is written so an executor can implement step-by-step with TDD wh
 ### Task 1: Add `neverthrow` and base Result helpers
 
 **Files:**
-
 - Modify: `package.json`
 - Create: `utils/result.ts`
 
 **Step 1: Add dependency**
-
 - Run: `npm install neverthrow`
 - Expected: `neverthrow` appears in `dependencies` in `package.json`.
 
 **Step 2: Create shared Result helpers**
-
 - In `utils/result.ts`, re-export the key types and constructors:
   - `Result`, `Ok`, `Err` (or `ok`, `err`), plus a small helper alias like `AppResult<T, E = Error> = Result<T, E>`.
   - Keep the file free of domain-specific concerns; it should be a low-level primitive layer.
 
 **Step 3: Optional linting rule (future)**
-
 - (Optional, can be a later PR): Decide whether to add an ESLint rule or convention that encourages using `Result` for new async functions in the data/API layer instead of naked `Promise<T>` + throw.
 
 ---
@@ -54,11 +50,9 @@ Each task below is written so an executor can implement step-by-step with TDD wh
 ### Task 2: Define domain error types and error taxonomy
 
 **Files:**
-
 - Create: `types/AppError.ts` (or `utils/errors.ts`)
 
 **Step 1: Sketch error categories**
-
 - Define a small, pragmatic set of categories, for example:
   - `InfraError` (network, DB, Supabase, file system, external API).
   - `ValidationError` (invalid input, bad user data).
@@ -67,7 +61,6 @@ Each task below is written so an executor can implement step-by-step with TDD wh
   - `UnknownError` (fallback when classification fails).
 
 **Step 2: Implement discriminated union types**
-
 - In `types/AppError.ts`:
   - Create a discriminated union like:
     - `type AppError = InfraError | ValidationError | NotFoundError | ConflictError | UnknownError;`
@@ -77,7 +70,6 @@ Each task below is written so an executor can implement step-by-step with TDD wh
     - Optional `cause?: unknown` for underlying low-level error.
 
 **Step 3: Add small helpers**
-
 - Add factory functions like `infraError(message: string, cause?: unknown): InfraError` etc.
 - These helpers will be used in later tasks to convert unknown thrown errors into typed `AppError` values in `Result` objects.
 
@@ -86,19 +78,16 @@ Each task below is written so an executor can implement step-by-step with TDD wh
 ### Task 3: Integrate `neverthrow` with `utils/api-error-handler`
 
 **Files:**
-
 - Modify: `utils/api-error-handler.ts`
 - (Possibly) Create: `utils/api-error-handler.neverthrow.ts` if you prefer to keep old and new in parallel.
 
 **Step 1: Decide coexistence strategy**
-
 - Choose one of:
   - **Option A (preferred, incremental)**: Keep existing `withErrorHandling` / `withErrorLogging` for legacy call sites; add new helpers that work with `Result<AppResult>` and `AppError`.
   - **Option B (aggressive)**: Gradually refactor existing wrappers to internally use `Result` while leaving their public signatures stable for now.
 - For this plan, assume **Option A** to avoid large immediate churn.
 
 **Step 2: Add Result-based wrappers**
-
 - In `utils/api-error-handler.ts`, add new helpers such as:
   - `wrapResult<T>(fn: () => Promise<T>, errorMapper?: (e: unknown) => AppError): Promise<AppResult<T, AppError>>`
     - Uses `try/catch` once, converts thrown errors to `AppError` using `errorMapper` or a default classification.
@@ -106,11 +95,9 @@ Each task below is written so an executor can implement step-by-step with TDD wh
     - `logAndWrapResult` that both logs via `log.error` and returns a `Result`.
 
 **Step 3: Ensure logging preserves stack traces**
-
 - When logging inside these helpers, log the full `error` object, not just `error.message`, so debugging retains stack traces.
 
 **Step 4: Keep legacy helpers intact**
-
 - Confirm existing `withErrorHandling`, `withErrorLogging`, `withStructuredError`, `withSilentError`, `withWarningHandling`, `withArrayErrorHandling`, `createErrorHandler` remain API-compatible so current call sites are not broken by this task.
 
 ---
@@ -120,11 +107,9 @@ Each task below is written so an executor can implement step-by-step with TDD wh
 **Goal:** Use `neverthrow` internally in `data/api/recipeImportApi.ts` while keeping the external signature (`YouTubeImportResult`, `{ success, error }`) unchanged for now.
 
 **Files:**
-
 - Modify: `data/api/recipeImportApi.ts`
 
 **Step 1: Identify exception-heavy paths**
-
 - Focus on:
   - `importRecipeFromUrl`
   - `importRecipeFromYouTube`
@@ -133,7 +118,6 @@ Each task below is written so an executor can implement step-by-step with TDD wh
   - Helpers like `withImportErrorHandling`
 
 **Step 2: Define internal Result-returning helpers**
-
 - For each complex operation, introduce private helpers, e.g.:
   - `private async function analyzeUrlResult(url: string): Promise<AppResult<AnalyzedUrl, AppError>>`
   - `private async function importFromYouTubeResult(…): Promise<AppResult<YouTubeImportSuccessPayload, AppError>>`
@@ -141,7 +125,6 @@ Each task below is written so an executor can implement step-by-step with TDD wh
 - Implement these using `wrapResult` and your domain error factories, not raw `try/catch`.
 
 **Step 3: Adapt public functions to use Results internally**
-
 - In `importRecipeFromUrl`, `importRecipeFromYouTube`, `importRecipeFromWebsite`:
   - Replace the bulk of the logic with calls to the new `Result` helpers.
   - Pattern:
@@ -153,7 +136,6 @@ Each task below is written so an executor can implement step-by-step with TDD wh
   - You gain a clear, composable internal error pipeline using `Result`.
 
 **Step 4: Update `withImportErrorHandling`**
-
 - Consider re-implementing `withImportErrorHandling` on top of `neverthrow`:
   - It can become a thin adapter that:
     - Wraps the `fn` into a `Result` using `wrapResult`.
@@ -161,7 +143,6 @@ Each task below is written so an executor can implement step-by-step with TDD wh
     - Converts back to `{ success, error }` for external callers.
 
 **Step 5: Add tests / adjust existing tests**
-
 - Add or update tests around:
   - Invalid URLs.
   - Unsupported URL types.
@@ -176,20 +157,17 @@ Each task below is written so an executor can implement step-by-step with TDD wh
 **Goal:** Provide explicit `Result`-returning functions for the main data APIs while keeping the current promise-returning APIs for compatibility.
 
 **Files:**
-
 - Modify: `data/api/recipeApi.ts`
 - Modify: `data/api/pantryApi.ts`
 - Modify: `data/api/mealPlanApi.ts`
 
 **Step 1: List high-value methods**
-
 - For each API, identify key methods:
   - `recipeApi`: `fetchAllRecipes`, `getRecipeById`, `searchRecipes`, `addRecipe`, `updateRecipe`, `deleteRecipe`, `getAvailableRecipesWithCompletion`, `generateTailoredRecipe`, etc.
   - `pantryApi`: `fetchAllPantryItems`, `addPantryItem`, `addPantryItemsWithMetadata`, `updatePantryItem`, etc.
   - `mealPlanApi`: `getAllMealPlanItems`, `addToPlan`, `getMealPlanItemByRecipeId`, `isRecipeInPlan`, `removeFromPlan`, etc.
 
 **Step 2: Add `Result`-returning counterparts**
-
 - For each method, add a new `*Result` or similarly named function, for example:
   - `fetchAllRecipesResult(): Promise<AppResult<Recipe[], AppError>>`
   - `getRecipeByIdResult(id: string): Promise<AppResult<Recipe | null, AppError>>`
@@ -197,7 +175,6 @@ Each task below is written so an executor can implement step-by-step with TDD wh
 - Implement them using `wrapResult` / `logAndWrapResult` and domain error types instead of legacy `withErrorHandling`.
 
 **Step 3: Implement legacy wrappers on top of Result**
-
 - Refactor the existing methods to be thin veneers over the new Result variants:
   - Example for `fetchAllRecipes`:
     - Call `const res = await recipeApi.fetchAllRecipesResult();`
@@ -210,14 +187,12 @@ Each task below is written so an executor can implement step-by-step with TDD wh
   - Older call sites continue to behave as before.
 
 **Step 4: Use more precise `AppError` variants**
-
 - When wrapping:
   - Use `NotFoundError` for “no recipe/stock” cases instead of generic `UnknownError`.
   - Use `InfraError` for DB/WatermelonDB/Supabase failures.
   - Use `ValidationError` for bad inputs (e.g. invalid IDs, negative quantities).
 
 **Step 5: Update 1–2 call sites as examples**
-
 - Choose a couple of representative hooks or components (e.g. `useYouTubeRecipeQueries`, pantry list hook) and:
   - Switch them to call the `*Result` variants instead of legacy methods.
   - Handle errors by:
@@ -230,21 +205,18 @@ Each task below is written so an executor can implement step-by-step with TDD wh
 ### Task 6: Testing and documentation
 
 **Files:**
-
 - Add/modify tests under existing test structure (if present).
 - Create or update documentation:
   - `docs/plans/2026-02-28-neverthrow-adoption.md` (this plan).
   - Optionally a short `docs/error-handling.md` or section in an existing architecture doc.
 
 **Step 1: Add targeted tests for Result behavior**
-
 - For each migrated API:
   - Add tests for `*Result` functions that:
     - Verify success cases (`ok` branch).
     - Verify error classification (`AppError.kind`) for representative failures.
 
 **Step 2: Document conventions for new code**
-
 - In `docs/error-handling.md` (or similar):
   - State that new async functions in the data/API layer should:
     - Prefer returning `Result<T, AppError>` instead of throwing.
@@ -254,7 +226,6 @@ Each task below is written so an executor can implement step-by-step with TDD wh
     - How UI code should typically map `AppError` kinds to user messages.
 
 **Step 3: Plan follow-up phases**
-
 - Once the pilot and core APIs are stable:
   - Identify remaining hotspots that still use `withErrorHandling` directly and consider migrating them to Results.
   - Consider adding lightweight linting or code review rules to keep new code aligned with the Result pattern.

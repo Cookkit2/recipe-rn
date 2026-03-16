@@ -26,7 +26,11 @@ export interface WeeklyTrigger {
   repeats: true;
 }
 
-export type NotificationTrigger = TimeIntervalTrigger | DateTrigger | DailyTrigger | WeeklyTrigger;
+export type NotificationTrigger =
+  | TimeIntervalTrigger
+  | DateTrigger
+  | DailyTrigger
+  | WeeklyTrigger;
 
 // ============================================
 // Notification Data
@@ -78,7 +82,7 @@ export interface ForegroundNotificationBehavior {
 // ============================================
 
 export type NotificationResponseHandler = (
-  response: Notifications.NotificationResponse
+  response: Notifications.NotificationResponse,
 ) => void | Promise<void>;
 
 // ============================================

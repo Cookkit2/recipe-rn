@@ -1,5 +1,9 @@
 import React, { createContext, useContext, useCallback } from "react";
-import { type SharedValue, useSharedValue, withSpring } from "react-native-reanimated";
+import {
+  type SharedValue,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
 import { log } from "~/utils/logger";
 
 interface RootScaleContextType {
@@ -29,7 +33,9 @@ export function RootScaleProvider({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <RootScaleContext.Provider value={{ scale, setScale }}>{children}</RootScaleContext.Provider>
+    <RootScaleContext.Provider value={{ scale, setScale }}>
+      {children}
+    </RootScaleContext.Provider>
   );
 }
 

@@ -5,17 +5,14 @@ module.exports = {
   testMatch: ["**/__tests__/**/*.test.(js|jsx|ts|tsx)"],
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json"],
   transform: {
-    "^.+\\.(ts|tsx)$": [
-      "ts-jest",
-      {
-        tsconfig: {
-          jsx: "react",
-          esModuleInterop: true,
-          allowSyntheticDefaultImports: true,
-          skipLibCheck: true,
-        },
+    "^.+\\.(ts|tsx)$": ["ts-jest", {
+      tsconfig: {
+        jsx: "react",
+        esModuleInterop: true,
+        allowSyntheticDefaultImports: true,
+        skipLibCheck: true,
       },
-    ],
+    }],
   },
   transformIgnorePatterns: [
     "node_modules/(?!(react-native|@react-native|@nozbe|@expo|expo|react-navigation)/)",
@@ -34,5 +31,8 @@ module.exports = {
     "!data/db/database.ts",
     "!data/db/migrations/**",
   ],
-  testPathIgnorePatterns: ["/node_modules/", "/.expo/"],
+  testPathIgnorePatterns: [
+    "/node_modules/",
+    "/.expo/",
+  ],
 };

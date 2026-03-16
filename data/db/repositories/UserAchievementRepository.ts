@@ -1,8 +1,8 @@
-// @ts-nocheck
 import { Q } from "@nozbe/watermelondb";
-import UserAchievement, { type UserAchievementData } from "../models/UserAchievement";
+import UserAchievement, {
+  type UserAchievementData,
+} from "../models/UserAchievement";
 import { BaseRepository, type SearchOptions } from "./BaseRepository";
-import Achievement from "../models/Achievement";
 import { database } from "../database";
 
 export interface UserAchievementSearchOptions extends SearchOptions {
@@ -17,9 +17,13 @@ export class UserAchievementRepository extends BaseRepository<UserAchievement> {
   }
 
   // Create or get user achievement for a specific achievement
-  async getOrCreateForAchievement(achievementId: string): Promise<UserAchievement> {
+  async getOrCreateForAchievement(
+    achievementId: string
+  ): Promise<UserAchievement> {
     // First try to find existing
-    const existing = await this.collection.query(Q.where("achievement_id", achievementId)).fetch();
+    const existing = await this.collection
+      .query(Q.where("achievement_id", achievementId))
+      .fetch();
 
     if (existing.length > 0) {
       return existing[0];
@@ -56,7 +60,10 @@ export class UserAchievementRepository extends BaseRepository<UserAchievement> {
   }
 
   // Increment progress for a user achievement
-  async incrementProgress(achievementId: string, amount: number = 1): Promise<UserAchievement> {
+  async incrementProgress(
+    achievementId: string,
+    amount: number = 1
+  ): Promise<UserAchievement> {
     const userAchievement = await this.getOrCreateForAchievement(achievementId);
 
     return await database.write(async () => {
@@ -122,27 +129,40 @@ export class UserAchievementRepository extends BaseRepository<UserAchievement> {
   // Get unlocked achievements
   async getUnlockedAchievements(): Promise<UserAchievement[]> {
     return await this.collection
-      .query(Q.where("status", "unlocked"), Q.sortBy("unlocked_at", Q.desc))
+      .query(
+        Q.where("status", "unlocked"),
+        Q.sortBy("unlocked_at", Q.desc)
+      )
       .fetch();
   }
 
   // Get in-progress achievements
   async getInProgressAchievements(): Promise<UserAchievement[]> {
     return await this.collection
-      .query(Q.where("status", "in_progress"), Q.sortBy("last_checked_at", Q.desc))
+      .query(
+        Q.where("status", "in_progress"),
+        Q.sortBy("last_checked_at", Q.desc)
+      )
       .fetch();
   }
 
   // Get locked achievements
   async getLockedAchievements(): Promise<UserAchievement[]> {
     return await this.collection
-      .query(Q.where("status", "locked"), Q.sortBy("last_checked_at", Q.desc))
+      .query(
+        Q.where("status", "locked"),
+        Q.sortBy("last_checked_at", Q.desc)
+      )
       .fetch();
   }
 
   // Get user achievement for a specific achievement
-  async getByAchievementId(achievementId: string): Promise<UserAchievement | null> {
-    const results = await this.collection.query(Q.where("achievement_id", achievementId)).fetch();
+  async getByAchievementId(
+    achievementId: string
+  ): Promise<UserAchievement | null> {
+    const results = await this.collection
+      .query(Q.where("achievement_id", achievementId))
+      .fetch();
 
     return results.length > 0 ? results[0] : null;
   }
@@ -150,42 +170,32 @@ export class UserAchievementRepository extends BaseRepository<UserAchievement> {
   // Get recently unlocked achievements
   async getRecentlyUnlocked(limit: number = 10): Promise<UserAchievement[]> {
     return await this.collection
-      .query(Q.where("status", "unlocked"), Q.sortBy("unlocked_at", Q.desc), Q.take(limit))
+      .query(
+        Q.where("status", "unlocked"),
+        Q.sortBy("unlocked_at", Q.desc),
+        Q.take(limit)
+      )
       .fetch();
   }
 
   // Count achievements by status
   async countByStatus(status: string): Promise<number> {
-    return await this.collection.query(Q.where("status", status)).fetchCount();
+    return await this.collection
+      .query(Q.where("status", status))
+      .fetchCount();
   }
 
   // Get total XP earned from unlocked achievements
-  // Note: Optimized to fetch all related achievements in a single query (batch fetch) instead of N+1 queries.
+  // Note: This requires joining with achievement table to get XP values
   async getTotalXPEarned(): Promise<number> {
     const unlockedAchievements = await this.getUnlockedAchievements();
-    if (unlockedAchievements.length === 0) return 0;
-
-    // Collect all unique achievement IDs
-    const achievementIds = [...new Set(unlockedAchievements.map((ua) => ua.achievementId))];
-
-    // Fetch all related achievements in one go
-    const achievements = await this.collection.database.collections
-      .get<Achievement>(Achievement.table)
-      .query(Q.where("id", Q.oneOf(achievementIds)))
-      .fetch();
-
-    // Create a map for fast O(1) lookups
-    const achievementMap = new Map<string, Achievement>();
-    for (const achievement of achievements) {
-      achievementMap.set(achievement.id, achievement);
-    }
-
-    // Calculate total XP
     let totalXP = 0;
+
     for (const userAchievement of unlockedAchievements) {
-      const achievement = achievementMap.get(userAchievement.achievementId);
+      // Need to fetch the related achievement to get XP
+      const achievement: any = await (userAchievement as any).achievement.fetch();
       if (achievement) {
-        totalXP += achievement.xpValue;
+        totalXP += achievement.xpValue ?? 0;
       }
     }
 

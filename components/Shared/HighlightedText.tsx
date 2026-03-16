@@ -7,7 +7,13 @@ interface TextSegment {
   isBold: boolean;
 }
 
-const HighlightedText = ({ text, className }: { text: string; className?: string }) => {
+const HighlightedText = ({
+  text,
+  className,
+}: {
+  text: string;
+  className?: string;
+}) => {
   const segments = parseText(text);
 
   return (
@@ -15,7 +21,10 @@ const HighlightedText = ({ text, className }: { text: string; className?: string
       {segments.map((segment, index) => (
         <Text
           key={`${segment.text}-${index}`}
-          className={cn(className, segment.isBold ? "font-urbanist-semibold text-foreground" : "")}
+          className={cn(
+            className,
+            segment.isBold ? "font-urbanist-semibold text-foreground" : ""
+          )}
         >
           {segment.text}
         </Text>
