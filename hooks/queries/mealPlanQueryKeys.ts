@@ -10,12 +10,10 @@ export const mealPlanQueryKeys = {
   items: () => [...mealPlanQueryKeys.all, "items"] as const,
 
   // Single meal plan item by recipe ID
-  byRecipeId: (recipeId: string) =>
-    [...mealPlanQueryKeys.items(), "recipe", recipeId] as const,
+  byRecipeId: (recipeId: string) => [...mealPlanQueryKeys.items(), "recipe", recipeId] as const,
 
   // Check if recipe is in plan
-  isInPlan: (recipeId: string) =>
-    [...mealPlanQueryKeys.all, "isInPlan", recipeId] as const,
+  isInPlan: (recipeId: string) => [...mealPlanQueryKeys.all, "isInPlan", recipeId] as const,
 
   // Planned recipe count
   count: () => [...mealPlanQueryKeys.all, "count"] as const,
@@ -34,6 +32,5 @@ export const mealPlanQueryKeys = {
   templates: () => [...mealPlanQueryKeys.all, "templates"] as const,
 
   // Single template by ID
-  templateById: (templateId: string) =>
-    [...mealPlanQueryKeys.all, "template", templateId] as const,
+  templateById: (templateId: string) => [...mealPlanQueryKeys.all, "template", templateId] as const,
 } as const;

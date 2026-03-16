@@ -44,11 +44,7 @@ class VoiceAnswerGenerator {
   /**
    * Generate and speak the amount needed for an ingredient
    */
-  generateIngredientAmount(
-    ingredientName: string,
-    quantity: number,
-    unit: string
-  ): VoiceAnswer {
+  generateIngredientAmount(ingredientName: string, quantity: number, unit: string): VoiceAnswer {
     const spokenQuantity = this.formatQuantityForSpeech(quantity);
     const spokenUnit = this.formatUnitForSpeech(unit, quantity);
 
@@ -74,7 +70,11 @@ class VoiceAnswerGenerator {
 
     // Calculate the equivalent in the other unit
     const convertedUnit: "F" | "C" = temperature.unit === "F" ? "C" : "F";
-    const convertedValue = this.convertTemperature(temperature.value, temperature.unit, convertedUnit);
+    const convertedValue = this.convertTemperature(
+      temperature.value,
+      temperature.unit,
+      convertedUnit
+    );
     const convertedUnitName = convertedUnit === "F" ? "Fahrenheit" : "Celsius";
 
     let text: string;
@@ -153,9 +153,7 @@ class VoiceAnswerGenerator {
   /**
    * Generate error response for unknown commands
    */
-  generateErrorResponse(
-    context?: "ingredient" | "temperature" | "general" | "step"
-  ): VoiceAnswer {
+  generateErrorResponse(context?: "ingredient" | "temperature" | "general" | "step"): VoiceAnswer {
     let text = "I didn't catch that.";
 
     switch (context) {
@@ -164,7 +162,8 @@ class VoiceAnswerGenerator {
           " Try asking about a specific ingredient, like 'how much flour' or 'how many eggs'.";
         break;
       case "temperature":
-        text += " For temperature, try saying 'what's the temperature' or 'how hot should the oven be'.";
+        text +=
+          " For temperature, try saying 'what's the temperature' or 'how hot should the oven be'.";
         break;
       case "step":
         text += " For step help, try 'explain this step' or 'what do I do'.";
@@ -377,7 +376,7 @@ class VoiceAnswerGenerator {
     }
 
     // from C to F
-    return Math.round((value * 9 / 5) + 32);
+    return Math.round((value * 9) / 5 + 32);
   }
 
   /**

@@ -852,10 +852,7 @@ export class DatabaseFacade {
   /**
    * Update progress for a challenge
    */
-  async updateChallengeProgress(
-    challengeId: string,
-    progress: number
-  ): Promise<UserChallenge> {
+  async updateChallengeProgress(challengeId: string, progress: number): Promise<UserChallenge> {
     return await this.userChallenges.updateProgress(challengeId, progress);
   }
 
@@ -918,7 +915,11 @@ export class DatabaseFacade {
   /**
    * Record a waste log entry for discarded ingredients
    */
-  async recordWaste(stockId: string, quantityWasted: number, data?: RecordWasteData): Promise<WasteLog> {
+  async recordWaste(
+    stockId: string,
+    quantityWasted: number,
+    data?: RecordWasteData
+  ): Promise<WasteLog> {
     return await this.wasteLog.recordWaste(stockId, quantityWasted, {
       wasteDate: data?.wasteDate,
       reason: data?.reason,
@@ -972,7 +973,9 @@ export class DatabaseFacade {
     limit?: number,
     startDate?: number,
     endDate?: number
-  ): Promise<Array<{ stockId: string; wasteCount: number; totalQuantity: number; totalCost: number }>> {
+  ): Promise<
+    Array<{ stockId: string; wasteCount: number; totalQuantity: number; totalCost: number }>
+  > {
     return await this.wasteLog.getMostWastedItems(limit, startDate, endDate);
   }
 
@@ -1120,20 +1123,19 @@ export class DatabaseFacade {
       }[] = [];
 
       // Process recipes in batches
-      const batchSize = 10;
+      const batchSize = 100;
 
       for (let i = 0; i < allRecipes.length; i += batchSize) {
         const recipeBatch = allRecipes.slice(i, i + batchSize);
 
-        const batchDetailsPromises = recipeBatch.map((recipe) =>
-          this.recipes.getRecipeWithDetails(recipe.id)
-        );
-
-        const batchDetails = await Promise.all(batchDetailsPromises);
+        const recipeIds = recipeBatch.map((recipe) => recipe.id);
+        const batchDetailsMap = await this.getRecipesWithDetails(recipeIds);
 
         for (let j = 0; j < recipeBatch.length; j++) {
           const recipe = recipeBatch[j];
-          const recipeDetails = batchDetails[j];
+          if (!recipe) continue;
+
+          const recipeDetails = batchDetailsMap.get(recipe.id);
 
           if (!recipeDetails || !recipeDetails.ingredients.length) {
             continue;
@@ -1188,10 +1190,21 @@ export class DatabaseFacade {
     const missingIngredients: ShoppingListResult["missingIngredients"] = [];
     const availableIngredients: ShoppingListResult["availableIngredients"] = [];
 
+    // Gather all ingredient names to query them simultaneously
+    const ingredientNames = recipeDetails.ingredients.map((ing) => ing.name);
+
+    // Fetch matching stock items at once to avoid N+1 queries in the loop below
+    const matchingStocks = await this.stocks.getStocksByNamesOrSynonyms(ingredientNames);
+
     for (const ingredient of recipeDetails.ingredients) {
-      // Use findByNameOrSynonym for better matching
-      const stockItems = await this.stocks.findByNameOrSynonym(ingredient.name);
-      const totalStock = stockItems.reduce((sum: number, item: Stock) => sum + item.quantity, 0);
+      // Filter the specific stock items for this ingredient from the pre-fetched list
+      const stockItems = matchingStocks.filter((stock) =>
+        isIngredientMatch(stock.name, ingredient.name, stock.synonyms)
+      );
+
+      // Note: getStocksByNamesOrSynonyms returns an array of plain objects, not Stock models,
+      // so we use any/type inference for the reduction.
+      const totalStock = stockItems.reduce((sum: number, item: any) => sum + item.quantity, 0);
 
       if (totalStock === 0) {
         missingIngredients.push({
@@ -1234,6 +1247,33 @@ export class DatabaseFacade {
       cookingHistory,
       totalRecords: recipes + stockItems + cookingHistory,
     };
+  }
+
+  /**
+   * Clear all recipes and related cooking history from the database
+   */
+  async clearRecipes(): Promise<void> {
+    if (!database) {
+      throw new Error("Database is not initialized");
+    }
+
+    const collections = ["recipe", "recipe_step", "recipe_ingredient", "cooking_history"];
+
+    // Batch all deletions in a single write to avoid flooding the write queue
+    await database.write(async () => {
+      for (const collectionName of collections) {
+        try {
+          const collection = database.collections.get(collectionName);
+          const allRecords = await collection.query().fetch();
+
+          if (allRecords.length > 0) {
+            await Promise.all(allRecords.map((record) => record.destroyPermanently()));
+          }
+        } catch (error) {
+          log.warn(`⚠️ Error clearing ${collectionName}:`, error);
+        }
+      }
+    });
   }
 
   /**
@@ -1296,9 +1336,15 @@ export class DatabaseFacade {
    */
   async isHealthy(): Promise<boolean> {
     try {
-      if (!this.recipes || !this.stocks || !this.cookingHistory ||
-          !this.achievements || !this.userAchievements ||
-          !this.challenges || !this.userChallenges) {
+      if (
+        !this.recipes ||
+        !this.stocks ||
+        !this.cookingHistory ||
+        !this.achievements ||
+        !this.userAchievements ||
+        !this.challenges ||
+        !this.userChallenges
+      ) {
         return false;
       }
 

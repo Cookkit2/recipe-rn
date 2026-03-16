@@ -19,8 +19,7 @@ const CookedRecipeCard = ({
 }) => {
   const router = useRouter();
   const { data: recipe } = useRecipe(recipeId);
-  const { animatedStyle, roundedStyle, onPressIn, onPressOut } =
-    useButtonAnimation(true, 24);
+  const { animatedStyle, roundedStyle, onPressIn, onPressOut } = useButtonAnimation(true, 24);
 
   const handlePress = () => {
     if (recipe) {
@@ -34,31 +33,18 @@ const CookedRecipeCard = ({
   }
 
   return (
-    <Animated.View
-      className="flex-column items-start p-3"
-      style={[animatedStyle]}
-    >
-      <Pressable
-        onPress={handlePress}
-        onPressIn={onPressIn}
-        onPressOut={onPressOut}
-      >
+    <Animated.View className="flex-column items-start p-3" style={[animatedStyle]}>
+      <Pressable onPress={handlePress} onPressIn={onPressIn} onPressOut={onPressOut}>
         <Animated.View
           className="w-full relative flex items-center justify-center border-continuous aspect-square overflow-hidden"
           style={[roundedStyle]}
         >
-          <Image
-            source={{ uri: recipe.imageUrl }}
-            style={styles.image}
-            contentFit="cover"
-          />
+          <Image source={{ uri: recipe.imageUrl }} style={styles.image} contentFit="cover" />
           {/* Cook count badge */}
           {cookCount > 1 && (
             <View className="absolute top-2 right-2 bg-black/60 px-2 py-1 rounded-full flex-row items-center">
               <ChefHatIcon size={12} className="text-foreground mr-1" />
-              <P className="text-foreground text-xs font-urbanist-bold">
-                {cookCount}x
-              </P>
+              <P className="text-foreground text-xs font-urbanist-bold">{cookCount}x</P>
             </View>
           )}
         </Animated.View>

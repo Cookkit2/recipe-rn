@@ -33,9 +33,7 @@ export default class StepsToStore extends Model {
   }
 
   // Update method
-  @writer async updateStep(
-    data: Partial<StepsToStoreData>
-  ): Promise<StepsToStore> {
+  @writer async updateStep(data: Partial<StepsToStoreData>): Promise<StepsToStore> {
     return this.update((step) => {
       if (data.title !== undefined) step.title = data.title;
       if (data.description !== undefined) step.description = data.description;

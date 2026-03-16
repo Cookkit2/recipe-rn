@@ -2,7 +2,13 @@ import React, { useCallback, useState } from "react";
 import { View, Pressable, ActivityIndicator, FlatList } from "react-native";
 import { H3, P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
-import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, CalendarIcon, BookTemplateIcon } from "lucide-uniwind";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  PlusIcon,
+  CalendarIcon,
+  BookTemplateIcon,
+} from "lucide-uniwind";
 import { Stack, useRouter } from "expo-router";
 import { useMealPlanCalendar } from "~/store/MealPlanCalendarContext";
 import WeeklyCalendar from "~/components/MealPlanCalendar/WeeklyCalendar";
@@ -168,12 +174,7 @@ export default function MealPlanPage() {
 
         {!isCurrentWeek() && (
           <View className="items-center mt-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onPress={goToToday}
-              className="h-7 px-3 rounded-full"
-            >
+            <Button variant="ghost" size="sm" onPress={goToToday} className="h-7 px-3 rounded-full">
               <CalendarIcon size={14} strokeWidth={2} className="text-foreground mr-1" />
               <P className="text-xs font-urbanist-semibold text-foreground">Today</P>
             </Button>
@@ -182,10 +183,7 @@ export default function MealPlanPage() {
       </View>
 
       {/* Weekly Calendar */}
-      <WeeklyCalendar
-        onMealSlotPress={handleMealSlotPress}
-        onMealSlotDrop={handleMealSlotDrop}
-      />
+      <WeeklyCalendar onMealSlotPress={handleMealSlotPress} onMealSlotDrop={handleMealSlotDrop} />
 
       {/* Recipe Selection Panel (Bottom Sheet) */}
       {isRecipeSheetOpen && (

@@ -89,11 +89,10 @@ export class MealPlanTemplateRepository extends BaseRepository<MealPlanTemplate>
       return await this.findAll();
     }
 
-    const query = this.buildSearchQuery(
-      this.collection.query(),
-      searchTerm,
-      ["name", "description"]
-    );
+    const query = this.buildSearchQuery(this.collection.query(), searchTerm, [
+      "name",
+      "description",
+    ]);
 
     return await query.fetch();
   }

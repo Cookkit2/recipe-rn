@@ -2,10 +2,7 @@ import { Pressable, ActivityIndicator } from "react-native";
 import Animated, { BounceIn } from "react-native-reanimated";
 import { AlertCircleIcon } from "lucide-uniwind";
 import { Image } from "expo-image";
-import {
-  useCreateIngredientStore,
-  type CreatePantryItem,
-} from "~/store/CreateIngredientContext";
+import { useCreateIngredientStore, type CreatePantryItem } from "~/store/CreateIngredientContext";
 
 const size = 28;
 
@@ -13,9 +10,7 @@ interface IngredientThumbnailProps {
   item: CreatePantryItem;
 }
 
-export default function IngredientThumbnail({
-  item,
-}: IngredientThumbnailProps) {
+export default function IngredientThumbnail({ item }: IngredientThumbnailProps) {
   const { status, id, image_url } = item;
   const { removeItem, retryItem } = useCreateIngredientStore();
 
@@ -25,10 +20,7 @@ export default function IngredientThumbnail({
         return <ActivityIndicator size="small" color="white" />;
       case "failed":
         return (
-          <Pressable
-            onPress={() => retryItem(id)}
-            onLongPress={() => removeItem(id)}
-          >
+          <Pressable onPress={() => retryItem(id)} onLongPress={() => removeItem(id)}>
             <AlertCircleIcon className="text-red-400" size={16} />
           </Pressable>
         );

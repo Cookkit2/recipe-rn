@@ -47,9 +47,8 @@ export class CategoryFilter implements RecipeFilterStrategy {
    */
   filter(recipe: Recipe, context?: FilterContext): boolean {
     // Use categories from options or context
-    const categoriesToMatch = this.categories.length > 0 
-      ? this.categories 
-      : context?.selectedCategories ?? [];
+    const categoriesToMatch =
+      this.categories.length > 0 ? this.categories : (context?.selectedCategories ?? []);
 
     // No categories specified - include all
     if (categoriesToMatch.length === 0) {

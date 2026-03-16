@@ -110,4 +110,3 @@ class NotificationSettingsService {
 }
 
 export const notificationSettingsService = new NotificationSettingsService();
-

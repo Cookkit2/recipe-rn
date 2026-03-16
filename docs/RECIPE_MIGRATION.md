@@ -10,19 +10,19 @@ The recipe context has been restructured to separate concerns and provide better
 
 ```tsx
 // All operations were mixed in context
-const { 
-  allRecipes, 
-  isLoading, 
+const {
+  allRecipes,
+  isLoading,
   error,
-  addRecipe, 
-  updateRecipe, 
+  addRecipe,
+  updateRecipe,
   deleteRecipe,
   searchRecipes,
   getRecipeById,
   getAvailableRecipes,
   getShoppingListForRecipe,
   selectedRecipeTags,
-  updateRecipeTag 
+  updateRecipeTag,
 } = useRecipeStore();
 ```
 
@@ -72,7 +72,7 @@ addRecipeMutation.mutate(newRecipe, {
   },
   onError: (error) => {
     // Handle error
-  }
+  },
 });
 ```
 
@@ -85,11 +85,14 @@ await updateRecipe(recipeId, updates);
 
 // After
 const updateRecipeMutation = useUpdateRecipe();
-updateRecipeMutation.mutate({ id: recipeId, updates }, {
-  onSuccess: () => {
-    // Handle success
+updateRecipeMutation.mutate(
+  { id: recipeId, updates },
+  {
+    onSuccess: () => {
+      // Handle success
+    },
   }
-});
+);
 ```
 
 ### 4. Searching Recipes
@@ -168,32 +171,28 @@ const { data: availableRecipes, isLoading } = useAvailableRecipes();
 ## Complete Component Example
 
 ```tsx
-import React from 'react';
-import { 
-  useRecipes, 
-  useAddRecipe, 
-  useDeleteRecipe 
-} from '~/hooks/queries/useRecipeQueries';
-import { useRecipeStore } from '~/store/RecipeContext';
+import React from "react";
+import { useRecipes, useAddRecipe, useDeleteRecipe } from "~/hooks/queries/useRecipeQueries";
+import { useRecipeStore } from "~/store/RecipeContext";
 
 export function RecipeList() {
   // Data hooks
   const { data: recipes = [], isLoading, error } = useRecipes();
   const addRecipeMutation = useAddRecipe();
   const deleteRecipeMutation = useDeleteRecipe();
-  
+
   // UI state hooks
   const { selectedRecipeTags, filteredRecipes } = useRecipeStore();
 
-  const handleAddRecipe = (recipe: Omit<Recipe, 'id'>) => {
+  const handleAddRecipe = (recipe: Omit<Recipe, "id">) => {
     addRecipeMutation.mutate(recipe, {
       onSuccess: () => {
         // Recipe automatically added to cache
-        console.log('Recipe added successfully!');
+        console.log("Recipe added successfully!");
       },
       onError: (error) => {
-        console.error('Failed to add recipe:', error);
-      }
+        console.error("Failed to add recipe:", error);
+      },
     });
   };
 
@@ -201,8 +200,8 @@ export function RecipeList() {
     deleteRecipeMutation.mutate(id, {
       onSuccess: () => {
         // Recipe automatically removed from cache
-        console.log('Recipe deleted successfully!');
-      }
+        console.log("Recipe deleted successfully!");
+      },
     });
   };
 
@@ -213,14 +212,14 @@ export function RecipeList() {
 
   return (
     <div>
-      {recipesToShow.map(recipe => (
+      {recipesToShow.map((recipe) => (
         <div key={recipe.id}>
           <h3>{recipe.title}</h3>
-          <button 
+          <button
             onClick={() => handleDeleteRecipe(recipe.id)}
             disabled={deleteRecipeMutation.isPending}
           >
-            {deleteRecipeMutation.isPending ? 'Deleting...' : 'Delete'}
+            {deleteRecipeMutation.isPending ? "Deleting..." : "Delete"}
           </button>
         </div>
       ))}
@@ -232,7 +231,7 @@ export function RecipeList() {
 ## Files Changed
 
 1. **Created**: `hooks/api/recipeApi.ts` - Pure API functions
-2. **Created**: `hooks/queries/recipeQueryKeys.ts` - Query key management  
+2. **Created**: `hooks/queries/recipeQueryKeys.ts` - Query key management
 3. **Created**: `hooks/queries/useRecipeQueries.ts` - React Query hooks
 4. **Modified**: `store/RecipeContext.tsx` - Simplified to UI state only
 

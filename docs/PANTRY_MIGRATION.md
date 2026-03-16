@@ -7,7 +7,7 @@ This document explains how to migrate from the old PantryContext database operat
 ### Before (Old PantryContext)
 
 ```tsx
-import { usePantryStore } from '~/store/PantryContext';
+import { usePantryStore } from "~/store/PantryContext";
 
 function MyComponent() {
   const {
@@ -42,20 +42,20 @@ function MyComponent() {
 ### After (New React Query Hooks)
 
 ```tsx
-import { usePantryStore } from '~/store/PantryContext'; // For UI state only
+import { usePantryStore } from "~/store/PantryContext"; // For UI state only
 import {
   useAddPantryItem,
   useUpdatePantryItem,
   useDeletePantryItem,
   useRefreshPantryItems,
-} from '~/hooks/usePantry';
+} from "~/hooks/usePantry";
 
 function MyComponent() {
   // UI state (unchanged)
   const {
     filteredPantryItems, // Now comes from React Query
-    isLoading,          // Now comes from React Query  
-    error,              // Now comes from React Query
+    isLoading, // Now comes from React Query
+    error, // Now comes from React Query
   } = usePantryStore();
 
   // Database operations (new React Query mutations)
@@ -95,7 +95,7 @@ function MyComponent() {
 - `useSearchPantryItems(query)` - Search items by name
 - `useExpiringItems(days)` - Get items expiring within X days
 
-### Mutation Hooks  
+### Mutation Hooks
 
 - `useAddPantryItem()` - Add new item
 - `useUpdatePantryItem()` - Update existing item
@@ -113,9 +113,9 @@ function MyComponent() {
    ```tsx
    // Remove old imports
    // const { addPantryItem } = usePantryStore();
-   
+
    // Add new imports
-   import { useAddPantryItem } from '~/hooks/usePantry';
+   import { useAddPantryItem } from "~/hooks/usePantry";
    const addMutation = useAddPantryItem();
    ```
 
@@ -158,7 +158,7 @@ const addMutation = useAddPantryItem();
 
 useEffect(() => {
   if (addMutation.error) {
-    toast.error('Failed to add item: ' + addMutation.error.message);
+    toast.error("Failed to add item: " + addMutation.error.message);
   }
 }, [addMutation.error]);
 ```
@@ -175,7 +175,7 @@ const handleOptimisticUpdate = (id: string, updates: Partial<PantryItem>) => {
     {
       onError: (error) => {
         // React Query automatically rolls back on error
-        toast.error('Update failed: ' + error.message);
+        toast.error("Update failed: " + error.message);
       },
     }
   );
@@ -185,8 +185,8 @@ const handleOptimisticUpdate = (id: string, updates: Partial<PantryItem>) => {
 ### Manual Cache Management
 
 ```tsx
-import { queryClient } from '~/store/QueryProvider';
-import { pantryQueryKeys } from '~/hooks/usePantry';
+import { queryClient } from "~/store/QueryProvider";
+import { pantryQueryKeys } from "~/hooks/usePantry";
 
 // Invalidate specific queries
 queryClient.invalidateQueries({

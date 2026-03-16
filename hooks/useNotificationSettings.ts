@@ -86,10 +86,13 @@ export function useNotificationSettings() {
     }, [refreshSettings])
   );
 
-  const updateSettings = useCallback((updates: Partial<NotificationSettings>) => {
-    notificationSettingsService.updateSettings(updates);
-    refreshSettings();
-  }, [refreshSettings]);
+  const updateSettings = useCallback(
+    (updates: Partial<NotificationSettings>) => {
+      notificationSettingsService.updateSettings(updates);
+      refreshSettings();
+    },
+    [refreshSettings]
+  );
 
   const toggleEnabled = useCallback(async () => {
     const current = notificationSettingsService.getSettings();
@@ -144,4 +147,3 @@ export function useNotificationSettings() {
     refreshPermissions,
   };
 }
-

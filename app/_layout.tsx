@@ -86,17 +86,6 @@ function AnimatedStack() {
     };
   }, [router]);
 
-  // const animatedStyle = useAnimatedStyle(() => {
-  //   return {
-  //     transform: [
-  //       { scale: scale.value },
-  //       {
-  //         translateY: (1 - scale.value) * -150,
-  //       },
-  //     ],
-  //   };
-  // });
-
   // Check onboarding status on mount
   useEffect(() => {
     // router.push("/profile/preferences/voice-settings");

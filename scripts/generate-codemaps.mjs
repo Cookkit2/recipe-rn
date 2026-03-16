@@ -69,9 +69,7 @@ function analyze() {
     const exps = [...content.matchAll(EXPORT_RE)].map((m) => m[1]);
 
     modules[rel] = { imports: imps, exports: exps };
-    imports[rel] = imps
-      .map((s) => resolveImport(f, s))
-      .filter(Boolean);
+    imports[rel] = imps.map((s) => resolveImport(f, s)).filter(Boolean);
     exports[rel] = exps;
   }
 

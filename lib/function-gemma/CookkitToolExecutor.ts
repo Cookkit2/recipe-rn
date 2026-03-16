@@ -14,6 +14,11 @@ import { recipeApi } from "~/data/supabase-api/RecipeApi";
 import { baseIngredientApi } from "~/data/supabase-api/BaseIngredientApi";
 import { queryClient } from "~/store/QueryProvider";
 import { pantryQueryKeys } from "~/hooks/queries/pantryQueryKeys";
+import {
+  scheduleNotification,
+  getNotificationPermissions,
+  requestNotificationPermissions,
+} from "~/lib/notifications";
 
 // Typed collection helpers
 const stockCollection = () => database.collections.get<Stock>("stock");
@@ -186,11 +191,48 @@ export class CookkitToolExecutor implements ToolExecutor {
     try {
       const { item_id, alert_time } = params;
 
-      // TODO: Integrate with expo-notifications for real push alerts
-      // For now, add a note to the grocery list as a reminder
-      return this.addToGroceryList({
-        name: `Expiry alert: item ${item_id} at ${alert_time}`,
+      const stock = await stockCollection().find(item_id);
+      if (!stock) {
+        return {
+          success: false,
+          error: "Item not found in inventory",
+        };
+      }
+
+      // alert_time format: "YYYY-MM-DD HH:MM"
+      // Convert to a valid Date object string safely
+      const alertDate = new Date(alert_time.replace(" ", "T") + ":00");
+
+      if (isNaN(alertDate.getTime())) {
+        return {
+          success: false,
+          error: `Invalid alert time format: ${alert_time}`,
+        };
+      }
+
+      if (alertDate.getTime() <= Date.now()) {
+        return {
+          success: false,
+          error: "Alert time must be in the future",
+        };
+      }
+
+      const { granted } = await getNotificationPermissions();
+      if (!granted) {
+        await requestNotificationPermissions();
+      }
+
+      await scheduleNotification({
+        id: `expiry-alert-${item_id}-${Date.now()}`,
+        title: "Expiry Alert",
+        body: `Your ${stock.name} is expiring soon!`,
+        trigger: { date: alertDate },
       });
+
+      return {
+        success: true,
+        message: `Alert set for ${stock.name} at ${alert_time}`,
+      };
     } catch (error) {
       console.error("[CookkitToolExecutor] setExpiryAlert error:", error);
       return {

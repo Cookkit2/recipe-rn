@@ -8,10 +8,7 @@ import {
   type ImageStyle,
 } from "react-native";
 import { Image } from "expo-image";
-import Animated, {
-  useDerivedValue,
-  type SharedValue,
-} from "react-native-reanimated";
+import Animated, { useDerivedValue, type SharedValue } from "react-native-reanimated";
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
