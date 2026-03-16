@@ -2,6 +2,7 @@ import { Q } from "@nozbe/watermelondb";
 import Challenge from "../models/Challenge";
 import UserChallenge, { type UserChallengeData } from "../models/UserChallenge";
 import { BaseRepository, type SearchOptions } from "./BaseRepository";
+import Challenge from "../models/Challenge";
 import { database } from "../database";
 
 export interface UserChallengeSearchOptions extends SearchOptions {
@@ -194,43 +195,33 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
   }
 
   // Get total XP earned from completed challenges
-  // Note: This requires joining with challenge table to get XP values
+  // Note: Optimized to fetch all related challenges in a single query (batch fetch) instead of N+1 queries.
   async getTotalXPEarned(): Promise<number> {
     const completedChallenges = await this.getCompletedChallenges();
+    if (completedChallenges.length === 0) return 0;
 
-    if (completedChallenges.length === 0) {
-      return 0;
-    }
-
-    // Extract unique challenge IDs
+    // Collect all unique challenge IDs
     const challengeIds = [...new Set(completedChallenges.map((uc) => uc.challengeId))];
 
-    // Fetch all related challenges in chunks to avoid SQLite limits
-    const CHUNK_SIZE = 500;
-    const allChallenges: Challenge[] = [];
-    const challengeCollection = this.collection.database.collections.get<Challenge>(
-      Challenge.table
-    );
+    // Fetch all related challenges in one go
+    const challenges = await this.collection.database.collections
+      .get<Challenge>(Challenge.table)
+      .query(Q.where("id", Q.oneOf(challengeIds)))
+      .fetch();
 
-    for (let i = 0; i < challengeIds.length; i += CHUNK_SIZE) {
-      const chunk = challengeIds.slice(i, i + CHUNK_SIZE);
-      const chunkChallenges = await challengeCollection
-        .query(Q.where("id", Q.oneOf(chunk)))
-        .fetch();
-      allChallenges.push(...chunkChallenges);
+    // Create a map for fast O(1) lookups
+    const challengeMap = new Map<string, Challenge>();
+    for (const challenge of challenges) {
+      challengeMap.set(challenge.id, challenge);
     }
 
-    // Create a map for O(1) lookups
-    const xpMap = new Map<string, number>();
-    for (const challenge of allChallenges) {
-      xpMap.set(challenge.id, challenge.xpValue);
-    }
-
-    // Calculate total XP allowing for multiple completions of the same challenge
+    // Calculate total XP
     let totalXP = 0;
     for (const userChallenge of completedChallenges) {
-      const xp = xpMap.get(userChallenge.challengeId) || 0;
-      totalXP += xp;
+      const challenge = challengeMap.get(userChallenge.challengeId);
+      if (challenge) {
+        totalXP += challenge.xpValue;
+      }
     }
 
     return totalXP;

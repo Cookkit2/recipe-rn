@@ -58,7 +58,11 @@ describe("pantryApi.addPantryItems performance", () => {
       quantity: 1,
       unit: "pcs",
       type: "pantry" as any,
-    } as any));
+      steps_to_store: [],
+      image_url: null,
+      category: null,
+      background_color: null,
+    }));
 
     await pantryApi.addPantryItems(items as any);
 
