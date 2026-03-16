@@ -103,6 +103,24 @@ describe("Text Formatter Utils - Capitalization", () => {
       expect(toKebabCase(null as any)).toBe("");
       expect(toKebabCase(undefined as any)).toBe("");
     });
+
+    it("should handle strings with numbers", () => {
+      expect(toKebabCase("version1Update")).toBe("version1update");
+      expect(toKebabCase("Recipe 2 Ingredients")).toBe("recipe-2-ingredients");
+    });
+
+    it("should handle mixed separators", () => {
+      expect(toKebabCase("hello _ world")).toBe("hello-world");
+    });
+
+    it("should return the same string if already kebab-case", () => {
+      expect(toKebabCase("already-kebab-case")).toBe("already-kebab-case");
+    });
+
+    it("should leave leading and trailing hyphens for spaces or underscores", () => {
+      expect(toKebabCase("  hello world  ")).toBe("-hello-world-");
+      expect(toKebabCase("__hello_world__")).toBe("-hello-world-");
+    });
   });
 
   describe("toCamelCase", () => {
