@@ -6,8 +6,6 @@ import type StockCategory from "./StockCategory";
 import type WasteLog from "./WasteLog";
 import type StepsToStore from "./StepsToStore";
 
-import type StepsToStore from "./StepsToStore";
-
 export interface StockData {
   name: string;
   quantity: number;
@@ -28,7 +26,6 @@ export default class Stock extends Model {
     ingredient_synonym: { type: "has_many", foreignKey: "stock_id" },
     stock_category: { type: "has_many", foreignKey: "stock_id" },
     waste_log: { type: "has_many", foreignKey: "stock_id" },
-    steps_to_store: { type: "has_many", foreignKey: "stock_id" },
   };
 
   @field("name") name!: string;

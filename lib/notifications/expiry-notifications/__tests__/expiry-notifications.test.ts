@@ -56,7 +56,7 @@ describe("scheduleExpiryNotifications", () => {
 
     const calls = (scheduleNotification as any).mock.calls;
     expect(calls.length).toBeGreaterThanOrEqual(1);
-    const ids = calls.map((c) => c[0].id);
+    const ids = calls.map((c: any) => c[0].id);
     expect(ids).toContain("expiry-future");
   });
 });

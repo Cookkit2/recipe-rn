@@ -476,25 +476,8 @@ export class DatabaseFacade {
   /**
    * Delete a recipe and all its related data
    */
-  /**
-   * Clear all recipes
-   */
-  async clearRecipes(): Promise<void> {
-    await this.recipes.clearAllRecipes();
-  }
-
-  /**
-   * Delete a recipe and all its related data
-   */
   async deleteRecipe(id: string): Promise<void> {
     await this.recipes.delete(id);
-  }
-
-  /**
-   * Clear all recipes from the database
-   */
-  async clearRecipes(): Promise<void> {
-    await this.recipes.clearAllRecipes();
   }
 
   /**

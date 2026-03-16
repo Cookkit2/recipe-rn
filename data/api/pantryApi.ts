@@ -530,13 +530,13 @@ const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
   let synonyms: Array<{ id: string; synonym: string }> = [];
   try {
     // Add timeout to prevent hanging
-    const synonymRecords = await Promise.race([
-      stock.synonyms.fetch(),
+    const synonymRecords = (await Promise.race([
+      stock.synonyms.query().fetch(),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("Synonym fetch timeout")), 3000)
       ),
-    ]);
-    synonyms = synonymRecords.map((s) => ({ id: s.id, synonym: s.synonym }));
+    ])) as IngredientSynonym[];
+    synonyms = synonymRecords.map((s: IngredientSynonym) => ({ id: s.id, synonym: s.synonym }));
   } catch (error) {
     // Silent fail for synonyms - they're not critical
     log.warn("Could not fetch synonyms for stock:", stock.id);
@@ -545,21 +545,24 @@ const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
   // Fetch categories if available
   let categories: Array<{ id: string; name: string }> = [];
   try {
-    const stockCategoryRecords = await Promise.race([
-      stock.stockCategories.fetch(),
+    const stockCategoryRecords = (await Promise.race([
+      stock.stockCategories.query().fetch(),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("StockCategory fetch timeout")), 3000)
       ),
-    ]);
+    ])) as StockCategory[];
 
     // Fetch the actual category names
     if (stockCategoryRecords.length > 0) {
-      const categoryPromises = stockCategoryRecords.map((sc: any) =>
-        // @ts-ignore - WatermelonDB relation typings might be missing fetch() but it exists at runtime
-        typeof sc.category?.fetch === "function" ? sc.category.fetch() : Promise.resolve(null)
+      const categoryPromises = stockCategoryRecords.map(async (sc: StockCategory) => {
+        const rel = (sc as unknown as { category?: { fetch?: () => Promise<IngredientCategory> } })
+          .category;
+        return typeof rel?.fetch === "function" ? rel.fetch() : null;
+      });
+      const categoryRecords = (await Promise.all(categoryPromises)).filter(
+        (c): c is IngredientCategory => Boolean(c)
       );
-      const categoryRecords = await Promise.all(categoryPromises);
-      categories = categoryRecords.filter(Boolean).map((c: any) => ({ id: c.id, name: c.name }));
+      categories = categoryRecords.map((c) => ({ id: c.id, name: c.name }));
     }
   } catch (error) {
     log.warn("Could not fetch categories for stock:", stock.id);

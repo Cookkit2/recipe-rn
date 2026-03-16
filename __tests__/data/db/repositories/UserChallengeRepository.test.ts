@@ -54,7 +54,9 @@ describe("UserChallengeRepository XP Optimization", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     repo = new UserChallengeRepository();
-    repo.getCompletedChallenges = jest.fn().mockResolvedValue(mockUserChallenges);
+    repo.getCompletedChallenges = jest
+      .fn(async () => mockUserChallenges as any)
+      .mockName("getCompletedChallenges") as unknown as typeof repo.getCompletedChallenges;
   });
 
   it("should benchmark getTotalXPEarned", async () => {
