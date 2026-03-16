@@ -15,7 +15,6 @@ describe("Text Formatter Utils - Capitalization", () => {
       expect(capitalize("hElLo")).toBe("Hello");
     });
 
-
     it("should handle single characters", () => {
       expect(capitalize("a")).toBe("A");
       expect(capitalize("Z")).toBe("Z");
