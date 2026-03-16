@@ -1,4 +1,5 @@
 import { Q } from "@nozbe/watermelondb";
+import Challenge from "../models/Challenge";
 import UserChallenge, { type UserChallengeData } from "../models/UserChallenge";
 import { BaseRepository, type SearchOptions } from "./BaseRepository";
 import Challenge from "../models/Challenge";

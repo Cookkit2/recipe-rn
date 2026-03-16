@@ -53,7 +53,7 @@ describe("pantryApi.addPantryItems performance", () => {
   });
 
   it("should add multiple items", async () => {
-    const items = Array.from({ length: 5 }).map((_, i) => ({
+    const items: any[] = Array.from({ length: 5 }).map((_, i) => ({
       name: `Item ${i}`,
       quantity: 1,
       unit: "pcs",
@@ -64,7 +64,7 @@ describe("pantryApi.addPantryItems performance", () => {
       background_color: null,
     }));
 
-    await pantryApi.addPantryItems(items);
+    await pantryApi.addPantryItems(items as any);
 
     expect(stocks.length).toBeGreaterThan(0);
     expect(writeCount).toBe(1);

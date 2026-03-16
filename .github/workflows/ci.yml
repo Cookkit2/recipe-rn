@@ -32,7 +32,7 @@ jobs:
         run: pnpm lint
 
       - name: Test
-        run: pnpm test
+        run: npx jest
 
   audit:
     runs-on: ubuntu-latest
