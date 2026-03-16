@@ -57,7 +57,9 @@ export class RecipeRepository extends BaseRepository<Recipe> {
 
     // Filter by tags
     if (options.tags && options.tags.length > 0) {
-      const tagConditions = options.tags.map((tag) => Q.where("tags", Q.like(`%"${Q.sanitizeLikeString(tag)}"%`)));
+      const tagConditions = options.tags.map((tag) =>
+        Q.where("tags", Q.like(`%"${Q.sanitizeLikeString(tag)}"%`))
+      );
       query = query.extend(Q.or(...tagConditions));
     }
 
