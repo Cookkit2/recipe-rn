@@ -77,7 +77,14 @@ export class AuthStorageManager {
         return null;
       }
 
-      const session = JSON.parse(sessionData) as AuthSession;
+      let session: AuthSession;
+      try {
+        session = JSON.parse(sessionData) as AuthSession;
+      } catch (e) {
+        log.warn("Stored session data is invalid JSON, clearing session", e);
+        await this.clearSession();
+        return null;
+      }
       session.expiresAt = new Date(session.expiresAt);
 
       // Check if session is expired
@@ -159,10 +166,14 @@ export class AuthStorageManager {
       // Update session data if it exists
       const sessionData = this.storage.get<string>(this.KEYS.SESSION_DATA);
       if (sessionData) {
-        const session = JSON.parse(sessionData) as AuthSession;
-        session.accessToken = accessToken;
-        session.expiresAt = expiresAt;
-        this.storage.set(this.KEYS.SESSION_DATA, JSON.stringify(session));
+        try {
+          const session = JSON.parse(sessionData) as AuthSession;
+          session.accessToken = accessToken;
+          session.expiresAt = expiresAt;
+          this.storage.set(this.KEYS.SESSION_DATA, JSON.stringify(session));
+        } catch (e) {
+          log.warn("Stored session data is invalid JSON, skipping session update", e);
+        }
       }
 
       log.info("Access token updated");
