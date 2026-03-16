@@ -44,6 +44,8 @@ export default function UploadPictureIcon({ onImageSelected }: UploadPictureIcon
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         onPress={pickImage}
+        accessibilityLabel="Upload profile picture"
+        accessibilityRole="button"
       >
         {selectedImage ? (
           <Image
