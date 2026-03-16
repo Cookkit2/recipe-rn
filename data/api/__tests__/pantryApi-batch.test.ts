@@ -60,7 +60,7 @@ describe("pantryApi.addPantryItems performance", () => {
       type: "pantry" as any,
     } as any));
 
-    await pantryApi.addPantryItems(items);
+    await pantryApi.addPantryItems(items as any);
 
     expect(stocks.length).toBeGreaterThan(0);
     expect(writeCount).toBe(1);
