@@ -1,4 +1,5 @@
 import { Model } from "@nozbe/watermelondb";
+import { safeJsonParse } from "~/utils/json-parsing";
 import { field, date, children, writer } from "@nozbe/watermelondb/decorators";
 import type { Associations } from "@nozbe/watermelondb/Model";
 import UserAchievement from "./UserAchievement";
@@ -41,12 +42,12 @@ export default class Achievement extends Model {
 
   // Computed property for parsed requirement
   get parsedRequirement(): AchievementRequirement {
-    return JSON.parse(this.requirement);
+    return safeJsonParse<AchievementRequirement>(this.requirement, {} as AchievementRequirement);
   }
 
   // Computed property for parsed reward
   get parsedReward(): AchievementReward | undefined {
-    return this.reward ? JSON.parse(this.reward) : undefined;
+    return safeJsonParse<AchievementReward | undefined>(this.reward, undefined);
   }
 
   // Check if achievement is hidden

@@ -1,4 +1,5 @@
 import { Model } from "@nozbe/watermelondb";
+import { safeJsonParse } from "~/utils/json-parsing";
 import { field, date, children, writer } from "@nozbe/watermelondb/decorators";
 import type { Associations } from "@nozbe/watermelondb/Model";
 import UserChallenge from "./UserChallenge";
@@ -47,12 +48,12 @@ export default class Challenge extends Model {
 
   // Computed property for parsed requirement
   get parsedRequirement(): ChallengeRequirement {
-    return JSON.parse(this.requirement);
+    return safeJsonParse<ChallengeRequirement>(this.requirement, {} as ChallengeRequirement);
   }
 
   // Computed property for parsed reward
   get parsedReward(): ChallengeReward {
-    return JSON.parse(this.reward);
+    return safeJsonParse<ChallengeReward>(this.reward, {} as ChallengeReward);
   }
 
   // Check if challenge is daily
