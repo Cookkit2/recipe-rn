@@ -26,7 +26,9 @@ describe("sanitizeForDatabase", () => {
   });
 
   it("strips special characters when allowSpecialChars is false", () => {
-    expect(sanitizeForDatabase("hello @world! #1", { allowSpecialChars: false })).toBe("hello world 1");
+    expect(sanitizeForDatabase("hello @world! #1", { allowSpecialChars: false })).toBe(
+      "hello world 1"
+    );
   });
 
   it("removes characters matching custom removePattern", () => {
