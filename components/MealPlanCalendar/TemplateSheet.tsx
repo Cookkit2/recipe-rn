@@ -65,6 +65,167 @@ interface TemplateSheetProps {
  * - Apply a template to the current week
  * - Delete templates
  */
+
+/**
+ * Generates a shareable meal plan JSON string from an array of meal plans
+ */
+function generateShareableMealPlan(currentWeekMeals: MealPlanItemWithRecipe[]): string {
+  const shareableData: ShareableMealPlan = {
+    version: "1.0",
+    exportDate: new Date().toISOString(),
+    mealPlans: currentWeekMeals.map((meal) => ({
+      date: meal.date.toISOString(),
+      mealSlot: meal.mealSlot,
+      servings: meal.servings,
+      recipe: meal.recipe
+        ? {
+            title: meal.recipe.title,
+            servings: meal.recipe.servings,
+            ingredients: meal.recipe.ingredients,
+          }
+        : null,
+    })),
+  };
+  return JSON.stringify(shareableData, null, 2);
+}
+
+/**
+ * Shares the meal plan JSON string using the React Native Share API
+ */
+async function shareMealPlanJson(
+  jsonString: string,
+  weekStart: Date,
+  weekEnd: Date,
+  onShared: () => void
+) {
+  try {
+    const result = await Share.share({
+      message: Platform.select({
+        ios: `My Meal Plan for ${weekStart.toLocaleDateString()} - ${weekEnd.toLocaleDateString()}\n\nCopy the JSON below to import this meal plan:\n\n${jsonString}`,
+        android: `My Meal Plan:\n\n${jsonString}`,
+        default: jsonString,
+      }) as string,
+      title: "Share Meal Plan",
+    });
+
+    if (result.action === Share.sharedAction) {
+      onShared();
+      log.info("Meal plan shared successfully");
+    }
+  } catch (shareError) {
+    // If share is dismissed or fails, show the JSON in an alert
+    if ((shareError as any)?.code !== "SHARE_DISMISSED") {
+      log.warn("Share failed, showing JSON in alert:", shareError);
+      Alert.alert("Meal Plan JSON", "Copy this JSON to share your meal plan:", [
+        { text: "Close", style: "cancel" },
+        {
+          text: "Copy",
+          onPress: () => {
+            // Note: Clipboard API would need expo-clipboard
+            Alert.alert("Info", "JSON ready to be copied manually (clipboard feature coming soon)");
+          },
+        },
+      ]);
+    }
+  }
+}
+
+/**
+ * Parses and validates import data JSON string
+ */
+function parseImportData(jsonString: string): ShareableMealPlan {
+  const data = JSON.parse(jsonString.trim()) as ShareableMealPlan;
+  if (!data.version || !data.mealPlans || !Array.isArray(data.mealPlans)) {
+    throw new Error("Invalid meal plan format");
+  }
+  return data;
+}
+
+/**
+ * Processes importing meals from parsed data and adds them to the database
+ */
+async function importMealsFromData(
+  data: ShareableMealPlan,
+  addToMealPlanAsync: (args: {
+    recipeId: string;
+    servings: number;
+    date: Date;
+    mealSlot: string;
+  }) => Promise<any>
+): Promise<{ successCount: number; errorCount: number; skippedRecipes: string[] }> {
+  let successCount = 0;
+  let errorCount = 0;
+  const skippedRecipes: string[] = [];
+
+  for (const mealPlan of data.mealPlans) {
+    try {
+      if (!mealPlan.recipe) {
+        log.warn("Skipping meal plan without recipe data");
+        errorCount++;
+        continue;
+      }
+
+      const matchingRecipes = await recipeApi.searchRecipes(mealPlan.recipe.title);
+
+      if (!matchingRecipes || matchingRecipes.length === 0) {
+        log.warn(`Recipe not found: ${mealPlan.recipe.title}`);
+        skippedRecipes.push(mealPlan.recipe.title);
+        errorCount++;
+        continue;
+      }
+
+      const matchedRecipe = matchingRecipes[0]!;
+      const mealDate = new Date(mealPlan.date);
+
+      await addToMealPlanAsync({
+        recipeId: matchedRecipe.id,
+        servings: mealPlan.servings,
+        date: mealDate,
+        mealSlot: mealPlan.mealSlot,
+      });
+
+      successCount++;
+      log.info(`Imported meal: ${mealPlan.recipe.title}`);
+    } catch (err) {
+      log.error("Error importing meal plan item:", err);
+      errorCount++;
+    }
+  }
+
+  return { successCount, errorCount, skippedRecipes };
+}
+
+/**
+ * Displays the results of the import process
+ */
+function showImportResults(
+  successCount: number,
+  errorCount: number,
+  skippedRecipes: string[],
+  onTemplateApplied?: () => void
+) {
+  if (errorCount === 0 && successCount > 0) {
+    Alert.alert(
+      "Import Success",
+      `Imported ${successCount} meal${successCount !== 1 ? "s" : ""} to your plan!`
+    );
+    onTemplateApplied?.();
+  } else if (successCount > 0) {
+    const skippedList = skippedRecipes.slice(0, 3).join("\n");
+    const moreText = skippedRecipes.length > 3 ? `\n... and ${skippedRecipes.length - 3} more` : "";
+    Alert.alert(
+      "Import Partial",
+      `Imported ${successCount} meal${successCount !== 1 ? "s" : ""}, ${errorCount} skipped.\n\nSkipped recipes:\n${skippedList}${moreText}`
+    );
+    onTemplateApplied?.();
+  } else {
+    Alert.alert(
+      "Import Failed",
+      "No meals could be imported. Make sure you have the recipes in your collection that match the shared plan."
+    );
+  }
+}
+
 export default function TemplateSheet({ onTemplateApplied, onClose }: TemplateSheetProps) {
   const { selectedWeek } = useMealPlanCalendar();
   const { bottom } = useSafeAreaInsets();
@@ -208,61 +369,8 @@ export default function TemplateSheet({ onTemplateApplied, onClose }: TemplateSh
       setIsExporting(true);
       handleHapticFeedback();
 
-      // Create shareable meal plan data
-      const shareableData: ShareableMealPlan = {
-        version: "1.0",
-        exportDate: new Date().toISOString(),
-        mealPlans: currentWeekMeals.map((meal) => ({
-          date: meal.date.toISOString(),
-          mealSlot: meal.mealSlot,
-          servings: meal.servings,
-          recipe: meal.recipe
-            ? {
-                title: meal.recipe.title,
-                servings: meal.recipe.servings,
-                ingredients: meal.recipe.ingredients,
-              }
-            : null,
-        })),
-      };
-
-      // Convert to JSON string
-      const jsonString = JSON.stringify(shareableData, null, 2);
-
-      // Try to share using React Native Share API
-      try {
-        const result = await Share.share({
-          message: Platform.select({
-            ios: `My Meal Plan for ${weekStart.toLocaleDateString()} - ${weekEnd.toLocaleDateString()}\n\nCopy the JSON below to import this meal plan:\n\n${jsonString}`,
-            android: `My Meal Plan:\n\n${jsonString}`,
-            default: jsonString,
-          }) as string,
-          title: "Share Meal Plan",
-        });
-
-        if (result.action === Share.sharedAction) {
-          handleHapticFeedback();
-          log.info("Meal plan shared successfully");
-        }
-      } catch (shareError) {
-        // If share is dismissed or fails, show the JSON in an alert
-        if ((shareError as any)?.code !== "SHARE_DISMISSED") {
-          log.warn("Share failed, showing JSON in alert:", shareError);
-          Alert.alert("Meal Plan JSON", "Copy this JSON to share your meal plan:", [
-            { text: "Close", style: "cancel" },
-            {
-              text: "Copy",
-              onPress: () => {
-                // Note: Clipboard API would need expo-clipboard
-                Alert.alert(
-                  "Info",
-                  "JSON ready to be copied manually (clipboard feature coming soon)"
-                );
-              },
-            },
-          ]);
-        }
-      }
+      const jsonString = generateShareableMealPlan(currentWeekMeals);
+      await shareMealPlanJson(jsonString, weekStart, weekEnd, handleHapticFeedback);
     } catch (error) {
       log.error("Error exporting meal plan:", error);
       Alert.alert("Export Error", "Failed to export meal plan");
@@ -270,6 +378,41 @@ export default function TemplateSheet({ onTemplateApplied, onClose }: TemplateSh
       setIsExporting(false);
     }
   }, [currentWeekMeals, weekStart, weekEnd, handleHapticFeedback]);
+
+  const processMealPlanImport = useCallback(
+    async (jsonString: string | undefined) => {
+      if (!jsonString || !jsonString.trim()) {
+        Alert.alert("Import Error", "Please enter JSON data");
+        return;
+      }
+
+      try {
+        setIsImporting(true);
+        handleHapticFeedback();
+
+        let data: ShareableMealPlan;
+        try {
+          data = parseImportData(jsonString);
+        } catch (err) {
+          Alert.alert("Import Error", (err as Error).message || "Invalid meal plan format");
+          return;
+        }
+
+        const { successCount, errorCount, skippedRecipes } = await importMealsFromData(
+          data,
+          addToMealPlan.mutateAsync
+        );
+        handleHapticFeedback();
+        showImportResults(successCount, errorCount, skippedRecipes, onTemplateApplied);
+      } catch (parseError) {
+        log.error("Error parsing import JSON:", parseError);
+        Alert.alert("Import Error", "Invalid JSON format. Please check and try again.");
+      } finally {
+        setIsImporting(false);
+      }
+    },
+    [handleHapticFeedback, addToMealPlan.mutateAsync, onTemplateApplied]
+  );
 
   /**
    * Import a meal plan from JSON
@@ -282,103 +425,12 @@ export default function TemplateSheet({ onTemplateApplied, onClose }: TemplateSh
         { text: "Cancel", style: "cancel" },
         {
           text: "Import",
-          onPress: async (jsonString: string | undefined) => {
-            if (!jsonString || !jsonString.trim()) {
-              Alert.alert("Import Error", "Please enter JSON data");
-              return;
-            }
-
-            try {
-              setIsImporting(true);
-              handleHapticFeedback();
-
-              // Parse JSON
-              const data = JSON.parse(jsonString.trim()) as ShareableMealPlan;
-
-              // Validate data structure
-              if (!data.version || !data.mealPlans || !Array.isArray(data.mealPlans)) {
-                Alert.alert("Import Error", "Invalid meal plan format");
-                return;
-              }
-
-              // Import meal plans
-              let successCount = 0;
-              let errorCount = 0;
-              const skippedRecipes: string[] = [];
-
-              for (const mealPlan of data.mealPlans) {
-                try {
-                  if (!mealPlan.recipe) {
-                    log.warn("Skipping meal plan without recipe data");
-                    errorCount++;
-                    continue;
-                  }
-
-                  // Search for recipe by title
-                  const matchingRecipes = await recipeApi.searchRecipes(mealPlan.recipe.title);
-
-                  if (!matchingRecipes || matchingRecipes.length === 0) {
-                    log.warn(`Recipe not found: ${mealPlan.recipe.title}`);
-                    skippedRecipes.push(mealPlan.recipe.title);
-                    errorCount++;
-                    continue;
-                  }
-
-                  // Use the first matching recipe (safe because we checked length above)
-                  const matchedRecipe = matchingRecipes[0]!;
-                  const mealDate = new Date(mealPlan.date);
-
-                  // Add to meal plan
-                  await addToMealPlan.mutateAsync({
-                    recipeId: matchedRecipe.id,
-                    servings: mealPlan.servings,
-                    date: mealDate,
-                    mealSlot: mealPlan.mealSlot,
-                  });
-
-                  successCount++;
-                  log.info(`Imported meal: ${mealPlan.recipe.title}`);
-                } catch (err) {
-                  log.error("Error importing meal plan item:", err);
-                  errorCount++;
-                }
-              }
-
-              handleHapticFeedback();
-
-              if (errorCount === 0 && successCount > 0) {
-                Alert.alert(
-                  "Import Success",
-                  `Imported ${successCount} meal${successCount !== 1 ? "s" : ""} to your plan!`
-                );
-                onTemplateApplied?.();
-              } else if (successCount > 0) {
-                const skippedList = skippedRecipes.slice(0, 3).join("\n");
-                const moreText =
-                  skippedRecipes.length > 3 ? `\n... and ${skippedRecipes.length - 3} more` : "";
-                Alert.alert(
-                  "Import Partial",
-                  `Imported ${successCount} meal${successCount !== 1 ? "s" : ""}, ${errorCount} skipped.\n\nSkipped recipes:\n${skippedList}${moreText}`
-                );
-                onTemplateApplied?.();
-              } else {
-                Alert.alert(
-                  "Import Failed",
-                  "No meals could be imported. Make sure you have the recipes in your collection that match the shared plan."
-                );
-              }
-            } catch (parseError) {
-              log.error("Error parsing import JSON:", parseError);
-              Alert.alert("Import Error", "Invalid JSON format. Please check and try again.");
-            } finally {
-              setIsImporting(false);
-            }
-          },
+          onPress: processMealPlanImport,
         },
       ],
       Platform.OS === "ios" ? "plain-text" : "default"
     );
-  }, [handleHapticFeedback, onTemplateApplied, addToMealPlan]);
+  }, [processMealPlanImport]);
 
   return (
     <SheetModalWrapper>
