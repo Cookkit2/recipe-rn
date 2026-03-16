@@ -19,27 +19,27 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { H1, H4, P, Small } from "~/components/ui/typography";
-import { ClockIcon, StarIcon, ShoppingCartIcon } from "lucide-uniwind";
-import { OutlinedImage } from "~/components/ui/outlined-image";
+import { ShoppingCartIcon } from "lucide-uniwind";
 import { Separator } from "~/components/ui/separator";
-import RotationCard from "~/components/Shared/RotationCard";
 import TopBar from "~/components/Recipe/Details/TopBar";
 import RecipeServing from "~/components/Recipe/Details/RecipeServing";
+import RecipeMeta from "~/components/Recipe/Details/RecipeMeta";
+import IngredientList from "~/components/Recipe/Details/IngredientList";
+import IngredientVisualPreview from "~/components/Recipe/Details/IngredientVisualPreview";
+import MissingIngredients from "~/components/Recipe/Details/MissingIngredients";
+
 import BottomActionBar from "~/components/Recipe/Details/BottomActionBar";
 import { Image } from "expo-image";
 import { useRecipe } from "~/hooks/queries/useRecipeQueries";
 import { usePantryItemsByType } from "~/hooks/queries/usePantryQueries";
 import { useAddToMealPlan, useIsRecipeInPlan } from "~/hooks/queries/useMealPlanQueries";
-import { titleCase } from "~/utils/text-formatter";
 import { useRecipeDetailStore } from "~/store/RecipeDetailContext";
-import ShapeContainer from "~/components/Shared/Shapes/ShapeContainer";
 import { setStatusBarStyle } from "expo-status-bar";
 import { recipeApi } from "~/data/api/recipeApi";
 import type { Recipe } from "~/types/Recipe";
 import { useUniwind } from "uniwind";
 import { Button } from "~/components/ui/button";
 import { useIngredientMatcher } from "~/hooks/useIngredientMatcher";
-import { isIngredientMatch } from "~/utils/ingredient-matching";
 
 const AnimatedH1 = Animated.createAnimatedComponent(H1);
 const AnimatedImage = Animated.createAnimatedComponent(Image);
@@ -342,32 +342,11 @@ export default function RecipeDetails() {
           )}
 
           {/* Meta */}
-          {(totalMinutes > 0 || (recipe.difficultyStars ?? 0) > 0) && (
-            <View className="flex-column items-center justify-center gap-3 my-2">
-              {totalMinutes > 0 && (
-                <View className="flex-row items-center gap-2">
-                  <ClockIcon className="text-muted-foreground" size={16} strokeWidth={3} />
-                  <P className="font-urbanist-medium text-foreground">{readyByLabel.label}</P>
-                  <P className="font-urbanist-regular text-muted-foreground font-bold">•</P>
-                  <P className="font-urbanist-regular text-muted-foreground">{totalMinutes} min</P>
-                </View>
-              )}
-              {(displayedRecipe.difficultyStars ?? 0) > 0 && (
-                <View className="flex-row items-center gap-1">
-                  {Array.from({ length: displayedRecipe.difficultyStars ?? 0 }).map((_, i) => (
-                    <StarIcon
-                      key={i}
-                      className="text-yellow-500"
-                      size={16}
-                      strokeWidth={3}
-                      fill="#ffd700"
-                    />
-                  ))}
-                  <P className="font-urbanist-regular text-muted-foreground ml-1">difficulty</P>
-                </View>
-              )}
-            </View>
-          )}
+          <RecipeMeta
+            totalMinutes={totalMinutes}
+            readyByLabel={readyByLabel}
+            difficultyStars={displayedRecipe.difficultyStars ?? 0}
+          />
 
           <RecipeServing />
 
@@ -377,130 +356,26 @@ export default function RecipeDetails() {
           <Separator className="my-8" />
 
           {/* Ingredient use summary */}
-          <View className="flex-row items-center justify-between">
-            <H4 className="font-bowlby-one text-foreground/70">Ingredients</H4>
-            {isScaled && (
-              <View className="px-2 py-1 rounded-full bg-primary/10 border border-primary/30">
-                <P className="text-primary font-urbanist-medium text-xs">
-                  Scaled to {servings} servings
-                </P>
-              </View>
-            )}
-          </View>
+          <IngredientList
+            scaledIngredients={scaledIngredients}
+            isScaled={isScaled}
+            servings={servings}
+            findMatch={findMatch}
+          />
 
-          {/* Ingredient list with scaled quantities */}
-          {scaledIngredients.length > 0 && (
-            <View className="mt-3 bg-card/60 rounded-xl px-4 py-3">
-              {scaledIngredients.map((ingredient, idx) => {
-                const isInPantry = filteredPantryItems.some((pantryItem) =>
-                  isIngredientMatch(
-                    pantryItem.name,
-                    ingredient.name,
-                    pantryItem.synonyms?.map((s) => s.synonym)
-                  )
-                );
-
-                return (
-                  <View
-                    key={idx}
-                    className={`flex-row items-center py-2 ${
-                      idx < scaledIngredients.length - 1 ? "border-b border-border/40" : ""
-                    }`}
-                  >
-                    <View className="flex-1 flex-row items-center gap-2">
-                      <View
-                        className={`w-2 h-2 rounded-full ${
-                          isInPantry ? "bg-green-500" : "bg-orange-400"
-                        }`}
-                      />
-                      <P
-                        className={`font-urbanist-regular flex-1 ${
-                          isInPantry ? "text-foreground" : "text-foreground/60"
-                        }`}
-                      >
-                        {titleCase(ingredient.name)}
-                      </P>
-                    </View>
-                    <View className="flex-row items-center gap-1">
-                      <P className="font-urbanist-semibold text-foreground">
-                        {ingredient.quantity}
-                      </P>
-                      <P className="font-urbanist-regular text-muted-foreground">
-                        {ingredient.unit}
-                      </P>
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-          )}
-
-          {/* Ingredient visual preview (keep existing rotation cards) */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            className="flex-row gap-2 mt-2 -mx-6 px-12 overflow-visible"
-          >
-            {/* Matched ingredients with images */}
-            {ingredientPreviewData.matched.map((item, index) => (
-              <RotationCard
-                key={`matched-${item.name}-${index}`}
-                index={index}
-                total={ingredientPreviewData.matched.length + ingredientPreviewData.missing.length}
-                className="-ml-6"
-                style={{ zIndex: index }}
-                scaleEnabled={false}
-              >
-                <OutlinedImage source={item.imageUrl} size={48} />
-              </RotationCard>
-            ))}
-            {/* Missing ingredients with shape placeholders */}
-            {ingredientPreviewData.missing.map((item, index) => (
-              <RotationCard
-                key={`missing-${item.name}-${index}`}
-                index={ingredientPreviewData.matched.length + index}
-                total={ingredientPreviewData.matched.length + ingredientPreviewData.missing.length}
-                className="-ml-6"
-                style={{ zIndex: ingredientPreviewData.matched.length + index }}
-                scaleEnabled={false}
-              >
-                <ShapeContainer
-                  index={item.index % 21}
-                  text="?"
-                  width={48}
-                  height={48}
-                  color={missingIngredientPalette[index % 6]}
-                />
-              </RotationCard>
-            ))}
-          </ScrollView>
+          {/* Ingredient visual preview */}
+          <IngredientVisualPreview
+            ingredientPreviewData={ingredientPreviewData}
+            missingIngredientPalette={missingIngredientPalette}
+          />
 
           {/* Missing Ingredients */}
-          {memoizedMissingIngredients && (
-            <View className="mt-6 bg-card/80 rounded-xl px-6 py-4">
-              <View className="flex-row items-center justify-between">
-                <H4 className="font-urbanist-semibold text-destructive/60 mb-2">
-                  Missing Ingredients
-                </H4>
-                {/* Add missing ingredients to grocery list button */}
-                {!isInPlan && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onPress={handleAddMissingToGrocery}
-                    disabled={addToMealPlan.isPending}
-                  >
-                    <Small className="font-urbanist-semibold text-foreground/50">
-                      {addToMealPlan.isPending ? "Adding..." : "Add to Grocery"}
-                    </Small>
-                  </Button>
-                )}
-              </View>
-              <P className="font-urbanist-regular text-muted-foreground/70 leading-6">
-                {memoizedMissingIngredients}
-              </P>
-            </View>
-          )}
+          <MissingIngredients
+            memoizedMissingIngredients={memoizedMissingIngredients}
+            isInPlan={!!isInPlan}
+            isAddingToPlan={addToMealPlan.isPending}
+            onAddToPlan={handleAddMissingToGrocery}
+          />
 
           <Separator className="my-8" />
 
