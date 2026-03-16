@@ -5,6 +5,7 @@ import {
   camelCaseToReadable,
   toKebabCase,
   toCamelCase,
+  sanitizeText,
 } from "../text-formatter";
 
 describe("Text Formatter Utils - Capitalization", () => {
@@ -137,6 +138,37 @@ describe("Text Formatter Utils - Capitalization", () => {
       expect(toCamelCase("")).toBe("");
       expect(toCamelCase(null as any)).toBe("");
       expect(toCamelCase(undefined as any)).toBe("");
+    });
+  });
+});
+
+describe("Text Formatter Utils - Sanitization", () => {
+  describe("sanitizeText", () => {
+    it("should remove all non-alphanumeric characters except spaces", () => {
+      expect(sanitizeText("Hello, World!")).toBe("Hello World");
+      expect(sanitizeText("user@example.com")).toBe("userexamplecom");
+      expect(sanitizeText("Price: $10.99")).toBe("Price 1099");
+      expect(sanitizeText("Special chars: !@#$%^&*()_+={}[]|\\:;\"'<>,.?/~`")).toBe(
+        "Special chars"
+      );
+    });
+
+    it("should leave alphanumeric characters and spaces intact", () => {
+      expect(sanitizeText("Hello World 123")).toBe("Hello World 123");
+      expect(sanitizeText("abc DEF 456")).toBe("abc DEF 456");
+      expect(sanitizeText("1234567890")).toBe("1234567890");
+    });
+
+    it("should trim whitespace from the beginning and end", () => {
+      expect(sanitizeText("  Hello World  ")).toBe("Hello World");
+      expect(sanitizeText("  leading")).toBe("leading");
+      expect(sanitizeText("trailing  ")).toBe("trailing");
+    });
+
+    it("should return empty string for empty or null input", () => {
+      expect(sanitizeText("")).toBe("");
+      expect(sanitizeText(null as any)).toBe("");
+      expect(sanitizeText(undefined as any)).toBe("");
     });
   });
 });
