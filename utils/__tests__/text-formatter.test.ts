@@ -5,6 +5,7 @@ import {
   camelCaseToReadable,
   toKebabCase,
   toCamelCase,
+  truncate,
 } from "../text-formatter";
 
 describe("Text Formatter Utils - Capitalization", () => {
@@ -137,6 +138,36 @@ describe("Text Formatter Utils - Capitalization", () => {
       expect(toCamelCase("")).toBe("");
       expect(toCamelCase(null as any)).toBe("");
       expect(toCamelCase(undefined as any)).toBe("");
+    });
+  });
+});
+
+describe("Text Formatter Utils - Text Manipulation", () => {
+  describe("truncate", () => {
+    it("should truncate text to specified length and add default ellipsis", () => {
+      expect(truncate("hello world", 8)).toBe("hello...");
+    });
+
+    it("should truncate text and add custom suffix", () => {
+      expect(truncate("hello world", 8, "..")).toBe("hello ..");
+    });
+
+    it("should not truncate if text is shorter than length", () => {
+      expect(truncate("hello", 10)).toBe("hello");
+    });
+
+    it("should not truncate if text is exactly equal to length", () => {
+      expect(truncate("hello", 5)).toBe("hello");
+    });
+
+    it("should handle length shorter than suffix", () => {
+      expect(truncate("hello", 2)).toBe("...");
+    });
+
+    it("should return empty string for empty or null input", () => {
+      expect(truncate("", 5)).toBe("");
+      expect(truncate(null as any, 5)).toBe(null);
+      expect(truncate(undefined as any, 5)).toBe(undefined);
     });
   });
 });
