@@ -5,6 +5,7 @@ import {
   camelCaseToReadable,
   toKebabCase,
   toCamelCase,
+  normalizeWhitespace,
 } from "../text-formatter";
 
 describe("Text Formatter Utils - Capitalization", () => {
@@ -137,6 +138,39 @@ describe("Text Formatter Utils - Capitalization", () => {
       expect(toCamelCase("")).toBe("");
       expect(toCamelCase(null as any)).toBe("");
       expect(toCamelCase(undefined as any)).toBe("");
+    });
+  });
+});
+
+describe("Text Formatter Utils - Whitespace Formatting", () => {
+  describe("normalizeWhitespace", () => {
+    it("should remove extra spaces between words", () => {
+      expect(normalizeWhitespace("hello   world")).toBe("hello world");
+      expect(normalizeWhitespace("this  is   a    test")).toBe("this is a test");
+    });
+
+    it("should remove leading and trailing spaces", () => {
+      expect(normalizeWhitespace("  hello world  ")).toBe("hello world");
+      expect(normalizeWhitespace("    test    ")).toBe("test");
+    });
+
+    it("should handle newlines and tabs", () => {
+      expect(normalizeWhitespace("hello\tworld")).toBe("hello world");
+      expect(normalizeWhitespace("hello\nworld")).toBe("hello world");
+      expect(normalizeWhitespace("hello\r\nworld")).toBe("hello world");
+      expect(normalizeWhitespace("  hello \t \n world  ")).toBe("hello world");
+    });
+
+    it("should not modify strings that are already normalized", () => {
+      expect(normalizeWhitespace("hello world")).toBe("hello world");
+      expect(normalizeWhitespace("this is a test")).toBe("this is a test");
+    });
+
+    it("should return empty string for empty or null input", () => {
+      expect(normalizeWhitespace("")).toBe("");
+      expect(normalizeWhitespace("   ")).toBe("");
+      expect(normalizeWhitespace(null as any)).toBe("");
+      expect(normalizeWhitespace(undefined as any)).toBe("");
     });
   });
 });
