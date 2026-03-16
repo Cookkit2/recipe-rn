@@ -69,7 +69,7 @@ Please tweaked the instructions and recipe to adapt to the ingredients and its q
 
 export const parseTailoredRecipeResponse = (responseText: string, baseRecipe: Recipe): Recipe => {
   const cleaned = stripJsonFences(responseText);
-  const parsed = JSON.parse(cleaned) as Partial<Recipe> & {
+  let parsed: Partial<Recipe> & {
     ingredients?: Array<{
       name?: string;
       quantity?: number;
@@ -82,6 +82,12 @@ export const parseTailoredRecipeResponse = (responseText: string, baseRecipe: Re
       description?: string;
     }>;
   };
+
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch (error) {
+    throw new Error("Invalid tailored recipe response: failed to parse JSON");
+  }
 
   if (!parsed || !parsed.title || !parsed.ingredients || !parsed.instructions) {
     throw new Error("Invalid tailored recipe response");
