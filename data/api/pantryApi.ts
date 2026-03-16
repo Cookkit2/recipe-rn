@@ -1,4 +1,5 @@
 import { databaseFacade } from "~/data/db/DatabaseFacade";
+import { baseIngredientApi } from "~/data/supabase-api/BaseIngredientApi";
 import { database } from "~/data/db/database";
 import type { Stock } from "~/data/db/models";
 import type IngredientCategory from "~/data/db/models/IngredientCategory";
@@ -120,9 +121,15 @@ export const pantryApi = {
     return withErrorLogging(async () => {
       log.info("🔍 Adding pantry item:", item);
 
-      // Generate a temporary base ingredient ID
-      // TODO: In the future, fetch from cloud API to get the actual base_ingredient_id
-      const baseIngredientId = `temp_${item.name.toLowerCase().replace(/\s+/g, "_")}`;
+      let baseIngredientId = `temp_${item.name.toLowerCase().replace(/\s+/g, "_")}`;
+      try {
+        const cloudIngredient = await baseIngredientApi.getBaseIngredientByName(item.name);
+        if (cloudIngredient && cloudIngredient.id) {
+          baseIngredientId = cloudIngredient.id;
+        }
+      } catch (err) {
+        log.warn("Failed to fetch base_ingredient_id from cloud API, falling back to temp ID", err);
+      }
 
       // Prepare stock data
       const stockData = {
@@ -166,7 +173,15 @@ export const pantryApi = {
     return logAndWrapResult(async () => {
       log.info("🔍 Adding pantry item:", item);
 
-      const baseIngredientId = `temp_${item.name.toLowerCase().replace(/\s+/g, "_")}`;
+      let baseIngredientId = `temp_${item.name.toLowerCase().replace(/\s+/g, "_")}`;
+      try {
+        const cloudIngredient = await baseIngredientApi.getBaseIngredientByName(item.name);
+        if (cloudIngredient && cloudIngredient.id) {
+          baseIngredientId = cloudIngredient.id;
+        }
+      } catch (err) {
+        log.warn("Failed to fetch base_ingredient_id from cloud API, falling back to temp ID", err);
+      }
 
       const stockData = {
         baseIngredientId,
