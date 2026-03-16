@@ -1123,20 +1123,19 @@ export class DatabaseFacade {
       }[] = [];
 
       // Process recipes in batches
-      const batchSize = 10;
+      const batchSize = 100;
 
       for (let i = 0; i < allRecipes.length; i += batchSize) {
         const recipeBatch = allRecipes.slice(i, i + batchSize);
 
-        const batchDetailsPromises = recipeBatch.map((recipe) =>
-          this.recipes.getRecipeWithDetails(recipe.id)
-        );
-
-        const batchDetails = await Promise.all(batchDetailsPromises);
+        const recipeIds = recipeBatch.map((recipe) => recipe.id);
+        const batchDetailsMap = await this.getRecipesWithDetails(recipeIds);
 
         for (let j = 0; j < recipeBatch.length; j++) {
           const recipe = recipeBatch[j];
-          const recipeDetails = batchDetails[j];
+          if (!recipe) continue;
+
+          const recipeDetails = batchDetailsMap.get(recipe.id);
 
           if (!recipeDetails || !recipeDetails.ingredients.length) {
             continue;
@@ -1191,10 +1190,21 @@ export class DatabaseFacade {
     const missingIngredients: ShoppingListResult["missingIngredients"] = [];
     const availableIngredients: ShoppingListResult["availableIngredients"] = [];
 
+    // Gather all ingredient names to query them simultaneously
+    const ingredientNames = recipeDetails.ingredients.map((ing) => ing.name);
+
+    // Fetch matching stock items at once to avoid N+1 queries in the loop below
+    const matchingStocks = await this.stocks.getStocksByNamesOrSynonyms(ingredientNames);
+
     for (const ingredient of recipeDetails.ingredients) {
-      // Use findByNameOrSynonym for better matching
-      const stockItems = await this.stocks.findByNameOrSynonym(ingredient.name);
-      const totalStock = stockItems.reduce((sum: number, item: Stock) => sum + item.quantity, 0);
+      // Filter the specific stock items for this ingredient from the pre-fetched list
+      const stockItems = matchingStocks.filter((stock) =>
+        isIngredientMatch(stock.name, ingredient.name, stock.synonyms)
+      );
+
+      // Note: getStocksByNamesOrSynonyms returns an array of plain objects, not Stock models,
+      // so we use any/type inference for the reduction.
+      const totalStock = stockItems.reduce((sum: number, item: any) => sum + item.quantity, 0);
 
       if (totalStock === 0) {
         missingIngredients.push({

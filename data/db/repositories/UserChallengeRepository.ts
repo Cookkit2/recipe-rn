@@ -1,4 +1,5 @@
 import { Q } from "@nozbe/watermelondb";
+import Challenge from "../models/Challenge";
 import UserChallenge, { type UserChallengeData } from "../models/UserChallenge";
 import { BaseRepository, type SearchOptions } from "./BaseRepository";
 import { database } from "../database";
@@ -196,12 +197,40 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
   // Note: This requires joining with challenge table to get XP values
   async getTotalXPEarned(): Promise<number> {
     const completedChallenges = await this.getCompletedChallenges();
-    let totalXP = 0;
 
+    if (completedChallenges.length === 0) {
+      return 0;
+    }
+
+    // Extract unique challenge IDs
+    const challengeIds = [...new Set(completedChallenges.map((uc) => uc.challengeId))];
+
+    // Fetch all related challenges in chunks to avoid SQLite limits
+    const CHUNK_SIZE = 500;
+    const allChallenges: Challenge[] = [];
+    const challengeCollection = this.collection.database.collections.get<Challenge>(
+      Challenge.table
+    );
+
+    for (let i = 0; i < challengeIds.length; i += CHUNK_SIZE) {
+      const chunk = challengeIds.slice(i, i + CHUNK_SIZE);
+      const chunkChallenges = await challengeCollection
+        .query(Q.where("id", Q.oneOf(chunk)))
+        .fetch();
+      allChallenges.push(...chunkChallenges);
+    }
+
+    // Create a map for O(1) lookups
+    const xpMap = new Map<string, number>();
+    for (const challenge of allChallenges) {
+      xpMap.set(challenge.id, challenge.xpValue);
+    }
+
+    // Calculate total XP allowing for multiple completions of the same challenge
+    let totalXP = 0;
     for (const userChallenge of completedChallenges) {
-      // Need to fetch the related challenge to get XP
-      const challenge = await userChallenge.challenge.fetch();
-      totalXP += challenge.xpValue;
+      const xp = xpMap.get(userChallenge.challengeId) || 0;
+      totalXP += xp;
     }
 
     return totalXP;
