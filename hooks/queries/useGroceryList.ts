@@ -365,6 +365,262 @@ function combineIngredientWithConversion(
  * - `isEmpty`: Whether the grocery list is empty
  * - `hasNeededItems`: Whether there are items that need to be purchased
  */
+
+/**
+ * Type definitions for helper functions to maintain strict typing
+ * without needing to import large external models.
+ */
+interface AggregatedIngredient {
+  name: string;
+  totalQuantity: number;
+  unit: string;
+  fromRecipes: string[];
+}
+
+/**
+ * Step 1: Aggregates ingredients from planned recipes.
+ */
+export function aggregateRecipeIngredients(
+  mealPlanItems: any[]
+): Map<string, AggregatedIngredient> {
+  const ingredientMap = new Map<string, AggregatedIngredient>();
+
+  for (const mealPlanItem of mealPlanItems) {
+    if (!mealPlanItem.recipe) continue;
+
+    const recipe = mealPlanItem.recipe;
+    const servingsMultiplier = mealPlanItem.servings / (recipe.servings || 1);
+
+    for (const ingredient of recipe.ingredients) {
+      const normalizedName = normalizeIngredientName(ingredient.name);
+      const scaledQuantity = ingredient.quantity * servingsMultiplier;
+
+      const existing = ingredientMap.get(normalizedName);
+      if (existing) {
+        // Combine quantities with unit conversion
+        const combined = combineIngredientWithConversion(
+          existing.totalQuantity,
+          existing.unit,
+          scaledQuantity,
+          ingredient.unit
+        );
+
+        if (combined.canCombine) {
+          existing.totalQuantity = combined.quantity;
+          existing.unit = combined.unit;
+        } else {
+          // Units are incompatible; keep existing quantity and unit but log a warning.
+          console.warn("Incompatible units when combining ingredient in grocery list:", {
+            ingredientName: ingredient.name,
+            existingQuantity: existing.totalQuantity,
+            existingUnit: existing.unit,
+            additionalQuantity: scaledQuantity,
+            additionalUnit: ingredient.unit,
+          });
+        }
+        if (!existing.fromRecipes.includes(recipe.title)) {
+          existing.fromRecipes.push(recipe.title);
+        }
+      } else {
+        ingredientMap.set(normalizedName, {
+          name: ingredient.name,
+          totalQuantity: scaledQuantity,
+          unit: ingredient.unit,
+          fromRecipes: [recipe.title],
+        });
+      }
+    }
+  }
+
+  return ingredientMap;
+}
+
+/**
+ * Step 2: Calculates needed quantities by subtracting pantry stock.
+ */
+export function calculateNeededQuantities(
+  ingredientMap: Map<string, AggregatedIngredient>,
+  pantryItems: any[] | null | undefined,
+  attributesMap: Record<string, { isChecked: boolean; isDeleted: boolean }> | null | undefined
+): GroceryItem[] {
+  const groceryItems: GroceryItem[] = [];
+
+  for (const [normalizedName, ingredient] of ingredientMap) {
+    // Collect ALL matching pantry items (not just the first one)
+    const matchingPantryItems: Array<{ quantity: number; unit: string }> = [];
+
+    if (pantryItems) {
+      for (const pantryItem of pantryItems) {
+        const isMatch = isIngredientMatch(
+          pantryItem.name,
+          ingredient.name,
+          pantryItem.synonyms?.map((s: any) => s.synonym)
+        );
+
+        if (isMatch) {
+          matchingPantryItems.push({
+            quantity: pantryItem.quantity,
+            unit: pantryItem.unit,
+          });
+          // Don't break - aggregate all matching items
+        }
+      }
+    }
+
+    // Calculate pantry quantity with unit conversion
+    let pantryQuantityInRecipeUnit = 0;
+    let totalPantryQuantity = 0; // Raw quantity for display
+
+    if (matchingPantryItems.length > 0) {
+      // Try to aggregate quantities using base unit conversion
+      const aggregatedQuantity = aggregateQuantities(matchingPantryItems);
+
+      if (aggregatedQuantity !== null) {
+        // Units are compatible - convert aggregated base unit to recipe unit
+        const recipeBaseUnit = getUnitDimension(ingredient.unit);
+        if (recipeBaseUnit) {
+          // For weight (g base) and volume (ml base), convert from base to recipe unit
+          const recipeInBase = convertToBaseUnit(ingredient.totalQuantity, ingredient.unit);
+          if (recipeInBase !== null && recipeInBase > 0) {
+            // Calculate how much of the recipe requirement is covered
+            const coverageRatio = Math.min(1, aggregatedQuantity / recipeInBase);
+            pantryQuantityInRecipeUnit = ingredient.totalQuantity * coverageRatio;
+            totalPantryQuantity = pantryQuantityInRecipeUnit;
+          } else {
+            // Unknown units, fall back to simple sum
+            totalPantryQuantity = matchingPantryItems.reduce((sum, item) => sum + item.quantity, 0);
+            pantryQuantityInRecipeUnit = totalPantryQuantity;
+          }
+        } else {
+          // Unknown recipe dimension, fall back to simple sum
+          totalPantryQuantity = matchingPantryItems.reduce((sum, item) => sum + item.quantity, 0);
+          pantryQuantityInRecipeUnit = totalPantryQuantity;
+        }
+      } else {
+        // Units are incompatible - use simple sum of first match as fallback
+        const firstMatch = matchingPantryItems[0];
+        if (firstMatch) {
+          totalPantryQuantity = firstMatch.quantity;
+          pantryQuantityInRecipeUnit = totalPantryQuantity;
+        }
+      }
+    }
+
+    const neededQuantity = Math.max(0, ingredient.totalQuantity - pantryQuantityInRecipeUnit);
+    const isCovered = neededQuantity <= 0;
+
+    const attributes = attributesMap?.[normalizedName] || { isChecked: false, isDeleted: false };
+
+    if (attributes.isDeleted) {
+      continue;
+    }
+
+    groceryItems.push({
+      name: ingredient.name,
+      normalizedName,
+      totalQuantity: ingredient.totalQuantity,
+      unit: ingredient.unit,
+      neededQuantity,
+      pantryQuantity: totalPantryQuantity,
+      fromRecipes: ingredient.fromRecipes,
+      category: categorizeIngredient(ingredient.name),
+      isChecked: attributes.isChecked,
+      isCovered,
+    });
+  }
+
+  return groceryItems;
+}
+
+/**
+ * Step 3: Groups grocery items into organized sections.
+ */
+export function groupGroceryItemsIntoSections(groceryList: GroceryItem[]): GroceryListSection[] {
+  const categoryMap = new Map<GroceryCategory, GroceryItem[]>();
+  const purchasedItems: GroceryItem[] = [];
+
+  // Initialize all categories except 'purchased'
+  for (const category of Object.keys(CATEGORY_CONFIG) as GroceryCategory[]) {
+    if (category !== "purchased") {
+      categoryMap.set(category, []);
+    }
+  }
+
+  // Group items - separate checked items into purchased section
+  for (const item of groceryList) {
+    if (item.isChecked) {
+      purchasedItems.push(item);
+    } else {
+      const items = categoryMap.get(item.category) || [];
+      items.push(item);
+      categoryMap.set(item.category, items);
+    }
+  }
+
+  // Convert to sections array
+  const sections: GroceryListSection[] = [];
+
+  for (const [category, items] of categoryMap) {
+    if (items.length > 0) {
+      const config = CATEGORY_CONFIG[category];
+      sections.push({
+        category,
+        title: config.title,
+        emoji: config.emoji,
+        items: items.sort((a, b) => {
+          // Covered items at bottom, then alphabetical
+          if (a.isCovered !== b.isCovered) {
+            return a.isCovered ? 1 : -1;
+          }
+          return a.name.localeCompare(b.name);
+        }),
+      });
+    }
+  }
+
+  // Add purchased section at the end if there are checked items
+  if (purchasedItems.length > 0) {
+    const config = CATEGORY_CONFIG.purchased;
+    sections.push({
+      category: "purchased",
+      title: config.title,
+      emoji: config.emoji,
+      items: purchasedItems.sort((a, b) => a.name.localeCompare(b.name)),
+    });
+  }
+
+  // Sort sections by predefined order (purchased will always be last due to when it's added)
+  const categoryOrder: GroceryCategory[] = [
+    "produce",
+    "dairy",
+    "meat",
+    "pantry",
+    "other",
+    "purchased",
+  ];
+  return sections.sort(
+    (a, b) => categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category)
+  );
+}
+
+/**
+ * Step 4: Computes statistics for the grocery list.
+ */
+export function computeGroceryStats(groceryList: GroceryItem[]) {
+  const totalItems = groceryList.length;
+  const neededItems = groceryList.filter((item) => !item.isCovered).length;
+  const checkedItems = groceryList.filter((item) => item.isChecked).length;
+  const coveredItems = groceryList.filter((item) => item.isCovered).length;
+
+  return {
+    totalItems,
+    neededItems,
+    checkedItems,
+    coveredItems,
+    allCheckedOrCovered: neededItems > 0 && checkedItems >= neededItems - coveredItems,
+  };
+}
+
 export function useGroceryList(startDate?: Date, endDate?: Date) {
   // Use date-filtered query if dates provided, otherwise get all items
   const useDateFiltered = !!startDate && !!endDate;
@@ -392,240 +648,18 @@ export function useGroceryList(startDate?: Date, endDate?: Date) {
       return [];
     }
 
-    // Step 1: Aggregate all ingredients from planned recipes
-    const ingredientMap = new Map<
-      string,
-      {
-        name: string;
-        totalQuantity: number;
-        unit: string;
-        fromRecipes: string[];
-      }
-    >();
-
-    for (const mealPlanItem of mealPlanItems) {
-      if (!mealPlanItem.recipe) continue;
-
-      const recipe = mealPlanItem.recipe;
-      const servingsMultiplier = mealPlanItem.servings / (recipe.servings || 1);
-
-      for (const ingredient of recipe.ingredients) {
-        const normalizedName = normalizeIngredientName(ingredient.name);
-        const scaledQuantity = ingredient.quantity * servingsMultiplier;
-
-        const existing = ingredientMap.get(normalizedName);
-        if (existing) {
-          // Combine quantities with unit conversion
-          const combined = combineIngredientWithConversion(
-            existing.totalQuantity,
-            existing.unit,
-            scaledQuantity,
-            ingredient.unit
-          );
-
-          if (combined.canCombine) {
-            existing.totalQuantity = combined.quantity;
-            existing.unit = combined.unit;
-          } else {
-            // Units are incompatible; keep existing quantity and unit but log a warning.
-            console.warn("Incompatible units when combining ingredient in grocery list:", {
-              ingredientName: ingredient.name,
-              existingQuantity: existing.totalQuantity,
-              existingUnit: existing.unit,
-              additionalQuantity: scaledQuantity,
-              additionalUnit: ingredient.unit,
-            });
-          }
-          if (!existing.fromRecipes.includes(recipe.title)) {
-            existing.fromRecipes.push(recipe.title);
-          }
-        } else {
-          ingredientMap.set(normalizedName, {
-            name: ingredient.name,
-            totalQuantity: scaledQuantity,
-            unit: ingredient.unit,
-            fromRecipes: [recipe.title],
-          });
-        }
-      }
-    }
-
-    // Step 2: Calculate needed quantities (subtract pantry stock with unit conversion)
-    const groceryItems: GroceryItem[] = [];
-
-    for (const [normalizedName, ingredient] of ingredientMap) {
-      // Collect ALL matching pantry items (not just the first one)
-      const matchingPantryItems: Array<{ quantity: number; unit: string }> = [];
-
-      if (pantryItems) {
-        for (const pantryItem of pantryItems) {
-          const isMatch = isIngredientMatch(
-            pantryItem.name,
-            ingredient.name,
-            pantryItem.synonyms?.map((s) => s.synonym)
-          );
-
-          if (isMatch) {
-            matchingPantryItems.push({
-              quantity: pantryItem.quantity,
-              unit: pantryItem.unit,
-            });
-            // Don't break - aggregate all matching items
-          }
-        }
-      }
-
-      // Calculate pantry quantity with unit conversion
-      let pantryQuantityInRecipeUnit = 0;
-      let totalPantryQuantity = 0; // Raw quantity for display
-
-      if (matchingPantryItems.length > 0) {
-        // Try to aggregate quantities using base unit conversion
-        const aggregatedQuantity = aggregateQuantities(matchingPantryItems);
-
-        if (aggregatedQuantity !== null) {
-          // Units are compatible - convert aggregated base unit to recipe unit
-          const recipeBaseUnit = getUnitDimension(ingredient.unit);
-          if (recipeBaseUnit) {
-            // For weight (g base) and volume (ml base), convert from base to recipe unit
-            const recipeInBase = convertToBaseUnit(ingredient.totalQuantity, ingredient.unit);
-            if (recipeInBase !== null && recipeInBase > 0) {
-              // Calculate how much of the recipe requirement is covered
-              const coverageRatio = Math.min(1, aggregatedQuantity / recipeInBase);
-              pantryQuantityInRecipeUnit = ingredient.totalQuantity * coverageRatio;
-              totalPantryQuantity = pantryQuantityInRecipeUnit;
-            } else {
-              // Unknown units, fall back to simple sum
-              totalPantryQuantity = matchingPantryItems.reduce(
-                (sum, item) => sum + item.quantity,
-                0
-              );
-              pantryQuantityInRecipeUnit = totalPantryQuantity;
-            }
-          } else {
-            // Unknown recipe dimension, fall back to simple sum
-            totalPantryQuantity = matchingPantryItems.reduce((sum, item) => sum + item.quantity, 0);
-            pantryQuantityInRecipeUnit = totalPantryQuantity;
-          }
-        } else {
-          // Units are incompatible - use simple sum of first match as fallback
-          const firstMatch = matchingPantryItems[0];
-          if (firstMatch) {
-            totalPantryQuantity = firstMatch.quantity;
-            pantryQuantityInRecipeUnit = totalPantryQuantity;
-          }
-        }
-      }
-
-      const neededQuantity = Math.max(0, ingredient.totalQuantity - pantryQuantityInRecipeUnit);
-      const isCovered = neededQuantity <= 0;
-
-      const attributes = attributesMap?.[normalizedName] || { isChecked: false, isDeleted: false };
-
-      if (attributes.isDeleted) {
-        continue;
-      }
-
-      groceryItems.push({
-        name: ingredient.name,
-        normalizedName,
-        totalQuantity: ingredient.totalQuantity,
-        unit: ingredient.unit,
-        neededQuantity,
-        pantryQuantity: totalPantryQuantity,
-        fromRecipes: ingredient.fromRecipes,
-        category: categorizeIngredient(ingredient.name),
-        isChecked: attributes.isChecked,
-        isCovered,
-      });
-    }
-
-    return groceryItems;
+    const ingredientMap = aggregateRecipeIngredients(mealPlanItems);
+    return calculateNeededQuantities(ingredientMap, pantryItems, attributesMap);
   }, [mealPlanItems, pantryItems, attributesMap]);
 
   // Group items by category, with checked items in a trailing Purchased section
-  const sections = useMemo((): GroceryListSection[] => {
-    const categoryMap = new Map<GroceryCategory, GroceryItem[]>();
-    const purchasedItems: GroceryItem[] = [];
-
-    // Initialize all categories except 'purchased'
-    for (const category of Object.keys(CATEGORY_CONFIG) as GroceryCategory[]) {
-      if (category !== "purchased") {
-        categoryMap.set(category, []);
-      }
-    }
-
-    // Group items - separate checked items into purchased section
-    for (const item of groceryList) {
-      if (item.isChecked) {
-        purchasedItems.push(item);
-      } else {
-        const items = categoryMap.get(item.category) || [];
-        items.push(item);
-        categoryMap.set(item.category, items);
-      }
-    }
-
-    // Convert to sections array
-    const sections: GroceryListSection[] = [];
-
-    for (const [category, items] of categoryMap) {
-      if (items.length > 0) {
-        const config = CATEGORY_CONFIG[category];
-        sections.push({
-          category,
-          title: config.title,
-          emoji: config.emoji,
-          items: items.sort((a, b) => {
-            // Covered items at bottom, then alphabetical
-            if (a.isCovered !== b.isCovered) {
-              return a.isCovered ? 1 : -1;
-            }
-            return a.name.localeCompare(b.name);
-          }),
-        });
-      }
-    }
-
-    // Add purchased section at the end if there are checked items
-    if (purchasedItems.length > 0) {
-      const config = CATEGORY_CONFIG.purchased;
-      sections.push({
-        category: "purchased",
-        title: config.title,
-        emoji: config.emoji,
-        items: purchasedItems.sort((a, b) => a.name.localeCompare(b.name)),
-      });
-    }
-
-    // Sort sections by predefined order (purchased will always be last due to when it's added)
-    const categoryOrder: GroceryCategory[] = [
-      "produce",
-      "dairy",
-      "meat",
-      "pantry",
-      "other",
-      "purchased",
-    ];
-    return sections.sort(
-      (a, b) => categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category)
-    );
+  const sections = useMemo(() => {
+    return groupGroceryItemsIntoSections(groceryList);
   }, [groceryList]);
 
   // Compute statistics
   const stats = useMemo(() => {
-    const totalItems = groceryList.length;
-    const neededItems = groceryList.filter((item) => !item.isCovered).length;
-    const checkedItems = groceryList.filter((item) => item.isChecked).length;
-    const coveredItems = groceryList.filter((item) => item.isCovered).length;
-
-    return {
-      totalItems,
-      neededItems,
-      checkedItems,
-      coveredItems,
-      allCheckedOrCovered: neededItems > 0 && checkedItems >= neededItems - coveredItems,
-    };
+    return computeGroceryStats(groceryList);
   }, [groceryList]);
 
   return {
