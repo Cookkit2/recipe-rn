@@ -39,7 +39,7 @@ export default function ThemeSection() {
       // Persist to MMKV and update UI
       storage.set(PREF_COLOR_SCHEME_KEY, scheme);
       Uniwind.setTheme(scheme);
-      setAndroidNavigationBar(theme === "dark" ? "dark" : "light");
+      setAndroidNavigationBar(theme as "light" | "dark");
     },
     [theme]
   );
