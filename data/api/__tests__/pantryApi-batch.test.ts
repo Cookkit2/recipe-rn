@@ -54,6 +54,13 @@ describe("pantryApi.addPantryItems performance", () => {
 
   it("should add multiple items", async () => {
     const items = Array.from({ length: 5 }).map((_, i) => ({
+      steps_to_store: [] as any,
+      image_url: "",
+      category: "",
+      background_color: "",
+      category_id: "",
+      expiration_date: "",
+      price: 0,
       name: `Item ${i}`,
       quantity: 1,
       unit: "pcs",

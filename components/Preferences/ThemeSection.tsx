@@ -52,7 +52,7 @@ export default function ThemeSection() {
         </View>
         <SegmentedButtons
           buttons={THEME_BUTTONS}
-          value={themePreference as any}
+          value={themePreference as "system" | "light" | "dark" | undefined}
           onValueChange={handleSelectTheme}
         />
       </CardContent>
