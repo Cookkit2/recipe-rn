@@ -6,6 +6,7 @@
  */
 
 import * as Notifications from "expo-notifications";
+import * as Crypto from "expo-crypto";
 import { AppState, type AppStateStatus } from "react-native";
 import { log } from "~/utils/logger";
 import { storage } from "~/data";
@@ -297,7 +298,7 @@ class TimerService {
    */
   async createTimer(input: TimerCreateInput): Promise<Timer> {
     const timer: Timer = {
-      id: `timer_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      id: `timer_${Date.now()}_${Crypto.randomUUID()}`,
       name: input.name,
       durationSeconds: input.durationSeconds,
       remainingSeconds: input.durationSeconds,
