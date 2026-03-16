@@ -373,8 +373,8 @@ export const mealPlanApi = {
         let recipeData = null;
         if (recipe) {
           const ingredients =
-            recipe.ingredients != null && typeof recipe.ingredients.query === "function"
-              ? await recipe.ingredients.query().fetch()
+            recipe.ingredients != null && typeof recipe.ingredients.fetch === "function"
+              ? await recipe.ingredients.fetch()
               : [];
           recipeData = {
             id: recipe.id,

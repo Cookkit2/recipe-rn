@@ -1,4 +1,4 @@
-import { Collection, Model } from "@nozbe/watermelondb";
+import { Query, Model } from "@nozbe/watermelondb";
 import { field, date, children, writer } from "@nozbe/watermelondb/decorators";
 import type { Associations } from "@nozbe/watermelondb/Model";
 import type RecipeStep from "./RecipeStep";
@@ -48,9 +48,9 @@ export default class Recipe extends Model {
   @field("is_favorite") isFavorite!: boolean; // NEW: User can favorite recipes
   @field("type") type?: RecipeType;
 
-  @children("recipe_step") steps!: Collection<RecipeStep>;
-  @children("recipe_ingredient") ingredients!: Collection<RecipeIngredient>;
-  @children("cooking_history") cookingHistory!: Collection<CookingHistory>;
+  @children("recipe_step") steps!: Query<RecipeStep>;
+  @children("recipe_ingredient") ingredients!: Query<RecipeIngredient>;
+  @children("cooking_history") cookingHistory!: Query<CookingHistory>;
 
   @date("created_at") createdAt!: Date;
   @date("updated_at") updatedAt!: Date;

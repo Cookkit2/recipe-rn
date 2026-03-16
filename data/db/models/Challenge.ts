@@ -1,4 +1,4 @@
-import { Model } from "@nozbe/watermelondb";
+import { Model, Query } from "@nozbe/watermelondb";
 import { field, date, children, writer } from "@nozbe/watermelondb/decorators";
 import type { Associations } from "@nozbe/watermelondb/Model";
 import UserChallenge from "./UserChallenge";
@@ -30,7 +30,7 @@ export default class Challenge extends Model {
   @field("end_date") endDate!: number; // Timestamp when challenge expires
   @field("xp") xp?: number; // XP reward for completion
 
-  @children("user_challenges") userChallenges!: UserChallenge[];
+  @children("user_challenges") userChallenges!: Query<UserChallenge>;
 
   @date("created_at") createdAt!: Date;
   @date("updated_at") updatedAt!: Date;

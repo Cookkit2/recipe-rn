@@ -1,4 +1,4 @@
-import { Model, Collection } from "@nozbe/watermelondb";
+import { Model, Query } from "@nozbe/watermelondb";
 import { field, date, writer, children } from "@nozbe/watermelondb/decorators";
 import type { Associations } from "@nozbe/watermelondb/Model";
 import type StockCategory from "./StockCategory";
@@ -16,7 +16,7 @@ export default class IngredientCategory extends Model {
   @field("name") name!: string;
   @field("synced_at") syncedAt!: number;
 
-  @children("stock_category") stockCategories!: Collection<StockCategory>;
+  @children("stock_category") stockCategories!: Query<StockCategory>;
 
   @date("created_at") createdAt!: Date;
   @date("updated_at") updatedAt!: Date;

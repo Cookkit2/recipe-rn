@@ -531,7 +531,7 @@ const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
   try {
     // Add timeout to prevent hanging
     const synonymRecords = (await Promise.race([
-      stock.synonyms.query().fetch(),
+      stock.synonyms.fetch(),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("Synonym fetch timeout")), 3000)
       ),
@@ -546,7 +546,7 @@ const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
   let categories: Array<{ id: string; name: string }> = [];
   try {
     const stockCategoryRecords = (await Promise.race([
-      stock.stockCategories.query().fetch(),
+      stock.stockCategories.fetch(),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("StockCategory fetch timeout")), 3000)
       ),
