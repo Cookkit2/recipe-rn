@@ -208,10 +208,10 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
 
     // Group waste events by date (day granularity)
     const wasteDates = new Set<number>();
-    const d = new Date();
     for (const record of records) {
-      d.setTime(record.wasteDate);
-      wasteDates.add(d.setHours(0, 0, 0, 0));
+      const date = new Date(record.wasteDate);
+      const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+      wasteDates.add(dayStart);
     }
 
     const sortedWasteDates = Array.from(wasteDates).sort((a, b) => a - b);
@@ -281,24 +281,20 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
     // Group by time period
     const timeMap = new Map<number, { count: number; quantity: number; cost: number }>();
 
-    const d = new Date();
     for (const record of records) {
-      d.setTime(record.wasteDate);
+      const date = new Date(record.wasteDate);
       let key: number;
 
       if (groupBy === "day") {
         // Group by day (start of day)
-        key = d.setHours(0, 0, 0, 0);
+        key = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
       } else if (groupBy === "week") {
         // Group by week (start of week - Sunday)
-        const dayOfWeek = d.getDay();
-        const date = d.getDate();
-        d.setDate(date - dayOfWeek);
-        key = d.setHours(0, 0, 0, 0);
+        const dayOfWeek = date.getDay();
+        key = new Date(date.getFullYear(), date.getMonth(), date.getDate() - dayOfWeek).getTime();
       } else {
         // Group by month (start of month)
-        d.setDate(1);
-        key = d.setHours(0, 0, 0, 0);
+        key = new Date(date.getFullYear(), date.getMonth(), 1).getTime();
       }
 
       const existing = timeMap.get(key);
