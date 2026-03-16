@@ -263,34 +263,19 @@ export const mealPlanApi = {
 
           const itemsToHide: { name: string; isDeleted: boolean }[] = [];
 
-          // Pre-compute map for O(1) exact name and synonym lookups
-          const stockMap = new Map<string, (typeof stockItems)[0]>();
-          for (const item of stockItems) {
-            stockMap.set(item.name.toLowerCase().trim(), item);
-            if (item.synonyms && item.synonyms.length > 0) {
-              for (const syn of item.synonyms) {
-                stockMap.set(syn.toLowerCase().trim(), item);
-              }
-            }
-          }
-
           for (const ingredient of result.recipe.ingredients) {
             const baseServings = result.recipe.servings || 1;
             const neededQuantity = (ingredient.quantity / baseServings) * result.servings;
 
-            // 1. Try O(1) fast path first
-            const ingredientKey = ingredient.name.toLowerCase().trim();
-            let matchingStock = stockMap.get(ingredientKey);
+            const matchingStock = stockItems.find((p) =>
+              isIngredientMatch(p.name, ingredient.name, p.synonyms)
+            );
 
-            // 2. Fallback to O(N) fuzzy search if not found
-            if (!matchingStock) {
-              matchingStock = stockItems.find((p) =>
-                isIngredientMatch(p.name, ingredient.name, p.synonyms)
-              );
-            }
-
-            if (matchingStock && matchingStock.quantity >= neededQuantity) {
-              itemsToHide.push({ name: ingredient.name, isDeleted: true });
+            if (matchingStock) {
+              // Check if we have enough
+              if (matchingStock.quantity >= neededQuantity) {
+                itemsToHide.push({ name: ingredient.name, isDeleted: true });
+              }
             }
           }
 
@@ -341,31 +326,13 @@ export const mealPlanApi = {
 
           const itemsToHide: { name: string; isDeleted: boolean }[] = [];
 
-          // Pre-compute map for O(1) exact name and synonym lookups
-          const stockMap = new Map<string, (typeof stockItems)[0]>();
-          for (const item of stockItems) {
-            stockMap.set(item.name.toLowerCase().trim(), item);
-            if (item.synonyms && item.synonyms.length > 0) {
-              for (const syn of item.synonyms) {
-                stockMap.set(syn.toLowerCase().trim(), item);
-              }
-            }
-          }
-
           for (const ingredient of result.recipe.ingredients) {
             const baseServings = result.recipe.servings || 1;
             const neededQuantity = (ingredient.quantity / baseServings) * result.servings;
 
-            // 1. Try O(1) fast path first
-            const ingredientKey = ingredient.name.toLowerCase().trim();
-            let matchingStock = stockMap.get(ingredientKey);
-
-            // 2. Fallback to O(N) fuzzy search if not found
-            if (!matchingStock) {
-              matchingStock = stockItems.find((p) =>
-                isIngredientMatch(p.name, ingredient.name, p.synonyms)
-              );
-            }
+            const matchingStock = stockItems.find((p) =>
+              isIngredientMatch(p.name, ingredient.name, p.synonyms)
+            );
 
             if (matchingStock && matchingStock.quantity >= neededQuantity) {
               itemsToHide.push({ name: ingredient.name, isDeleted: true });

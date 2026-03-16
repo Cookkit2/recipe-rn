@@ -53,12 +53,12 @@ describe("pantryApi.addPantryItems performance", () => {
   });
 
   it("should add multiple items", async () => {
-    const items: any[] = Array.from({ length: 5 }).map((_, i) => ({
+    const items = Array.from({ length: 5 }).map((_, i) => ({
       name: `Item ${i}`,
       quantity: 1,
       unit: "pcs",
       type: "pantry" as any,
-    } as any));
+    }));
 
     await pantryApi.addPantryItems(items as any);
 
