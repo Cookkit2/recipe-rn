@@ -149,7 +149,9 @@ describe("Text Formatter Utils - Text Manipulation", () => {
     });
 
     it("should truncate string and append custom suffix", () => {
-      expect(truncateWords("This is a long string", 3, " [read more]")).toBe("This is a [read more]");
+      expect(truncateWords("This is a long string", 3, " [read more]")).toBe(
+        "This is a [read more]"
+      );
     });
 
     it("should return the original string if the number of words is equal to the limit", () => {
