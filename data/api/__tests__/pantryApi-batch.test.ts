@@ -65,9 +65,9 @@ describe("pantryApi.addPantryItems performance", () => {
       quantity: 1,
       unit: "pcs",
       type: "pantry" as any,
-    } as any));
+    }));
 
-    await pantryApi.addPantryItems(items as any);
+    await pantryApi.addPantryItems(items);
 
     expect(stocks.length).toBeGreaterThan(0);
     expect(writeCount).toBe(1);
