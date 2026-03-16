@@ -9,6 +9,8 @@
 import { AchievementRepository } from "../db/repositories/AchievementRepository";
 import { UserAchievementRepository } from "../db/repositories/UserAchievementRepository";
 import { CookingHistoryRepository } from "../db/repositories/CookingHistoryRepository";
+import { StockRepository } from "../db/repositories/StockRepository";
+import { IngredientCategoryRepository } from "../db/repositories/IngredientCategoryRepository";
 import { StreakService } from "./StreakService";
 import type { AchievementRequirement, AchievementProgress } from "~/types/achievements";
 import { log } from "~/utils/logger";
@@ -35,12 +37,16 @@ export class AchievementService {
   private userAchievementRepo: UserAchievementRepository;
   private cookingHistoryRepo: CookingHistoryRepository;
   private streakService: StreakService;
+  private stockRepo: StockRepository;
+  private ingredientCategoryRepo: IngredientCategoryRepository;
 
   constructor() {
     this.achievementRepo = new AchievementRepository();
     this.userAchievementRepo = new UserAchievementRepository();
     this.cookingHistoryRepo = new CookingHistoryRepository();
     this.streakService = new StreakService();
+    this.stockRepo = new StockRepository();
+    this.ingredientCategoryRepo = new IngredientCategoryRepository();
   }
 
   /**
@@ -375,14 +381,18 @@ export class AchievementService {
           return allCooks.length;
 
         case "ingredients_tracked":
-          // This would need to query the stock table - placeholder for now
-          // TODO: Implement when stock repository is available
-          return 0;
+          // Total ingredients tracked in stock
+          return await this.stockRepo.count();
 
-        case "spices_tracked":
-          // This would need to query the stock table filtered by spice type - placeholder
-          // TODO: Implement when stock repository is available
-          return 0;
+        case "spices_tracked": {
+          // Total spices tracked in stock
+          const spicesCategory = await this.ingredientCategoryRepo.findByName("Spices");
+          if (!spicesCategory) {
+            return 0;
+          }
+          const spicesStock = await this.stockRepo.getStockByCategory(spicesCategory.id);
+          return spicesStock.length;
+        }
 
         case "ingredients_used_before_expiry":
           // This would need to track ingredient usage before expiry - placeholder
