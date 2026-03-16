@@ -59,35 +59,45 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
 
       if (!mappings.length) return null;
 
-      // Get the recipe and verify it's linked to the base recipe
+      // Get the recipes and verify they are linked to the base recipe
       const recipeCollection = database.collections.get<Recipe>("recipe");
 
+      const recipeIds = mappings.map((m) => m.recipeId);
+      if (recipeIds.length === 0) return null;
+
+      const CHUNK_SIZE = 500;
+      const recipesMap = new Map<string, Recipe>();
+
+      for (let i = 0; i < recipeIds.length; i += CHUNK_SIZE) {
+        const chunk = recipeIds.slice(i, i + CHUNK_SIZE);
+        const chunkRecipes = await recipeCollection.query(Q.where("id", Q.oneOf(chunk))).fetch();
+
+        for (const r of chunkRecipes) {
+          recipesMap.set(r.id, r);
+        }
+      }
+
       for (const mapping of mappings) {
-        try {
-          const recipe = await recipeCollection.find(mapping.recipeId);
+        const recipe = recipesMap.get(mapping.recipeId);
 
-          // Check if this recipe is a tailored version of the base recipe
-          // We store baseRecipeId in the recipe's sourceUrl field for tailored recipes
-          if (recipe && recipe.type === RecipeType.TAILORED && recipe.sourceUrl === baseRecipeId) {
-            const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
-            const ingredientsCollection =
-              database.collections.get<RecipeIngredient>("recipe_ingredient");
+        // Check if this recipe is a tailored version of the base recipe
+        // We store baseRecipeId in the recipe's sourceUrl field for tailored recipes
+        if (recipe && recipe.type === RecipeType.TAILORED && recipe.sourceUrl === baseRecipeId) {
+          const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
+          const ingredientsCollection =
+            database.collections.get<RecipeIngredient>("recipe_ingredient");
 
-            const [steps, ingredients] = await Promise.all([
-              stepsCollection.query(Q.where("recipe_id", recipe.id)).fetch(),
-              ingredientsCollection.query(Q.where("recipe_id", recipe.id)).fetch(),
-            ]);
+          const [steps, ingredients] = await Promise.all([
+            stepsCollection.query(Q.where("recipe_id", recipe.id)).fetch(),
+            ingredientsCollection.query(Q.where("recipe_id", recipe.id)).fetch(),
+          ]);
 
-            return {
-              mapping,
-              recipe,
-              steps: steps.sort((a, b) => a.step - b.step),
-              ingredients,
-            };
-          }
-        } catch {
-          // Recipe not found, continue to next mapping
-          continue;
+          return {
+            mapping,
+            recipe,
+            steps: steps.sort((a, b) => a.step - b.step),
+            ingredients,
+          };
         }
       }
 
