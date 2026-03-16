@@ -45,3 +45,6 @@ export const COOKING_TIMERS_KEY = "cooking:timers";
 
 // EXPIRING RECIPES
 export const EXPIRING_RECIPES_DISMISSED_AT_KEY = "expiring_recipes:dismissed_at";
+
+// SOCIAL SHARING
+export const SOCIAL_SHARES_COUNT_KEY = "social:shares_count";
