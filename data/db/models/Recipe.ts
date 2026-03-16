@@ -4,6 +4,7 @@ import type { Associations } from "@nozbe/watermelondb/Model";
 import type RecipeStep from "./RecipeStep";
 import type RecipeIngredient from "./RecipeIngredient";
 import type CookingHistory from "./CookingHistory";
+import { safeJsonParse } from "~/utils/json-parsing";
 
 export enum RecipeType {
   STANDARD = "standard",
@@ -57,7 +58,7 @@ export default class Recipe extends Model {
 
   // Computed property for tags
   get tags(): string[] {
-    return this._tags ? JSON.parse(this._tags) : [];
+    return this._tags ? safeJsonParse<string[]>(this._tags, []) : [];
   }
 
   set tags(value: string[]) {

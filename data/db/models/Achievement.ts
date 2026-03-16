@@ -3,6 +3,7 @@ import { field, date, children, writer } from "@nozbe/watermelondb/decorators";
 import type { Associations } from "@nozbe/watermelondb/Model";
 import UserAchievement from "./UserAchievement";
 import type { AchievementRequirement, AchievementReward } from "~/types/achievements";
+import { safeJsonParse } from "~/utils/json-parsing";
 
 export interface AchievementModelData {
   type: string;
@@ -41,12 +42,17 @@ export default class Achievement extends Model {
 
   // Computed property for parsed requirement
   get parsedRequirement(): AchievementRequirement {
-    return JSON.parse(this.requirement);
+    return safeJsonParse<AchievementRequirement>(this.requirement, {
+      type: "count",
+      target: 0,
+    });
   }
 
   // Computed property for parsed reward
   get parsedReward(): AchievementReward | undefined {
-    return this.reward ? JSON.parse(this.reward) : undefined;
+    return this.reward
+      ? safeJsonParse<AchievementReward>(this.reward, { type: "badge", value: "Unknown" })
+      : undefined;
   }
 
   // Check if achievement is hidden
