@@ -47,12 +47,20 @@ export default class Challenge extends Model {
 
   // Computed property for parsed requirement
   get parsedRequirement(): ChallengeRequirement {
-    return JSON.parse(this.requirement);
+    try {
+      return JSON.parse(this.requirement);
+    } catch (e) {
+      return { type: "cook_recipes", target: 1, description: "Unknown requirement" };
+    }
   }
 
   // Computed property for parsed reward
   get parsedReward(): ChallengeReward {
-    return JSON.parse(this.reward);
+    try {
+      return JSON.parse(this.reward);
+    } catch (e) {
+      return { xp: 0 };
+    }
   }
 
   // Check if challenge is daily
