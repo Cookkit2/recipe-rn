@@ -2,6 +2,7 @@
 import { Q } from "@nozbe/watermelondb";
 import UserAchievement, { type UserAchievementData } from "../models/UserAchievement";
 import { BaseRepository, type SearchOptions } from "./BaseRepository";
+import Achievement from "../models/Achievement";
 import { database } from "../database";
 
 export interface UserAchievementSearchOptions extends SearchOptions {
@@ -159,16 +160,32 @@ export class UserAchievementRepository extends BaseRepository<UserAchievement> {
   }
 
   // Get total XP earned from unlocked achievements
-  // Note: This requires joining with achievement table to get XP values
+  // Note: Optimized to fetch all related achievements in a single query (batch fetch) instead of N+1 queries.
   async getTotalXPEarned(): Promise<number> {
     const unlockedAchievements = await this.getUnlockedAchievements();
-    let totalXP = 0;
+    if (unlockedAchievements.length === 0) return 0;
 
+    // Collect all unique achievement IDs
+    const achievementIds = [...new Set(unlockedAchievements.map((ua) => ua.achievementId))];
+
+    // Fetch all related achievements in one go
+    const achievements = await this.collection.database.collections
+      .get<Achievement>(Achievement.table)
+      .query(Q.where("id", Q.oneOf(achievementIds)))
+      .fetch();
+
+    // Create a map for fast O(1) lookups
+    const achievementMap = new Map<string, Achievement>();
+    for (const achievement of achievements) {
+      achievementMap.set(achievement.id, achievement);
+    }
+
+    // Calculate total XP
+    let totalXP = 0;
     for (const userAchievement of unlockedAchievements) {
-      // Need to fetch the related achievement to get XP
-      const achievement: any = await (userAchievement as any).achievement.fetch();
+      const achievement = achievementMap.get(userAchievement.achievementId);
       if (achievement) {
-        totalXP += achievement.xpValue ?? 0;
+        totalXP += achievement.xpValue;
       }
     }
 

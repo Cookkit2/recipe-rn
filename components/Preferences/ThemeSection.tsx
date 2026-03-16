@@ -32,7 +32,7 @@ const THEME_BUTTONS: GroupButton<Theme>[] = [
 
 export default function ThemeSection() {
   const { theme, hasAdaptiveThemes } = useUniwind();
-  const themePreference = hasAdaptiveThemes ? "system" : theme;
+  const themePreference = hasAdaptiveThemes ? "system" : theme === "dark" ? "dark" : "light";
 
   const handleSelectTheme = useCallback(
     (scheme: "light" | "dark" | "system") => {
@@ -52,7 +52,7 @@ export default function ThemeSection() {
         </View>
         <SegmentedButtons
           buttons={THEME_BUTTONS}
-          value={themePreference as "system" | "light" | "dark" | undefined}
+          value={themePreference as Theme}
           onValueChange={handleSelectTheme}
         />
       </CardContent>

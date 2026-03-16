@@ -51,9 +51,13 @@ describe("pantryApi batch operations", () => {
       quantity: 1,
       unit: "pcs",
       type: "pantry" as any,
-    } as any));
+      steps_to_store: [],
+      image_url: null,
+      category: null,
+      background_color: null,
+    }));
 
-    await pantryApi.addPantryItems(items);
+    await pantryApi.addPantryItems(items as any);
 
     const stockCollection = database.collections.get("stock");
     expect(stockCollection.prepareCreate).toHaveBeenCalledTimes(5);
