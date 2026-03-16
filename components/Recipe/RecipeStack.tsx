@@ -21,7 +21,7 @@ export default function RecipeStack({ recipes }: { recipes: Recipe[] }) {
 
   const activeRecipe = recipes[activeIndex] ?? recipes[0];
 
-  const allImages = recipes.map((recipe) => recipe.imageUrl);
+  const allItems = recipes.map((recipe) => ({ img: recipe.imageUrl, title: recipe.title }));
 
   const textAnim = (delayMs: number = 0) =>
     FadeInDown.duration(300).easing(Easing.out(Easing.ease)).delay(delayMs);
@@ -35,7 +35,7 @@ export default function RecipeStack({ recipes }: { recipes: Recipe[] }) {
         <Carousel
           ref={ref}
           autoPlayInterval={2000}
-          data={allImages}
+          data={allItems}
           width={PAGE_WIDTH}
           height={PAGE_HEIGHT}
           loop={true}
@@ -47,7 +47,7 @@ export default function RecipeStack({ recipes }: { recipes: Recipe[] }) {
             parallaxScrollingScale: 0.9,
             parallaxScrollingOffset: 50,
           }}
-          renderItem={({ index, item }) => <Item key={index} img={item} />}
+          renderItem={({ index, item }) => <Item key={index} img={item.img} title={item.title} />}
           onProgressChange={progress}
           onScrollEnd={(index) => setActiveIndex(index)}
           onSnapToItem={(index) => setActiveIndex(index)}
@@ -83,7 +83,7 @@ export default function RecipeStack({ recipes }: { recipes: Recipe[] }) {
   );
 }
 
-const Item: React.FC<{ img: string }> = ({ img }) => {
+const Item: React.FC<{ img: string; title?: string }> = ({ img, title }) => {
   const width = window.width * 0.7;
   const height = window.height * 0.5;
 
@@ -101,7 +101,12 @@ const Item: React.FC<{ img: string }> = ({ img }) => {
           },
         ]}
       >
-        <Image source={{ uri: img }} contentFit="cover" style={styles.image} />
+        <Image
+          source={{ uri: img }}
+          contentFit="cover"
+          style={styles.image}
+          accessibilityLabel={title ? `Image of ${title}` : "Recipe image"}
+        />
       </View>
     </Animated.View>
   );
