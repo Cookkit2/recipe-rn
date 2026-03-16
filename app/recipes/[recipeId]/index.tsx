@@ -40,6 +40,7 @@ import type { Recipe } from "~/types/Recipe";
 import { useUniwind } from "uniwind";
 import { Button } from "~/components/ui/button";
 import { useIngredientMatcher } from "~/hooks/useIngredientMatcher";
+import { titleCase } from "~/utils/text-formatter";
 
 const AnimatedH1 = Animated.createAnimatedComponent(H1);
 const AnimatedImage = Animated.createAnimatedComponent(Image);
