@@ -15,6 +15,18 @@ describe("Text Formatter Utils - Capitalization", () => {
       expect(capitalize("hElLo")).toBe("Hello");
     });
 
+
+    it("should handle single characters", () => {
+      expect(capitalize("a")).toBe("A");
+      expect(capitalize("Z")).toBe("Z");
+    });
+
+    it("should handle strings starting with non-alphabetic characters", () => {
+      expect(capitalize("1hello")).toBe("1hello");
+      expect(capitalize("!hello")).toBe("!hello");
+      expect(capitalize(" hello")).toBe(" hello");
+    });
+
     it("should return empty string for empty or null input", () => {
       expect(capitalize("")).toBe("");
       expect(capitalize(null as any)).toBe("");
