@@ -1,5 +1,10 @@
 import { jest, describe, beforeEach, it, expect } from "@jest/globals";
-import { sanitizeForDatabase, sanitizeSearchTerm, sanitizeEmail } from "../input-sanitization";
+import {
+  sanitizeForDatabase,
+  sanitizeSearchTerm,
+  sanitizeEmail,
+  sanitizeNumber,
+} from "../input-sanitization";
 
 describe("sanitizeForDatabase", () => {
   it("removes SQL keywords and prevents injection patterns", () => {
@@ -31,5 +36,46 @@ describe("sanitizeEmail", () => {
 
   it("rejects invalid email", () => {
     expect(sanitizeEmail("not-an-email")).toBe("");
+  });
+});
+
+describe("sanitizeNumber", () => {
+  it("handles null, undefined, and empty string", () => {
+    expect(sanitizeNumber(null as any)).toBeNull();
+    expect(sanitizeNumber(undefined as any)).toBeNull();
+    expect(sanitizeNumber("")).toBeNull();
+  });
+
+  it("handles valid numbers", () => {
+    expect(sanitizeNumber(0)).toBe(0);
+    expect(sanitizeNumber(42)).toBe(42);
+    expect(sanitizeNumber(-42)).toBe(-42);
+    expect(sanitizeNumber(3.14)).toBe(3.14);
+  });
+
+  it("handles valid numeric strings", () => {
+    expect(sanitizeNumber("0")).toBe(0);
+    expect(sanitizeNumber("42")).toBe(42);
+    expect(sanitizeNumber("-42")).toBe(-42);
+    expect(sanitizeNumber("3.14")).toBe(3.14);
+  });
+
+  it("rejects invalid numeric strings", () => {
+    expect(sanitizeNumber("abc")).toBeNull();
+    expect(sanitizeNumber("12abc")).toBeNull();
+    expect(sanitizeNumber("abc12")).toBeNull();
+    expect(sanitizeNumber("12 34")).toBeNull();
+  });
+
+  it("rejects NaN and Infinity", () => {
+    expect(sanitizeNumber(NaN)).toBeNull();
+    expect(sanitizeNumber(Infinity)).toBeNull();
+    expect(sanitizeNumber(-Infinity)).toBeNull();
+  });
+
+  it("enforces min and max options", () => {
+    expect(sanitizeNumber(10, { min: 5, max: 15 })).toBe(10);
+    expect(sanitizeNumber(4, { min: 5, max: 15 })).toBeNull();
+    expect(sanitizeNumber(16, { min: 5, max: 15 })).toBeNull();
   });
 });
