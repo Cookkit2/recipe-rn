@@ -75,6 +75,9 @@ describe("UserChallengeRepository", () => {
       const mockCompletedChallenges = Array.from({ length: 100 }, (_, i) => ({
         id: `uc${i}`,
         challengeId: `c${i}`,
+        challenge: {
+          fetch: jest.fn().mockResolvedValue({ xpValue: 10 }),
+        },
       }));
 
       repository.getCompletedChallenges = jest.fn().mockResolvedValue(mockCompletedChallenges);

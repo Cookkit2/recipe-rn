@@ -1,6 +1,6 @@
-// @ts-nocheck
 import { useState, useCallback } from "react";
 import { Alert } from "react-native";
+import { Collection } from "@nozbe/watermelondb";
 import { database } from "~/data/db/database";
 import type Recipe from "~/data/db/models/Recipe";
 import type RecipeIngredient from "~/data/db/models/RecipeIngredient";
@@ -41,6 +41,91 @@ export interface UseRecipeEditOptions {
   onSave?: () => void;
   onSaveAsCopy?: () => void;
   onCancel?: () => void;
+}
+
+async function updateRecipeDetails(recipe: Recipe, workingCopy: EditableRecipe) {
+  await recipe.updateRecipe({
+    title: workingCopy.title,
+    description: workingCopy.description,
+    imageUrl: workingCopy.imageUrl,
+    prepMinutes: workingCopy.prepMinutes,
+    cookMinutes: workingCopy.cookMinutes,
+    difficultyStars: workingCopy.difficultyStars,
+    servings: workingCopy.servings,
+    tags: workingCopy.tags,
+  });
+}
+
+async function syncRecipeIngredients(
+  recipe: Recipe,
+  workingCopy: EditableRecipe,
+  ingredientsCollection: Collection<RecipeIngredient>
+) {
+  // Delete removed ingredients
+  const existingIngredients = await recipe.ingredients.query().fetch();
+  for (const existing of existingIngredients) {
+    if (!workingCopy.ingredients.some((ing) => ing.id === existing.id)) {
+      await existing.destroyPermanently();
+    }
+  }
+
+  // Update or create ingredients
+  for (const ingredient of workingCopy.ingredients) {
+    if (ingredient.id) {
+      // Update existing
+      const existing = await ingredientsCollection.find(ingredient.id);
+      await existing.updateRecipeIngredient({
+        name: ingredient.name,
+        quantity: ingredient.quantity,
+        unit: ingredient.unit,
+        notes: ingredient.notes,
+      });
+    } else {
+      // Create new
+      await ingredientsCollection.create((ing) => {
+        ing.recipeId = recipe.id;
+        ing.name = ingredient.name;
+        ing.quantity = ingredient.quantity;
+        ing.unit = ingredient.unit;
+        ing.notes = ingredient.notes;
+      });
+    }
+  }
+}
+
+async function syncRecipeSteps(
+  recipe: Recipe,
+  workingCopy: EditableRecipe,
+  stepsCollection: Collection<RecipeStep>
+) {
+  // Delete removed steps
+  const existingSteps = await recipe.steps.query().fetch();
+  for (const existing of existingSteps) {
+    if (!workingCopy.steps.some((step) => step.id === existing.id)) {
+      await existing.destroyPermanently();
+    }
+  }
+
+  // Update or create steps
+  for (const step of workingCopy.steps) {
+    if (step.id) {
+      // Update existing
+      const existing = await stepsCollection.find(step.id);
+      await existing.updateStep({
+        step: step.step,
+        title: step.title,
+        description: step.description,
+      });
+    } else {
+      // Create new
+      await stepsCollection.create((s) => {
+        s.step = step.step;
+        s.title = step.title;
+        s.description = step.description;
+        s.recipeId = recipe.id;
+      });
+    }
+  }
 }
 
 export function useRecipeEdit(recipe: Recipe | null, options: UseRecipeEditOptions = {}) {
@@ -125,7 +210,7 @@ export function useRecipeEdit(recipe: Recipe | null, options: UseRecipeEditOptio
       setWorkingCopy((prev) => {
         if (!prev) return prev;
         const newIngredients = [...prev.ingredients];
-        newIngredients[index] = { ...newIngredients[index], ...updates };
+        newIngredients[index] = { ...newIngredients[index], ...updates } as EditableIngredient;
         setHasUnsavedChanges(true);
         return { ...prev, ingredients: newIngredients };
       });
@@ -142,7 +227,10 @@ export function useRecipeEdit(recipe: Recipe | null, options: UseRecipeEditOptio
       setHasUnsavedChanges(true);
       return {
         ...prev,
-        ingredients: [...prev.ingredients, { name: "", quantity: 1, unit: "unit" }],
+        ingredients: [
+          ...prev.ingredients,
+          { name: "", quantity: 1, unit: "unit" } as EditableIngredient,
+        ],
       };
     });
   }, [workingCopy]);
@@ -170,7 +258,7 @@ export function useRecipeEdit(recipe: Recipe | null, options: UseRecipeEditOptio
       setWorkingCopy((prev) => {
         if (!prev) return prev;
         const newSteps = [...prev.steps];
-        newSteps[index] = { ...newSteps[index], ...updates };
+        newSteps[index] = { ...newSteps[index], ...updates } as EditableStep;
         setHasUnsavedChanges(true);
         return { ...prev, steps: newSteps };
       });
@@ -188,7 +276,7 @@ export function useRecipeEdit(recipe: Recipe | null, options: UseRecipeEditOptio
       setHasUnsavedChanges(true);
       return {
         ...prev,
-        steps: [...prev.steps, { step: newStepNumber, title: "", description: "" }],
+        steps: [...prev.steps, { step: newStepNumber, title: "", description: "" } as EditableStep],
       };
     });
   }, [workingCopy]);
@@ -219,7 +307,7 @@ export function useRecipeEdit(recipe: Recipe | null, options: UseRecipeEditOptio
         if (!prev) return prev;
         const newSteps = [...prev.steps];
         const [movedStep] = newSteps.splice(fromIndex, 1);
-        newSteps.splice(toIndex, 0, movedStep);
+        newSteps.splice(toIndex, 0, movedStep as EditableStep);
 
         // Renumber all steps
         const renumberedSteps = newSteps.map((step, i) => ({
@@ -240,84 +328,14 @@ export function useRecipeEdit(recipe: Recipe | null, options: UseRecipeEditOptio
 
     try {
       await database.write(async () => {
-        // Update recipe
-        await recipe.updateRecipe({
-          title: workingCopy.title,
-          description: workingCopy.description,
-          imageUrl: workingCopy.imageUrl,
-          prepMinutes: workingCopy.prepMinutes,
-          cookMinutes: workingCopy.cookMinutes,
-          difficultyStars: workingCopy.difficultyStars,
-          servings: workingCopy.servings,
-          tags: workingCopy.tags,
-        });
+        await updateRecipeDetails(recipe, workingCopy);
 
-        // Handle ingredients
         const ingredientsCollection =
           database.collections.get<RecipeIngredient>("recipe_ingredient");
+        await syncRecipeIngredients(recipe, workingCopy, ingredientsCollection);
 
-        // Delete removed ingredients
-        const existingIngredients = await recipe.ingredients.query().fetch();
-        for (const existing of existingIngredients) {
-          if (!workingCopy.ingredients.some((ing) => ing.id === existing.id)) {
-            await existing.destroyPermanently();
-          }
-        }
-
-        // Update or create ingredients
-        for (const ingredient of workingCopy.ingredients) {
-          if (ingredient.id) {
-            // Update existing
-            const existing = await ingredientsCollection.find(ingredient.id);
-            await existing.updateRecipeIngredient({
-              name: ingredient.name,
-              quantity: ingredient.quantity,
-              unit: ingredient.unit,
-              notes: ingredient.notes,
-            });
-          } else {
-            // Create new
-            await ingredientsCollection.create((ing) => {
-              ing.recipeId = recipe.id;
-              ing.name = ingredient.name;
-              ing.quantity = ingredient.quantity;
-              ing.unit = ingredient.unit;
-              ing.notes = ingredient.notes;
-            });
-          }
-        }
-
-        // Handle steps
         const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
-
-        // Delete removed steps
-        const existingSteps = await recipe.steps.query().fetch();
-        for (const existing of existingSteps) {
-          if (!workingCopy.steps.some((step) => step.id === existing.id)) {
-            await existing.destroyPermanently();
-          }
-        }
-
-        // Update or create steps
-        for (const step of workingCopy.steps) {
-          if (step.id) {
-            // Update existing
-            const existing = await stepsCollection.find(step.id);
-            await existing.updateStep({
-              step: step.step,
-              title: step.title,
-              description: step.description,
-            });
-          } else {
-            // Create new
-            await stepsCollection.create((s) => {
-              s.step = step.step;
-              s.title = step.title;
-              s.description = step.description;
-              s.recipeId = recipe.id;
-            });
-          }
-        }
+        await syncRecipeSteps(recipe, workingCopy, stepsCollection);
       });
 
       setIsEditing(false);

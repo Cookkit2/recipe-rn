@@ -22,6 +22,7 @@ module.exports = {
   ],
   moduleNameMapper: {
     "^~/(.*)$": "<rootDir>/$1",
+    "^@sentry/react-native$": "<rootDir>/test/mocks/sentry-react-native.ts",
   },
   collectCoverageFrom: [
     "utils/**/*.{ts,tsx}",

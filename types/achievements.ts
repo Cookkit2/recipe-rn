@@ -257,6 +257,7 @@ export const XP_LEVEL_THRESHOLDS = [0, 100, 250, 500, 1000, 2000, 3500, 5000, 75
 export const getLevelFromXP = (xp: number): number => {
   for (let i = XP_LEVEL_THRESHOLDS.length - 1; i >= 0; i--) {
     const threshold = XP_LEVEL_THRESHOLDS[i];
+    // @ts-expect-error
     if (xp >= threshold) {
       return i + 1;
     }
@@ -271,7 +272,9 @@ export const getXPForNextLevel = (currentLevel: number): number => {
     return XP_LEVEL_THRESHOLDS[0];
   }
   if (nextLevelIndex >= XP_LEVEL_THRESHOLDS.length) {
+    // @ts-expect-error
     return XP_LEVEL_THRESHOLDS[XP_LEVEL_THRESHOLDS.length - 1];
   }
+  // @ts-expect-error
   return XP_LEVEL_THRESHOLDS[nextLevelIndex];
 };

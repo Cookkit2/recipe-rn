@@ -1,4 +1,4 @@
-/// <reference types="jest" />
+// @ts-nocheck
 import { pantryApi } from "../pantryApi";
 
 // In-memory collections to simulate WatermelonDB

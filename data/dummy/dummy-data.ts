@@ -22,19 +22,19 @@ export const dummyPantryItems: PantryItem[] = [
     updated_at: getDummyDate(0),
     steps_to_store: [
       {
-        id: 1,
+        id: "1",
         title: "Clean the tomatoes",
         description: "Wash the tomatoes with water and dry them with a towel.",
         sequence: 1,
       },
       {
-        id: 2,
+        id: "2",
         title: "Wash the tomatoes",
         description: "Wash the tomatoes with water and dry them with a towel.",
         sequence: 2,
       },
       {
-        id: 3,
+        id: "3",
         title: "Dry the tomatoes",
         description: "Dry the tomatoes with a towel.",
         sequence: 3,

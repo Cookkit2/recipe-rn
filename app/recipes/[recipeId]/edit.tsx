@@ -127,84 +127,103 @@ export default function RecipeEdit() {
       const { database } = await import("~/data/db/database");
 
       await database.write(async () => {
-        // Update recipe
-        await dbRecipe.updateRecipe({
-          title: editable.title,
-          description: editable.description,
-          imageUrl: editable.imageUrl,
-          prepMinutes: editable.prepMinutes,
-          cookMinutes: editable.cookMinutes,
-          difficultyStars: editable.difficultyStars,
-          servings: editable.servings,
-          tags: editable.tags,
-        });
+        const batchOperations: any[] = [];
+
+        // Prepare recipe update
+        batchOperations.push(
+          dbRecipe.prepareUpdate((recipe) => {
+            if (editable.title !== undefined) recipe.title = editable.title;
+            if (editable.description !== undefined) recipe.description = editable.description;
+            if (editable.imageUrl !== undefined) recipe.imageUrl = editable.imageUrl;
+            if (editable.prepMinutes !== undefined) recipe.prepMinutes = editable.prepMinutes;
+            if (editable.cookMinutes !== undefined) recipe.cookMinutes = editable.cookMinutes;
+            if (editable.difficultyStars !== undefined)
+              recipe.difficultyStars = editable.difficultyStars;
+            if (editable.servings !== undefined) recipe.servings = editable.servings;
+            if (editable.tags !== undefined) recipe.tags = editable.tags;
+          })
+        );
 
         // Handle ingredients
         const ingredientsCollection =
           database.collections.get<RecipeIngredientModel>("recipe_ingredient");
 
-        // Delete removed ingredients
         const existingIngredients = await dbRecipe.ingredients.query().fetch();
+        const existingIngredientsMap = new Map(existingIngredients.map((ing) => [ing.id, ing]));
+
+        // Delete removed ingredients
         for (const existing of existingIngredients) {
           if (!editable.ingredients.some((ing) => ing.id === existing.id)) {
-            await existing.destroyPermanently();
+            batchOperations.push(existing.prepareDestroyPermanently());
           }
         }
 
-        const existingIngredientsMap = new Map(existingIngredients.map((ing) => [ing.id, ing]));
-
         // Update or create ingredients
         for (const ingredient of editable.ingredients) {
-          if (ingredient.id && existingIngredientsMap.has(ingredient.id)) {
-            const existing = existingIngredientsMap.get(ingredient.id)!;
-            await existing.updateRecipeIngredient({
-              name: ingredient.name,
-              quantity: ingredient.quantity,
-              unit: ingredient.unit,
-              notes: ingredient.notes,
-            });
+          if (ingredient.id) {
+            const existing = existingIngredientsMap.get(ingredient.id);
+            if (existing) {
+              batchOperations.push(
+                existing.prepareUpdate((ing) => {
+                  if (ingredient.name !== undefined) ing.name = ingredient.name;
+                  if (ingredient.quantity !== undefined) ing.quantity = ingredient.quantity;
+                  if (ingredient.unit !== undefined) ing.unit = ingredient.unit;
+                  if (ingredient.notes !== undefined) ing.notes = ingredient.notes;
+                })
+              );
+            }
           } else {
-            await ingredientsCollection.create((ing) => {
-              ing.recipeId = dbRecipe.id;
-              ing.name = ingredient.name;
-              ing.quantity = ingredient.quantity;
-              ing.unit = ingredient.unit;
-              ing.notes = ingredient.notes;
-            });
+            batchOperations.push(
+              ingredientsCollection.prepareCreate((ing) => {
+                ing.recipeId = dbRecipe.id;
+                ing.name = ingredient.name;
+                if (ingredient.quantity !== undefined) ing.quantity = ingredient.quantity;
+                if (ingredient.unit !== undefined) ing.unit = ingredient.unit;
+                if (ingredient.notes !== undefined) ing.notes = ingredient.notes;
+              })
+            );
           }
         }
 
         // Handle steps
         const stepsCollection = database.collections.get<RecipeStepModel>("recipe_step");
 
-        // Delete removed steps
         const existingSteps = await dbRecipe.steps.query().fetch();
+        const existingStepsMap = new Map(existingSteps.map((step) => [step.id, step]));
+
+        // Delete removed steps
         for (const existing of existingSteps) {
           if (!editable.steps.some((step) => step.id === existing.id)) {
-            await existing.destroyPermanently();
+            batchOperations.push(existing.prepareDestroyPermanently());
           }
         }
-
-        const existingStepsMap = new Map(existingSteps.map((step) => [step.id, step]));
 
         // Update or create steps
         for (const step of editable.steps) {
-          if (step.id && existingStepsMap.has(step.id)) {
-            const existing = existingStepsMap.get(step.id)!;
-            await existing.updateStep({
-              step: step.step,
-              title: step.title,
-              description: step.description,
-            });
+          if (step.id) {
+            const existing = existingStepsMap.get(step.id);
+            if (existing) {
+              batchOperations.push(
+                existing.prepareUpdate((s) => {
+                  if (step.step !== undefined) s.step = step.step;
+                  if (step.title !== undefined) s.title = step.title;
+                  if (step.description !== undefined) s.description = step.description;
+                })
+              );
+            }
           } else {
-            await stepsCollection.create((s) => {
-              s.step = step.step;
-              s.title = step.title;
-              s.description = step.description;
-              s.recipeId = dbRecipe.id;
-            });
+            batchOperations.push(
+              stepsCollection.prepareCreate((s) => {
+                s.step = step.step;
+                s.title = step.title;
+                if (step.description !== undefined) s.description = step.description;
+                s.recipeId = dbRecipe.id;
+              })
+            );
           }
         }
+
+        await database.batch(...batchOperations);
       });
 
       router.back();

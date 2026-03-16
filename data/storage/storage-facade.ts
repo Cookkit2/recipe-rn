@@ -263,7 +263,7 @@ export class StorageFacade implements IStorage {
     // Fallback to individual operations
     const result: Record<string, T | null> = {};
     for (const key of keys) {
-      result[key] = (this.storage as any).get(key);
+      result[key] = this.storage.get<T>(key);
     }
     return result;
   }
@@ -292,7 +292,7 @@ export class StorageFacade implements IStorage {
     } else {
       // Fallback to individual operations
       for (const [key, value] of Object.entries(data)) {
-        (this.storage as any).set(key, value);
+        this.storage.set(key, value);
       }
     }
   }
@@ -323,7 +323,7 @@ export class StorageFacade implements IStorage {
     } else {
       // Fallback to individual operations
       for (const key of keys) {
-        (this.storage as any).delete(key);
+        this.storage.delete(key);
       }
     }
   }

@@ -4,29 +4,11 @@ import { database } from "~/data/db/database";
 
 // Mock the dependencies
 jest.mock("~/data/db/database", () => ({
+  __esModule: true,
   database: {
     write: jest.fn(async (cb: any) => cb()),
     collections: {
-      get: jest.fn((name: any) => {
-        if (name === "stock") {
-          return {
-            query: jest.fn().mockReturnThis(),
-            fetch: jest.fn().mockResolvedValue([]),
-            prepareCreate: jest.fn((updater: any) => {
-              const record = {};
-              updater(record);
-              return record;
-            }),
-          };
-        }
-        if (name === "stock_category") {
-          return {
-            query: jest.fn().mockReturnThis(),
-            fetch: jest.fn().mockResolvedValue([]),
-          };
-        }
-        return {};
-      }),
+      get: jest.fn(),
     },
     batch: jest.fn(async (...records: any[]) => records),
   },
@@ -34,6 +16,7 @@ jest.mock("~/data/db/database", () => ({
 
 jest.mock("~/lib/supabase/supabase-client", () => ({
   supabase: {
+    from: jest.fn(),
     functions: {
       invoke: jest.fn().mockResolvedValue({ data: { categories: [] }, error: null }),
     },
@@ -43,6 +26,27 @@ jest.mock("~/lib/supabase/supabase-client", () => ({
 describe("pantryApi batch operations", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+
+    const stockCollection = {
+      query: jest.fn().mockReturnThis(),
+      fetch: jest.fn().mockResolvedValue([]),
+      prepareCreate: jest.fn((updater: any) => {
+        const record: any = {};
+        updater(record);
+        return record;
+      }),
+    };
+
+    const stockCategoryCollection = {
+      query: jest.fn().mockReturnThis(),
+      fetch: jest.fn().mockResolvedValue([]),
+    };
+
+    (database.collections.get as jest.Mock).mockImplementation((name: any) => {
+      if (name === "stock") return stockCollection;
+      if (name === "stock_category") return stockCategoryCollection;
+      return {};
+    });
   });
 
   it("should format batch parameters correctly", async () => {

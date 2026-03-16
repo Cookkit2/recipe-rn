@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Achievement Share Utilities
  *
@@ -7,6 +6,7 @@
  */
 
 import { Share, Platform } from "react-native";
+import * as StoreReview from "expo-store-review";
 import type { AchievementProgress } from "~/types/achievements";
 import { ACHIEVEMENT_CATEGORY_DISPLAY } from "~/types/achievements";
 
@@ -43,13 +43,11 @@ function getAppName(): string {
 }
 
 /**
- * Get app store URL (placeholder for future use)
+ * Get app store URL or fallback to website
  */
 function getAppStoreUrl(): string {
-  if (Platform.OS === "ios") {
-    return "https://apps.apple.com/us/app/cookkit/id6752543191";
-  }
-  return "https://cookkit.app";
+  const storeUrl = StoreReview.storeUrl();
+  return storeUrl || "https://cookkit.app";
 }
 
 /**
@@ -275,7 +273,7 @@ export async function shareAchievement(
       result.action === "sharedAction" ? "shared" : "dismissed";
     return {
       action,
-      activityType: result.activityType ?? undefined,
+      activityType: result.activityType || undefined,
     };
   } catch (error) {
     // User cancelled the share sheet - this is expected behavior
@@ -321,7 +319,7 @@ export async function shareMultipleAchievements(
       result.action === "sharedAction" ? "shared" : "dismissed";
     return {
       action,
-      activityType: result.activityType ?? undefined,
+      activityType: result.activityType || undefined,
     };
   } catch (error) {
     if (error instanceof Error && error.message.includes("cancelled")) {
@@ -362,7 +360,7 @@ export async function shareStreak(
       result.action === "sharedAction" ? "shared" : "dismissed";
     return {
       action,
-      activityType: result.activityType ?? undefined,
+      activityType: result.activityType || undefined,
     };
   } catch (error) {
     if (error instanceof Error && error.message.includes("cancelled")) {
@@ -407,7 +405,7 @@ export async function shareContent(
       result.action === "sharedAction" ? "shared" : "dismissed";
     return {
       action,
-      activityType: result.activityType ?? undefined,
+      activityType: result.activityType || undefined,
     };
   } catch (error) {
     if (error instanceof Error && error.message.includes("cancelled")) {
@@ -431,12 +429,9 @@ export function getShareTextForCopy(achievement: AchievementProgress, userName?:
 
 /**
  * Generate achievement share URL (for deep linking to specific achievement)
- * This is a placeholder for future deep linking implementation
  */
 export function getAchievementShareUrl(achievementId: string): string {
-  // TODO: Implement deep linking when app has universal links
-  // Format: https://cookkit.app/achievement/{achievementId}
-  return `${getAppStoreUrl()}?achievement=${achievementId}`;
+  return `https://cookkit.app/achievement/${achievementId}`;
 }
 
 // ============================================

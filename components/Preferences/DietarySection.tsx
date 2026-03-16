@@ -1,15 +1,14 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import SegmentedButtons, { type GroupButton } from "~/components/Shared/SegmentedButtons";
 import { Card, CardContent } from "~/components/ui/card";
 import { H4 } from "~/components/ui/typography";
 import { MoonIcon, SaladIcon, VeganIcon, FishIcon, BadgeXIcon } from "lucide-uniwind";
 import { StarNorthIcon } from "~/lib/icons/StarNorth";
-import { storage } from "~/data";
 import { PREF_DIET_KEY } from "~/constants/storage-keys";
 import { useQueryClient } from "@tanstack/react-query";
 import { recipeQueryKeys } from "~/hooks/queries/recipeQueryKeys";
+import useLocalStorageState from "~/hooks/useLocalStorageState";
 
-// NOTE: State-only for now. TODO: persist to storage later.
 export type Diet = "halal" | "kosher" | "vegetarian" | "vegan" | "pescatarian" | "none";
 
 const DIET_OPTIONS: GroupButton<Diet>[] = [
@@ -23,12 +22,22 @@ const DIET_OPTIONS: GroupButton<Diet>[] = [
 
 export default function DietarySection() {
   const queryClient = useQueryClient();
-  const [diet, setDiet] = useState<Diet | undefined>(storage.get(PREF_DIET_KEY) || undefined);
+  const [diet, setDiet] = useLocalStorageState<Diet>(PREF_DIET_KEY, {
+    serializer: {
+      parse: (value: string) => {
+        try {
+          return JSON.parse(value);
+        } catch {
+          return value as Diet;
+        }
+      },
+      stringify: (value: unknown) => JSON.stringify(value),
+    },
+  });
 
   const handleToggleDiet = useCallback(
-    (diet: Diet) => {
-      setDiet(diet);
-      storage.set(PREF_DIET_KEY, diet);
+    (newDiet: Diet) => {
+      setDiet(newDiet);
       queryClient.invalidateQueries({
         queryKey: recipeQueryKeys.recommendations(),
       });
@@ -36,7 +45,7 @@ export default function DietarySection() {
         queryKey: recipeQueryKeys.expiringRecipes(),
       });
     },
-    [queryClient]
+    [queryClient, setDiet]
   );
 
   return (

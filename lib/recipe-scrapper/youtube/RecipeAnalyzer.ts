@@ -350,9 +350,6 @@ Return a valid JSON response matching the schema provided.
    */
   private parseResponse(response: string, sourceUrl?: string): RecipeAnalysisResult {
     try {
-      // TODO: delete after debugging
-      log.debug("RecipeAnalyzer: Response:", response);
-
       const parsed = JSON.parse(response);
 
       // Validate required fields
