@@ -228,10 +228,22 @@ export function sanitizeFilename(filename: string): string {
 
   // Limit length
   if (sanitized.length > 255) {
-    const extension = sanitized.split(".").pop() || "";
-    const nameWithoutExt = sanitized.substring(0, sanitized.lastIndexOf("."));
-    const maxNameLength = 255 - extension.length - 1;
-    sanitized = nameWithoutExt.substring(0, maxNameLength) + "." + extension;
+    const lastDotIndex = sanitized.lastIndexOf(".");
+    if (lastDotIndex === -1) {
+      sanitized = sanitized.substring(0, 255);
+    } else {
+      const extension = sanitized.substring(lastDotIndex + 1);
+      const nameWithoutExt = sanitized.substring(0, lastDotIndex);
+      // Ensure we don't have a negative maxNameLength if extension itself is > 254 chars
+      const maxNameLength = Math.max(0, 255 - extension.length - 1);
+
+      if (maxNameLength === 0 && extension.length >= 255) {
+        // Edge case: extension itself is >= 255 chars
+        sanitized = extension.substring(0, 255);
+      } else {
+        sanitized = nameWithoutExt.substring(0, maxNameLength) + "." + extension;
+      }
+    }
   }
 
   return sanitized;
