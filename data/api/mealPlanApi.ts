@@ -90,15 +90,21 @@ export const mealPlanApi = {
 
         const itemsWithRecipes: MealPlanItemWithRecipe[] = [];
 
+        // Extract unique recipe IDs
+        const recipeIds = [...new Set(mealPlanItems.map(item => item.recipeId))];
+
+        log.info(`Batch fetching details for ${recipeIds.length} unique recipes`);
+
+        // Fetch all recipe details in a single batch query
+        const recipesDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
+
         for (const item of mealPlanItems) {
           try {
-            log.info(`Fetching recipe for item ${item.id} with recipeId ${item.recipeId}`);
-            const recipeDetails = await databaseFacade.getRecipeWithDetails(item.recipeId);
+            const recipeDetails = recipesDetailsMap.get(item.recipeId);
 
             let recipeData: MealPlanItemWithRecipe["recipe"];
             if (recipeDetails && recipeDetails.recipe) {
               const { recipe, ingredients } = recipeDetails;
-              log.info(`Found recipe ${recipe.id}: ${recipe.title}`);
               recipeData = {
                 id: recipe.id,
                 title: recipe.title,
@@ -162,15 +168,18 @@ export const mealPlanApi = {
 
       const itemsWithRecipes: MealPlanItemWithRecipe[] = [];
 
+      const recipeIds = [...new Set(mealPlanItems.map(item => item.recipeId))];
+      log.info(`Batch fetching details for ${recipeIds.length} unique recipes`);
+
+      const recipesDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
+
       for (const item of mealPlanItems) {
         try {
-          log.info(`Fetching recipe for item ${item.id} with recipeId ${item.recipeId}`);
-          const recipeDetails = await databaseFacade.getRecipeWithDetails(item.recipeId);
+          const recipeDetails = recipesDetailsMap.get(item.recipeId);
 
           let recipeData: MealPlanItemWithRecipe["recipe"];
           if (recipeDetails && recipeDetails.recipe) {
             const { recipe, ingredients } = recipeDetails;
-            log.info(`Found recipe ${recipe.id}: ${recipe.title}`);
             recipeData = {
               id: recipe.id,
               title: recipe.title,
@@ -691,9 +700,14 @@ export const mealPlanApi = {
 
       const itemsWithRecipes: MealPlanItemWithRecipe[] = [];
 
+      const recipeIds = [...new Set(mealPlanItems.map(item => item.recipeId))];
+      log.info(`Batch fetching details for ${recipeIds.length} unique recipes`);
+
+      const recipesDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
+
       for (const item of mealPlanItems) {
         try {
-          const recipeDetails = await databaseFacade.getRecipeWithDetails(item.recipeId);
+          const recipeDetails = recipesDetailsMap.get(item.recipeId);
           if (!recipeDetails) {
             log.warn(`Recipe not found for meal plan item ${item.id}`);
             continue;
@@ -797,8 +811,8 @@ export const mealPlanApi = {
         id: updated.id,
         recipeId: updated.recipeId,
         servings: updated.servings,
-        date: date as any,
-        mealSlot: mealSlot as any,
+        date: updatedDate,
+        mealSlot: updatedMealSlot,
         templateId: updated.templateId,
         createdAt: updated.createdAt,
         recipe: recipeData,
