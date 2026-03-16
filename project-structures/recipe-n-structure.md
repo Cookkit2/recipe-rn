@@ -1,6 +1,7 @@
 # Recipe-n Project Structure
 
 ## Technology Stack
+
 - **Framework:** React Native (0.72+)
 - **iOS Platform:** iOS 15.0+
 - **Android Platform:** Android 8.0+ (API 26+)
@@ -96,6 +97,7 @@ recipe-rn/
 ## Phase 1 Implementation Order
 
 ### Sprint 1: Core Infrastructure (Week 1-2)
+
 1. **Database Setup**
    - [ ] Initialize SQLite/Room database
    - [ ] Create tables from schema
@@ -116,6 +118,7 @@ recipe-rn/
    - [ ] Add deep linking
 
 ### Sprint 2: Core Screens (Week 3-4)
+
 1. **Home Screen**
    - [ ] Recipe card component
    - [ ] Recipe list with pagination
@@ -140,6 +143,7 @@ recipe-rn/
    - [ ] Filter and sort
 
 ### Sprint 3: MVP Features (Week 5-6)
+
 1. **Cooking Mode (Basic)**
    - [ ] Instruction stepper
    - [ ] Step-by-step navigation
@@ -166,6 +170,7 @@ recipe-rn/
 ## Dependencies
 
 ### Core Dependencies
+
 ```json
 {
   "dependencies": {
@@ -183,6 +188,7 @@ recipe-rn/
 ```
 
 ### Development Dependencies
+
 ```json
 {
   "devDependencies": {
@@ -198,18 +204,21 @@ recipe-rn/
 ## Key Implementation Notes
 
 ### Offline-First Strategy
+
 1. All API calls wrapped in try-catch
 2. Fallback to local database if offline
 3. Queue writes when offline
 4. Sync when connection restored
 
 ### Performance Targets
+
 - App launch: <2 seconds
 - Recipe load: <1 second
 - Search: <300ms
 - Database query: <100ms
 
 ### Testing Strategy
+
 - Unit tests: 80% coverage minimum
 - E2E tests: Critical user journeys
 - Integration tests: Database operations

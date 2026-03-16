@@ -1,6 +1,7 @@
 # Recipe-cms Project Structure
 
 ## Technology Stack
+
 - **Framework:** Next.js 14+ (App Router)
 - **Runtime:** Node.js 18+
 - **Language:** TypeScript
@@ -108,6 +109,7 @@ recipe-cms/
 ## Phase 1 Implementation Order
 
 ### Sprint 1: Core Infrastructure (Week 1-2)
+
 1. **Database Setup**
    - [ ] Configure Prisma ORM
    - [ ] Create all tables from schema
@@ -132,6 +134,7 @@ recipe-cms/
    - [ ] Role-based access control
 
 ### Sprint 2: Core Content Types (Week 3-4)
+
 1. **Recipe Content Type**
    - [ ] CRUD endpoints
    - [ ] Recipe metadata endpoint
@@ -155,6 +158,7 @@ recipe-cms/
    - [ ] SEO meta tags
 
 ### Sprint 3: API Features (Week 5-6)
+
 1. **Markdown-Based Content**
    - [ ] Markdown editor
    - [ ] Real-time preview
@@ -179,6 +183,7 @@ recipe-cms/
 ## Dependencies
 
 ### Core Dependencies
+
 ```json
 {
   "dependencies": {
@@ -196,6 +201,7 @@ recipe-cms/
 ```
 
 ### Development Dependencies
+
 ```json
 {
   "devDependencies": {
@@ -214,18 +220,21 @@ recipe-cms/
 ## Key Implementation Notes
 
 ### Headless CMS Architecture
+
 1. API-first design (web + mobile)
 2. Database schema separate from business logic
 3. Markdown-based content (not WYSIWYG)
 4. Git version control (not just timestamps)
 
 ### Performance Targets
+
 - API response: <200ms P95
 - Database query: <100ms
 - Markdown rendering: <50ms
 - Search: <300ms (Elasticsearch)
 
 ### Testing Strategy
+
 - Unit tests: 80% coverage minimum
 - Integration tests: API endpoints
 - E2E tests: Critical user journeys

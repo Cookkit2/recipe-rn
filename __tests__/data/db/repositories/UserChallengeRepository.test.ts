@@ -1,4 +1,4 @@
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { describe, it, expect, jest, beforeEach } from "@jest/globals";
 import { UserChallengeRepository } from "../../../../data/db/repositories/UserChallengeRepository";
 
 // Create a realistic-ish mock
@@ -13,9 +13,9 @@ const mockUserChallenges = Array.from({ length: 100 }, (_, i) => ({
   challenge: {
     fetch: jest.fn().mockImplementation(() => {
       // Simulate slight delay for N+1
-      return new Promise(resolve => setTimeout(() => resolve(mockChallenges[i]), 1));
-    })
-  }
+      return new Promise((resolve) => setTimeout(() => resolve(mockChallenges[i]), 1));
+    }),
+  },
 }));
 
 // Mock the dependencies and model
@@ -26,26 +26,26 @@ jest.mock("../../../../data/db/database", () => ({
       get: jest.fn().mockReturnValue({
         query: jest.fn().mockReturnValue({
           fetch: jest.fn().mockImplementation(() => {
-             return new Promise(resolve => setTimeout(() => resolve(mockChallenges), 5));
-          })
-        })
-      })
-    }
-  }
+            return new Promise((resolve) => setTimeout(() => resolve(mockChallenges), 5));
+          }),
+        }),
+      }),
+    },
+  },
 }));
 
 jest.mock("../../../../data/db/models/Challenge", () => {
   return class Challenge {
     id = "challenge_1";
     xpValue = 50;
-  }
+  };
 });
 
 jest.mock("../../../../data/db/models/UserChallenge", () => {
   return class UserChallenge {
     id = "user_challenge_1";
     challengeId = "challenge_1";
-  }
+  };
 });
 
 describe("UserChallengeRepository XP Optimization", () => {

@@ -14,13 +14,9 @@
     "noErrorTruncation": true,
     "experimentalDecorators": true,
     "paths": {
-      "~/*": [
-        "*"
-      ]
+      "~/*": ["*"]
     },
-    "types": [
-      "jest"
-    ]
+    "types": ["jest"]
   },
   "include": [
     "**/*.ts",
@@ -30,7 +26,5 @@
     "test_globals.d.ts",
     "test-globals.d.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }

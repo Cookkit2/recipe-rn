@@ -1,6 +1,12 @@
-import { Q } from "@nozbe/watermelondb";
 import { pantryApi } from "../pantryApi";
 import { database } from "~/data/db/database";
+
+// NOTE: `jest.mock(...)` is hoisted, so these must not be `const` initializations
+// referenced by the mock factory (TDZ). We lazily initialize them inside the factory.
+// eslint-disable-next-line no-var
+var stockCollectionMock: any;
+// eslint-disable-next-line no-var
+var stockCategoryCollectionMock: any;
 
 // Mock the dependencies
 jest.mock("~/data/db/database", () => ({
@@ -8,7 +14,47 @@ jest.mock("~/data/db/database", () => ({
   database: {
     write: jest.fn(async (cb: any) => cb()),
     collections: {
-      get: jest.fn(),
+      get: jest.fn((name: any) => {
+        if (!stockCollectionMock) {
+          stockCollectionMock = {
+            query: jest.fn().mockReturnThis(),
+            fetch: jest.fn().mockResolvedValue([]),
+            prepareCreate: jest.fn((updater: any) => {
+              const record: any = {
+                id: "mock_stock_id",
+                name: "",
+                quantity: 0,
+                unit: "",
+                expiryDate: undefined,
+                storageType: undefined,
+                backgroundColor: undefined,
+                imageUrl: undefined,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+                synonyms: { fetch: jest.fn().mockResolvedValue([]) },
+                stockCategories: { fetch: jest.fn().mockResolvedValue([]) },
+              };
+              updater(record);
+              return record;
+            }),
+          };
+        }
+
+        if (!stockCategoryCollectionMock) {
+          stockCategoryCollectionMock = {
+            query: jest.fn().mockReturnThis(),
+            fetch: jest.fn().mockResolvedValue([]),
+          };
+        }
+
+        if (name === "stock") {
+          return stockCollectionMock;
+        }
+        if (name === "stock_category") {
+          return stockCategoryCollectionMock;
+        }
+        return {};
+      }),
     },
     batch: jest.fn(async (...records: any[]) => records),
   },
@@ -63,7 +109,7 @@ describe("pantryApi batch operations", () => {
 
     await pantryApi.addPantryItems(items as any);
 
-    const stockCollection = database.collections.get("stock");
+    const stockCollection = database.collections.get("stock") as any;
     expect(stockCollection.prepareCreate).toHaveBeenCalledTimes(5);
   });
 });

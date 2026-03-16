@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals';
+import { jest } from "@jest/globals";
 import { scheduleExpiryNotifications } from "../expiry-notifications";
 
 jest.mock("../../notification-service", () => ({

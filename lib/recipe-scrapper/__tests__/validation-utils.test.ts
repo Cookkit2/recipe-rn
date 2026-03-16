@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals';
+import { jest } from "@jest/globals";
 jest.mock("~/utils/logger", () => ({
   log: {
     info: jest.fn(),
@@ -19,16 +19,14 @@ describe("isValidRecipe", () => {
         title: " ",
         ingredients: [],
         steps: [],
-      } as any),
+      } as any)
     ).toBe(false);
   });
 
   it("rejects recipes with only unknown ingredients", () => {
     const recipe = {
       title: "Test",
-      ingredients: [
-        { name: "" },
-      ],
+      ingredients: [{ name: "" }],
       steps: [{ description: "Step 1" }],
     };
 
@@ -56,4 +54,3 @@ describe("isValidRecipe", () => {
     expect(isValidRecipe(recipe as any)).toBe(false);
   });
 });
-

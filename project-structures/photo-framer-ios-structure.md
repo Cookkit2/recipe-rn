@@ -1,6 +1,7 @@
 # Photo-Framer-iOS Project Structure
 
 ## Technology Stack
+
 - **Language:** Swift 5.9+
 - **Platform:** iOS 15.0+
 - **UI Framework:** SwiftUI
@@ -205,6 +206,7 @@ Photo-Framer-iOS/
 ## Phase 1 Implementation Order
 
 ### Sprint 1: Core Infrastructure (Week 1-2)
+
 1. **Project Setup**
    - [ ] Initialize Xcode project
    - [ ] Configure SwiftUI architecture
@@ -227,6 +229,7 @@ Photo-Framer-iOS/
    - [ ] Create testable implementations
 
 ### Sprint 2: CoreML Integration (Week 3-4)
+
 1. **Photo Analysis Models**
    - [ ] Train/color detection model
    - [ ] Train mood classification model
@@ -243,6 +246,7 @@ Photo-Framer-iOS/
    - [ ] Add scoring logic
 
 ### Sprint 3: MVP Features (Week 5-6)
+
 1. **Photo Editor (Basic)**
    - [ ] Photo upload and display
    - [ ] Frame selection gallery
@@ -268,6 +272,7 @@ Photo-Framer-iOS/
 ## Dependencies
 
 ### iOS Native
+
 ```swift
 import Foundation
 import SwiftUI
@@ -279,6 +284,7 @@ import PhotosUI
 ```
 
 ### Third-Party Libraries
+
 ```swift
 // Package.swift
 dependencies: [
@@ -290,6 +296,7 @@ dependencies: [
 ## Key Implementation Notes
 
 ### Completely Dark Mode UI
+
 1. Background: #050505 (deep black)
 2. Text: #E8E8E8 (off-white, not harsh white)
 3. Accents: Rich, vibrant colors
@@ -297,24 +304,28 @@ dependencies: [
 5. Minimal chrome: Clean, content-first
 
 ### Metal-Accelerated Processing
+
 1. Use GPU for image compositing
 2. Metal shaders for filters
 3. Hardware encoder for compression
 4. Target: <500ms per photo
 
 ### CoreML Optimization
+
 1. All models <50MB total
 2. On-device inference (no cloud)
 3. Inference time: <100ms per photo
 4. Batch predictions when possible
 
 ### ARKit Performance Targets
+
 1. Frame update rate: 60 FPS
 2. Tracking latency: <16ms
 3. Battery: Minimal usage (only during AR)
 4. Light estimation for frame blending
 
 ### Testing Strategy
+
 - Unit tests: 80% coverage minimum
 - UI tests: Critical user journeys
 - Performance tests: Image processing <500ms

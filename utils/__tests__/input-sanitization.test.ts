@@ -1,15 +1,9 @@
 import { jest, describe, beforeEach, it, expect } from "@jest/globals";
-import {
-  sanitizeForDatabase,
-  sanitizeSearchTerm,
-  sanitizeEmail,
-} from "../input-sanitization";
+import { sanitizeForDatabase, sanitizeSearchTerm, sanitizeEmail } from "../input-sanitization";
 
 describe("sanitizeForDatabase", () => {
   it("removes SQL keywords and prevents injection patterns", () => {
-    expect(sanitizeForDatabase("'; DROP TABLE stock; --")).not.toMatch(
-      /DROP|;|'/,
-    );
+    expect(sanitizeForDatabase("'; DROP TABLE stock; --")).not.toMatch(/DROP|;|'/);
     expect(sanitizeForDatabase("1' OR '1'='1")).not.toMatch(/'/);
   });
 
@@ -39,4 +33,3 @@ describe("sanitizeEmail", () => {
     expect(sanitizeEmail("not-an-email")).toBe("");
   });
 });
-

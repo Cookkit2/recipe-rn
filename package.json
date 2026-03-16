@@ -11,7 +11,8 @@
     "test": "jest",
     "test:coverage": "jest --coverage",
     "typecheck": "tsc --noEmit",
-    "lint": "prettier --check . && tsc --noEmit"
+    "lint": "prettier --check . && tsc --noEmit",
+    "lint:fix": "prettier --write ."
   },
   "dependencies": {
     "@babel/plugin-proposal-decorators": "^7.28.6",
