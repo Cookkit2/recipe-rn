@@ -385,9 +385,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
     try {
       const recipesWithDetails = await recipeApi.getRecipesWithDetailsSupabase(limit);
       log.info(`Syncing ${recipesWithDetails.length} recipes from Supabase...`);
-      // log.info("First recipe preview:", recipesWithDetails[0]?.ingredients);
 
-      // Check if we have recipes to sync
       if (recipesWithDetails.length === 0) {
         log.info("No recipes found to sync from Supabase");
         return;
@@ -395,17 +393,16 @@ export class RecipeRepository extends BaseRepository<Recipe> {
 
       log.info(`First recipe: ${recipesWithDetails[0]?.recipe.title}`);
 
-      // Get all existing recipe IDs to check for updates vs new recipes
-      const existingRecipeIds = new Set<string>();
+      // Get all existing recipes
       const existingRecipes = await this.collection.query().fetch();
-      existingRecipes.forEach((recipe) => existingRecipeIds.add(recipe.id));
+      const existingRecipesMap = new Map(existingRecipes.map((r) => [r.id, r]));
 
       // Separate new recipes from existing ones
       const newRecipes: SupabaseRecipeWithDetails[] = [];
       const existingRecipesToUpdate: SupabaseRecipeWithDetails[] = [];
 
       recipesWithDetails.forEach((supabaseRecipe) => {
-        if (existingRecipeIds.has(supabaseRecipe.recipe.id)) {
+        if (existingRecipesMap.has(supabaseRecipe.recipe.id)) {
           existingRecipesToUpdate.push(supabaseRecipe);
         } else {
           newRecipes.push(supabaseRecipe);
@@ -416,28 +413,80 @@ export class RecipeRepository extends BaseRepository<Recipe> {
         `Found ${newRecipes.length} new recipes and ${existingRecipesToUpdate.length} existing recipes to update`
       );
 
-      // Process all recipes in a single transaction to avoid nested transactions
-      await database.write(async () => {
-        // Process new recipes
-        for (const supabaseRecipe of newRecipes) {
-          try {
-            await this.syncSingleRecipe(supabaseRecipe);
-            // log.info(`Created new recipe: ${supabaseRecipe.recipe.title}`);
-          } catch (error) {
-            log.error(`Failed to create recipe ${supabaseRecipe.recipe.title}:`, error);
-          }
-        }
+      // Pre-fetch steps and ingredients for existing recipes to update
+      const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
+      const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
 
-        // Process existing recipes (update them)
-        for (const supabaseRecipe of existingRecipesToUpdate) {
-          try {
-            await this.updateExistingRecipe(supabaseRecipe);
-            // log.info(`Updated existing recipe: ${supabaseRecipe.recipe.title}`);
-          } catch (error) {
-            log.error(`Failed to update recipe ${supabaseRecipe.recipe.title}:`, error);
-          }
+      const existingRecipeIdsArray = existingRecipesToUpdate.map((r) => r.recipe.id);
+
+      // We need to fetch steps and ingredients in chunks to avoid SQLite parameter limits
+      const chunkedFetch = async <T>(collection: any, ids: string[], foreignKey: string) => {
+        const CHUNK_SIZE = 500;
+        let results: T[] = [];
+        for (let i = 0; i < ids.length; i += CHUNK_SIZE) {
+          const chunk = ids.slice(i, i + CHUNK_SIZE);
+          const fetched = await collection.query(Q.where(foreignKey, Q.oneOf(chunk))).fetch();
+          results = results.concat(fetched);
         }
+        return results;
+      };
+
+      const existingSteps = await chunkedFetch<RecipeStep>(
+        stepsCollection,
+        existingRecipeIdsArray,
+        "recipe_id"
+      );
+      const existingIngredients = await chunkedFetch<RecipeIngredient>(
+        ingredientsCollection,
+        existingRecipeIdsArray,
+        "recipe_id"
+      );
+
+      const stepsByRecipeId = new Map<string, RecipeStep[]>();
+      existingSteps.forEach((s) => {
+        const recipeId = s.recipeId;
+        if (!stepsByRecipeId.has(recipeId)) stepsByRecipeId.set(recipeId, []);
+        stepsByRecipeId.get(recipeId)!.push(s);
       });
+
+      const ingredientsByRecipeId = new Map<string, RecipeIngredient[]>();
+      existingIngredients.forEach((i) => {
+        const recipeId = i.recipeId;
+        if (!ingredientsByRecipeId.has(recipeId)) ingredientsByRecipeId.set(recipeId, []);
+        ingredientsByRecipeId.get(recipeId)!.push(i);
+      });
+
+      // Prepare operations
+      const batchOps: import("@nozbe/watermelondb").Model[] = [];
+
+      for (const supabaseRecipe of newRecipes) {
+        batchOps.push(...this.prepareSyncSingleRecipe(supabaseRecipe));
+      }
+
+      for (const supabaseRecipe of existingRecipesToUpdate) {
+        const recipeId = supabaseRecipe.recipe.id;
+        const existingRecipe = existingRecipesMap.get(recipeId);
+        if (existingRecipe) {
+          batchOps.push(
+            ...this.prepareUpdateExistingRecipe(
+              supabaseRecipe,
+              existingRecipe,
+              stepsByRecipeId.get(recipeId) || [],
+              ingredientsByRecipeId.get(recipeId) || []
+            )
+          );
+        }
+      }
+
+      // Execute all operations in chunks inside a single transaction
+      if (batchOps.length > 0) {
+        await database.write(async () => {
+          const BATCH_SIZE = 500;
+          for (let i = 0; i < batchOps.length; i += BATCH_SIZE) {
+            await database.batch(...batchOps.slice(i, i + BATCH_SIZE));
+          }
+        });
+      }
 
       // Verify sync worked
       const localCount = await this.count();
@@ -448,84 +497,124 @@ export class RecipeRepository extends BaseRepository<Recipe> {
     }
   }
 
-  // Helper method to transform and sync a single recipe (must be called within a database.write transaction)
-  private async syncSingleRecipe(supabaseRecipe: SupabaseRecipeWithDetails): Promise<Recipe> {
-    // Since we've already filtered out existing recipes, just create the new one
-    return await this.createRecipeWithDetailsRaw({
-      recipe: this.transformSupabaseRecipe(supabaseRecipe.recipe),
-      steps: supabaseRecipe.steps.map((step) => this.transformSupabaseStep(step)),
-      ingredients: supabaseRecipe.ingredients.map((ingredient) =>
-        this.transformSupabaseIngredient(ingredient)
-      ),
+  // Helper method to transform and sync a single recipe
+  private prepareSyncSingleRecipe(
+    supabaseRecipe: SupabaseRecipeWithDetails
+  ): import("@nozbe/watermelondb").Model[] {
+    const ops: import("@nozbe/watermelondb").Model[] = [];
+    const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
+    const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
+
+    const recipeData = this.transformSupabaseRecipe(supabaseRecipe.recipe);
+
+    const recipe = this.collection.prepareCreate((r) => {
+      r._raw.id = recipeData.id;
+      r.title = recipeData.title;
+      r.description = recipeData.description;
+      if (recipeData.imageUrl) r.imageUrl = recipeData.imageUrl;
+      r.prepMinutes = recipeData.prepMinutes;
+      r.cookMinutes = recipeData.cookMinutes;
+      r.difficultyStars = recipeData.difficultyStars;
+      r.servings = recipeData.servings;
+      if (recipeData.sourceUrl) r.sourceUrl = recipeData.sourceUrl;
+      if (recipeData.calories) r.calories = recipeData.calories;
+      if (recipeData.tags) r.tags = recipeData.tags;
+      if (recipeData.type) r.type = recipeData.type;
+      r.syncedAt = Date.now(); // Set sync time
+      r.isFavorite = false; // Default to false
     });
+    ops.push(recipe);
+
+    for (const stepData of supabaseRecipe.steps) {
+      const transformedStep = this.transformSupabaseStep(stepData);
+      ops.push(
+        stepsCollection.prepareCreate((step) => {
+          step.step = transformedStep.step;
+          step.title = transformedStep.title;
+          step.description = transformedStep.description;
+          step.recipeId = recipe.id;
+        })
+      );
+    }
+
+    for (const ingredientData of supabaseRecipe.ingredients) {
+      const transformedIngredient = this.transformSupabaseIngredient(ingredientData);
+      ops.push(
+        ingredientsCollection.prepareCreate((ingredient) => {
+          ingredient.recipeId = recipe.id;
+          ingredient.name = transformedIngredient.name;
+          ingredient.quantity = transformedIngredient.quantity;
+          ingredient.unit = transformedIngredient.unit;
+          ingredient.notes = transformedIngredient.notes;
+        })
+      );
+    }
+
+    return ops;
   }
 
-  // Helper method to update an existing recipe with Supabase data (must be called within a database.write transaction)
-  private async updateExistingRecipe(supabaseRecipe: SupabaseRecipeWithDetails): Promise<void> {
-    const recipeId = supabaseRecipe.recipe.id;
-
-    // Update the main recipe record
-    const existingRecipe = await this.collection.find(recipeId);
-    await existingRecipe.update((recipe) => {
-      const transformedRecipe = this.transformSupabaseRecipe(supabaseRecipe.recipe);
-      recipe.title = transformedRecipe.title;
-      recipe.description = transformedRecipe.description;
-      if (transformedRecipe.imageUrl) recipe.imageUrl = transformedRecipe.imageUrl;
-      recipe.prepMinutes = transformedRecipe.prepMinutes;
-      recipe.cookMinutes = transformedRecipe.cookMinutes;
-      recipe.difficultyStars = transformedRecipe.difficultyStars;
-      recipe.servings = transformedRecipe.servings;
-      if (transformedRecipe.sourceUrl) recipe.sourceUrl = transformedRecipe.sourceUrl;
-      if (transformedRecipe.calories) recipe.calories = transformedRecipe.calories;
-      if (transformedRecipe.tags) recipe.tags = transformedRecipe.tags;
-    });
-
-    // Update steps - delete existing and create new ones
+  // Helper method to update an existing recipe with Supabase data
+  private prepareUpdateExistingRecipe(
+    supabaseRecipe: SupabaseRecipeWithDetails,
+    existingRecipe: Recipe,
+    existingSteps: RecipeStep[],
+    existingIngredients: RecipeIngredient[]
+  ): import("@nozbe/watermelondb").Model[] {
+    const ops: import("@nozbe/watermelondb").Model[] = [];
     const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
-    const existingSteps = await stepsCollection.query(Q.where("recipe_id", recipeId)).fetch();
-
-    // Delete existing steps
-    await Promise.all(existingSteps.map((step) => step.destroyPermanently()));
-
-    // Create new steps
-    if (supabaseRecipe.steps && supabaseRecipe.steps.length > 0) {
-      await Promise.all(
-        supabaseRecipe.steps.map((stepData) =>
-          stepsCollection.create((step) => {
-            const transformedStep = this.transformSupabaseStep(stepData);
-            step.step = transformedStep.step;
-            step.title = transformedStep.title;
-            step.description = transformedStep.description;
-            step.recipeId = recipeId;
-          })
-        )
-      );
-    }
-
-    // Update ingredients - delete existing and create new ones
     const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
-    const existingIngredients = await ingredientsCollection
-      .query(Q.where("recipe_id", recipeId))
-      .fetch();
+    const recipeId = existingRecipe.id;
 
-    // Delete existing ingredients
-    await Promise.all(existingIngredients.map((ingredient) => ingredient.destroyPermanently()));
+    ops.push(
+      existingRecipe.prepareUpdate((recipe) => {
+        const transformedRecipe = this.transformSupabaseRecipe(supabaseRecipe.recipe);
+        recipe.title = transformedRecipe.title;
+        recipe.description = transformedRecipe.description;
+        if (transformedRecipe.imageUrl) recipe.imageUrl = transformedRecipe.imageUrl;
+        recipe.prepMinutes = transformedRecipe.prepMinutes;
+        recipe.cookMinutes = transformedRecipe.cookMinutes;
+        recipe.difficultyStars = transformedRecipe.difficultyStars;
+        recipe.servings = transformedRecipe.servings;
+        if (transformedRecipe.sourceUrl) recipe.sourceUrl = transformedRecipe.sourceUrl;
+        if (transformedRecipe.calories) recipe.calories = transformedRecipe.calories;
+        if (transformedRecipe.tags) recipe.tags = transformedRecipe.tags;
+      })
+    );
 
-    // Create new ingredients
-    if (supabaseRecipe.ingredients && supabaseRecipe.ingredients.length > 0) {
-      await Promise.all(
-        supabaseRecipe.ingredients.map((ingredientData) =>
-          ingredientsCollection.create((ingredient) => {
-            const transformedIngredient = this.transformSupabaseIngredient(ingredientData);
-            ingredient.recipeId = recipeId;
-            ingredient.name = transformedIngredient.name;
-            ingredient.quantity = transformedIngredient.quantity;
-            ingredient.unit = transformedIngredient.unit;
-            ingredient.notes = transformedIngredient.notes;
-          })
-        )
+    for (const step of existingSteps) {
+      ops.push(step.prepareDestroyPermanently());
+    }
+
+    for (const stepData of supabaseRecipe.steps) {
+      const transformedStep = this.transformSupabaseStep(stepData);
+      ops.push(
+        stepsCollection.prepareCreate((step) => {
+          step.step = transformedStep.step;
+          step.title = transformedStep.title;
+          step.description = transformedStep.description;
+          step.recipeId = recipeId;
+        })
       );
     }
+
+    for (const ingredient of existingIngredients) {
+      ops.push(ingredient.prepareDestroyPermanently());
+    }
+
+    for (const ingredientData of supabaseRecipe.ingredients) {
+      const transformedIngredient = this.transformSupabaseIngredient(ingredientData);
+      ops.push(
+        ingredientsCollection.prepareCreate((ingredient) => {
+          ingredient.recipeId = recipeId;
+          ingredient.name = transformedIngredient.name;
+          ingredient.quantity = transformedIngredient.quantity;
+          ingredient.unit = transformedIngredient.unit;
+          ingredient.notes = transformedIngredient.notes;
+        })
+      );
+    }
+
+    return ops;
   }
 
   // Create recipe with steps and ingredients without database.write wrapper (for use within transactions)
