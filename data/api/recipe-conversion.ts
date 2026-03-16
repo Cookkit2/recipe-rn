@@ -88,7 +88,7 @@ export const convertDbRecipesToUIRecipesBatch = (
         step: step.step,
         title: step.title,
         description: step.description,
-        relatedIngredientIds: [],
+        relatedIngredientIds: [], // The WatermelonDB 'recipe_step' table does not store relationships to ingredients.
       })),
     });
   }
