@@ -50,20 +50,20 @@ const stockCollection = {
 };
 
 const otherCollection = {
-    query: () => ({
-      fetch: async () => [],
-    }),
-    create: jest.fn(async () => {
-        dbMetrics.creates++;
-        return {};
-    }),
-    prepareCreate: jest.fn((updater: any) => {
-        return {
-          _isPrepared: true,
-          _type: 'create',
-          updater
-        };
-    })
+  query: () => ({
+    fetch: async () => [],
+  }),
+  create: jest.fn(async () => {
+    dbMetrics.creates++;
+    return {};
+  }),
+  prepareCreate: jest.fn((updater: any) => {
+    return {
+      _isPrepared: true,
+      _type: "create",
+      updater,
+    };
+  }),
 };
 
 jest.mock("~/data/db/DatabaseFacade", () => ({

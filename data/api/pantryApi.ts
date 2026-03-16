@@ -545,7 +545,7 @@ const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
   // Fetch categories if available
   let categories: Array<{ id: string; name: string }> = [];
   try {
-    const stockCategoryRecords = await Promise.race([
+    const stockCategoryRecords: any[] = await Promise.race([
       stock.stockCategories.fetch(),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("StockCategory fetch timeout")), 3000)

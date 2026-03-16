@@ -1,13 +1,11 @@
 # Product Requirements Document: recipe-n
 
 ## Overview
-
 recipe-n is a smart mobile cooking companion designed to streamline the cooking experience, from finding the perfect recipe to following step-by-step guidance.
 
 ## 1. Core User Journeys
 
 ### Discovery to Cooking
-
 1. **Browse recipes**: User opens the app and browses curated collections or personalized recommendations.
 2. **Search recipe**: User searches for a specific dish, ingredient, or cuisine using the search bar or filters.
 3. **View recipe**: User taps on a recipe card to view the ingredients, time required, difficulty, and nutritional info.
@@ -29,17 +27,17 @@ recipe-n is a smart mobile cooking companion designed to streamline the cooking 
 
 ## 3. Technical Constraints
 
-- **Mobile-First**: The UI/UX must be optimized for mobile screens (phones and tablets), prioritizing touch interactions and one-handed use.
-- **Offline-First**: Core functionalities (viewing saved recipes, pantry, grocery lists) must work seamlessly without an internet connection, syncing when connectivity is restored.
-- **Minimal Battery Usage**: Cooking sessions can be long; the app (especially voice recognition and screen-on features) must be optimized to prevent excessive battery drain.
+* **Mobile-First**: The UI/UX must be optimized for mobile screens (phones and tablets), prioritizing touch interactions and one-handed use.
+* **Offline-First**: Core functionalities (viewing saved recipes, pantry, grocery lists) must work seamlessly without an internet connection, syncing when connectivity is restored.
+* **Minimal Battery Usage**: Cooking sessions can be long; the app (especially voice recognition and screen-on features) must be optimized to prevent excessive battery drain.
 
 ## 4. Success Criteria
 
-- **Efficiency**: Users cook 30% faster (measured by time spent in Cooking Mode vs. estimated recipe time).
-- **Engagement**: Users save 20% more recipes (month-over-month increase in favorites per active user).
+* **Efficiency**: Users cook 30% faster (measured by time spent in Cooking Mode vs. estimated recipe time).
+* **Engagement**: Users save 20% more recipes (month-over-month increase in favorites per active user).
 
 ## 5. Target Platforms
 
-- **Primary**: iOS (Swift/React Native)
-- **Secondary**: Android (Kotlin/React Native)
-- **Companion**: Web (React/Next.js) for easy browsing and meal planning on larger screens.
+* **Primary**: iOS (Swift/React Native)
+* **Secondary**: Android (Kotlin/React Native)
+* **Companion**: Web (React/Next.js) for easy browsing and meal planning on larger screens.

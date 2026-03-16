@@ -23,7 +23,7 @@ describe("recipe-scaling", () => {
 
       // 1/3 = 0.33333... but commonFractions has 0.333
       // adjustToCommonFraction(0.33) should match 0.333 (diff 0.003 < 0.02)
-      expect(adjustToCommonFraction(0.33)).toBeCloseTo(1 / 3, 5);
+      expect(adjustToCommonFraction(0.33)).toBeCloseTo(1/3, 5);
 
       // 1/4 = 0.25
       expect(adjustToCommonFraction(0.26)).toBeCloseTo(0.25, 5);
@@ -45,17 +45,17 @@ describe("recipe-scaling", () => {
 
     it("should handle all defined common fractions", () => {
       const cases = [
-        { input: 0.06, expected: 1 / 16 },
-        { input: 0.12, expected: 1 / 8 },
-        { input: 0.18, expected: 3 / 16 },
-        { input: 0.25, expected: 1 / 4 },
-        { input: 0.33, expected: 1 / 3 },
-        { input: 0.37, expected: 3 / 8 },
-        { input: 0.51, expected: 1 / 2 },
-        { input: 0.62, expected: 5 / 8 },
-        { input: 0.66, expected: 2 / 3 },
-        { input: 0.74, expected: 3 / 4 },
-        { input: 0.88, expected: 7 / 8 },
+        { input: 0.06, expected: 1/16 },
+        { input: 0.12, expected: 1/8 },
+        { input: 0.18, expected: 3/16 },
+        { input: 0.25, expected: 1/4 },
+        { input: 0.33, expected: 1/3 },
+        { input: 0.37, expected: 3/8 },
+        { input: 0.51, expected: 1/2 },
+        { input: 0.62, expected: 5/8 },
+        { input: 0.66, expected: 2/3 },
+        { input: 0.74, expected: 3/4 },
+        { input: 0.88, expected: 7/8 },
       ];
 
       cases.forEach(({ input, expected }) => {

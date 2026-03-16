@@ -67,7 +67,7 @@ jest.mock("~/data/db/database", () => ({
           create: jest.fn(async () => ({})),
           prepareCreate: jest.fn((updater) => {
             return { _type: "create", updater };
-          }),
+          })
         };
       },
     },
