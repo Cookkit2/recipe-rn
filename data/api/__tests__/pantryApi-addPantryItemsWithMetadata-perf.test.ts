@@ -30,8 +30,8 @@ const stockCollection = {
       name: "",
       quantity: 0,
       update: async (fn: (stock: Stock) => void) => {
-         dbMetrics.updates++;
-         fn(draft);
+        dbMetrics.updates++;
+        fn(draft);
       },
     };
 
@@ -43,10 +43,10 @@ const stockCollection = {
   prepareCreate: jest.fn((updater: (stock: Stock) => void) => {
     return {
       _isPrepared: true,
-      _type: 'create',
-      updater
+      _type: "create",
+      updater,
     };
-  })
+  }),
 };
 
 const otherCollection = {
@@ -88,25 +88,25 @@ jest.mock("~/data/db/database", () => ({
     batch: async (...operations: any[]) => {
       dbMetrics.batches++;
       for (const op of operations) {
-          if (op && op._isPrepared) {
-              if (op._type === 'create') {
-                  const draft: any = {
-                      id: `item_${Math.random()}`,
-                      update: async (fn: any) => {
-                           dbMetrics.updates++;
-                           fn(draft);
-                      }
-                  };
-                  op.updater(draft);
-                  if (op.updater.toString().includes('quantity')) {
-                      stocks.push(draft);
-                  }
-              } else if (op._type === 'update') {
-                  op.updater(op.record);
-              }
+        if (op && op._isPrepared) {
+          if (op._type === "create") {
+            const draft: any = {
+              id: `item_${Math.random()}`,
+              update: async (fn: any) => {
+                dbMetrics.updates++;
+                fn(draft);
+              },
+            };
+            op.updater(draft);
+            if (op.updater.toString().includes("quantity")) {
+              stocks.push(draft);
+            }
+          } else if (op._type === "update") {
+            op.updater(op.record);
           }
+        }
       }
-    }
+    },
   },
 }));
 
@@ -129,15 +129,15 @@ describe("pantryApi.addPantryItemsWithMetadata Performance", () => {
 
   it("should measure performance", async () => {
     const items = [];
-    for(let i=0; i<50; i++) {
-        items.push({
-            name: `TestItem${i}`,
-            quantity: 1,
-            unit: 'pcs',
-            type: 'pantry',
-            categories: [{name: `Cat${i}`}],
-            synonyms: [{synonym: `Syn${i}`}]
-        } as any);
+    for (let i = 0; i < 50; i++) {
+      items.push({
+        name: `TestItem${i}`,
+        quantity: 1,
+        unit: "pcs",
+        type: "pantry",
+        categories: [{ name: `Cat${i}` }],
+        synonyms: [{ synonym: `Syn${i}` }],
+      } as any);
     }
 
     const start = Date.now();
@@ -145,7 +145,9 @@ describe("pantryApi.addPantryItemsWithMetadata Performance", () => {
     const end = Date.now();
 
     console.log(`Add 50 items with metadata took: ${end - start}ms`);
-    console.log(`DB Metrics: Creates: ${dbMetrics.creates}, Updates: ${dbMetrics.updates}, Batches: ${dbMetrics.batches}`);
+    console.log(
+      `DB Metrics: Creates: ${dbMetrics.creates}, Updates: ${dbMetrics.updates}, Batches: ${dbMetrics.batches}`
+    );
   });
 });
 
@@ -161,15 +163,15 @@ describe("pantryApi.addPantryItemsWithMetadata Update Performance", () => {
   it("should measure performance with existing items", async () => {
     // add initial
     const items = [];
-    for(let i=0; i<50; i++) {
-        items.push({
-            name: `TestItem${i}`,
-            quantity: 1,
-            unit: 'pcs',
-            type: 'pantry',
-            categories: [{name: `Cat${i}`}],
-            synonyms: [{synonym: `Syn${i}`}]
-        } as any);
+    for (let i = 0; i < 50; i++) {
+      items.push({
+        name: `TestItem${i}`,
+        quantity: 1,
+        unit: "pcs",
+        type: "pantry",
+        categories: [{ name: `Cat${i}` }],
+        synonyms: [{ synonym: `Syn${i}` }],
+      } as any);
     }
     await pantryApi.addPantryItemsWithMetadata(items);
 
@@ -183,6 +185,8 @@ describe("pantryApi.addPantryItemsWithMetadata Update Performance", () => {
     const end = Date.now();
 
     console.log(`Update 50 items with metadata took: ${end - start}ms`);
-    console.log(`DB Metrics: Creates: ${dbMetrics.creates}, Updates: ${dbMetrics.updates}, Batches: ${dbMetrics.batches}`);
+    console.log(
+      `DB Metrics: Creates: ${dbMetrics.creates}, Updates: ${dbMetrics.updates}, Batches: ${dbMetrics.batches}`
+    );
   });
 });

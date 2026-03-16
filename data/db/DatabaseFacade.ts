@@ -1123,20 +1123,19 @@ export class DatabaseFacade {
       }[] = [];
 
       // Process recipes in batches
-      const batchSize = 10;
+      const batchSize = 100;
 
       for (let i = 0; i < allRecipes.length; i += batchSize) {
         const recipeBatch = allRecipes.slice(i, i + batchSize);
 
-        const batchDetailsPromises = recipeBatch.map((recipe) =>
-          this.recipes.getRecipeWithDetails(recipe.id)
-        );
-
-        const batchDetails = await Promise.all(batchDetailsPromises);
+        const recipeIds = recipeBatch.map((recipe) => recipe.id);
+        const batchDetailsMap = await this.getRecipesWithDetails(recipeIds);
 
         for (let j = 0; j < recipeBatch.length; j++) {
           const recipe = recipeBatch[j];
-          const recipeDetails = batchDetails[j];
+          if (!recipe) continue;
+
+          const recipeDetails = batchDetailsMap.get(recipe.id);
 
           if (!recipeDetails || !recipeDetails.ingredients.length) {
             continue;
