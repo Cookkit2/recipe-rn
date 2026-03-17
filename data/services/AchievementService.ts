@@ -13,6 +13,8 @@ import { StreakService } from "./StreakService";
 import type { AchievementRequirement, AchievementProgress } from "~/types/achievements";
 import { log } from "~/utils/logger";
 import { scheduleAchievementUnlock } from "~/lib/notifications/achievement-notifications";
+import { storage } from "~/data";
+import { SOCIAL_SHARES_COUNT_KEY } from "~/constants/storage-keys";
 
 export interface AchievementCheckResult {
   newlyUnlocked: Array<{
@@ -350,6 +352,22 @@ export class AchievementService {
   }
 
   /**
+   * Record that a user shared an achievement
+   */
+  async recordAchievementShare(): Promise<void> {
+    try {
+      const currentShares = Number(storage.get(SOCIAL_SHARES_COUNT_KEY)) || 0;
+      const newShares = currentShares + 1;
+      storage.set(SOCIAL_SHARES_COUNT_KEY, newShares.toString());
+
+      // Check achievements after updating the count
+      await this.checkAchievements();
+    } catch (error) {
+      log.error("Error recording achievement share:", error);
+    }
+  }
+
+  /**
    * Get current progress for a specific requirement
    * This is where we calculate progress based on the requirement type
    */
@@ -390,9 +408,7 @@ export class AchievementService {
           return 0;
 
         case "achievements_shared":
-          // This would need to track shares - placeholder
-          // TODO: Implement when sharing is available
-          return 0;
+          return Number(storage.get(SOCIAL_SHARES_COUNT_KEY)) || 0;
 
         case "breakfast_recipes_cooked":
         case "dinner_recipes_cooked":
