@@ -152,7 +152,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
       if (!recipe) return null;
 
       // Add defensive checks to ensure the recipe has the expected properties
-      if (!recipe.steps || typeof recipe.steps.query !== "function") {
+      if (!recipe.steps || typeof recipe.steps.fetch !== "function") {
         // Fallback: query collections directly
         return await this.getRecipeWithDetailsDirectQuery(id);
       }
@@ -163,8 +163,8 @@ export class RecipeRepository extends BaseRepository<Recipe> {
       }
 
       const [steps, ingredients] = await Promise.all([
-        recipe.steps.query().fetch(),
-        recipe.ingredients.query().fetch(),
+        recipe.steps.fetch(),
+        recipe.ingredients.fetch(),
       ]);
 
       return {

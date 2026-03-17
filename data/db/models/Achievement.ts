@@ -1,4 +1,4 @@
-import { Model } from "@nozbe/watermelondb";
+import { Model, Query } from "@nozbe/watermelondb";
 import { safeJsonParse } from "~/utils/json-parsing";
 import { field, date, children, writer } from "@nozbe/watermelondb/decorators";
 import type { Associations } from "@nozbe/watermelondb/Model";
@@ -35,7 +35,7 @@ export default class Achievement extends Model {
   @field("sort_order") sortOrder!: number;
   @field("hidden") hidden?: boolean; // Hidden until unlocked
 
-  @children("user_achievements") userAchievements!: UserAchievement[];
+  @children("user_achievements") userAchievements!: Query<UserAchievement>;
 
   @date("created_at") createdAt!: Date;
   @date("updated_at") updatedAt!: Date;
