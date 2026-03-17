@@ -58,6 +58,7 @@ function RecipeItemCard({ recipe, completionPercentage, matchCategory }: RecipeI
                 style={styles.image}
                 contentFit="cover"
                 collapsable={false}
+                accessibilityLabel={recipe.title ? `Image of ${recipe.title}` : "Recipe image"}
               />
             </Link.AppleZoom>
             {/* Completion badge */}
