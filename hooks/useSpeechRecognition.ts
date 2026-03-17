@@ -34,31 +34,15 @@ const CONFIDENCE_THRESHOLD = 0.5; // Only process commands with 50%+ confidence
 const MIN_TRANSCRIPT_LENGTH = 2; // Minimum characters to process (filters short noise)
 const COMMAND_DEBOUNCE_MS = 300; // Wait before processing to ensure user finished speaking
 
-export function useSpeechRecognition({
-  onCommand,
-  recipe,
-  currentStep,
-}: UseSpeechRecognitionOptions) {
-  const [isListening, setIsListening] = useState(false);
-  const [transcript, setTranscript] = useState("");
-  const shouldBeListeningRef = useRef(false);
-  const restartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+function useCommandProcessor(
+  onCommand: UseSpeechRecognitionOptions["onCommand"],
+  context: { recipe?: Recipe | null; currentStep?: RecipeStep }
+) {
   const lastCommandRef = useRef<string>("");
-  const wasListeningBeforeTTSRef = useRef(false);
-  const isPausedDueToTTSRef = useRef(false);
   const unknownCommandCountRef = useRef(0);
   const lastSuggestionTimeRef = useRef<number>(0);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Guard: cancel any pending restart
-  const clearRestart = useCallback(() => {
-    if (restartTimerRef.current) {
-      clearTimeout(restartTimerRef.current);
-      restartTimerRef.current = null;
-    }
-  }, []);
-
-  // Guard: cancel any pending debounce
   const clearDebounce = useCallback(() => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
@@ -66,43 +50,60 @@ export function useSpeechRecognition({
     }
   }, []);
 
-  const startRecognition = useCallback(() => {
-    ExpoSpeechRecognitionModule.start({
-      lang: "en-US",
-      interimResults: true,
-      continuous: true,
-      // Android-specific: Use free_form language model for better noise robustness
-      // web_search can be too aggressive in trying to match web search terms
-      androidIntentOptions: {
-        EXTRA_LANGUAGE_MODEL: "free_form",
-      },
-      iosTaskHint: "confirmation",
-    });
-  }, []);
+  const processCommand = useCallback(
+    (text: string, confidence: number) => {
+      clearDebounce();
 
-  const stopRecognition = useCallback((updateUI = true) => {
-    ExpoSpeechRecognitionModule.abort();
-    // Only update UI state if this is a user-initiated stop, not a TTS pause
-    if (updateUI) {
-      setIsListening(false);
-    }
-  }, []);
+      debounceTimerRef.current = setTimeout(() => {
+        if (text.trim()) {
+          const command = voiceCookingService.parseCommand(text);
 
-  // Schedule a single restart — dedupes multiple end/error events
-  const scheduleRestart = useCallback(
-    (delay: number) => {
-      clearRestart();
-      restartTimerRef.current = setTimeout(() => {
-        restartTimerRef.current = null;
-        if (shouldBeListeningRef.current) {
-          startRecognition();
+          log.info(
+            `[SpeechRecognition] Heard "${text}", parsed as "${command}" ` +
+              `(confidence: ${confidence.toFixed(2)}, last command: "${lastCommandRef.current}")`
+          );
+
+          if (command === "unknown") {
+            unknownCommandCountRef.current += 1;
+            const now = Date.now();
+            const timeSinceLastSuggestion = now - lastSuggestionTimeRef.current;
+
+            if (unknownCommandCountRef.current >= 3 && timeSinceLastSuggestion > 5000) {
+              const suggestion = voiceCookingService.getSuggestionMessage();
+              log.info(`[SpeechRecognition] Providing suggestion: ${suggestion}`);
+              voiceCookingService.speakFeedback(suggestion);
+              unknownCommandCountRef.current = 0;
+              lastSuggestionTimeRef.current = now;
+            }
+          } else if (command !== lastCommandRef.current) {
+            unknownCommandCountRef.current = 0;
+            lastCommandRef.current = command;
+            onCommand(command, text, context);
+
+            setTimeout(() => {
+              lastCommandRef.current = "";
+            }, 2000);
+          }
         }
-      }, delay);
+        debounceTimerRef.current = null;
+      }, COMMAND_DEBOUNCE_MS);
     },
-    [clearRestart, startRecognition]
+    [clearDebounce, onCommand, context.recipe, context.currentStep]
   );
 
-  // Pause speech recognition when TTS starts speaking
+  return { processCommand, clearDebounce };
+}
+
+function useTTSPauseHandler(
+  isListening: boolean,
+  shouldBeListeningRef: React.MutableRefObject<boolean>,
+  stopRecognition: (updateUI?: boolean) => void,
+  scheduleRestart: (delay: number) => void,
+  clearRestart: () => void
+) {
+  const wasListeningBeforeTTSRef = useRef(false);
+  const isPausedDueToTTSRef = useRef(false);
+
   useEffect(() => {
     const unsubscribeStart = voiceCookingService.onSpeakingStart(() => {
       if (isListening || shouldBeListeningRef.current) {
@@ -131,11 +132,71 @@ export function useSpeechRecognition({
       unsubscribeStart();
       unsubscribeFinish();
     };
-  }, [isListening, stopRecognition, clearRestart, scheduleRestart]);
+  }, [isListening, stopRecognition, clearRestart, scheduleRestart, shouldBeListeningRef]);
 
-  // Handle speech recognition events
+  return isPausedDueToTTSRef;
+}
+
+export function useSpeechRecognition({
+  onCommand,
+  recipe,
+  currentStep,
+}: UseSpeechRecognitionOptions) {
+  const [isListening, setIsListening] = useState(false);
+  const [transcript, setTranscript] = useState("");
+  const shouldBeListeningRef = useRef(false);
+  const restartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const { processCommand, clearDebounce } = useCommandProcessor(onCommand, { recipe, currentStep });
+
+  const clearRestart = useCallback(() => {
+    if (restartTimerRef.current) {
+      clearTimeout(restartTimerRef.current);
+      restartTimerRef.current = null;
+    }
+  }, []);
+
+  const startRecognition = useCallback(() => {
+    ExpoSpeechRecognitionModule.start({
+      lang: "en-US",
+      interimResults: true,
+      continuous: true,
+      androidIntentOptions: {
+        EXTRA_LANGUAGE_MODEL: "free_form",
+      },
+      iosTaskHint: "confirmation",
+    });
+  }, []);
+
+  const stopRecognition = useCallback((updateUI = true) => {
+    ExpoSpeechRecognitionModule.abort();
+    if (updateUI) {
+      setIsListening(false);
+    }
+  }, []);
+
+  const scheduleRestart = useCallback(
+    (delay: number) => {
+      clearRestart();
+      restartTimerRef.current = setTimeout(() => {
+        restartTimerRef.current = null;
+        if (shouldBeListeningRef.current) {
+          startRecognition();
+        }
+      }, delay);
+    },
+    [clearRestart, startRecognition]
+  );
+
+  const isPausedDueToTTSRef = useTTSPauseHandler(
+    isListening,
+    shouldBeListeningRef,
+    stopRecognition,
+    scheduleRestart,
+    clearRestart
+  );
+
   useSpeechRecognitionEvent("start", () => {
-    // Only update UI if we're not paused due to TTS
     if (!isPausedDueToTTSRef.current) {
       setIsListening(true);
     }
@@ -143,13 +204,11 @@ export function useSpeechRecognition({
   });
 
   useSpeechRecognitionEvent("end", () => {
-    // Only update UI if we're not paused due to TTS
     if (!isPausedDueToTTSRef.current) {
       setIsListening(false);
     }
     log.info("[SpeechRecognition] Stopped listening");
 
-    // Auto-restart if we should still be listening
     if (shouldBeListeningRef.current && !isPausedDueToTTSRef.current) {
       scheduleRestart(500);
     }
@@ -160,8 +219,6 @@ export function useSpeechRecognition({
     const confidence = event.results[0]?.confidence ?? 0;
     setTranscript(text);
 
-    // Ignore speech recognition results when TTS is speaking or paused due to TTS
-    // This prevents the app from picking up its own voice output
     if (voiceCookingService.getIsSpeaking() || isPausedDueToTTSRef.current) {
       log.debug(
         `[SpeechRecognition] Ignoring command "${text}" - ` +
@@ -171,7 +228,6 @@ export function useSpeechRecognition({
       return;
     }
 
-    // Filter out low-confidence results (likely kitchen noise)
     if (confidence < CONFIDENCE_THRESHOLD) {
       log.debug(
         `[SpeechRecognition] Ignoring low-confidence result "${text}" ` +
@@ -180,7 +236,6 @@ export function useSpeechRecognition({
       return;
     }
 
-    // Filter out very short transcriptions (likely noise pops/clicks)
     if (text.trim().length < MIN_TRANSCRIPT_LENGTH) {
       log.debug(
         `[SpeechRecognition] Ignoring short transcription "${text}" ` +
@@ -189,62 +244,16 @@ export function useSpeechRecognition({
       return;
     }
 
-    // Clear any pending debounce timer
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-      debounceTimerRef.current = null;
-    }
-
-    // Debounce command processing to ensure user finished speaking
-    // This prevents processing partial/incomplete commands
-    debounceTimerRef.current = setTimeout(() => {
-      if (text.trim()) {
-        const command = voiceCookingService.parseCommand(text);
-
-        log.info(
-          `[SpeechRecognition] Heard "${text}", parsed as "${command}" ` +
-            `(confidence: ${confidence.toFixed(2)}, last command: "${lastCommandRef.current}")`
-        );
-
-        if (command === "unknown") {
-          // Track unknown commands for helpful suggestions
-          unknownCommandCountRef.current += 1;
-          const now = Date.now();
-          const timeSinceLastSuggestion = now - lastSuggestionTimeRef.current;
-
-          // Provide suggestion after 3 unknown commands, or 5+ seconds since last suggestion
-          if (unknownCommandCountRef.current >= 3 && timeSinceLastSuggestion > 5000) {
-            const suggestion = voiceCookingService.getSuggestionMessage();
-            log.info(`[SpeechRecognition] Providing suggestion: ${suggestion}`);
-            voiceCookingService.speakFeedback(suggestion);
-            unknownCommandCountRef.current = 0;
-            lastSuggestionTimeRef.current = now;
-          }
-        } else if (command !== lastCommandRef.current) {
-          // Reset unknown counter on successful command
-          unknownCommandCountRef.current = 0;
-          lastCommandRef.current = command;
-          onCommand(command, text, { recipe, currentStep });
-
-          // Clear the last command after 2 seconds to allow the same command again
-          setTimeout(() => {
-            lastCommandRef.current = "";
-          }, 2000);
-        }
-      }
-      debounceTimerRef.current = null;
-    }, COMMAND_DEBOUNCE_MS);
+    processCommand(text, confidence);
   });
 
   useSpeechRecognitionEvent("error", (event) => {
-    // no-speech is expected when the user is silent — don't log as a warning
     if (event.error === "no-speech") {
       return;
     }
 
     log.warn("[SpeechRecognition] Error:", event.error, event.message);
 
-    // Don't restart on permission errors
     if (event.error === "not-allowed") {
       shouldBeListeningRef.current = false;
       setIsListening(false);
@@ -280,7 +289,6 @@ export function useSpeechRecognition({
     }
   }, [startListening, stopListening]);
 
-  // Pause listening when app goes to background
   useEffect(() => {
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
       if (nextAppState !== "active" && shouldBeListeningRef.current) {
@@ -295,7 +303,6 @@ export function useSpeechRecognition({
     return () => subscription.remove();
   }, [clearRestart, scheduleRestart]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       shouldBeListeningRef.current = false;
