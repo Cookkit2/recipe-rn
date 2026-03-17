@@ -404,10 +404,6 @@ export class AchievementService {
         case "ingredients_tracked":
           return await this.stockRepo.count();
 
-        case "spices_tracked":
-          // Total ingredients tracked in stock
-          return await this.stockRepo.count();
-
         case "spices_tracked": {
           const spicesCategory =
             (await this.categoryRepo.findByName("Spices")) ?? (await this.categoryRepo.findByName("spices"));
