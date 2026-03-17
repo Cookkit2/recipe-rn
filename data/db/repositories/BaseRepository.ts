@@ -91,10 +91,16 @@ export abstract class BaseRepository<T extends Model> {
   }
 
   async deleteMany(ids: string[]): Promise<void> {
+    if (ids.length === 0) return;
+
+    // Performance optimization:
+    // 1. Fetch only required records using Q.oneOf instead of fetching all records and filtering
+    // 2. Use batch processing to delete records in a single transaction, avoiding N+1 sequential writes
+    const recordsToDelete = await this.collection.query(Q.where("id", Q.oneOf(ids))).fetch();
+
     await database.write(async () => {
-      const records = await this.collection.query().fetch();
-      const recordsToDelete = records.filter((record) => ids.includes(record.id));
-      await Promise.all(recordsToDelete.map((record) => record.destroyPermanently()));
+      const batchOps = recordsToDelete.map((record) => record.prepareDestroyPermanently());
+      await database.batch(...batchOps);
     });
   }
 
