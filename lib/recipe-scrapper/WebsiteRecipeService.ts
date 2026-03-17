@@ -555,7 +555,13 @@ Return the cleaned recipe as valid JSON with the exact same structure as the inp
       });
 
       const response = await gemini.generateContent("gemini-2.0-flash", requestBody);
-      const cleanedRecipe = JSON.parse(response);
+      let cleanedRecipe;
+      try {
+        cleanedRecipe = JSON.parse(response);
+      } catch (parseError) {
+        log.warn("WebsiteRecipeService: Failed to parse Gemini response as JSON", parseError);
+        return recipe;
+      }
 
       // Validate cleaned recipe
       if (!isValidRecipe(cleanedRecipe)) {
