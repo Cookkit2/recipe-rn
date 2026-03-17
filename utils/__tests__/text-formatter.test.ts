@@ -46,8 +46,32 @@ describe("Text Formatter Utils - Capitalization", () => {
       expect(titleCase("hElLo wOrLd")).toBe("Hello World");
     });
 
+    it("should handle single character words", () => {
+      expect(titleCase("a b c")).toBe("A B C");
+      expect(titleCase("i am a hero")).toBe("I Am A Hero");
+    });
+
+    it("should handle words with numbers", () => {
+      expect(titleCase("recipe 1st version")).toBe("Recipe 1st Version");
+      expect(titleCase("version 2.0 is out")).toBe("Version 2.0 Is Out");
+    });
+
+    it("should handle words with special characters", () => {
+      expect(titleCase("hello-world")).toBe("Hello-world");
+      expect(titleCase("foo_bar")).toBe("Foo_bar");
+      expect(titleCase("user@domain.com")).toBe("User@domain.com");
+      expect(titleCase("@handle")).toBe("@handle");
+      expect(titleCase("#hashtag rules")).toBe("#hashtag Rules");
+    });
+
+    it("should handle leading and trailing spaces", () => {
+      expect(titleCase(" hello world ")).toBe(" Hello World ");
+      expect(titleCase("   spaced out   ")).toBe("   Spaced Out   ");
+    });
+
     it("should handle multiple spaces", () => {
       expect(titleCase("hello  world")).toBe("Hello  World");
+      expect(titleCase("a   b     c")).toBe("A   B     C");
     });
 
     it("should return empty string for empty or null input", () => {
