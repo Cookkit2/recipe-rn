@@ -1,4 +1,5 @@
-import { Model } from "@nozbe/watermelondb";
+import { Model, Query } from "@nozbe/watermelondb";
+import { safeJsonParse } from "~/utils/json-parsing";
 import { field, date, children, writer } from "@nozbe/watermelondb/decorators";
 import type { Associations } from "@nozbe/watermelondb/Model";
 import UserChallenge from "./UserChallenge";
@@ -30,7 +31,7 @@ export default class Challenge extends Model {
   @field("end_date") endDate!: number; // Timestamp when challenge expires
   @field("xp") xp?: number; // XP reward for completion
 
-  @children("user_challenges") userChallenges!: UserChallenge[];
+  @children("user_challenges") userChallenges!: Query<UserChallenge>;
 
   @date("created_at") createdAt!: Date;
   @date("updated_at") updatedAt!: Date;
@@ -47,12 +48,16 @@ export default class Challenge extends Model {
 
   // Computed property for parsed requirement
   get parsedRequirement(): ChallengeRequirement {
-    return JSON.parse(this.requirement);
+    return safeJsonParse<ChallengeRequirement>(this.requirement, {
+      type: "cook_recipes",
+      target: 0,
+      description: "Unknown",
+    } as ChallengeRequirement);
   }
 
   // Computed property for parsed reward
   get parsedReward(): ChallengeReward {
-    return JSON.parse(this.reward);
+    return safeJsonParse<ChallengeReward>(this.reward, { xp: 0 } as ChallengeReward);
   }
 
   // Check if challenge is daily

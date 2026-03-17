@@ -13,6 +13,7 @@ import { CAMERA_RESOLUTION } from "~/constants/camera";
 import { File, Paths } from "expo-file-system";
 import { titleCase } from "~/utils/text-formatter";
 import * as Haptics from "expo-haptics";
+import * as Crypto from "expo-crypto";
 import type { Prettify } from "~/utils/type-prettier";
 import { log } from "~/utils/logger";
 
@@ -192,7 +193,7 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
   // Add item and immediately start processing (fire and forget, parallel)
   const processImage = useCallback(
     (imagePath: string, itemFramePosition: { x: number; y: number }) => {
-      const itemId = `item-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+      const itemId = `item-${Date.now()}-${Crypto.randomUUID()}`;
 
       const newItem: CreatePantryItem = {
         id: itemId,

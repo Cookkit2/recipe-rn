@@ -93,17 +93,7 @@ export class StorageFactory {
     const toStorage = this.createStorage(toConfig);
 
     try {
-      // Get all keys to migrate
-      let keysToMigrate: string[] = [];
-
-      if (keys) {
-        keysToMigrate = keys;
-      } else {
-        // Always call getAllKeys for tests to verify it's called
-        const allKeys =
-          typeof fromStorage.getAllKeys === "function" ? fromStorage.getAllKeys() : null;
-        keysToMigrate = Array.isArray(allKeys) ? allKeys : [];
-      }
+      const keysToMigrate = this.getKeysToMigrate(fromStorage, keys);
 
       if (keysToMigrate.length === 0) {
         log.info("No data to migrate");
@@ -115,22 +105,46 @@ export class StorageFactory {
       const toSupportsBatch = this.storageSupportsMethod(toStorage, "setBatch");
 
       if (fromSupportsBatch && toSupportsBatch) {
-        // Use batch operations for efficiency
-        const data = fromStorage.getBatch(keysToMigrate);
-        toStorage.setBatch(data);
+        this.performBatchMigration(fromStorage, toStorage, keysToMigrate);
       } else {
-        // Migrate one by one
-        for (const key of keysToMigrate) {
-          const value = fromStorage.get(key);
-          if (value !== null) {
-            toStorage.set(key, value);
-          }
-        }
+        this.performSequentialMigration(fromStorage, toStorage, keysToMigrate);
       }
 
       log.info(`Successfully migrated ${keysToMigrate.length} items`);
     } catch (error) {
       throw new StorageError(`Migration failed: ${error}`, toConfig.type);
+    }
+  }
+
+  private static getKeysToMigrate(storage: IStorage, requestedKeys?: string[]): string[] {
+    if (requestedKeys) {
+      return requestedKeys;
+    }
+
+    // Always call getAllKeys for tests to verify it's called
+    const allKeys = typeof storage.getAllKeys === "function" ? storage.getAllKeys() : null;
+    return Array.isArray(allKeys) ? allKeys : [];
+  }
+
+  private static performBatchMigration(
+    fromStorage: IStorage,
+    toStorage: IStorage,
+    keys: string[]
+  ): void {
+    const data = fromStorage.getBatch(keys);
+    toStorage.setBatch(data);
+  }
+
+  private static performSequentialMigration(
+    fromStorage: IStorage,
+    toStorage: IStorage,
+    keys: string[]
+  ): void {
+    for (const key of keys) {
+      const value = fromStorage.get(key);
+      if (value !== null) {
+        toStorage.set(key, value);
+      }
     }
   }
 

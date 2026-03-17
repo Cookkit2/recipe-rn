@@ -27,6 +27,22 @@ const groceryCollection = () => database.collections.get<GroceryItemCheck>("groc
 /**
  * Implementation of tool executor for DoneDish features
  */
+
+/**
+ * Helper to wrap tool execution with common error handling
+ */
+async function executeTool<T>(name: string, fn: () => Promise<T>): Promise<any> {
+  try {
+    return await fn();
+  } catch (error) {
+    console.error(`[CookkitToolExecutor] ${name} error:`, error);
+    return {
+      success: false,
+      error: String(error),
+    };
+  }
+}
+
 export class CookkitToolExecutor implements ToolExecutor {
   // ============================================================================
   // INVENTORY MANAGEMENT
@@ -34,7 +50,7 @@ export class CookkitToolExecutor implements ToolExecutor {
 
   async addItem(params: any): Promise<any> {
     console.log("[CookkitToolExecutor] addItem called:", params);
-    try {
+    return executeTool("addItem", async () => {
       const { name, quantity, unit, location, expiry_date } = params;
 
       console.log("[CookkitToolExecutor] addItem writing to DB:", {
@@ -64,17 +80,11 @@ export class CookkitToolExecutor implements ToolExecutor {
       };
       console.log("[CookkitToolExecutor] addItem success:", result);
       return result;
-    } catch (error) {
-      console.error("[CookkitToolExecutor] addItem error:", error);
-      return {
-        success: false,
-        error: String(error),
-      };
-    }
+    });
   }
 
   async removeItem(params: any): Promise<any> {
-    try {
+    return executeTool("removeItem", async () => {
       const { item_id, quantity } = params;
 
       const stock = await stockCollection().find(item_id);
@@ -104,17 +114,11 @@ export class CookkitToolExecutor implements ToolExecutor {
           message: `Removed all ${stock.name} from inventory`,
         };
       }
-    } catch (error) {
-      console.error("[CookkitToolExecutor] removeItem error:", error);
-      return {
-        success: false,
-        error: String(error),
-      };
-    }
+    });
   }
 
   async getInventory(params: any = {}): Promise<any> {
-    try {
+    return executeTool("getInventory", async () => {
       const { location } = params;
 
       let items: Stock[];
@@ -136,13 +140,7 @@ export class CookkitToolExecutor implements ToolExecutor {
           expiry_date: item.expiryDate ? item.expiryDate.toISOString() : null,
         })),
       };
-    } catch (error) {
-      console.error("[CookkitToolExecutor] getInventory error:", error);
-      return {
-        success: false,
-        error: String(error),
-      };
-    }
+    });
   }
 
   // ============================================================================
@@ -150,7 +148,7 @@ export class CookkitToolExecutor implements ToolExecutor {
   // ============================================================================
 
   async getExpiringItems(params: any = {}): Promise<any> {
-    try {
+    return executeTool("getExpiringItems", async () => {
       const { days_ahead = 3 } = params;
       const now = Date.now();
       const expiryThreshold = now + days_ahead * 24 * 60 * 60 * 1000;
@@ -178,17 +176,11 @@ export class CookkitToolExecutor implements ToolExecutor {
           };
         }),
       };
-    } catch (error) {
-      console.error("[CookkitToolExecutor] getExpiringItems error:", error);
-      return {
-        success: false,
-        error: String(error),
-      };
-    }
+    });
   }
 
   async setExpiryAlert(params: any): Promise<any> {
-    try {
+    return executeTool("setExpiryAlert", async () => {
       const { item_id, alert_time } = params;
 
       const stock = await stockCollection().find(item_id);
@@ -233,13 +225,7 @@ export class CookkitToolExecutor implements ToolExecutor {
         success: true,
         message: `Alert set for ${stock.name} at ${alert_time}`,
       };
-    } catch (error) {
-      console.error("[CookkitToolExecutor] setExpiryAlert error:", error);
-      return {
-        success: false,
-        error: String(error),
-      };
-    }
+    });
   }
 
   // ============================================================================
@@ -247,7 +233,7 @@ export class CookkitToolExecutor implements ToolExecutor {
   // ============================================================================
 
   async addToGroceryList(params: any): Promise<any> {
-    try {
+    return executeTool("addToGroceryList", async () => {
       const { name, quantity } = params;
 
       // The grocery list is meal-plan-based (derived from planned recipes).
@@ -269,17 +255,11 @@ export class CookkitToolExecutor implements ToolExecutor {
         ...result,
         message: `Added ${quantity ?? 1} ${name} to your pantry. (The grocery list is built from meal plan recipes.)`,
       };
-    } catch (error) {
-      console.error("[CookkitToolExecutor] addToGroceryList error:", error);
-      return {
-        success: false,
-        error: String(error),
-      };
-    }
+    });
   }
 
   async getGroceryList(params: any = {}): Promise<any> {
-    try {
+    return executeTool("getGroceryList", async () => {
       const items = await groceryCollection()
         .query(Q.where("is_deleted", Q.notEq(true)))
         .fetch();
@@ -293,13 +273,7 @@ export class CookkitToolExecutor implements ToolExecutor {
           checked: item.isChecked,
         })),
       };
-    } catch (error) {
-      console.error("[CookkitToolExecutor] getGroceryList error:", error);
-      return {
-        success: false,
-        error: String(error),
-      };
-    }
+    });
   }
 
   // ============================================================================
@@ -307,7 +281,7 @@ export class CookkitToolExecutor implements ToolExecutor {
   // ============================================================================
 
   async findRecipes(params: any): Promise<any> {
-    try {
+    return executeTool("findRecipes", async () => {
       // Fetch all recipes from Supabase and filter client-side
       const allRecipes = await recipeApi.getAllRecipes();
 
@@ -336,17 +310,11 @@ export class CookkitToolExecutor implements ToolExecutor {
           cook_minutes: r.cook_minutes,
         })),
       };
-    } catch (error) {
-      console.error("[CookkitToolExecutor] findRecipes error:", error);
-      return {
-        success: false,
-        error: String(error),
-      };
-    }
+    });
   }
 
   async suggestMeals(params: any = {}): Promise<any> {
-    try {
+    return executeTool("suggestMeals", async () => {
       // Get current inventory
       const inventoryResult = await this.getInventory();
       if (!inventoryResult.success) {
@@ -364,13 +332,7 @@ export class CookkitToolExecutor implements ToolExecutor {
         based_on_inventory: ingredientNames,
         suggestions: recipesResult.recipes ?? [],
       };
-    } catch (error) {
-      console.error("[CookkitToolExecutor] suggestMeals error:", error);
-      return {
-        success: false,
-        error: String(error),
-      };
-    }
+    });
   }
 
   // ============================================================================
@@ -378,7 +340,7 @@ export class CookkitToolExecutor implements ToolExecutor {
   // ============================================================================
 
   async scanBarcode(params: any): Promise<any> {
-    try {
+    return executeTool("scanBarcode", async () => {
       const { barcode } = params;
 
       // Look up ingredient by name via Supabase base ingredient data
@@ -395,12 +357,6 @@ export class CookkitToolExecutor implements ToolExecutor {
         success: true,
         product: productInfo,
       };
-    } catch (error) {
-      console.error("[CookkitToolExecutor] scanBarcode error:", error);
-      return {
-        success: false,
-        error: String(error),
-      };
-    }
+    });
   }
 }

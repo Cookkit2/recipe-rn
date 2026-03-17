@@ -1,4 +1,5 @@
-import { Collection, Model } from "@nozbe/watermelondb";
+import { Model, Query } from "@nozbe/watermelondb";
+import { safeJsonParse } from "~/utils/json-parsing";
 import { field, date, children, writer } from "@nozbe/watermelondb/decorators";
 import type { Associations } from "@nozbe/watermelondb/Model";
 import type RecipeStep from "./RecipeStep";
@@ -48,16 +49,16 @@ export default class Recipe extends Model {
   @field("is_favorite") isFavorite!: boolean; // NEW: User can favorite recipes
   @field("type") type?: RecipeType;
 
-  @children("recipe_step") steps!: Collection<RecipeStep>;
-  @children("recipe_ingredient") ingredients!: Collection<RecipeIngredient>;
-  @children("cooking_history") cookingHistory!: Collection<CookingHistory>;
+  @children("recipe_step") steps!: Query<RecipeStep>;
+  @children("recipe_ingredient") ingredients!: Query<RecipeIngredient>;
+  @children("cooking_history") cookingHistory!: Query<CookingHistory>;
 
   @date("created_at") createdAt!: Date;
   @date("updated_at") updatedAt!: Date;
 
   // Computed property for tags
   get tags(): string[] {
-    return this._tags ? JSON.parse(this._tags) : [];
+    return safeJsonParse<string[]>(this._tags, []);
   }
 
   set tags(value: string[]) {

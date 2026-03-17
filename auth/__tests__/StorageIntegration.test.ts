@@ -146,4 +146,29 @@ describe("AuthStorageManager", () => {
     expect(storage.contains("auth_session_data")).toBe(false);
     expect(storage.contains("auth_session_expires_at")).toBe(false);
   });
+
+  it("returns null and clears session when stored session data is invalid JSON", async () => {
+    const manager = AuthStorageManager.getInstance();
+    const storage = getMockStorage();
+
+    storage.set("auth_session_data", "{ invalid json");
+
+    const result = await manager.getSession();
+
+    expect(result).toBeNull();
+    expect(storage.contains("auth_session_data")).toBe(false);
+  });
+
+  it("handles invalid JSON when updating access token gracefully", async () => {
+    const manager = AuthStorageManager.getInstance();
+    const storage = getMockStorage();
+
+    storage.set("auth_session_data", "{ invalid json");
+
+    await manager.updateAccessToken("new-token", new Date());
+
+    expect(storage.set).toHaveBeenCalledWith("auth_access_token", "new-token");
+    // It should not have updated the session data due to catch
+    expect(storage.getString("auth_session_data")).toBe("{ invalid json");
+  });
 });

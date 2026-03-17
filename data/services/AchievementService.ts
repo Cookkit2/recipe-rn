@@ -9,10 +9,15 @@
 import { AchievementRepository } from "../db/repositories/AchievementRepository";
 import { UserAchievementRepository } from "../db/repositories/UserAchievementRepository";
 import { CookingHistoryRepository } from "../db/repositories/CookingHistoryRepository";
+import { RecipeRepository } from "../db/repositories/RecipeRepository";
 import { StreakService } from "./StreakService";
+import { StockRepository } from "../db/repositories/StockRepository";
+import { IngredientCategoryRepository } from "../db/repositories/IngredientCategoryRepository";
 import type { AchievementRequirement, AchievementProgress } from "~/types/achievements";
 import { log } from "~/utils/logger";
 import { scheduleAchievementUnlock } from "~/lib/notifications/achievement-notifications";
+import { storage } from "~/data";
+import { SOCIAL_SHARES_COUNT_KEY } from "~/constants/storage-keys";
 
 export interface AchievementCheckResult {
   newlyUnlocked: Array<{
@@ -35,12 +40,18 @@ export class AchievementService {
   private userAchievementRepo: UserAchievementRepository;
   private cookingHistoryRepo: CookingHistoryRepository;
   private streakService: StreakService;
+  private stockRepo: StockRepository;
+  private categoryRepo: IngredientCategoryRepository;
+  private recipeRepo: RecipeRepository;
 
   constructor() {
     this.achievementRepo = new AchievementRepository();
     this.userAchievementRepo = new UserAchievementRepository();
     this.cookingHistoryRepo = new CookingHistoryRepository();
     this.streakService = new StreakService();
+    this.stockRepo = new StockRepository();
+    this.categoryRepo = new IngredientCategoryRepository();
+    this.recipeRepo = new RecipeRepository();
   }
 
   /**
@@ -350,6 +361,22 @@ export class AchievementService {
   }
 
   /**
+   * Record that a user shared an achievement
+   */
+  async recordAchievementShare(): Promise<void> {
+    try {
+      const currentShares = Number(storage.get(SOCIAL_SHARES_COUNT_KEY)) || 0;
+      const newShares = currentShares + 1;
+      storage.set(SOCIAL_SHARES_COUNT_KEY, newShares.toString());
+
+      // Check achievements after updating the count
+      await this.checkAchievements();
+    } catch (error) {
+      log.error("Error recording achievement share:", error);
+    }
+  }
+
+  /**
    * Get current progress for a specific requirement
    * This is where we calculate progress based on the requirement type
    */
@@ -375,14 +402,17 @@ export class AchievementService {
           return allCooks.length;
 
         case "ingredients_tracked":
-          // This would need to query the stock table - placeholder for now
-          // TODO: Implement when stock repository is available
-          return 0;
+          return await this.stockRepo.count();
 
-        case "spices_tracked":
-          // This would need to query the stock table filtered by spice type - placeholder
-          // TODO: Implement when stock repository is available
-          return 0;
+        case "spices_tracked": {
+          const spicesCategory =
+            (await this.categoryRepo.findByName("Spices")) ?? (await this.categoryRepo.findByName("spices"));
+
+          if (!spicesCategory) return 0;
+
+          const spicesStock = await this.stockRepo.getStockByCategory(spicesCategory.id);
+          return spicesStock.length;
+        }
 
         case "ingredients_used_before_expiry":
           // This would need to track ingredient usage before expiry - placeholder
@@ -390,15 +420,21 @@ export class AchievementService {
           return 0;
 
         case "achievements_shared":
-          // This would need to track shares - placeholder
-          // TODO: Implement when sharing is available
-          return 0;
+          return Number(storage.get(SOCIAL_SHARES_COUNT_KEY)) || 0;
 
-        case "breakfast_recipes_cooked":
-        case "dinner_recipes_cooked":
-          // This would need category-specific counting - placeholder
-          // TODO: Implement when recipe categories are available
-          return 0;
+        case "breakfast_recipes_cooked": {
+          const breakfastRecipes = await this.recipeRepo.getRecipesByTag("breakfast");
+          const breakfastRecipeIds = new Set(breakfastRecipes.map((r) => r.id));
+          const allCooks = await this.cookingHistoryRepo.getCookingHistory();
+          return allCooks.filter((c) => breakfastRecipeIds.has(c.recipeId)).length;
+        }
+
+        case "dinner_recipes_cooked": {
+          const dinnerRecipes = await this.recipeRepo.getRecipesByTag("dinner");
+          const dinnerRecipeIds = new Set(dinnerRecipes.map((r) => r.id));
+          const allCooks = await this.cookingHistoryRepo.getCookingHistory();
+          return allCooks.filter((c) => dinnerRecipeIds.has(c.recipeId)).length;
+        }
 
         default:
           log.warn(`Unknown achievement metric: ${requirement.metric}`);

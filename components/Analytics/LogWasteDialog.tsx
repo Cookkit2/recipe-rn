@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, ScrollView } from "react-native";
 import * as Haptics from "expo-haptics";
+import * as Crypto from "expo-crypto";
 import {
   Dialog,
   DialogContent,
@@ -82,7 +83,7 @@ export function LogWasteDialog({
     }
 
     // If no stockId provided, create a temporary entry with just the name
-    const finalStockId = stockId || `temp-${Date.now()}-${Math.random()}`;
+    const finalStockId = stockId || `temp-${Date.now()}-${Crypto.randomUUID()}`;
 
     recordWaste.mutate(
       {

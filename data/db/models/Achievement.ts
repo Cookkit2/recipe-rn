@@ -1,4 +1,5 @@
-import { Model } from "@nozbe/watermelondb";
+import { Model, Query } from "@nozbe/watermelondb";
+import { safeJsonParse } from "~/utils/json-parsing";
 import { field, date, children, writer } from "@nozbe/watermelondb/decorators";
 import type { Associations } from "@nozbe/watermelondb/Model";
 import UserAchievement from "./UserAchievement";
@@ -34,19 +35,22 @@ export default class Achievement extends Model {
   @field("sort_order") sortOrder!: number;
   @field("hidden") hidden?: boolean; // Hidden until unlocked
 
-  @children("user_achievements") userAchievements!: UserAchievement[];
+  @children("user_achievements") userAchievements!: Query<UserAchievement>;
 
   @date("created_at") createdAt!: Date;
   @date("updated_at") updatedAt!: Date;
 
   // Computed property for parsed requirement
   get parsedRequirement(): AchievementRequirement {
-    return JSON.parse(this.requirement);
+    return safeJsonParse<AchievementRequirement>(this.requirement, {
+      type: "special",
+      target: 0,
+    } as AchievementRequirement);
   }
 
   // Computed property for parsed reward
   get parsedReward(): AchievementReward | undefined {
-    return this.reward ? JSON.parse(this.reward) : undefined;
+    return safeJsonParse<AchievementReward | undefined>(this.reward, undefined);
   }
 
   // Check if achievement is hidden

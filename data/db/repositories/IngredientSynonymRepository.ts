@@ -1,6 +1,7 @@
 import { Q } from "@nozbe/watermelondb";
 import IngredientSynonym from "../models/IngredientSynonym";
 import { BaseRepository } from "./BaseRepository";
+import { sanitizeSearchTerm } from "~/utils/input-sanitization";
 
 export class IngredientSynonymRepository extends BaseRepository<IngredientSynonym> {
   constructor() {
@@ -15,7 +16,7 @@ export class IngredientSynonymRepository extends BaseRepository<IngredientSynony
   // Find stock IDs by synonym (for matching)
   async findStockIdsBySynonym(synonym: string): Promise<string[]> {
     const synonyms = await this.collection
-      .query(Q.where("synonym", Q.like(`%${Q.sanitizeLikeString(synonym)}%`)))
+      .query(Q.where("synonym", Q.like(sanitizeSearchTerm(synonym))))
       .fetch();
     return synonyms.map((syn) => syn.stockId);
   }
