@@ -1,9 +1,9 @@
 import { Model } from "@nozbe/watermelondb";
+import { safeJsonParse } from "~/utils/json-parsing";
 import { field, date, children, writer } from "@nozbe/watermelondb/decorators";
 import type { Associations } from "@nozbe/watermelondb/Model";
 import UserChallenge from "./UserChallenge";
 import type { ChallengeRequirement, ChallengeReward } from "~/types/achievements";
-import { safeJsonParse } from "~/utils/json-parsing";
 
 export interface ChallengeData {
   type: string;
