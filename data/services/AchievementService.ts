@@ -405,15 +405,18 @@ export class AchievementService {
           return await this.stockRepo.count();
 
         case "spices_tracked":
-          const allCategories = await this.categoryRepo.findAll();
-          const spiceCategory = allCategories.find((c) => c.name.toLowerCase() === "spices");
+          // Total ingredients tracked in stock
+          return await this.stockRepo.count();
 
-          if (!spiceCategory) {
-            return 0;
-          }
+        case "spices_tracked": {
+          const spicesCategory =
+            (await this.categoryRepo.findByName("Spices")) ?? (await this.categoryRepo.findByName("spices"));
 
-          const spiceStocks = await this.stockRepo.getStockByCategory(spiceCategory.id);
-          return spiceStocks.length;
+          if (!spicesCategory) return 0;
+
+          const spicesStock = await this.stockRepo.getStockByCategory(spicesCategory.id);
+          return spicesStock.length;
+        }
 
         case "ingredients_used_before_expiry":
           // This would need to track ingredient usage before expiry - placeholder
