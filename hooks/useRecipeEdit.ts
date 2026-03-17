@@ -61,11 +61,13 @@ async function syncRecipeIngredients(
   workingCopy: EditableRecipe,
   ingredientsCollection: Collection<RecipeIngredient>
 ) {
+  const batchOps: any[] = [];
+
   // Delete removed ingredients
   const existingIngredients = await recipe.ingredients.query().fetch();
   for (const existing of existingIngredients) {
     if (!workingCopy.ingredients.some((ing) => ing.id === existing.id)) {
-      await existing.destroyPermanently();
+      batchOps.push(existing.prepareDestroyPermanently());
     }
   }
 
@@ -73,23 +75,33 @@ async function syncRecipeIngredients(
   for (const ingredient of workingCopy.ingredients) {
     if (ingredient.id) {
       // Update existing
-      const existing = await ingredientsCollection.find(ingredient.id);
-      await existing.updateRecipeIngredient({
-        name: ingredient.name,
-        quantity: ingredient.quantity,
-        unit: ingredient.unit,
-        notes: ingredient.notes,
-      });
+      const existing = existingIngredients.find((ing) => ing.id === ingredient.id);
+      if (existing) {
+        batchOps.push(
+          existing.prepareUpdate((ing: RecipeIngredient) => {
+            ing.name = ingredient.name;
+            ing.quantity = ingredient.quantity;
+            ing.unit = ingredient.unit;
+            ing.notes = ingredient.notes;
+          })
+        );
+      }
     } else {
       // Create new
-      await ingredientsCollection.create((ing) => {
-        ing.recipeId = recipe.id;
-        ing.name = ingredient.name;
-        ing.quantity = ingredient.quantity;
-        ing.unit = ingredient.unit;
-        ing.notes = ingredient.notes;
-      });
+      batchOps.push(
+        ingredientsCollection.prepareCreate((ing: RecipeIngredient) => {
+          ing.recipeId = recipe.id;
+          ing.name = ingredient.name;
+          ing.quantity = ingredient.quantity;
+          ing.unit = ingredient.unit;
+          ing.notes = ingredient.notes;
+        })
+      );
     }
+  }
+
+  if (batchOps.length > 0) {
+    await ingredientsCollection.database.batch(...batchOps);
   }
 }
 
@@ -98,11 +110,13 @@ async function syncRecipeSteps(
   workingCopy: EditableRecipe,
   stepsCollection: Collection<RecipeStep>
 ) {
+  const batchOps: any[] = [];
+
   // Delete removed steps
   const existingSteps = await recipe.steps.query().fetch();
   for (const existing of existingSteps) {
     if (!workingCopy.steps.some((step) => step.id === existing.id)) {
-      await existing.destroyPermanently();
+      batchOps.push(existing.prepareDestroyPermanently());
     }
   }
 
@@ -110,21 +124,31 @@ async function syncRecipeSteps(
   for (const step of workingCopy.steps) {
     if (step.id) {
       // Update existing
-      const existing = await stepsCollection.find(step.id);
-      await existing.updateStep({
-        step: step.step,
-        title: step.title,
-        description: step.description,
-      });
+      const existing = existingSteps.find((s) => s.id === step.id);
+      if (existing) {
+        batchOps.push(
+          existing.prepareUpdate((s: RecipeStep) => {
+            s.step = step.step;
+            s.title = step.title;
+            s.description = step.description;
+          })
+        );
+      }
     } else {
       // Create new
-      await stepsCollection.create((s) => {
-        s.step = step.step;
-        s.title = step.title;
-        s.description = step.description;
-        s.recipeId = recipe.id;
-      });
+      batchOps.push(
+        stepsCollection.prepareCreate((s: RecipeStep) => {
+          s.step = step.step;
+          s.title = step.title;
+          s.description = step.description;
+          s.recipeId = recipe.id;
+        })
+      );
     }
+  }
+
+  if (batchOps.length > 0) {
+    await stepsCollection.database.batch(...batchOps);
   }
 }
 
