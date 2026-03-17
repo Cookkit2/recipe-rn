@@ -9,6 +9,7 @@
 import { AchievementRepository } from "../db/repositories/AchievementRepository";
 import { UserAchievementRepository } from "../db/repositories/UserAchievementRepository";
 import { CookingHistoryRepository } from "../db/repositories/CookingHistoryRepository";
+import { RecipeRepository } from "../db/repositories/RecipeRepository";
 import { StreakService } from "./StreakService";
 import { StockRepository } from "../db/repositories/StockRepository";
 import { IngredientCategoryRepository } from "../db/repositories/IngredientCategoryRepository";
@@ -41,6 +42,7 @@ export class AchievementService {
   private streakService: StreakService;
   private stockRepo: StockRepository;
   private categoryRepo: IngredientCategoryRepository;
+  private recipeRepo: RecipeRepository;
 
   constructor() {
     this.achievementRepo = new AchievementRepository();
@@ -49,6 +51,7 @@ export class AchievementService {
     this.streakService = new StreakService();
     this.stockRepo = new StockRepository();
     this.categoryRepo = new IngredientCategoryRepository();
+    this.recipeRepo = new RecipeRepository();
   }
 
   /**
@@ -420,11 +423,19 @@ export class AchievementService {
         case "achievements_shared":
           return Number(storage.get(SOCIAL_SHARES_COUNT_KEY)) || 0;
 
-        case "breakfast_recipes_cooked":
-        case "dinner_recipes_cooked":
-          // This would need category-specific counting - placeholder
-          // TODO: Implement when recipe categories are available
-          return 0;
+        case "breakfast_recipes_cooked": {
+          const breakfastRecipes = await this.recipeRepo.getRecipesByTag("breakfast");
+          const breakfastRecipeIds = new Set(breakfastRecipes.map((r) => r.id));
+          const allCooks = await this.cookingHistoryRepo.getCookingHistory();
+          return allCooks.filter((c) => breakfastRecipeIds.has(c.recipeId)).length;
+        }
+
+        case "dinner_recipes_cooked": {
+          const dinnerRecipes = await this.recipeRepo.getRecipesByTag("dinner");
+          const dinnerRecipeIds = new Set(dinnerRecipes.map((r) => r.id));
+          const allCooks = await this.cookingHistoryRepo.getCookingHistory();
+          return allCooks.filter((c) => dinnerRecipeIds.has(c.recipeId)).length;
+        }
 
         default:
           log.warn(`Unknown achievement metric: ${requirement.metric}`);
