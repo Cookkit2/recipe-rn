@@ -1142,6 +1142,8 @@ export class DatabaseFacade {
         completionPercentage: number;
       }[] = [];
 
+      const ingredientMatchCache = new Map<string, (typeof pantryItemsWithMetadata)[0] | null>();
+
       // Process recipes in batches
       const batchSize = 100;
 
@@ -1164,14 +1166,22 @@ export class DatabaseFacade {
           let availableCount = 0;
           for (const ingredient of recipeDetails.ingredients) {
             const normalizedIngredientName = ingredient.name.toLowerCase().trim();
-            let matchingItem = pantryIndex.get(normalizedIngredientName);
-            if (!matchingItem) {
-              matchingItem = pantryItemsWithMetadata.find((pantryItem) =>
-                isIngredientMatch(pantryItem.name, ingredient.name, pantryItem.synonyms)
-              );
+
+            let matchingItem: (typeof pantryItemsWithMetadata)[0] | null | undefined =
+              ingredientMatchCache.get(normalizedIngredientName);
+
+            if (matchingItem === undefined) {
+              matchingItem = pantryIndex.get(normalizedIngredientName) || null;
+              if (!matchingItem) {
+                matchingItem =
+                  pantryItemsWithMetadata.find((pantryItem) =>
+                    isIngredientMatch(pantryItem.name, ingredient.name, pantryItem.synonyms)
+                  ) || null;
+              }
+              ingredientMatchCache.set(normalizedIngredientName, matchingItem);
             }
 
-            if (matchingItem) {
+            if (matchingItem !== null) {
               availableCount++;
             }
           }
