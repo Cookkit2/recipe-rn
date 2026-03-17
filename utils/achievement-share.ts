@@ -47,7 +47,15 @@ function getAppName(): string {
  */
 function getAppStoreUrl(): string {
   const storeUrl = StoreReview.storeUrl();
-  return storeUrl || "https://cookkit.app";
+  if (storeUrl) {
+    return storeUrl;
+  }
+
+  if (Platform.OS === "ios") {
+    return "https://apps.apple.com/us/app/cookkit/id6752543191";
+  }
+
+  return "https://cookkit.app";
 }
 
 /**
