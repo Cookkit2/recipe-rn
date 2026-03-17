@@ -531,7 +531,7 @@ const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
   try {
     // Add timeout to prevent hanging
     const synonymRecords = (await Promise.race([
-      stock.synonyms.query().fetch(),
+      stock.synonyms.fetch(),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("Synonym fetch timeout")), 3000)
       ),
@@ -546,7 +546,7 @@ const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
   let categories: Array<{ id: string; name: string }> = [];
   try {
     const stockCategoryRecords = (await Promise.race([
-      stock.stockCategories.query().fetch(),
+      stock.stockCategories.fetch(),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("StockCategory fetch timeout")), 3000)
       ),
@@ -568,6 +568,28 @@ const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
     log.warn("Could not fetch categories for stock:", stock.id);
   }
 
+  // Fetch steps to store if available
+  let stepsToStore: Array<{ id: string; title: string; description: string; sequence: number }> =
+    [];
+  try {
+    const stepsRecords = (await Promise.race([
+      stock.stepsToStore.fetch(),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("StepsToStore fetch timeout")), 3000)
+      ),
+    ])) as any[];
+    stepsToStore = stepsRecords.map((s) => ({
+      id: s.id,
+      title: s.title,
+      description: s.description,
+      sequence: s.sequence,
+    }));
+    // Sort by sequence
+    stepsToStore.sort((a, b) => a.sequence - b.sequence);
+  } catch (error) {
+    log.warn("Could not fetch steps to store for stock:", stock.id);
+  }
+
   return {
     id: stock.id,
     name: stock.name,
@@ -581,7 +603,7 @@ const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
     background_color: stock.backgroundColor,
     created_at: stock.createdAt,
     updated_at: stock.updatedAt,
-    steps_to_store: [], // TODO: Load from StepsToStore model
+    steps_to_store: stepsToStore,
     synonyms,
   };
 };
