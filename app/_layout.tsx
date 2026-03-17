@@ -33,22 +33,7 @@ import {
 } from "~/lib/notifications";
 import { initImageCache } from "~/lib/image-cache";
 
-function AnimatedStack() {
-  const { theme } = useUniwind();
-  const headerColor = theme === "dark" ? "#fff" : "#000";
-  const router = useRouter();
-  const colors = useColors();
-
-  // Register the navigation container with Sentry for automatic route tracking
-  const ref = useNavigationContainerRef();
-
-  // Hide splash screen once the navigation stack is mounted
-  useEffect(() => {
-    if (ref) {
-      navigationIntegration.registerNavigationContainer(ref);
-    }
-  }, [ref]);
-
+function useNotificationHandlers(router: ReturnType<typeof useRouter>) {
   // Single handler for ingredient_expiry: deep link to first recipe or pantry
   useEffect(() => {
     registerNotificationHandler(INGREDIENT_EXPIRY_TYPE, (response) => {
@@ -85,7 +70,9 @@ function AnimatedStack() {
       unregisterNotificationHandler(CHALLENGE_COMPLETED_TYPE);
     };
   }, [router]);
+}
 
+function useOnboardingCheck(router: ReturnType<typeof useRouter>) {
   // Check onboarding status on mount
   useEffect(() => {
     // router.push("/profile/preferences/voice-settings");
@@ -97,6 +84,42 @@ function AnimatedStack() {
       SplashScreen.hideAsync();
     }, 0);
   }, [router]);
+}
+
+function AnimatedStack() {
+  const router = useRouter();
+  const colors = useColors();
+
+  const commonHeaderOptions = {
+    presentation: "card",
+    headerShown: true,
+    headerTransparent: true,
+    headerLargeTitleEnabled: true,
+    headerLargeTitleStyle: {
+      fontFamily: "BowlbyOne-Regular",
+      fontSize: 28,
+      fontWeight: "bold",
+      color: colors.foreground,
+    },
+    headerTitleStyle: {
+      fontFamily: "BowlbyOne-Regular",
+    },
+    headerTintColor: colors.foreground,
+    headerBackButtonDisplayMode: "minimal",
+  } as const;
+
+  // Register the navigation container with Sentry for automatic route tracking
+  const ref = useNavigationContainerRef();
+
+  // Hide splash screen once the navigation stack is mounted
+  useEffect(() => {
+    if (ref) {
+      navigationIntegration.registerNavigationContainer(ref);
+    }
+  }, [ref]);
+
+  useNotificationHandlers(router);
+  useOnboardingCheck(router);
 
   return (
     <Stack>
@@ -193,192 +216,39 @@ function AnimatedStack() {
       {/* ======== PROFILE ======== */}
       <Stack.Screen
         name="profile/index"
-        options={{
-          presentation: "card",
-          headerShown: true,
-          headerTransparent: true,
-          headerTitle: "Profile",
-          headerLargeTitleEnabled: true,
-          headerLargeTitleStyle: {
-            fontFamily: "BowlbyOne-Regular",
-            fontSize: 28,
-            fontWeight: "bold",
-            color: colors.foreground,
-          },
-          headerTitleStyle: {
-            fontFamily: "BowlbyOne-Regular",
-          },
-          headerTintColor: colors.foreground,
-          headerBackButtonDisplayMode: "minimal",
-        }}
+        options={{ ...commonHeaderOptions, headerTitle: "Profile" }}
       />
       <Stack.Screen
         name="profile/cooked-recipes"
-        options={{
-          presentation: "card",
-          headerShown: true,
-          headerTransparent: true,
-          headerTitle: "Cooked Recipes",
-          headerLargeTitleEnabled: true,
-          headerLargeTitleStyle: {
-            fontFamily: "BowlbyOne-Regular",
-            fontSize: 28,
-            fontWeight: "bold",
-            color: colors.foreground,
-          },
-          headerTitleStyle: {
-            fontFamily: "BowlbyOne-Regular",
-          },
-          headerTintColor: colors.foreground,
-          headerBackButtonDisplayMode: "minimal",
-        }}
+        options={{ ...commonHeaderOptions, headerTitle: "Cooked Recipes" }}
       />
       <Stack.Screen
         name="profile/analytics"
-        options={{
-          presentation: "card",
-          headerShown: true,
-          headerTransparent: true,
-          headerTitle: "Analytics",
-          headerLargeTitleEnabled: true,
-          headerLargeTitleStyle: {
-            fontFamily: "BowlbyOne-Regular",
-            fontSize: 28,
-            fontWeight: "bold",
-            color: colors.foreground,
-          },
-          headerTitleStyle: {
-            fontFamily: "BowlbyOne-Regular",
-          },
-          headerTintColor: colors.foreground,
-          headerBackButtonDisplayMode: "minimal",
-        }}
+        options={{ ...commonHeaderOptions, headerTitle: "Analytics" }}
       />
       <Stack.Screen
         name="profile/achievements"
-        options={{
-          presentation: "card",
-          headerShown: true,
-          headerTransparent: true,
-          headerTitle: "Achievements",
-          headerLargeTitleEnabled: true,
-          headerLargeTitleStyle: {
-            fontFamily: "BowlbyOne-Regular",
-            fontSize: 28,
-            fontWeight: "bold",
-            color: colors.foreground,
-          },
-          headerTitleStyle: {
-            fontFamily: "BowlbyOne-Regular",
-          },
-          headerTintColor: colors.foreground,
-          headerBackButtonDisplayMode: "minimal",
-        }}
+        options={{ ...commonHeaderOptions, headerTitle: "Achievements" }}
       />
       <Stack.Screen
         name="profile/notification"
-        options={{
-          presentation: "card",
-          headerShown: true,
-          headerTransparent: true,
-          headerTitle: "Notification",
-          headerLargeTitleEnabled: true,
-          headerLargeTitleStyle: {
-            fontFamily: "BowlbyOne-Regular",
-            fontSize: 28,
-            fontWeight: "bold",
-            color: colors.foreground,
-          },
-          headerTitleStyle: {
-            fontFamily: "BowlbyOne-Regular",
-          },
-          headerTintColor: colors.foreground,
-          headerBackButtonDisplayMode: "minimal",
-        }}
+        options={{ ...commonHeaderOptions, headerTitle: "Notification" }}
       />
       <Stack.Screen
         name="profile/preferences/index"
-        options={{
-          presentation: "card",
-          headerShown: true,
-          headerTransparent: true,
-          headerTitle: "Preferences",
-          headerLargeTitleEnabled: true,
-          headerLargeTitleStyle: {
-            fontFamily: "BowlbyOne-Regular",
-            fontSize: 28,
-            fontWeight: "bold",
-            color: colors.foreground,
-          },
-          headerTitleStyle: {
-            fontFamily: "BowlbyOne-Regular",
-          },
-          headerTintColor: colors.foreground,
-          headerBackButtonDisplayMode: "minimal",
-        }}
+        options={{ ...commonHeaderOptions, headerTitle: "Preferences" }}
       />
       <Stack.Screen
         name="profile/preferences/dietary-preference"
-        options={{
-          presentation: "card",
-          headerShown: true,
-          headerTransparent: true,
-          headerTitle: "Dietary Preference",
-          headerLargeTitleEnabled: true,
-          headerLargeTitleStyle: {
-            fontFamily: "BowlbyOne-Regular",
-            fontSize: 28,
-            fontWeight: "bold",
-            color: colors.foreground,
-          },
-          headerTitleStyle: {
-            fontFamily: "BowlbyOne-Regular",
-          },
-          headerTintColor: colors.foreground,
-          headerBackButtonDisplayMode: "minimal",
-        }}
+        options={{ ...commonHeaderOptions, headerTitle: "Dietary Preference" }}
       />
       <Stack.Screen
         name="profile/preferences/allergy"
-        options={{
-          presentation: "card",
-          headerShown: true,
-          headerTransparent: true,
-          headerTitle: "Food Allergies",
-          headerLargeTitleEnabled: true,
-          headerLargeTitleStyle: {
-            fontFamily: "BowlbyOne-Regular",
-            fontSize: 28,
-            fontWeight: "bold",
-            color: colors.foreground,
-          },
-          headerTitleStyle: {
-            fontFamily: "BowlbyOne-Regular",
-          },
-          headerTintColor: colors.foreground,
-          headerBackButtonDisplayMode: "minimal",
-        }}
+        options={{ ...commonHeaderOptions, headerTitle: "Food Allergies" }}
       />
       <Stack.Screen
         name="profile/preferences/voice-settings"
-        options={{
-          presentation: "card",
-          headerShown: true,
-          headerTransparent: true,
-          headerTitle: "Voice Settings",
-          headerLargeTitleEnabled: true,
-          headerLargeTitleStyle: {
-            fontFamily: "BowlbyOne-Regular",
-            fontSize: 28,
-            fontWeight: "bold",
-            color: colors.foreground,
-          },
-          headerTitleStyle: {
-            fontFamily: "BowlbyOne-Regular",
-          },
-          headerTintColor: colors.foreground,
-          headerBackButtonDisplayMode: "minimal",
-        }}
+        options={{ ...commonHeaderOptions, headerTitle: "Voice Settings" }}
       />
       {/* ======== ONBOARDING ======== */}
       <Stack.Screen name="onboarding/index" options={{ headerShown: false }} />
@@ -400,24 +270,7 @@ function AnimatedStack() {
       {/* ======== GROCERY LIST ======== */}
       <Stack.Screen
         name="grocery-list/index"
-        options={{
-          presentation: "card",
-          headerShown: true,
-          headerTransparent: true,
-          headerTitle: "Grocery List",
-          headerLargeTitleEnabled: true,
-          headerLargeTitleStyle: {
-            fontFamily: "BowlbyOne-Regular",
-            fontSize: 28,
-            fontWeight: "bold",
-            color: colors.foreground,
-          },
-          headerTitleStyle: {
-            fontFamily: "BowlbyOne-Regular",
-          },
-          headerTintColor: colors.foreground,
-          headerBackButtonDisplayMode: "minimal",
-        }}
+        options={{ ...commonHeaderOptions, headerTitle: "Grocery List" }}
       />
       {/* ======== SEARCH ======== */}
       <Stack.Screen
