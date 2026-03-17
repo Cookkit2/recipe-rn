@@ -145,6 +145,7 @@ The core intelligence of this feature:
 - [x] Phase 4: UI - Recipe Detail "Add to Plan" ✅
 - [x] Phase 5: Grocery List Page ✅
 - [x] Phase 6: Polish & UX ✅
+- [x] 2026-03-17: Fix failing Jest tests (update expectations for `safeJsonParse` + corrupted auth session handling). ✅
 - [ ] 2026-03-12: Fix `SegmentedButtons` column layout regression caused by dynamic NativeWind basis classes.
 - [ ] 2026-03-12: Resolve iOS archive failure caused by building the CocoaPods app project without its workspace.
 

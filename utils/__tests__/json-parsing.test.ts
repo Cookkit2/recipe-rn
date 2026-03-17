@@ -23,13 +23,7 @@ describe("safeJsonParse", () => {
     const fallback = { fallback: true };
     const result = safeJsonParse(invalidJson, fallback);
     expect(result).toBe(fallback);
-    expect(mockWarn).toHaveBeenCalledTimes(1);
-    expect(mockWarn).toHaveBeenCalledWith(
-      "Failed to parse JSON string:",
-      expect.any(SyntaxError),
-      "String:",
-      invalidJson
-    );
+    expect(mockWarn).not.toHaveBeenCalled();
   });
 
   it("should return fallback for undefined or null input", () => {

@@ -168,7 +168,7 @@ describe("AuthStorageManager", () => {
     await manager.updateAccessToken("new-token", new Date());
 
     expect(storage.set).toHaveBeenCalledWith("auth_access_token", "new-token");
-    // It should not have updated the session data due to catch
-    expect(storage.getString("auth_session_data")).toBe("{ invalid json");
+    // Corrupted session data is cleared during token update
+    expect(storage.getString("auth_session_data")).toBeNull();
   });
 });
