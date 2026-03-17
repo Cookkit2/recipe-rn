@@ -6,6 +6,7 @@ import {
   sanitizeNumber,
   sanitizeFilename,
   sanitizeObject,
+  sanitizeUrl,
 } from "../input-sanitization";
 
 describe("sanitizeForDatabase", () => {
@@ -298,5 +299,40 @@ describe("sanitizeObject", () => {
     };
 
     expect(sanitizeObject(input, { maxLength: 5 })).toEqual(expected);
+  });
+});
+
+describe("sanitizeUrl", () => {
+  it("accepts valid http, https, ftp, ftps URLs", () => {
+    expect(sanitizeUrl("http://example.com")).toBe("http://example.com");
+    expect(sanitizeUrl("https://example.com/path?q=1")).toBe("https://example.com/path?q=1");
+    expect(sanitizeUrl("ftp://ftp.example.com")).toBe("ftp://ftp.example.com");
+    expect(sanitizeUrl("ftps://ftps.example.com")).toBe("ftps://ftps.example.com");
+  });
+
+  it("trims whitespace from URLs", () => {
+    expect(sanitizeUrl("  https://example.com  ")).toBe("https://example.com");
+  });
+
+  it("rejects invalid protocols (e.g. javascript:, data:)", () => {
+    expect(sanitizeUrl("javascript:alert(1)")).toBe("");
+    expect(sanitizeUrl("data:text/html,<html>")).toBe("");
+    expect(sanitizeUrl("file:///etc/passwd")).toBe("");
+  });
+
+  it("rejects invalid URL formats", () => {
+    expect(sanitizeUrl("not-a-url")).toBe("");
+    expect(sanitizeUrl("://invalid")).toBe("");
+  });
+
+  it("returns empty string for non-string or empty inputs", () => {
+    expect(sanitizeUrl(null as any)).toBe("");
+    expect(sanitizeUrl(undefined as any)).toBe("");
+    expect(sanitizeUrl(123 as any)).toBe("");
+    expect(sanitizeUrl("")).toBe("");
+  });
+
+  it("removes control characters", () => {
+    expect(sanitizeUrl("https://example.com/\x00test")).toBe("https://example.com/test");
   });
 });
