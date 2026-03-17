@@ -1,3 +1,17 @@
+jest.mock("expo-constants", () => ({ manifest: { extra: {} } }));
+jest.mock("react-native-mmkv", () => ({ MMKV: jest.fn() }));
+jest.mock("expo-modules-core", () => ({
+  requireOptionalNativeModule: jest.fn(),
+  CodedError: class CodedError extends Error {},
+}));
+jest.mock("~/data/storage/storage-facade", () => ({
+  storage: { getItem: jest.fn(), setItem: jest.fn(), removeItem: jest.fn() },
+}));
+jest.mock("~/data/storage/storage-factory", () => ({
+  StorageFactory: {
+    initialize: jest.fn(() => ({ getItem: jest.fn(), setItem: jest.fn(), removeItem: jest.fn() })),
+  },
+}));
 import { pantryApi } from "../pantryApi";
 
 // In-memory collections to simulate WatermelonDB
