@@ -170,6 +170,13 @@ All phases have been implemented. The grocery list feature is now ready for test
 - Evidence: the log shows `cd /Users/ming/Documents/GitHub/recipe-rn/ios/Cookkit.xcodeproj`, a one-target dependency graph, and missing files under `BuildProductsPath/Release-iphoneos/*/*.modulemap` such as `Expo/Expo.modulemap` and `EASClient/EASClient.modulemap`.
 - Recommended next step: archive from the workspace or change the build command to use `-workspace ios/Cookkit.xcworkspace -scheme Cookkit` so pod products are built before Swift compilation.
 
+2026-03-17 executor update:
+
+- Consolidated all currently open PR branches (#118–#171) into `consolidate/open-prs-2026-03-17`.
+- Opened a single combined PR: `https://github.com/Cookkit2/recipe-rn/pull/172`.
+- Follow-up: PR `#172` is now **merged**, and GitHub currently reports **no open PRs** remaining in this repo.
+- Notable recurring conflict resolutions: kept `package-lock.json` and `fix-ts-13.js` deleted (repo uses `pnpm-lock.yaml`), unified JSON parsing via `utils/json-parsing.ts`, and merged/expanded sanitizer/text-formatter test suites without dropping prior cases.
+
 ---
 
 ## Technical Notes
