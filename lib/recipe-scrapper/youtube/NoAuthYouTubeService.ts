@@ -158,21 +158,27 @@ export class NoAuthYouTubeService implements IYouTubeService {
    * Tries multiple methods in order of reliability, exits early on success
    */
   private async scrapeTranscript(videoId: string): Promise<YouTubeTranscript> {
-    for (const fetcher of this.transcriptFetchers) {
-      try {
-        log.debug(`Transcript: Trying ${fetcher.name}...`);
-        const transcript = await fetcher.fetch(videoId);
-
-        if (transcript) {
-          log.debug(`Transcript: Successfully fetched via ${fetcher.name}`);
-          return transcript;
+    const abortController = new AbortController();
+    try {
+      const promises = this.transcriptFetchers.map(async (fetcher) => {
+        try {
+          log.debug(`Transcript: Trying ${fetcher.name}...`);
+          const transcript = await fetcher.fetch(videoId);
+          if (transcript) {
+            log.debug(`Transcript: Successfully fetched via ${fetcher.name}`);
+            abortController.abort();
+            return transcript;
+          }
+          if (!abortController.signal.aborted)
+            log.debug(`Transcript: ${fetcher.name} returned no results`);
+        } catch (e) {
+          if (!abortController.signal.aborted)
+            log.debug(`Transcript: ${fetcher.name} failed: ${e}`);
         }
-
-        log.debug(`Transcript: ${fetcher.name} returned no results`);
-      } catch (e) {
-        log.debug(`Transcript: ${fetcher.name} failed: ${e}`);
-      }
-    }
+        throw new Error(`${fetcher.name} failed or returned null`);
+      });
+      return await Promise.any(promises);
+    } catch (e) {}
 
     throw new YouTubeServiceError("Could not fetch transcript using any method", "NO_CAPTIONS");
   }
