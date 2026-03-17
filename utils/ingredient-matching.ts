@@ -13,6 +13,24 @@
  * isIngredientMatch("Chicken Breast", "chicken breast", []); // true
  * isIngredientMatch("Milk", "whole milk", ["whole milk"]);    // true (synonym)
  */
+
+// Optimization: Pre-compile regex and extract it outside the function
+// to avoid recompilation on every call
+const STOP_WORDS_REGEX =
+  /\b(fresh|frozen|canned|dried|cooked|raw|organic|whole|sliced|diced|chopped|steamed|boiled|fried|grilled)\b/g;
+
+// Optimization: Pre-define the synonym map outside the function
+// to avoid object allocation and Object.entries overhead on every call
+const SYNONYM_MAP_ENTRIES = Object.entries({
+  rice: ["white rice", "steamed rice", "jasmine rice", "basmati rice"],
+  chicken: ["chicken breast", "chicken thigh", "chicken leg"],
+  beef: ["ground beef", "beef steak", "beef roast"],
+  tomato: ["cherry tomato", "roma tomato", "beef tomato"],
+  onion: ["yellow onion", "white onion", "red onion"],
+  pepper: ["bell pepper", "green pepper", "red pepper"],
+  cheese: ["cheddar cheese", "mozzarella cheese", "parmesan cheese"],
+});
+
 export const isIngredientMatch = (
   pantryItemName: string,
   recipeIngredientName: string,
@@ -39,10 +57,7 @@ export const isIngredientMatch = (
   // Extract key words and remove common modifiers
   const extractKeyWords = (name: string): string[] => {
     return name
-      .replace(
-        /\b(fresh|frozen|canned|dried|cooked|raw|organic|whole|sliced|diced|chopped|steamed|boiled|fried|grilled)\b/g,
-        ""
-      )
+      .replace(STOP_WORDS_REGEX, "")
       .split(/[\s,\-()]+/)
       .filter((word) => word.length > 2) // Filter out short words
       .map((word) => word.trim());
@@ -61,31 +76,24 @@ export const isIngredientMatch = (
     )
   );
 
-  // Handle specific synonyms
-  const synonymMap: Record<string, string[]> = {
-    rice: ["white rice", "steamed rice", "jasmine rice", "basmati rice"],
-    chicken: ["chicken breast", "chicken thigh", "chicken leg"],
-    beef: ["ground beef", "beef steak", "beef roast"],
-    tomato: ["cherry tomato", "roma tomato", "beef tomato"],
-    onion: ["yellow onion", "white onion", "red onion"],
-    pepper: ["bell pepper", "green pepper", "red pepper"],
-    cheese: ["cheddar cheese", "mozzarella cheese", "parmesan cheese"],
-  };
+  // Optimization: return early before checking synonyms if we already matched
+  if (hasCommonKeyWord) return true;
 
   // Check synonyms
-  for (const [baseWord, synonyms] of Object.entries(synonymMap)) {
+  for (const [baseWord, synonyms] of SYNONYM_MAP_ENTRIES) {
     const pantryContainsBase = pantryWords.some((word) => word.includes(baseWord));
-    const recipeContainsBase = recipeWords.some((word) => word.includes(baseWord));
     const pantryContainsSynonym = synonyms.some((synonym) => pantryName.includes(synonym));
-    const recipeContainsSynonym = synonyms.some((synonym) => recipeName.includes(synonym));
 
-    if (
-      (pantryContainsBase || pantryContainsSynonym) &&
-      (recipeContainsBase || recipeContainsSynonym)
-    ) {
-      return true;
+    // Optimization: only check recipe words if pantry matched
+    if (pantryContainsBase || pantryContainsSynonym) {
+      const recipeContainsBase = recipeWords.some((word) => word.includes(baseWord));
+      const recipeContainsSynonym = synonyms.some((synonym) => recipeName.includes(synonym));
+
+      if (recipeContainsBase || recipeContainsSynonym) {
+        return true;
+      }
     }
   }
 
-  return hasCommonKeyWord;
+  return false;
 };
