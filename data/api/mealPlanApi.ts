@@ -90,10 +90,14 @@ export const mealPlanApi = {
 
         const itemsWithRecipes: MealPlanItemWithRecipe[] = [];
 
+        // Batch fetch all recipe details to avoid N+1 query problem
+        const recipeIds = Array.from(new Set(mealPlanItems.map((item) => item.recipeId)));
+        const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
+
         for (const item of mealPlanItems) {
           try {
             log.info(`Fetching recipe for item ${item.id} with recipeId ${item.recipeId}`);
-            const recipeDetails = await databaseFacade.getRecipeWithDetails(item.recipeId);
+            const recipeDetails = recipeDetailsMap.get(item.recipeId) || null;
 
             let recipeData: MealPlanItemWithRecipe["recipe"];
             if (recipeDetails && recipeDetails.recipe) {
@@ -162,10 +166,14 @@ export const mealPlanApi = {
 
       const itemsWithRecipes: MealPlanItemWithRecipe[] = [];
 
+      // Batch fetch all recipe details to avoid N+1 query problem
+      const recipeIds = Array.from(new Set(mealPlanItems.map((item) => item.recipeId)));
+      const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
+
       for (const item of mealPlanItems) {
         try {
           log.info(`Fetching recipe for item ${item.id} with recipeId ${item.recipeId}`);
-          const recipeDetails = await databaseFacade.getRecipeWithDetails(item.recipeId);
+          const recipeDetails = recipeDetailsMap.get(item.recipeId) || null;
 
           let recipeData: MealPlanItemWithRecipe["recipe"];
           if (recipeDetails && recipeDetails.recipe) {
