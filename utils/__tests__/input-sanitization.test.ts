@@ -28,6 +28,47 @@ describe("sanitizeSearchTerm", () => {
   it("wraps term in wildcards for LIKE", () => {
     expect(sanitizeSearchTerm("foo")).toBe("%foo%");
   });
+
+  it("handles empty strings and non-string inputs", () => {
+    expect(sanitizeSearchTerm("")).toBe("%%");
+    expect(sanitizeSearchTerm(null as any)).toBe("%%");
+    expect(sanitizeSearchTerm(undefined as any)).toBe("%%");
+  });
+
+  it("escapes existing SQL wildcards and backslashes", () => {
+    expect(sanitizeSearchTerm("100%")).toBe("%100\\%%");
+    expect(sanitizeSearchTerm("user_name")).toBe("%user\\_name%");
+    expect(sanitizeSearchTerm("path\\to\\file")).toBe("%path\\\\to\\\\file%");
+  });
+
+  it("removes SQL keywords and injection patterns", () => {
+    // DROP and SELECT are reserved keywords removed by sanitizeForDatabase
+    expect(sanitizeSearchTerm("DROP TABLE users")).toBe("%TABLE users%");
+    expect(sanitizeSearchTerm("SELECT * FROM users;")).toBe("%* FROM users%");
+  });
+
+  it("removes HTML tags by default", () => {
+    // SCRIPT is a keyword that gets removed! So <script> becomes <>, then <> is removed by allowHtml=false
+    expect(sanitizeSearchTerm("<script>alert('xss')</script>")).toBe("%alert(xss)/%");
+    // "b" is not a keyword
+    expect(sanitizeSearchTerm("<b>bold</b>")).toBe("%bbold/b%");
+  });
+
+  it("enforces default maxLength of 100", () => {
+    const long = "a".repeat(150);
+    const result = sanitizeSearchTerm(long);
+    expect(result.length).toBe(102);
+    expect(result).toBe(`%${"a".repeat(100)}%`);
+  });
+
+  it("allows custom options to override defaults", () => {
+    const long = "a".repeat(150);
+    const result = sanitizeSearchTerm(long, { maxLength: 50 });
+    expect(result.length).toBe(52); // % + 50 + %
+
+    // allowHtml: true preserves <>
+    expect(sanitizeSearchTerm("<b>bold</b>", { allowHtml: true })).toBe("%<b>bold</b>%");
+  });
 });
 
 describe("sanitizeEmail", () => {
