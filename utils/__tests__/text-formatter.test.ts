@@ -5,6 +5,7 @@ import {
   camelCaseToReadable,
   toKebabCase,
   toCamelCase,
+  truncateWords,
 } from "../text-formatter";
 
 describe("Text Formatter Utils - Capitalization", () => {
@@ -137,6 +138,39 @@ describe("Text Formatter Utils - Capitalization", () => {
       expect(toCamelCase("")).toBe("");
       expect(toCamelCase(null as any)).toBe("");
       expect(toCamelCase(undefined as any)).toBe("");
+    });
+  });
+});
+
+describe("Text Formatter Utils - Text Manipulation", () => {
+  describe("truncateWords", () => {
+    it("should truncate string with more words than the limit and append default suffix", () => {
+      expect(truncateWords("This is a long string", 3)).toBe("This is a...");
+    });
+
+    it("should truncate string and append custom suffix", () => {
+      expect(truncateWords("This is a long string", 3, " [read more]")).toBe(
+        "This is a [read more]"
+      );
+    });
+
+    it("should return the original string if the number of words is equal to the limit", () => {
+      expect(truncateWords("This is a string", 4)).toBe("This is a string");
+    });
+
+    it("should return the original string if the number of words is less than the limit", () => {
+      expect(truncateWords("Short string", 5)).toBe("Short string");
+    });
+
+    it("should handle strings with multiple spaces correctly (current split behavior)", () => {
+      // split(" ") creates empty strings for extra spaces, which count as words
+      expect(truncateWords("This  is   spaced", 4)).toBe("This  is ...");
+    });
+
+    it("should return an empty string for empty, null, or undefined input", () => {
+      expect(truncateWords("", 3)).toBe("");
+      expect(truncateWords(null as any, 3)).toBe("");
+      expect(truncateWords(undefined as any, 3)).toBe("");
     });
   });
 });
