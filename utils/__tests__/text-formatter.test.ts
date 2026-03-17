@@ -75,6 +75,19 @@ describe("Text Formatter Utils - Capitalization", () => {
       expect(camelCaseToReadable(null as any)).toBe("");
       expect(camelCaseToReadable(undefined as any)).toBe("");
     });
+
+    it("should handle consecutive capital letters", () => {
+      expect(camelCaseToReadable("XMLParser")).toBe("X M L Parser");
+    });
+
+    it("should handle numbers in strings", () => {
+      expect(camelCaseToReadable("version2")).toBe("Version2");
+      expect(camelCaseToReadable("myApp1")).toBe("My App1");
+    });
+
+    it("should handle strings that already have spaces", () => {
+      expect(camelCaseToReadable("already Readable")).toBe("Already  Readable");
+    });
   });
 
   describe("toKebabCase", () => {
