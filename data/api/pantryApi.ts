@@ -1,6 +1,7 @@
 import { databaseFacade } from "~/data/db/DatabaseFacade";
 import { baseIngredientApi } from "~/data/supabase-api/BaseIngredientApi";
 import { database } from "~/data/db/database";
+import { Q } from "@nozbe/watermelondb";
 import type { Stock } from "~/data/db/models";
 import type IngredientCategory from "~/data/db/models/IngredientCategory";
 import type IngredientSynonym from "~/data/db/models/IngredientSynonym";
@@ -569,14 +570,11 @@ const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
 
     // Fetch the actual category names
     if (stockCategoryRecords.length > 0) {
-      const categoryPromises = stockCategoryRecords.map(async (sc: StockCategory) => {
-        const rel = (sc as unknown as { category?: { fetch?: () => Promise<IngredientCategory> } })
-          .category;
-        return typeof rel?.fetch === "function" ? rel.fetch() : null;
-      });
-      const categoryRecords = (await Promise.all(categoryPromises)).filter(
-        (c): c is IngredientCategory => Boolean(c)
-      );
+      const categoryIds = stockCategoryRecords.map((sc) => sc.categoryId).filter(Boolean);
+      const categoryRecords = await database.collections
+        .get<IngredientCategory>("ingredient_category")
+        .query(Q.where("id", Q.oneOf(categoryIds)))
+        .fetch();
       categories = categoryRecords.map((c) => ({ id: c.id, name: c.name }));
     }
   } catch (error) {
