@@ -13,7 +13,7 @@ describe("fetchWithTimeout", () => {
 
   it("should successfully return response when fetch completes before timeout", async () => {
     const mockResponse = new Response("ok", { status: 200 });
-    jest.spyOn(global, "fetch").mockImplementation(() => {
+    jest.spyOn(globalThis, "fetch").mockImplementation(() => {
       return Promise.resolve(mockResponse);
     });
 
@@ -21,7 +21,7 @@ describe("fetchWithTimeout", () => {
     const response = await promise;
 
     expect(response).toBe(mockResponse);
-    expect(global.fetch).toHaveBeenCalledWith(
+    expect(globalThis.fetch).toHaveBeenCalledWith(
       "https://example.com",
       expect.objectContaining({
         signal: expect.any(AbortSignal),
@@ -30,7 +30,7 @@ describe("fetchWithTimeout", () => {
   });
 
   it("should abort when timeout is exceeded", async () => {
-    jest.spyOn(global, "fetch").mockImplementation((url, init) => {
+    jest.spyOn(globalThis, "fetch").mockImplementation((url: any, init?: RequestInit) => {
       return new Promise<Response>((resolve, reject) => {
         const signal = init?.signal as AbortSignal | undefined;
         if (signal) {
@@ -54,7 +54,7 @@ describe("fetchWithTimeout", () => {
   });
 
   it("should abort when external signal is aborted", async () => {
-    jest.spyOn(global, "fetch").mockImplementation((url, init) => {
+    jest.spyOn(globalThis, "fetch").mockImplementation((url: any, init?: RequestInit) => {
       return new Promise<Response>((resolve, reject) => {
         const signal = init?.signal as AbortSignal | undefined;
         if (signal) {
