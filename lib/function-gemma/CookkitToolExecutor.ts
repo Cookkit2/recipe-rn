@@ -49,7 +49,6 @@ export class CookkitToolExecutor implements ToolExecutor {
   // ============================================================================
 
   async addItem(params: any): Promise<any> {
-    console.log("[CookkitToolExecutor] addItem called:", params);
     return executeTool("addItem", async () => {
       const { name, quantity, unit, location, expiry_date } = params;
 
