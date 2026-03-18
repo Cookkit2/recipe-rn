@@ -148,12 +148,12 @@ export default function RecipeEdit() {
         const ingredientsCollection =
           database.collections.get<RecipeIngredientModel>("recipe_ingredient");
 
-        const existingIngredients = await dbRecipe.ingredients.query().fetch();
-        const existingIngredientsMap = new Map(existingIngredients.map((ing) => [ing.id, ing]));
+        const existingIngredients = await dbRecipe.ingredients.fetch();
+        const existingIngredientsMap = new Map(existingIngredients.map((ing: RecipeIngredientModel) => [ing.id, ing]));
 
         // Delete removed ingredients
         for (const existing of existingIngredients) {
-          if (!editable.ingredients.some((ing) => ing.id === existing.id)) {
+          if (!editable.ingredients.some((ing: any) => ing.id === existing.id)) {
             batchOperations.push(existing.prepareDestroyPermanently());
           }
         }
@@ -188,12 +188,12 @@ export default function RecipeEdit() {
         // Handle steps
         const stepsCollection = database.collections.get<RecipeStepModel>("recipe_step");
 
-        const existingSteps = await dbRecipe.steps.query().fetch();
-        const existingStepsMap = new Map(existingSteps.map((step) => [step.id, step]));
+        const existingSteps = await dbRecipe.steps.fetch();
+        const existingStepsMap = new Map(existingSteps.map((step: RecipeStepModel) => [step.id, step]));
 
         // Delete removed steps
         for (const existing of existingSteps) {
-          if (!editable.steps.some((step) => step.id === existing.id)) {
+          if (!editable.steps.some((step: any) => step.id === existing.id)) {
             batchOperations.push(existing.prepareDestroyPermanently());
           }
         }
