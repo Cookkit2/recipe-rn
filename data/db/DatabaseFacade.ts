@@ -1230,15 +1230,46 @@ export class DatabaseFacade {
     // Fetch matching stock items at once to avoid N+1 queries in the loop below
     const matchingStocks = await this.stocks.getStocksByNamesOrSynonyms(ingredientNames);
 
-    for (const ingredient of recipeDetails.ingredients) {
-      // Filter the specific stock items for this ingredient from the pre-fetched list
-      const stockItems = matchingStocks.filter((stock) =>
-        isIngredientMatch(stock.name, ingredient.name, stock.synonyms)
-      );
+    // Pre-aggregate stocks by name to avoid duplicate matching and summing
+    const aggregatedStocksMap = new Map<
+      string,
+      { quantity: number; unit: string; synonyms: string[] }
+    >();
 
-      // Note: getStocksByNamesOrSynonyms returns an array of plain objects, not Stock models,
-      // so we use any/type inference for the reduction.
-      const totalStock = stockItems.reduce((sum: number, item: any) => sum + item.quantity, 0);
+    for (const stock of matchingStocks) {
+      const existing = aggregatedStocksMap.get(stock.name);
+      if (existing) {
+        existing.quantity += stock.quantity;
+        // Merge synonyms to ensure we don't lose any matchable terms
+        // @ts-ignore
+        if (stock.synonyms && stock.synonyms.length > 0) {
+          // @ts-ignore
+          existing.synonyms = Array.from(new Set([...existing.synonyms, ...stock.synonyms]));
+        }
+      } else {
+        aggregatedStocksMap.set(stock.name, {
+          // @ts-ignore - The object might be any depending on query return
+          quantity: stock.quantity,
+          // @ts-ignore
+          unit: stock.unit,
+          // @ts-ignore
+          synonyms: stock.synonyms ? [...stock.synonyms] : [],
+        });
+      }
+    }
+
+    for (const ingredient of recipeDetails.ingredients) {
+      let totalStock = 0;
+      let firstStockItemUnit = "";
+
+      for (const [stockName, stockData] of aggregatedStocksMap.entries()) {
+        if (isIngredientMatch(stockName, ingredient.name, stockData.synonyms)) {
+          totalStock += stockData.quantity;
+          if (!firstStockItemUnit && stockData.unit) {
+            firstStockItemUnit = stockData.unit;
+          }
+        }
+      }
 
       if (totalStock === 0) {
         missingIngredients.push({
@@ -1248,13 +1279,12 @@ export class DatabaseFacade {
           notes: ingredient.notes,
         });
       } else {
-        const firstStockItem = stockItems[0];
         availableIngredients.push({
           name: ingredient.name,
           quantity: ingredient.quantity,
           unit: ingredient.unit,
           stockQuantity: totalStock,
-          stockUnit: firstStockItem?.unit || "",
+          stockUnit: firstStockItemUnit || "",
         });
       }
     }
