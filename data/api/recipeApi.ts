@@ -378,16 +378,32 @@ export const recipeApi = {
       async () => {
         const availability = await databaseFacade.getAvailableRecipes();
 
-        const canMake = await Promise.all(availability.canMake.map(convertDbRecipeToUIRecipe));
+        // Collect all recipe IDs for batch query
+        const canMakeIds = availability.canMake.map((r) => r.id);
+        const partiallyMakeIds = availability.partiallyCanMake.map((item) => item.recipe.id);
+        const allRecipeIds = [...canMakeIds, ...partiallyMakeIds];
 
-        const partiallyCanMake = await Promise.all(
-          availability.partiallyCanMake.map(async (item) => {
+        // Fetch all recipe details in a single batch call to avoid N+1 queries
+        const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(allRecipeIds);
+
+        // Convert canMake recipes using batch approach
+        const canMake = convertDbRecipesToUIRecipesBatch(availability.canMake, recipeDetailsMap);
+
+        // Convert partiallyCanMake recipes using batch approach
+        const partiallyCanMake = availability.partiallyCanMake
+          .map((item) => {
+            const uiRecipes = convertDbRecipesToUIRecipesBatch([item.recipe], recipeDetailsMap);
+            if (uiRecipes.length === 0) {
+              return null;
+            }
             return {
-              recipe: await convertDbRecipeToUIRecipe(item.recipe),
+              recipe: uiRecipes[0],
               completionPercentage: item.completionPercentage,
             };
           })
-        );
+          .filter(
+            (item): item is { recipe: Recipe; completionPercentage: number } => item !== null
+          );
 
         return { canMake, partiallyCanMake };
       },
