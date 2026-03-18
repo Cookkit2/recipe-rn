@@ -64,7 +64,7 @@ async function syncRecipeIngredients(
   const batchOps: any[] = [];
 
   // Delete removed ingredients
-  const existingIngredients = await recipe.ingredients.query().fetch();
+  const existingIngredients = await recipe.ingredients.fetch();
   for (const existing of existingIngredients) {
     if (!workingCopy.ingredients.some((ing) => ing.id === existing.id)) {
       batchOps.push(existing.prepareDestroyPermanently());
@@ -78,7 +78,7 @@ async function syncRecipeIngredients(
       const existing = existingIngredients.find((ing) => ing.id === ingredient.id);
       if (existing) {
         batchOps.push(
-          existing.prepareUpdate((ing: RecipeIngredient) => {
+          (existing as any).prepareUpdate((ing: RecipeIngredient) => {
             ing.name = ingredient.name;
             ing.quantity = ingredient.quantity;
             ing.unit = ingredient.unit;
@@ -113,7 +113,7 @@ async function syncRecipeSteps(
   const batchOps: any[] = [];
 
   // Delete removed steps
-  const existingSteps = await recipe.steps.query().fetch();
+  const existingSteps = await recipe.steps.fetch();
   for (const existing of existingSteps) {
     if (!workingCopy.steps.some((step) => step.id === existing.id)) {
       batchOps.push(existing.prepareDestroyPermanently());
@@ -127,7 +127,7 @@ async function syncRecipeSteps(
       const existing = existingSteps.find((s) => s.id === step.id);
       if (existing) {
         batchOps.push(
-          existing.prepareUpdate((s: RecipeStep) => {
+          (existing as any).prepareUpdate((s: RecipeStep) => {
             s.step = step.step;
             s.title = step.title;
             s.description = step.description;
