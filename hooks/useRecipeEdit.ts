@@ -78,7 +78,7 @@ async function syncRecipeIngredients(
       const existing = existingIngredients.find((ing) => ing.id === ingredient.id);
       if (existing) {
         batchOps.push(
-          existing.prepareUpdate((ing: RecipeIngredient) => {
+          (existing as any).prepareUpdate((ing: any) => {
             ing.name = ingredient.name;
             ing.quantity = ingredient.quantity;
             ing.unit = ingredient.unit;
@@ -127,7 +127,7 @@ async function syncRecipeSteps(
       const existing = existingSteps.find((s) => s.id === step.id);
       if (existing) {
         batchOps.push(
-          existing.prepareUpdate((s: RecipeStep) => {
+          (existing as any).prepareUpdate((s: any) => {
             s.step = step.step;
             s.title = step.title;
             s.description = step.description;

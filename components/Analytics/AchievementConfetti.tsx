@@ -7,6 +7,7 @@
 
 import * as React from "react";
 import { View, StyleSheet } from "react-native";
+import * as Crypto from "expo-crypto";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -34,18 +35,25 @@ interface ConfettiParticle {
   delay: number;
 }
 
+// Generate a cryptographically secure float between 0 and 1
+function getSecureRandom(): number {
+  const randomBuffer = new Uint32Array(1);
+  Crypto.getRandomValues(randomBuffer);
+  return randomBuffer[0]! / 4294967296;
+}
+
 // Generate confetti particles
 function generateConfettiParticles(count: number, colors: string[]): ConfettiParticle[] {
   const palette = colors.length > 0 ? colors : ["#FFD700"];
 
   return Array.from({ length: count }, (_, i) => ({
     id: i,
-    x: Math.random() * 300 - 150, // Spread horizontally
-    y: -300 - Math.random() * 200, // Start above screen
-    rotation: Math.random() * 360,
-    color: palette[Math.floor(Math.random() * palette.length)] ?? "#FFD700",
-    size: 6 + Math.random() * 8, // Random size 6-14
-    delay: Math.random() * 300, // Stagger animations
+    x: getSecureRandom() * 300 - 150, // Spread horizontally
+    y: -300 - getSecureRandom() * 200, // Start above screen
+    rotation: getSecureRandom() * 360,
+    color: palette[Math.floor(getSecureRandom() * palette.length)] ?? "#FFD700",
+    size: 6 + getSecureRandom() * 8, // Random size 6-14
+    delay: getSecureRandom() * 300, // Stagger animations
   }));
 }
 
@@ -71,7 +79,7 @@ function ConfettiParticleComponent({
     animatedY.value = withDelay(
       particle.delay,
       withTiming(600, {
-        duration: duration * (0.8 + Math.random() * 0.4),
+        duration: duration * (0.8 + getSecureRandom() * 0.4),
         easing: Easing.out(Easing.quad),
       })
     );
