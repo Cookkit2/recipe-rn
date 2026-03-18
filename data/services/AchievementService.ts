@@ -17,7 +17,10 @@ import type { AchievementRequirement, AchievementProgress } from "~/types/achiev
 import { log } from "~/utils/logger";
 import { scheduleAchievementUnlock } from "~/lib/notifications/achievement-notifications";
 import { storage } from "~/data";
-import { SOCIAL_SHARES_COUNT_KEY, INGREDIENTS_USED_BEFORE_EXPIRY_KEY } from "~/constants/storage-keys";
+import {
+  SOCIAL_SHARES_COUNT_KEY,
+  INGREDIENTS_USED_BEFORE_EXPIRY_KEY,
+} from "~/constants/storage-keys";
 
 export interface AchievementCheckResult {
   newlyUnlocked: Array<{
@@ -406,7 +409,8 @@ export class AchievementService {
 
         case "spices_tracked": {
           const spicesCategory =
-            (await this.categoryRepo.findByName("Spices")) ?? (await this.categoryRepo.findByName("spices"));
+            (await this.categoryRepo.findByName("Spices")) ??
+            (await this.categoryRepo.findByName("spices"));
 
           if (!spicesCategory) return 0;
 

@@ -202,7 +202,10 @@ export function RecipeStepsProvider({
         // Update the achievements tracker if any unexpired ingredients were used
         if (ingredientsUsedBeforeExpiryCount > 0) {
           const currentCount = Number(storage.get(INGREDIENTS_USED_BEFORE_EXPIRY_KEY)) || 0;
-          storage.set(INGREDIENTS_USED_BEFORE_EXPIRY_KEY, (currentCount + ingredientsUsedBeforeExpiryCount).toString());
+          storage.set(
+            INGREDIENTS_USED_BEFORE_EXPIRY_KEY,
+            (currentCount + ingredientsUsedBeforeExpiryCount).toString()
+          );
 
           // Trigger achievement check again to pick up the new metric
           await achievementService.checkAchievements();
