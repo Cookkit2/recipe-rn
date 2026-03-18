@@ -623,8 +623,10 @@ export class RecipeRepository extends BaseRepository<Recipe> {
   private async createRecipeWithDetailsRaw(
     data: CreateRecipeWithDetailsData & { recipe: RecipeData & { id?: string } }
   ): Promise<Recipe> {
+    const batchOps: import("@nozbe/watermelondb").Model[] = [];
+
     // Create recipe
-    const recipe = await this.collection.create((r) => {
+    const recipe = this.collection.prepareCreate((r) => {
       if (data.recipe.id) r._raw.id = data.recipe.id;
       r.title = data.recipe.title;
       r.description = data.recipe.description;
@@ -641,36 +643,40 @@ export class RecipeRepository extends BaseRepository<Recipe> {
       r.isFavorite = data.recipe.isFavorite ?? false; // Default to false
     });
 
+    batchOps.push(recipe);
+
     // Create steps if provided
     if (data.steps && data.steps.length > 0) {
       const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
-      await Promise.all(
-        data.steps.map((stepData) =>
-          stepsCollection.create((step) => {
+      data.steps.forEach((stepData) => {
+        batchOps.push(
+          stepsCollection.prepareCreate((step) => {
             step.step = stepData.step;
             step.title = stepData.title;
             step.description = stepData.description;
             step.recipeId = recipe.id; // Use the new recipe's ID
           })
-        )
-      );
+        );
+      });
     }
 
     // Create ingredients if provided
     if (data.ingredients && data.ingredients.length > 0) {
       const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
-      await Promise.all(
-        data.ingredients.map((ingredientData) =>
-          ingredientsCollection.create((ingredient) => {
+      data.ingredients.forEach((ingredientData) => {
+        batchOps.push(
+          ingredientsCollection.prepareCreate((ingredient) => {
             ingredient.recipeId = recipe.id; // Use the new recipe's ID
             ingredient.name = ingredientData.name;
             ingredient.quantity = ingredientData.quantity;
             ingredient.unit = ingredientData.unit;
             ingredient.notes = ingredientData.notes;
           })
-        )
-      );
+        );
+      });
     }
+
+    await database.batch(...batchOps);
 
     return recipe;
   }
@@ -722,10 +728,27 @@ export class RecipeRepository extends BaseRepository<Recipe> {
   ): Promise<Recipe> {
     return await database.write(async () => {
       const recipe = await this.collection.find(recipeId);
+      const batchOps: import("@nozbe/watermelondb").Model[] = [];
 
       // Update recipe fields
       if (data.recipe) {
-        await recipe.updateRecipe(data.recipe);
+        batchOps.push(
+          recipe.prepareUpdate((r) => {
+            if (data.recipe!.title !== undefined) r.title = data.recipe!.title;
+            if (data.recipe!.description !== undefined) r.description = data.recipe!.description;
+            if (data.recipe!.imageUrl !== undefined) r.imageUrl = data.recipe!.imageUrl;
+            if (data.recipe!.prepMinutes !== undefined) r.prepMinutes = data.recipe!.prepMinutes;
+            if (data.recipe!.cookMinutes !== undefined) r.cookMinutes = data.recipe!.cookMinutes;
+            if (data.recipe!.difficultyStars !== undefined)
+              r.difficultyStars = data.recipe!.difficultyStars;
+            if (data.recipe!.servings !== undefined) r.servings = data.recipe!.servings;
+            if (data.recipe!.sourceUrl !== undefined) r.sourceUrl = data.recipe!.sourceUrl;
+            if (data.recipe!.calories !== undefined) r.calories = data.recipe!.calories;
+            if (data.recipe!.tags !== undefined) r.tags = data.recipe!.tags;
+            if (data.recipe!.isFavorite !== undefined) r.isFavorite = data.recipe!.isFavorite;
+            if (data.recipe!.type !== undefined) r.type = data.recipe!.type;
+          })
+        );
       }
 
       // Update steps if provided
@@ -734,20 +757,22 @@ export class RecipeRepository extends BaseRepository<Recipe> {
         const existingSteps = await stepsCollection.query(Q.where("recipe_id", recipeId)).fetch();
 
         // Delete existing steps
-        await Promise.all(existingSteps.map((step) => step.destroyPermanently()));
+        existingSteps.forEach((step) => {
+          batchOps.push(step.prepareDestroyPermanently());
+        });
 
         // Create new steps
         if (data.steps.length > 0) {
-          await Promise.all(
-            data.steps.map((stepData) =>
-              stepsCollection.create((step) => {
+          data.steps.forEach((stepData) => {
+            batchOps.push(
+              stepsCollection.prepareCreate((step) => {
                 step.step = stepData.step;
                 step.title = stepData.title;
                 step.description = stepData.description;
                 step.recipeId = recipeId;
               })
-            )
-          );
+            );
+          });
         }
       }
 
@@ -760,22 +785,28 @@ export class RecipeRepository extends BaseRepository<Recipe> {
           .fetch();
 
         // Delete existing ingredients
-        await Promise.all(existingIngredients.map((ingredient) => ingredient.destroyPermanently()));
+        existingIngredients.forEach((ingredient) => {
+          batchOps.push(ingredient.prepareDestroyPermanently());
+        });
 
         // Create new ingredients
         if (data.ingredients.length > 0) {
-          await Promise.all(
-            data.ingredients.map((ingredientData) =>
-              ingredientsCollection.create((ingredient) => {
+          data.ingredients.forEach((ingredientData) => {
+            batchOps.push(
+              ingredientsCollection.prepareCreate((ingredient) => {
                 ingredient.recipeId = recipeId;
                 ingredient.name = ingredientData.name;
                 ingredient.quantity = ingredientData.quantity;
                 ingredient.unit = ingredientData.unit;
                 ingredient.notes = ingredientData.notes;
               })
-            )
-          );
+            );
+          });
         }
+      }
+
+      if (batchOps.length > 0) {
+        await database.batch(...batchOps);
       }
 
       return recipe;
