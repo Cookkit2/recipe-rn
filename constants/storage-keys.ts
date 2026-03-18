@@ -48,3 +48,6 @@ export const EXPIRING_RECIPES_DISMISSED_AT_KEY = "expiring_recipes:dismissed_at"
 
 // SOCIAL SHARING
 export const SOCIAL_SHARES_COUNT_KEY = "social:shares_count";
+
+// ACHIEVEMENTS
+export const INGREDIENTS_USED_BEFORE_EXPIRY_KEY = "ingredients:used_before_expiry";

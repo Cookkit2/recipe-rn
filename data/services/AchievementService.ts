@@ -17,7 +17,7 @@ import type { AchievementRequirement, AchievementProgress } from "~/types/achiev
 import { log } from "~/utils/logger";
 import { scheduleAchievementUnlock } from "~/lib/notifications/achievement-notifications";
 import { storage } from "~/data";
-import { SOCIAL_SHARES_COUNT_KEY } from "~/constants/storage-keys";
+import { SOCIAL_SHARES_COUNT_KEY, INGREDIENTS_USED_BEFORE_EXPIRY_KEY } from "~/constants/storage-keys";
 
 export interface AchievementCheckResult {
   newlyUnlocked: Array<{
@@ -415,9 +415,7 @@ export class AchievementService {
         }
 
         case "ingredients_used_before_expiry":
-          // This would need to track ingredient usage before expiry - placeholder
-          // TODO: Implement when expiry tracking is available
-          return 0;
+          return Number(storage.get(INGREDIENTS_USED_BEFORE_EXPIRY_KEY)) || 0;
 
         case "achievements_shared":
           return Number(storage.get(SOCIAL_SHARES_COUNT_KEY)) || 0;
