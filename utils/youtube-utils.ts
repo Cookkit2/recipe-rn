@@ -25,17 +25,17 @@ export function extractYouTubeVideoId(url: string): string | null {
   // Video IDs are always 11 characters containing alphanumeric, dashes, and underscores
   const patterns = [
     // Standard watch URL: youtube.com/watch?v=VIDEO_ID
-    /(?:youtube\.com\/watch\?(?:.*&)?v=)([a-zA-Z0-9_-]{11})/,
+    /(?:youtube\.com\/watch\?(?:.*&)?v=)([a-zA-Z0-9_-]{11})(?![a-zA-Z0-9_-])/,
     // Short URL: youtu.be/VIDEO_ID
-    /(?:youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+    /(?:youtu\.be\/)([a-zA-Z0-9_-]{11})(?![a-zA-Z0-9_-])/,
     // Embed URL: youtube.com/embed/VIDEO_ID
-    /(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+    /(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})(?![a-zA-Z0-9_-])/,
     // Old embed URL: youtube.com/v/VIDEO_ID
-    /(?:youtube\.com\/v\/)([a-zA-Z0-9_-]{11})/,
+    /(?:youtube\.com\/v\/)([a-zA-Z0-9_-]{11})(?![a-zA-Z0-9_-])/,
     // Shorts URL: youtube.com/shorts/VIDEO_ID
-    /(?:youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/,
+    /(?:youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})(?![a-zA-Z0-9_-])/,
     // Live URL: youtube.com/live/VIDEO_ID
-    /(?:youtube\.com\/live\/)([a-zA-Z0-9_-]{11})/,
+    /(?:youtube\.com\/live\/)([a-zA-Z0-9_-]{11})(?![a-zA-Z0-9_-])/,
   ];
 
   for (const pattern of patterns) {

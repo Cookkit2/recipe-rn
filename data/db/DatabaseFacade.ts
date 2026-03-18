@@ -605,6 +605,7 @@ export class DatabaseFacade {
 
       // Batch all updates in a single write to avoid flooding the write queue
       await database.write(async () => {
+        const batchOperations: any[] = [];
         for (const stockItem of allStockItems) {
           try {
             const converted = convertToUnitSystem(stockItem.quantity, stockItem.unit, toUnitSystem);
@@ -613,10 +614,12 @@ export class DatabaseFacade {
             const unitChanged = converted.unit !== stockItem.unit;
 
             if (quantityChanged || unitChanged) {
-              await stockItem.update((record: any) => {
-                record.quantity = roundToReasonablePrecision(converted.quantity);
-                record.unit = converted.unit;
-              });
+              batchOperations.push(
+                stockItem.prepareUpdate((record: any) => {
+                  record.quantity = roundToReasonablePrecision(converted.quantity);
+                  record.unit = converted.unit;
+                })
+              );
               convertedCount++;
             } else {
               skippedCount++;
@@ -625,6 +628,10 @@ export class DatabaseFacade {
             log.warn(`⚠️ Failed to convert stock item ${stockItem.name}:`, error);
             errorCount++;
           }
+        }
+
+        if (batchOperations.length > 0) {
+          await database.batch(...batchOperations);
         }
       });
 
@@ -1307,11 +1314,7 @@ export class DatabaseFacade {
       for (const collectionName of collections) {
         try {
           const collection = database.collections.get(collectionName);
-          const allRecords = await collection.query().fetch();
-
-          if (allRecords.length > 0) {
-            await Promise.all(allRecords.map((record) => record.destroyPermanently()));
-          }
+          await collection.query().destroyAllPermanently();
         } catch (error) {
           log.warn(`⚠️ Error clearing ${collectionName}:`, error);
         }
@@ -1341,11 +1344,7 @@ export class DatabaseFacade {
       for (const collectionName of collections) {
         try {
           const collection = database.collections.get(collectionName);
-          const allRecords = await collection.query().fetch();
-
-          if (allRecords.length > 0) {
-            await Promise.all(allRecords.map((record) => record.destroyPermanently()));
-          }
+          await collection.query().destroyAllPermanently();
         } catch (error) {
           log.warn(`⚠️ Error clearing ${collectionName}:`, error);
         }

@@ -133,8 +133,7 @@ export class ChallengeService {
   async startChallenge(challengeId: string): Promise<boolean> {
     try {
       // Verify challenge is active
-      const challenges = await this.challengeRepo.getChallenges();
-      const challenge = challenges.find((c) => c.id === challengeId);
+      const challenge = await this.challengeRepo.getChallengeById(challengeId);
 
       if (!challenge) {
         log.warn(`Challenge not found: ${challengeId}`);
@@ -161,8 +160,7 @@ export class ChallengeService {
    */
   async updateProgress(challengeId: string, progress: number): Promise<boolean> {
     try {
-      const challenges = await this.challengeRepo.getChallenges();
-      const challenge = challenges.find((c) => c.id === challengeId);
+      const challenge = await this.challengeRepo.getChallengeById(challengeId);
       if (!challenge) {
         log.warn(`Challenge not found: ${challengeId}`);
         return false;
@@ -232,8 +230,7 @@ export class ChallengeService {
    */
   async completeChallenge(challengeId: string): Promise<boolean> {
     try {
-      const challenges = await this.challengeRepo.getChallenges();
-      const challenge = challenges.find((c) => c.id === challengeId);
+      const challenge = await this.challengeRepo.getChallengeById(challengeId);
 
       if (!challenge) {
         log.warn(`Challenge not found: ${challengeId}`);
@@ -278,8 +275,7 @@ export class ChallengeService {
     xp: number;
   }> {
     try {
-      const challenges = await this.challengeRepo.getChallenges();
-      const challenge = challenges.find((c) => c.id === challengeId);
+      const challenge = await this.challengeRepo.getChallengeById(challengeId);
 
       if (!challenge) {
         log.warn(`Challenge not found: ${challengeId}`);
@@ -301,8 +297,7 @@ export class ChallengeService {
    */
   async getProgress(challengeId: string): Promise<ChallengeProgress | null> {
     try {
-      const challenges = await this.challengeRepo.getChallenges();
-      const challenge = challenges.find((c) => c.id === challengeId);
+      const challenge = await this.challengeRepo.getChallengeById(challengeId);
 
       if (!challenge) {
         return null;

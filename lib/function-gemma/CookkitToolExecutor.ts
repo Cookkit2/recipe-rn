@@ -49,17 +49,9 @@ export class CookkitToolExecutor implements ToolExecutor {
   // ============================================================================
 
   async addItem(params: any): Promise<any> {
-    console.log("[CookkitToolExecutor] addItem called:", params);
     return executeTool("addItem", async () => {
       const { name, quantity, unit, location, expiry_date } = params;
 
-      console.log("[CookkitToolExecutor] addItem writing to DB:", {
-        name,
-        quantity,
-        unit,
-        location,
-        expiry_date,
-      });
       const newStock = await database.write(async () => {
         return stockCollection().create((record) => {
           record.name = name;

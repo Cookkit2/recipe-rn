@@ -164,14 +164,21 @@ export class UserAchievementRepository extends BaseRepository<UserAchievement> {
   // Note: This requires joining with achievement table to get XP values
   async getTotalXPEarned(): Promise<number> {
     const unlockedAchievements = await this.getUnlockedAchievements();
+    if (unlockedAchievements.length === 0) return 0;
+
     let totalXP = 0;
 
-    for (const userAchievement of unlockedAchievements) {
-      // Need to fetch the related achievement to get XP
-      const achievement: any = await (userAchievement as any).achievement.fetch();
-      if (achievement) {
-        totalXP += achievement.xpValue ?? 0;
-      }
+    // Extract all achievement IDs
+    const achievementIds = unlockedAchievements.map((ua) => ua.achievementId);
+
+    // Batch fetch all related achievements in one query to prevent N+1 queries
+    const achievements = await database.collections
+      .get("achievement")
+      .query(Q.where("id", Q.oneOf(achievementIds)))
+      .fetch();
+
+    for (const achievement of achievements) {
+      totalXP += (achievement as any).xpValue ?? 0;
     }
 
     return totalXP;

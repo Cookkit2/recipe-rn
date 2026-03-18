@@ -112,8 +112,7 @@ export class AchievementService {
     target: number;
   }> {
     try {
-      const achievements = await this.achievementRepo.getAchievements();
-      const achievement = achievements.find((a) => a.id === achievementId);
+      const achievement = await this.achievementRepo.findById(achievementId);
 
       if (!achievement) {
         log.warn(`Achievement not found: ${achievementId}`);
@@ -170,8 +169,7 @@ export class AchievementService {
    */
   async unlockAchievement(achievementId: string): Promise<boolean> {
     try {
-      const achievements = await this.achievementRepo.getAchievements();
-      const achievement = achievements.find((a) => a.id === achievementId);
+      const achievement = await this.achievementRepo.findById(achievementId);
 
       if (!achievement) {
         log.warn(`Achievement not found: ${achievementId}`);
@@ -210,8 +208,7 @@ export class AchievementService {
    */
   async getProgress(achievementId: string): Promise<AchievementProgress | null> {
     try {
-      const achievements = await this.achievementRepo.getAchievements();
-      const achievement = achievements.find((a) => a.id === achievementId);
+      const achievement = await this.achievementRepo.findById(achievementId);
 
       if (!achievement) {
         return null;
@@ -318,8 +315,7 @@ export class AchievementService {
       await this.userAchievementRepo.updateProgress(achievementId, progress);
 
       // Check if achievement should be unlocked
-      const achievements = await this.achievementRepo.getAchievements();
-      const achievement = achievements.find((a) => a.id === achievementId);
+      const achievement = await this.achievementRepo.findById(achievementId);
 
       if (achievement) {
         const requirement = achievement.parsedRequirement as AchievementRequirement;
@@ -345,8 +341,7 @@ export class AchievementService {
       // Check if achievement should be unlocked
       const userAchievement = await this.userAchievementRepo.getByAchievementId(achievementId);
       if (userAchievement) {
-        const achievements = await this.achievementRepo.getAchievements();
-        const achievement = achievements.find((a) => a.id === achievementId);
+        const achievement = await this.achievementRepo.findById(achievementId);
 
         if (achievement) {
           const requirement = achievement.parsedRequirement as AchievementRequirement;
