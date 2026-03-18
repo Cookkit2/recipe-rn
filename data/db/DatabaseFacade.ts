@@ -1230,30 +1230,27 @@ export class DatabaseFacade {
     // Fetch matching stock items at once to avoid N+1 queries in the loop below
     const matchingStocks = await this.stocks.getStocksByNamesOrSynonyms(ingredientNames);
 
-    // Pre-calculate mapped stock matching for each recipe ingredient
-    const ingredientStockMap = new Map<string, { totalQuantity: number; firstUnit: string }>();
-
     for (const ingredient of recipeDetails.ingredients) {
       let totalStock = 0;
-      let firstUnit = "";
+      let firstStockItemUnit = "";
 
+      // The fetched matchingStocks is already reduced to only relevant items.
+      // We can iterate over them directly to sum quantities instead of allocating
+      // intermediate arrays via .filter() and .reduce().
       for (let i = 0; i < matchingStocks.length; i++) {
         const stock = matchingStocks[i];
+        if (!stock) continue;
+
         if (isIngredientMatch(stock.name, ingredient.name, stock.synonyms)) {
           totalStock += stock.quantity;
-          if (!firstUnit && stock.unit) {
-            firstUnit = stock.unit;
+          // Capture the unit from the first matched stock item
+          if (!firstStockItemUnit && stock.unit) {
+            firstStockItemUnit = stock.unit;
           }
         }
       }
 
-      ingredientStockMap.set(ingredient.name, { totalQuantity: totalStock, firstUnit });
-    }
-
-    for (const ingredient of recipeDetails.ingredients) {
-      const stockInfo = ingredientStockMap.get(ingredient.name);
-
-      if (!stockInfo || stockInfo.totalQuantity === 0) {
+      if (totalStock === 0) {
         missingIngredients.push({
           name: ingredient.name,
           quantity: ingredient.quantity,
@@ -1265,8 +1262,8 @@ export class DatabaseFacade {
           name: ingredient.name,
           quantity: ingredient.quantity,
           unit: ingredient.unit,
-          stockQuantity: stockInfo.totalQuantity,
-          stockUnit: stockInfo.firstUnit,
+          stockQuantity: totalStock,
+          stockUnit: firstStockItemUnit,
         });
       }
     }
