@@ -166,7 +166,7 @@ export default function RecipeEdit() {
             const existing = existingIngredientsMap.get(ingredient.id);
             if (existing) {
               batchOperations.push(
-                (existing as any).prepareUpdate((ing: any) => {
+                existing.prepareUpdate((ing: any) => {
                   if (ingredient.name !== undefined) ing.name = ingredient.name;
                   if (ingredient.quantity !== undefined) ing.quantity = ingredient.quantity;
                   if (ingredient.unit !== undefined) ing.unit = ingredient.unit;
@@ -206,7 +206,7 @@ export default function RecipeEdit() {
             const existing = existingStepsMap.get(step.id);
             if (existing) {
               batchOperations.push(
-                (existing as any).prepareUpdate((s: any) => {
+                existing.prepareUpdate((s: any) => {
                   if (step.step !== undefined) s.step = step.step;
                   if (step.title !== undefined) s.title = step.title;
                   if (step.description !== undefined) s.description = step.description;
