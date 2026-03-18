@@ -8,7 +8,7 @@ import type { Recipe, RecipeIngredient } from "~/types/Recipe";
 import type { PantryItem } from "~/types/PantryItem";
 import type { StepPageData } from "~/app/recipes/[recipeId]/steps";
 import { storage, database } from "~/data";
-import { RECIPE_COOKED_KEY } from "~/constants/storage-keys";
+import { RECIPE_COOKED_KEY, INGREDIENTS_USED_BEFORE_EXPIRY_KEY } from "~/constants/storage-keys";
 import { achievementService } from "~/data/services/AchievementService";
 import {
   usePantryItemsByType,
@@ -132,8 +132,23 @@ export function RecipeStepsProvider({
 
       // Automatically deduct ingredients without showing alerts
       try {
+        let ingredientsUsedBeforeExpiryCount = 0;
+
         const updatePromises = matches.map(async ({ pantryItem, recipeIngredient }) => {
           let reductionInPantryUnits: number;
+
+          // Check if ingredient is used before expiry
+          if (pantryItem.expiry_date) {
+            const expiryDate = new Date(pantryItem.expiry_date);
+            const now = new Date();
+            // Reset times to compare just the dates
+            expiryDate.setHours(0, 0, 0, 0);
+            now.setHours(0, 0, 0, 0);
+
+            if (expiryDate >= now) {
+              ingredientsUsedBeforeExpiryCount++;
+            }
+          }
 
           // Check if dimensions are compatible (both weight, both volume, etc.)
           if (areDimensionsCompatible(pantryItem.unit, recipeIngredient.unit)) {
@@ -183,6 +198,18 @@ export function RecipeStepsProvider({
         });
 
         await Promise.all(updatePromises);
+
+        // Update the achievements tracker if any unexpired ingredients were used
+        if (ingredientsUsedBeforeExpiryCount > 0) {
+          const currentCount = Number(storage.get(INGREDIENTS_USED_BEFORE_EXPIRY_KEY)) || 0;
+          storage.set(
+            INGREDIENTS_USED_BEFORE_EXPIRY_KEY,
+            (currentCount + ingredientsUsedBeforeExpiryCount).toString()
+          );
+
+          // Trigger achievement check again to pick up the new metric
+          await achievementService.checkAchievements();
+        }
       } catch {
         // Silent error handling - errors are handled gracefully
       }
