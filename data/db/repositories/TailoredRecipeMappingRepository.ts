@@ -59,12 +59,15 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
 
       if (!mappings.length) return null;
 
-      // Get the recipe and verify it's linked to the base recipe
+      // Get the recipes and verify they are linked to the base recipe
       const recipeCollection = database.collections.get<Recipe>("recipe");
+
+      const recipeIds = mappings.map((m) => m.recipeId);
+      const recipes = await recipeCollection.query(Q.where("id", Q.oneOf(recipeIds))).fetch();
 
       for (const mapping of mappings) {
         try {
-          const recipe = await recipeCollection.find(mapping.recipeId);
+          const recipe = recipes.find((r) => r.id === mapping.recipeId);
 
           // Check if this recipe is a tailored version of the base recipe
           // We store baseRecipeId in the recipe's sourceUrl field for tailored recipes
@@ -86,7 +89,7 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
             };
           }
         } catch {
-          // Recipe not found, continue to next mapping
+          // Continue to next mapping
           continue;
         }
       }
