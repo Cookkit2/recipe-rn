@@ -64,7 +64,10 @@ describe("UserChallengeRepository", () => {
       return mockUserChallengeCollection;
     });
 
-    (database.collections.get as jest.Mock).mockReturnValue(mockUserChallengeCollection);
+    (database.collections.get as jest.Mock).mockImplementation((table: string) => {
+      if (table === "challenge") return mockChallengeCollection;
+      return mockUserChallengeCollection;
+    });
 
     repository = new UserChallengeRepository();
   });
