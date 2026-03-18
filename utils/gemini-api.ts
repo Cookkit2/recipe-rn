@@ -119,7 +119,8 @@ export class GeminiAPI {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
+        log.error(`Gemini API error: ${response.status} - ${errorText}`);
+        throw new Error("Gemini API request failed. Please try again later.");
       }
 
       const data: GeminiResponse = await response.json();
@@ -177,7 +178,8 @@ export class GeminiAPI {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
+        log.error(`Gemini API error: ${response.status} - ${errorText}`);
+        throw new Error("Gemini API request failed. Please try again later.");
       }
 
       return await response.json();
