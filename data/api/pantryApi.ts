@@ -513,7 +513,6 @@ export const pantryApi = {
   },
 };
 
-
 // Helper function to convert Stock + BaseIngredient to PantryItem in batches
 const convertStockToPantryItemBatch = async (stocks: Stock[]): Promise<PantryItem[]> => {
   if (stocks.length === 0) return [];
@@ -533,25 +532,31 @@ const convertStockToPantryItemBatch = async (stocks: Stock[]): Promise<PantryIte
     const [synonymsResult, categoriesResult, stepsResult] = await Promise.all([
       Promise.race([
         synonymCollection.query(Q.where("stock_id", Q.oneOf(stockIds))).fetch(),
-        new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Synonym fetch timeout")), 5000))
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Synonym fetch timeout")), 5000)
+        ),
       ]).catch((e) => {
         log.warn("Batch synonym fetch failed", e);
         return [];
       }),
       Promise.race([
         stockCategoryCollection.query(Q.where("stock_id", Q.oneOf(stockIds))).fetch(),
-        new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Categories fetch timeout")), 5000))
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Categories fetch timeout")), 5000)
+        ),
       ]).catch((e) => {
         log.warn("Batch category fetch failed", e);
         return [];
       }),
       Promise.race([
         stepsCollection.query(Q.where("stock_id", Q.oneOf(stockIds))).fetch(),
-        new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Steps fetch timeout")), 5000))
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Steps fetch timeout")), 5000)
+        ),
       ]).catch((e) => {
         log.warn("Batch steps fetch failed", e);
         return [];
-      })
+      }),
     ]);
 
     allSynonyms = synonymsResult as IngredientSynonym[];
@@ -566,45 +571,66 @@ const convertStockToPantryItemBatch = async (stocks: Stock[]): Promise<PantryIte
   const categoryIds = new Set<string>();
 
   allStockCategories.forEach((sc) => {
-    if (((sc as any).category_id || (sc as any).categoryId || (sc as any)._raw?.category_id)) {
-        categoryIds.add(((sc as any).category_id || (sc as any).categoryId || (sc as any)._raw?.category_id));
+    if ((sc as any).category_id || (sc as any).categoryId || (sc as any)._raw?.category_id) {
+      categoryIds.add(
+        (sc as any).category_id || (sc as any).categoryId || (sc as any)._raw?.category_id
+      );
     }
   });
 
   const categoryCollection = database.collections.get<IngredientCategory>("ingredient_category");
   let allIngredientCategories: IngredientCategory[] = [];
   if (categoryIds.size > 0) {
-      try {
-          allIngredientCategories = await Promise.race([
-            categoryCollection.query(Q.where("id", Q.oneOf(Array.from(categoryIds)))).fetch(),
-            new Promise<never>((_, reject) => setTimeout(() => reject(new Error("IngredientCategory fetch timeout")), 5000))
-          ]) as IngredientCategory[];
-      } catch (error) {
-          log.warn("Batch IngredientCategory fetch failed", error);
-      }
+    try {
+      allIngredientCategories = (await Promise.race([
+        categoryCollection.query(Q.where("id", Q.oneOf(Array.from(categoryIds)))).fetch(),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("IngredientCategory fetch timeout")), 5000)
+        ),
+      ])) as IngredientCategory[];
+    } catch (error) {
+      log.warn("Batch IngredientCategory fetch failed", error);
+    }
   }
 
   const ingredientCategoryMap = new Map<string, IngredientCategory>();
-  allIngredientCategories.forEach(c => ingredientCategoryMap.set(c.id, c));
+  allIngredientCategories.forEach((c) => ingredientCategoryMap.set(c.id, c));
 
   // Group by stock_id
   const synonymsByStockId = new Map<string, Array<{ id: string; synonym: string }>>();
   const categoriesByStockId = new Map<string, Array<{ id: string; name: string }>>();
-  const stepsByStockId = new Map<string, Array<{ id: string; title: string; description: string; sequence: number }>>();
+  const stepsByStockId = new Map<
+    string,
+    Array<{ id: string; title: string; description: string; sequence: number }>
+  >();
 
   allSynonyms.forEach((s) => {
-    const list = synonymsByStockId.get(((s as any).stock_id || (s as any).stockId || (s as any)._raw?.stock_id)) || [];
+    const list =
+      synonymsByStockId.get(
+        (s as any).stock_id || (s as any).stockId || (s as any)._raw?.stock_id
+      ) || [];
     list.push({ id: s.id, synonym: s.synonym });
-    synonymsByStockId.set(((s as any).stock_id || (s as any).stockId || (s as any)._raw?.stock_id), list);
+    synonymsByStockId.set(
+      (s as any).stock_id || (s as any).stockId || (s as any)._raw?.stock_id,
+      list
+    );
   });
 
   allStockCategories.forEach((sc) => {
-    const list = categoriesByStockId.get(((sc as any).stock_id || (sc as any).stockId || (sc as any)._raw?.stock_id)) || [];
-    const ingredientCat = ingredientCategoryMap.get(((sc as any).category_id || (sc as any).categoryId || (sc as any)._raw?.category_id));
+    const list =
+      categoriesByStockId.get(
+        (sc as any).stock_id || (sc as any).stockId || (sc as any)._raw?.stock_id
+      ) || [];
+    const ingredientCat = ingredientCategoryMap.get(
+      (sc as any).category_id || (sc as any).categoryId || (sc as any)._raw?.category_id
+    );
     if (ingredientCat) {
-        list.push({ id: ingredientCat.id, name: ingredientCat.name });
+      list.push({ id: ingredientCat.id, name: ingredientCat.name });
     }
-    categoriesByStockId.set(((sc as any).stock_id || (sc as any).stockId || (sc as any)._raw?.stock_id), list);
+    categoriesByStockId.set(
+      (sc as any).stock_id || (sc as any).stockId || (sc as any)._raw?.stock_id,
+      list
+    );
   });
 
   allSteps.forEach((s) => {
