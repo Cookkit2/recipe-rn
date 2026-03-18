@@ -149,7 +149,9 @@ export default function RecipeEdit() {
           database.collections.get<RecipeIngredientModel>("recipe_ingredient");
 
         const existingIngredients = await dbRecipe.ingredients.fetch();
-        const existingIngredientsMap = new Map(existingIngredients.map((ing) => [ing.id, ing]));
+        const existingIngredientsMap = new Map(
+          existingIngredients.map((ing: RecipeIngredientModel) => [ing.id, ing])
+        );
 
         // Delete removed ingredients
         for (const existing of existingIngredients) {
@@ -164,7 +166,7 @@ export default function RecipeEdit() {
             const existing = existingIngredientsMap.get(ingredient.id);
             if (existing) {
               batchOperations.push(
-                existing.prepareUpdate((ing: any) => {
+                existing.prepareUpdate((ing: RecipeIngredientModel) => {
                   if (ingredient.name !== undefined) ing.name = ingredient.name;
                   if (ingredient.quantity !== undefined) ing.quantity = ingredient.quantity;
                   if (ingredient.unit !== undefined) ing.unit = ingredient.unit;
@@ -189,7 +191,9 @@ export default function RecipeEdit() {
         const stepsCollection = database.collections.get<RecipeStepModel>("recipe_step");
 
         const existingSteps = await dbRecipe.steps.fetch();
-        const existingStepsMap = new Map(existingSteps.map((step) => [step.id, step]));
+        const existingStepsMap = new Map(
+          existingSteps.map((step: RecipeStepModel) => [step.id, step])
+        );
 
         // Delete removed steps
         for (const existing of existingSteps) {
@@ -204,7 +208,7 @@ export default function RecipeEdit() {
             const existing = existingStepsMap.get(step.id);
             if (existing) {
               batchOperations.push(
-                existing.prepareUpdate((s: any) => {
+                existing.prepareUpdate((s: RecipeStepModel) => {
                   if (step.step !== undefined) s.step = step.step;
                   if (step.title !== undefined) s.title = step.title;
                   if (step.description !== undefined) s.description = step.description;
