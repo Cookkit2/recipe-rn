@@ -406,7 +406,8 @@ export class AchievementService {
 
         case "spices_tracked": {
           const spicesCategory =
-            (await this.categoryRepo.findByName("Spices")) ?? (await this.categoryRepo.findByName("spices"));
+            (await this.categoryRepo.findByName("Spices")) ??
+            (await this.categoryRepo.findByName("spices"));
 
           if (!spicesCategory) return 0;
 
