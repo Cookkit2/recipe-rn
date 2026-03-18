@@ -4,7 +4,7 @@ import { AlertTriangleIcon } from "lucide-uniwind";
 import { P } from "~/components/ui/typography";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { useExpiringItems } from "~/hooks/queries/usePantryQueries";
-import { isIngredientMatch } from "~/utils/ingredient-matching";
+import { useIngredientMatcher } from "~/hooks/useIngredientMatcher";
 import type { Recipe } from "~/types/Recipe";
 
 interface ExpiringIngredientsBadgeProps {
@@ -47,44 +47,28 @@ export default function ExpiringIngredientsBadge({
 }: ExpiringIngredientsBadgeProps) {
   const { data: expiringItems = [], isLoading } = useExpiringItems(daysUntilExpiry);
 
+  const { countMatchingPantryItems } = useIngredientMatcher({ pantryItems: expiringItems });
+
   // Calculate count of unique expiring ingredients used in recipes
   const expiringCount = useMemo(() => {
     if (!recipes || recipes.length === 0 || expiringItems.length === 0) {
       return 0;
     }
 
-    // Collect all unique ingredient names from recipes
-    const recipeIngredientNames = new Set<string>();
+    // Collect all recipe ingredients
+    const allRecipeIngredients = [];
 
     for (const mealPlanItem of recipes) {
       if (!mealPlanItem.recipe) continue;
 
       const recipe = mealPlanItem.recipe;
       for (const ingredient of recipe.ingredients) {
-        recipeIngredientNames.add(ingredient.name.toLowerCase().trim());
+        allRecipeIngredients.push(ingredient);
       }
     }
 
-    // Match expiring pantry items against recipe ingredients
-    const matchedExpiringItems = new Set<string>();
-
-    for (const expiringItem of expiringItems) {
-      for (const recipeIngredient of recipeIngredientNames) {
-        if (
-          isIngredientMatch(
-            expiringItem.name,
-            recipeIngredient,
-            expiringItem.synonyms?.map((s: any) => s.synonym)
-          )
-        ) {
-          matchedExpiringItems.add(expiringItem.name);
-          break; // Found a match, no need to check other ingredients
-        }
-      }
-    }
-
-    return matchedExpiringItems.size;
-  }, [recipes, expiringItems]);
+    return countMatchingPantryItems(allRecipeIngredients);
+  }, [recipes, expiringItems, countMatchingPantryItems]);
 
   // Don't render if loading, no count, or no recipes provided
   if (isLoading || expiringCount === 0) {
@@ -123,41 +107,26 @@ export function useExpiringIngredientsCount(
 ) {
   const { data: expiringItems = [], isLoading } = useExpiringItems(daysUntilExpiry);
 
+  const { countMatchingPantryItems } = useIngredientMatcher({ pantryItems: expiringItems });
+
   const count = useMemo(() => {
     if (!recipes || recipes.length === 0 || expiringItems.length === 0) {
       return 0;
     }
 
-    const recipeIngredientNames = new Set<string>();
+    const allRecipeIngredients = [];
 
     for (const mealPlanItem of recipes) {
       if (!mealPlanItem.recipe) continue;
 
       const recipe = mealPlanItem.recipe;
       for (const ingredient of recipe.ingredients) {
-        recipeIngredientNames.add(ingredient.name.toLowerCase().trim());
+        allRecipeIngredients.push(ingredient);
       }
     }
 
-    const matchedExpiringItems = new Set<string>();
-
-    for (const expiringItem of expiringItems) {
-      for (const recipeIngredient of recipeIngredientNames) {
-        if (
-          isIngredientMatch(
-            expiringItem.name,
-            recipeIngredient,
-            expiringItem.synonyms?.map((s: any) => s.synonym)
-          )
-        ) {
-          matchedExpiringItems.add(expiringItem.name);
-          break;
-        }
-      }
-    }
-
-    return matchedExpiringItems.size;
-  }, [recipes, expiringItems]);
+    return countMatchingPantryItems(allRecipeIngredients);
+  }, [recipes, expiringItems, countMatchingPantryItems]);
 
   return {
     count,
