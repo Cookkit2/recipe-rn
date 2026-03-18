@@ -142,7 +142,7 @@ export const pantryApi = {
         backgroundColor: stockItem.backgroundColor,
       });
 
-      const convertedItem = (await convertStockToPantryItemBatch([stockItem]))[0];
+      const convertedItem = (await convertStockToPantryItemBatch([stockItem]))[0] as PantryItem;
       log.info("✅ Converted pantry item:", convertedItem);
 
       return convertedItem;
@@ -192,7 +192,7 @@ export const pantryApi = {
         backgroundColor: stockItem.backgroundColor,
       });
 
-      const convertedItem = (await convertStockToPantryItemBatch([stockItem]))[0];
+      const convertedItem = (await convertStockToPantryItemBatch([stockItem]))[0] as PantryItem;
       log.info("✅ Converted pantry item:", convertedItem);
 
       return convertedItem;
@@ -427,7 +427,7 @@ export const pantryApi = {
       }
 
       const batchResult = await convertStockToPantryItemBatch([updatedStock]);
-      return batchResult[0];
+      return batchResult[0] as PantryItem;
     }, "Error updating pantry item");
   },
 
@@ -461,7 +461,7 @@ export const pantryApi = {
       }
 
       const batchResult = await convertStockToPantryItemBatch([updatedStock]);
-      return batchResult[0];
+      return batchResult[0] as PantryItem;
     }, "Error updating pantry item");
   },
 
@@ -566,8 +566,8 @@ const convertStockToPantryItemBatch = async (stocks: Stock[]): Promise<PantryIte
   const categoryIds = new Set<string>();
 
   allStockCategories.forEach((sc) => {
-    if ((sc.category_id || (sc as any).categoryId || sc._raw?.category_id)) {
-        categoryIds.add((sc.category_id || (sc as any).categoryId || sc._raw?.category_id));
+    if (((sc as any).category_id || (sc as any).categoryId || (sc as any)._raw?.category_id)) {
+        categoryIds.add(((sc as any).category_id || (sc as any).categoryId || (sc as any)._raw?.category_id));
     }
   });
 
@@ -593,24 +593,24 @@ const convertStockToPantryItemBatch = async (stocks: Stock[]): Promise<PantryIte
   const stepsByStockId = new Map<string, Array<{ id: string; title: string; description: string; sequence: number }>>();
 
   allSynonyms.forEach((s) => {
-    const list = synonymsByStockId.get((s.stock_id || (s as any).stockId || s._raw?.stock_id)) || [];
+    const list = synonymsByStockId.get(((s as any).stock_id || (s as any).stockId || (s as any)._raw?.stock_id)) || [];
     list.push({ id: s.id, synonym: s.synonym });
-    synonymsByStockId.set((s.stock_id || (s as any).stockId || s._raw?.stock_id), list);
+    synonymsByStockId.set(((s as any).stock_id || (s as any).stockId || (s as any)._raw?.stock_id), list);
   });
 
   allStockCategories.forEach((sc) => {
-    const list = categoriesByStockId.get((sc.stock_id || (sc as any).stockId || sc._raw?.stock_id)) || [];
-    const ingredientCat = ingredientCategoryMap.get((sc.category_id || (sc as any).categoryId || sc._raw?.category_id));
+    const list = categoriesByStockId.get(((sc as any).stock_id || (sc as any).stockId || (sc as any)._raw?.stock_id)) || [];
+    const ingredientCat = ingredientCategoryMap.get(((sc as any).category_id || (sc as any).categoryId || (sc as any)._raw?.category_id));
     if (ingredientCat) {
         list.push({ id: ingredientCat.id, name: ingredientCat.name });
     }
-    categoriesByStockId.set((sc.stock_id || (sc as any).stockId || sc._raw?.stock_id), list);
+    categoriesByStockId.set(((sc as any).stock_id || (sc as any).stockId || (sc as any)._raw?.stock_id), list);
   });
 
   allSteps.forEach((s) => {
     // WatermelonDB models have properties matching column names but mapped to camelCase by decorators
     // For raw records it depends on the model. Assuming s is a Model instance:
-    const stockId = s.stock_id || (s as any).stockId || s._raw.stock_id;
+    const stockId = (s as any).stock_id || (s as any).stockId || s._raw.stock_id;
     const list = stepsByStockId.get(stockId) || [];
     list.push({
       id: s.id,
@@ -633,7 +633,7 @@ const convertStockToPantryItemBatch = async (stocks: Stock[]): Promise<PantryIte
       quantity: stock.quantity,
       unit: stock.unit,
       expiry_date: stock.expiryDate || undefined,
-      category: categories.length > 0 ? categories[0].name : "",
+      category: categories.length > 0 ? categories[0]?.name || "" : "",
       categories,
       type: mapDbTypeToType(stock.storageType),
       image_url: stock.imageUrl,
