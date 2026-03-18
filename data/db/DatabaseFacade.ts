@@ -1307,11 +1307,7 @@ export class DatabaseFacade {
       for (const collectionName of collections) {
         try {
           const collection = database.collections.get(collectionName);
-          const allRecords = await collection.query().fetch();
-
-          if (allRecords.length > 0) {
-            await Promise.all(allRecords.map((record) => record.destroyPermanently()));
-          }
+          await collection.query().destroyAllPermanently();
         } catch (error) {
           log.warn(`⚠️ Error clearing ${collectionName}:`, error);
         }
@@ -1341,11 +1337,7 @@ export class DatabaseFacade {
       for (const collectionName of collections) {
         try {
           const collection = database.collections.get(collectionName);
-          const allRecords = await collection.query().fetch();
-
-          if (allRecords.length > 0) {
-            await Promise.all(allRecords.map((record) => record.destroyPermanently()));
-          }
+          await collection.query().destroyAllPermanently();
         } catch (error) {
           log.warn(`⚠️ Error clearing ${collectionName}:`, error);
         }
