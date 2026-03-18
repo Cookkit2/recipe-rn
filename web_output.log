@@ -1,0 +1,108 @@
+
+> cookkit@1.1.0 web /app
+> expo start -c --web
+
+Starting project at /app
+React Compiler enabled
+Starting Metro Bundler
+
+warning: Bundler cache is empty, rebuilding (this may take a minute)
+The following packages should be updated for best compatibility with the installed expo version:
+  @expo/ui@55.0.2 - expected version: ~55.0.3
+  @shopify/react-native-skia@2.5.1 - expected version: 2.4.18
+  expo-blur@55.0.9 - expected version: ~55.0.10
+  expo-build-properties@55.0.9 - expected version: ~55.0.10
+  expo-constants@55.0.7 - expected version: ~55.0.8
+  expo-crypto@55.0.9 - expected version: ~55.0.10
+  expo-haptics@55.0.8 - expected version: ~55.0.9
+  expo-image-picker@55.0.12 - expected version: ~55.0.13
+  expo-linear-gradient@55.0.8 - expected version: ~55.0.9
+  expo-navigation-bar@55.0.8 - expected version: ~55.0.9
+  expo-notifications@55.0.12 - expected version: ~55.0.13
+  expo-router@55.0.5 - expected version: ~55.0.6
+  expo-speech@55.0.8 - expected version: ~55.0.9
+  expo-splash-screen@55.0.10 - expected version: ~55.0.11
+  expo-store-review@55.0.8 - expected version: ~55.0.9
+  expo-system-ui@55.0.9 - expected version: ~55.0.10
+  expo-updates@55.0.13 - expected version: ~55.0.14
+  expo-video@55.0.10 - expected version: ~55.0.11
+  expo-web-browser@55.0.9 - expected version: ~55.0.10
+  react-native-reanimated@4.2.2 - expected version: 4.2.1
+  react-native-safe-area-context@5.7.0 - expected version: ~5.6.2
+  react-native-worklets@0.7.4 - expected version: 0.7.2
+  @types/jest@30.0.0 - expected version: 29.5.14
+Your project may not work correctly until you install the expected versions of the packages.
+Waiting on http://localhost:8081
+Logs for your project will appear below.
+Web node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web node_modules/expo-router/entry.js ▓▓▓▓░░░░░░░░░░░░ 27.7% ( 41/137)
+λ node_modules/@expo/router-server/node/render.js ▓▓▓▓░░░░░░░░░░░░ 26.3% ( 36/128)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓░░░░░░░░░░ 40.6% (181/284)
+λ node_modules/@expo/router-server/node/render.js ▓▓▓▓░░░░░░░░░░░░ 26.3% (239/612)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 46.1% (260/437)
+λ node_modules/@expo/router-server/node/render.js ▓▓▓▓░░░░░░░░░░░░ 26.3% ( 356/2754)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 46.1% (294/466)
+λ node_modules/@expo/router-server/node/render.js ▓▓▓▓░░░░░░░░░░░░ 26.3% ( 640/3317)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 46.1% (294/466)
+λ node_modules/@expo/router-server/node/render.js ▓▓▓▓▓▓░░░░░░░░░░ 38.0% (2075/3367)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 46.1% (315/531)
+λ node_modules/@expo/router-server/node/render.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 60.9% (2741/3728)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 46.1% (466/765)
+λ node_modules/@expo/router-server/node/render.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 60.9% (3029/3957)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 46.1% (466/765)
+λ node_modules/@expo/router-server/node/render.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 65.5% (3406/4210)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 46.1% (497/802)
+λ node_modules/@expo/router-server/node/render.js ▓▓▓▓▓▓▓▓▓▓▓░░░░░ 74.6% (3711/5954)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 46.1% ( 575/2934)
+λ node_modules/@expo/router-server/node/render.js ▓▓▓▓▓▓▓▓▓▓▓░░░░░ 74.6% (3711/5954)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 46.1% ( 760/3221)
+λ node_modules/@expo/router-server/node/render.js ▓▓▓▓▓▓▓▓▓▓▓░░░░░ 74.6% (3909/6046)
+ WARN  The package /app/node_modules/node-vibrant/browser contains an invalid package.json configuration. Consider raising this issue with the package maintainer(s).
+Reason: The target for "." defined in "exports" is "./../dist/esm/browser.js", however this value is an invalid subpath or subpath pattern because it includes "..". Falling back to file-based resolution.
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 46.1% ( 760/3221)
+λ node_modules/@expo/router-server/node/render.js ▓▓▓▓▓▓▓▓▓▓▓░░░░░ 74.6% (4286/6267)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 46.1% ( 814/3258)
+λ node_modules/@expo/router-server/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 89.4% (5933/6274)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 60.7% (2632/3538)
+λ node_modules/@expo/router-server/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 89.4% (5933/6274)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 60.7% (2977/4002)
+λ node_modules/@expo/router-server/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 89.4% (5933/6274)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 62.0% (3212/4078)
+λ node_modules/@expo/router-server/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 90.9% (6218/6666)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 67.3% (3666/5967)
+λ node_modules/@expo/router-server/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 90.9% (6269/6682)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 67.3% (4075/6567)
+λ node_modules/@expo/router-server/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 90.9% (6282/6688)
+ WARN  The package /app/node_modules/node-vibrant/browser contains an invalid package.json configuration. Consider raising this issue with the package maintainer(s).
+Reason: The target for "." defined in "exports" is "./../dist/esm/browser.js", however this value is an invalid subpath or subpath pattern because it includes "..". Falling back to file-based resolution.
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 67.3% (4200/8322)
+λ node_modules/@expo/router-server/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 92.4% (6665/7099)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 67.3% (5420/8356)
+λ node_modules/@expo/router-server/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 92.4% (6665/7099)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 67.3% (6082/8456)
+λ node_modules/@expo/router-server/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 92.4% (6665/7099)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓░░░░░ 73.6% (7339/8552)
+λ node_modules/@expo/router-server/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 92.4% (6665/7099)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 92.0% (8205/8554)
+λ node_modules/@expo/router-server/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 93.3% (7012/7260)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 93.0% (8516/8830)
+λ node_modules/@expo/router-server/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 97.1% (7236/7342)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 93.6% (9128/9456)
+λ node_modules/@expo/router-server/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 98.6% (7310/7360)
+λ Bundling failed 90812ms node_modules/@expo/router-server/node/render.js (7366 modules)
+
+Metro error: data/db/models/Recipe.ts: /app/data/db/models/Recipe.ts: Definitely assigned fields cannot be initialized here, but only in the constructor
+[0m [90m 36 |[39m   }[33m;[39m
+ [90m 37 |[39m
+[31m[1m>[22m[39m[90m 38 |[39m   [33m@[39mfield([32m"title"[39m) title[33m![39m[33m:[39m string[33m;[39m
+ [90m    |[39m   [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 39 |[39m   [33m@[39mfield([32m"description"[39m) description[33m![39m[33m:[39m string[33m;[39m
+ [90m 40 |[39m   [33m@[39mfield([32m"image_url"[39m) imageUrl[33m?[39m[33m:[39m string[33m;[39m
+ [90m 41 |[39m   [33m@[39mfield([32m"prep_minutes"[39m) prepMinutes[33m![39m[33m:[39m number[33m;[39m[0m
+
+
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 98.9% (9639/9691)
+Web Bundling failed 90978ms node_modules/expo-router/entry.js (9695 modules)
+Web Bundled 3136ms node_modules/expo-router/_error.js (134 modules)
+Killed
+ ELIFECYCLE  Command failed with exit code 137.

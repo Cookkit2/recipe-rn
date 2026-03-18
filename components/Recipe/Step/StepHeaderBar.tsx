@@ -32,7 +32,13 @@ export default function StepHeaderBar() {
         >
           <HelpCircleIcon className="text-foreground" />
         </Button> */}
-        <Button size="icon" variant="ghost" className="rounded-full" onPress={() => router.back()}>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="rounded-full"
+          onPress={() => router.back()}
+          accessibilityLabel="Close"
+        >
           <XIcon className="text-foreground" />
         </Button>
       </View>

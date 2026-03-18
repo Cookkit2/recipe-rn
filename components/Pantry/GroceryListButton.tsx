@@ -12,7 +12,7 @@ export default function GroceryListButton() {
   return (
     <View className="relative">
       <Link href="/grocery-list" asChild>
-        <Button size="icon-sm" variant="ghost">
+        <Button size="icon-sm" variant="ghost" accessibilityLabel="Grocery list">
           <ShoppingCartIcon className="text-foreground" size={18} strokeWidth={3} />
         </Button>
       </Link>

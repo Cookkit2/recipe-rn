@@ -18,6 +18,7 @@ export default function RecipeServing() {
         enableDebounce={false}
         disabled={servings <= 1}
         onPress={() => servings > 1 && updateServings(servings - 1)}
+        accessibilityLabel="Decrease servings"
       >
         <MinusIcon className="text-foreground" size={20} strokeWidth={2.618} />
       </Button>
@@ -33,6 +34,7 @@ export default function RecipeServing() {
         className="rounded-full"
         enableDebounce={false}
         onPress={() => updateServings(servings + 1)}
+        accessibilityLabel="Increase servings"
       >
         <PlusIcon className="text-foreground" size={20} strokeWidth={2.618} />
       </Button>
