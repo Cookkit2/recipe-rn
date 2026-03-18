@@ -157,7 +157,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
         return await this.getRecipeWithDetailsDirectQuery(id);
       }
 
-      if (!recipe.ingredients || typeof (recipe.ingredients as any).fetch !== "function") {
+      if (!recipe.ingredients || typeof recipe.ingredients.fetch !== "function") {
         // Fallback: query collections directly
         return await this.getRecipeWithDetailsDirectQuery(id);
       }
