@@ -149,9 +149,7 @@ export default function RecipeEdit() {
           database.collections.get<RecipeIngredientModel>("recipe_ingredient");
 
         const existingIngredients = await dbRecipe.ingredients.fetch();
-        const existingIngredientsMap = new Map(
-          existingIngredients.map((ing: RecipeIngredientModel) => [ing.id, ing])
-        );
+        const existingIngredientsMap = new Map(existingIngredients.map((ing: any) => [ing.id, ing]));
 
         // Delete removed ingredients
         for (const existing of existingIngredients) {
@@ -191,9 +189,7 @@ export default function RecipeEdit() {
         const stepsCollection = database.collections.get<RecipeStepModel>("recipe_step");
 
         const existingSteps = await dbRecipe.steps.fetch();
-        const existingStepsMap = new Map(
-          existingSteps.map((step: RecipeStepModel) => [step.id, step])
-        );
+        const existingStepsMap = new Map(existingSteps.map((step: any) => [step.id, step]));
 
         // Delete removed steps
         for (const existing of existingSteps) {
