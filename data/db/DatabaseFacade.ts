@@ -1231,14 +1231,24 @@ export class DatabaseFacade {
     const matchingStocks = await this.stocks.getStocksByNamesOrSynonyms(ingredientNames);
 
     for (const ingredient of recipeDetails.ingredients) {
-      // Filter the specific stock items for this ingredient from the pre-fetched list
-      const stockItems = matchingStocks.filter((stock) =>
-        isIngredientMatch(stock.name, ingredient.name, stock.synonyms)
-      );
+      let totalStock = 0;
+      let firstStockItemUnit = "";
 
-      // Note: getStocksByNamesOrSynonyms returns an array of plain objects, not Stock models,
-      // so we use any/type inference for the reduction.
-      const totalStock = stockItems.reduce((sum: number, item: any) => sum + item.quantity, 0);
+      // The fetched matchingStocks is already reduced to only relevant items.
+      // We can iterate over them directly to sum quantities instead of allocating
+      // intermediate arrays via .filter() and .reduce().
+      for (let i = 0; i < matchingStocks.length; i++) {
+        const stock = matchingStocks[i];
+        if (!stock) continue;
+
+        if (isIngredientMatch(stock.name, ingredient.name, stock.synonyms)) {
+          totalStock += stock.quantity;
+          // Capture the unit from the first matched stock item
+          if (!firstStockItemUnit && stock.unit) {
+            firstStockItemUnit = stock.unit;
+          }
+        }
+      }
 
       if (totalStock === 0) {
         missingIngredients.push({
@@ -1248,13 +1258,12 @@ export class DatabaseFacade {
           notes: ingredient.notes,
         });
       } else {
-        const firstStockItem = stockItems[0];
         availableIngredients.push({
           name: ingredient.name,
           quantity: ingredient.quantity,
           unit: ingredient.unit,
           stockQuantity: totalStock,
-          stockUnit: firstStockItem?.unit || "",
+          stockUnit: firstStockItemUnit,
         });
       }
     }
