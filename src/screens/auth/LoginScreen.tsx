@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -9,43 +9,43 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-} from 'react-native';
-import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
+} from "react-native";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function LoginScreen() {
   const { login, isLoading, clearError } = useAuth();
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
   const handleLogin = async () => {
     clearError();
-    setError('');
+    setError("");
 
     if (!email || !password) {
-      setError('Please fill in all fields');
+      setError("Please fill in all fields");
       return;
     }
 
     try {
       await login(email, password);
-      router.replace('/(tabs)');
+      router.replace("/(tabs)");
     } catch (err: any) {
-      setError(err.message || 'Login failed');
+      setError(err.message || "Login failed");
     }
   };
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
     >
       <SafeAreaView style={styles.safeArea}>
         <LinearGradient
-          colors={['#FF6B6B', '#FF8E53', '#FF6B6B']}
+          colors={["#FF6B6B", "#FF8E53", "#FF6B6B"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.gradient}
@@ -108,7 +108,7 @@ export default function LoginScreen() {
 
               <TouchableOpacity
                 style={styles.linkButton}
-                onPress={() => router.push('/(auth)/register')}
+                onPress={() => router.push("/(auth)/register")}
                 disabled={isLoading}
               >
                 <Text style={styles.linkButtonText}>Don't have an account? Register</Text>
@@ -124,99 +124,99 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
   },
   safeArea: {
     flex: 1,
   },
   gradient: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: 20,
   },
   content: {
-    width: '100%',
+    width: "100%",
   },
   title: {
     fontSize: 32,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "bold",
+    color: "#fff",
     marginBottom: 10,
-    textAlign: 'center',
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 16,
-    color: '#fff',
+    color: "#fff",
     marginBottom: 40,
-    textAlign: 'center',
+    textAlign: "center",
     opacity: 0.9,
   },
   form: {
-    width: '100%',
+    width: "100%",
   },
   inputContainer: {
     marginBottom: 20,
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#fff',
+    fontWeight: "600",
+    color: "#fff",
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
-    color: '#333',
+    color: "#333",
   },
   errorContainer: {
-    backgroundColor: 'rgba(255, 0, 0, 0.2)',
+    backgroundColor: "rgba(255, 0, 0, 0.2)",
     padding: 12,
     borderRadius: 8,
     marginBottom: 20,
   },
   errorText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 14,
   },
   button: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
-    alignItems: 'center',
+    alignItems: "center",
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   buttonText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#FF6B6B',
+    fontWeight: "bold",
+    color: "#FF6B6B",
   },
   divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginVertical: 20,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     opacity: 0.5,
   },
   dividerText: {
     marginHorizontal: 16,
-    color: '#fff',
+    color: "#fff",
     fontSize: 14,
   },
   linkButton: {
     paddingVertical: 12,
   },
   linkButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });
