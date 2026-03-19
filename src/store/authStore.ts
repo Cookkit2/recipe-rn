@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import * as SecureStore from "expo-secure-store";
-import { authDb, Session } from "@/services/database/auth-db";
+import * as authDB from "~/src/services/database/auth-db";
+import { type Session } from "~/src/services/database/auth-db";
 
 interface AuthState {
   user: User | null;
@@ -28,7 +29,10 @@ export interface User {
   preferences?: any;
 }
 
-const initialState: AuthState = {
+const initialState: Omit<
+  AuthState,
+  "login" | "register" | "logout" | "refreshSession" | "checkAuth" | "clearError"
+> = {
   user: null,
   accessToken: null,
   refreshToken: null,
@@ -53,9 +57,9 @@ export const useAuthStore = create<AuthState>()(
           const refreshToken = `refresh_${Date.now()}`;
 
           // Save to database
-          await authDb.createUser(userId, email, "Test User");
-          await authDb.upsertSession(userId, accessToken, refreshToken, 900); // 15 minutes
-          await authDb.createRefreshToken(userId, refreshToken, 604800000); // 7 days
+          await authDB.createUser(userId, email, "Test User");
+          await authDB.upsertSession(userId, accessToken, refreshToken, 900); // 15 minutes
+          await authDB.createRefreshToken(userId, refreshToken, 604800000); // 7 days
 
           // Save to secure store
           await SecureStore.setItemAsync(
@@ -94,9 +98,9 @@ export const useAuthStore = create<AuthState>()(
           const refreshToken = `refresh_${Date.now()}`;
 
           // Save to database
-          await authDb.createUser(userId, email, displayName);
-          await authDb.upsertSession(userId, accessToken, refreshToken, 900);
-          await authDb.createRefreshToken(userId, refreshToken, 604800000);
+          await authDB.createUser(userId, email, displayName);
+          await authDB.upsertSession(userId, accessToken, refreshToken, 900);
+          await authDB.createRefreshToken(userId, refreshToken, 604800000);
 
           // Save to secure store
           await SecureStore.setItemAsync(
@@ -131,7 +135,7 @@ export const useAuthStore = create<AuthState>()(
 
           if (accessToken) {
             // Revoke session in database
-            await authDb.revokeSession(accessToken);
+            await authDB.revokeSession(accessToken);
           }
 
           // Clear secure store
@@ -155,7 +159,7 @@ export const useAuthStore = create<AuthState>()(
 
         try {
           // Refresh token via database
-          const newTokens = await authDb.refreshToken(user.id, refreshToken);
+          const newTokens = await authDB.refreshToken(user.id, refreshToken);
 
           if (newTokens) {
             // Update secure store
@@ -202,14 +206,14 @@ export const useAuthStore = create<AuthState>()(
           const { userId, accessToken, refreshToken } = JSON.parse(sessionStr);
 
           // Check if tokens are still valid
-          const session = await authDb.getSessionByToken(accessToken);
+          const session = await authDB.getSessionByToken(accessToken);
 
           if (session) {
             // Update last used time
-            await authDb.upsertSession(userId, accessToken, refreshToken, 900);
+            await authDB.upsertSession(userId, accessToken, refreshToken, 900);
 
             // Get user from database
-            const user = await authDb.getUserById(userId);
+            const user = await authDB.getUserById(userId);
 
             if (user) {
               set({
@@ -244,21 +248,13 @@ export const useAuthStore = create<AuthState>()(
         refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
       }),
-      // Custom serialization to handle SecureStore
-      deserialize: (str) => {
-        try {
-          return JSON.parse(str);
-        } catch {
-          return initialState;
-        }
-      },
     }
   )
 );
 
 // Custom middleware to sync with SecureStore
 const authStore = useAuthStore as any;
-authStore.persist.onRehydrateStorage = () => (state) => {
+authStore.persist.onRehydrateStorage = () => (state: any) => {
   if (state) {
     // Hydrated from storage, check auth
     state.checkAuth();
