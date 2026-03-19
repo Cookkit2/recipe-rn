@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import * as SecureStore from 'expo-secure-store';
-import { authDb, Session } from '@/services/database/auth-db';
+import * as authDb from '~/src/services/database/auth-db';
+import type { Session } from '~/src/services/database/auth-db';
 
 interface AuthState {
   user: User | null;
@@ -28,7 +29,7 @@ export interface User {
   preferences?: any;
 }
 
-const initialState: AuthState = {
+const initialState = {
   user: null,
   accessToken: null,
   refreshToken: null,
@@ -234,27 +235,20 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'auth-storage',
       // Note: We need to handle custom serialization for SecureStore
-      partialize: (state) => ({
+      partialize: (state: AuthState) => ({
         user: state.user,
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
       }),
       // Custom serialization to handle SecureStore
-      deserialize: (str) => {
-        try {
-          return JSON.parse(str);
-        } catch {
-          return initialState;
-        }
-      },
     }
   )
 );
 
 // Custom middleware to sync with SecureStore
 const authStore = useAuthStore as any;
-authStore.persist.onRehydrateStorage = () => (state) => {
+authStore.persist.onRehydrateStorage = () => (state: AuthState | undefined) => {
   if (state) {
     // Hydrated from storage, check auth
     state.checkAuth();
