@@ -113,6 +113,7 @@ export default function CameraActionRow({
         variant="ghost"
         className="rounded-full active:bg-white/10"
         onPress={pickFromGallery}
+        accessibilityLabel="Pick from gallery"
       >
         <ImagesIcon className="text-white/80" size={24} />
       </Button>
@@ -125,6 +126,8 @@ export default function CameraActionRow({
         onPressOut={handlePressOut}
         style={animatedStyle}
         disabled={!isCameraAvailable}
+        accessibilityLabel="Take picture"
+        accessibilityRole="button"
       >
         <View className="w-15 h-15 rounded-full bg-white border-2 border-gray-400" />
       </AnimatedPressable>
@@ -136,6 +139,7 @@ export default function CameraActionRow({
         className="rounded-full active:bg-white/10"
         onPress={onConfirm}
         disabled={processPantryItems.length === 0}
+        accessibilityLabel="Save and confirm"
       >
         <SaveIcon className="text-white/80" size={24} />
       </Button>
