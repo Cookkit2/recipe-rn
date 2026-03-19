@@ -41,7 +41,12 @@ export default function PreferencePage() {
         <AllergySection />
       </Animated.ScrollView>
       <View className="absolute right-6 top-6">
-        <Button size="icon" variant="ghost" onPress={() => router.back()}>
+        <Button
+          size="icon"
+          variant="ghost"
+          onPress={() => router.back()}
+          accessibilityLabel="Close"
+        >
           <XIcon className="text-foreground" size={20} strokeWidth={2.618} />
         </Button>
       </View>
