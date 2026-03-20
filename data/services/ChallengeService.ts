@@ -43,9 +43,7 @@ export class ChallengeService {
   async getActiveChallenges(): Promise<ChallengeProgress[]> {
     try {
       const activeChallenges = await this.challengeRepo.getActiveChallenges();
-      const progressPromises = activeChallenges.map((c) => this.getProgress(c.id));
-      const results = await Promise.all(progressPromises);
-      return results.filter((p): p is ChallengeProgress => p !== null);
+      return await this.getProgressBatch(activeChallenges);
     } catch (error) {
       log.error("Error getting active challenges:", error);
       return [];
@@ -58,9 +56,7 @@ export class ChallengeService {
   async getActiveDailyChallenges(): Promise<ChallengeProgress[]> {
     try {
       const dailyChallenges = await this.challengeRepo.getActiveDailyChallenges();
-      const progressPromises = dailyChallenges.map((c) => this.getProgress(c.id));
-      const results = await Promise.all(progressPromises);
-      return results.filter((p): p is ChallengeProgress => p !== null);
+      return await this.getProgressBatch(dailyChallenges);
     } catch (error) {
       log.error("Error getting active daily challenges:", error);
       return [];
@@ -73,9 +69,7 @@ export class ChallengeService {
   async getActiveWeeklyChallenges(): Promise<ChallengeProgress[]> {
     try {
       const weeklyChallenges = await this.challengeRepo.getActiveWeeklyChallenges();
-      const progressPromises = weeklyChallenges.map((c) => this.getProgress(c.id));
-      const results = await Promise.all(progressPromises);
-      return results.filter((p): p is ChallengeProgress => p !== null);
+      return await this.getProgressBatch(weeklyChallenges);
     } catch (error) {
       log.error("Error getting active weekly challenges:", error);
       return [];
@@ -88,9 +82,10 @@ export class ChallengeService {
   async getUserActiveChallenges(): Promise<ChallengeProgress[]> {
     try {
       const userChallenges = await this.userChallengeRepo.getActiveChallenges();
-      const progressPromises = userChallenges.map((uc) => this.getProgress(uc.challengeId));
-      const results = await Promise.all(progressPromises);
-      return results.filter((p): p is ChallengeProgress => p !== null);
+      if (userChallenges.length === 0) return [];
+      const challengeIds = userChallenges.map((uc) => uc.challengeId);
+      const challenges = await this.challengeRepo.getByIds(challengeIds);
+      return await this.getProgressBatch(challenges);
     } catch (error) {
       log.error("Error getting user active challenges:", error);
       return [];
@@ -103,9 +98,10 @@ export class ChallengeService {
   async getUserCompletedChallenges(): Promise<ChallengeProgress[]> {
     try {
       const userChallenges = await this.userChallengeRepo.getCompletedChallenges();
-      const progressPromises = userChallenges.map((uc) => this.getProgress(uc.challengeId));
-      const results = await Promise.all(progressPromises);
-      return results.filter((p): p is ChallengeProgress => p !== null);
+      if (userChallenges.length === 0) return [];
+      const challengeIds = userChallenges.map((uc) => uc.challengeId);
+      const challenges = await this.challengeRepo.getByIds(challengeIds);
+      return await this.getProgressBatch(challenges);
     } catch (error) {
       log.error("Error getting user completed challenges:", error);
       return [];
@@ -118,9 +114,10 @@ export class ChallengeService {
   async getUnclaimedChallenges(): Promise<ChallengeProgress[]> {
     try {
       const userChallenges = await this.userChallengeRepo.getUnclaimedChallenges();
-      const progressPromises = userChallenges.map((uc) => this.getProgress(uc.challengeId));
-      const results = await Promise.all(progressPromises);
-      return results.filter((p): p is ChallengeProgress => p !== null);
+      if (userChallenges.length === 0) return [];
+      const challengeIds = userChallenges.map((uc) => uc.challengeId);
+      const challenges = await this.challengeRepo.getByIds(challengeIds);
+      return await this.getProgressBatch(challenges);
     } catch (error) {
       log.error("Error getting unclaimed challenges:", error);
       return [];
@@ -359,14 +356,83 @@ export class ChallengeService {
   }
 
   /**
+   * Get progress for multiple challenges in a batch to avoid N+1 queries
+   */
+  async getProgressBatch(challenges: any[]): Promise<ChallengeProgress[]> {
+    if (challenges.length === 0) return [];
+
+    try {
+      const challengeIds = challenges.map((c) => c.id).filter(Boolean);
+      const userChallenges = await this.userChallengeRepo.getByChallengeIds(challengeIds);
+
+      const userChallengeMap = new Map();
+      userChallenges.forEach((uc) => {
+        userChallengeMap.set(uc.challengeId, uc);
+      });
+
+      return challenges.map((challenge) => {
+        const userChallenge = userChallengeMap.get(challenge.id);
+        const requirement = challenge.parsedRequirement;
+        const target = requirement.target;
+
+        const progress = userChallenge?.progress ?? 0;
+        const progressPercentage = Math.min(100, (progress / target) * 100);
+
+        const isAvailable = !userChallenge || userChallenge.isAvailable;
+        const isActive = userChallenge?.isActive ?? false;
+        const isCompleted = userChallenge?.isCompleted ?? false;
+        const isExpired = challenge.isExpired || userChallenge?.isExpired || false;
+
+        let timeRemaining: number | undefined;
+        if (!isExpired && !isCompleted) {
+          timeRemaining = challenge.timeRemaining;
+        }
+
+        return {
+          challenge: {
+            id: challenge.id,
+            type: challenge.type as any,
+            title: challenge.title,
+            description: challenge.description,
+            requirement,
+            reward: challenge.parsedReward,
+            startDate: challenge.startDateDate,
+            endDate: challenge.endDateDate,
+            xp: challenge.xpValue,
+          },
+          userChallenge: userChallenge
+            ? {
+                id: userChallenge.id,
+                challengeId: userChallenge.challengeId,
+                status: userChallenge.status as any,
+                progress: userChallenge.progress,
+                startedAt: userChallenge.startedAtDate,
+                completedAt: userChallenge.completedAtDate,
+                claimedAt: userChallenge.claimedAtDate,
+              }
+            : undefined,
+          progress,
+          progressPercentage,
+          isActive,
+          isCompleted,
+          isExpired,
+          isAvailable,
+          timeRemaining,
+        };
+      });
+    } catch (error) {
+      log.error(`Error getting batch progress for challenges:`, error);
+      return [];
+    }
+  }
+
+  /**
    * Get progress for all active challenges
    */
   async getAllActiveProgress(): Promise<ChallengeProgress[]> {
     try {
       const activeChallenges = await this.challengeRepo.getActiveChallenges();
-      const progressPromises = activeChallenges.map((c) => this.getProgress(c.id));
-      const results = await Promise.all(progressPromises);
-      return results.filter((p): p is ChallengeProgress => p !== null);
+      return await this.getProgressBatch(activeChallenges);
     } catch (error) {
       log.error("Error getting all active challenge progress:", error);
       return [];
@@ -461,9 +527,8 @@ export class ChallengeService {
   async getChallengesExpiringSoon(): Promise<ChallengeProgress[]> {
     try {
       const challenges = await this.challengeRepo.getChallengesExpiringSoon();
-      const progressPromises = challenges.map((c) => this.getProgress(c.id));
-      const results = await Promise.all(progressPromises);
-      return results.filter((p): p is ChallengeProgress => p !== null && p.isActive);
+      const results = await this.getProgressBatch(challenges);
+      return results.filter((p) => p.isActive);
     } catch (error) {
       log.error("Error getting challenges expiring soon:", error);
       return [];

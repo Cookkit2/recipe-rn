@@ -33,6 +33,12 @@ export class ChallengeRepository extends BaseRepository<Challenge> {
 
   // Get challenges with optional filters
 
+  // Get multiple challenges by IDs
+  async getByIds(ids: string[]): Promise<Challenge[]> {
+    if (ids.length === 0) return [];
+    return await this.collection.query(Q.where("id", Q.oneOf(ids))).fetch();
+  }
+
   // Get challenge by ID
   async getChallengeById(id: string): Promise<Challenge | null> {
     return await this.findById(id);
