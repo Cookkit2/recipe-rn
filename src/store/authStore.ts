@@ -29,7 +29,17 @@ export interface User {
   preferences?: any;
 }
 
-const initialState: Omit<AuthState, "login" | "register" | "logout" | "refreshSession" | "syncSession" | "checkSession" | "checkAuth" | "clearError"> = {
+const initialState: Omit<
+  AuthState,
+  | "login"
+  | "register"
+  | "logout"
+  | "refreshSession"
+  | "syncSession"
+  | "checkSession"
+  | "checkAuth"
+  | "clearError"
+> = {
   user: null,
   accessToken: null,
   refreshToken: null,
