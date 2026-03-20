@@ -1,5 +1,5 @@
 /**
- * Auth YouTube Service Implementation (Future)
+ * Auth YouTube Service Implementation
  *
  * Uses YouTube Data API v3 for full video metadata.
  * Requires API key - provides richer data than NoAuth service.
@@ -11,8 +11,6 @@
  * - Higher rate limits
  *
  * Note: Transcript still requires scraping as YouTube API doesn't expose captions
- *
- * TODO: Implement when upgrading from MVP
  */
 
 import type {

@@ -5,7 +5,8 @@
 
 import type { IYouTubeService } from "./types";
 import { NoAuthYouTubeService } from "./NoAuthYouTubeService";
-// import { AuthYouTubeService } from './AuthYouTubeService'; // Future implementation
+import Constants from "expo-constants";
+import { AuthYouTubeService } from "./AuthYouTubeService";
 
 export type YouTubeServiceType = "noauth" | "auth";
 
@@ -17,7 +18,7 @@ export function createYouTubeService(type: YouTubeServiceType = "noauth"): IYouT
     case "noauth":
       return new NoAuthYouTubeService();
     case "auth":
-      throw new Error("AuthYouTubeService not yet implemented. Use 'noauth' for MVP.");
+      return new AuthYouTubeService();
     default:
       return new NoAuthYouTubeService();
   }
@@ -25,16 +26,16 @@ export function createYouTubeService(type: YouTubeServiceType = "noauth"): IYouT
 
 /**
  * Get the default YouTube service based on environment configuration
- * For MVP, always returns NoAuth service
- * Future: Will check for API key and return Auth service if available
+ * Returns Auth service if API key is available, otherwise falls back to NoAuth service
  */
 export function getDefaultYouTubeService(): IYouTubeService {
   // Check if YouTube Data API key is configured
-  // const hasApiKey = !!process.env.EXPO_PUBLIC_YOUTUBE_API_KEY;
+  const hasApiKey = !!(
+    process.env.EXPO_PUBLIC_YOUTUBE_API_KEY ||
+    Constants.expoConfig?.extra?.EXPO_PUBLIC_YOUTUBE_API_KEY
+  );
 
-  // For MVP, always use noauth implementation
-  // This uses noembed for metadata and scraping for transcripts
-  return createYouTubeService("noauth");
+  return createYouTubeService(hasApiKey ? "auth" : "noauth");
 }
 
 /**
