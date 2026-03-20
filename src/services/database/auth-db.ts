@@ -73,7 +73,7 @@ export const createUser = async (
   await database.runAsync(
     `INSERT INTO users (id, email, display_name, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?)`,
-    [userId, email, displayName, new Date().toISOString(), new Date().toISOString()]
+    [userId, email, displayName ?? null, new Date().toISOString(), new Date().toISOString()]
   );
 };
 
