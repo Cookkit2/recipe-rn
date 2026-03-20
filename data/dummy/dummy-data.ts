@@ -1,3 +1,4 @@
+import type { ImageSourcePropType } from "react-native";
 import type { PantryItem } from "~/types/PantryItem";
 
 const today = new Date();
@@ -11,7 +12,7 @@ const createDummyItem = (
   unit: string,
   daysToExpiry: number,
   category: string,
-  imageUrl: any,
+  imageUrl: ImageSourcePropType | string,
   type: "fridge" | "cabinet" | "freezer",
   backgroundColor: string,
   stepsToStore: PantryItem["steps_to_store"] = []
