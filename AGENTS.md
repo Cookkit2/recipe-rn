@@ -5,6 +5,7 @@
 - Include debugging information in program output when sharing results.
 - Read files before editing them.
 - When terminal vulnerability warnings appear, run `npm audit` first.
+- When many pull requests are open, the user may ask to consolidate them into a single PR for review and close the superseded ones.
 
 ## Learned Workspace Facts
 

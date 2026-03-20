@@ -3,6 +3,8 @@ import { H3, P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
 import { TrashIcon, CheckCircleIcon, XIcon, Edit2Icon } from "lucide-uniwind";
 import { useGroceryList } from "~/hooks/queries/useGroceryList";
+import MalaysiaShopBanner from "~/components/GroceryList/MalaysiaShopBanner";
+import { useMalaysiaShopPricing } from "~/hooks/useMalaysiaShopPricing";
 import {
   useClearGroceryChecks,
   useClearMealPlan,
@@ -12,10 +14,10 @@ import GroceryListItem from "~/components/GroceryList/GroceryListItem";
 import GroceryListHeader from "~/components/GroceryList/GroceryListHeader";
 import { Stack } from "expo-router";
 import { toast } from "sonner-native";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 export default function GroceryListPage() {
-  const { sections, stats, isLoading, isEmpty, hasNeededItems } = useGroceryList();
+  const { sections, stats, isLoading, isEmpty, hasNeededItems, groceryList } = useGroceryList();
   const clearChecks = useClearGroceryChecks();
   const clearMealPlan = useClearMealPlan();
   const deleteItem = useDeleteGroceryItem();
@@ -92,6 +94,13 @@ export default function GroceryListPage() {
   };
 
   const allItems = sections.flatMap((section) => section.items);
+
+  const neededItems = useMemo(
+    () => groceryList.filter((item) => item.neededQuantity > 0),
+    [groceryList]
+  );
+
+  const malaysiaShopPricing = useMalaysiaShopPricing(neededItems);
 
   // Loading state
   if (isLoading) {
@@ -179,7 +188,14 @@ export default function GroceryListPage() {
       />
       <FlatList
         data={allItems}
-        ListHeaderComponent={<GroceryListHeader />}
+        ListHeaderComponent={
+          <>
+            {!isSelectionMode && neededItems.length > 0 ? (
+              <MalaysiaShopBanner neededItems={neededItems} pricing={malaysiaShopPricing} />
+            ) : null}
+            <GroceryListHeader />
+          </>
+        }
         keyExtractor={(item) => item.normalizedName}
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={{ paddingBottom: 32 }}
@@ -191,6 +207,14 @@ export default function GroceryListPage() {
             isSelectionMode={isSelectionMode}
             isSelected={selectedItemNames.has(item.normalizedName)}
             onToggleSelect={() => toggleItemSelection(item.normalizedName)}
+            estimateMyr={
+              !isSelectionMode &&
+              malaysiaShopPricing.showPerLineEstimates &&
+              !item.isCovered &&
+              item.neededQuantity > 0
+                ? malaysiaShopPricing.estimateLineMyr(item)
+                : null
+            }
           />
         )}
       />

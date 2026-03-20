@@ -25,6 +25,8 @@ interface GroceryListItemProps {
   isSelectionMode?: boolean;
   isSelected?: boolean;
   onToggleSelect?: () => void;
+  /** Estimated line total in MYR when Malaysia shop pricing is available */
+  estimateMyr?: number | null;
 }
 
 export default function GroceryListItem({
@@ -32,6 +34,7 @@ export default function GroceryListItem({
   isSelectionMode = false,
   isSelected = false,
   onToggleSelect,
+  estimateMyr = null,
 }: GroceryListItemProps) {
   const toggleCheck = useToggleGroceryItemCheck();
   const deleteItem = useDeleteGroceryItem();
@@ -112,10 +115,13 @@ export default function GroceryListItem({
             {item.name}
           </Animated.Text>
 
-          <View className="flex-row items-center gap-2 mt-0.5">
+          <View className="flex-row items-center gap-2 mt-0.5 flex-wrap">
             <P className={`text-sm ${item.isCovered ? "text-green-600" : "text-muted-foreground"}`}>
               {quantityDisplay}
             </P>
+            {estimateMyr != null && estimateMyr > 0 && (
+              <P className="text-xs text-muted-foreground">· Est. RM {estimateMyr.toFixed(2)}</P>
+            )}
           </View>
 
           {/* Recipe attribution */}

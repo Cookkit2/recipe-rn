@@ -70,6 +70,7 @@
     "expo-image-picker": "~55.0.10",
     "expo-linear-gradient": "~55.0.8",
     "expo-linking": "~55.0.4",
+    "expo-location": "~55.1.4",
     "expo-navigation-bar": "~55.0.8",
     "expo-notifications": "~55.0.10",
     "expo-router": "~55.0.3",

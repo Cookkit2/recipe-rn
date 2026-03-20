@@ -153,6 +153,12 @@ The core intelligence of this feature:
 
 ## Executor Feedback or Help Requests
 
+**2026-03-20 — Malaysia shop outbound (99 Speedmart / Jaya Grocer)**
+
+- Implemented: location gate (Malaysia bbox + Singapore exclusion), `MalaysiaShopBanner` on grocery list, confirmation bottom sheet (destination + estimated RM + disclaimer), Google Maps for 99 Speedmart, Grab URL for Jaya Grocer (`EXPO_PUBLIC_GRAB_JAYA_GROCER_URL`), Supabase types + migration SQL at `supabase/migrations/20260320120000_malaysia_shop_retailers.sql`, client fallback if tables missing. Added `expo-location` and Android location permissions + `expo-location` config plugin.
+- Tests: `utils/__tests__/geo-malaysia.test.ts`, `retailer-outbound-urls.test.ts`, `grocery-price-estimate.test.ts` (all passing).
+- **User action:** Run the SQL migration on Supabase; seed `ingredient_retailer_price_estimate` rows for meaningful totals; set `EXPO_PUBLIC_GRAB_JAYA_GROCER_URL` to the real GrabMart / Jaya storefront link when known.
+
 **✅ FEATURE IMPLEMENTATION COMPLETE!**
 
 All phases have been implemented. The grocery list feature is now ready for testing.

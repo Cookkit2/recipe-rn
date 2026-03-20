@@ -348,6 +348,86 @@ export type Database = {
         };
         Relationships: [];
       };
+      shop_retailer: {
+        Row: {
+          id: string;
+          slug: string;
+          display_name: string;
+          country_code: string;
+          channel_type: string;
+          maps_search_query: string | null;
+          grab_open_url: string | null;
+          is_active: boolean;
+          sort_order: number;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          display_name: string;
+          country_code?: string;
+          channel_type: string;
+          maps_search_query?: string | null;
+          grab_open_url?: string | null;
+          is_active?: boolean;
+          sort_order?: number;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          slug?: string;
+          display_name?: string;
+          country_code?: string;
+          channel_type?: string;
+          maps_search_query?: string | null;
+          grab_open_url?: string | null;
+          is_active?: boolean;
+          sort_order?: number;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
+      ingredient_retailer_price_estimate: {
+        Row: {
+          id: string;
+          retailer_id: string;
+          ingredient_key: string;
+          currency: string;
+          price_myr: number;
+          bundle_quantity: number;
+          bundle_unit: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          retailer_id: string;
+          ingredient_key: string;
+          currency?: string;
+          price_myr: number;
+          bundle_quantity?: number;
+          bundle_unit: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          retailer_id?: string;
+          ingredient_key?: string;
+          currency?: string;
+          price_myr?: number;
+          bundle_quantity?: number;
+          bundle_unit?: string;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ingredient_retailer_price_estimate_retailer_id_fkey";
+            columns: ["retailer_id"];
+            isOneToOne: false;
+            referencedRelation: "shop_retailer";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
