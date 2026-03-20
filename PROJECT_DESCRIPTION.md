@@ -35,6 +35,20 @@
 - **Cloud Syncing:** Integrates with Supabase (PostgreSQL, Auth, Storage) for robust cross-device synchronization and backend services.
 - **Data Fetching:** Utilizes React Query for efficient server state management and caching.
 
+### 6. Design Tokens & Theming System
+
+The app uses a robust design token system managed via `uniwind` (Tailwind CSS v4 variant) and global CSS variables mapped to the `oklch` color space.
+
+- **Typography Tokens:**
+  - `font-urbanist-regular`, `font-urbanist-light`, `font-urbanist-medium`, `font-urbanist-semibold`, `font-urbanist-bold`, `font-urbanist-extrabold`, `font-urbanist-black`
+  - `font-bowlby-one` for branding
+- **Radii:** Base radius is `10px` with scale adjustments (`sm`, `md`, `lg`, `xl`).
+- **Color Palettes (OKLCH):**
+  - Configures full variants for `light` and `dark` modes.
+  - Colors include primary, secondary, card, popover, muted, accent, destructive, border, input, ring, and specific shades for charting and sidebars.
+  - Example Base App Colors (Light Mode): `background: oklch(0.92 0 20)`, `primary: oklch(0.637 0.257 29.23)`
+  - Example Base App Colors (Dark Mode): `background: oklch(0.15 0 20)`, `primary: oklch(0.637 0.257 29.23)`
+
 ## 🏗️ Technical Stack & Architecture
 
 - **Framework:** React Native (0.83+) with Expo (SDK 55 Preview), utilizing Expo Router for file-based navigation.
