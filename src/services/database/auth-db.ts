@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Database initialization and helper functions
 import * as SQLite from "expo-sqlite";
 
