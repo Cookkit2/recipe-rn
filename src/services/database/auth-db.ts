@@ -1,5 +1,5 @@
 // Database initialization and helper functions
-import * as SQLite from 'expo-sqlite';
+import * as SQLite from "expo-sqlite";
 
 let db: SQLite.SQLiteDatabase | null = null;
 
@@ -8,7 +8,7 @@ let db: SQLite.SQLiteDatabase | null = null;
  */
 export const getDatabase = async (): Promise<SQLite.SQLiteDatabase> => {
   if (!db) {
-    db = await SQLite.openDatabaseAsync('recipe-rn.db');
+    db = await SQLite.openDatabaseAsync("recipe-rn.db");
   }
   return db;
 };
@@ -63,7 +63,11 @@ export const initializeDatabase = async (): Promise<void> => {
 /**
  * Insert a new user
  */
-export const createUser = async (userId: string, email: string, displayName?: string): Promise<void> => {
+export const createUser = async (
+  userId: string,
+  email: string,
+  displayName?: string
+): Promise<void> => {
   const database = await getDatabase();
 
   await database.runAsync(
@@ -168,7 +172,13 @@ export const refreshToken = async (
   await database.runAsync(
     `UPDATE sessions SET access_token = ?, refresh_token = ?, expires_at = ?, last_used = ?
      WHERE id = ?`,
-    [accessToken, refreshToken, new Date(Date.now() + 15 * 60 * 1000).toISOString(), new Date().toISOString(), session.id]
+    [
+      accessToken,
+      refreshToken,
+      new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+      new Date().toISOString(),
+      session.id,
+    ]
   );
 
   return { accessToken, refreshToken };
@@ -180,16 +190,19 @@ export const refreshToken = async (
 export const revokeSession = async (accessToken: string): Promise<void> => {
   const database = await getDatabase();
 
-  await database.runAsync(
-    `UPDATE sessions SET is_revoked = 1 WHERE access_token = ?`,
-    [accessToken]
-  );
+  await database.runAsync(`UPDATE sessions SET is_revoked = 1 WHERE access_token = ?`, [
+    accessToken,
+  ]);
 };
 
 /**
  * Create a refresh token
  */
-export const createRefreshToken = async (userId: string, refreshToken: string, expiresIn: number): Promise<void> => {
+export const createRefreshToken = async (
+  userId: string,
+  refreshToken: string,
+  expiresIn: number
+): Promise<void> => {
   const database = await getDatabase();
   const expiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();
   const tokenHash = hashToken(refreshToken);
@@ -208,10 +221,9 @@ export const revokeRefreshToken = async (refreshToken: string): Promise<void> =>
   const database = await getDatabase();
   const tokenHash = hashToken(refreshToken);
 
-  await database.runAsync(
-    `UPDATE refresh_tokens SET is_revoked = 1 WHERE token_hash = ?`,
-    [tokenHash]
-  );
+  await database.runAsync(`UPDATE refresh_tokens SET is_revoked = 1 WHERE token_hash = ?`, [
+    tokenHash,
+  ]);
 };
 
 /**
@@ -253,10 +265,9 @@ const hashToken = (token: string): string => {
 export const refreshExpiredSessions = async (): Promise<void> => {
   const database = await getDatabase();
 
-  await database.runAsync(
-    `UPDATE sessions SET is_revoked = 1 WHERE expires_at <= ?`,
-    [new Date().toISOString()]
-  );
+  await database.runAsync(`UPDATE sessions SET is_revoked = 1 WHERE expires_at <= ?`, [
+    new Date().toISOString(),
+  ]);
 };
 
 /**
@@ -265,10 +276,9 @@ export const refreshExpiredSessions = async (): Promise<void> => {
 export const clearExpiredRefreshTokens = async (): Promise<void> => {
   const database = await getDatabase();
 
-  await database.runAsync(
-    `DELETE FROM refresh_tokens WHERE expires_at <= ?`,
-    [new Date().toISOString()]
-  );
+  await database.runAsync(`DELETE FROM refresh_tokens WHERE expires_at <= ?`, [
+    new Date().toISOString(),
+  ]);
 };
 
 // Type definitions

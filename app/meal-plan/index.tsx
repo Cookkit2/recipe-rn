@@ -143,10 +143,20 @@ export default function MealPlanPage() {
           headerTitle: "",
           headerRight: () => (
             <View className="flex-row items-center gap-2">
-              <Pressable onPress={() => setIsTemplateSheetOpen(true)} className="px-2 py-2">
+              <Pressable
+                onPress={() => setIsTemplateSheetOpen(true)}
+                className="px-2 py-2"
+                accessibilityRole="button"
+                accessibilityLabel="Meal plan templates"
+              >
                 <BookTemplateIcon className="text-foreground" strokeWidth={2} size={22} />
               </Pressable>
-              <Pressable onPress={() => updateRecipeSheetOpen(true)} className="px-4 py-2">
+              <Pressable
+                onPress={() => updateRecipeSheetOpen(true)}
+                className="px-4 py-2"
+                accessibilityRole="button"
+                accessibilityLabel="Add recipe"
+              >
                 <PlusIcon className="text-foreground" strokeWidth={2.618} />
               </Pressable>
             </View>
@@ -157,7 +167,12 @@ export default function MealPlanPage() {
       {/* Week Navigation Header */}
       <View className="bg-background/95 backdrop-blur-sm border-b border-border/20 px-4 py-3">
         <View className="flex-row items-center justify-between">
-          <Pressable onPress={goToPreviousWeek} className="p-2">
+          <Pressable
+            onPress={goToPreviousWeek}
+            className="p-2"
+            accessibilityRole="button"
+            accessibilityLabel="Previous week"
+          >
             <ChevronLeftIcon className="text-foreground" size={24} strokeWidth={2} />
           </Pressable>
 
@@ -167,7 +182,12 @@ export default function MealPlanPage() {
             </P>
           </View>
 
-          <Pressable onPress={goToNextWeek} className="p-2">
+          <Pressable
+            onPress={goToNextWeek}
+            className="p-2"
+            accessibilityRole="button"
+            accessibilityLabel="Next week"
+          >
             <ChevronRightIcon className="text-foreground" size={24} strokeWidth={2} />
           </Pressable>
         </View>
@@ -197,7 +217,12 @@ export default function MealPlanPage() {
             {/* Header */}
             <View className="flex-row items-center justify-between px-6 py-3 border-b border-border/10">
               <H3 className="font-bowlby-one">Select Recipe</H3>
-              <Pressable onPress={() => updateRecipeSheetOpen(false)} className="p-2">
+              <Pressable
+                onPress={() => updateRecipeSheetOpen(false)}
+                className="p-2"
+                accessibilityRole="button"
+                accessibilityLabel="Close recipe selection"
+              >
                 <P className="text-muted-foreground font-urbanist-semibold">Done</P>
               </Pressable>
             </View>

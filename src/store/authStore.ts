@@ -1,7 +1,7 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import * as SecureStore from 'expo-secure-store';
-import { authDb, Session } from '@/services/database/auth-db';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import * as SecureStore from "expo-secure-store";
+import { authDb, Session } from "@/services/database/auth-db";
 
 interface AuthState {
   user: User | null;
@@ -53,19 +53,22 @@ export const useAuthStore = create<AuthState>()(
           const refreshToken = `refresh_${Date.now()}`;
 
           // Save to database
-          await authDb.createUser(userId, email, 'Test User');
+          await authDb.createUser(userId, email, "Test User");
           await authDb.upsertSession(userId, accessToken, refreshToken, 900); // 15 minutes
           await authDb.createRefreshToken(userId, refreshToken, 604800000); // 7 days
 
           // Save to secure store
-          await SecureStore.setItemAsync('user_session', JSON.stringify({ userId, accessToken, refreshToken }));
+          await SecureStore.setItemAsync(
+            "user_session",
+            JSON.stringify({ userId, accessToken, refreshToken })
+          );
 
           // Update state
           set({
             user: {
               id: userId,
               email,
-              displayName: 'Test User',
+              displayName: "Test User",
             },
             accessToken,
             refreshToken,
@@ -74,7 +77,7 @@ export const useAuthStore = create<AuthState>()(
           });
         } catch (error: any) {
           set({
-            error: error.message || 'Login failed',
+            error: error.message || "Login failed",
             isLoading: false,
           });
           throw error;
@@ -96,7 +99,10 @@ export const useAuthStore = create<AuthState>()(
           await authDb.createRefreshToken(userId, refreshToken, 604800000);
 
           // Save to secure store
-          await SecureStore.setItemAsync('user_session', JSON.stringify({ userId, accessToken, refreshToken }));
+          await SecureStore.setItemAsync(
+            "user_session",
+            JSON.stringify({ userId, accessToken, refreshToken })
+          );
 
           // Update state
           set({
@@ -112,7 +118,7 @@ export const useAuthStore = create<AuthState>()(
           });
         } catch (error: any) {
           set({
-            error: error.message || 'Registration failed',
+            error: error.message || "Registration failed",
             isLoading: false,
           });
           throw error;
@@ -129,12 +135,12 @@ export const useAuthStore = create<AuthState>()(
           }
 
           // Clear secure store
-          await SecureStore.deleteItemAsync('user_session');
+          await SecureStore.deleteItemAsync("user_session");
 
           // Reset state
           set(initialState);
         } catch (error: any) {
-          console.error('Logout error:', error);
+          console.error("Logout error:", error);
         }
       },
 
@@ -153,11 +159,14 @@ export const useAuthStore = create<AuthState>()(
 
           if (newTokens) {
             // Update secure store
-            await SecureStore.setItemAsync('user_session', JSON.stringify({
-              userId: user.id,
-              accessToken: newTokens.accessToken,
-              refreshToken: newTokens.refreshToken,
-            }));
+            await SecureStore.setItemAsync(
+              "user_session",
+              JSON.stringify({
+                userId: user.id,
+                accessToken: newTokens.accessToken,
+                refreshToken: newTokens.refreshToken,
+              })
+            );
 
             // Update state
             set({
@@ -171,7 +180,7 @@ export const useAuthStore = create<AuthState>()(
           }
         } catch (error: any) {
           set({
-            error: error.message || 'Session refresh failed',
+            error: error.message || "Session refresh failed",
             isLoading: false,
           });
           await get().logout();
@@ -183,7 +192,7 @@ export const useAuthStore = create<AuthState>()(
 
         try {
           // Get session from secure store
-          const sessionStr = await SecureStore.getItemAsync('user_session');
+          const sessionStr = await SecureStore.getItemAsync("user_session");
 
           if (!sessionStr) {
             set({ isLoading: false, isAuthenticated: false });
@@ -197,12 +206,7 @@ export const useAuthStore = create<AuthState>()(
 
           if (session) {
             // Update last used time
-            await authDb.upsertSession(
-              userId,
-              accessToken,
-              refreshToken,
-              900
-            );
+            await authDb.upsertSession(userId, accessToken, refreshToken, 900);
 
             // Get user from database
             const user = await authDb.getUserById(userId);
@@ -222,7 +226,7 @@ export const useAuthStore = create<AuthState>()(
           // Session is invalid, logout
           await get().logout();
         } catch (error: any) {
-          console.error('Auth check error:', error);
+          console.error("Auth check error:", error);
           set({ isLoading: false, isAuthenticated: false });
         }
       },
@@ -232,7 +236,7 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: 'auth-storage',
+      name: "auth-storage",
       // Note: We need to handle custom serialization for SecureStore
       partialize: (state) => ({
         user: state.user,
