@@ -5,27 +5,32 @@
 ## 🌟 Core Features
 
 ### 1. Smart Pantry Management
+
 - **Visual Inventory Tracking:** Users can track ingredients with photos, quantities, and expiration dates.
 - **Smart Organization:** Ingredients are categorized by storage location (fridge, cabinet, freezer).
 - **Expiration System:** A color-coded system shows days until expiry, automatically sorting items by the earliest expiration date.
 - **Camera Integration:** Add ingredients quickly by snapping photos using the device camera (`react-native-vision-camera`) and local ML processing (`react-native-fast-tflite`).
 
 ### 2. AI-Powered Recipe Discovery
+
 - **Personalized Recommendations:** Suggests recipes based strictly on the ingredients the user actually has in their pantry.
 - **Ingredient Matching:** Intelligently matches pantry items to recipe requirements using synonym mapping and categorization.
 - **Recipe Details:** Comprehensive instructions, prep/cook times, difficulty ratings (1-5 stars), nutritional info (calories, serving sizes), and dietary tagging (e.g., vegetarian, gluten-free).
 
 ### 3. Voice-Guided Cooking Experience
+
 - **Hands-Free Navigation:** Users can navigate cooking steps using voice commands like "next", "previous", or "repeat" (`expo-speech-recognition`).
 - **Auto-Read Steps:** The app automatically reads recipe steps aloud using Text-to-Speech (`expo-speech`).
 - **Smart Audio Control:** Automatically pauses voice recognition during TTS playback to prevent the app from triggering its own commands.
 
 ### 4. Interactive & Accessible UI
+
 - **Modern Design System:** Inspired by Material 3, featuring fluid, physics-based spring animations (`react-native-reanimated`) and an elegant UI styled with Tailwind CSS (`uniwind`).
 - **Typography:** Uses Urbanist for UI elements and Bowlby One for branding.
 - **Responsive & Accessible:** Built-in dark mode support, screen reader compatibility (VoiceOver/TalkBack), and large touch targets designed for accessibility.
 
 ### 5. Robust Offline-First Architecture
+
 - **Local First Data:** Uses WatermelonDB (SQLite) for fast, reactive, offline data access.
 - **Cloud Syncing:** Integrates with Supabase (PostgreSQL, Auth, Storage) for robust cross-device synchronization and backend services.
 - **Data Fetching:** Utilizes React Query for efficient server state management and caching.
@@ -37,9 +42,9 @@
 - **Local Database:** WatermelonDB (SQLite) acting as the primary source of truth for complex relational data.
 - **Cloud Backend:** Supabase for PostgreSQL, Authentication (Email/Password, Social Login, Anonymous Mode), and remote storage.
 - **State Management:**
-  - *Server/Async State:* React Query (`@tanstack/react-query`)
-  - *UI State:* React Context API
-  - *Key-Value Persistence:* MMKV (primary) / AsyncStorage (fallback)
+  - _Server/Async State:_ React Query (`@tanstack/react-query`)
+  - _UI State:_ React Context API
+  - _Key-Value Persistence:_ MMKV (primary) / AsyncStorage (fallback)
 - **Styling:** Tailwind CSS v4 via `uniwind`.
 - **Animations:** React Native Reanimated 4 and React Native Gesture Handler.
 - **UI Components:** Built on `@rn-primitives` (a shadcn-style component library).
