@@ -2,7 +2,6 @@ import { Q } from "@nozbe/watermelondb";
 import { databaseFacade } from "~/data/db/DatabaseFacade";
 import { baseIngredientApi } from "~/data/supabase-api/BaseIngredientApi";
 import { database } from "~/data/db/database";
-import { Q } from "@nozbe/watermelondb";
 import type { Stock } from "~/data/db/models";
 import type IngredientCategory from "~/data/db/models/IngredientCategory";
 import type IngredientSynonym from "~/data/db/models/IngredientSynonym";
