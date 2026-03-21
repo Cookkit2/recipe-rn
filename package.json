@@ -12,7 +12,8 @@
     "test:coverage": "jest --coverage",
     "typecheck": "tsc --noEmit",
     "lint": "prettier --check . && tsc --noEmit",
-    "lint:fix": "prettier --write ."
+    "lint:fix": "prettier --write .",
+    "prepare": "husky"
   },
   "dependencies": {
     "@babel/plugin-proposal-decorators": "^7.28.6",
@@ -124,6 +125,7 @@
     "@types/react": "~19.2.10",
     "expo-secure-store": "^55.0.9",
     "expo-sqlite": "^55.0.11",
+    "husky": "^9.1.7",
     "prettier": "^3.6.2",
     "prettier-plugin-tailwindcss": "^0.6.14",
     "ts-jest": "^29.4.6",
