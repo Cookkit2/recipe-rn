@@ -9,12 +9,12 @@ type CreateDummyItemProps = {
   id: string;
   name: string;
   quantity: number;
-  unit: string;
+  unit: PantryItem["unit"];
   daysToExpiry: number;
-  category: string;
+  category: PantryItem["category"];
   imageUrl: ImageSourcePropType | string;
-  type: "fridge" | "cabinet" | "freezer";
-  backgroundColor: string;
+  type: PantryItem["type"];
+  backgroundColor: PantryItem["background_color"];
   stepsToStore?: PantryItem["steps_to_store"];
 };
 
@@ -322,4 +322,4 @@ export const dummyPantryItems: PantryItem[] = [
     type: "fridge",
     backgroundColor: "#FFFF00",
   }),
-] as const;
+];
