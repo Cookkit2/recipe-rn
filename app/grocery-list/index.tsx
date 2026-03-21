@@ -150,7 +150,12 @@ export default function GroceryListPage() {
                   {
                     type: "custom",
                     element: (
-                      <Pressable onPress={toggleSelectionMode} className="px-1.5">
+                      <Pressable
+                        onPress={toggleSelectionMode}
+                        className="px-1.5"
+                        accessibilityRole="button"
+                        accessibilityLabel="Cancel selection"
+                      >
                         <XIcon className="text-muted-foreground" size={24} />
                       </Pressable>
                     ),
@@ -158,7 +163,12 @@ export default function GroceryListPage() {
                   {
                     type: "custom",
                     element: (
-                      <Pressable onPress={handleDeleteSelected} className="px-1.5">
+                      <Pressable
+                        onPress={handleDeleteSelected}
+                        className="px-1.5"
+                        accessibilityRole="button"
+                        accessibilityLabel="Delete selected items"
+                      >
                         <TrashIcon className="text-destructive" size={24} />
                       </Pressable>
                     ),
@@ -168,7 +178,12 @@ export default function GroceryListPage() {
                   {
                     type: "custom",
                     element: (
-                      <Pressable onPress={toggleSelectionMode} className="px-1.5">
+                      <Pressable
+                        onPress={toggleSelectionMode}
+                        className="px-1.5"
+                        accessibilityRole="button"
+                        accessibilityLabel="Edit selection mode"
+                      >
                         <Edit2Icon className="text-foreground" size={24} />
                       </Pressable>
                     ),

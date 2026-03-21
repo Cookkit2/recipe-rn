@@ -17,6 +17,7 @@ import {
 import type { AppResult } from "~/utils/result";
 import type { AppError } from "~/types/AppError";
 import { log } from "~/utils/logger";
+import { Q } from "@nozbe/watermelondb";
 
 /**
  * Pure API functions for pantry operations
