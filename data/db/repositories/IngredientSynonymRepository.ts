@@ -88,7 +88,12 @@ export class IngredientSynonymRepository extends BaseRepository<IngredientSynony
 
     await db.write(async () => {
       const synonyms = await this.collection.query(Q.where("stock_id", Q.eq(stockId))).fetch();
-      await Promise.all(synonyms.map((syn) => syn.markAsDeleted()));
+      if (synonyms.length > 0) {
+        // ⚡ Bolt Performance Optimization:
+        // Use batch operation to mark multiple synonyms as deleted at once rather than
+        // iterating with individual updates, reducing overhead and improving speed.
+        await db.batch(...synonyms.map((syn) => syn.prepareMarkAsDeleted()));
+      }
     });
   }
 

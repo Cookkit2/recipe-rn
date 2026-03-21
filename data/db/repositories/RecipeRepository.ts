@@ -290,16 +290,24 @@ export class RecipeRepository extends BaseRepository<Recipe> {
   async clearAllRecipes(): Promise<void> {
     await database.write(async () => {
       const allRecipes = await this.collection.query().fetch();
-      await Promise.all(allRecipes.map((recipe) => recipe.destroyPermanently()));
-
-      // Also clear related steps and ingredients
       const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
       const allSteps = await stepsCollection.query().fetch();
-      await Promise.all(allSteps.map((step) => step.destroyPermanently()));
-
       const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
       const allIngredients = await ingredientsCollection.query().fetch();
-      await Promise.all(allIngredients.map((ingredient) => ingredient.destroyPermanently()));
+
+      // ⚡ Bolt Performance Optimization:
+      // Replaced individual Promise.all(record.destroyPermanently()) calls with a single
+      // database.batch() using prepareDestroyPermanently(). This minimizes SQLite
+      // transactions and reduces main-thread blocking when clearing the database.
+      const batchOps: import("@nozbe/watermelondb").Model[] = [
+        ...allRecipes.map((recipe) => recipe.prepareDestroyPermanently()),
+        ...allSteps.map((step) => step.prepareDestroyPermanently()),
+        ...allIngredients.map((ingredient) => ingredient.prepareDestroyPermanently()),
+      ];
+
+      if (batchOps.length > 0) {
+        await database.batch(...batchOps);
+      }
     });
   }
 

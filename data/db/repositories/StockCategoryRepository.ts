@@ -48,8 +48,11 @@ export class StockCategoryRepository extends BaseRepository<StockCategory> {
 
     const db = this.collection.database;
     await db.write(async () => {
-      for (const sc of stockCategories) {
-        await sc.markAsDeleted();
+      if (stockCategories.length > 0) {
+        // ⚡ Bolt Performance Optimization:
+        // By avoiding manual loop marking and passing prepareMarkAsDeleted directly to batch,
+        // we execute modifications in one shot on the underlying SQLite thread.
+        await db.batch(...stockCategories.map((sc) => sc.prepareMarkAsDeleted()));
       }
     });
   }
@@ -91,7 +94,12 @@ export class StockCategoryRepository extends BaseRepository<StockCategory> {
       const stockCategories = await this.collection
         .query(Q.where("stock_id", Q.eq(stockId)))
         .fetch();
-      await Promise.all(stockCategories.map((sc) => sc.markAsDeleted()));
+
+      if (stockCategories.length > 0) {
+        // ⚡ Bolt Performance Optimization:
+        // Similar to replaceCategories, avoiding N+1 synchronous deletion writes improves write velocity.
+        await db.batch(...stockCategories.map((sc) => sc.prepareMarkAsDeleted()));
+      }
     });
   }
 
@@ -104,15 +112,28 @@ export class StockCategoryRepository extends BaseRepository<StockCategory> {
     await db.write(async () => {
       // Remove existing
       const existing = await this.collection.query(Q.where("stock_id", Q.eq(stockId))).fetch();
-      await Promise.all(existing.map((sc) => sc.markAsDeleted()));
+
+      const batchOps: import("@nozbe/watermelondb").Model[] = [
+        ...existing.map((sc) => sc.prepareMarkAsDeleted()),
+      ];
 
       // Add new
       for (const categoryId of categoryIds) {
-        const sc = await this.collection.create((record: any) => {
+        const sc = this.collection.prepareCreate((record: any) => {
           record.stockId = stockId;
           record.categoryId = categoryId;
-        });
+        }) as StockCategory;
+        batchOps.push(sc);
         created.push(sc);
+      }
+
+      if (batchOps.length > 0) {
+        // ⚡ Bolt Performance Optimization:
+        // By replacing sequential markAsDeleted and create actions with prepare calls
+        // passed to a unified db.batch, we eliminate N+1 latency blocks.
+        // Also, by directly capturing the output of prepareCreate, we bypass
+        // the need for a secondary read-query fetch loop at the end of the transaction.
+        await db.batch(...batchOps);
       }
     });
 

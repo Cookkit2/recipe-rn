@@ -141,7 +141,12 @@ export class RecipeVersionRepository extends BaseRepository<RecipeVersion> {
   async deleteVersionsForRecipe(recipeId: string): Promise<void> {
     await database.write(async () => {
       const versions = await this.getVersionsForRecipe(recipeId);
-      await Promise.all(versions.map((version) => version.destroyPermanently()));
+      if (versions.length > 0) {
+        // ⚡ Bolt Performance Optimization:
+        // By replacing Promise.all with prepareDestroyPermanently and database.batch,
+        // we merge individual deletes into a single SQLite transaction, reducing JS thread blockage.
+        await database.batch(...versions.map((version) => version.prepareDestroyPermanently()));
+      }
     });
   }
 

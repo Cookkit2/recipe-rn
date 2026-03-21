@@ -375,7 +375,12 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
     await database.write(async () => {
       const records = await this.collection.query(Q.where("stock_id", stockId)).fetch();
 
-      await Promise.all(records.map((record) => record.destroyPermanently()));
+      if (records.length > 0) {
+        // ⚡ Bolt Performance Optimization:
+        // Grouping prepareDestroyPermanently calls inside database.batch limits the
+        // number of roundtrips to the native SQLite layer, bypassing N+1 delete query bottlenecks.
+        await database.batch(...records.map((record) => record.prepareDestroyPermanently()));
+      }
     });
   }
 
