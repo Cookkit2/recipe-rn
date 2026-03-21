@@ -278,7 +278,7 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
     const challengeIds = [...new Set(allUserChallenges.map((uc) => uc.challengeId))];
 
     // Batch fetch related challenges
-    const challenges = await database.collections
+    const challenges = await this.collection.database.collections
       .get("challenge")
       .query(Q.where("id", Q.oneOf(challengeIds)))
       .fetch();
