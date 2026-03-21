@@ -278,7 +278,7 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
     const challengeIds = [...new Set(allUserChallenges.map((uc) => uc.challengeId))];
 
     // Batch fetch related challenges
-    const challenges = await database.collections
+    const challenges = await this.collection.database.collections
       .get("challenge")
       .query(Q.where("id", Q.oneOf(challengeIds)))
       .fetch();
@@ -301,9 +301,18 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
       return;
     }
 
-    // Use Promise.all with find() to maintain the exact error-throwing behavior
-    // of the original code if an invalid ID is provided.
-    const records = await Promise.all(userChallengeIds.map((id) => this.collection.find(id)));
+    // ⚡ Bolt Performance Optimization:
+    // Replaced N+1 individual .find(id) queries with a single batch fetch using Q.oneOf()
+    // This dramatically reduces main-thread blockage and SQLite load during batch expirations.
+    const uniqueIds = [...new Set(userChallengeIds)];
+    let records = await this.collection.query(Q.where("id", Q.oneOf(uniqueIds))).fetch();
+
+    // Maintain the exact error-throwing behavior if an invalid ID is provided.
+    // If the fast batch fetch doesn't find all records, fall back to individual fetches
+    // so WatermelonDB can throw its standard "Record ID not found" error.
+    if (records.length !== uniqueIds.length) {
+      records = await Promise.all(userChallengeIds.map((id) => this.collection.find(id)));
+    }
 
     await database.write(async () => {
       const batchOps = records.map((record) =>

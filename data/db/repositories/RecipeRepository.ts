@@ -7,6 +7,7 @@ import { database } from "../database";
 import { recipeApi, type SupabaseRecipeWithDetails } from "~/data/supabase-api/RecipeApi";
 import type { Tables } from "~/lib/supabase/supabase-types";
 import { log } from "~/utils/logger";
+import { sanitizeSearchTerm } from "~/utils/input-sanitization";
 
 export interface RecipeSearchOptions extends SearchOptions {
   tags?: string[];
@@ -58,7 +59,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
     // Filter by tags
     if (options.tags && options.tags.length > 0) {
       const tagConditions = options.tags.map((tag) =>
-        Q.where("tags", Q.like(`%"${Q.sanitizeLikeString(tag)}"%`))
+        Q.where("tags", Q.like(sanitizeSearchTerm(`"${tag}"`, { allowSpecialChars: false })))
       );
       query = query.extend(Q.or(...tagConditions));
     }
@@ -339,7 +340,9 @@ export class RecipeRepository extends BaseRepository<Recipe> {
 
   // Get recipes by tag
   async getRecipesByTag(tag: string, options: SearchOptions = {}): Promise<Recipe[]> {
-    let query = this.collection.query(Q.where("tags", Q.like(`%"${Q.sanitizeLikeString(tag)}"%`)));
+    let query = this.collection.query(
+      Q.where("tags", Q.like(sanitizeSearchTerm(`"${tag}"`, { allowSpecialChars: false })))
+    );
 
     query = this.applySorting(query, options.sortBy || "created_at", options.sortOrder);
 

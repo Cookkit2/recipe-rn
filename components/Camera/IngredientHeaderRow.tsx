@@ -74,7 +74,13 @@ export default function IngredientHeaderRow() {
           </Pressable>
         )}
       />
-      <Button size="icon-sm" variant="ghost" className="rounded-full mx-4" onPress={onBack}>
+      <Button
+        size="icon-sm"
+        variant="ghost"
+        className="rounded-full mx-4"
+        onPress={onBack}
+        accessibilityLabel="Close camera"
+      >
         <XIcon className="text-white" size={20} />
       </Button>
     </View>

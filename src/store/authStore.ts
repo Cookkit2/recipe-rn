@@ -244,7 +244,7 @@ export const useAuthStore = create<AuthState>()(
     {
       name: "auth-storage",
       // Note: We need to handle custom serialization for SecureStore
-      partialize: (state: any) => ({
+      partialize: (state: AuthState) => ({
         user: state.user,
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
@@ -265,7 +265,7 @@ export const useAuthStore = create<AuthState>()(
 
 // Custom middleware to sync with SecureStore
 const authStore = useAuthStore as any;
-authStore.persist.onRehydrateStorage = () => (state: any) => {
+authStore.persist.onRehydrateStorage = () => (state: AuthState | undefined) => {
   if (state) {
     // Hydrated from storage, check auth
     state.checkAuth();
