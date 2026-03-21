@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import * as SecureStore from "expo-secure-store";
@@ -30,10 +29,12 @@ export interface User {
   preferences?: any;
 }
 
-const initialState: Omit<
+type AuthStateInitial = Omit<
   AuthState,
   "login" | "register" | "logout" | "refreshSession" | "checkAuth" | "clearError"
-> = {
+>;
+
+const initialState: AuthStateInitial = {
   user: null,
   accessToken: null,
   refreshToken: null,
