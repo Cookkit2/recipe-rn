@@ -8,6 +8,7 @@ import type IngredientCategory from "~/data/db/models/IngredientCategory";
 import type IngredientSynonym from "~/data/db/models/IngredientSynonym";
 import type StockCategory from "~/data/db/models/StockCategory";
 import type { ItemType, PantryItem } from "~/types/PantryItem";
+import { Q } from "@nozbe/watermelondb";
 import {
   withErrorHandling,
   withErrorLogging,
