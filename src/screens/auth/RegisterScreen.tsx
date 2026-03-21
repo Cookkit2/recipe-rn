@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -9,49 +9,49 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-} from 'react-native';
-import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
+} from "react-native";
+import { useAuth } from "~/src/contexts/AuthContext";
+import { useRouter } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function RegisterScreen() {
   const { register, isLoading, clearError } = useAuth();
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [error, setError] = useState("");
 
   const handleRegister = async () => {
     clearError();
-    setError('');
+    setError("");
 
     if (!email || !password || !displayName) {
-      setError('Please fill in all fields');
+      setError("Please fill in all fields");
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError("Password must be at least 6 characters");
       return;
     }
 
     try {
       await register(email, password, displayName);
-      router.replace('/(tabs)');
+      router.replace("/(tabs)");
     } catch (err: any) {
-      setError(err.message || 'Registration failed');
+      setError(err.message || "Registration failed");
     }
   };
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
     >
       <SafeAreaView style={styles.safeArea}>
         <LinearGradient
-          colors={['#4F46E5', '#7C3AED', '#4F46E5']}
+          colors={["#4F46E5", "#7C3AED", "#4F46E5"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.gradient}
@@ -127,7 +127,7 @@ export default function RegisterScreen() {
 
               <TouchableOpacity
                 style={styles.linkButton}
-                onPress={() => router.push('/(auth)/login')}
+                onPress={() => router.push("/(auth)/login")}
                 disabled={isLoading}
               >
                 <Text style={styles.linkButtonText}>Already have an account? Login</Text>
@@ -143,99 +143,99 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
   },
   safeArea: {
     flex: 1,
   },
   gradient: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: 20,
   },
   content: {
-    width: '100%',
+    width: "100%",
   },
   title: {
     fontSize: 32,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "bold",
+    color: "#fff",
     marginBottom: 10,
-    textAlign: 'center',
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 16,
-    color: '#fff',
+    color: "#fff",
     marginBottom: 40,
-    textAlign: 'center',
+    textAlign: "center",
     opacity: 0.9,
   },
   form: {
-    width: '100%',
+    width: "100%",
   },
   inputContainer: {
     marginBottom: 20,
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#fff',
+    fontWeight: "600",
+    color: "#fff",
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
-    color: '#333',
+    color: "#333",
   },
   errorContainer: {
-    backgroundColor: 'rgba(255, 0, 0, 0.2)',
+    backgroundColor: "rgba(255, 0, 0, 0.2)",
     padding: 12,
     borderRadius: 8,
     marginBottom: 20,
   },
   errorText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 14,
   },
   button: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
-    alignItems: 'center',
+    alignItems: "center",
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   buttonText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#4F46E5',
+    fontWeight: "bold",
+    color: "#4F46E5",
   },
   divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginVertical: 20,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     opacity: 0.5,
   },
   dividerText: {
     marginHorizontal: 16,
-    color: '#fff',
+    color: "#fff",
     fontSize: 14,
   },
   linkButton: {
     paddingVertical: 12,
   },
   linkButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });
