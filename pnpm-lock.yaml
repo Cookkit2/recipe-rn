@@ -323,6 +323,12 @@ importers:
       "@types/react":
         specifier: ~19.2.10
         version: 19.2.14
+      expo-secure-store:
+        specifier: ^55.0.9
+        version: 55.0.9(expo@55.0.6)
+      expo-sqlite:
+        specifier: ^55.0.11
+        version: 55.0.11(expo@55.0.6)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
       prettier:
         specifier: ^3.6.2
         version: 3.8.1
