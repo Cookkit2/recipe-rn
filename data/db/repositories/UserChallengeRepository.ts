@@ -174,6 +174,12 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
     return completed.filter((c) => !c.isClaimed);
   }
 
+  // Get user challenges for multiple challenges
+  async getByChallengeIds(challengeIds: string[]): Promise<UserChallenge[]> {
+    if (challengeIds.length === 0) return [];
+    return await this.collection.query(Q.where("challenge_id", Q.oneOf(challengeIds))).fetch();
+  }
+
   // Get user challenge for a specific challenge
   async getByChallengeId(challengeId: string): Promise<UserChallenge | null> {
     const results = await this.collection.query(Q.where("challenge_id", challengeId)).fetch();

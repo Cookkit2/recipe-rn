@@ -244,12 +244,21 @@ export const useAuthStore = create<AuthState>()(
     {
       name: "auth-storage",
       // Note: We need to handle custom serialization for SecureStore
-      partialize: (state) => ({
+      partialize: (state: any) => ({
         user: state.user,
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
       }),
+      // Custom serialization to handle SecureStore
+      // @ts-ignore
+      deserialize: (str: string) => {
+        try {
+          return JSON.parse(str);
+        } catch {
+          return initialState;
+        }
+      },
     }
   )
 );
