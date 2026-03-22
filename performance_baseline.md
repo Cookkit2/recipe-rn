@@ -5,6 +5,7 @@ This document establishes the theoretical database operation counts for the curr
 ## Current Implementation Analysis
 
 ### 1. `cleanupExpired`
+
 For $N$ expired mappings, each having 1 recipe, $S$ steps, and $I$ ingredients:
 
 - **Queries:**
@@ -22,6 +23,7 @@ For $N$ expired mappings, each having 1 recipe, $S$ steps, and $I$ ingredients:
   - **Total Writes: $2N + N(S + I)$**
 
 ### 2. `clearForBaseRecipe`
+
 For $M$ tailored recipes found for a base recipe, each having $K$ mappings, $S$ steps, and $I$ ingredients:
 
 - **Queries:**
@@ -43,6 +45,7 @@ For $M$ tailored recipes found for a base recipe, each having $K$ mappings, $S$ 
 ## Optimized Implementation Analysis
 
 ### 1. `cleanupExpired`
+
 - **Queries:**
   - $1$ query to fetch expired mappings.
   - $1$ query to fetch all recipes (`Q.oneOf`).
@@ -55,6 +58,7 @@ For $M$ tailored recipes found for a base recipe, each having $K$ mappings, $S$ 
   - **Total Writes: 1**
 
 ### 2. `clearForBaseRecipe`
+
 - **Queries:**
   - $1$ query to fetch tailored recipes.
   - $1$ query to fetch all mappings (`Q.oneOf`).
@@ -68,14 +72,15 @@ For $M$ tailored recipes found for a base recipe, each having $K$ mappings, $S$ 
 
 ## Comparison Table (for $N=50, S=10, I=15$)
 
-| Method | Metric | Original | Optimized | Reduction |
-| :--- | :--- | :--- | :--- | :--- |
-| `cleanupExpired` | Queries | 151 | 4 | **97.3%** |
-| `cleanupExpired` | Writes | 1350 | 1 | **99.9%** |
-| `clearForBaseRecipe` (K=1) | Queries | 151 | 4 | **97.3%** |
-| `clearForBaseRecipe` (K=1) | Writes | 1350 | 1 | **99.9%** |
+| Method                     | Metric  | Original | Optimized | Reduction |
+| :------------------------- | :------ | :------- | :-------- | :-------- |
+| `cleanupExpired`           | Queries | 151      | 4         | **97.3%** |
+| `cleanupExpired`           | Writes  | 1350     | 1         | **99.9%** |
+| `clearForBaseRecipe` (K=1) | Queries | 151      | 4         | **97.3%** |
+| `clearForBaseRecipe` (K=1) | Writes  | 1350     | 1         | **99.9%** |
 
 ## Conclusion
+
 The optimization successfully eliminates the N+1 query problem by batching both fetches and deletions. This significantly reduces database round-trips and I/O overhead, especially when cleaning up a large number of expired tailored recipes.
 
-*Note: Actual performance benchmarks could not be executed due to environment network limitations preventing dependency installation (`ts-jest`). Verification was performed via static analysis and code review of the implemented batching patterns.*
+_Note: Actual performance benchmarks could not be executed due to environment network limitations preventing dependency installation (`ts-jest`). Verification was performed via static analysis and code review of the implemented batching patterns._
