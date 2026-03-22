@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   ScrollView,
   Alert,
+  RefreshControl,
 } from "react-native";
 import Animated, {
   Extrapolation,
@@ -36,6 +37,8 @@ import ShapeContainer from "~/components/Shared/Shapes/ShapeContainer";
 import { setStatusBarStyle } from "expo-status-bar";
 import { recipeApi } from "~/data/api/recipeApi";
 import type { Recipe } from "~/types/Recipe";
+import { RecipeIngredient } from "~/components/RecipeIngredient";
+import { RecipeStep } from "~/components/RecipeStep";
 import { useUniwind } from "uniwind";
 import { Button } from "~/components/ui/button";
 import { useIngredientMatcher } from "~/hooks/useIngredientMatcher";
@@ -53,7 +56,7 @@ export default function RecipeDetails() {
 
   const { recipeId } = useLocalSearchParams<{ recipeId: string }>();
   const { width: windowWidth } = useWindowDimensions();
-  const { data: recipe, isLoading, error } = useRecipe(recipeId);
+  const { data: recipe, isLoading, error, refetch, isRefetching } = useRecipe(recipeId);
   const { data: filteredPantryItems = [] } = usePantryItemsByType("all");
   const { servings, scaledIngredients, scalingFactor, isScaled, originalServings } =
     useRecipeDetailStore();
@@ -276,7 +279,10 @@ export default function RecipeDetails() {
   if (error) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
-        <P className="text-destructive text-center">{error.message}</P>
+        <P className="text-destructive text-center mb-4">{error.message}</P>
+        <Button onPress={() => refetch()}>
+          <P className="text-primary-foreground font-urbanist-semibold">Retry</P>
+        </Button>
       </View>
     );
   }
@@ -286,9 +292,12 @@ export default function RecipeDetails() {
     return (
       <View className="flex-1 items-center justify-center bg-background">
         <H1 className="text-center">Recipe not found</H1>
-        <P className="mt-2 text-muted-foreground text-center">
+        <P className="mt-2 mb-4 text-muted-foreground text-center">
           The recipe you're looking for doesn't exist.
         </P>
+        <Button onPress={() => refetch()}>
+          <P className="text-primary-foreground font-urbanist-semibold">Retry</P>
+        </Button>
       </View>
     );
   }
@@ -320,6 +329,9 @@ export default function RecipeDetails() {
         scrollEventThrottle={16}
         contentContainerStyle={{ paddingTop: windowWidth }}
         style={{ flex: 1 }}
+        refreshControl={
+          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#f97316" />
+        }
       >
         <Animated.View
           className="flex-1 px-6 py-8 bg-background rounded-t-3xl -mt-8"
@@ -401,35 +413,12 @@ export default function RecipeDetails() {
                 );
 
                 return (
-                  <View
+                  <RecipeIngredient
                     key={idx}
-                    className={`flex-row items-center py-2 ${
-                      idx < scaledIngredients.length - 1 ? "border-b border-border/40" : ""
-                    }`}
-                  >
-                    <View className="flex-1 flex-row items-center gap-2">
-                      <View
-                        className={`w-2 h-2 rounded-full ${
-                          isInPantry ? "bg-green-500" : "bg-orange-400"
-                        }`}
-                      />
-                      <P
-                        className={`font-urbanist-regular flex-1 ${
-                          isInPantry ? "text-foreground" : "text-foreground/60"
-                        }`}
-                      >
-                        {titleCase(ingredient.name)}
-                      </P>
-                    </View>
-                    <View className="flex-row items-center gap-1">
-                      <P className="font-urbanist-semibold text-foreground">
-                        {ingredient.quantity}
-                      </P>
-                      <P className="font-urbanist-regular text-muted-foreground">
-                        {ingredient.unit}
-                      </P>
-                    </View>
-                  </View>
+                    ingredient={ingredient}
+                    isInPantry={isInPantry}
+                    isLast={idx === scaledIngredients.length - 1}
+                  />
                 );
               })}
             </View>
@@ -504,6 +493,25 @@ export default function RecipeDetails() {
 
           <Separator className="my-8" />
 
+          <Separator className="my-8" />
+
+          {/* Instructions */}
+          {displayedRecipe.instructions && displayedRecipe.instructions.length > 0 && (
+            <View>
+              <H4 className="font-bowlby-one text-foreground/70 mb-4">Instructions</H4>
+              <View className="bg-card/60 rounded-xl px-4 py-2">
+                {displayedRecipe.instructions.map((step, idx) => (
+                  <RecipeStep
+                    key={idx}
+                    step={step}
+                    isLast={idx === displayedRecipe.instructions.length - 1}
+                  />
+                ))}
+              </View>
+            </View>
+          )}
+
+          <Separator className="my-8" />
           {/* Description */}
           {displayedRecipe.description && (
             <P className="font-urbanist-regular text-foreground/60">
