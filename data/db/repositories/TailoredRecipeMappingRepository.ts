@@ -195,10 +195,10 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
           ingredientsCollection.query(Q.where("recipe_id", recipeId)).fetch(),
         ]);
 
-        await Promise.all([
-          ...steps.map((step) => step.destroyPermanently()),
-          ...ingredients.map((ingredient) => ingredient.destroyPermanently()),
-        ]);
+        await database.batch(
+          ...steps.map((step) => step.prepareDestroyPermanently()),
+          ...ingredients.map((ingredient) => ingredient.prepareDestroyPermanently())
+        );
 
         await recipe.destroyPermanently();
       } catch {
@@ -240,10 +240,10 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
               ingredientsCollection.query(Q.where("recipe_id", recipeId)).fetch(),
             ]);
 
-            await Promise.all([
-              ...steps.map((step) => step.destroyPermanently()),
-              ...ingredients.map((ingredient) => ingredient.destroyPermanently()),
-            ]);
+            await database.batch(
+              ...steps.map((step) => step.prepareDestroyPermanently()),
+              ...ingredients.map((ingredient) => ingredient.prepareDestroyPermanently())
+            );
 
             await recipe.destroyPermanently();
           } catch {
@@ -282,17 +282,17 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
         try {
           // Delete mapping
           const mappings = await this.collection.query(Q.where("recipe_id", recipe.id)).fetch();
-          await Promise.all(mappings.map((m) => m.destroyPermanently()));
+          await database.batch(...mappings.map((m) => m.prepareDestroyPermanently()));
 
           // Delete steps and ingredients
           const [steps, ingredients] = await Promise.all([
             stepsCollection.query(Q.where("recipe_id", recipe.id)).fetch(),
             ingredientsCollection.query(Q.where("recipe_id", recipe.id)).fetch(),
           ]);
-          await Promise.all([
-            ...steps.map((step) => step.destroyPermanently()),
-            ...ingredients.map((ingredient) => ingredient.destroyPermanently()),
-          ]);
+          await database.batch(
+            ...steps.map((step) => step.prepareDestroyPermanently()),
+            ...ingredients.map((ingredient) => ingredient.prepareDestroyPermanently())
+          );
 
           await recipe.destroyPermanently();
         } catch {

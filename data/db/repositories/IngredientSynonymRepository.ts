@@ -1,6 +1,7 @@
 import { Q } from "@nozbe/watermelondb";
 import IngredientSynonym from "../models/IngredientSynonym";
 import { BaseRepository } from "./BaseRepository";
+import { database } from "../database";
 import { sanitizeSearchTerm } from "~/utils/input-sanitization";
 
 export class IngredientSynonymRepository extends BaseRepository<IngredientSynonym> {
@@ -88,7 +89,7 @@ export class IngredientSynonymRepository extends BaseRepository<IngredientSynony
 
     await db.write(async () => {
       const synonyms = await this.collection.query(Q.where("stock_id", Q.eq(stockId))).fetch();
-      await Promise.all(synonyms.map((syn) => syn.markAsDeleted()));
+      await database.batch(...synonyms.map((syn) => syn.prepareMarkAsDeleted()));
     });
   }
 

@@ -1,6 +1,7 @@
 import { Q } from "@nozbe/watermelondb";
 import StockCategory from "../models/StockCategory";
 import { BaseRepository } from "./BaseRepository";
+import { database } from "../database";
 
 export class StockCategoryRepository extends BaseRepository<StockCategory> {
   constructor() {
@@ -91,7 +92,7 @@ export class StockCategoryRepository extends BaseRepository<StockCategory> {
       const stockCategories = await this.collection
         .query(Q.where("stock_id", Q.eq(stockId)))
         .fetch();
-      await Promise.all(stockCategories.map((sc) => sc.markAsDeleted()));
+      await database.batch(...stockCategories.map((sc) => sc.prepareMarkAsDeleted()));
     });
   }
 
@@ -104,7 +105,7 @@ export class StockCategoryRepository extends BaseRepository<StockCategory> {
     await db.write(async () => {
       // Remove existing
       const existing = await this.collection.query(Q.where("stock_id", Q.eq(stockId))).fetch();
-      await Promise.all(existing.map((sc) => sc.markAsDeleted()));
+      await database.batch(...existing.map((sc) => sc.prepareMarkAsDeleted()));
 
       // Add new
       for (const categoryId of categoryIds) {
