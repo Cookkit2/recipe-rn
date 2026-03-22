@@ -46,7 +46,7 @@ export function useToggleFavorite() {
           updatedFavorites = updatedFavorites.filter((r) => r.id !== recipeId);
         } else {
           // Add to favorites (try to find it in other caches)
-          const recipeToAdd = previousRecipe || previousRecipes?.find(r => r.id === recipeId);
+          const recipeToAdd = previousRecipe || previousRecipes?.find((r) => r.id === recipeId);
           if (recipeToAdd) {
             updatedFavorites.push({ ...recipeToAdd, isFavorite: true });
           }
@@ -65,8 +65,9 @@ export function useToggleFavorite() {
 
       // Optimistically update recipes list
       if (previousRecipes) {
-        queryClient.setQueryData<Recipe[]>(recipeQueryKeys.recipes(),
-          previousRecipes.map(r => r.id === recipeId ? { ...r, isFavorite: !r.isFavorite } : r)
+        queryClient.setQueryData<Recipe[]>(
+          recipeQueryKeys.recipes(),
+          previousRecipes.map((r) => (r.id === recipeId ? { ...r, isFavorite: !r.isFavorite } : r))
         );
       }
 
@@ -74,11 +75,11 @@ export function useToggleFavorite() {
       return { previousFavorites, previousRecipe, previousRecipes, recipeId };
     },
     onSuccess: (data, recipeId, context) => {
-        if (data.isFavorite) {
-            toast.success("Added to favorites");
-        } else {
-            toast.success("Removed from favorites");
-        }
+      if (data.isFavorite) {
+        toast.success("Added to favorites");
+      } else {
+        toast.success("Removed from favorites");
+      }
     },
     onError: (err, recipeId, context) => {
       toast.error("Failed to update favorite status");

@@ -24,9 +24,10 @@ export default function FavoritesScreen() {
     if (!searchQuery.trim()) return favoriteRecipes;
 
     const query = searchQuery.toLowerCase().trim();
-    return favoriteRecipes.filter((recipe) =>
-      recipe.title.toLowerCase().includes(query) ||
-      (recipe.description && recipe.description.toLowerCase().includes(query))
+    return favoriteRecipes.filter(
+      (recipe) =>
+        recipe.title.toLowerCase().includes(query) ||
+        (recipe.description && recipe.description.toLowerCase().includes(query))
     );
   }, [favoriteRecipes, searchQuery]);
 
@@ -75,12 +76,7 @@ export default function FavoritesScreen() {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#A1A1AA" />
         }
-        renderItem={({ item }) => (
-          <RecipeItemCard
-            key={item.id}
-            recipe={item}
-          />
-        )}
+        renderItem={({ item }) => <RecipeItemCard key={item.id} recipe={item} />}
         ListEmptyComponent={
           <View className="py-16 items-center justify-center">
             <HeartIcon size={64} className="text-muted-foreground mb-4" />
