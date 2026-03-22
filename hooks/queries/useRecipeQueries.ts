@@ -42,7 +42,9 @@ export function useSearchRecipes(
     tags?: string[];
     maxPrepTime?: number;
     maxCookTime?: number;
-    maxDifficulty?: number;
+    minTotalTime?: number;
+    maxTotalTime?: number;
+    difficulty?: number;
   }
 ) {
   return useQuery({
