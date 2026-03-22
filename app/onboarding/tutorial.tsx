@@ -83,7 +83,13 @@ export default function Tutorial() {
       <LinearGradient colors={[colors.border, colors.muted]} style={[StyleSheet.absoluteFill]} />
 
       <Animated.View className="absolute left-6" style={[{ top }, opacityStyle]}>
-        <Button size="icon" variant="secondary" className="rounded-full" onPress={onBack}>
+        <Button
+          size="icon"
+          variant="secondary"
+          className="rounded-full"
+          onPress={onBack}
+          accessibilityLabel="Go back"
+        >
           <ArrowLeftIcon className="text-foreground" size={20} strokeWidth={2.618} />
         </Button>
       </Animated.View>

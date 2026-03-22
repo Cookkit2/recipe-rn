@@ -270,7 +270,13 @@ export default function DebugScreen() {
       <View style={{ paddingTop: top + 20 }} className="px-6 pb-6">
         {/* Header */}
         <View className="flex-row items-center mb-6">
-          <Button size="icon-sm" variant="ghost" onPress={() => router.back()} className="mr-3">
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            onPress={() => router.back()}
+            className="mr-3"
+            accessibilityLabel="Go back"
+          >
             <ArrowLeftIcon className="text-foreground" size={20} />
           </Button>
           <H1>Database Debug</H1>
