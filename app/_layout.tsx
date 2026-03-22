@@ -167,6 +167,27 @@ function AnimatedStack() {
       />
       {/* ======== RECIPE ======== */}
       <Stack.Screen
+        name="recipes/favorites"
+        options={{
+          presentation: "card",
+          headerShown: true,
+          headerTransparent: true,
+          headerTitle: "Favorites",
+          headerLargeTitleEnabled: true,
+          headerLargeTitleStyle: {
+            fontFamily: "BowlbyOne-Regular",
+            fontSize: 28,
+            fontWeight: "bold",
+            color: colors.foreground,
+          },
+          headerTitleStyle: {
+            fontFamily: "BowlbyOne-Regular",
+          },
+          headerTintColor: colors.foreground,
+          headerBackButtonDisplayMode: "minimal",
+        }}
+      />
+      <Stack.Screen
         name="recipes/[recipeId]"
         options={{
           presentation: "card",
