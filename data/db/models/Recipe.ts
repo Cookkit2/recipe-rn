@@ -4,6 +4,7 @@ import type { Associations } from "@nozbe/watermelondb/Model";
 import type RecipeStep from "./RecipeStep";
 import type RecipeIngredient from "./RecipeIngredient";
 import type CookingHistory from "./CookingHistory";
+import type ConsumptionLog from "./ConsumptionLog";
 
 export enum RecipeType {
   STANDARD = "standard",
@@ -32,6 +33,7 @@ export default class Recipe extends Model {
     recipe_step: { type: "has_many", foreignKey: "recipe_id" },
     recipe_ingredient: { type: "has_many", foreignKey: "recipe_id" },
     cooking_history: { type: "has_many", foreignKey: "recipe_id" },
+    consumption_log: { type: "has_many", foreignKey: "recipe_id" },
   };
 
   @field("title") title!: string;
@@ -51,6 +53,7 @@ export default class Recipe extends Model {
   @children("recipe_step") steps!: Collection<RecipeStep>;
   @children("recipe_ingredient") ingredients!: Collection<RecipeIngredient>;
   @children("cooking_history") cookingHistory!: Collection<CookingHistory>;
+  @children("consumption_log") consumptionLogs!: Collection<ConsumptionLog>;
 
   @date("created_at") createdAt!: Date;
   @date("updated_at") updatedAt!: Date;

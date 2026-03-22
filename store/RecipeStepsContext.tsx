@@ -98,6 +98,48 @@ export function RecipeStepsProvider({
           servingsMade: servings,
         });
 
+        // Try to record consumption of ingredients
+        try {
+          // Get ingredients for this recipe
+          const recipe = await database.getRecipeById(baseRecipeId);
+          if (recipe) {
+            const ingredients = await recipe.ingredients.fetch();
+            const ingredientNames = ingredients.map((i) => i.name);
+
+            const now = Date.now();
+
+            for (const ingredient of ingredients) {
+              // Find matching stock for this specific ingredient using the facade
+              const matchingStocks = await database.getStockByIngredient(ingredient.name);
+
+              if (matchingStocks.length > 0) {
+                const exactMatch = matchingStocks[0];
+                if (exactMatch && exactMatch.quantity > 0) {
+                  // If the stock has an expiry date, record consumption
+                  // Get full stock model to check expiry
+                  const stockModel = await database.getStockById(exactMatch.id);
+                  if (stockModel && stockModel.expiryDate) {
+                    // Only track if it hasn't expired yet
+                    if (now <= stockModel.expiryDate.getTime()) {
+                      await database.recordConsumption(
+                        stockModel.id,
+                        Math.min(ingredient.quantity, exactMatch.quantity),
+                        {
+                          recipeId: baseRecipeId,
+                          consumedDate: now,
+                          isBeforeExpiry: true,
+                        }
+                      );
+                    }
+                  }
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Failed to record ingredient consumption:", error);
+        }
+
         // Check for achievements after recording cooking
         // This will trigger achievement checks and unlock any newly achieved milestones
         await achievementService.checkAchievements();

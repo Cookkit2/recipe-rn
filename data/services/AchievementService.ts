@@ -13,6 +13,7 @@ import { StreakService } from "./StreakService";
 import type { AchievementRequirement, AchievementProgress } from "~/types/achievements";
 import { log } from "~/utils/logger";
 import { scheduleAchievementUnlock } from "~/lib/notifications/achievement-notifications";
+import database from "~/data/db";
 
 export interface AchievementCheckResult {
   newlyUnlocked: Array<{
@@ -385,9 +386,8 @@ export class AchievementService {
           return 0;
 
         case "ingredients_used_before_expiry":
-          // This would need to track ingredient usage before expiry - placeholder
-          // TODO: Implement when expiry tracking is available
-          return 0;
+          const usedBeforeExpiryCount = await database.getIngredientsUsedBeforeExpiryCount();
+          return usedBeforeExpiryCount;
 
         case "achievements_shared":
           // This would need to track shares - placeholder

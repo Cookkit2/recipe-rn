@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from "@nozbe/watermelondb";
 
 export default appSchema({
-  version: 2,
+  version: 3,
   tables: [
     // ========================================
     // RECIPE CACHE (3 tables)
@@ -195,6 +195,19 @@ export default appSchema({
     // ========================================
 
     // Meal Plan table - Stores recipes user wants to cook
+
+    tableSchema({
+      name: "consumption_log",
+      columns: [
+        { name: "stock_id", type: "string", isIndexed: true }, // Reference to consumed stock item
+        { name: "quantity_consumed", type: "number" }, // Amount that was consumed
+        { name: "recipe_id", type: "string", isOptional: true, isIndexed: true }, // Recipe used for
+        { name: "consumed_date", type: "number", isIndexed: true }, // Timestamp when consumed
+        { name: "is_before_expiry", type: "boolean" }, // Whether it was consumed before expiry
+        { name: "created_at", type: "number" },
+        { name: "updated_at", type: "number" },
+      ],
+    }),
     tableSchema({
       name: "meal_plan",
       columns: [

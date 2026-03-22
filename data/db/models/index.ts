@@ -60,6 +60,7 @@ import UserAchievement from "./UserAchievement";
 import Challenge from "./Challenge";
 import UserChallenge from "./UserChallenge";
 import WasteLog from "./WasteLog";
+import ConsumptionLog from "./ConsumptionLog";
 
 export const modelClasses = [
   Recipe,
@@ -81,4 +82,5 @@ export const modelClasses = [
   Challenge,
   UserChallenge,
   WasteLog,
+  ConsumptionLog,
 ];
