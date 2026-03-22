@@ -62,10 +62,11 @@ export class AuthYouTubeService implements IYouTubeService {
           );
         }
 
-        throw new YouTubeServiceError(
-          errorData.error?.message || `API error: HTTP ${response.status}`,
-          "API_ERROR"
-        );
+        const rawMessage = errorData.error?.message || `API error: HTTP ${response.status}`;
+        const sanitizedMessage = API_KEY
+          ? rawMessage.replaceAll(API_KEY, "[REDACTED_API_KEY]")
+          : rawMessage;
+        throw new YouTubeServiceError(sanitizedMessage, "API_ERROR");
       }
 
       const data = await response.json();
@@ -88,10 +89,11 @@ export class AuthYouTubeService implements IYouTubeService {
       if (error instanceof YouTubeServiceError) {
         throw error;
       }
-      throw new YouTubeServiceError(
-        `Network error: ${error instanceof Error ? error.message : "Unknown error"}`,
-        "NETWORK_ERROR"
-      );
+      const rawMessage = `Network error: ${error instanceof Error ? error.message : "Unknown error"}`;
+      const sanitizedMessage = API_KEY
+        ? rawMessage.replaceAll(API_KEY, "[REDACTED_API_KEY]")
+        : rawMessage;
+      throw new YouTubeServiceError(sanitizedMessage, "NETWORK_ERROR");
     }
   }
 
