@@ -1,3 +1,4 @@
+import { baseIngredientApi } from "~/data/supabase-api/BaseIngredientApi";
 import { databaseFacade } from "~/data/db/DatabaseFacade";
 import { database } from "~/data/db/database";
 import type { Stock } from "~/data/db/models";
@@ -566,6 +567,18 @@ const convertStockToPantryItem = async (stock: Stock): Promise<PantryItem> => {
     }
   } catch (error) {
     log.warn("Could not fetch categories for stock:", stock.id);
+  }
+
+  // Load from BaseIngredient category if local categories are empty
+  if (categories.length === 0) {
+    try {
+      const baseIngredient = await baseIngredientApi.getBaseIngredientByName(stock.name);
+      if (baseIngredient && baseIngredient.categories && baseIngredient.categories.length > 0) {
+        categories = baseIngredient.categories;
+      }
+    } catch (error) {
+      log.warn("Could not fetch base ingredient categories for stock:", stock.name, error);
+    }
   }
 
   return {
