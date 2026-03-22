@@ -3,6 +3,7 @@ import { field, date, children, writer } from "@nozbe/watermelondb/decorators";
 import type { Associations } from "@nozbe/watermelondb/Model";
 import UserChallenge from "./UserChallenge";
 import type { ChallengeRequirement, ChallengeReward } from "~/types/achievements";
+import { safeJsonParse } from "~/utils/json-parsing";
 
 export interface ChallengeData {
   type: string;
@@ -47,12 +48,16 @@ export default class Challenge extends Model {
 
   // Computed property for parsed requirement
   get parsedRequirement(): ChallengeRequirement {
-    return JSON.parse(this.requirement);
+    return safeJsonParse<ChallengeRequirement>(this.requirement, {
+      type: "cook_recipes",
+      target: 0,
+      description: "",
+    });
   }
 
   // Computed property for parsed reward
   get parsedReward(): ChallengeReward {
-    return JSON.parse(this.reward);
+    return safeJsonParse<ChallengeReward>(this.reward, { xp: 0 });
   }
 
   // Check if challenge is daily

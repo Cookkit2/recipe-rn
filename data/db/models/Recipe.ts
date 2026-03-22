@@ -1,14 +1,15 @@
 import { Collection, Model } from "@nozbe/watermelondb";
 import { field, date, children, writer } from "@nozbe/watermelondb/decorators";
 import type { Associations } from "@nozbe/watermelondb/Model";
+import { safeJsonParse } from "~/utils/json-parsing";
 import type RecipeStep from "./RecipeStep";
 import type RecipeIngredient from "./RecipeIngredient";
 import type CookingHistory from "./CookingHistory";
 
 export enum RecipeType {
-  STANDARD = 'standard',
-  TAILORED = 'tailored',
-  CONVERTED = 'converted',
+  STANDARD = "standard",
+  TAILORED = "tailored",
+  CONVERTED = "converted",
 }
 
 export interface RecipeData {
@@ -57,7 +58,7 @@ export default class Recipe extends Model {
 
   // Computed property for tags
   get tags(): string[] {
-    return this._tags ? JSON.parse(this._tags) : [];
+    return safeJsonParse<string[]>(this._tags, []);
   }
 
   set tags(value: string[]) {
@@ -93,8 +94,7 @@ export default class Recipe extends Model {
       if (data.imageUrl !== undefined) recipe.imageUrl = data.imageUrl;
       if (data.prepMinutes !== undefined) recipe.prepMinutes = data.prepMinutes;
       if (data.cookMinutes !== undefined) recipe.cookMinutes = data.cookMinutes;
-      if (data.difficultyStars !== undefined)
-        recipe.difficultyStars = data.difficultyStars;
+      if (data.difficultyStars !== undefined) recipe.difficultyStars = data.difficultyStars;
       if (data.servings !== undefined) recipe.servings = data.servings;
       if (data.sourceUrl !== undefined) recipe.sourceUrl = data.sourceUrl;
       if (data.calories !== undefined) recipe.calories = data.calories;
