@@ -22,6 +22,7 @@ import { log } from "~/utils/logger";
 import { recipeApi } from "~/data/api/recipeApi";
 import type { MealPlanTemplateData } from "~/data/api/mealPlanTemplateApi";
 import type { MealPlanItemWithRecipe } from "~/data/api/mealPlanApi";
+import { safeJsonParse } from "~/utils/json-parsing";
 
 /**
  * Shareable meal plan data structure for JSON export/import
@@ -292,8 +293,13 @@ export default function TemplateSheet({ onTemplateApplied, onClose }: TemplateSh
               setIsImporting(true);
               handleHapticFeedback();
 
-              // Parse JSON
-              const data = JSON.parse(jsonString.trim()) as ShareableMealPlan;
+              // Parse JSON safely to prevent JSON prototype injection
+              // Provide a default empty structure that fails validation rather than crashing
+              const data = safeJsonParse<ShareableMealPlan>(jsonString.trim(), {
+                version: "",
+                exportDate: "",
+                mealPlans: []
+              });
 
               // Validate data structure
               if (!data.version || !data.mealPlans || !Array.isArray(data.mealPlans)) {
