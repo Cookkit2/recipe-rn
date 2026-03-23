@@ -141,7 +141,7 @@ export class RecipeVersionRepository extends BaseRepository<RecipeVersion> {
   async deleteVersionsForRecipe(recipeId: string): Promise<void> {
     await database.write(async () => {
       const versions = await this.getVersionsForRecipe(recipeId);
-      await Promise.all(versions.map((version) => version.destroyPermanently()));
+      await database.batch(...versions.map((version) => version.prepareDestroyPermanently()));
     });
   }
 

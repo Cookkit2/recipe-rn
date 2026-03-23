@@ -91,7 +91,7 @@ export class StockCategoryRepository extends BaseRepository<StockCategory> {
       const stockCategories = await this.collection
         .query(Q.where("stock_id", Q.eq(stockId)))
         .fetch();
-      await Promise.all(stockCategories.map((sc) => sc.markAsDeleted()));
+      await db.batch(...stockCategories.map((sc) => sc.prepareMarkAsDeleted()));
     });
   }
 
@@ -104,15 +104,26 @@ export class StockCategoryRepository extends BaseRepository<StockCategory> {
     await db.write(async () => {
       // Remove existing
       const existing = await this.collection.query(Q.where("stock_id", Q.eq(stockId))).fetch();
-      await Promise.all(existing.map((sc) => sc.markAsDeleted()));
+
+      const batchOps = existing.map((sc) => sc.prepareMarkAsDeleted());
 
       // Add new
       for (const categoryId of categoryIds) {
-        const sc = await this.collection.create((record: any) => {
-          record.stockId = stockId;
-          record.categoryId = categoryId;
-        });
-        created.push(sc);
+        batchOps.push(
+          this.collection.prepareCreate((record: any) => {
+            record.stockId = stockId;
+            record.categoryId = categoryId;
+          })
+        );
+      }
+
+      await db.batch(...batchOps);
+
+      // We still need to return the created categories. They are the newly created records in the batchOps.
+      for (const op of batchOps) {
+        if (!existing.includes(op as any)) {
+          created.push(op as StockCategory);
+        }
       }
     });
 

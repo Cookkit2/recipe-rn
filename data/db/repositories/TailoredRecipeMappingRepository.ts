@@ -280,21 +280,19 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
 
       for (const recipe of tailoredRecipes) {
         try {
-          // Delete mapping
-          const mappings = await this.collection.query(Q.where("recipe_id", recipe.id)).fetch();
-          await Promise.all(mappings.map((m) => m.destroyPermanently()));
-
-          // Delete steps and ingredients
-          const [steps, ingredients] = await Promise.all([
+          // Fetch related records
+          const [mappings, steps, ingredients] = await Promise.all([
+            this.collection.query(Q.where("recipe_id", recipe.id)).fetch(),
             stepsCollection.query(Q.where("recipe_id", recipe.id)).fetch(),
             ingredientsCollection.query(Q.where("recipe_id", recipe.id)).fetch(),
           ]);
-          await Promise.all([
-            ...steps.map((step) => step.destroyPermanently()),
-            ...ingredients.map((ingredient) => ingredient.destroyPermanently()),
-          ]);
 
-          await recipe.destroyPermanently();
+          await database.batch(
+            ...mappings.map((m) => m.prepareDestroyPermanently()),
+            ...steps.map((step) => step.prepareDestroyPermanently()),
+            ...ingredients.map((ingredient) => ingredient.prepareDestroyPermanently()),
+            recipe.prepareDestroyPermanently()
+          );
         } catch {
           // Continue with other recipes
         }
