@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 import * as SecureStore from "expo-secure-store";
 import * as authDb from "~/src/services/database/auth-db";
 import type { Session } from "~/src/services/database/auth-db";
+import { safeJsonParse } from "~/utils/json-parsing";
 
 interface AuthState {
   user: User | null;
@@ -205,7 +206,7 @@ export const useAuthStore = create<AuthState>()(
             return;
           }
 
-          const { userId, accessToken, refreshToken } = JSON.parse(sessionStr);
+          const { userId, accessToken, refreshToken } = safeJsonParse<any>(sessionStr, {});
 
           // Check if tokens are still valid
           const session = await authDb.getSessionByToken(accessToken);
@@ -253,11 +254,7 @@ export const useAuthStore = create<AuthState>()(
       // Custom serialization to handle SecureStore
       // @ts-ignore
       deserialize: (str: string) => {
-        try {
-          return JSON.parse(str);
-        } catch {
-          return initialState;
-        }
+        return safeJsonParse(str, initialState);
       },
     }
   )
