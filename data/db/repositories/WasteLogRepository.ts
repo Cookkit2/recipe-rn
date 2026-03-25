@@ -375,7 +375,12 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
     await database.write(async () => {
       const records = await this.collection.query(Q.where("stock_id", stockId)).fetch();
 
-      await Promise.all(records.map((record) => record.destroyPermanently()));
+      const batchOps: import("@nozbe/watermelondb").Model[] = records.map((record) =>
+        record.prepareDestroyPermanently()
+      );
+      if (batchOps.length > 0) {
+        await database.batch(...batchOps);
+      }
     });
   }
 
