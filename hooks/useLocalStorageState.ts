@@ -2,6 +2,7 @@ import type { Dispatch, SetStateAction } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { storage } from "~/data";
 import { log } from "~/utils/logger";
+import { safeJsonParse } from "~/utils/json-parsing";
 
 /**
  * In-memory fallback storage used when persistent storage throws an error.
@@ -215,5 +216,5 @@ function useAsyncStorage<T>(
  * @returns Parsed value, or undefined if input is "undefined" string
  */
 function parseJSON(value: string): unknown {
-  return value === "undefined" ? undefined : JSON.parse(value);
+  return value === "undefined" ? undefined : safeJsonParse(value, undefined);
 }

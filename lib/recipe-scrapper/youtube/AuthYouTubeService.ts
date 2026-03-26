@@ -62,7 +62,6 @@ export class AuthYouTubeService implements IYouTubeService {
           );
         }
 
-
         const rawMessage = errorData.error?.message || `API error: HTTP ${response.status}`;
         const sanitizedMessage = API_KEY
           ? rawMessage.replaceAll(API_KEY, "[REDACTED_API_KEY]")
@@ -96,7 +95,6 @@ export class AuthYouTubeService implements IYouTubeService {
       const sanitizedMessage = API_KEY
         ? rawMessage.replaceAll(API_KEY, "[REDACTED_API_KEY]")
         : rawMessage;
-
 
       throw new YouTubeServiceError(sanitizedMessage, "NETWORK_ERROR");
     }
