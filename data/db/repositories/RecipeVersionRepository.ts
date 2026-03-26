@@ -144,8 +144,6 @@ export class RecipeVersionRepository extends BaseRepository<RecipeVersion> {
       await database.batch(...versions.map((version) => version.prepareDestroyPermanently()));
     });
   }
-    });
-  }
 
   // Get the total number of versions for a recipe
   async countVersionsForRecipe(recipeId: string): Promise<number> {

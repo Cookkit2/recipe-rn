@@ -290,17 +290,16 @@ export class RecipeRepository extends BaseRepository<Recipe> {
   async clearAllRecipes(): Promise<void> {
     await database.write(async () => {
       const allRecipes = await this.collection.query().fetch();
+      await database.batch(...allRecipes.map((recipe) => recipe.prepareDestroyPermanently()));
 
       // Also clear related steps and ingredients
       const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
       const allSteps = await stepsCollection.query().fetch();
+      await database.batch(...allSteps.map((step) => step.prepareDestroyPermanently()));
 
       const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
       const allIngredients = await ingredientsCollection.query().fetch();
-
       await database.batch(
-        ...allRecipes.map((recipe) => recipe.prepareDestroyPermanently()),
-        ...allSteps.map((step) => step.prepareDestroyPermanently()),
         ...allIngredients.map((ingredient) => ingredient.prepareDestroyPermanently())
       );
     });

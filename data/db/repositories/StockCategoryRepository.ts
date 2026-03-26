@@ -1,6 +1,7 @@
 import { Q } from "@nozbe/watermelondb";
 import StockCategory from "../models/StockCategory";
 import { BaseRepository } from "./BaseRepository";
+import { database } from "../database";
 
 export class StockCategoryRepository extends BaseRepository<StockCategory> {
   constructor() {
@@ -97,8 +98,6 @@ export class StockCategoryRepository extends BaseRepository<StockCategory> {
       await db.batch(...stockCategories.map((sc) => sc.prepareMarkAsDeleted()));
     });
   }
-    });
-  }
 
   // Replace all categories for a stock
   async replaceCategories(stockId: string, categoryIds: string[]): Promise<StockCategory[]> {
@@ -129,8 +128,6 @@ export class StockCategoryRepository extends BaseRepository<StockCategory> {
         if (!existing.includes(op as any)) {
           created.push(op as StockCategory);
         }
-      }
-    });
       }
     });
 
