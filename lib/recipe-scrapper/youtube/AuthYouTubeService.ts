@@ -63,11 +63,10 @@ export class AuthYouTubeService implements IYouTubeService {
         }
 
         const rawMessage = errorData.error?.message || `API error: HTTP ${response.status}`;
-        const safeMessage = API_KEY
+        const sanitizedMessage = API_KEY
           ? rawMessage.replaceAll(API_KEY, "[REDACTED_API_KEY]")
           : rawMessage;
-
-        throw new YouTubeServiceError(safeMessage, "API_ERROR");
+        throw new YouTubeServiceError(sanitizedMessage, "API_ERROR");
       }
 
       const data = await response.json();
@@ -91,21 +90,11 @@ export class AuthYouTubeService implements IYouTubeService {
         throw error;
       }
 
-<<<<<<< HEAD
-      const rawMessage = `Network error: ${error instanceof Error ? error.message : "Unknown error"}`;
-      const safeMessage = API_KEY
-        ? rawMessage.replaceAll(API_KEY, "[REDACTED_API_KEY]")
-        : rawMessage;
-
-      throw new YouTubeServiceError(safeMessage, "NETWORK_ERROR");
-=======
       const rawMessage = error instanceof Error ? error.message : "Unknown error";
       const sanitizedMessage = API_KEY
-        ? rawMessage.replace(new RegExp(API_KEY, "g"), "[REDACTED_API_KEY]")
+        ? rawMessage.replaceAll(API_KEY, "[REDACTED_API_KEY]")
         : rawMessage;
-
       throw new YouTubeServiceError(`Network error: ${sanitizedMessage}`, "NETWORK_ERROR");
->>>>>>> origin/sentinel/redact-youtube-api-key-10990474656388061219
     }
   }
 
