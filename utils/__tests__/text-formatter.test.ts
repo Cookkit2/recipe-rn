@@ -222,6 +222,22 @@ describe("Text Formatter Utils - Capitalization", () => {
       expect(toCamelCase("ingredient  name")).toBe("ingredientName");
     });
 
+    it("should handle ALL CAPS", () => {
+      expect(toCamelCase("HELLO WORLD")).toBe("helloWorld");
+      expect(toCamelCase("INGREDIENT")).toBe("ingredient");
+    });
+
+    it("should handle strings with numbers", () => {
+      expect(toCamelCase("version 2.0")).toBe("version2.0");
+      expect(toCamelCase("ingredient 1")).toBe("ingredient1");
+    });
+
+    it("should handle leading and trailing spaces", () => {
+      expect(toCamelCase("  leading spaces")).toBe("leadingSpaces");
+      expect(toCamelCase("trailing spaces  ")).toBe("trailingSpaces");
+      expect(toCamelCase("  both spaces  ")).toBe("bothSpaces");
+    });
+
     it("should return empty string for empty or null input", () => {
       expect(toCamelCase("")).toBe("");
       expect(toCamelCase(null as any)).toBe("");
