@@ -51,6 +51,7 @@ export default function IngredientQuantity({
         className="rounded-full"
         enableDebounce={false}
         onPress={() => updateQuantity(Math.max(0, quantity - 1))}
+        accessibilityLabel="Decrease quantity"
       >
         <MinusIcon className="text-foreground" size={20} strokeWidth={2.618} />
       </Button>
@@ -60,7 +61,12 @@ export default function IngredientQuantity({
           value={quantity}
           onValueChange={(newValue) => updateQuantity(Math.min(9999, Math.max(0, newValue)))}
         />
-        <Pressable onPress={showUnitPicker} className="min-w-6">
+        <Pressable
+          onPress={showUnitPicker}
+          className="min-w-6"
+          accessibilityLabel="Select unit"
+          accessibilityRole="button"
+        >
           <P className="text-center font-urbanist-medium text-xl">{unit}</P>
         </Pressable>
       </View>
@@ -72,6 +78,7 @@ export default function IngredientQuantity({
         className="rounded-full"
         enableDebounce={false}
         onPress={() => updateQuantity(Math.min(9999, quantity + 1))}
+        accessibilityLabel="Increase quantity"
       >
         <PlusIcon className="text-foreground" size={20} strokeWidth={2.618} />
       </Button>

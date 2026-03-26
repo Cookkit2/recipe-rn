@@ -72,6 +72,8 @@ export default function IngredientDiscardButton() {
           onPress={handleDiscardPress}
           className="flex-row items-center gap-3"
           disabled={recordWaste.isPending}
+          accessibilityLabel="Mark ingredient as discarded"
+          accessibilityRole="button"
         >
           <View className="w-10 h-10 rounded-full bg-destructive/20 items-center justify-center">
             <Trash2Icon className="text-destructive" size={20} strokeWidth={2.618} />

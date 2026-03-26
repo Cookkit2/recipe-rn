@@ -28,7 +28,7 @@ const IngredientDeleteButton = () => {
   };
 
   return (
-    <Pressable onPress={onDelete}>
+    <Pressable onPress={onDelete} accessibilityLabel="Delete ingredient" accessibilityRole="button">
       <Trash2Icon className="text-destructive" size={20} strokeWidth={2.618} />
     </Pressable>
   );
