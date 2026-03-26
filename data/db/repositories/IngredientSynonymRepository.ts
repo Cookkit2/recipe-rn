@@ -88,7 +88,12 @@ export class IngredientSynonymRepository extends BaseRepository<IngredientSynony
 
     await db.write(async () => {
       const synonyms = await this.collection.query(Q.where("stock_id", Q.eq(stockId))).fetch();
-      await Promise.all(synonyms.map((syn) => syn.markAsDeleted()));
+      const batchOps: import("@nozbe/watermelondb").Model[] = synonyms.map((syn) =>
+        syn.prepareMarkAsDeleted()
+      );
+      if (batchOps.length > 0) {
+        await db.batch(...batchOps);
+      }
     });
   }
 

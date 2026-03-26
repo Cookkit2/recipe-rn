@@ -48,8 +48,11 @@ export class StockCategoryRepository extends BaseRepository<StockCategory> {
 
     const db = this.collection.database;
     await db.write(async () => {
-      for (const sc of stockCategories) {
-        await sc.markAsDeleted();
+      const batchOps: import("@nozbe/watermelondb").Model[] = stockCategories.map((sc) =>
+        sc.prepareMarkAsDeleted()
+      );
+      if (batchOps.length > 0) {
+        await db.batch(...batchOps);
       }
     });
   }
@@ -91,7 +94,12 @@ export class StockCategoryRepository extends BaseRepository<StockCategory> {
       const stockCategories = await this.collection
         .query(Q.where("stock_id", Q.eq(stockId)))
         .fetch();
-      await Promise.all(stockCategories.map((sc) => sc.markAsDeleted()));
+      const batchOps: import("@nozbe/watermelondb").Model[] = stockCategories.map((sc) =>
+        sc.prepareMarkAsDeleted()
+      );
+      if (batchOps.length > 0) {
+        await db.batch(...batchOps);
+      }
     });
   }
 
@@ -104,15 +112,35 @@ export class StockCategoryRepository extends BaseRepository<StockCategory> {
     await db.write(async () => {
       // Remove existing
       const existing = await this.collection.query(Q.where("stock_id", Q.eq(stockId))).fetch();
-      await Promise.all(existing.map((sc) => sc.markAsDeleted()));
+
+      const batchOps: import("@nozbe/watermelondb").Model[] = existing.map((sc) =>
+        sc.prepareMarkAsDeleted()
+      );
 
       // Add new
       for (const categoryId of categoryIds) {
-        const sc = await this.collection.create((record: any) => {
-          record.stockId = stockId;
-          record.categoryId = categoryId;
-        });
-        created.push(sc);
+        batchOps.push(
+          this.collection.prepareCreate((record: any) => {
+            record.stockId = stockId;
+            record.categoryId = categoryId;
+          })
+        );
+      }
+
+      if (batchOps.length > 0) {
+        await db.batch(...batchOps);
+      }
+
+      // After batch, we need to return created records.
+      // Since prepareCreate doesn't return the resolved records easily in watermelon,
+      // we fetch them again. (They should be instantly available in local DB after batch)
+      if (categoryIds.length > 0) {
+        const newRecords = await this.collection
+          .query(
+            Q.and(Q.where("stock_id", Q.eq(stockId)), Q.where("category_id", Q.oneOf(categoryIds)))
+          )
+          .fetch();
+        created.push(...newRecords);
       }
     });
 

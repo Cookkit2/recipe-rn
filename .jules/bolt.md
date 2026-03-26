@@ -7,3 +7,8 @@
 
 **Learning:** In the `isIngredientMatch` utility function, `RegExp` objects (with `/g` flags) and large static objects (`synonymMap` and its `Object.entries()`) were being recreated on every function invocation. This function is called heavily inside nested loops when processing ingredient matches against the pantry (resulting in tens of thousands of calls), and the repetitive object allocations caused a noticeable performance drag.
 **Action:** Always extract static regular expressions and static map objects to the module scope so they are only initialized once. Also, optimize loops by short-circuiting as early as possible.
+
+## 2025-03-25 - [Type Definition for Multi-Model Batch Operations]
+
+**Learning:** When performing bulk `.prepareDestroyPermanently()` operations across multiple different model types (e.g. `mappings`, `steps`, `ingredients`, and `recipe`) and aggregating them into a single `batchOps` array for `database.batch(...)`, TypeScript struggles to infer a mixed union type for the array and throws a TS2345 type mismatch error.
+**Action:** Always explicitly type the aggregated operations array as `const batchOps: import("@nozbe/watermelondb").Model[] = []` before pushing different Model types into it to appease the TypeScript compiler.

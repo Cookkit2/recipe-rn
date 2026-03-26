@@ -178,9 +178,9 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
       // Find and delete the mapping
       const mappings = await this.collection.query(Q.where("recipe_id", recipeId)).fetch();
 
-      for (const mapping of mappings) {
-        await mapping.destroyPermanently();
-      }
+      const batchOps: import("@nozbe/watermelondb").Model[] = [
+        ...mappings.map((mapping) => mapping.prepareDestroyPermanently()),
+      ];
 
       // Find and delete the recipe with its steps and ingredients
       const recipeCollection = database.collections.get<Recipe>("recipe");
@@ -195,14 +195,17 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
           ingredientsCollection.query(Q.where("recipe_id", recipeId)).fetch(),
         ]);
 
-        await Promise.all([
-          ...steps.map((step) => step.destroyPermanently()),
-          ...ingredients.map((ingredient) => ingredient.destroyPermanently()),
-        ]);
-
-        await recipe.destroyPermanently();
+        batchOps.push(
+          ...steps.map((step) => step.prepareDestroyPermanently()),
+          ...ingredients.map((ingredient) => ingredient.prepareDestroyPermanently()),
+          recipe.prepareDestroyPermanently()
+        );
       } catch {
         // Recipe already deleted or doesn't exist
+      }
+
+      if (batchOps.length > 0) {
+        await database.batch(...batchOps);
       }
     });
   }
@@ -226,11 +229,12 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
       const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
 
       for (const mapping of expiredMappings) {
+        const batchOps = [];
         try {
           const recipeId = mapping.recipeId;
 
           // Delete mapping
-          await mapping.destroyPermanently();
+          batchOps.push(mapping.prepareDestroyPermanently());
 
           // Delete recipe, steps, ingredients
           try {
@@ -240,16 +244,18 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
               ingredientsCollection.query(Q.where("recipe_id", recipeId)).fetch(),
             ]);
 
-            await Promise.all([
-              ...steps.map((step) => step.destroyPermanently()),
-              ...ingredients.map((ingredient) => ingredient.destroyPermanently()),
-            ]);
-
-            await recipe.destroyPermanently();
+            batchOps.push(
+              ...steps.map((step) => step.prepareDestroyPermanently()),
+              ...ingredients.map((ingredient) => ingredient.prepareDestroyPermanently()),
+              recipe.prepareDestroyPermanently()
+            );
           } catch {
             // Recipe already deleted or doesn't exist
           }
 
+          if (batchOps.length > 0) {
+            await database.batch(...batchOps);
+          }
           deletedCount++;
         } catch {
           // Continue cleaning up other mappings
@@ -279,22 +285,27 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
       const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
 
       for (const recipe of tailoredRecipes) {
+        const batchOps = [];
         try {
           // Delete mapping
           const mappings = await this.collection.query(Q.where("recipe_id", recipe.id)).fetch();
-          await Promise.all(mappings.map((m) => m.destroyPermanently()));
+          batchOps.push(...mappings.map((m) => m.prepareDestroyPermanently()));
 
           // Delete steps and ingredients
           const [steps, ingredients] = await Promise.all([
             stepsCollection.query(Q.where("recipe_id", recipe.id)).fetch(),
             ingredientsCollection.query(Q.where("recipe_id", recipe.id)).fetch(),
           ]);
-          await Promise.all([
-            ...steps.map((step) => step.destroyPermanently()),
-            ...ingredients.map((ingredient) => ingredient.destroyPermanently()),
-          ]);
 
-          await recipe.destroyPermanently();
+          batchOps.push(
+            ...steps.map((step) => step.prepareDestroyPermanently()),
+            ...ingredients.map((ingredient) => ingredient.prepareDestroyPermanently()),
+            recipe.prepareDestroyPermanently()
+          );
+
+          if (batchOps.length > 0) {
+            await database.batch(...batchOps);
+          }
         } catch {
           // Continue with other recipes
         }
