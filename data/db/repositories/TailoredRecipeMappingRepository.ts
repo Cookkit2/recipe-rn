@@ -225,41 +225,50 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
     // Batch all deletions in a single write to avoid nested write deadlocks
     await database.write(async () => {
       const recipeCollection = database.collections.get<Recipe>("recipe");
+
+      // ⚡ Bolt Performance Optimization:
+      // Prevent N+1 query bottlenecks during cleanup. Instead of querying and destroying
+      // associated recipes, steps, and ingredients sequentially inside a loop, we extract
+      // all unique recipe IDs, fetch the models simultaneously via Q.oneOf(), and destroy them
+      // in a single large database.batch() operation. This drastically reduces JS thread blocking
+      // and SQLite load compared to N sequential fetches and writes.
       const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
       const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
 
+      const recipeIds = expiredMappings.map((m) => m.recipeId);
+      const uniqueRecipeIds = [...new Set(recipeIds)].filter(Boolean);
+
+      const batchOps: import("@nozbe/watermelondb").Model[] = [];
+
       for (const mapping of expiredMappings) {
-        const batchOps = [];
+        batchOps.push(mapping.prepareDestroyPermanently());
+        deletedCount++;
+      }
+
+      if (uniqueRecipeIds.length > 0) {
         try {
-          const recipeId = mapping.recipeId;
+          const [recipes, steps, ingredients] = await Promise.all([
+            recipeCollection.query(Q.where("id", Q.oneOf(uniqueRecipeIds))).fetch(),
+            stepsCollection.query(Q.where("recipe_id", Q.oneOf(uniqueRecipeIds))).fetch(),
+            ingredientsCollection.query(Q.where("recipe_id", Q.oneOf(uniqueRecipeIds))).fetch(),
+          ]);
 
-          // Delete mapping
-          batchOps.push(mapping.prepareDestroyPermanently());
-
-          // Delete recipe, steps, ingredients
-          try {
-            const recipe = await recipeCollection.find(recipeId);
-            const [steps, ingredients] = await Promise.all([
-              stepsCollection.query(Q.where("recipe_id", recipeId)).fetch(),
-              ingredientsCollection.query(Q.where("recipe_id", recipeId)).fetch(),
-            ]);
-
-            batchOps.push(
-              ...steps.map((step) => step.prepareDestroyPermanently()),
-              ...ingredients.map((ingredient) => ingredient.prepareDestroyPermanently()),
-              recipe.prepareDestroyPermanently()
-            );
-          } catch {
-            // Recipe already deleted or doesn't exist
+          for (const recipe of recipes) {
+            batchOps.push(recipe.prepareDestroyPermanently());
           }
-
-          if (batchOps.length > 0) {
-            await database.batch(...batchOps);
+          for (const step of steps) {
+            batchOps.push(step.prepareDestroyPermanently());
           }
-          deletedCount++;
+          for (const ingredient of ingredients) {
+            batchOps.push(ingredient.prepareDestroyPermanently());
+          }
         } catch {
-          // Continue cleaning up other mappings
+          // Continue if there are errors fetching related models
         }
+      }
+
+      if (batchOps.length > 0) {
+        await database.batch(...batchOps);
       }
     });
 
@@ -282,26 +291,39 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
     // Batch all deletions in a single write to avoid nested write deadlocks
     await database.write(async () => {
       const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
+
+      // ⚡ Bolt Performance Optimization:
+      // Prevent N+1 database querying bottlenecks when clearing tailored recipes.
+      // Instead of querying and destroying mappings, steps, and ingredients sequentially inside
+      // a loop for every tailored recipe, we fetch all relevant associated entities simultaneously
+      // via Q.oneOf() and destroy them in a single large database.batch() execution.
       const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
 
-      for (const recipe of tailoredRecipes) {
-        try {
-          // Fetch related records
-          const [mappings, steps, ingredients] = await Promise.all([
-            this.collection.query(Q.where("recipe_id", recipe.id)).fetch(),
-            stepsCollection.query(Q.where("recipe_id", recipe.id)).fetch(),
-            ingredientsCollection.query(Q.where("recipe_id", recipe.id)).fetch(),
-          ]);
+      const recipeIds = tailoredRecipes.map((r) => r.id);
+      const uniqueRecipeIds = [...new Set(recipeIds)].filter(Boolean);
 
-          await database.batch(
-            ...mappings.map((m) => m.prepareDestroyPermanently()),
-            ...steps.map((step) => step.prepareDestroyPermanently()),
-            ...ingredients.map((ingredient) => ingredient.prepareDestroyPermanently()),
-            recipe.prepareDestroyPermanently()
-          );
-        } catch {
-          // Continue with other recipes
+      if (uniqueRecipeIds.length === 0) return;
+
+      try {
+        // Fetch related records
+        const [mappings, steps, ingredients] = await Promise.all([
+          this.collection.query(Q.where("recipe_id", Q.oneOf(uniqueRecipeIds))).fetch(),
+          stepsCollection.query(Q.where("recipe_id", Q.oneOf(uniqueRecipeIds))).fetch(),
+          ingredientsCollection.query(Q.where("recipe_id", Q.oneOf(uniqueRecipeIds))).fetch(),
+        ]);
+
+        const batchOps: import("@nozbe/watermelondb").Model[] = [
+          ...mappings.map((m) => m.prepareDestroyPermanently()),
+          ...steps.map((step) => step.prepareDestroyPermanently()),
+          ...ingredients.map((ingredient) => ingredient.prepareDestroyPermanently()),
+          ...tailoredRecipes.map((recipe) => recipe.prepareDestroyPermanently()),
+        ];
+
+        if (batchOps.length > 0) {
+          await database.batch(...batchOps);
         }
+      } catch {
+        // Continue if there are errors
       }
     });
   }
