@@ -65,8 +65,15 @@ async function syncRecipeIngredients(
 
   // Delete removed ingredients
   const existingIngredients = await recipe.ingredients.fetch();
+
+  // Create O(1) lookups for performance optimization
+  const workingIngredientIds = new Set(
+    workingCopy.ingredients.map((ing) => ing.id).filter(Boolean)
+  );
+  const existingIngredientsMap = new Map(existingIngredients.map((ing) => [ing.id, ing]));
+
   for (const existing of existingIngredients) {
-    if (!workingCopy.ingredients.some((ing) => ing.id === existing.id)) {
+    if (!workingIngredientIds.has(existing.id)) {
       batchOps.push(existing.prepareDestroyPermanently());
     }
   }
@@ -75,9 +82,7 @@ async function syncRecipeIngredients(
   for (const ingredient of workingCopy.ingredients) {
     if (ingredient.id) {
       // Update existing
-      const existing = existingIngredients.find(
-        (ing: RecipeIngredient) => ing.id === ingredient.id
-      );
+      const existing = existingIngredientsMap.get(ingredient.id);
       if (existing) {
         batchOps.push(
           (existing as any).prepareUpdate((ing: RecipeIngredient) => {
@@ -116,8 +121,13 @@ async function syncRecipeSteps(
 
   // Delete removed steps
   const existingSteps = await recipe.steps.fetch();
+
+  // Create O(1) lookups for performance optimization
+  const workingStepIds = new Set(workingCopy.steps.map((step) => step.id).filter(Boolean));
+  const existingStepsMap = new Map(existingSteps.map((step) => [step.id, step]));
+
   for (const existing of existingSteps) {
-    if (!workingCopy.steps.some((step) => step.id === existing.id)) {
+    if (!workingStepIds.has(existing.id)) {
       batchOps.push(existing.prepareDestroyPermanently());
     }
   }
@@ -126,7 +136,7 @@ async function syncRecipeSteps(
   for (const step of workingCopy.steps) {
     if (step.id) {
       // Update existing
-      const existing = existingSteps.find((s: RecipeStep) => s.id === step.id);
+      const existing = existingStepsMap.get(step.id);
       if (existing) {
         batchOps.push(
           (existing as any).prepareUpdate((s: RecipeStep) => {
