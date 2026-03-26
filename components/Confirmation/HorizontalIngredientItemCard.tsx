@@ -81,7 +81,13 @@ function HorizontalIngredientItemCard({ item }: { item: CreatePantryItem }) {
             updateQuantity={handleQuantityChange}
             updateUnit={handleUnitChange}
           />
-          <Button size="icon" variant="ghost" className="rounded-full" onPress={handleDelete}>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="rounded-full"
+            onPress={handleDelete}
+            accessibilityLabel="Delete ingredient"
+          >
             <Trash2Icon className="text-destructive" size={20} strokeWidth={2.618} />
           </Button>
         </View>
@@ -137,7 +143,12 @@ function FailedState({ onRetry, onDelete }: { onRetry: () => void; onDelete: () 
           <Button size="sm" variant="outline" className="flex-1" onPress={onRetry}>
             <Muted>Retry</Muted>
           </Button>
-          <Button size="icon" variant="ghost" onPress={onDelete}>
+          <Button
+            size="icon"
+            variant="ghost"
+            onPress={onDelete}
+            accessibilityLabel="Delete ingredient"
+          >
             <Trash2Icon className="text-destructive" size={20} strokeWidth={2.618} />
           </Button>
         </View>
