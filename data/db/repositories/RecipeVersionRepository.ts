@@ -141,12 +141,9 @@ export class RecipeVersionRepository extends BaseRepository<RecipeVersion> {
   async deleteVersionsForRecipe(recipeId: string): Promise<void> {
     await database.write(async () => {
       const versions = await this.getVersionsForRecipe(recipeId);
-      const batchOps: import("@nozbe/watermelondb").Model[] = versions.map((version) =>
-        version.prepareDestroyPermanently()
-      );
-      if (batchOps.length > 0) {
-        await database.batch(...batchOps);
-      }
+      await database.batch(...versions.map((version) => version.prepareDestroyPermanently()));
+    });
+  }
     });
   }
 

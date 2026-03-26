@@ -298,15 +298,11 @@ export class RecipeRepository extends BaseRepository<Recipe> {
       const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
       const allIngredients = await ingredientsCollection.query().fetch();
 
-      const batchOps: import("@nozbe/watermelondb").Model[] = [
+      await database.batch(
         ...allRecipes.map((recipe) => recipe.prepareDestroyPermanently()),
         ...allSteps.map((step) => step.prepareDestroyPermanently()),
-        ...allIngredients.map((ingredient) => ingredient.prepareDestroyPermanently()),
-      ];
-
-      if (batchOps.length > 0) {
-        await database.batch(...batchOps);
-      }
+        ...allIngredients.map((ingredient) => ingredient.prepareDestroyPermanently())
+      );
     });
   }
 
