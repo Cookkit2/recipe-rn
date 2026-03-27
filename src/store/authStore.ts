@@ -59,16 +59,18 @@ export const useAuthStore = create<AuthState>()(
           const accessToken = `access_${Date.now()}`;
           const refreshToken = `refresh_${Date.now()}`;
 
-          // Save to database
+          // Ensure user is created before tokens to prevent FK constraint violations
           await authDb.createUser(userId, email, "Test User");
-          await authDb.upsertSession(userId, accessToken, refreshToken, 900); // 15 minutes
-          await authDb.createRefreshToken(userId, refreshToken, 604800000); // 7 days
 
-          // Save to secure store
-          await SecureStore.setItemAsync(
-            "user_session",
-            JSON.stringify({ userId, accessToken, refreshToken })
-          );
+          // Save to database and secure store concurrently
+          await Promise.all([
+            authDb.upsertSession(userId, accessToken, refreshToken, 900), // 15 minutes
+            authDb.createRefreshToken(userId, refreshToken, 604800000), // 7 days
+            SecureStore.setItemAsync(
+              "user_session",
+              JSON.stringify({ userId, accessToken, refreshToken })
+            ),
+          ]);
 
           // Update state
           set({
@@ -100,16 +102,18 @@ export const useAuthStore = create<AuthState>()(
           const accessToken = `access_${Date.now()}`;
           const refreshToken = `refresh_${Date.now()}`;
 
-          // Save to database
+          // Ensure user is created before tokens to prevent FK constraint violations
           await authDb.createUser(userId, email, displayName);
-          await authDb.upsertSession(userId, accessToken, refreshToken, 900);
-          await authDb.createRefreshToken(userId, refreshToken, 604800000);
 
-          // Save to secure store
-          await SecureStore.setItemAsync(
-            "user_session",
-            JSON.stringify({ userId, accessToken, refreshToken })
-          );
+          // Save to database and secure store concurrently
+          await Promise.all([
+            authDb.upsertSession(userId, accessToken, refreshToken, 900),
+            authDb.createRefreshToken(userId, refreshToken, 604800000),
+            SecureStore.setItemAsync(
+              "user_session",
+              JSON.stringify({ userId, accessToken, refreshToken })
+            ),
+          ]);
 
           // Update state
           set({
@@ -136,13 +140,14 @@ export const useAuthStore = create<AuthState>()(
         try {
           const { accessToken } = get();
 
+          const logoutPromises: Promise<any>[] = [SecureStore.deleteItemAsync("user_session")];
+
           if (accessToken) {
-            // Revoke session in database
-            await authDb.revokeSession(accessToken);
+            // Revoke session in database concurrently
+            logoutPromises.push(authDb.revokeSession(accessToken));
           }
 
-          // Clear secure store
-          await SecureStore.deleteItemAsync("user_session");
+          await Promise.all(logoutPromises);
 
           // Reset state
           set(initialState);
@@ -212,11 +217,11 @@ export const useAuthStore = create<AuthState>()(
           const session = await authDb.getSessionByToken(accessToken);
 
           if (session) {
-            // Update last used time
-            await authDb.upsertSession(userId, accessToken, refreshToken, 900);
-
-            // Get user from database
-            const user = await authDb.getUserById(userId);
+            // Update last used time and get user concurrently
+            const [, user] = await Promise.all([
+              authDb.upsertSession(userId, accessToken, refreshToken, 900),
+              authDb.getUserById(userId),
+            ]);
 
             if (user) {
               set({
