@@ -95,7 +95,7 @@ const BottomActionBar = ({
           disabled={isTailoring}
         >
           <HeartIcon
-            className={isFavorite ? "text-red-500" : "text-foreground"}
+            className={isFavorite ? "text-red-600" : "text-foreground"}
             size={16}
             strokeWidth={2.5}
             fill={isFavorite ? "currentColor" : "none"}
