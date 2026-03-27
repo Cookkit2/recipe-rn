@@ -89,13 +89,13 @@ const BottomActionBar = ({
       {showFavorite && (
         <Button
           size="lg"
-          variant={isFavorite ? "default" : "outline"}
+          variant="outline"
           className="rounded-full px-4"
           onPress={onToggleFavorite}
           disabled={isTailoring}
         >
           <HeartIcon
-            className={isFavorite ? "text-background" : "text-foreground"}
+            className={isFavorite ? "text-red-500" : "text-foreground"}
             size={16}
             strokeWidth={2.5}
             fill={isFavorite ? "currentColor" : "none"}
