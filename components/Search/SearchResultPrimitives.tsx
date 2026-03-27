@@ -48,6 +48,7 @@ export function SearchResultRow({
       <Pressable
         onPress={() => Keyboard.dismiss()}
         className="px-5 flex-row items-center gap-3 active:bg-muted"
+        accessibilityRole="button"
       >
         <Link.AppleZoom>
           <View collapsable={false}>{media}</View>

@@ -13,7 +13,11 @@ type AIResponsePreviewProps = {
 export function AIResponsePreview({ message, onPress }: AIResponsePreviewProps) {
   return (
     <SearchResultSection title="AI Response">
-      <Pressable onPress={onPress} className="px-5 flex-row items-center gap-3 active:bg-muted">
+      <Pressable
+        onPress={onPress}
+        className="px-5 flex-row items-center gap-3 active:bg-muted"
+        accessibilityRole="button"
+      >
         <Text className="text-sm text-foreground font-urbanist-medium leading-relaxed mt-2">
           {message.content.slice(0, 150)}
           {message.content.length > 150 ? "..." : ""}
