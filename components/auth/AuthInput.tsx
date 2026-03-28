@@ -42,6 +42,7 @@ export function AuthInput({
       <Text className="text-sm font-medium text-foreground">{label}</Text>
       <View className="relative">
         <TextInput
+          accessibilityLabel={label}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
@@ -67,6 +68,8 @@ export function AuthInput({
             onPress={() => setIsSecureTextVisible(!isSecureTextVisible)}
             className="absolute right-3 top-3 p-1"
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            accessibilityLabel={isSecureTextVisible ? "Hide password" : "Show password"}
+            accessibilityRole="button"
           >
             {isSecureTextVisible ? (
               <EyeOffIcon size={20} className="text-muted-foreground" />
