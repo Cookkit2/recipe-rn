@@ -1,6 +1,7 @@
 // @ts-nocheck
 // Database initialization and helper functions
 import * as SQLite from "expo-sqlite";
+import * as Crypto from "expo-crypto";
 
 let db: SQLite.SQLiteDatabase | null = null;
 
@@ -122,7 +123,7 @@ export const upsertSession = async (
     `INSERT OR REPLACE INTO sessions (id, user_id, access_token, refresh_token, expires_at, created_at, last_used)
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [
-      `${userId}_${Date.now()}`,
+      Crypto.randomUUID(),
       userId,
       accessToken,
       refreshToken,
@@ -211,7 +212,7 @@ export const createRefreshToken = async (
   await database.runAsync(
     `INSERT INTO refresh_tokens (id, user_id, token_hash, expires_at, created_at)
      VALUES (?, ?, ?, ?, ?)`,
-    [`${userId}_${Date.now()}`, userId, tokenHash, expiresAt, new Date().toISOString()]
+    [Crypto.randomUUID(), userId, tokenHash, expiresAt, new Date().toISOString()]
   );
 };
 
@@ -248,7 +249,7 @@ export const isValidRefreshToken = async (refreshToken: string): Promise<boolean
  */
 const generateTokens = (userId: string): { accessToken: string; refreshToken: string } => {
   const accessToken = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${btoa(JSON.stringify({ userId, exp: Date.now() + 15 * 60 * 1000 }))}.signature`;
-  const refreshToken = `refresh_${userId}_${Date.now()}`;
+  const refreshToken = `refresh_${Crypto.randomUUID()}`;
   return { accessToken, refreshToken };
 };
 
