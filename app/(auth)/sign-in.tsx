@@ -144,7 +144,7 @@ export default function SignInScreen() {
               {/* Forgot Password Link */}
               <View className="items-end">
                 <Link href="/(auth)/forgot-password" asChild>
-                  <Pressable>
+                  <Pressable accessibilityRole="link">
                     <Text className="text-sm text-primary font-medium">Forgot password?</Text>
                   </Pressable>
                 </Link>
@@ -199,7 +199,7 @@ export default function SignInScreen() {
               <View className="flex-row justify-center items-center space-x-2 pt-4">
                 <Text className="text-sm text-muted-foreground">Don't have an account?</Text>
                 <Link href="/(auth)/sign-up" asChild>
-                  <Pressable>
+                  <Pressable accessibilityRole="link">
                     <Text className="text-sm text-primary font-medium">Sign Up</Text>
                   </Pressable>
                 </Link>

@@ -67,6 +67,8 @@ export function AuthInput({
             onPress={() => setIsSecureTextVisible(!isSecureTextVisible)}
             className="absolute right-3 top-3 p-1"
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            accessibilityRole="button"
+            accessibilityLabel={isSecureTextVisible ? "Hide password" : "Show password"}
           >
             {isSecureTextVisible ? (
               <EyeOffIcon size={20} className="text-muted-foreground" />
