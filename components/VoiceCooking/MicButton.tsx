@@ -127,6 +127,9 @@ export function MicButton({
         onPress={handlePress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
+        accessibilityRole="button"
+        accessibilityLabel={isVoiceEnabled ? "Disable voice control" : "Enable voice control"}
+        accessibilityState={{ selected: isVoiceEnabled }}
         className={cn(
           "rounded-full items-center justify-center shadow-lg",
           buttonColor,
