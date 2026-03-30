@@ -61,14 +61,17 @@ export const useAuthStore = create<AuthState>()(
 
           // Save to database
           await authDb.createUser(userId, email, "Test User");
-          await authDb.upsertSession(userId, accessToken, refreshToken, 900); // 15 minutes
-          await authDb.createRefreshToken(userId, refreshToken, 604800000); // 7 days
 
-          // Save to secure store
-          await SecureStore.setItemAsync(
-            "user_session",
-            JSON.stringify({ userId, accessToken, refreshToken })
-          );
+          // ⚡ Bolt: Parallelize dependent child record creation after parent is created
+          await Promise.all([
+            authDb.upsertSession(userId, accessToken, refreshToken, 900), // 15 minutes
+            authDb.createRefreshToken(userId, refreshToken, 604800000), // 7 days
+            // Save to secure store can also happen in parallel
+            SecureStore.setItemAsync(
+              "user_session",
+              JSON.stringify({ userId, accessToken, refreshToken })
+            ),
+          ]);
 
           // Update state
           set({
@@ -102,14 +105,17 @@ export const useAuthStore = create<AuthState>()(
 
           // Save to database
           await authDb.createUser(userId, email, displayName);
-          await authDb.upsertSession(userId, accessToken, refreshToken, 900);
-          await authDb.createRefreshToken(userId, refreshToken, 604800000);
 
-          // Save to secure store
-          await SecureStore.setItemAsync(
-            "user_session",
-            JSON.stringify({ userId, accessToken, refreshToken })
-          );
+          // ⚡ Bolt: Parallelize dependent child record creation after parent is created
+          await Promise.all([
+            authDb.upsertSession(userId, accessToken, refreshToken, 900),
+            authDb.createRefreshToken(userId, refreshToken, 604800000),
+            // Save to secure store can also happen in parallel
+            SecureStore.setItemAsync(
+              "user_session",
+              JSON.stringify({ userId, accessToken, refreshToken })
+            ),
+          ]);
 
           // Update state
           set({
@@ -212,11 +218,13 @@ export const useAuthStore = create<AuthState>()(
           const session = await authDb.getSessionByToken(accessToken);
 
           if (session) {
-            // Update last used time
-            await authDb.upsertSession(userId, accessToken, refreshToken, 900);
-
-            // Get user from database
-            const user = await authDb.getUserById(userId);
+            // ⚡ Bolt: Parallelize independent database operations
+            const [, user] = await Promise.all([
+              // Update last used time
+              authDb.upsertSession(userId, accessToken, refreshToken, 900),
+              // Get user from database
+              authDb.getUserById(userId),
+            ]);
 
             if (user) {
               set({
