@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import * as SecureStore from "expo-secure-store";
+import * as Crypto from "expo-crypto";
 import * as authDb from "~/src/services/database/auth-db";
 import type { Session } from "~/src/services/database/auth-db";
 import { safeJsonParse } from "~/utils/json-parsing";
@@ -55,9 +56,9 @@ export const useAuthStore = create<AuthState>()(
         try {
           // Simulate API call to login endpoint
           // In production, this would call your auth API
-          const userId = `user_${Date.now()}`;
-          const accessToken = `access_${Date.now()}`;
-          const refreshToken = `refresh_${Date.now()}`;
+          const userId = Crypto.randomUUID();
+          const accessToken = Crypto.randomUUID();
+          const refreshToken = Crypto.randomUUID();
 
           // Ensure user is created before tokens to prevent FK constraint violations
           await authDb.createUser(userId, email, "Test User");
@@ -98,9 +99,9 @@ export const useAuthStore = create<AuthState>()(
 
         try {
           // Simulate API call to register endpoint
-          const userId = `user_${Date.now()}`;
-          const accessToken = `access_${Date.now()}`;
-          const refreshToken = `refresh_${Date.now()}`;
+          const userId = Crypto.randomUUID();
+          const accessToken = Crypto.randomUUID();
+          const refreshToken = Crypto.randomUUID();
 
           // Ensure user is created before tokens to prevent FK constraint violations
           await authDb.createUser(userId, email, displayName);
