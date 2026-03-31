@@ -13,7 +13,9 @@ export interface RecipeSearchOptions extends SearchOptions {
   tags?: string[];
   maxPrepTime?: number;
   maxCookTime?: number;
-  maxDifficulty?: number;
+  minTotalTime?: number;
+  maxTotalTime?: number;
+  difficulty?: number;
   minServings?: number;
   maxServings?: number;
 }
@@ -75,8 +77,14 @@ export class RecipeRepository extends BaseRepository<Recipe> {
     }
 
     // Filter by difficulty
-    if (options.maxDifficulty) {
-      query = query.extend(Q.where("difficulty_stars", Q.lte(options.maxDifficulty)));
+    if (options.difficulty) {
+      query = query.extend(Q.where("difficulty_stars", Q.eq(options.difficulty)));
+    }
+
+    // Preliminary time filters to narrow down results before in-memory total time filtering
+    if (options.maxTotalTime) {
+      query = query.extend(Q.where("prep_minutes", Q.lte(options.maxTotalTime)));
+      query = query.extend(Q.where("cook_minutes", Q.lte(options.maxTotalTime)));
     }
 
     // Filter by servings
@@ -98,7 +106,18 @@ export class RecipeRepository extends BaseRepository<Recipe> {
       query = query.extend(Q.take(options.limit));
     }
 
-    return await query.fetch();
+    const results = await query.fetch();
+
+    if (options.minTotalTime !== undefined || options.maxTotalTime !== undefined) {
+      return results.filter((r) => {
+        const totalTime = r.prepMinutes + r.cookMinutes;
+        if (options.minTotalTime !== undefined && totalTime < options.minTotalTime) return false;
+        if (options.maxTotalTime !== undefined && totalTime > options.maxTotalTime) return false;
+        return true;
+      });
+    }
+
+    return results;
   }
 
   // Get favorite recipes

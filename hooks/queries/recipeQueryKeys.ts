@@ -20,7 +20,9 @@ export const recipeQueryKeys = {
       tags?: string[];
       maxPrepTime?: number;
       maxCookTime?: number;
-      maxDifficulty?: number;
+      minTotalTime?: number;
+      maxTotalTime?: number;
+      difficulty?: number;
     }
   ) => [...recipeQueryKeys.all, "search", { searchTerm, filters }] as const,
 

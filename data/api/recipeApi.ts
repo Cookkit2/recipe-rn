@@ -148,7 +148,9 @@ export const recipeApi = {
       tags?: string[];
       maxPrepTime?: number;
       maxCookTime?: number;
-      maxDifficulty?: number;
+      minTotalTime?: number;
+      maxTotalTime?: number;
+      difficulty?: number;
     }
   ): Promise<Recipe[]> {
     return withErrorHandling(
@@ -157,7 +159,9 @@ export const recipeApi = {
           tags: filters?.tags,
           maxPrepTime: filters?.maxPrepTime,
           maxCookTime: filters?.maxCookTime,
-          maxDifficulty: filters?.maxDifficulty,
+          minTotalTime: filters?.minTotalTime,
+          maxTotalTime: filters?.maxTotalTime,
+          difficulty: filters?.difficulty,
         });
 
         // Use batch query to get all recipe details in one call
@@ -181,7 +185,9 @@ export const recipeApi = {
       tags?: string[];
       maxPrepTime?: number;
       maxCookTime?: number;
-      maxDifficulty?: number;
+      minTotalTime?: number;
+      maxTotalTime?: number;
+      difficulty?: number;
     }
   ): Promise<AppResult<Recipe[], AppError>> {
     return logAndWrapResult(async () => {
@@ -189,7 +195,9 @@ export const recipeApi = {
         tags: filters?.tags,
         maxPrepTime: filters?.maxPrepTime,
         maxCookTime: filters?.maxCookTime,
-        maxDifficulty: filters?.maxDifficulty,
+        minTotalTime: filters?.minTotalTime,
+        maxTotalTime: filters?.maxTotalTime,
+        difficulty: filters?.difficulty,
       });
 
       return await Promise.all(dbRecipes.map(convertDbRecipeToUIRecipe));
