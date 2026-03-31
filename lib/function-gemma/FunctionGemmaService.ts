@@ -600,13 +600,7 @@ export class FunctionGemmaService {
 
     // Execute tool calls if we found any (from llama.rn or our parser)
     if (toolCalls && toolCalls.length > 0) {
-      console.log("[FunctionGemma] Executing", toolCalls.length, "tool calls...");
-      const toolExecStart = Date.now();
       const toolResults = await this.executeToolCalls(toolCalls);
-      console.log("[FunctionGemma] Tool execution complete:", {
-        results: toolResults,
-        elapsedMs: Date.now() - toolExecStart,
-      });
 
       // Try to get a natural language response from the model via a second completion.
       // FunctionGemma's chat template + llama.rn can be fragile here, so we
