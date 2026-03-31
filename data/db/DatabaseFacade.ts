@@ -1,4 +1,7 @@
 import { database } from "./database";
+import { ConsumptionLogRepository } from "./repositories/ConsumptionLogRepository";
+import type { ConsumptionLogSearchOptions } from "./repositories/ConsumptionLogRepository";
+import ConsumptionLog from "./models/ConsumptionLog";
 import { Q } from "@nozbe/watermelondb";
 import type {
   Recipe,
@@ -97,6 +100,12 @@ export interface RecordCookingData {
   servingsMade?: number;
 }
 
+export interface RecordConsumptionData {
+  recipeId?: string;
+  consumedDate?: number;
+  isBeforeExpiry?: boolean;
+}
+
 export interface RecordWasteData {
   wasteDate?: number;
   reason?: string;
@@ -187,6 +196,7 @@ export class DatabaseFacade {
   private challenges: ChallengeRepository;
   private userChallenges: UserChallengeRepository;
   private wasteLog: WasteLogRepository;
+  private consumptionLog: ConsumptionLogRepository;
 
   constructor() {
     // Initialize repositories synchronously first
@@ -200,6 +210,7 @@ export class DatabaseFacade {
     this.challenges = repositories.challengeRepository!;
     this.userChallenges = repositories.userChallengeRepository!;
     this.wasteLog = repositories.wasteLogRepository!;
+    this.consumptionLog = repositories.consumptionLogRepository!;
 
     // Then initialize async features in the background
     this.initializeAsync();
@@ -1012,6 +1023,41 @@ export class DatabaseFacade {
    */
   async getWasteForDateRange(startDate: number, endDate: number): Promise<WasteLog[]> {
     return await this.wasteLog.getWasteForDateRange(startDate, endDate);
+  }
+
+  // ============================================
+  // CONSUMPTION LOG METHODS
+  // ============================================
+
+  /**
+   * Record a consumption log entry for used ingredients
+   */
+  async recordConsumption(
+    stockId: string,
+    quantityConsumed: number,
+    data?: RecordConsumptionData
+  ): Promise<ConsumptionLog> {
+    return await this.consumptionLog.recordConsumption(
+      stockId,
+      quantityConsumed,
+      data?.recipeId,
+      data?.consumedDate,
+      data?.isBeforeExpiry
+    );
+  }
+
+  /**
+   * Get consumption logs with optional filters
+   */
+  async getConsumptionLogs(options?: ConsumptionLogSearchOptions): Promise<ConsumptionLog[]> {
+    return await this.consumptionLog.getConsumptionLogs(options);
+  }
+
+  /**
+   * Get count of ingredients used before their expiry date
+   */
+  async getIngredientsUsedBeforeExpiryCount(): Promise<number> {
+    return await this.consumptionLog.getIngredientsUsedBeforeExpiryCount();
   }
 
   // ============================================

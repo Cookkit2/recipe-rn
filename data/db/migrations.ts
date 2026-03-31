@@ -7,6 +7,23 @@ import { schemaMigrations, createTable, addColumns } from "@nozbe/watermelondb/S
 export default schemaMigrations({
   migrations: [
     {
+      toVersion: 3,
+      steps: [
+        createTable({
+          name: "consumption_log",
+          columns: [
+            { name: "stock_id", type: "string", isIndexed: true },
+            { name: "quantity_consumed", type: "number" },
+            { name: "recipe_id", type: "string", isOptional: true, isIndexed: true },
+            { name: "consumed_date", type: "number", isIndexed: true },
+            { name: "is_before_expiry", type: "boolean" },
+            { name: "created_at", type: "number" },
+            { name: "updated_at", type: "number" },
+          ],
+        }),
+      ],
+    },
+    {
       toVersion: 2,
       steps: [
         // Base tables (recipe cache, stock, ingredient reference)

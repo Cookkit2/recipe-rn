@@ -21,6 +21,7 @@ import {
   SOCIAL_SHARES_COUNT_KEY,
   INGREDIENTS_USED_BEFORE_EXPIRY_KEY,
 } from "~/constants/storage-keys";
+import { databaseFacade } from "~/data/db/DatabaseFacade";
 
 export interface AchievementCheckResult {
   newlyUnlocked: Array<{
@@ -414,7 +415,12 @@ export class AchievementService {
         }
 
         case "ingredients_used_before_expiry":
-          return Number(storage.get(INGREDIENTS_USED_BEFORE_EXPIRY_KEY)) || 0;
+          // Prefer DB-derived count when available (backed by consumption_log)
+          try {
+            return await databaseFacade.getIngredientsUsedBeforeExpiryCount();
+          } catch {
+            return Number(storage.get(INGREDIENTS_USED_BEFORE_EXPIRY_KEY)) || 0;
+          }
 
         case "achievements_shared":
           return Number(storage.get(SOCIAL_SHARES_COUNT_KEY)) || 0;
