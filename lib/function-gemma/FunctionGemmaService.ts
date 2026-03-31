@@ -578,13 +578,7 @@ export class FunctionGemmaService {
         ? result.text
         : result.text + "<end_function_call>";
 
-      console.log("[FunctionGemma] Attempting manual parse of raw text...");
       const parsedCalls = parseFunctionCalls(textToParse);
-
-      console.log("[FunctionGemma] Manual parse result:", {
-        parsedCount: parsedCalls.length,
-        parsedCalls,
-      });
 
       if (parsedCalls.length > 0) {
         toolCalls = parsedCalls.map((call, i) => ({
