@@ -42,7 +42,12 @@ export default function DateSection() {
             <View className="flex-1 justify-end">
               <View className="bg-background rounded-t-3xl py-5 flex items-center shadow-md">
                 <View className="w-full flex-row justify-between items-center border-b border-border pb-3 px-5">
-                  <Pressable className="flex-[1]" onPress={() => setExpiresDateOpen(false)}>
+                  <Pressable
+                    className="flex-[1]"
+                    onPress={() => setExpiresDateOpen(false)}
+                    accessibilityLabel="Cancel expiry date selection"
+                    accessibilityRole="button"
+                  >
                     <P className="text-foreground/80">Cancel</P>
                   </Pressable>
                   <View className="flex-[2] flex items-center justify-center">
@@ -51,6 +56,8 @@ export default function DateSection() {
                   <Pressable
                     className="flex-[1] items-end"
                     onPress={() => setExpiresDateOpen(false)}
+                    accessibilityLabel="Confirm expiry date selection"
+                    accessibilityRole="button"
                   >
                     <P className="text-foreground/80">Done</P>
                   </Pressable>
@@ -72,7 +79,12 @@ export default function DateSection() {
             <View className="flex-1 justify-end">
               <View className="bg-background rounded-t-3xl py-5 flex items-center shadow-md">
                 <View className="w-full flex-row justify-between items-center border-b border-border pb-3 px-5">
-                  <Pressable className="flex-[1]" onPress={() => setPurchasedDateOpen(false)}>
+                  <Pressable
+                    className="flex-[1]"
+                    onPress={() => setPurchasedDateOpen(false)}
+                    accessibilityLabel="Cancel purchase date selection"
+                    accessibilityRole="button"
+                  >
                     <P className="text-foreground/80">Cancel</P>
                   </Pressable>
                   <View className="flex-[2] flex items-center justify-center">
@@ -81,6 +93,8 @@ export default function DateSection() {
                   <Pressable
                     className="flex-[1] items-end"
                     onPress={() => setPurchasedDateOpen(false)}
+                    accessibilityLabel="Confirm purchase date selection"
+                    accessibilityRole="button"
                   >
                     <P className="text-foreground/80">Done</P>
                   </Pressable>
@@ -127,7 +141,11 @@ export default function DateSection() {
     <>
       <Card className="flex-1 mx-12 mt-6 rounded-3xl shadow-md shadow-foreground/10 border-none">
         <CardContent className="flex gap-2 p-5 items-center">
-          <Pressable onPress={() => setExpiresDateOpen(true)}>
+          <Pressable
+            onPress={() => setExpiresDateOpen(true)}
+            accessibilityLabel="Change expiry date"
+            accessibilityRole="button"
+          >
             <H4 className="font-urbanist-semibold text-center">
               Expires on{" "}
               <Text className="text-primary">
@@ -135,7 +153,11 @@ export default function DateSection() {
               </Text>
             </H4>
           </Pressable>
-          <Pressable onPress={() => setPurchasedDateOpen(true)}>
+          <Pressable
+            onPress={() => setPurchasedDateOpen(true)}
+            accessibilityLabel="Change purchase date"
+            accessibilityRole="button"
+          >
             <P className="text-sm font-urbanist-regular tracking-wider text-foreground/80 text-center">
               Purchased on {format(pantryItem.created_at, "d MMM yyyy")}
             </P>

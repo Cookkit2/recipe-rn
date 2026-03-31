@@ -143,7 +143,13 @@ function FailedState({ onRetry, onDelete }: { onRetry: () => void; onDelete: () 
           <Button size="sm" variant="outline" className="flex-1" onPress={onRetry}>
             <Muted>Retry</Muted>
           </Button>
-          <Button size="icon" variant="ghost" onPress={onDelete} accessibilityLabel="Delete item">
+          <Button
+            size="icon"
+            variant="ghost"
+            onPress={onDelete}
+            accessibilityLabel="Delete ingredient"
+            accessibilityRole="button"
+          >
             <Trash2Icon className="text-destructive" size={20} strokeWidth={2.618} />
           </Button>
         </View>

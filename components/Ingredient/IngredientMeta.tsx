@@ -28,7 +28,12 @@ export default function IngredientMeta() {
 
   return (
     <View className="flex-row items-center justify-center mb-12">
-      <Pressable className="flex-row items-center gap-1" onPress={showUnitPicker}>
+      <Pressable
+        className="flex-row items-center gap-1"
+        onPress={showUnitPicker}
+        accessibilityLabel="Change ingredient type"
+        accessibilityRole="button"
+      >
         {React.cloneElement(pantryItemType!.icon, {
           className: "text-foreground/70",
         })}
