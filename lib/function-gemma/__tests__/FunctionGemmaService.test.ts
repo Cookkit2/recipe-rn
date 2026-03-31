@@ -1,4 +1,4 @@
-import { FunctionGemmaService, parseFunctionCalls, ToolExecutor } from "../FunctionGemmaService";
+import { FunctionGemmaService, parseFunctionCalls, type ToolExecutor } from "../FunctionGemmaService";
 
 jest.mock("expo-file-system", () => {
   const mockDownloadFileAsync = jest.fn();
@@ -83,7 +83,7 @@ describe("FunctionGemmaService", () => {
         "<start_function_call>call:add_item{name:<escape>apple<escape>}<end_function_call> Some other text <start_function_call>call:add_item{name:<escape>banana<escape>}<end_function_call>";
       const result = parseFunctionCalls(text);
       expect(result).toHaveLength(1);
-      expect(result[0].arguments).toEqual({ name: "apple" });
+      expect(result[0]?.arguments).toEqual({ name: "apple" });
     });
   });
 
@@ -160,8 +160,8 @@ describe("FunctionGemmaService", () => {
 
       const result = await service.processMessage("Add tomato");
       expect(result.tool_calls).toBeDefined();
-      expect(result.tool_calls?.[0].function.name).toBe("add_item");
-      expect(result.tool_calls?.[0].function.arguments).toEqual({ name: "tomato" });
+      expect(result.tool_calls?.[0]?.function.name).toBe("add_item");
+      expect(result.tool_calls?.[0]?.function.arguments).toEqual({ name: "tomato" });
     });
 
     it("should throw error if called before initialization", async () => {
