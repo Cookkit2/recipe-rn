@@ -647,29 +647,43 @@ const convertStockToPantryItemBatch = async (stocks: Stock[]): Promise<PantryIte
     stepsByStockId.set(stockId, list);
   });
 
-  return stocks.map((stock) => {
-    const synonyms = synonymsByStockId.get(stock.id) || [];
-    const categories = categoriesByStockId.get(stock.id) || [];
-    const stepsToStore = stepsByStockId.get(stock.id) || [];
-    stepsToStore.sort((a, b) => a.sequence - b.sequence);
+  return await Promise.all(
+    stocks.map(async (stock) => {
+      const synonyms = synonymsByStockId.get(stock.id) || [];
+      let categories = categoriesByStockId.get(stock.id) || [];
+      const stepsToStore = stepsByStockId.get(stock.id) || [];
+      stepsToStore.sort((a, b) => a.sequence - b.sequence);
 
-    return {
-      id: stock.id,
-      name: stock.name,
-      quantity: stock.quantity,
-      unit: stock.unit,
-      expiry_date: stock.expiryDate || undefined,
-      category: categories.length > 0 ? categories[0]?.name || "" : "",
-      categories,
-      type: mapDbTypeToType(stock.storageType),
-      image_url: stock.imageUrl,
-      background_color: stock.backgroundColor,
-      created_at: stock.createdAt,
-      updated_at: stock.updatedAt,
-      steps_to_store: stepsToStore,
-      synonyms,
-    };
-  });
+      // Fallback: if no local categories, try loading from BaseIngredient
+      if (categories.length === 0) {
+        try {
+          const baseIngredient = await baseIngredientApi.getBaseIngredientByName(stock.name);
+          if (baseIngredient?.categories?.length) {
+            categories = baseIngredient.categories;
+          }
+        } catch (error) {
+          log.warn("Could not fetch base ingredient categories for stock:", stock.name, error);
+        }
+      }
+
+      return {
+        id: stock.id,
+        name: stock.name,
+        quantity: stock.quantity,
+        unit: stock.unit,
+        expiry_date: stock.expiryDate || undefined,
+        category: categories.length > 0 ? categories[0]?.name || "" : "",
+        categories,
+        type: mapDbTypeToType(stock.storageType),
+        image_url: stock.imageUrl,
+        background_color: stock.backgroundColor,
+        created_at: stock.createdAt,
+        updated_at: stock.updatedAt,
+        steps_to_store: stepsToStore,
+        synonyms,
+      };
+    })
+  );
 };
 
 // Map database dbType to ItemType
