@@ -180,7 +180,7 @@ importers:
         version: 55.0.12(expo@55.0.6)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
       expo-router:
         specifier: ~55.0.3
-        version: 55.0.5(7a9f8a64bf4a2f11ecd6ca74e1031d13)
+        version: 55.0.5(c2977e3d2215b08ef0866b934e8e0fdf)
       expo-secure-store:
         specifier: ^55.0.9
         version: 55.0.9(expo@55.0.6)
@@ -317,6 +317,9 @@ importers:
       "@babel/core":
         specifier: ^7.26.0
         version: 7.29.0
+      "@testing-library/react-native":
+        specifier: ^13.3.3
+        version: 13.3.3(jest@30.3.0(@types/node@25.5.0))(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react-test-renderer@19.2.0(react@19.2.0))(react@19.2.0)
       "@types/jest":
         specifier: ^30.0.0
         version: 30.0.0
@@ -332,6 +335,9 @@ importers:
       prettier-plugin-tailwindcss:
         specifier: ^0.6.14
         version: 0.6.14(prettier@3.8.1)
+      react-test-renderer:
+        specifier: 19.2.0
+        version: 19.2.0(react@19.2.0)
       ts-jest:
         specifier: ^29.4.6
         version: 29.4.6(@babel/core@7.29.0)(@jest/transform@30.3.0)(@jest/types@30.3.0)(babel-jest@30.3.0(@babel/core@7.29.0))(jest-util@30.3.0)(jest@30.3.0(@types/node@25.5.0))(typescript@5.9.3)
@@ -3652,6 +3658,21 @@ packages:
     peerDependencies:
       react: ^18 || ^19
 
+  "@testing-library/react-native@13.3.3":
+    resolution:
+      {
+        integrity: sha512-k6Mjsd9dbZgvY4Bl7P1NIpePQNi+dfYtlJ5voi9KQlynxSyQkfOgJmYGCYmw/aSgH/rUcFvG8u5gd4npzgRDyg==,
+      }
+    engines: { node: ">=18" }
+    peerDependencies:
+      jest: ">=29.0.0"
+      react: ">=18.2.0"
+      react-native: ">=0.71"
+      react-test-renderer: ">=18.2.0"
+    peerDependenciesMeta:
+      jest:
+        optional: true
+
   "@tokenizer/token@0.3.0":
     resolution:
       {
@@ -5915,6 +5936,13 @@ packages:
       }
     engines: { node: ">=0.8.19" }
 
+  indent-string@4.0.0:
+    resolution:
+      {
+        integrity: sha512-EdDDZu4A2OyIK7Lr/2zG+w5jmbuk1DVBnEwREQvBzspBJkCEbRa8GxU1lghYcaGJCnRWibjDXlq779X1/y5xwg==,
+      }
+    engines: { node: ">=8" }
+
   inflight@1.0.6:
     resolution:
       {
@@ -7166,6 +7194,13 @@ packages:
       }
     engines: { node: ">=6" }
 
+  min-indent@1.0.1:
+    resolution:
+      {
+        integrity: sha512-I9jwMn07Sy/IwOj3zVkVik2JTvgpaykDZEigL6Rx6N9LbMywwUSMtxET+7lVoDLLd3O3IXwJwvuuns8UB/HeAg==,
+      }
+    engines: { node: ">=4" }
+
   minimatch@10.2.4:
     resolution:
       {
@@ -8161,6 +8196,14 @@ packages:
       "@types/react":
         optional: true
 
+  react-test-renderer@19.2.0:
+    resolution:
+      {
+        integrity: sha512-zLCFMHFE9vy/w3AxO0zNxy6aAupnCuLSVOJYDe/Tp+ayGI1f2PLQsFVPANSD42gdSbmYx5oN+1VWDhcXtq7hAQ==,
+      }
+    peerDependencies:
+      react: ^19.2.0
+
   react@19.2.0:
     resolution:
       {
@@ -8179,6 +8222,13 @@ packages:
     resolution:
       {
         integrity: sha512-9nX56alTf5bwXQ3ZDipHJhusu9NTQJ/CVPtb/XHAJCXihZeitfJvIRS4GqQ/mfIoOE3IelHMrpayVrosdHBuLw==,
+      }
+    engines: { node: ">=8" }
+
+  redent@3.0.0:
+    resolution:
+      {
+        integrity: sha512-6tDA8g98We0zd0GvVeMT9arEOnTw9qM03L9cJXaCjrip1OO764RDBLBfrB4cwzNGDj5OA5ioymC9GkizgWJDUg==,
       }
     engines: { node: ">=8" }
 
@@ -8638,6 +8688,13 @@ packages:
         integrity: sha512-BrpvfNAE3dcvq7ll3xVumzjKjZQ5tI1sEUIKr3Uoks0XUl45St3FlatVqef9prk4jRDzhW6WZg+3bk93y6pLjA==,
       }
     engines: { node: ">=6" }
+
+  strip-indent@3.0.0:
+    resolution:
+      {
+        integrity: sha512-laJTa3Jb+VQpaC6DseHhF7dXVqHTfJPCRDaEbid/drOhgitgYku/letMUqOXFoWV0zIIUbjpdH2t+tYj4bQMRQ==,
+      }
+    engines: { node: ">=8" }
 
   strip-json-comments@3.1.1:
     resolution:
@@ -10039,7 +10096,7 @@ snapshots:
       ws: 8.19.0
       zod: 3.25.76
     optionalDependencies:
-      expo-router: 55.0.5(7a9f8a64bf4a2f11ecd6ca74e1031d13)
+      expo-router: 55.0.5(c2977e3d2215b08ef0866b934e8e0fdf)
       react-native: 0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)
     transitivePeerDependencies:
       - "@expo/dom-webview"
@@ -10292,7 +10349,7 @@ snapshots:
       react: 19.2.0
     optionalDependencies:
       "@expo/metro-runtime": 55.0.6(@expo/dom-webview@55.0.3)(expo@55.0.6)(react-dom@19.2.0(react@19.2.0))(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
-      expo-router: 55.0.5(7a9f8a64bf4a2f11ecd6ca74e1031d13)
+      expo-router: 55.0.5(c2977e3d2215b08ef0866b934e8e0fdf)
       react-dom: 19.2.0(react@19.2.0)
     transitivePeerDependencies:
       - supports-color
@@ -12116,6 +12173,18 @@ snapshots:
       "@tanstack/query-core": 5.90.20
       react: 19.2.0
 
+  "@testing-library/react-native@13.3.3(jest@30.3.0(@types/node@25.5.0))(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react-test-renderer@19.2.0(react@19.2.0))(react@19.2.0)":
+    dependencies:
+      jest-matcher-utils: 30.3.0
+      picocolors: 1.1.1
+      pretty-format: 30.3.0
+      react: 19.2.0
+      react-native: 0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)
+      react-test-renderer: 19.2.0(react@19.2.0)
+      redent: 3.0.0
+    optionalDependencies:
+      jest: 30.3.0(@types/node@25.5.0)
+
   "@tokenizer/token@0.3.0": {}
 
   "@tybys/wasm-util@0.10.1":
@@ -13115,7 +13184,7 @@ snapshots:
       - supports-color
       - typescript
 
-  expo-router@55.0.5(7a9f8a64bf4a2f11ecd6ca74e1031d13):
+  expo-router@55.0.5(c2977e3d2215b08ef0866b934e8e0fdf):
     dependencies:
       "@expo/log-box": 55.0.7(@expo/dom-webview@55.0.3)(expo@55.0.6)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
       "@expo/metro-runtime": 55.0.6(@expo/dom-webview@55.0.3)(expo@55.0.6)(react-dom@19.2.0(react@19.2.0))(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
@@ -13152,6 +13221,7 @@ snapshots:
       use-latest-callback: 0.2.6(react@19.2.0)
       vaul: 1.1.2(@types/react@19.2.14)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
     optionalDependencies:
+      "@testing-library/react-native": 13.3.3(jest@30.3.0(@types/node@25.5.0))(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react-test-renderer@19.2.0(react@19.2.0))(react@19.2.0)
       react-dom: 19.2.0(react@19.2.0)
       react-native-gesture-handler: 2.30.0(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
       react-native-reanimated: 4.2.2(react-native-worklets@0.7.4(@babel/core@7.29.0)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0))(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
@@ -13534,6 +13604,8 @@ snapshots:
       resolve-cwd: 3.0.0
 
   imurmurhash@0.1.4: {}
+
+  indent-string@4.0.0: {}
 
   inflight@1.0.6:
     dependencies:
@@ -14643,6 +14715,8 @@ snapshots:
 
   mimic-fn@2.1.0: {}
 
+  min-indent@1.0.1: {}
+
   minimatch@10.2.4:
     dependencies:
       brace-expansion: 5.0.4
@@ -15201,6 +15275,12 @@ snapshots:
     optionalDependencies:
       "@types/react": 19.2.14
 
+  react-test-renderer@19.2.0(react@19.2.0):
+    dependencies:
+      react: 19.2.0
+      react-is: 19.2.4
+      scheduler: 0.27.0
+
   react@19.2.0: {}
 
   readable-stream@4.7.0:
@@ -15214,6 +15294,11 @@ snapshots:
   readable-web-to-node-stream@3.0.4:
     dependencies:
       readable-stream: 4.7.0
+
+  redent@3.0.0:
+    dependencies:
+      indent-string: 4.0.0
+      strip-indent: 3.0.0
 
   regenerate-unicode-properties@10.2.2:
     dependencies:
@@ -15440,6 +15525,10 @@ snapshots:
   strip-bom@4.0.0: {}
 
   strip-final-newline@2.0.0: {}
+
+  strip-indent@3.0.0:
+    dependencies:
+      min-indent: 1.0.1
 
   strip-json-comments@3.1.1: {}
 
