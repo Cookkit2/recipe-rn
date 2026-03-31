@@ -513,13 +513,6 @@ export class FunctionGemmaService {
     userMessage: string,
     conversationHistory: Array<{ role: string; content: string }> = []
   ): Promise<{ text: string; tool_calls?: ToolCall[] }> {
-    console.log("[FunctionGemma] processMessage called:", {
-      userMessage,
-      historyLength: conversationHistory.length,
-      hasContext: !!this.context,
-      isInitialized: this.isInitialized,
-    });
-
     if (!this.context) {
       throw new Error("Function Gemma not initialized. Call initialize() first.");
     }
