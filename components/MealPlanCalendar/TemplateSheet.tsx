@@ -22,6 +22,7 @@ import { log } from "~/utils/logger";
 import { recipeApi } from "~/data/api/recipeApi";
 import type { MealPlanTemplateData } from "~/data/api/mealPlanTemplateApi";
 import type { MealPlanItemWithRecipe } from "~/data/api/mealPlanApi";
+import { safeJsonParse } from "~/utils/json-parsing";
 
 /**
  * Shareable meal plan data structure for JSON export/import
@@ -134,7 +135,11 @@ async function shareMealPlanJson(
  * Parses and validates import data JSON string
  */
 function parseImportData(jsonString: string): ShareableMealPlan {
-  const data = JSON.parse(jsonString.trim()) as ShareableMealPlan;
+  const data = safeJsonParse<ShareableMealPlan>(jsonString.trim(), {
+    version: "",
+    exportDate: "",
+    mealPlans: [],
+  });
   if (!data.version || !data.mealPlans || !Array.isArray(data.mealPlans)) {
     throw new Error("Invalid meal plan format");
   }
