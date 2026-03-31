@@ -350,6 +350,41 @@ export const recipeApi = {
   },
 
   /**
+   * Get favorite recipes
+   */
+  async getFavoriteRecipes(): Promise<Recipe[]> {
+    return withErrorHandling(
+      async () => {
+        const dbRecipes = await databaseFacade.getFavoriteRecipes();
+
+        // Use batch query to get all recipe details in one call
+        const recipeIds = dbRecipes.map((r) => r.id);
+        const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
+
+        // Use batch conversion to avoid N+1 queries
+        return convertDbRecipesToUIRecipesBatch(dbRecipes, recipeDetailsMap);
+      },
+      "Error fetching favorite recipes",
+      []
+    );
+  },
+
+  /**
+   * Toggle recipe favorite status
+   */
+  async toggleFavorite(recipeId: string): Promise<Recipe> {
+    return withErrorLogging(async () => {
+      const dbRecipe = await databaseFacade.toggleFavorite(recipeId);
+
+      if (!dbRecipe) {
+        throw new Error("Recipe not found");
+      }
+
+      return await convertDbRecipeToUIRecipe(dbRecipe);
+    }, "Error toggling favorite status");
+  },
+
+  /**
    * Delete a recipe
    */
   async deleteRecipe(id: string): Promise<void> {

@@ -36,6 +36,14 @@ export default function PantryPage() {
         />
 
         <Stack.Toolbar.Button
+          icon="heart"
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            router.push("/recipes/favorites");
+          }}
+        />
+
+        <Stack.Toolbar.Button
           icon="person"
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
