@@ -18,7 +18,7 @@ module.exports = {
     ],
   },
   transformIgnorePatterns: [
-    "node_modules/(?!(react-native|@react-native|@nozbe|@expo|expo|react-navigation)/)",
+    "node_modules/(?!(react-native|@react-native|@nozbe|@expo|expo|react-navigation|llama\\.rn|expo-file-system|expo-modules-core)/)",
   ],
   moduleNameMapper: {
     "^~/(.*)$": "<rootDir>/$1",
