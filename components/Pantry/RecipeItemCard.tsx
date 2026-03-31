@@ -10,7 +10,8 @@ import { RECIPE_MATCH_CATEGORY_LABELS } from "~/types/RecipeMatching";
 import useDebounce from "~/hooks/useDebounce";
 import Animated from "react-native-reanimated";
 import useButtonAnimation from "~/hooks/animation/useButtonAnimations";
-import { CheckCircleIcon } from "lucide-uniwind";
+import { CheckCircleIcon, HeartIcon } from "lucide-uniwind";
+import { useToggleFavorite } from "~/hooks/queries/useFavorites";
 
 interface RecipeItemCardProps {
   recipe: Recipe;
@@ -20,6 +21,7 @@ interface RecipeItemCardProps {
 
 function RecipeItemCard({ recipe, completionPercentage, matchCategory }: RecipeItemCardProps) {
   const { animatedStyle, roundedStyle, onPressIn, onPressOut } = useButtonAnimation(true, 24);
+  const toggleFavorite = useToggleFavorite();
 
   const canMake = completionPercentage === 100;
   const hasIngredients = completionPercentage !== undefined && completionPercentage > 0;
@@ -67,6 +69,24 @@ function RecipeItemCard({ recipe, completionPercentage, matchCategory }: RecipeI
                 <CheckCircleIcon size={16} className="text-white" strokeWidth={2.5} />
               </View>
             )}
+
+            {/* Favorite button */}
+            <Pressable
+              className="absolute top-2 left-2 p-2 rounded-full bg-black/40"
+              onPress={(e) => {
+                e.stopPropagation();
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                toggleFavorite.mutate(recipe.id);
+              }}
+            >
+              <HeartIcon
+                size={18}
+                className={recipe.isFavorite ? "text-red-500" : "text-white"}
+                fill={recipe.isFavorite ? "currentColor" : "none"}
+                strokeWidth={2.5}
+              />
+            </Pressable>
+
             {/* Completion percentage bar */}
             {/* {hasIngredients && !canMake && (
               <View className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/30">
@@ -110,6 +130,7 @@ export default React.memo(RecipeItemCard, (prevProps, nextProps) => {
   // Only re-render if these specific props change
   return (
     prevProps.recipe.id === nextProps.recipe.id &&
+    prevProps.recipe.isFavorite === nextProps.recipe.isFavorite &&
     prevProps.completionPercentage === nextProps.completionPercentage &&
     prevProps.matchCategory === nextProps.matchCategory
   );

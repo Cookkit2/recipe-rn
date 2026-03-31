@@ -50,4 +50,7 @@ export const recipeQueryKeys = {
   // Latest recipe version metadata
   latestVersion: (recipeId: string) =>
     [...recipeQueryKeys.all, "latest-version", recipeId] as const,
+
+  // Favorite recipes
+  favorites: () => [...recipeQueryKeys.all, "favorites"] as const,
 } as const;
