@@ -1,6 +1,7 @@
 // @ts-nocheck
 // Database initialization and helper functions
 import * as SQLite from "expo-sqlite";
+import * as Crypto from "expo-crypto";
 
 let db: SQLite.SQLiteDatabase | null = null;
 
@@ -206,7 +207,7 @@ export const createRefreshToken = async (
 ): Promise<void> => {
   const database = await getDatabase();
   const expiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();
-  const tokenHash = hashToken(refreshToken);
+  const tokenHash = await hashToken(refreshToken);
 
   await database.runAsync(
     `INSERT INTO refresh_tokens (id, user_id, token_hash, expires_at, created_at)
@@ -220,7 +221,7 @@ export const createRefreshToken = async (
  */
 export const revokeRefreshToken = async (refreshToken: string): Promise<void> => {
   const database = await getDatabase();
-  const tokenHash = hashToken(refreshToken);
+  const tokenHash = await hashToken(refreshToken);
 
   await database.runAsync(`UPDATE refresh_tokens SET is_revoked = 1 WHERE token_hash = ?`, [
     tokenHash,
@@ -232,7 +233,7 @@ export const revokeRefreshToken = async (refreshToken: string): Promise<void> =>
  */
 export const isValidRefreshToken = async (refreshToken: string): Promise<boolean> => {
   const database = await getDatabase();
-  const tokenHash = hashToken(refreshToken);
+  const tokenHash = await hashToken(refreshToken);
 
   const result = await database.getFirstAsync<{ count: number } | undefined>(
     `SELECT COUNT(*) as count FROM refresh_tokens
@@ -255,9 +256,8 @@ const generateTokens = (userId: string): { accessToken: string; refreshToken: st
 /**
  * Hash token for storage
  */
-const hashToken = (token: string): string => {
-  // In production, use a proper hashing algorithm
-  return `hash_${token}`;
+const hashToken = async (token: string): Promise<string> => {
+  return await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, token);
 };
 
 /**
