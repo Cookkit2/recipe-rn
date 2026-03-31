@@ -63,7 +63,6 @@ export const useAuthStore = create<AuthState>()(
           // Ensure user is created before tokens to prevent FK constraint violations
           await authDb.createUser(userId, email, "Test User");
 
-          // Save to database and secure store concurrently
           await Promise.all([
             authDb.upsertSession(userId, accessToken, refreshToken, 900), // 15 minutes
             authDb.createRefreshToken(userId, refreshToken, 604800000), // 7 days
@@ -106,7 +105,6 @@ export const useAuthStore = create<AuthState>()(
           // Ensure user is created before tokens to prevent FK constraint violations
           await authDb.createUser(userId, email, displayName);
 
-          // Save to database and secure store concurrently
           await Promise.all([
             authDb.upsertSession(userId, accessToken, refreshToken, 900),
             authDb.createRefreshToken(userId, refreshToken, 604800000),
@@ -218,7 +216,6 @@ export const useAuthStore = create<AuthState>()(
           const session = await authDb.getSessionByToken(accessToken);
 
           if (session) {
-            // Update last used time and get user concurrently
             const [, user] = await Promise.all([
               authDb.upsertSession(userId, accessToken, refreshToken, 900),
               authDb.getUserById(userId),
