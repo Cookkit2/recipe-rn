@@ -225,6 +225,13 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
     // Batch all deletions in a single write to avoid nested write deadlocks
     await database.write(async () => {
       const recipeCollection = database.collections.get<Recipe>("recipe");
+
+      // ⚡ Bolt Performance Optimization:
+      // Prevent N+1 query bottlenecks during cleanup. Instead of querying and destroying
+      // associated recipes, steps, and ingredients sequentially inside a loop, we extract
+      // all unique recipe IDs, fetch the models simultaneously via Q.oneOf(), and destroy them
+      // in a single large database.batch() operation. This drastically reduces JS thread blocking
+      // and SQLite load compared to N sequential fetches and writes.
       const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
       const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
       // Batch fetch all related data
@@ -265,6 +272,12 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
     // Batch all deletions in a single write to avoid nested write deadlocks
     await database.write(async () => {
       const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
+
+      // ⚡ Bolt Performance Optimization:
+      // Prevent N+1 database querying bottlenecks when clearing tailored recipes.
+      // Instead of querying and destroying mappings, steps, and ingredients sequentially inside
+      // a loop for every tailored recipe, we fetch all relevant associated entities simultaneously
+      // via Q.oneOf() and destroy them in a single large database.batch() execution.
       const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
       // Batch fetch related data
       const [mappings, steps, ingredients] = await Promise.all([
