@@ -97,7 +97,9 @@ export const recipeApi = {
       }
 
       const dbRecipes = await databaseFacade.getAllRecipes();
-      const uiRecipes = await Promise.all(dbRecipes.map(convertDbRecipeToUIRecipe));
+      const recipeIds = dbRecipes.map((r) => r.id);
+      const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
+      const uiRecipes = convertDbRecipesToUIRecipesBatch(dbRecipes, recipeDetailsMap);
 
       return uiRecipes;
     }, "Error fetching all recipes");
@@ -200,7 +202,9 @@ export const recipeApi = {
         difficulty: filters?.difficulty,
       });
 
-      return await Promise.all(dbRecipes.map(convertDbRecipeToUIRecipe));
+      const recipeIds = dbRecipes.map((r) => r.id);
+      const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
+      return convertDbRecipesToUIRecipesBatch(dbRecipes, recipeDetailsMap);
     }, "Error searching recipes");
   },
 
