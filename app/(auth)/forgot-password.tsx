@@ -117,6 +117,8 @@ export default function ForgotPasswordScreen() {
               <Pressable
                 onPress={handleBackToSignIn}
                 className="flex-row items-center space-x-2 -mt-2"
+                accessibilityRole="button"
+                accessibilityLabel="Back to Sign In"
               >
                 <ArrowLeftIcon size={16} className="text-muted-foreground" />
                 <Text className="text-sm text-muted-foreground">Back to Sign In</Text>
@@ -150,7 +152,7 @@ export default function ForgotPasswordScreen() {
               <View className="flex-row justify-center items-center space-x-2 pt-4">
                 <Text className="text-sm text-muted-foreground">Don't have an account?</Text>
                 <Link href="/(auth)/sign-up" asChild>
-                  <Pressable>
+                  <Pressable accessibilityRole="link">
                     <Text className="text-sm text-primary font-medium">Sign Up</Text>
                   </Pressable>
                 </Link>

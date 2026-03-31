@@ -54,8 +54,8 @@ export function SocialAuthButton({
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         disabled={disabled || loading}
-        accessibilityLabel={config.label}
         accessibilityRole="button"
+        accessibilityLabel={config.label}
         accessibilityState={{ disabled: disabled || loading }}
         className={cn(
           "flex-row items-center justify-center h-12 px-4 py-3 rounded-lg border",
