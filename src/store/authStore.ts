@@ -56,9 +56,9 @@ export const useAuthStore = create<AuthState>()(
         try {
           // Simulate API call to login endpoint
           // In production, this would call your auth API
-          const userId = Crypto.randomUUID();
-          const accessToken = Crypto.randomUUID();
-          const refreshToken = Crypto.randomUUID();
+          const userId = `user_${Crypto.randomUUID()}`;
+          const accessToken = `access_${Crypto.randomUUID()}`;
+          const refreshToken = `refresh_${Crypto.randomUUID()}`;
 
           // Ensure user is created before tokens to prevent FK constraint violations
           await authDb.createUser(userId, email, "Test User");
@@ -98,9 +98,9 @@ export const useAuthStore = create<AuthState>()(
 
         try {
           // Simulate API call to register endpoint
-          const userId = Crypto.randomUUID();
-          const accessToken = Crypto.randomUUID();
-          const refreshToken = Crypto.randomUUID();
+          const userId = `user_${Crypto.randomUUID()}`;
+          const accessToken = `access_${Crypto.randomUUID()}`;
+          const refreshToken = `refresh_${Crypto.randomUUID()}`;
 
           // Ensure user is created before tokens to prevent FK constraint violations
           await authDb.createUser(userId, email, displayName);

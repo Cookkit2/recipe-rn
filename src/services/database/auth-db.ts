@@ -123,7 +123,7 @@ export const upsertSession = async (
     `INSERT OR REPLACE INTO sessions (id, user_id, access_token, refresh_token, expires_at, created_at, last_used)
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [
-      Crypto.randomUUID(),
+      `${userId}_${Crypto.randomUUID()}`,
       userId,
       accessToken,
       refreshToken,
@@ -212,7 +212,7 @@ export const createRefreshToken = async (
   await database.runAsync(
     `INSERT INTO refresh_tokens (id, user_id, token_hash, expires_at, created_at)
      VALUES (?, ?, ?, ?, ?)`,
-    [Crypto.randomUUID(), userId, tokenHash, expiresAt, new Date().toISOString()]
+    [`${userId}_${Crypto.randomUUID()}`, userId, tokenHash, expiresAt, new Date().toISOString()]
   );
 };
 
