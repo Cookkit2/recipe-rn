@@ -193,10 +193,6 @@ export function useFunctionGemma(options: UseFunctionGemmaOptions = {}): UseFunc
           .filter((m) => m.role !== "system")
           .map((m) => ({ role: m.role, content: m.content }));
 
-        console.log(
-          "[useFunctionGemma] Calling processMessage with history length:",
-          conversationHistory.length
-        );
         const startTime = Date.now();
 
         // Process with Function Gemma
