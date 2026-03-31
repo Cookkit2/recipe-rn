@@ -1,9 +1,9 @@
-import { GeminiAPI, calculateTokenCost, generateGeminiContent, } from "../gemini-api";
+import { GeminiAPI, calculateTokenCost, generateGeminiContent } from "../gemini-api";
 import { log } from "~/utils/logger";
 import Constants from "expo-constants";
 
 // Mock global fetch
-global.fetch = jest.fn();
+globalThis.fetch = jest.fn() as any;
 
 // Mock dependencies
 jest.mock("~/utils/logger", () => ({
@@ -14,7 +14,8 @@ jest.mock("~/utils/logger", () => ({
 }));
 
 // Setup initial API_KEY expectation for our tests
-const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY || Constants.expoConfig?.extra?.EXPO_PUBLIC_GEMINI_API_KEY;
+const API_KEY =
+  process.env.EXPO_PUBLIC_GEMINI_API_KEY || Constants.expoConfig?.extra?.EXPO_PUBLIC_GEMINI_API_KEY;
 
 describe("gemini-api", () => {
   const originalEnv = process.env;
@@ -75,14 +76,14 @@ describe("gemini-api", () => {
           ],
         };
 
-        (global.fetch as jest.Mock).mockResolvedValueOnce({
+        (globalThis.fetch as jest.Mock).mockResolvedValueOnce({
           ok: true,
           json: async () => mockResponse,
         });
 
         const result = await api.generateContent("gemini-2.0-flash", "Hello");
 
-        expect(global.fetch).toHaveBeenCalledWith(
+        expect(globalThis.fetch).toHaveBeenCalledWith(
           "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
           expect.objectContaining({
             method: "POST",
@@ -110,7 +111,7 @@ describe("gemini-api", () => {
           },
         };
 
-        (global.fetch as jest.Mock).mockResolvedValueOnce({
+        (globalThis.fetch as jest.Mock).mockResolvedValueOnce({
           ok: true,
           json: async () => mockResponse,
         });
@@ -123,7 +124,7 @@ describe("gemini-api", () => {
       });
 
       it("should throw and log error with redacted API key when fetch fails", async () => {
-        (global.fetch as jest.Mock).mockResolvedValueOnce({
+        (globalThis.fetch as jest.Mock).mockResolvedValueOnce({
           ok: false,
           status: 400,
           text: async () => `Bad request for API key ${API_KEY}`,
@@ -134,7 +135,9 @@ describe("gemini-api", () => {
         );
 
         expect(log.error).toHaveBeenCalledWith(
-          expect.stringContaining("Gemini API error: 400 - Bad request for API key [REDACTED_API_KEY]")
+          expect.stringContaining(
+            "Gemini API error: 400 - Bad request for API key [REDACTED_API_KEY]"
+          )
         );
         expect(log.error).not.toHaveBeenCalledWith(expect.stringContaining(API_KEY as string));
       });
@@ -142,7 +145,7 @@ describe("gemini-api", () => {
       it("should throw if response has no candidates", async () => {
         const mockResponse = { candidates: [] };
 
-        (global.fetch as jest.Mock).mockResolvedValueOnce({
+        (globalThis.fetch as jest.Mock).mockResolvedValueOnce({
           ok: true,
           json: async () => mockResponse,
         });
@@ -161,7 +164,7 @@ describe("gemini-api", () => {
           ],
         };
 
-        (global.fetch as jest.Mock).mockResolvedValueOnce({
+        (globalThis.fetch as jest.Mock).mockResolvedValueOnce({
           ok: true,
           json: async () => mockResponse,
         });
@@ -175,16 +178,16 @@ describe("gemini-api", () => {
         const controller = new AbortController();
         const signal = controller.signal;
 
-        (global.fetch as jest.Mock).mockResolvedValueOnce({
+        (globalThis.fetch as jest.Mock).mockResolvedValueOnce({
           ok: true,
           json: async () => ({
-            candidates: [{ content: { parts: [{ text: "Ok" }] } }]
-          })
+            candidates: [{ content: { parts: [{ text: "Ok" }] } }],
+          }),
         });
 
         await api.generateContent("gemini-2.0-flash", "Hello", signal);
 
-        expect(global.fetch).toHaveBeenCalledWith(
+        expect(globalThis.fetch).toHaveBeenCalledWith(
           expect.any(String),
           expect.objectContaining({ signal })
         );
@@ -200,14 +203,14 @@ describe("gemini-api", () => {
           ],
         };
 
-        (global.fetch as jest.Mock).mockResolvedValueOnce({
+        (globalThis.fetch as jest.Mock).mockResolvedValueOnce({
           ok: true,
           json: async () => mockResponse,
         });
 
         const result = await api.listModels();
 
-        expect(global.fetch).toHaveBeenCalledWith(
+        expect(globalThis.fetch).toHaveBeenCalledWith(
           "https://generativelanguage.googleapis.com/v1beta/models",
           expect.objectContaining({
             method: "GET",
@@ -220,7 +223,7 @@ describe("gemini-api", () => {
       });
 
       it("should throw and log error with redacted API key when listModels fails", async () => {
-        (global.fetch as jest.Mock).mockResolvedValueOnce({
+        (globalThis.fetch as jest.Mock).mockResolvedValueOnce({
           ok: false,
           status: 403,
           text: async () => `Forbidden: ${API_KEY} is invalid`,
@@ -231,7 +234,9 @@ describe("gemini-api", () => {
         );
 
         expect(log.error).toHaveBeenCalledWith(
-          expect.stringContaining("Gemini API error: 403 - Forbidden: [REDACTED_API_KEY] is invalid")
+          expect.stringContaining(
+            "Gemini API error: 403 - Forbidden: [REDACTED_API_KEY] is invalid"
+          )
         );
       });
     });
@@ -247,14 +252,14 @@ describe("gemini-api", () => {
         ],
       };
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (globalThis.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,
       });
 
       const result = await generateGeminiContent("Hello helper");
 
-      expect(global.fetch).toHaveBeenCalledWith(
+      expect(globalThis.fetch).toHaveBeenCalledWith(
         "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-001:generateContent",
         expect.objectContaining({
           body: "Hello helper",
@@ -287,13 +292,15 @@ describe("GeminiAPI missing API KEY", () => {
 
       // Override the module mock for this specific isolated module environment
       jest.doMock("expo-constants", () => ({
-        expoConfig: { extra: { EXPO_PUBLIC_GEMINI_API_KEY: undefined } }
+        expoConfig: { extra: { EXPO_PUBLIC_GEMINI_API_KEY: undefined } },
       }));
 
       const { GeminiAPI } = require("../gemini-api");
       localApi = new GeminiAPI();
     });
 
-    await expect(localApi.generateContent("model", "body")).rejects.toThrow("Gemini API key is not set");
+    await expect(localApi.generateContent("model", "body")).rejects.toThrow(
+      "Gemini API key is not set"
+    );
   });
 });
