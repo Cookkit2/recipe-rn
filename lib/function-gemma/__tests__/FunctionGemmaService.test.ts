@@ -1,4 +1,8 @@
-import { FunctionGemmaService, parseFunctionCalls, type ToolExecutor } from "../FunctionGemmaService";
+import {
+  FunctionGemmaService,
+  parseFunctionCalls,
+  type ToolExecutor,
+} from "../FunctionGemmaService";
 
 jest.mock("expo-file-system", () => {
   const mockDownloadFileAsync = jest.fn();
