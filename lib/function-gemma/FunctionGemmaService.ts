@@ -447,10 +447,6 @@ export class FunctionGemmaService {
     try {
       // Check if model exists
       const modelFile = new File(this.modelPath);
-      console.log("[FunctionGemma] initialize: checking model file:", {
-        path: this.modelPath,
-        exists: modelFile.exists,
-      });
       if (!modelFile.exists) {
         console.error("[FunctionGemma] Model file not found:", this.modelPath);
         return false;
