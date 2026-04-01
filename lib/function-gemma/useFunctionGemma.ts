@@ -190,18 +190,9 @@ export function useFunctionGemma(options: UseFunctionGemmaOptions = {}): UseFunc
           "[useFunctionGemma] Calling processMessage with history length:",
           conversationHistory.length
         );
-        const startTime = Date.now();
 
         // Process with Function Gemma
         const result = await serviceRef.current.processMessage(userMessage, conversationHistory);
-
-        console.log("[useFunctionGemma] processMessage returned:", {
-          textLength: result.text?.length ?? 0,
-          textPreview: result.text?.slice(0, 200),
-          hasToolCalls: !!result.tool_calls,
-          toolCallCount: result.tool_calls?.length ?? 0,
-          elapsedMs: Date.now() - startTime,
-        });
 
         // Add assistant response
         setMessages((prev) => [
