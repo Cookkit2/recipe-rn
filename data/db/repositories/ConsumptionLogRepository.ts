@@ -1,6 +1,6 @@
 import { Q } from "@nozbe/watermelondb";
 import ConsumptionLog from "../models/ConsumptionLog";
-import BaseRepository from "./BaseRepository";
+import { BaseRepository } from "./BaseRepository";
 import { database } from "../database";
 
 export interface ConsumptionLogSearchOptions {
