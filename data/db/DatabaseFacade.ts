@@ -1357,14 +1357,16 @@ export class DatabaseFacade {
 
     // Batch all deletions in a single write to avoid flooding the write queue
     await database.write(async () => {
-      for (const collectionName of collections) {
-        try {
-          const collection = database.collections.get(collectionName);
-          await collection.query().destroyAllPermanently();
-        } catch (error) {
-          log.warn(`⚠️ Error clearing ${collectionName}:`, error);
-        }
-      }
+      await Promise.all(
+        collections.map(async (collectionName) => {
+          try {
+            const collection = database.collections.get(collectionName);
+            await collection.query().destroyAllPermanently();
+          } catch (error) {
+            log.warn(`⚠️ Error clearing ${collectionName}:`, error);
+          }
+        })
+      );
     });
   }
 
@@ -1387,14 +1389,16 @@ export class DatabaseFacade {
 
     // Batch all deletions in a single write to avoid flooding the write queue
     await database.write(async () => {
-      for (const collectionName of collections) {
-        try {
-          const collection = database.collections.get(collectionName);
-          await collection.query().destroyAllPermanently();
-        } catch (error) {
-          log.warn(`⚠️ Error clearing ${collectionName}:`, error);
-        }
-      }
+      await Promise.all(
+        collections.map(async (collectionName) => {
+          try {
+            const collection = database.collections.get(collectionName);
+            await collection.query().destroyAllPermanently();
+          } catch (error) {
+            log.warn(`⚠️ Error clearing ${collectionName}:`, error);
+          }
+        })
+      );
     });
   }
 
