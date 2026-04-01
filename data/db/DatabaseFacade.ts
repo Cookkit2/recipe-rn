@@ -615,11 +615,28 @@ export class DatabaseFacade {
       let errorCount = 0;
 
       // Batch all updates in a single write to avoid flooding the write queue
+      // Pre-caching to optimize sequential unit conversion loop
+      const conversionCache = new Map<string, { quantity: number; unit: string }>();
+
       await database.write(async () => {
         const batchOperations: any[] = [];
         for (const stockItem of allStockItems) {
           try {
-            const converted = convertToUnitSystem(stockItem.quantity, stockItem.unit, toUnitSystem);
+            const cacheKey = `${stockItem.quantity}_${stockItem.unit}`;
+            let converted = conversionCache.get(cacheKey);
+
+            if (converted === undefined) {
+              const rawConverted = convertToUnitSystem(
+                stockItem.quantity,
+                stockItem.unit,
+                toUnitSystem
+              );
+              converted = {
+                quantity: roundToReasonablePrecision(rawConverted.quantity),
+                unit: rawConverted.unit,
+              };
+              conversionCache.set(cacheKey, converted);
+            }
 
             const quantityChanged = Math.abs(converted.quantity - stockItem.quantity) > 0.001;
             const unitChanged = converted.unit !== stockItem.unit;
@@ -627,8 +644,8 @@ export class DatabaseFacade {
             if (quantityChanged || unitChanged) {
               batchOperations.push(
                 stockItem.prepareUpdate((record: any) => {
-                  record.quantity = roundToReasonablePrecision(converted.quantity);
-                  record.unit = converted.unit;
+                  record.quantity = converted!.quantity;
+                  record.unit = converted!.unit;
                 })
               );
               convertedCount++;
