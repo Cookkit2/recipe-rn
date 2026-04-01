@@ -2,6 +2,7 @@
 // Database initialization and helper functions
 import * as SQLite from "expo-sqlite";
 import * as Crypto from "expo-crypto";
+import jwtEncode from "jwt-encode";
 
 let db: SQLite.SQLiteDatabase | null = null;
 
@@ -248,8 +249,10 @@ export const isValidRefreshToken = async (refreshToken: string): Promise<boolean
  * Generate JWT tokens (simplified - use actual JWT library in production)
  */
 const generateTokens = (userId: string): { accessToken: string; refreshToken: string } => {
-  const accessToken = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${btoa(JSON.stringify({ userId, exp: Date.now() + 15 * 60 * 1000 }))}.signature`;
-  const refreshToken = `refresh_${Crypto.randomUUID()}`;
+  const payload = { userId, exp: Date.now() + 15 * 60 * 1000 };
+  const pseudoSecret = "local_db_secret";
+  const accessToken = jwtEncode(payload, pseudoSecret);
+  const refreshToken = `refresh_${userId}_${Crypto.randomUUID()}`;
   return { accessToken, refreshToken };
 };
 
