@@ -186,11 +186,6 @@ export function useFunctionGemma(options: UseFunctionGemmaOptions = {}): UseFunc
           .filter((m) => m.role !== "system")
           .map((m) => ({ role: m.role, content: m.content }));
 
-        console.log(
-          "[useFunctionGemma] Calling processMessage with history length:",
-          conversationHistory.length
-        );
-
         // Process with Function Gemma
         const result = await serviceRef.current.processMessage(userMessage, conversationHistory);
 
@@ -221,7 +216,6 @@ export function useFunctionGemma(options: UseFunctionGemmaOptions = {}): UseFunc
           },
         ]);
       } finally {
-        console.log("[useFunctionGemma] sendMessage complete, setting isGenerating=false");
         setIsGenerating(false);
       }
     },
