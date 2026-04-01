@@ -1,27 +1,37 @@
-import { describe, it, expect, jest } from "@jest/globals";
+import { describe, it, expect, jest, beforeEach, afterEach } from "@jest/globals";
 
-// Mock NativeModules before importing FunctionGemmaService
+const mockReleaseAllLlama = jest.fn();
+const mockInitLlama = jest.fn();
+
 jest.mock("llama.rn", () => ({
-  initLlama: jest.fn(),
-  releaseAllLlama: jest.fn(),
+  initLlama: (...args: unknown[]) => mockInitLlama(...args),
+  releaseAllLlama: () => mockReleaseAllLlama(),
 }));
 
-jest.mock("expo-file-system", () => ({
-  File: class File {
-    exists = false;
-    uri = "mock-uri";
-    constructor() {}
-  },
-  Paths: {
-    document: "mock-document-path",
-  },
-}));
+jest.mock("expo-file-system", () => {
+  const mockDownloadFileAsync = jest.fn();
+  return {
+    Paths: { document: "/mock/path" },
+    File: class MockFile {
+      uri: string;
+      exists: boolean;
+      constructor(path: string, filename?: string) {
+        this.uri = filename ? `${path}/${filename}` : path;
+        this.exists = this.uri.includes("functiongemma");
+      }
+      static downloadFileAsync = mockDownloadFileAsync;
+    },
+  };
+});
 
-import { parseFunctionCalls } from "../FunctionGemmaService";
+import {
+  FunctionGemmaService,
+  parseFunctionCalls,
+  type ToolExecutor,
+} from "../FunctionGemmaService";
 
 describe("parseFunctionCalls", () => {
   beforeEach(() => {
-    // Suppress console.warn during tests
     jest.spyOn(console, "warn").mockImplementation(() => {});
   });
 
@@ -141,15 +151,173 @@ describe("parseFunctionCalls", () => {
 
   it("should handle malformed function calls gracefully", () => {
     const malformedInputs = [
-      "<start_function_call>call:add_item{name:milk<end_function_call>", // missing closing brace
-      "<start_function_call>call:add_item{name:<escape>milk<escape>}", // missing end token
-      "call:add_item{name:<escape>milk<escape>}<end_function_call>", // missing start token
-      "<start_function_call>add_item{name:<escape>milk<escape>}<end_function_call>", // missing 'call:' prefix
+      "<start_function_call>call:add_item{name:milk<end_function_call>",
+      "<start_function_call>call:add_item{name:<escape>milk<escape>}",
+      "call:add_item{name:<escape>milk<escape>}<end_function_call>",
+      "<start_function_call>add_item{name:<escape>milk<escape>}<end_function_call>",
     ];
 
     malformedInputs.forEach((input) => {
       const result = parseFunctionCalls(input);
       expect(result).toHaveLength(0);
+    });
+  });
+});
+
+describe("FunctionGemmaService", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe("Initialization", () => {
+    it("should initialize correctly when model file exists", async () => {
+      const mockContext = { completion: jest.fn() };
+      mockInitLlama.mockResolvedValueOnce(mockContext);
+
+      const service = new FunctionGemmaService();
+      const success = await service.initialize();
+
+      expect(success).toBe(true);
+      expect(service.isReady()).toBe(true);
+      expect(mockInitLlama).toHaveBeenCalledWith(
+        expect.objectContaining({
+          use_mlock: true,
+          n_ctx: 4096,
+          n_gpu_layers: 1,
+        })
+      );
+    });
+
+    it("should fail to initialize if initLlama returns null", async () => {
+      mockInitLlama.mockResolvedValueOnce(null);
+
+      const service = new FunctionGemmaService();
+      const success = await service.initialize();
+
+      expect(success).toBe(false);
+      expect(service.isReady()).toBe(false);
+    });
+
+    it("should clean up correctly", async () => {
+      const mockContext = { completion: jest.fn() };
+      mockInitLlama.mockResolvedValueOnce(mockContext);
+
+      const service = new FunctionGemmaService();
+      await service.initialize();
+      expect(service.isReady()).toBe(true);
+
+      await service.cleanup();
+      expect(service.isReady()).toBe(false);
+      expect(mockReleaseAllLlama).toHaveBeenCalled();
+    });
+  });
+
+  describe("processMessage", () => {
+    let mockContext: { completion: jest.Mock };
+    let service: FunctionGemmaService;
+
+    beforeEach(async () => {
+      mockContext = { completion: jest.fn() };
+      mockInitLlama.mockResolvedValue(mockContext);
+      service = new FunctionGemmaService();
+      await service.initialize();
+    });
+
+    it("should return text when no tool calls are generated", async () => {
+      mockContext.completion.mockResolvedValueOnce({
+        text: "Hello! How can I help you cook today?",
+        tool_calls: [],
+      });
+
+      const result = await service.processMessage("Hi");
+      expect(result.text).toBe("Hello! How can I help you cook today?");
+      expect(result.tool_calls).toBeUndefined();
+    });
+
+    it("should parse manual tool calls from text if tool_calls array is missing", async () => {
+      mockContext.completion.mockResolvedValueOnce({
+        text: "<start_function_call>call:add_item{name:<escape>tomato<escape>}",
+      });
+
+      const result = await service.processMessage("Add tomato");
+      expect(result.tool_calls).toBeDefined();
+      expect(result.tool_calls?.[0]?.function.name).toBe("add_item");
+      expect(result.tool_calls?.[0]?.function.arguments).toEqual({ name: "tomato" });
+    });
+
+    it("should throw error if called before initialization", async () => {
+      const uninitializedService = new FunctionGemmaService();
+      await expect(uninitializedService.processMessage("Hi")).rejects.toThrow(
+        "Function Gemma not initialized"
+      );
+    });
+  });
+
+  describe("Tool Execution", () => {
+    let mockContext: { completion: jest.Mock };
+    let service: FunctionGemmaService;
+    let mockExecutor: jest.Mocked<ToolExecutor>;
+
+    beforeEach(async () => {
+      mockContext = { completion: jest.fn() };
+      mockInitLlama.mockResolvedValue(mockContext);
+
+      mockExecutor = {
+        addItem: jest.fn().mockResolvedValue({ success: true, message: "Added item" }),
+        removeItem: jest.fn(),
+        getInventory: jest.fn(),
+        getExpiringItems: jest.fn(),
+        setExpiryAlert: jest.fn(),
+        addToGroceryList: jest.fn(),
+        getGroceryList: jest.fn(),
+        findRecipes: jest.fn(),
+        suggestMeals: jest.fn(),
+        scanBarcode: jest.fn(),
+      };
+
+      service = new FunctionGemmaService(mockExecutor);
+      await service.initialize();
+    });
+
+    it("should execute tool call via ToolExecutor", async () => {
+      mockContext.completion.mockResolvedValueOnce({
+        text: "",
+        tool_calls: [
+          {
+            id: "call_1",
+            type: "function",
+            function: { name: "add_item", arguments: { name: "eggs" } },
+          },
+        ],
+      });
+      mockContext.completion.mockResolvedValueOnce({
+        text: "I have added eggs to your pantry.",
+      });
+
+      const result = await service.processMessage("Add eggs");
+
+      expect(mockExecutor.addItem).toHaveBeenCalledWith({ name: "eggs" });
+      expect(result.text).toBe("I have added eggs to your pantry.");
+      expect(result.tool_calls).toBeDefined();
+    });
+
+    it("should fallback to formatting text if second completion fails", async () => {
+      mockContext.completion.mockResolvedValueOnce({
+        text: "",
+        tool_calls: [
+          {
+            id: "call_1",
+            type: "function",
+            function: { name: "add_item", arguments: { name: "eggs" } },
+          },
+        ],
+      });
+      mockContext.completion.mockRejectedValueOnce(new Error("Model crashed"));
+
+      const result = await service.processMessage("Add eggs");
+
+      expect(result.text).toBe("Added item");
+      expect(mockExecutor.addItem).toHaveBeenCalled();
     });
   });
 });
