@@ -142,13 +142,6 @@ export function useFunctionGemma(options: UseFunctionGemmaOptions = {}): UseFunc
    */
   const sendMessage = useCallback(
     async (message: string) => {
-      console.log("[useFunctionGemma] sendMessage called:", {
-        message,
-        hasService: !!serviceRef.current,
-        isModelLoaded,
-        isGenerating,
-      });
-
       if (!message.trim()) {
         console.warn("[useFunctionGemma] Empty message, aborting");
         return;
