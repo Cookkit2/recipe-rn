@@ -717,11 +717,6 @@ export class FunctionGemmaService {
             result = { error: `Unknown function: ${name}` };
         }
 
-        console.log(`[FunctionGemma] Tool ${name} completed:`, {
-          result,
-          elapsedMs: Date.now() - toolStart,
-        });
-
         results.push({
           id: toolCall.id,
           result,
