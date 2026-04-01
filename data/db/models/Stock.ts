@@ -5,6 +5,7 @@ import type IngredientSynonym from "./IngredientSynonym";
 import type StockCategory from "./StockCategory";
 import type WasteLog from "./WasteLog";
 import type StepsToStore from "./StepsToStore";
+import type ConsumptionLog from "./ConsumptionLog";
 
 export interface StockData {
   name: string;
@@ -26,6 +27,7 @@ export default class Stock extends Model {
     ingredient_synonym: { type: "has_many", foreignKey: "stock_id" },
     stock_category: { type: "has_many", foreignKey: "stock_id" },
     waste_log: { type: "has_many", foreignKey: "stock_id" },
+    consumption_log: { type: "has_many", foreignKey: "stock_id" },
   };
 
   @field("name") name!: string;
@@ -42,6 +44,7 @@ export default class Stock extends Model {
   @children("ingredient_synonym") synonyms!: Query<IngredientSynonym>;
   @children("stock_category") stockCategories!: Query<StockCategory>;
   @children("waste_log") wasteLogs!: Query<WasteLog>;
+  @children("consumption_log") consumptionLogs!: Query<ConsumptionLog>;
   @children("steps_to_store") stepsToStore!: Query<StepsToStore>;
 
   @date("created_at") createdAt!: Date;

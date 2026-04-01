@@ -447,10 +447,6 @@ export class FunctionGemmaService {
     try {
       // Check if model exists
       const modelFile = new File(this.modelPath);
-      console.log("[FunctionGemma] initialize: checking model file:", {
-        path: this.modelPath,
-        exists: modelFile.exists,
-      });
       if (!modelFile.exists) {
         console.error("[FunctionGemma] Model file not found:", this.modelPath);
         return false;
@@ -513,13 +509,6 @@ export class FunctionGemmaService {
     userMessage: string,
     conversationHistory: Array<{ role: string; content: string }> = []
   ): Promise<{ text: string; tool_calls?: ToolCall[] }> {
-    console.log("[FunctionGemma] processMessage called:", {
-      userMessage,
-      historyLength: conversationHistory.length,
-      hasContext: !!this.context,
-      isInitialized: this.isInitialized,
-    });
-
     if (!this.context) {
       throw new Error("Function Gemma not initialized. Call initialize() first.");
     }
@@ -578,13 +567,7 @@ export class FunctionGemmaService {
         ? result.text
         : result.text + "<end_function_call>";
 
-      console.log("[FunctionGemma] Attempting manual parse of raw text...");
       const parsedCalls = parseFunctionCalls(textToParse);
-
-      console.log("[FunctionGemma] Manual parse result:", {
-        parsedCount: parsedCalls.length,
-        parsedCalls,
-      });
 
       if (parsedCalls.length > 0) {
         toolCalls = parsedCalls.map((call, i) => ({
@@ -600,13 +583,7 @@ export class FunctionGemmaService {
 
     // Execute tool calls if we found any (from llama.rn or our parser)
     if (toolCalls && toolCalls.length > 0) {
-      console.log("[FunctionGemma] Executing", toolCalls.length, "tool calls...");
-      const toolExecStart = Date.now();
       const toolResults = await this.executeToolCalls(toolCalls);
-      console.log("[FunctionGemma] Tool execution complete:", {
-        results: toolResults,
-        elapsedMs: Date.now() - toolExecStart,
-      });
 
       // Try to get a natural language response from the model via a second completion.
       // FunctionGemma's chat template + llama.rn can be fragile here, so we
@@ -729,11 +706,6 @@ export class FunctionGemmaService {
             console.warn(`[FunctionGemma] Unknown function: ${name}`);
             result = { error: `Unknown function: ${name}` };
         }
-
-        console.log(`[FunctionGemma] Tool ${name} completed:`, {
-          result,
-          elapsedMs: Date.now() - toolStart,
-        });
 
         results.push({
           id: toolCall.id,

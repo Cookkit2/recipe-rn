@@ -220,50 +220,38 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
 
     if (expiredMappings.length === 0) return 0;
 
-    let deletedCount = 0;
+    const recipeIds = Array.from(new Set(expiredMappings.map((m) => m.recipeId)));
 
     // Batch all deletions in a single write to avoid nested write deadlocks
     await database.write(async () => {
       const recipeCollection = database.collections.get<Recipe>("recipe");
+
+      // ⚡ Bolt Performance Optimization:
+      // Prevent N+1 query bottlenecks during cleanup. Instead of querying and destroying
+      // associated recipes, steps, and ingredients sequentially inside a loop, we extract
+      // all unique recipe IDs, fetch the models simultaneously via Q.oneOf(), and destroy them
+      // in a single large database.batch() operation. This drastically reduces JS thread blocking
+      // and SQLite load compared to N sequential fetches and writes.
       const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
       const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
+      // Batch fetch all related data
+      const [recipes, steps, ingredients] = await Promise.all([
+        recipeCollection.query(Q.where("id", Q.oneOf(recipeIds))).fetch(),
+        stepsCollection.query(Q.where("recipe_id", Q.oneOf(recipeIds))).fetch(),
+        ingredientsCollection.query(Q.where("recipe_id", Q.oneOf(recipeIds))).fetch(),
+      ]);
 
-      for (const mapping of expiredMappings) {
-        const batchOps = [];
-        try {
-          const recipeId = mapping.recipeId;
+      const deletions = [
+        ...expiredMappings.map((m) => m.prepareDestroyPermanently()),
+        ...recipes.map((r) => r.prepareDestroyPermanently()),
+        ...steps.map((s) => s.prepareDestroyPermanently()),
+        ...ingredients.map((i) => i.prepareDestroyPermanently()),
+      ];
 
-          // Delete mapping
-          batchOps.push(mapping.prepareDestroyPermanently());
-
-          // Delete recipe, steps, ingredients
-          try {
-            const recipe = await recipeCollection.find(recipeId);
-            const [steps, ingredients] = await Promise.all([
-              stepsCollection.query(Q.where("recipe_id", recipeId)).fetch(),
-              ingredientsCollection.query(Q.where("recipe_id", recipeId)).fetch(),
-            ]);
-
-            batchOps.push(
-              ...steps.map((step) => step.prepareDestroyPermanently()),
-              ...ingredients.map((ingredient) => ingredient.prepareDestroyPermanently()),
-              recipe.prepareDestroyPermanently()
-            );
-          } catch {
-            // Recipe already deleted or doesn't exist
-          }
-
-          if (batchOps.length > 0) {
-            await database.batch(...batchOps);
-          }
-          deletedCount++;
-        } catch {
-          // Continue cleaning up other mappings
-        }
-      }
+      await database.batch(...deletions);
     });
 
-    return deletedCount;
+    return expiredMappings.length;
   }
 
   /**
@@ -274,35 +262,38 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
 
     // Find all tailored recipes that reference this base recipe
     const tailoredRecipes = await recipeCollection
-      .query(Q.where("type", "tailored"), Q.where("source_url", baseRecipeId))
+      .query(Q.where("type", RecipeType.TAILORED), Q.where("source_url", baseRecipeId))
       .fetch();
 
     if (tailoredRecipes.length === 0) return;
 
+    const recipeIds = tailoredRecipes.map((r) => r.id);
+
     // Batch all deletions in a single write to avoid nested write deadlocks
     await database.write(async () => {
       const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
+
+      // ⚡ Bolt Performance Optimization:
+      // Prevent N+1 database querying bottlenecks when clearing tailored recipes.
+      // Instead of querying and destroying mappings, steps, and ingredients sequentially inside
+      // a loop for every tailored recipe, we fetch all relevant associated entities simultaneously
+      // via Q.oneOf() and destroy them in a single large database.batch() execution.
       const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
+      // Batch fetch related data
+      const [mappings, steps, ingredients] = await Promise.all([
+        this.collection.query(Q.where("recipe_id", Q.oneOf(recipeIds))).fetch(),
+        stepsCollection.query(Q.where("recipe_id", Q.oneOf(recipeIds))).fetch(),
+        ingredientsCollection.query(Q.where("recipe_id", Q.oneOf(recipeIds))).fetch(),
+      ]);
 
-      for (const recipe of tailoredRecipes) {
-        try {
-          // Fetch related records
-          const [mappings, steps, ingredients] = await Promise.all([
-            this.collection.query(Q.where("recipe_id", recipe.id)).fetch(),
-            stepsCollection.query(Q.where("recipe_id", recipe.id)).fetch(),
-            ingredientsCollection.query(Q.where("recipe_id", recipe.id)).fetch(),
-          ]);
+      const deletions = [
+        ...mappings.map((m) => m.prepareDestroyPermanently()),
+        ...steps.map((s) => s.prepareDestroyPermanently()),
+        ...ingredients.map((i) => i.prepareDestroyPermanently()),
+        ...tailoredRecipes.map((r) => r.prepareDestroyPermanently()),
+      ];
 
-          await database.batch(
-            ...mappings.map((m) => m.prepareDestroyPermanently()),
-            ...steps.map((step) => step.prepareDestroyPermanently()),
-            ...ingredients.map((ingredient) => ingredient.prepareDestroyPermanently()),
-            recipe.prepareDestroyPermanently()
-          );
-        } catch {
-          // Continue with other recipes
-        }
-      }
+      await database.batch(...deletions);
     });
   }
 }

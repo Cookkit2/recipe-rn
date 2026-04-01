@@ -53,19 +53,46 @@ export class IngredientCategoryRepository extends BaseRepository<IngredientCateg
 
   // Sync categories from Supabase
   async syncFromSupabase(categories: Array<{ id: string; name: string }>): Promise<void> {
+    if (categories.length === 0) return;
+
     const db = this.collection.database;
 
     await db.write(async () => {
-      for (const catData of categories) {
-        const existing = await this.findByName(catData.name);
-        if (!existing) {
-          await this.collection.create((category: any) => {
-            category._raw.id = catData.id; // Preserve Supabase ID
-            category.name = catData.name;
-            category.syncedAt = Date.now();
-          });
+      // ⚡ Bolt Performance Optimization:
+      // Replaced N+1 individual .findByName() queries inside the loop with a single batch fetch using Q.oneOf().
+      // This is inside the write block to maintain transaction atomicity and prevent race conditions.
+      const categoryNames = categories.map((c) => c.name);
+
+      // Fetch all existing categories matching the incoming names in a single query
+      const existingCategories = await this.collection
+        .query(Q.where("name", Q.oneOf(categoryNames)))
+        .fetch();
+
+      const existingNames = new Set(existingCategories.map((c) => c.name));
+
+      // Deduplicate the incoming payload to prevent multiple creations of the same category
+      // which would result in SQLite UNIQUE constraint failures
+      const uniqueNewCategoriesMap = new Map<string, { id: string; name: string }>();
+
+      for (const c of categories) {
+        if (!existingNames.has(c.name) && !uniqueNewCategoriesMap.has(c.name)) {
+          uniqueNewCategoriesMap.set(c.name, c);
         }
       }
+
+      const newCategoriesToCreate = Array.from(uniqueNewCategoriesMap.values());
+
+      if (newCategoriesToCreate.length === 0) return;
+
+      const batchOps = newCategoriesToCreate.map((catData) =>
+        this.collection.prepareCreate((category: any) => {
+          category._raw.id = catData.id; // Preserve Supabase ID
+          category.name = catData.name;
+          category.syncedAt = Date.now();
+        })
+      );
+
+      await db.batch(...batchOps);
     });
   }
 }

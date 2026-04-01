@@ -32,7 +32,7 @@ export default function LoginScreen() {
 
     try {
       await login(email, password);
-      router.replace("/(tabs)");
+      router.replace("/");
     } catch (err: any) {
       setError(err.message || "Login failed");
     }
@@ -108,7 +108,7 @@ export default function LoginScreen() {
 
               <TouchableOpacity
                 style={styles.linkButton}
-                onPress={() => router.push("/(auth)/register")}
+                onPress={() => router.push("/sign-up")}
                 disabled={isLoading}
               >
                 <Text style={styles.linkButtonText}>Don't have an account? Register</Text>

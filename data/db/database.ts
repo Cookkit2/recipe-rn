@@ -84,6 +84,7 @@ export const collections = {
   stockCategories: database.collections.get("stock_category"),
   cookingHistory: database.collections.get("cooking_history"),
   wasteLogs: database.collections.get("waste_log"),
+  consumptionLogs: database.collections.get("consumption_log"),
   tailoredRecipeMappings: database.collections.get("tailored_recipe_mapping"),
 };
 

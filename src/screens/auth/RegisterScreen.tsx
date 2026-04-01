@@ -38,7 +38,7 @@ export default function RegisterScreen() {
 
     try {
       await register(email, password, displayName);
-      router.replace("/(tabs)");
+      router.replace("/");
     } catch (err: any) {
       setError(err.message || "Registration failed");
     }
@@ -127,7 +127,7 @@ export default function RegisterScreen() {
 
               <TouchableOpacity
                 style={styles.linkButton}
-                onPress={() => router.push("/(auth)/login")}
+                onPress={() => router.push("/sign-in")}
                 disabled={isLoading}
               >
                 <Text style={styles.linkButtonText}>Already have an account? Login</Text>

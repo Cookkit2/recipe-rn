@@ -291,7 +291,7 @@ export default function SignUpScreen() {
               <View className="flex-row justify-center items-center space-x-2 pt-4">
                 <Text className="text-sm text-muted-foreground">Already have an account?</Text>
                 <Link href="/(auth)/sign-in" asChild>
-                  <Pressable>
+                  <Pressable accessibilityRole="link">
                     <Text className="text-sm text-primary font-medium">Sign In</Text>
                   </Pressable>
                 </Link>

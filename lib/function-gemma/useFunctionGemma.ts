@@ -142,13 +142,6 @@ export function useFunctionGemma(options: UseFunctionGemmaOptions = {}): UseFunc
    */
   const sendMessage = useCallback(
     async (message: string) => {
-      console.log("[useFunctionGemma] sendMessage called:", {
-        message,
-        hasService: !!serviceRef.current,
-        isModelLoaded,
-        isGenerating,
-      });
-
       if (!message.trim()) {
         console.warn("[useFunctionGemma] Empty message, aborting");
         return;
@@ -193,22 +186,8 @@ export function useFunctionGemma(options: UseFunctionGemmaOptions = {}): UseFunc
           .filter((m) => m.role !== "system")
           .map((m) => ({ role: m.role, content: m.content }));
 
-        console.log(
-          "[useFunctionGemma] Calling processMessage with history length:",
-          conversationHistory.length
-        );
-        const startTime = Date.now();
-
         // Process with Function Gemma
         const result = await serviceRef.current.processMessage(userMessage, conversationHistory);
-
-        console.log("[useFunctionGemma] processMessage returned:", {
-          textLength: result.text?.length ?? 0,
-          textPreview: result.text?.slice(0, 200),
-          hasToolCalls: !!result.tool_calls,
-          toolCallCount: result.tool_calls?.length ?? 0,
-          elapsedMs: Date.now() - startTime,
-        });
 
         // Add assistant response
         setMessages((prev) => [
@@ -237,7 +216,6 @@ export function useFunctionGemma(options: UseFunctionGemmaOptions = {}): UseFunc
           },
         ]);
       } finally {
-        console.log("[useFunctionGemma] sendMessage complete, setting isGenerating=false");
         setIsGenerating(false);
       }
     },

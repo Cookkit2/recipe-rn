@@ -7,6 +7,7 @@
  */
 
 import { AchievementRepository } from "../db/repositories/AchievementRepository";
+import { Q } from "@nozbe/watermelondb";
 import { UserAchievementRepository } from "../db/repositories/UserAchievementRepository";
 import { CookingHistoryRepository } from "../db/repositories/CookingHistoryRepository";
 import { RecipeRepository } from "../db/repositories/RecipeRepository";
@@ -21,6 +22,7 @@ import {
   SOCIAL_SHARES_COUNT_KEY,
   INGREDIENTS_USED_BEFORE_EXPIRY_KEY,
 } from "~/constants/storage-keys";
+import { databaseFacade } from "~/data/db/DatabaseFacade";
 
 export interface AchievementCheckResult {
   newlyUnlocked: Array<{
@@ -71,9 +73,21 @@ export class AchievementService {
       // Get all visible achievements
       const achievements = await this.achievementRepo.getVisibleAchievements();
 
+      // Pre-fetch all related user achievements in one query to prevent N+1 queries
+      const achievementIds = achievements.map((a) => a.id);
+      let userAchievementsMap = new Map();
+      if (achievementIds.length > 0) {
+        // Chunk queries if there are too many, but typically achievements are < 100
+        const userAchievements = await this.userAchievementRepo.collection
+          .query(Q.where("achievement_id", Q.oneOf(achievementIds)))
+          .fetch();
+        userAchievementsMap = new Map(userAchievements.map((ua: any) => [ua.achievementId, ua]));
+      }
+
       // Check each achievement
       for (const achievement of achievements) {
-        const checkResult = await this.checkAndUnlockAchievement(achievement.id);
+        const userAchievement = userAchievementsMap.get(achievement.id);
+        const checkResult = await this._evaluateAchievement(achievement, userAchievement);
 
         if (checkResult.newlyUnlocked) {
           result.newlyUnlocked.push({
@@ -103,6 +117,61 @@ export class AchievementService {
   }
 
   /**
+   * Evaluate a pre-fetched achievement to avoid N+1 queries
+   */
+  private async _evaluateAchievement(
+    achievement: any,
+    userAchievement?: any
+  ): Promise<{
+    newlyUnlocked: boolean;
+    progressUpdated: boolean;
+    currentProgress: number;
+    target: number;
+  }> {
+    try {
+      // If already unlocked, skip
+      if (userAchievement && userAchievement.status === "unlocked") {
+        return {
+          newlyUnlocked: false,
+          progressUpdated: false,
+          currentProgress: userAchievement.progress,
+          target: this.getTargetFromRequirement(
+            achievement.parsedRequirement as AchievementRequirement
+          ),
+        };
+      }
+
+      // Parse requirement and get current progress
+      const requirement = achievement.parsedRequirement as AchievementRequirement;
+      const currentProgress = await this.getCurrentProgress(requirement);
+      const target = requirement.target;
+
+      // Update progress
+      await this.userAchievementRepo.updateProgress(achievement.id, currentProgress);
+
+      // Check if achievement should be unlocked
+      if (currentProgress >= target) {
+        await this.unlockAchievement(achievement.id, achievement);
+        return { newlyUnlocked: true, progressUpdated: true, currentProgress, target };
+      }
+
+      // Update status to in_progress if progress > 0
+      if (currentProgress > 0 && userAchievement?.status === "locked") {
+        await this.userAchievementRepo.updateProgress(
+          achievement.id,
+          currentProgress,
+          "in_progress"
+        );
+      }
+
+      return { newlyUnlocked: false, progressUpdated: true, currentProgress, target };
+    } catch (error) {
+      log.error(`Error evaluating achievement ${achievement.id}:`, error);
+      return { newlyUnlocked: false, progressUpdated: false, currentProgress: 0, target: 0 };
+    }
+  }
+
+  /**
    * Check a specific achievement and unlock if criteria is met
    */
   async checkAndUnlockAchievement(achievementId: string): Promise<{
@@ -122,42 +191,7 @@ export class AchievementService {
       // Get the user achievement record
       const userAchievement = await this.userAchievementRepo.getByAchievementId(achievementId);
 
-      // If already unlocked, skip
-      if (userAchievement && userAchievement.status === "unlocked") {
-        return {
-          newlyUnlocked: false,
-          progressUpdated: false,
-          currentProgress: userAchievement.progress,
-          target: this.getTargetFromRequirement(
-            achievement.parsedRequirement as AchievementRequirement
-          ),
-        };
-      }
-
-      // Parse requirement and get current progress
-      const requirement = achievement.parsedRequirement as AchievementRequirement;
-      const currentProgress = await this.getCurrentProgress(requirement);
-      const target = requirement.target;
-
-      // Update progress
-      await this.userAchievementRepo.updateProgress(achievementId, currentProgress);
-
-      // Check if achievement should be unlocked
-      if (currentProgress >= target) {
-        await this.unlockAchievement(achievementId);
-        return { newlyUnlocked: true, progressUpdated: true, currentProgress, target };
-      }
-
-      // Update status to in_progress if progress > 0
-      if (currentProgress > 0 && userAchievement?.status === "locked") {
-        await this.userAchievementRepo.updateProgress(
-          achievementId,
-          currentProgress,
-          "in_progress"
-        );
-      }
-
-      return { newlyUnlocked: false, progressUpdated: true, currentProgress, target };
+      return await this._evaluateAchievement(achievement, userAchievement);
     } catch (error) {
       log.error(`Error checking achievement ${achievementId}:`, error);
       return { newlyUnlocked: false, progressUpdated: false, currentProgress: 0, target: 0 };
@@ -167,9 +201,10 @@ export class AchievementService {
   /**
    * Unlock a specific achievement
    */
-  async unlockAchievement(achievementId: string): Promise<boolean> {
+  async unlockAchievement(achievementId: string, preloadedAchievement?: any): Promise<boolean> {
     try {
-      const achievement = await this.achievementRepo.findById(achievementId);
+      const achievement =
+        preloadedAchievement || (await this.achievementRepo.findById(achievementId));
 
       if (!achievement) {
         log.warn(`Achievement not found: ${achievementId}`);
@@ -414,7 +449,12 @@ export class AchievementService {
         }
 
         case "ingredients_used_before_expiry":
-          return Number(storage.get(INGREDIENTS_USED_BEFORE_EXPIRY_KEY)) || 0;
+          // Prefer DB-derived count when available (backed by consumption_log)
+          try {
+            return await databaseFacade.getIngredientsUsedBeforeExpiryCount();
+          } catch {
+            return Number(storage.get(INGREDIENTS_USED_BEFORE_EXPIRY_KEY)) || 0;
+          }
 
         case "achievements_shared":
           return Number(storage.get(SOCIAL_SHARES_COUNT_KEY)) || 0;

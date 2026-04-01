@@ -18,9 +18,10 @@ module.exports = {
     ],
   },
   transformIgnorePatterns: [
-    "node_modules/(?!(react-native|@react-native|@nozbe|@expo|expo|react-navigation)/)",
+    "node_modules/(?!(react-native|@react-native|@nozbe|@expo|expo|expo-modules-core|expo-constants|react-navigation|llama\\.rn|expo-file-system)/)",
   ],
   moduleNameMapper: {
+    "^expo-constants$": "<rootDir>/test/mocks/expo-constants.ts",
     "^~/(.*)$": "<rootDir>/$1",
     "^@sentry/react-native$": "<rootDir>/test/mocks/sentry-react-native.ts",
   },

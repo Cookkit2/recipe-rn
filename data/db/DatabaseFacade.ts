@@ -1,4 +1,7 @@
 import { database } from "./database";
+import { ConsumptionLogRepository } from "./repositories/ConsumptionLogRepository";
+import type { ConsumptionLogSearchOptions } from "./repositories/ConsumptionLogRepository";
+import ConsumptionLog from "./models/ConsumptionLog";
 import { Q } from "@nozbe/watermelondb";
 import type {
   Recipe,
@@ -97,6 +100,12 @@ export interface RecordCookingData {
   servingsMade?: number;
 }
 
+export interface RecordConsumptionData {
+  recipeId?: string;
+  consumedDate?: number;
+  isBeforeExpiry?: boolean;
+}
+
 export interface RecordWasteData {
   wasteDate?: number;
   reason?: string;
@@ -187,6 +196,7 @@ export class DatabaseFacade {
   private challenges: ChallengeRepository;
   private userChallenges: UserChallengeRepository;
   private wasteLog: WasteLogRepository;
+  private consumptionLog: ConsumptionLogRepository;
 
   constructor() {
     // Initialize repositories synchronously first
@@ -200,6 +210,7 @@ export class DatabaseFacade {
     this.challenges = repositories.challengeRepository!;
     this.userChallenges = repositories.userChallengeRepository!;
     this.wasteLog = repositories.wasteLogRepository!;
+    this.consumptionLog = repositories.consumptionLogRepository!;
 
     // Then initialize async features in the background
     this.initializeAsync();
@@ -604,11 +615,28 @@ export class DatabaseFacade {
       let errorCount = 0;
 
       // Batch all updates in a single write to avoid flooding the write queue
+      // Pre-caching to optimize sequential unit conversion loop
+      const conversionCache = new Map<string, { quantity: number; unit: string }>();
+
       await database.write(async () => {
         const batchOperations: any[] = [];
         for (const stockItem of allStockItems) {
           try {
-            const converted = convertToUnitSystem(stockItem.quantity, stockItem.unit, toUnitSystem);
+            const cacheKey = `${stockItem.quantity}_${stockItem.unit}`;
+            let converted = conversionCache.get(cacheKey);
+
+            if (converted === undefined) {
+              const rawConverted = convertToUnitSystem(
+                stockItem.quantity,
+                stockItem.unit,
+                toUnitSystem
+              );
+              converted = {
+                quantity: roundToReasonablePrecision(rawConverted.quantity),
+                unit: rawConverted.unit,
+              };
+              conversionCache.set(cacheKey, converted);
+            }
 
             const quantityChanged = Math.abs(converted.quantity - stockItem.quantity) > 0.001;
             const unitChanged = converted.unit !== stockItem.unit;
@@ -616,8 +644,8 @@ export class DatabaseFacade {
             if (quantityChanged || unitChanged) {
               batchOperations.push(
                 stockItem.prepareUpdate((record: any) => {
-                  record.quantity = roundToReasonablePrecision(converted.quantity);
-                  record.unit = converted.unit;
+                  record.quantity = converted!.quantity;
+                  record.unit = converted!.unit;
                 })
               );
               convertedCount++;
@@ -1015,6 +1043,41 @@ export class DatabaseFacade {
   }
 
   // ============================================
+  // CONSUMPTION LOG METHODS
+  // ============================================
+
+  /**
+   * Record a consumption log entry for used ingredients
+   */
+  async recordConsumption(
+    stockId: string,
+    quantityConsumed: number,
+    data?: RecordConsumptionData
+  ): Promise<ConsumptionLog> {
+    return await this.consumptionLog.recordConsumption(
+      stockId,
+      quantityConsumed,
+      data?.recipeId,
+      data?.consumedDate,
+      data?.isBeforeExpiry
+    );
+  }
+
+  /**
+   * Get consumption logs with optional filters
+   */
+  async getConsumptionLogs(options?: ConsumptionLogSearchOptions): Promise<ConsumptionLog[]> {
+    return await this.consumptionLog.getConsumptionLogs(options);
+  }
+
+  /**
+   * Get count of ingredients used before their expiry date
+   */
+  async getIngredientsUsedBeforeExpiryCount(): Promise<number> {
+    return await this.consumptionLog.getIngredientsUsedBeforeExpiryCount();
+  }
+
+  // ============================================
   // HIGH-LEVEL UTILITY METHODS
   // ============================================
 
@@ -1311,14 +1374,16 @@ export class DatabaseFacade {
 
     // Batch all deletions in a single write to avoid flooding the write queue
     await database.write(async () => {
-      for (const collectionName of collections) {
-        try {
-          const collection = database.collections.get(collectionName);
-          await collection.query().destroyAllPermanently();
-        } catch (error) {
-          log.warn(`⚠️ Error clearing ${collectionName}:`, error);
-        }
-      }
+      await Promise.all(
+        collections.map(async (collectionName) => {
+          try {
+            const collection = database.collections.get(collectionName);
+            await collection.query().destroyAllPermanently();
+          } catch (error) {
+            log.warn(`⚠️ Error clearing ${collectionName}:`, error);
+          }
+        })
+      );
     });
   }
 
@@ -1341,14 +1406,16 @@ export class DatabaseFacade {
 
     // Batch all deletions in a single write to avoid flooding the write queue
     await database.write(async () => {
-      for (const collectionName of collections) {
-        try {
-          const collection = database.collections.get(collectionName);
-          await collection.query().destroyAllPermanently();
-        } catch (error) {
-          log.warn(`⚠️ Error clearing ${collectionName}:`, error);
-        }
-      }
+      await Promise.all(
+        collections.map(async (collectionName) => {
+          try {
+            const collection = database.collections.get(collectionName);
+            await collection.query().destroyAllPermanently();
+          } catch (error) {
+            log.warn(`⚠️ Error clearing ${collectionName}:`, error);
+          }
+        })
+      );
     });
   }
 

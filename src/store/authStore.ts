@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import * as SecureStore from "expo-secure-store";
+import * as Crypto from "expo-crypto";
 import * as authDb from "~/src/services/database/auth-db";
 import type { Session } from "~/src/services/database/auth-db";
 import { safeJsonParse } from "~/utils/json-parsing";
@@ -55,20 +56,21 @@ export const useAuthStore = create<AuthState>()(
         try {
           // Simulate API call to login endpoint
           // In production, this would call your auth API
-          const userId = `user_${Date.now()}`;
-          const accessToken = `access_${Date.now()}`;
-          const refreshToken = `refresh_${Date.now()}`;
+          const userId = `user_${Crypto.randomUUID()}`;
+          const accessToken = `access_${Crypto.randomUUID()}`;
+          const refreshToken = `refresh_${Crypto.randomUUID()}`;
 
-          // Save to database
+          // Ensure user is created before tokens to prevent FK constraint violations
           await authDb.createUser(userId, email, "Test User");
-          await authDb.upsertSession(userId, accessToken, refreshToken, 900); // 15 minutes
-          await authDb.createRefreshToken(userId, refreshToken, 604800000); // 7 days
 
-          // Save to secure store
-          await SecureStore.setItemAsync(
-            "user_session",
-            JSON.stringify({ userId, accessToken, refreshToken })
-          );
+          await Promise.all([
+            authDb.upsertSession(userId, accessToken, refreshToken, 900), // 15 minutes
+            authDb.createRefreshToken(userId, refreshToken, 604800000), // 7 days
+            SecureStore.setItemAsync(
+              "user_session",
+              JSON.stringify({ userId, accessToken, refreshToken })
+            ),
+          ]);
 
           // Update state
           set({
@@ -96,20 +98,21 @@ export const useAuthStore = create<AuthState>()(
 
         try {
           // Simulate API call to register endpoint
-          const userId = `user_${Date.now()}`;
-          const accessToken = `access_${Date.now()}`;
-          const refreshToken = `refresh_${Date.now()}`;
+          const userId = `user_${Crypto.randomUUID()}`;
+          const accessToken = `access_${Crypto.randomUUID()}`;
+          const refreshToken = `refresh_${Crypto.randomUUID()}`;
 
-          // Save to database
+          // Ensure user is created before tokens to prevent FK constraint violations
           await authDb.createUser(userId, email, displayName);
-          await authDb.upsertSession(userId, accessToken, refreshToken, 900);
-          await authDb.createRefreshToken(userId, refreshToken, 604800000);
 
-          // Save to secure store
-          await SecureStore.setItemAsync(
-            "user_session",
-            JSON.stringify({ userId, accessToken, refreshToken })
-          );
+          await Promise.all([
+            authDb.upsertSession(userId, accessToken, refreshToken, 900),
+            authDb.createRefreshToken(userId, refreshToken, 604800000),
+            SecureStore.setItemAsync(
+              "user_session",
+              JSON.stringify({ userId, accessToken, refreshToken })
+            ),
+          ]);
 
           // Update state
           set({
@@ -136,13 +139,14 @@ export const useAuthStore = create<AuthState>()(
         try {
           const { accessToken } = get();
 
+          const logoutPromises: Promise<any>[] = [SecureStore.deleteItemAsync("user_session")];
+
           if (accessToken) {
-            // Revoke session in database
-            await authDb.revokeSession(accessToken);
+            // Revoke session in database concurrently
+            logoutPromises.push(authDb.revokeSession(accessToken));
           }
 
-          // Clear secure store
-          await SecureStore.deleteItemAsync("user_session");
+          await Promise.all(logoutPromises);
 
           // Reset state
           set(initialState);
@@ -212,11 +216,10 @@ export const useAuthStore = create<AuthState>()(
           const session = await authDb.getSessionByToken(accessToken);
 
           if (session) {
-            // Update last used time
-            await authDb.upsertSession(userId, accessToken, refreshToken, 900);
-
-            // Get user from database
-            const user = await authDb.getUserById(userId);
+            const [, user] = await Promise.all([
+              authDb.upsertSession(userId, accessToken, refreshToken, 900),
+              authDb.getUserById(userId),
+            ]);
 
             if (user) {
               set({

@@ -97,7 +97,9 @@ export const recipeApi = {
       }
 
       const dbRecipes = await databaseFacade.getAllRecipes();
-      const uiRecipes = await Promise.all(dbRecipes.map(convertDbRecipeToUIRecipe));
+      const recipeIds = dbRecipes.map((r) => r.id);
+      const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
+      const uiRecipes = convertDbRecipesToUIRecipesBatch(dbRecipes, recipeDetailsMap);
 
       return uiRecipes;
     }, "Error fetching all recipes");
@@ -148,7 +150,9 @@ export const recipeApi = {
       tags?: string[];
       maxPrepTime?: number;
       maxCookTime?: number;
-      maxDifficulty?: number;
+      minTotalTime?: number;
+      maxTotalTime?: number;
+      difficulty?: number;
     }
   ): Promise<Recipe[]> {
     return withErrorHandling(
@@ -157,7 +161,9 @@ export const recipeApi = {
           tags: filters?.tags,
           maxPrepTime: filters?.maxPrepTime,
           maxCookTime: filters?.maxCookTime,
-          maxDifficulty: filters?.maxDifficulty,
+          minTotalTime: filters?.minTotalTime,
+          maxTotalTime: filters?.maxTotalTime,
+          difficulty: filters?.difficulty,
         });
 
         // Use batch query to get all recipe details in one call
@@ -181,7 +187,9 @@ export const recipeApi = {
       tags?: string[];
       maxPrepTime?: number;
       maxCookTime?: number;
-      maxDifficulty?: number;
+      minTotalTime?: number;
+      maxTotalTime?: number;
+      difficulty?: number;
     }
   ): Promise<AppResult<Recipe[], AppError>> {
     return logAndWrapResult(async () => {
@@ -189,10 +197,14 @@ export const recipeApi = {
         tags: filters?.tags,
         maxPrepTime: filters?.maxPrepTime,
         maxCookTime: filters?.maxCookTime,
-        maxDifficulty: filters?.maxDifficulty,
+        minTotalTime: filters?.minTotalTime,
+        maxTotalTime: filters?.maxTotalTime,
+        difficulty: filters?.difficulty,
       });
 
-      return await Promise.all(dbRecipes.map(convertDbRecipeToUIRecipe));
+      const recipeIds = dbRecipes.map((r) => r.id);
+      const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
+      return convertDbRecipesToUIRecipesBatch(dbRecipes, recipeDetailsMap);
     }, "Error searching recipes");
   },
 
@@ -347,6 +359,41 @@ export const recipeApi = {
 
       return updatedRecipe;
     }, "Error updating recipe");
+  },
+
+  /**
+   * Get favorite recipes
+   */
+  async getFavoriteRecipes(): Promise<Recipe[]> {
+    return withErrorHandling(
+      async () => {
+        const dbRecipes = await databaseFacade.getFavoriteRecipes();
+
+        // Use batch query to get all recipe details in one call
+        const recipeIds = dbRecipes.map((r) => r.id);
+        const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
+
+        // Use batch conversion to avoid N+1 queries
+        return convertDbRecipesToUIRecipesBatch(dbRecipes, recipeDetailsMap);
+      },
+      "Error fetching favorite recipes",
+      []
+    );
+  },
+
+  /**
+   * Toggle recipe favorite status
+   */
+  async toggleFavorite(recipeId: string): Promise<Recipe> {
+    return withErrorLogging(async () => {
+      const dbRecipe = await databaseFacade.toggleFavorite(recipeId);
+
+      if (!dbRecipe) {
+        throw new Error("Recipe not found");
+      }
+
+      return await convertDbRecipeToUIRecipe(dbRecipe);
+    }, "Error toggling favorite status");
   },
 
   /**

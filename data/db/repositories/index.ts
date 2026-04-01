@@ -14,6 +14,7 @@ import { ChallengeRepository } from "./ChallengeRepository";
 import { UserChallengeRepository } from "./UserChallengeRepository";
 import { WasteLogRepository } from "./WasteLogRepository";
 import { RecipeVersionRepository } from "./RecipeVersionRepository";
+import { ConsumptionLogRepository } from "./ConsumptionLogRepository";
 
 // Export all repositories for easy importing
 export { BaseRepository } from "./BaseRepository";
@@ -62,6 +63,7 @@ export let challengeRepository: ChallengeRepository | null = null;
 export let userChallengeRepository: UserChallengeRepository | null = null;
 export let wasteLogRepository: WasteLogRepository | null = null;
 export let recipeVersionRepository: RecipeVersionRepository | null = null;
+export let consumptionLogRepository: ConsumptionLogRepository | null = null;
 
 // Initialize repositories - called by DatabaseFacade
 export function initializeRepositories() {
@@ -111,7 +113,12 @@ export function initializeRepositories() {
     recipeVersionRepository = new RecipeVersionRepository();
   }
 
+  if (!consumptionLogRepository) {
+    consumptionLogRepository = new ConsumptionLogRepository();
+  }
+
   return {
+    consumptionLogRepository,
     recipeRepository,
     stockRepository,
     cookingHistoryRepository,

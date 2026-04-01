@@ -121,12 +121,18 @@ export function MicButton({
     }
   };
 
+  // Determine accessibility label
+  const accessibilityLabel = isAnyVoiceActive ? "Mute voice assistant" : "Unmute voice assistant";
+
   return (
     <Animated.View style={[pressStyle, pulseAnimatedStyle]}>
       <Pressable
         onPress={handlePress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
+        accessibilityState={{ selected: isVoiceEnabled }}
         className={cn(
           "rounded-full items-center justify-center shadow-lg",
           buttonColor,
