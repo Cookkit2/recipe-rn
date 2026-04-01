@@ -1,11 +1,11 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from "@jest/globals";
 
-const mockReleaseAllLlama = jest.fn();
-const mockInitLlama = jest.fn();
+const mockReleaseAllLlama: any = jest.fn();
+const mockInitLlama: any = jest.fn();
 
 jest.mock("llama.rn", () => ({
-  initLlama: (...args: unknown[]) => mockInitLlama(...args),
-  releaseAllLlama: () => mockReleaseAllLlama(),
+  initLlama: (...args: any[]) => mockInitLlama(...args),
+  releaseAllLlama: (...args: any[]) => mockReleaseAllLlama(...args),
 }));
 
 jest.mock("expo-file-system", () => {
@@ -213,7 +213,7 @@ describe("FunctionGemmaService", () => {
   });
 
   describe("processMessage", () => {
-    let mockContext: { completion: jest.Mock };
+    let mockContext: any;
     let service: FunctionGemmaService;
 
     beforeEach(async () => {
@@ -254,16 +254,16 @@ describe("FunctionGemmaService", () => {
   });
 
   describe("Tool Execution", () => {
-    let mockContext: { completion: jest.Mock };
+    let mockContext: any;
     let service: FunctionGemmaService;
-    let mockExecutor: jest.Mocked<ToolExecutor>;
+    let mockExecutor: ToolExecutor;
 
     beforeEach(async () => {
       mockContext = { completion: jest.fn() };
       mockInitLlama.mockResolvedValue(mockContext);
 
       mockExecutor = {
-        addItem: jest.fn().mockResolvedValue({ success: true, message: "Added item" }),
+        addItem: jest.fn(() => Promise.resolve({ success: true, message: "Added item" })),
         removeItem: jest.fn(),
         getInventory: jest.fn(),
         getExpiringItems: jest.fn(),
@@ -273,7 +273,7 @@ describe("FunctionGemmaService", () => {
         findRecipes: jest.fn(),
         suggestMeals: jest.fn(),
         scanBarcode: jest.fn(),
-      };
+      } as unknown as ToolExecutor;
 
       service = new FunctionGemmaService(mockExecutor);
       await service.initialize();

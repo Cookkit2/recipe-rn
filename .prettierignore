@@ -1,0 +1,21 @@
+node_modules
+.expo
+.next
+dist
+build
+
+# Native build artifacts / vendored dependencies
+ios/Pods
+ios/build
+android/build
+android/.gradle
+
+# Generated / caches
+ios/build/generated
+
+# Large lockfiles
+pnpm-lock.yaml
+
+# Agent/assistant scratch files
+.jules
+.Jules
