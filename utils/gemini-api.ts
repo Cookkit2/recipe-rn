@@ -120,7 +120,7 @@ export class GeminiAPI {
       if (!response.ok) {
         const errorText = await response.text();
         const sanitizedErrorText = API_KEY
-          ? errorText.replace(new RegExp(API_KEY, "g"), "[REDACTED_API_KEY]")
+          ? errorText.replaceAll(API_KEY, "[REDACTED_API_KEY]")
           : errorText;
         log.error(`Gemini API error: ${response.status} - ${sanitizedErrorText}`);
         throw new Error("Gemini API request failed. Please try again later.");
@@ -182,7 +182,7 @@ export class GeminiAPI {
       if (!response.ok) {
         const errorText = await response.text();
         const sanitizedErrorText = API_KEY
-          ? errorText.replace(new RegExp(API_KEY, "g"), "[REDACTED_API_KEY]")
+          ? errorText.replaceAll(API_KEY, "[REDACTED_API_KEY]")
           : errorText;
         log.error(`Gemini API error: ${response.status} - ${sanitizedErrorText}`);
         throw new Error("Gemini API request failed. Please try again later.");
