@@ -40,6 +40,9 @@ export const isIngredientMatch = (
   const recipeName = recipeIngredientName.toLowerCase().trim();
 
   // Direct match
+  if (!pantryName || !recipeName) return pantryName === recipeName;
+
+  // Direct match
   if (pantryName === recipeName) return true;
 
   // Check provided synonyms (from database)
