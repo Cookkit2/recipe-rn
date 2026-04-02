@@ -215,24 +215,34 @@ export class StockRepository extends BaseRepository<Stock> {
     return await this.collection.database.write(async () => {
       const stock = await this.createRaw(data as any);
 
+      const batchOps: import("@nozbe/watermelondb").Model[] = [];
+
       if (options?.categoryIds && options.categoryIds.length > 0) {
         const stockCategoryRepo = this.collection.database.get("stock_category");
         for (const categoryId of options.categoryIds!) {
-          await stockCategoryRepo.create((sc: any) => {
-            sc.stockId = stock.id;
-            sc.categoryId = categoryId;
-          });
+          batchOps.push(
+            stockCategoryRepo.prepareCreate((sc: any) => {
+              sc.stockId = stock.id;
+              sc.categoryId = categoryId;
+            })
+          );
         }
       }
 
       if (options?.synonyms && options.synonyms.length > 0) {
         const synonymRepo = this.collection.database.get("ingredient_synonym");
         for (const synonym of options.synonyms!) {
-          await synonymRepo.create((syn: any) => {
-            syn.stockId = stock.id;
-            syn.synonym = synonym.toLowerCase();
-          });
+          batchOps.push(
+            synonymRepo.prepareCreate((syn: any) => {
+              syn.stockId = stock.id;
+              syn.synonym = synonym.toLowerCase();
+            })
+          );
         }
+      }
+
+      if (batchOps.length > 0) {
+        await this.collection.database.batch(...batchOps);
       }
 
       return stock;
