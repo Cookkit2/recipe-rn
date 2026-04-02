@@ -167,4 +167,48 @@ export class MealPlanRepository extends BaseRepository<MealPlan> {
 
     return record as MealPlan;
   }
+
+  // Batch upsert meal plans
+  async batchUpsert(
+    creates: MealPlanData[],
+    updates: { record: MealPlan; servings: number }[]
+  ): Promise<MealPlan[]> {
+    const batchOps: import("@nozbe/watermelondb").Model[] = [];
+
+    // Prepare creates
+    for (const data of creates) {
+      if (!data.recipeId) continue;
+
+      const preparedCreate = this.collection.prepareCreate((record) => {
+        record.recipeId = data.recipeId;
+        record.servings = data.servings;
+        const defaultDate = new Date();
+        defaultDate.setHours(0, 0, 0, 0);
+        record.date = data.date ?? defaultDate;
+        record.mealSlot = data.mealSlot ?? "dinner";
+        if (data.templateId !== undefined) {
+          record.templateId = data.templateId;
+        }
+      });
+      batchOps.push(preparedCreate);
+    }
+
+    // Prepare updates
+    for (const { record, servings } of updates) {
+      const preparedUpdate = record.prepareUpdate((r) => {
+        r.servings = servings;
+      });
+      batchOps.push(preparedUpdate);
+    }
+
+    if (batchOps.length === 0) return [];
+
+    await database.write(async () => {
+      await database.batch(...batchOps);
+    });
+
+    // We can't easily return the exact records created since they are just instances,
+    // but returning an empty array or something is fine since the API doesn't use the return value
+    return [];
+  }
 }

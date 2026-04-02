@@ -22,3 +22,6 @@
 ## 2024-05-24 - Batch Creation Optimization in WatermelonDB
 **Learning:** Sequential `create` operations inside loops (`await repo.create(...)`) are significant performance bottlenecks in WatermelonDB.
 **Action:** Replaced sequential awaits with `prepareCreate` and executed them via a single `database.batch(...)` array. This resulted in a measured ~65% speedup for metadata relationship creation. Always use `database.batch` for array-based entity creation.
+## 2025-02-23 - Batched WatermelonDB Template Applications
+**Learning:** Sequential reads and writes (N+1) are severe performance bottlenecks in WatermelonDB, especially during loop-based operations like template applications. Sequential transactions open and close writer locks repeatedly.
+**Action:** Always fetch the target scope upfront using a single query (e.g., `getByDateRange`) and index the results into a `Map` for O(1) lookups. Then, build an array of prepared models (`prepareCreate`, `prepareUpdate`) and execute them simultaneously using `database.batch(...)` within a single `database.write` block to reduce contention and overhead.

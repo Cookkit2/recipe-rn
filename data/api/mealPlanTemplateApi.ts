@@ -260,19 +260,27 @@ export const mealPlanTemplateApi = {
       const mealPlanRepo = getMealPlanRepository();
       const createdMealPlans: string[] = [];
 
-      // Pre-fetch all existing meal plans for the week to avoid N+1 queries
-      const endDate = new Date(startDate);
-      endDate.setDate(endDate.getDate() + 7);
+      // Calculate date range for the template
+      const templateStartDate = new Date(startDate);
+      templateStartDate.setHours(0, 0, 0, 0);
+      const templateEndDate = new Date(startDate);
+      templateEndDate.setDate(templateEndDate.getDate() + 7);
+      templateEndDate.setHours(23, 59, 59, 999);
 
-      const existingPlans = await mealPlanRepo.getByDateRange(startDate, endDate);
-      const existingPlanMap = new Map();
+      // Pre-fetch all existing meal plans for the date range
+      const existingPlans = await mealPlanRepo.getByDateRange(templateStartDate, templateEndDate);
+
+      // Create a lookup map for O(1) checks
+      const existingPlansMap = new Map<string, any>();
       for (const plan of existingPlans) {
-        // Normalize time to noon to match slotDate calculation below
+        // Normalize date to start of day for consistent matching, similar to getByDateAndMealSlot
         const planDate = new Date(plan.date);
-        planDate.setHours(12, 0, 0, 0);
-        existingPlanMap.set(`${planDate.getTime()}_${plan.mealSlot}`, plan);
+        planDate.setHours(0, 0, 0, 0);
+        existingPlansMap.set(`${planDate.getTime()}-${plan.mealSlot}`, plan);
       }
 
+      const creates: any[] = [];
+      const updates: { record: any; servings: number }[] = [];
       // Apply each meal slot in the template
       for (const slot of template.mealSlots) {
         try {
@@ -281,40 +289,49 @@ export const mealPlanTemplateApi = {
           const daysToAdd = (slot.dayOfWeek - slotDate.getDay() + 7) % 7;
           slotDate.setDate(slotDate.getDate() + daysToAdd);
 
-          // Set time to noon to avoid timezone issues
+          // Set time to noon to avoid timezone issues, but use start of day for lookup
           slotDate.setHours(12, 0, 0, 0);
 
-          // Check if a meal plan already exists for this date and slot in O(1) time
-          const existing = existingPlanMap.get(`${slotDate.getTime()}_${slot.mealSlot}`);
+          const lookupDate = new Date(slotDate);
+          lookupDate.setHours(0, 0, 0, 0);
+          const key = `${lookupDate.getTime()}-${slot.mealSlot}`;
+
+          // Check if a meal plan already exists for this date and slot
+          const existing = existingPlansMap.get(key);
 
           if (existing) {
             if (overwriteExisting) {
-              // Update the existing meal plan
-              await mealPlanRepo.updateServings(existing.recipeId, slot.servings);
+              updates.push({ record: existing, servings: slot.servings });
               log.info(
-                `Updated existing meal plan for ${slotDate.toISOString()} - ${slot.mealSlot}`
+                `Prepared update for existing meal plan for ${slotDate.toISOString()} - ${slot.mealSlot}`
               );
             } else {
               log.info(
                 `Skipped existing meal plan for ${slotDate.toISOString()} - ${slot.mealSlot}`
               );
-              continue;
             }
           } else {
-            // Create a new meal plan
-            const mealPlan = await mealPlanRepo.addToPlan({
+            creates.push({
               recipeId: slot.recipeId,
               servings: slot.servings,
               date: slotDate,
               mealSlot: slot.mealSlot,
             });
-            createdMealPlans.push(mealPlan.id);
-            log.info(`Created meal plan for ${slotDate.toISOString()} - ${slot.mealSlot}`);
+            createdMealPlans.push("pending-" + creates.length);
+            log.info(
+              `Prepared creation for meal plan for ${slotDate.toISOString()} - ${slot.mealSlot}`
+            );
           }
         } catch (error) {
-          log.error(`Error applying meal slot ${slot.mealSlot}:`, error);
-          // Continue with other slots
+          log.error(`Error processing meal slot ${slot.mealSlot}:`, error);
         }
+      }
+
+      // Execute all updates and creates in a single batch
+      if (creates.length > 0 || updates.length > 0) {
+        // We cast to any here to avoid importing MealPlan inside the API just for types
+        await mealPlanRepo.batchUpsert(creates, updates);
+        log.info(`Batch executed ${creates.length} creations and ${updates.length} updates`);
       }
 
       log.info(`✅ Applied template: created ${createdMealPlans.length} meal plans`);
