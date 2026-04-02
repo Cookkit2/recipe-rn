@@ -177,13 +177,12 @@ export function useRecipeVersioning(options: UseRecipeVersioningOptions) {
       const versionsToDelete = allVersions.slice(keepCount);
       let deletedCount = 0;
 
-      for (const version of versionsToDelete) {
-        try {
-          await recipeVersionRepository.deleteVersion(version.id);
-          deletedCount++;
-        } catch (error) {
-          log.warn(`Failed to delete version ${version.versionNumber}:`, error);
-        }
+      try {
+        const idsToDelete = versionsToDelete.map((v) => v.id);
+        await recipeVersionRepository.deleteMany(idsToDelete);
+        deletedCount = idsToDelete.length;
+      } catch (error) {
+        log.error("Failed to delete old versions in batch:", error);
       }
 
       return {

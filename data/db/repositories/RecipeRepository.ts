@@ -448,13 +448,13 @@ export class RecipeRepository extends BaseRepository<Recipe> {
       // We need to fetch steps and ingredients in chunks to avoid SQLite parameter limits
       const chunkedFetch = async <T>(collection: any, ids: string[], foreignKey: string) => {
         const CHUNK_SIZE = 500;
-        let results: T[] = [];
+        const promises: Promise<T[]>[] = [];
         for (let i = 0; i < ids.length; i += CHUNK_SIZE) {
           const chunk = ids.slice(i, i + CHUNK_SIZE);
-          const fetched = await collection.query(Q.where(foreignKey, Q.oneOf(chunk))).fetch();
-          results = results.concat(fetched);
+          promises.push(collection.query(Q.where(foreignKey, Q.oneOf(chunk))).fetch());
         }
-        return results;
+        const resultsArray = await Promise.all(promises);
+        return resultsArray.flat();
       };
 
       const existingSteps = await chunkedFetch<RecipeStep>(

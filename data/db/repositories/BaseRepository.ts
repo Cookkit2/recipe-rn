@@ -54,14 +54,27 @@ export abstract class BaseRepository<T extends Model> {
     });
   }
 
+  // Prepare create method for batching
+  prepareCreate(data: Partial<T> & Record<string, unknown>): T {
+    return this.collection.prepareCreate((record: T) => {
+      for (const key in data) {
+        if (Object.prototype.hasOwnProperty.call(data, key) && data[key] !== undefined) {
+          (record as any)[key] = data[key];
+        }
+      }
+    });
+  }
+
   // Raw create method that works within existing transactions
   async createRaw(data: Partial<T> & Record<string, unknown>): Promise<T> {
     return await this.collection.create((record: T) => {
-      Object.keys(data).forEach((key) => {
-        if (data[key] !== undefined) {
-          (record as any)[key] = data[key];
+      for (const key in data) {
+        if (Object.prototype.hasOwnProperty.call(data, key)) {
+          if (data[key] !== undefined) {
+            (record as any)[key] = data[key];
+          }
         }
-      });
+      }
     });
   }
 
@@ -75,11 +88,13 @@ export abstract class BaseRepository<T extends Model> {
   async updateRaw(id: string, data: Partial<T> & Record<string, unknown>): Promise<T> {
     const record = await this.collection.find(id);
     return await record.update((r: T) => {
-      Object.keys(data).forEach((key) => {
-        if (data[key] !== undefined) {
-          (r as any)[key] = data[key];
+      for (const key in data) {
+        if (Object.prototype.hasOwnProperty.call(data, key)) {
+          if (data[key] !== undefined) {
+            (r as any)[key] = data[key];
+          }
         }
-      });
+      }
     });
   }
 
