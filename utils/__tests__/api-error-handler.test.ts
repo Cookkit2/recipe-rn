@@ -1,3 +1,4 @@
+import { describe, it, expect, jest, beforeEach } from "@jest/globals";
 import {
   withErrorHandling,
   withErrorLogging,
@@ -10,94 +11,97 @@ import {
   logAndWrapResult,
 } from "../api-error-handler";
 import { log } from "../logger";
+import type { AppError } from "~/types/AppError";
 
 // Mock the logger
 jest.mock("../logger", () => ({
   log: {
     error: jest.fn(),
     warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
   },
 }));
 
 describe("api-error-handler", () => {
-  afterEach(() => {
+  const mockError = new Error("Test error");
+  const errorMessage = "Operation failed";
+
+  beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe("withErrorHandling", () => {
-    it("should return the function result on success", async () => {
-      const mockFn = jest.fn().mockResolvedValue("success");
-      const result = await withErrorHandling(mockFn, "Error msg", "default");
+  describe("withErrorLogging", () => {
+    it("should return the result of the function if it succeeds", async () => {
+      const mockFn = jest.fn<() => Promise<string>>().mockResolvedValue("success");
+      const result = await withErrorLogging(mockFn, errorMessage);
 
       expect(result).toBe("success");
       expect(mockFn).toHaveBeenCalledTimes(1);
       expect(log.error).not.toHaveBeenCalled();
     });
 
-    it("should return default value and log error on failure", async () => {
-      const error = new Error("test error");
-      const mockFn = jest.fn().mockRejectedValue(error);
-      const result = await withErrorHandling(mockFn, "Error msg", "default");
+    it("should log the error and re-throw if the function fails", async () => {
+      const mockFn = jest.fn<() => Promise<string>>().mockRejectedValue(mockError);
 
-      expect(result).toBe("default");
+      await expect(withErrorLogging(mockFn, errorMessage)).rejects.toThrow(mockError);
+
       expect(mockFn).toHaveBeenCalledTimes(1);
-      expect(log.error).toHaveBeenCalledWith("Error msg:", error);
+      expect(log.error).toHaveBeenCalledWith(`${errorMessage}:`, mockError);
     });
   });
 
-  describe("withErrorLogging", () => {
-    it("should return the function result on success", async () => {
-      const mockFn = jest.fn().mockResolvedValue("success");
-      const result = await withErrorLogging(mockFn, "Error msg");
+  describe("withErrorHandling", () => {
+    it("should return the result of the function if it succeeds", async () => {
+      const mockFn = jest.fn<() => Promise<string>>().mockResolvedValue("success");
+      const result = await withErrorHandling(mockFn, errorMessage, "default");
 
       expect(result).toBe("success");
       expect(mockFn).toHaveBeenCalledTimes(1);
       expect(log.error).not.toHaveBeenCalled();
     });
 
-    it("should re-throw error and log it on failure", async () => {
-      const error = new Error("test error");
-      const mockFn = jest.fn().mockRejectedValue(error);
+    it("should log the error and return the default value if the function fails", async () => {
+      const mockFn = jest.fn<() => Promise<string>>().mockRejectedValue(mockError);
+      const result = await withErrorHandling(mockFn, errorMessage, "default");
 
-      await expect(withErrorLogging(mockFn, "Error msg")).rejects.toThrow(error);
+      expect(result).toBe("default");
       expect(mockFn).toHaveBeenCalledTimes(1);
-      expect(log.error).toHaveBeenCalledWith("Error msg:", error);
+      expect(log.error).toHaveBeenCalledWith(`${errorMessage}:`, mockError);
     });
   });
 
   describe("withStructuredError", () => {
-    it("should return success result on success", async () => {
-      const mockFn = jest.fn().mockResolvedValue("success");
-      const result = await withStructuredError(mockFn, "Error msg");
+    it("should return a success result if the function succeeds", async () => {
+      const mockFn = jest.fn<() => Promise<string>>().mockResolvedValue("success");
+      const result = await withStructuredError(mockFn, errorMessage);
 
       expect(result).toEqual({ success: true, data: "success" });
       expect(mockFn).toHaveBeenCalledTimes(1);
       expect(log.error).not.toHaveBeenCalled();
     });
 
-    it("should return structured error and log on failure with Error instance", async () => {
-      const error = new Error("test error message");
-      const mockFn = jest.fn().mockRejectedValue(error);
-      const result = await withStructuredError(mockFn, "Error msg prefix");
+    it("should log the error and return a failure result if the function fails", async () => {
+      const mockFn = jest.fn<() => Promise<string>>().mockRejectedValue(mockError);
+      const result = await withStructuredError(mockFn, errorMessage);
 
-      expect(result).toEqual({ success: false, error: "test error message" });
+      expect(result).toEqual({ success: false, error: mockError.message });
       expect(mockFn).toHaveBeenCalledTimes(1);
-      expect(log.error).toHaveBeenCalledWith("Error msg prefix: Error -", "test error message");
+      expect(log.error).toHaveBeenCalledWith(`${errorMessage}: Error -`, mockError.message);
     });
 
-    it("should handle non-Error instances properly", async () => {
-      const mockFn = jest.fn().mockRejectedValue("string error");
-      const result = await withStructuredError(mockFn, "Error msg prefix");
+    it("should handle non-Error objects being thrown", async () => {
+      const mockFn = jest.fn<() => Promise<string>>().mockRejectedValue("string error");
+      const result = await withStructuredError(mockFn, errorMessage);
 
       expect(result).toEqual({ success: false, error: "Unknown error occurred" });
-      expect(mockFn).toHaveBeenCalledTimes(1);
-      expect(log.error).toHaveBeenCalledWith("Error msg prefix: Error -", "Unknown error occurred");
+      expect(log.error).toHaveBeenCalledWith(`${errorMessage}: Error -`, "Unknown error occurred");
     });
   });
 
   describe("withSilentError", () => {
-    it("should return the function result on success", async () => {
-      const mockFn = jest.fn().mockResolvedValue("success");
+    it("should return the result of the function if it succeeds", async () => {
+      const mockFn = jest.fn<() => Promise<string>>().mockResolvedValue("success");
       const result = await withSilentError(mockFn, "default");
 
       expect(result).toBe("success");
@@ -105,9 +109,8 @@ describe("api-error-handler", () => {
       expect(log.error).not.toHaveBeenCalled();
     });
 
-    it("should return default value and NOT log on failure", async () => {
-      const error = new Error("test error");
-      const mockFn = jest.fn().mockRejectedValue(error);
+    it("should return the default value without logging if the function fails", async () => {
+      const mockFn = jest.fn<() => Promise<string>>().mockRejectedValue(mockError);
       const result = await withSilentError(mockFn, "default");
 
       expect(result).toBe("default");
@@ -117,72 +120,81 @@ describe("api-error-handler", () => {
   });
 
   describe("withWarningHandling", () => {
-    it("should return the function result on success", async () => {
-      const mockFn = jest.fn().mockResolvedValue("success");
-      const result = await withWarningHandling(mockFn, "Warning msg", "default");
+    it("should return the result of the function if it succeeds", async () => {
+      const mockFn = jest.fn<() => Promise<string>>().mockResolvedValue("success");
+      const result = await withWarningHandling(mockFn, errorMessage, "default");
 
       expect(result).toBe("success");
       expect(mockFn).toHaveBeenCalledTimes(1);
       expect(log.warn).not.toHaveBeenCalled();
     });
 
-    it("should return default value and log warning on failure", async () => {
-      const error = new Error("test error");
-      const mockFn = jest.fn().mockRejectedValue(error);
-      const result = await withWarningHandling(mockFn, "Warning msg", "default");
+    it("should log a warning and return the default value if the function fails", async () => {
+      const mockFn = jest.fn<() => Promise<string>>().mockRejectedValue(mockError);
+      const result = await withWarningHandling(mockFn, errorMessage, "default");
 
       expect(result).toBe("default");
       expect(mockFn).toHaveBeenCalledTimes(1);
-      expect(log.warn).toHaveBeenCalledWith("Warning msg:", error);
+      expect(log.warn).toHaveBeenCalledWith(`${errorMessage}:`, mockError);
+      expect(log.error).not.toHaveBeenCalled();
     });
   });
 
   describe("withArrayErrorHandling", () => {
-    it("should process all items and return results on success", async () => {
+    it("should process all items and return results", async () => {
       const items = [1, 2, 3];
-      const mockProcessor = jest.fn().mockImplementation(async (item) => item * 2);
-      const result = await withArrayErrorHandling(items, mockProcessor, "Error prefix");
+      const mockFn = jest
+        .fn<(item: number) => Promise<string>>()
+        .mockImplementation(async (item) => `processed ${item}`);
 
-      expect(result).toEqual([2, 4, 6]);
-      expect(mockProcessor).toHaveBeenCalledTimes(3);
+      const results = await withArrayErrorHandling(items, mockFn, errorMessage);
+
+      expect(results).toEqual(["processed 1", "processed 2", "processed 3"]);
+      expect(mockFn).toHaveBeenCalledTimes(3);
       expect(log.error).not.toHaveBeenCalled();
     });
 
-    it("should filter out failures, log errors, and continue processing", async () => {
+    it("should skip failed items but continue processing others", async () => {
       const items = [1, 2, 3];
-      const error = new Error("test error");
-      const mockProcessor = jest.fn().mockImplementation(async (item) => {
-        if (item === 2) throw error;
-        return item * 2;
-      });
-      const result = await withArrayErrorHandling(items, mockProcessor, "Error prefix");
+      const mockFn = jest
+        .fn<(item: number) => Promise<string>>()
+        .mockImplementation(async (item) => {
+          if (item === 2) throw mockError;
+          return `processed ${item}`;
+        });
 
-      expect(result).toEqual([2, 6]);
-      expect(mockProcessor).toHaveBeenCalledTimes(3);
-      expect(log.error).toHaveBeenCalledWith("Error prefix:", 2, error);
+      const results = await withArrayErrorHandling(items, mockFn, errorMessage);
+
+      expect(results).toEqual(["processed 1", "processed 3"]);
+      expect(mockFn).toHaveBeenCalledTimes(3);
+      expect(log.error).toHaveBeenCalledTimes(1);
+      expect(log.error).toHaveBeenCalledWith(`${errorMessage}:`, 2, mockError);
     });
   });
 
   describe("createErrorHandler", () => {
-    it("should create handler with context prefix", async () => {
-      const handler = createErrorHandler({ context: "TestCtx" });
-      const mockFn = jest.fn().mockRejectedValue(new Error("test error"));
+    const errorHandler = createErrorHandler({ context: "TestContext" });
 
-      await handler.withErrorHandling(mockFn, "msg", "default");
-      expect(log.error).toHaveBeenCalledWith("TestCtx: msg:", expect.any(Error));
+    it("should prefix error messages correctly with context", async () => {
+      const mockFn = jest.fn<() => Promise<string>>().mockRejectedValue(mockError);
+      const result = await errorHandler.withErrorHandling(mockFn, "Failed", "default");
+
+      expect(result).toBe("default");
+      expect(log.error).toHaveBeenCalledWith("TestContext: Failed:", mockError);
     });
 
-    it("should create handler without context prefix if none provided", async () => {
-      const handler = createErrorHandler({});
-      const mockFn = jest.fn().mockRejectedValue(new Error("test error"));
+    it("should work without context", async () => {
+      const noContextHandler = createErrorHandler({});
+      const mockFn = jest.fn<() => Promise<string>>().mockRejectedValue(mockError);
+      const result = await noContextHandler.withErrorHandling(mockFn, "Failed", "default");
 
-      await handler.withErrorHandling(mockFn, "msg", "default");
-      expect(log.error).toHaveBeenCalledWith("msg:", expect.any(Error));
+      expect(result).toBe("default");
+      expect(log.error).toHaveBeenCalledWith("Failed:", mockError);
     });
 
     it("should expose all expected methods", async () => {
       const handler = createErrorHandler({});
-      const mockFn = jest.fn().mockResolvedValue("success");
+      const mockFn = jest.fn<() => Promise<string>>().mockResolvedValue("success");
 
       expect(await handler.withErrorHandling(mockFn, "msg", "def")).toBe("success");
       expect(await handler.withErrorLogging(mockFn, "msg")).toBe("success");
@@ -196,34 +208,37 @@ describe("api-error-handler", () => {
   });
 
   describe("wrapResult", () => {
-    it("should return ok result on success", async () => {
-      const mockFn = jest.fn().mockResolvedValue("success");
+    it("should return ok with value on success", async () => {
+      const mockFn = jest.fn<() => Promise<string>>().mockResolvedValue("success");
       const result = await wrapResult(mockFn);
+
       expect(result.isOk()).toBe(true);
-      if (result.isOk()) {
-        expect(result.value).toBe("success");
-      }
+      if (result.isOk()) expect(result.value).toBe("success");
+      expect(log.error).not.toHaveBeenCalled();
     });
 
-    it("should return err with default mapped error on failure", async () => {
-      const error = new Error("test error message");
-      const mockFn = jest.fn().mockRejectedValue(error);
+    it("should return err with AppError on failure", async () => {
+      const mockFn = jest.fn<() => Promise<string>>().mockRejectedValue(mockError);
       const result = await wrapResult(mockFn);
 
-      expect(result.isOk()).toBe(false);
-      if (!result.isOk()) {
+      expect(result.isErr()).toBe(true);
+      if (result.isErr()) {
         expect(result.error.kind).toBe("unknown");
-        expect(result.error.message).toBe("test error message");
+        expect(result.error.message).toBe("Test error");
+        expect(result.error.cause).toBe(mockError);
       }
+      expect(log.error).not.toHaveBeenCalled();
     });
 
     it("should use custom errorMapper if provided", async () => {
-      const mockFn = jest.fn().mockRejectedValue(new Error("test"));
-      const customMapper = jest.fn().mockReturnValue({ kind: "validation", message: "Custom" });
+      const mapperError: AppError = { kind: "validation", message: "Custom", cause: undefined };
+      const mockFn = jest.fn<() => Promise<string>>().mockRejectedValue(new Error("ignored"));
+      const customMapper = jest.fn<(e: unknown) => AppError>().mockReturnValue(mapperError);
+
       const result = await wrapResult(mockFn, customMapper);
 
-      expect(result.isOk()).toBe(false);
-      if (!result.isOk()) {
+      expect(result.isErr()).toBe(true);
+      if (result.isErr()) {
         expect(result.error.kind).toBe("validation");
         expect(result.error.message).toBe("Custom");
       }
@@ -231,38 +246,43 @@ describe("api-error-handler", () => {
   });
 
   describe("logAndWrapResult", () => {
-    it("should return ok result on success without logging", async () => {
-      const mockFn = jest.fn().mockResolvedValue("success");
-      const result = await logAndWrapResult(mockFn, "Prefix");
+    it("should return ok with value on success", async () => {
+      const mockFn = jest.fn<() => Promise<string>>().mockResolvedValue("success");
+      const result = await logAndWrapResult(mockFn, errorMessage);
 
       expect(result.isOk()).toBe(true);
+      if (result.isOk()) expect(result.value).toBe("success");
       expect(log.error).not.toHaveBeenCalled();
     });
 
-    it("should return err, map error, and log on failure", async () => {
-      const error = new Error("test error");
-      const mockFn = jest.fn().mockRejectedValue(error);
-      const result = await logAndWrapResult(mockFn, "Prefix");
+    it("should log error and return err with AppError on failure", async () => {
+      const mockFn = jest.fn<() => Promise<string>>().mockRejectedValue(mockError);
+      const result = await logAndWrapResult(mockFn, errorMessage);
 
-      expect(result.isOk()).toBe(false);
-      if (!result.isOk()) {
+      expect(log.error).toHaveBeenCalledWith(`${errorMessage}:`, mockError);
+      expect(result.isErr()).toBe(true);
+      if (result.isErr()) {
         expect(result.error.kind).toBe("unknown");
-        expect(result.error.message).toBe("Prefix: test error");
+        expect(result.error.message).toContain(errorMessage);
+        expect(result.error.cause).toBe(mockError);
       }
-      expect(log.error).toHaveBeenCalledWith("Prefix:", error);
     });
 
-    it("should preserve existing AppError kind and not prefix if already prefixed", async () => {
-      const appError = { kind: "not_found", message: "Prefix: Not found" };
-      const customMapper = jest.fn().mockReturnValue(appError);
-      const mockFn = jest.fn().mockRejectedValue(new Error("test"));
+    it("should preserve AppError kind and message if already prefixed", async () => {
+      const appError: AppError = {
+        kind: "not_found",
+        message: `${errorMessage}: Not found`,
+        cause: undefined,
+      };
+      const customMapper = jest.fn<(e: unknown) => AppError>().mockReturnValue(appError);
+      const mockFn = jest.fn<() => Promise<string>>().mockRejectedValue(new Error("ignored"));
 
-      const result = await logAndWrapResult(mockFn, "Prefix", customMapper);
+      const result = await logAndWrapResult(mockFn, errorMessage, customMapper);
 
-      expect(result.isOk()).toBe(false);
-      if (!result.isOk()) {
+      expect(result.isErr()).toBe(true);
+      if (result.isErr()) {
         expect(result.error.kind).toBe("not_found");
-        expect(result.error.message).toBe("Prefix: Not found");
+        expect(result.error.message).toBe(`${errorMessage}: Not found`);
       }
     });
   });
