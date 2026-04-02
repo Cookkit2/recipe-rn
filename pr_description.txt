@@ -1,0 +1,19 @@
+🎯 **What:**
+Added comprehensive unit tests for the `api-error-handler` utilities in `utils/api-error-handler.ts`.
+
+📊 **Coverage:**
+The new tests cover both success and failure scenarios for all exported utilities:
+* `withErrorHandling`
+* `withErrorLogging`
+* `withStructuredError`
+* `withSilentError`
+* `withWarningHandling`
+* `withArrayErrorHandling`
+* `createErrorHandler`
+* `wrapResult`
+* `logAndWrapResult`
+
+It correctly mocks the logger dependency to verify that errors are logged (or silently ignored) appropriately depending on the utility used.
+
+✨ **Result:**
+The test suite ensures that API error handling logic remains predictable, reducing regressions in production when modifying the API layer or error handlers. Tests utilize the standard `neverthrow` `.isOk()` patterns effectively.
