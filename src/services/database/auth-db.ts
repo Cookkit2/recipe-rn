@@ -245,13 +245,17 @@ export const isValidRefreshToken = async (refreshToken: string): Promise<boolean
   return result?.count ? result.count > 0 : false;
 };
 
+// Generate a stable secure pseudo-secret for the mock database session
+const MOCK_JWT_SECRET = Array.from(Crypto.getRandomBytes(32))
+  .map((b) => b.toString(16).padStart(2, "0"))
+  .join("");
+
 /**
  * Generate JWT tokens (simplified - use actual JWT library in production)
  */
 const generateTokens = (userId: string): { accessToken: string; refreshToken: string } => {
   const payload = { userId, exp: Date.now() + 15 * 60 * 1000 };
-  const pseudoSecret = "local_db_secret";
-  const accessToken = jwtEncode(payload, pseudoSecret);
+  const accessToken = jwtEncode(payload, MOCK_JWT_SECRET);
   const refreshToken = `refresh_${userId}_${Crypto.randomUUID()}`;
   return { accessToken, refreshToken };
 };
