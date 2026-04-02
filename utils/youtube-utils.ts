@@ -87,6 +87,48 @@ export function buildYouTubeEmbedUrl(videoId: string): string {
   return `https://www.youtube.com/embed/${videoId}`;
 }
 
+const COOKING_KEYWORDS = [
+  "recipe",
+  "cook",
+  "cooking",
+  "bake",
+  "baking",
+  "chef",
+  "kitchen",
+  "food",
+  "meal",
+  "dish",
+  "ingredient",
+  "how to make",
+  "how to cook",
+  "homemade",
+  "preparation",
+  "cuisine",
+  "dinner",
+  "lunch",
+  "breakfast",
+  "dessert",
+  "snack",
+  "appetizer",
+  "sauce",
+  "soup",
+  "salad",
+  "pasta",
+  "rice",
+  "chicken",
+  "beef",
+  "fish",
+  "vegetarian",
+  "vegan",
+  "grilled",
+  "fried",
+  "roasted",
+  "steamed",
+  "boiled",
+];
+
+const COOKING_KEYWORDS_REGEX = new RegExp(`\\b(${COOKING_KEYWORDS.join("|")})\\b`, "gi");
+
 /**
  * Quick keyword-based check to determine if a video might be cooking-related
  * based on the title. This is a lightweight pre-check before full AI analysis.
@@ -95,50 +137,9 @@ export function quickCookingCheck(title: string): {
   isCooking: boolean;
   confidence: number;
 } {
-  const lowerTitle = title.toLowerCase();
-
-  const cookingKeywords = [
-    "recipe",
-    "cook",
-    "cooking",
-    "bake",
-    "baking",
-    "chef",
-    "kitchen",
-    "food",
-    "meal",
-    "dish",
-    "ingredient",
-    "how to make",
-    "how to cook",
-    "homemade",
-    "preparation",
-    "cuisine",
-    "dinner",
-    "lunch",
-    "breakfast",
-    "dessert",
-    "snack",
-    "appetizer",
-    "sauce",
-    "soup",
-    "salad",
-    "pasta",
-    "rice",
-    "chicken",
-    "beef",
-    "fish",
-    "vegetarian",
-    "vegan",
-    "grilled",
-    "fried",
-    "roasted",
-    "steamed",
-    "boiled",
-  ];
-
-  const matches = cookingKeywords.filter((kw) => lowerTitle.includes(kw));
-  const confidence = Math.min(matches.length / 3, 1);
+  const matches = title.match(COOKING_KEYWORDS_REGEX);
+  const uniqueMatches = matches ? new Set(matches.map((m) => m.toLowerCase())).size : 0;
+  const confidence = Math.min(uniqueMatches / 3, 1);
 
   return {
     isCooking: confidence > 0.3,
