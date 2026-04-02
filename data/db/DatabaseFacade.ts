@@ -1214,59 +1214,64 @@ export class DatabaseFacade {
 
       const ingredientMatchCache = new Map<string, (typeof pantryItemsWithMetadata)[0] | null>();
 
-      // Process recipes in batches
-      const batchSize = 100;
+      // Pre-fetch all recipe details concurrently in chunks to avoid SQLite limits
+      const allRecipeIds = allRecipes.map((r) => r.id);
+      const detailsFetchPromises: Promise<Map<string, RecipeWithDetails>>[] = [];
+      for (let i = 0; i < allRecipeIds.length; i += 500) {
+        detailsFetchPromises.push(this.getRecipesWithDetails(allRecipeIds.slice(i, i + 500)));
+      }
 
-      for (let i = 0; i < allRecipes.length; i += batchSize) {
-        const recipeBatch = allRecipes.slice(i, i + batchSize);
+      const detailMaps = await Promise.all(detailsFetchPromises);
+      const allDetailsMap = new Map<string, RecipeWithDetails>();
+      for (const map of detailMaps) {
+        for (const [id, details] of map.entries()) {
+          allDetailsMap.set(id, details);
+        }
+      }
 
-        const recipeIds = recipeBatch.map((recipe) => recipe.id);
-        const batchDetailsMap = await this.getRecipesWithDetails(recipeIds);
+      for (let i = 0; i < allRecipes.length; i++) {
+        const recipe = allRecipes[i];
+        if (!recipe) continue;
 
-        for (let j = 0; j < recipeBatch.length; j++) {
-          const recipe = recipeBatch[j];
-          if (!recipe) continue;
+        const recipeDetails = allDetailsMap.get(recipe.id);
 
-          const recipeDetails = batchDetailsMap.get(recipe.id);
+        if (!recipeDetails || !recipeDetails.ingredients.length) {
+          continue;
+        }
 
-          if (!recipeDetails || !recipeDetails.ingredients.length) {
-            continue;
-          }
+        let availableCount = 0;
+        for (const ingredient of recipeDetails.ingredients) {
+          const normalizedIngredientName = ingredient.name.toLowerCase().trim();
 
-          let availableCount = 0;
-          for (const ingredient of recipeDetails.ingredients) {
-            const normalizedIngredientName = ingredient.name.toLowerCase().trim();
+          let matchingItem: (typeof pantryItemsWithMetadata)[0] | null | undefined =
+            ingredientMatchCache.get(normalizedIngredientName);
 
-            let matchingItem: (typeof pantryItemsWithMetadata)[0] | null | undefined =
-              ingredientMatchCache.get(normalizedIngredientName);
-
-            if (matchingItem === undefined) {
-              matchingItem = pantryIndex.get(normalizedIngredientName) || null;
-              if (!matchingItem) {
-                matchingItem =
-                  pantryItemsWithMetadata.find((pantryItem) =>
-                    isIngredientMatch(pantryItem.name, ingredient.name, pantryItem.synonyms)
-                  ) || null;
-              }
-              ingredientMatchCache.set(normalizedIngredientName, matchingItem);
+          if (matchingItem === undefined) {
+            matchingItem = pantryIndex.get(normalizedIngredientName) || null;
+            if (!matchingItem) {
+              matchingItem =
+                pantryItemsWithMetadata.find((pantryItem) =>
+                  isIngredientMatch(pantryItem.name, ingredient.name, pantryItem.synonyms)
+                ) || null;
             }
-
-            if (matchingItem !== null) {
-              availableCount++;
-            }
+            ingredientMatchCache.set(normalizedIngredientName, matchingItem);
           }
 
-          const totalCount = recipeDetails.ingredients.length;
-          const percentage = Math.round((availableCount / totalCount) * 100);
-
-          if (availableCount === totalCount && totalCount > 0 && recipe) {
-            canMake.push(recipe);
-          } else if (availableCount > 0 && recipe) {
-            partiallyCanMake.push({
-              recipe,
-              completionPercentage: percentage,
-            });
+          if (matchingItem !== null) {
+            availableCount++;
           }
+        }
+
+        const totalCount = recipeDetails.ingredients.length;
+        const percentage = Math.round((availableCount / totalCount) * 100);
+
+        if (availableCount === totalCount && totalCount > 0 && recipe) {
+          canMake.push(recipe);
+        } else if (availableCount > 0 && recipe) {
+          partiallyCanMake.push({
+            recipe,
+            completionPercentage: percentage,
+          });
         }
       }
 
