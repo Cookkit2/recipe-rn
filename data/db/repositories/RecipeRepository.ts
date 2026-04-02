@@ -453,8 +453,8 @@ export class RecipeRepository extends BaseRepository<Recipe> {
           const chunk = ids.slice(i, i + CHUNK_SIZE);
           promises.push(collection.query(Q.where(foreignKey, Q.oneOf(chunk))).fetch());
         }
-        const fetchedResults = await Promise.all(promises);
-        return fetchedResults.flat();
+        const resultsArray = await Promise.all(promises);
+        return resultsArray.flat();
       };
 
       const existingSteps = await chunkedFetch<RecipeStep>(
