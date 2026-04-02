@@ -130,18 +130,33 @@ export async function seedDatabase() {
 
     // Seed stock items
     log.info("📦 Seeding stock items...");
-    for (const item of dummyPantryItems) {
-      // Save the image from asset into file system and return the path
-      const imagePath = await saveImageAsset(item.image_url);
 
-      await databaseFacade.createStock({
-        name: item.name,
-        quantity: item.quantity,
-        unit: item.unit,
-        expirationDate: item.expiry_date?.getTime(),
-        storageType: item.type,
-        imageUrl: imagePath, // Use the saved file path instead of the original asset
-      });
+    // Resolve all image paths first (file system operations)
+    const itemsWithImages = await Promise.all(
+      dummyPantryItems.map(async (item) => ({
+        item,
+        imagePath: await saveImageAsset(item.image_url),
+      }))
+    );
+
+    // Prepare all stock items for batch insertion
+    const batchOps: import("@nozbe/watermelondb").Model[] = [];
+    for (const { item, imagePath } of itemsWithImages) {
+      batchOps.push(
+        databaseFacade.prepareCreateStock({
+          name: item.name,
+          quantity: item.quantity,
+          unit: item.unit,
+          expirationDate: item.expiry_date?.getTime(),
+          storageType: item.type,
+          imageUrl: imagePath, // Use the saved file path instead of the original asset
+        })
+      );
+    }
+
+    // Execute all insertions in a single transaction
+    if (batchOps.length > 0) {
+      await databaseFacade.batch(batchOps);
     }
 
     // Seed achievement definitions

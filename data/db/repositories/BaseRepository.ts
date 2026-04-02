@@ -54,6 +54,17 @@ export abstract class BaseRepository<T extends Model> {
     });
   }
 
+  // Prepare create method for batching
+  prepareCreate(data: Partial<T> & Record<string, unknown>): T {
+    return this.collection.prepareCreate((record: T) => {
+      for (const key in data) {
+        if (Object.prototype.hasOwnProperty.call(data, key) && data[key] !== undefined) {
+          (record as any)[key] = data[key];
+        }
+      }
+    });
+  }
+
   // Raw create method that works within existing transactions
   async createRaw(data: Partial<T> & Record<string, unknown>): Promise<T> {
     return await this.collection.create((record: T) => {
