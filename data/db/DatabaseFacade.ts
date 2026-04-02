@@ -1239,59 +1239,53 @@ export class DatabaseFacade {
 
       const ingredientMatchCache = new Map<string, (typeof pantryItemsWithMetadata)[0] | null>();
 
-      // Process recipes in batches
-      const batchSize = 100;
+      // Fetch all recipe details at once to avoid N+1 awaits in loop
+      const recipeIds = allRecipes.map((recipe) => recipe.id);
+      const allDetailsMap = await this.getRecipesWithDetails(recipeIds);
 
-      for (let i = 0; i < allRecipes.length; i += batchSize) {
-        const recipeBatch = allRecipes.slice(i, i + batchSize);
+      for (let j = 0; j < allRecipes.length; j++) {
+        const recipe = allRecipes[j];
+        if (!recipe) continue;
 
-        const recipeIds = recipeBatch.map((recipe) => recipe.id);
-        const batchDetailsMap = await this.getRecipesWithDetails(recipeIds);
+        const recipeDetails = allDetailsMap.get(recipe.id);
 
-        for (let j = 0; j < recipeBatch.length; j++) {
-          const recipe = recipeBatch[j];
-          if (!recipe) continue;
+        if (!recipeDetails || !recipeDetails.ingredients.length) {
+          continue;
+        }
 
-          const recipeDetails = batchDetailsMap.get(recipe.id);
+        let availableCount = 0;
+        for (const ingredient of recipeDetails.ingredients) {
+          const normalizedIngredientName = ingredient.name.toLowerCase().trim();
 
-          if (!recipeDetails || !recipeDetails.ingredients.length) {
-            continue;
-          }
+          let matchingItem: (typeof pantryItemsWithMetadata)[0] | null | undefined =
+            ingredientMatchCache.get(normalizedIngredientName);
 
-          let availableCount = 0;
-          for (const ingredient of recipeDetails.ingredients) {
-            const normalizedIngredientName = ingredient.name.toLowerCase().trim();
-
-            let matchingItem: (typeof pantryItemsWithMetadata)[0] | null | undefined =
-              ingredientMatchCache.get(normalizedIngredientName);
-
-            if (matchingItem === undefined) {
-              matchingItem = pantryIndex.get(normalizedIngredientName) || null;
-              if (!matchingItem) {
-                matchingItem =
-                  pantryItemsWithMetadata.find((pantryItem) =>
-                    isIngredientMatch(pantryItem.name, ingredient.name, pantryItem.synonyms)
-                  ) || null;
-              }
-              ingredientMatchCache.set(normalizedIngredientName, matchingItem);
+          if (matchingItem === undefined) {
+            matchingItem = pantryIndex.get(normalizedIngredientName) || null;
+            if (!matchingItem) {
+              matchingItem =
+                pantryItemsWithMetadata.find((pantryItem) =>
+                  isIngredientMatch(pantryItem.name, ingredient.name, pantryItem.synonyms)
+                ) || null;
             }
-
-            if (matchingItem !== null) {
-              availableCount++;
-            }
+            ingredientMatchCache.set(normalizedIngredientName, matchingItem);
           }
 
-          const totalCount = recipeDetails.ingredients.length;
-          const percentage = Math.round((availableCount / totalCount) * 100);
-
-          if (availableCount === totalCount && totalCount > 0 && recipe) {
-            canMake.push(recipe);
-          } else if (availableCount > 0 && recipe) {
-            partiallyCanMake.push({
-              recipe,
-              completionPercentage: percentage,
-            });
+          if (matchingItem !== null) {
+            availableCount++;
           }
+        }
+
+        const totalCount = recipeDetails.ingredients.length;
+        const percentage = Math.round((availableCount / totalCount) * 100);
+
+        if (availableCount === totalCount && totalCount > 0 && recipe) {
+          canMake.push(recipe);
+        } else if (availableCount > 0 && recipe) {
+          partiallyCanMake.push({
+            recipe,
+            completionPercentage: percentage,
+          });
         }
       }
 
