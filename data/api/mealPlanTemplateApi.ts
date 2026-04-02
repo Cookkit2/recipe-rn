@@ -260,6 +260,19 @@ export const mealPlanTemplateApi = {
       const mealPlanRepo = getMealPlanRepository();
       const createdMealPlans: string[] = [];
 
+      // Pre-fetch all existing meal plans for the week to avoid N+1 queries
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + 7);
+
+      const existingPlans = await mealPlanRepo.getByDateRange(startDate, endDate);
+      const existingPlanMap = new Map();
+      for (const plan of existingPlans) {
+        // Normalize time to noon to match slotDate calculation below
+        const planDate = new Date(plan.date);
+        planDate.setHours(12, 0, 0, 0);
+        existingPlanMap.set(`${planDate.getTime()}_${plan.mealSlot}`, plan);
+      }
+
       // Apply each meal slot in the template
       for (const slot of template.mealSlots) {
         try {
@@ -271,8 +284,8 @@ export const mealPlanTemplateApi = {
           // Set time to noon to avoid timezone issues
           slotDate.setHours(12, 0, 0, 0);
 
-          // Check if a meal plan already exists for this date and slot
-          const existing = await mealPlanRepo.getByDateAndMealSlot(slotDate, slot.mealSlot);
+          // Check if a meal plan already exists for this date and slot in O(1) time
+          const existing = existingPlanMap.get(`${slotDate.getTime()}_${slot.mealSlot}`);
 
           if (existing) {
             if (overwriteExisting) {
