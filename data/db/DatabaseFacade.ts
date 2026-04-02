@@ -564,6 +564,31 @@ export class DatabaseFacade {
   }
 
   /**
+   * Prepare a new stock item for batch creation
+   */
+  prepareCreateStock(data: CreateStockData) {
+    // Map CreateStockData to StockData interface
+    const stockData: Record<string, unknown> = {
+      name: data.name,
+      quantity: data.quantity,
+      unit: data.unit,
+      storageType: data.storageType,
+      imageUrl: data.imageUrl,
+      backgroundColor: data.backgroundColor,
+      x: data.x,
+      y: data.y,
+      scale: data.scale,
+    };
+
+    // Convert timestamp to Date if provided
+    if (data.expirationDate !== undefined) {
+      stockData.expiryDate = new Date(data.expirationDate);
+    }
+
+    return this.stocks.prepareCreate(stockData);
+  }
+
+  /**
    * Update an existing stock item
    */
   async updateStock(id: string, data: UpdateStockData): Promise<Stock | null> {
@@ -1462,6 +1487,16 @@ export class DatabaseFacade {
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Execute multiple operations in a single batch transaction
+   */
+  async batch(operations: import("@nozbe/watermelondb").Model[]): Promise<void> {
+    if (operations.length === 0) return;
+    await database.write(async () => {
+      await database.batch(...operations);
+    });
   }
 
   /**
