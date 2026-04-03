@@ -158,6 +158,8 @@ export function TimerItem({ timer, onTogglePlay, onDelete, className }: TimerIte
             onPress={handleDelete}
             onPressIn={handlePressIn}
             onPressOut={handlePressOut}
+            accessibilityRole="button"
+            accessibilityLabel="Delete timer"
             className="w-10 h-10 rounded-full items-center justify-center bg-muted"
           >
             <Trash2Icon size={20} className="text-muted-foreground" />
