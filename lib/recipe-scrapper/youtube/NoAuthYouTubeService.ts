@@ -665,7 +665,7 @@ export class NoAuthYouTubeService implements IYouTubeService {
       try {
         const json = JSON.parse(data);
         // srv3 format has events array
-        if (json.events) {
+        if (json.events && Array.isArray(json.events)) {
           for (const event of json.events) {
             if (event.segs) {
               const text = event.segs.map((s: { utf8?: string }) => s.utf8 || "").join("");

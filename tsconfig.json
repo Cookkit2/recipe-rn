@@ -13,6 +13,7 @@
     "downlevelIteration": true,
     "noErrorTruncation": true,
     "experimentalDecorators": true,
+    "useDefineForClassFields": false,
     "paths": {
       "~/*": ["*"]
     },
