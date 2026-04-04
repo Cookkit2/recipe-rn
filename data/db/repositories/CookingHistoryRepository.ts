@@ -211,14 +211,30 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
   }> {
     const allRecords = await this.findAll();
 
-    const uniqueRecipes = new Set(allRecords.map((r) => r.recipeId)).size;
-    const photosCount = allRecords.filter((r) => r.hasPhoto).length;
+    // ⚡ Bolt Performance Optimization:
+    // Prevent multiple array traversals and allocations by computing all stats
+    // in a single pass rather than chaining map/filter/reduce.
+    const seenRecipes = new Set<string>();
+    let photosCount = 0;
+    let ratingSum = 0;
+    let ratingCount = 0;
 
-    const recordsWithRating = allRecords.filter((r) => r.hasValidRating);
-    const averageRating =
-      recordsWithRating.length > 0
-        ? recordsWithRating.reduce((acc, r) => acc + (r.rating || 0), 0) / recordsWithRating.length
-        : null;
+    for (let i = 0; i < allRecords.length; i++) {
+      const r = allRecords[i];
+      if (!r) continue;
+
+      seenRecipes.add(r.recipeId);
+
+      if (r.hasPhoto) photosCount++;
+
+      if (r.hasValidRating) {
+        ratingCount++;
+        ratingSum += r.rating || 0;
+      }
+    }
+
+    const uniqueRecipes = seenRecipes.size;
+    const averageRating = ratingCount > 0 ? ratingSum / ratingCount : null;
 
     return {
       totalCooks: allRecords.length,
