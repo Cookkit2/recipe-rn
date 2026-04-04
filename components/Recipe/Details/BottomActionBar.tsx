@@ -98,7 +98,7 @@ const BottomActionBar = ({
             className="text-black"
             size={16}
             strokeWidth={2.5}
-            fill={isFavorite ? "currentColor" : "none"}
+            fill={isFavorite ? "#000000" : "none"}
           />
         </Button>
       )}
