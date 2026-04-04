@@ -396,6 +396,29 @@ export function useDeleteRecipe() {
 }
 
 /**
+ * Mutation hook to toggle favorite status of a recipe
+ */
+export function useToggleFavorite() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (recipeId: string) => databaseFacade.toggleFavorite(recipeId),
+    onSuccess: (updatedRecipe) => {
+      if (updatedRecipe) {
+        // Update the specific recipe in cache
+        queryClient.setQueryData(recipeQueryKeys.recipe(updatedRecipe.id), updatedRecipe);
+
+        // Update the recipe in the recipes list cache
+        queryClient.setQueryData<Recipe[]>(recipeQueryKeys.recipes(), (oldData) => {
+          if (!oldData) return oldData;
+          return oldData.map((recipe) => (recipe.id === updatedRecipe.id ? updatedRecipe : recipe));
+        });
+      }
+    },
+  });
+}
+
+/**
  * Hook to manually refresh recipe data
  */
 export function useRefreshRecipes() {

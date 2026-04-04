@@ -30,7 +30,7 @@ import MissingIngredients from "~/components/Recipe/Details/MissingIngredients";
 
 import BottomActionBar from "~/components/Recipe/Details/BottomActionBar";
 import { Image } from "expo-image";
-import { useRecipe } from "~/hooks/queries/useRecipeQueries";
+import { useRecipe, useToggleFavorite } from "~/hooks/queries/useRecipeQueries";
 import { usePantryItemsByType } from "~/hooks/queries/usePantryQueries";
 import { useAddToMealPlan, useIsRecipeInPlan } from "~/hooks/queries/useMealPlanQueries";
 import { useRecipeDetailStore } from "~/store/RecipeDetailContext";
@@ -63,6 +63,13 @@ export default function RecipeDetails() {
   const [isTailoring, setIsTailoring] = useState(false);
   const { data: isInPlan } = useIsRecipeInPlan(recipeId);
   const addToMealPlan = useAddToMealPlan();
+  const toggleFavorite = useToggleFavorite();
+
+  const handleToggleFavorite = useCallback(() => {
+    if (recipe?.id) {
+      toggleFavorite.mutate(recipe.id);
+    }
+  }, [recipe?.id, toggleFavorite]);
 
   // Use optimized ingredient matching hook
   const { findMatch, countMatchingPantryItems, getMissingIngredients } = useIngredientMatcher({
@@ -409,6 +416,8 @@ export default function RecipeDetails() {
         isTailoring={isTailoring}
         onTailor={handleTailorRecipe}
         onToggleMode={handleToggleMode}
+        isFavorite={recipe.isFavorite}
+        onToggleFavorite={handleToggleFavorite}
       />
     </View>
   );
