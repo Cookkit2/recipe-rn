@@ -35,26 +35,26 @@ export default class Recipe extends Model {
     cooking_history: { type: "has_many", foreignKey: "recipe_id" },
   };
 
-  @field("title") title: string;
-  @field("description") description: string;
+  @field("title") title!: string;
+  @field("description") description!: string;
   @field("image_url") imageUrl?: string;
-  @field("prep_minutes") prepMinutes: number;
-  @field("cook_minutes") cookMinutes: number;
-  @field("difficulty_stars") difficultyStars: number;
-  @field("servings") servings: number;
+  @field("prep_minutes") prepMinutes!: number;
+  @field("cook_minutes") cookMinutes!: number;
+  @field("difficulty_stars") difficultyStars!: number;
+  @field("servings") servings!: number;
   @field("source_url") sourceUrl?: string;
   @field("calories") calories?: number;
   @field("tags") _tags?: string; // JSON string
-  @field("synced_at") syncedAt: number; // NEW: Track last sync from cloud
-  @field("is_favorite") isFavorite: boolean; // NEW: User can favorite recipes
+  @field("synced_at") syncedAt!: number; // NEW: Track last sync from cloud
+  @field("is_favorite") isFavorite!: boolean; // NEW: User can favorite recipes
   @field("type") type?: RecipeType;
 
-  @children("recipe_step") steps: Query<RecipeStep>;
-  @children("recipe_ingredient") ingredients: Query<RecipeIngredient>;
-  @children("cooking_history") cookingHistory: Query<CookingHistory>;
+  @children("recipe_step") steps!: Query<RecipeStep>;
+  @children("recipe_ingredient") ingredients!: Query<RecipeIngredient>;
+  @children("cooking_history") cookingHistory!: Query<CookingHistory>;
 
-  @date("created_at") createdAt: Date;
-  @date("updated_at") updatedAt: Date;
+  @date("created_at") createdAt!: Date;
+  @date("updated_at") updatedAt!: Date;
 
   // Computed property for tags
   get tags(): string[] {
