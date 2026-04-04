@@ -78,6 +78,16 @@ export const getScalingDirection = (
   return "down";
 };
 
+// Performance Optimization: Extract static array to avoid recreation on every call
+const COMMON_FACTORS = [
+  { value: 2, label: "Double (2x)" },
+  { value: 3, label: "Triple (3x)" },
+  { value: 4, label: "Quadruple (4x)" },
+  { value: 0.5, label: "Half (0.5x)" },
+  { value: 0.33, label: "Third (0.33x)" },
+  { value: 0.25, label: "Quarter (0.25x)" },
+];
+
 /**
  * Formats the scaling change as a readable string
  * @param originalServings - The original number of servings
@@ -89,21 +99,11 @@ export const formatScalingChange = (originalServings: number, newServings: numbe
 
   const factor = calculateScalingFactor(originalServings, newServings);
 
-  // Common scaling factors
-  const commonFactors: Record<number, string> = {
-    2: "Double (2x)",
-    3: "Triple (3x)",
-    4: "Quadruple (4x)",
-    0.5: "Half (0.5x)",
-    0.33: "Third (0.33x)",
-    0.25: "Quarter (0.25x)",
-  };
-
-  // Check for common factor match (with small tolerance for floating point)
-  for (const [key, label] of Object.entries(commonFactors)) {
-    const keyNum = parseFloat(key);
-    if (Math.abs(factor - keyNum) < 0.01) {
-      return label;
+  // Performance Optimization: Use a regular for loop over pre-allocated array instead of Object.entries
+  for (let i = 0; i < COMMON_FACTORS.length; i++) {
+    const commonFactor = COMMON_FACTORS[i];
+    if (commonFactor && Math.abs(factor - commonFactor.value) < 0.01) {
+      return commonFactor.label;
     }
   }
 
@@ -120,6 +120,21 @@ export const isValidServingSize = (servings: number): boolean => {
   return typeof servings === "number" && !isNaN(servings) && isFinite(servings) && servings > 0;
 };
 
+// Performance Optimization: Extract static array to avoid recreation on every call
+const COMMON_FRACTIONS = [
+  { decimal: 0.0625, value: 1 / 16 }, // 1/16
+  { decimal: 0.125, value: 1 / 8 }, // 1/8
+  { decimal: 0.1875, value: 3 / 16 }, // 3/16
+  { decimal: 0.25, value: 1 / 4 }, // 1/4
+  { decimal: 0.333, value: 1 / 3 }, // 1/3
+  { decimal: 0.375, value: 3 / 8 }, // 3/8
+  { decimal: 0.5, value: 1 / 2 }, // 1/2
+  { decimal: 0.625, value: 5 / 8 }, // 5/8
+  { decimal: 0.667, value: 2 / 3 }, // 2/3
+  { decimal: 0.75, value: 3 / 4 }, // 3/4
+  { decimal: 0.875, value: 7 / 8 }, // 7/8
+];
+
 /**
  * Adjusts a quantity to a reasonable fraction if it's close to common cooking fractions
  * @param quantity - The quantity to adjust
@@ -128,28 +143,14 @@ export const isValidServingSize = (servings: number): boolean => {
 export const adjustToCommonFraction = (quantity: number): number => {
   if (quantity % 1 === 0) return quantity;
 
-  // Common cooking fractions as decimals
-  const commonFractions = [
-    { decimal: 0.0625, value: 1 / 16 }, // 1/16
-    { decimal: 0.125, value: 1 / 8 }, // 1/8
-    { decimal: 0.1875, value: 3 / 16 }, // 3/16
-    { decimal: 0.25, value: 1 / 4 }, // 1/4
-    { decimal: 0.333, value: 1 / 3 }, // 1/3
-    { decimal: 0.375, value: 3 / 8 }, // 3/8
-    { decimal: 0.5, value: 1 / 2 }, // 1/2
-    { decimal: 0.625, value: 5 / 8 }, // 5/8
-    { decimal: 0.667, value: 2 / 3 }, // 2/3
-    { decimal: 0.75, value: 3 / 4 }, // 3/4
-    { decimal: 0.875, value: 7 / 8 }, // 7/8
-  ];
-
   const whole = Math.floor(quantity);
   const fractional = quantity - whole;
 
   // Check if fractional part is close to a common fraction (within 0.02)
-  for (const fraction of commonFractions) {
-    if (Math.abs(fractional - fraction.decimal) < 0.02) {
-      return whole + fraction.value;
+  for (let i = 0; i < COMMON_FRACTIONS.length; i++) {
+    const commonFraction = COMMON_FRACTIONS[i];
+    if (commonFraction && Math.abs(fractional - commonFraction.decimal) < 0.02) {
+      return whole + commonFraction.value;
     }
   }
 
