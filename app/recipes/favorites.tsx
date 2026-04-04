@@ -51,20 +51,22 @@ export default function FavoritesScreen() {
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: top + 10 }}>
       {/* Search Bar */}
-      <View className="px-4 mb-4">
-        <View className="flex-row items-center bg-card rounded-2xl px-4 py-3 border border-border shadow-sm shadow-black/5">
-          <SearchIcon size={20} className="text-muted-foreground mr-3" />
-          <TextInput
-            className="flex-1 text-foreground font-urbanist-medium text-base h-8"
-            placeholder="Search favorites..."
-            placeholderTextColor="#A1A1AA"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            autoCorrect={false}
-            autoCapitalize="none"
-          />
+      {favoriteRecipes && favoriteRecipes.length > 0 && (
+        <View className="px-4 mb-4">
+          <View className="flex-row items-center bg-card rounded-2xl px-4 py-3 border border-border shadow-sm shadow-black/5">
+            <SearchIcon size={20} className="text-muted-foreground mr-3" />
+            <TextInput
+              className="flex-1 text-foreground font-urbanist-medium text-base h-8"
+              placeholder="Search favorites..."
+              placeholderTextColor="#A1A1AA"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoCorrect={false}
+              autoCapitalize="none"
+            />
+          </View>
         </View>
-      </View>
+      )}
 
       <LegendList
         contentInsetAdjustmentBehavior="automatic"
