@@ -1,4 +1,5 @@
 # Cookkit
+<!-- Updated favorite icon color -->
 
 > Track your ingredients. Discover tailored recipes.
 
