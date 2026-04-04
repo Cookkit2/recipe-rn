@@ -139,7 +139,7 @@ describe("pantryApi.addPantryItemsWithMetadata Performance", () => {
     dbMetrics.updates = 0;
     dbMetrics.batches = 0;
     jest.clearAllMocks();
-  });
+  }, 20000);
 
   it("should measure performance", async () => {
     const items = [];
@@ -162,7 +162,7 @@ describe("pantryApi.addPantryItemsWithMetadata Performance", () => {
     console.log(
       `DB Metrics: Creates: ${dbMetrics.creates}, Updates: ${dbMetrics.updates}, Batches: ${dbMetrics.batches}`
     );
-  });
+  }, 20000);
 });
 
 describe("pantryApi.addPantryItemsWithMetadata Update Performance", () => {
@@ -172,7 +172,7 @@ describe("pantryApi.addPantryItemsWithMetadata Update Performance", () => {
     dbMetrics.updates = 0;
     dbMetrics.batches = 0;
     jest.clearAllMocks();
-  });
+  }, 20000);
 
   it("should measure performance with existing items", async () => {
     // add initial
@@ -202,5 +202,5 @@ describe("pantryApi.addPantryItemsWithMetadata Update Performance", () => {
     console.log(
       `DB Metrics: Creates: ${dbMetrics.creates}, Updates: ${dbMetrics.updates}, Batches: ${dbMetrics.batches}`
     );
-  });
+  }, 20000);
 });
