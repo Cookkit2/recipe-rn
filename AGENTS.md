@@ -35,17 +35,17 @@ Platform targets: `pnpm run android`, `pnpm run ios`, `pnpm run web` (see `packa
 
 ## JIT index — directory map
 
-| Area | Path | Detail |
-|------|------|--------|
-| Routes & layouts | `app/` | [app/AGENTS.md](app/AGENTS.md) |
-| UI & design tokens | `components/` | [components/AGENTS.md](components/AGENTS.md) |
-| DB, API, domain services | `data/` | [data/AGENTS.md](data/AGENTS.md) |
-| React Query & data hooks | `hooks/` | [hooks/AGENTS.md](hooks/AGENTS.md) |
-| Auth (Supabase strategy) | `auth/` | [auth/AGENTS.md](auth/AGENTS.md) |
-| React contexts & providers | `store/` | [store/AGENTS.md](store/AGENTS.md) |
-| Cross-cutting libraries | `lib/` | [lib/AGENTS.md](lib/AGENTS.md) |
-| Pure helpers & parsers | `utils/` | [utils/AGENTS.md](utils/AGENTS.md) |
-| Legacy / parallel auth UI | `src/` | [src/AGENTS.md](src/AGENTS.md) |
+| Area                       | Path          | Detail                                       |
+| -------------------------- | ------------- | -------------------------------------------- |
+| Routes & layouts           | `app/`        | [app/AGENTS.md](app/AGENTS.md)               |
+| UI & design tokens         | `components/` | [components/AGENTS.md](components/AGENTS.md) |
+| DB, API, domain services   | `data/`       | [data/AGENTS.md](data/AGENTS.md)             |
+| React Query & data hooks   | `hooks/`      | [hooks/AGENTS.md](hooks/AGENTS.md)           |
+| Auth (Supabase strategy)   | `auth/`       | [auth/AGENTS.md](auth/AGENTS.md)             |
+| React contexts & providers | `store/`      | [store/AGENTS.md](store/AGENTS.md)           |
+| Cross-cutting libraries    | `lib/`        | [lib/AGENTS.md](lib/AGENTS.md)               |
+| Pure helpers & parsers     | `utils/`      | [utils/AGENTS.md](utils/AGENTS.md)           |
+| Legacy / parallel auth UI  | `src/`        | [src/AGENTS.md](src/AGENTS.md)               |
 
 ### Quick find (repo root)
 
