@@ -110,10 +110,12 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
     const expiryDatetime = Date.now() + expiryDays * 24 * 60 * 60 * 1000;
 
     return await database.write(async () => {
+      const batchOps: import("@nozbe/watermelondb").Model[] = [];
+
       // Create the recipe with type = 'tailored'
       // Store baseRecipeId in sourceUrl field for reference
       const recipeCollection = database.collections.get<Recipe>("recipe");
-      const recipe = await recipeCollection.create((record) => {
+      const recipe = recipeCollection.prepareCreate((record) => {
         record.title = data.recipe.title;
         record.description = data.recipe.description;
         record.imageUrl = data.recipe.imageUrl;
@@ -128,17 +130,20 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
         record.syncedAt = Date.now();
         record.isFavorite = false;
       });
+      batchOps.push(recipe);
 
       // Create steps
       if (data.steps && data.steps.length > 0) {
         const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
         for (const step of data.steps) {
-          await stepsCollection.create((record) => {
-            record.step = step.step;
-            record.title = step.title;
-            record.description = step.description;
-            record.recipeId = recipe.id;
-          });
+          batchOps.push(
+            stepsCollection.prepareCreate((record) => {
+              record.step = step.step;
+              record.title = step.title;
+              record.description = step.description;
+              record.recipeId = recipe.id;
+            })
+          );
         }
       }
 
@@ -147,24 +152,30 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
         const ingredientsCollection =
           database.collections.get<RecipeIngredient>("recipe_ingredient");
         for (const ingredient of data.ingredients) {
-          await ingredientsCollection.create((record) => {
-            record.recipeId = recipe.id;
-            record.name = ingredient.name;
-            record.quantity = ingredient.quantity;
-            record.unit = ingredient.unit;
-            if (ingredient.notes) {
-              record.notes = ingredient.notes;
-            }
-          });
+          batchOps.push(
+            ingredientsCollection.prepareCreate((record) => {
+              record.recipeId = recipe.id;
+              record.name = ingredient.name;
+              record.quantity = ingredient.quantity;
+              record.unit = ingredient.unit;
+              if (ingredient.notes) {
+                record.notes = ingredient.notes;
+              }
+            })
+          );
         }
       }
 
       // Create the mapping entry
-      await this.collection.create((record) => {
-        record.hash = data.recipe.pantryHash;
-        record.recipeId = recipe.id;
-        record.expiryDatetime = expiryDatetime;
-      });
+      batchOps.push(
+        this.collection.prepareCreate((record) => {
+          record.hash = data.recipe.pantryHash;
+          record.recipeId = recipe.id;
+          record.expiryDatetime = expiryDatetime;
+        })
+      );
+
+      await database.batch(...batchOps);
 
       return recipe;
     });
