@@ -140,6 +140,7 @@ export default function GroceryListPage() {
     );
   }
 
+  // Render the grocery list in a 2-column grid
   return (
     <>
       <Stack.Screen
