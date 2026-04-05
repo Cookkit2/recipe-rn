@@ -194,6 +194,8 @@ export default function GroceryListPage() {
       />
       <FlatList
         data={allItems}
+        numColumns={2}
+        columnWrapperStyle={{ gap: 12, paddingHorizontal: 20 }}
         ListHeaderComponent={<GroceryListHeader />}
         keyExtractor={(item) => item.normalizedName}
         contentInsetAdjustmentBehavior="automatic"
