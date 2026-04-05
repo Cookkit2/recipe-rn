@@ -194,10 +194,13 @@ export default function GroceryListPage() {
       />
       <FlatList
         data={allItems}
+        numColumns={2}
+        key="grocery-grid"
         ListHeaderComponent={<GroceryListHeader />}
         keyExtractor={(item) => item.normalizedName}
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={{ paddingBottom: 32 }}
+        contentContainerStyle={{ paddingBottom: 32, paddingHorizontal: 20 }}
+        columnWrapperStyle={{ gap: 12 }}
         className="flex-1 bg-background"
         showsVerticalScrollIndicator={false}
         renderItem={({ item }) => (
