@@ -71,7 +71,7 @@ export default function IngredientLists() {
       contentInsetAdjustmentBehavior="automatic"
       ref={ingredientScrollRef}
       keyExtractor={(item) => item.id.toString()}
-      numColumns={2}
+      numColumns={3}
       contentContainerStyle={{ paddingBottom: 100 + bottom }}
       showsVerticalScrollIndicator={false}
       data={items}
