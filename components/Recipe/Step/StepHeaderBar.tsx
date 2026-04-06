@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 import { HelpCircleIcon, XIcon } from "lucide-uniwind";
 import { useState } from "react";
-import { View } from "react-native";
+import { View, Alert } from "react-native";
 import { useDerivedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "~/components/ui/button";
@@ -14,6 +14,17 @@ export default function StepHeaderBar() {
   const { progress, stepPages } = useRecipeSteps();
   const router = useRouter();
   const [helpOpen, setHelpOpen] = useState(false);
+
+  const handleClose = () => {
+    if (progress.value > 0 && progress.value < stepPages.length - 1) {
+      Alert.alert("Exit Cooking?", "Are you sure you want to exit? You can always resume later.", [
+        { text: "Cancel", style: "cancel" },
+        { text: "Exit", style: "destructive", onPress: () => router.back() },
+      ]);
+    } else {
+      router.back();
+    }
+  };
 
   const progressPercentage = useDerivedValue(() => {
     const percent = (progress.value / (stepPages.length - 1)) * 100;
@@ -36,7 +47,7 @@ export default function StepHeaderBar() {
           size="icon"
           variant="ghost"
           className="rounded-full"
-          onPress={() => router.back()}
+          onPress={handleClose}
           accessibilityLabel="Close"
         >
           <XIcon className="text-foreground" />
