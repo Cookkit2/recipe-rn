@@ -64,23 +64,36 @@ export class StockCategoryRepository extends BaseRepository<StockCategory> {
     const created: StockCategory[] = [];
 
     await db.write(async () => {
-      for (const categoryId of categoryIds) {
-        // Check if relationship already exists (inline to avoid nested write)
-        const existing = await this.collection
-          .query(
-            Q.and(Q.where("stock_id", Q.eq(stockId)), Q.where("category_id", Q.eq(categoryId)))
-          )
-          .fetch();
+      // ⚡ Bolt Performance Optimization:
+      // Prevent N+1 query bottlenecks and bridge overhead when adding multiple categories to a stock.
+      // Fetch all existing relationships simultaneously using Q.oneOf() and batch create any missing ones.
+      const existing = await this.collection
+        .query(
+          Q.and(Q.where("stock_id", Q.eq(stockId)), Q.where("category_id", Q.oneOf(categoryIds)))
+        )
+        .fetch();
 
-        if (existing.length > 0) {
-          created.push(existing[0]!);
-        } else {
-          const sc = await this.collection.create((record: any) => {
+      const existingCategoryIds = new Set(existing.map((sc) => sc.categoryId));
+      const batchOps: import("@nozbe/watermelondb").Model[] = [];
+
+      for (const sc of existing) {
+        created.push(sc);
+      }
+
+      for (const categoryId of categoryIds) {
+        if (!existingCategoryIds.has(categoryId)) {
+          const sc = this.collection.prepareCreate((record: any) => {
             record.stockId = stockId;
             record.categoryId = categoryId;
           });
-          created.push(sc);
+          batchOps.push(sc);
+          created.push(sc as StockCategory);
+          existingCategoryIds.add(categoryId); // Prevent duplicate creations if categoryIds contains duplicates
         }
+      }
+
+      if (batchOps.length > 0) {
+        await db.batch(...batchOps);
       }
     });
 
