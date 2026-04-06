@@ -26,7 +26,7 @@ import {
 import { useImagePreloader } from "~/hooks/useImagePreloader";
 import ExpiringRecipesSection from "./ExpiringRecipesSection";
 
-const NUM_COLUMNS = 2;
+const NUM_COLUMNS = 3;
 const PRELOAD_WINDOW_SIZE = 6;
 const SCROLL_PREFETCH_THROTTLE_MS = 200;
 
@@ -221,7 +221,7 @@ export default function RecipeLists() {
         <ExpiringRecipesSection />
         <LegendList
           keyExtractor={(item) => item.recipe.id.toString()}
-          numColumns={2}
+          numColumns={3}
           style={{ paddingHorizontal: 12, paddingTop: 8 }}
           showsVerticalScrollIndicator={false}
           data={listData}
