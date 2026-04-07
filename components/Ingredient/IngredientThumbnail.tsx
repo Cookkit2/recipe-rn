@@ -20,7 +20,12 @@ export default function IngredientThumbnail({ item }: IngredientThumbnailProps) 
         return <ActivityIndicator size="small" color="white" />;
       case "failed":
         return (
-          <Pressable onPress={() => retryItem(id)} onLongPress={() => removeItem(id)}>
+          <Pressable
+            onPress={() => retryItem(id)}
+            onLongPress={() => removeItem(id)}
+            accessibilityRole="button"
+            accessibilityLabel="Retry or remove ingredient"
+          >
             <AlertCircleIcon className="text-red-400" size={16} />
           </Pressable>
         );
