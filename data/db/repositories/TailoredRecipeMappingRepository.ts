@@ -132,6 +132,8 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
       });
       batchOps.push(recipe);
 
+      batchOps.push(recipe);
+
       // Create steps
       if (data.steps && data.steps.length > 0) {
         const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
@@ -175,6 +177,8 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
         })
       );
 
+      // ⚡ Bolt Performance Optimization:
+      // Prevent N+1 transactional overhead by batching all operations together.
       await database.batch(...batchOps);
 
       return recipe;
