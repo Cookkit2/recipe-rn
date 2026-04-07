@@ -27,8 +27,13 @@ export const storageConfigs: Record<string, StorageConfig> = {
   encrypted: (() => {
     const key = getEncryptionKey();
     if (!key) {
+      if (typeof __DEV__ !== "undefined" && !__DEV__) {
+        throw new Error(
+          "CRITICAL: EXPO_PUBLIC_MMKV_ENCRYPTION_KEY must be set in production for encrypted auth storage. Refusing to fallback to unencrypted storage for sensitive credentials."
+        );
+      }
       log.warn(
-        "[storage-config] No encryption key found. Set EXPO_PUBLIC_MMKV_ENCRYPTION_KEY (env or app.json extra) for encrypted auth storage. Using non-encrypted MMKV for this instance."
+        "[storage-config] No encryption key found. Set EXPO_PUBLIC_MMKV_ENCRYPTION_KEY (env or app.json extra) for encrypted auth storage. Using non-encrypted MMKV for this instance in development."
       );
     }
     return {

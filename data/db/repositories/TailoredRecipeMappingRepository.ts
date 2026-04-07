@@ -130,6 +130,7 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
         record.syncedAt = Date.now();
         record.isFavorite = false;
       });
+      batchOps.push(recipe);
 
       batchOps.push(recipe);
 
