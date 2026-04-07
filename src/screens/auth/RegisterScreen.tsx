@@ -31,6 +31,12 @@ export default function RegisterScreen() {
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Invalid email format");
+      return;
+    }
+
     if (password.length < 6) {
       setError("Password must be at least 6 characters");
       return;
