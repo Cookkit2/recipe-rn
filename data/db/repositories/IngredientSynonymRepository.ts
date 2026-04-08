@@ -56,27 +56,33 @@ export class IngredientSynonymRepository extends BaseRepository<IngredientSynony
     const db = this.collection.database;
     const created: IngredientSynonym[] = [];
 
+    // Pre-fetch all existing synonyms for this stockId to avoid N+1 queries
+    const existingSynonyms = await this.findByStockId(stockId);
+    const existingSynonymMap = new Map(existingSynonyms.map((syn) => [syn.synonym, syn]));
+
+    const batchOps: import("@nozbe/watermelondb").Model[] = [];
+
     await db.write(async () => {
       for (const synonym of synonyms) {
-        // Check if synonym already exists for this stock (inline to avoid nested write)
-        const existing = await this.collection
-          .query(
-            Q.and(
-              Q.where("stock_id", Q.eq(stockId)),
-              Q.where("synonym", Q.eq(synonym.toLowerCase()))
-            )
-          )
-          .fetch();
+        const lowerSynonym = synonym.toLowerCase();
+        const existing = existingSynonymMap.get(lowerSynonym);
 
-        if (existing.length > 0) {
-          created.push(existing[0]!);
+        if (existing) {
+          created.push(existing);
         } else {
-          const syn = await this.collection.create((record: any) => {
+          const newSyn = this.collection.prepareCreate((record: any) => {
             record.stockId = stockId;
-            record.synonym = synonym.toLowerCase();
-          });
-          created.push(syn);
+            record.synonym = lowerSynonym;
+          }) as IngredientSynonym;
+
+          existingSynonymMap.set(lowerSynonym, newSyn); // Update map to handle duplicates in the input array
+          batchOps.push(newSyn);
+          created.push(newSyn);
         }
+      }
+
+      if (batchOps.length > 0) {
+        await db.batch(...batchOps);
       }
     });
 
