@@ -53,34 +53,49 @@ export class IngredientSynonymRepository extends BaseRepository<IngredientSynony
 
   // Batch add synonyms to stock
   async addSynonymsToStock(stockId: string, synonyms: string[]): Promise<IngredientSynonym[]> {
+    if (synonyms.length === 0) return [];
+
     const db = this.collection.database;
-    const created: IngredientSynonym[] = [];
+    const lowerSynonyms = synonyms.map((s) => s.toLowerCase());
 
-    await db.write(async () => {
-      for (const synonym of synonyms) {
-        // Check if synonym already exists for this stock (inline to avoid nested write)
-        const existing = await this.collection
-          .query(
-            Q.and(
-              Q.where("stock_id", Q.eq(stockId)),
-              Q.where("synonym", Q.eq(synonym.toLowerCase()))
-            )
-          )
-          .fetch();
+    // Replaced N+1 queries with a single Q.oneOf query
+    const existingRecords = await this.collection
+      .query(Q.and(Q.where("stock_id", Q.eq(stockId)), Q.where("synonym", Q.oneOf(lowerSynonyms))))
+      .fetch();
 
-        if (existing.length > 0) {
-          created.push(existing[0]!);
-        } else {
-          const syn = await this.collection.create((record: any) => {
-            record.stockId = stockId;
-            record.synonym = synonym.toLowerCase();
-          });
-          created.push(syn);
-        }
+    const existingMap = new Map<string, IngredientSynonym>();
+    for (const r of existingRecords) {
+      existingMap.set(r.synonym, r);
+    }
+
+    const result: IngredientSynonym[] = [];
+    const batchOps: IngredientSynonym[] = [];
+
+    for (const synonym of lowerSynonyms) {
+      const existing = existingMap.get(synonym);
+      if (existing) {
+        result.push(existing);
+      } else {
+        // Prepare creation instead of awaiting individual .create() calls
+        const syn = this.collection.prepareCreate((record: any) => {
+          record.stockId = stockId;
+          record.synonym = synonym;
+        });
+        batchOps.push(syn);
+        result.push(syn);
+
+        // Add to map immediately to avoid preparing duplicate insertions
+        existingMap.set(synonym, syn);
       }
-    });
+    }
 
-    return created;
+    if (batchOps.length > 0) {
+      await db.write(async () => {
+        await db.batch(...batchOps);
+      });
+    }
+
+    return result;
   }
 
   // Remove all synonyms for a stock
