@@ -57,6 +57,8 @@ export default function StepTimer({ onOpenAddTimerDialog }: StepTimerProps) {
         <GestureDetector gesture={tapGesture}>
           <TouchableOpacity
             onPress={onOpenAddTimerDialog}
+            accessibilityRole="button"
+            accessibilityLabel="Add Timer"
             activeOpacity={0.7}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             className="h-8 px-3 rounded-full flex-row items-center border border-input bg-background"

@@ -153,6 +153,8 @@ export default function SearchScreen() {
                 return (
                   <TouchableOpacity
                     key={opt.label}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isActive }}
                     onPress={() => setSelectedTime(isActive ? null : opt)}
                     className={cn(
                       "px-4 py-2 rounded-full border border-border",
@@ -178,6 +180,8 @@ export default function SearchScreen() {
                 return (
                   <TouchableOpacity
                     key={opt.label}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isActive }}
                     onPress={() => setSelectedDifficulty(isActive ? null : opt.value)}
                     className={cn(
                       "px-4 py-2 rounded-full border border-border",
@@ -203,6 +207,8 @@ export default function SearchScreen() {
                 return (
                   <TouchableOpacity
                     key={tag}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isActive }}
                     onPress={() =>
                       setSelectedTags((prev) =>
                         isActive ? prev.filter((t) => t !== tag) : [...prev, tag]
