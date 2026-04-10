@@ -43,6 +43,7 @@ export default function Header({ title, scrollOffset }: HeaderProps) {
         size="icon"
         variant="secondary"
         className="rounded-full"
+        accessibilityLabel="Go back"
         onPress={() => router.back()}
       >
         <ArrowLeftIcon

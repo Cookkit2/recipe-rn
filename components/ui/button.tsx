@@ -161,6 +161,7 @@ const Button = React.forwardRef<React.ComponentRef<typeof Pressable>, ButtonProp
             accessibilityRole={accessibilityRole}
             style={[props.style, roundedStyle]}
             {...props}
+            accessibilityState={{ disabled: !!props.disabled, ...props.accessibilityState }}
           />
         </Animated.View>
       </TextClassContext.Provider>
