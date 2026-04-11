@@ -1,0 +1,3 @@
+## 2024-06-25 - Batch create optimization in WatermelonDB
+**Learning:** In WatermelonDB on React Native, executing sequential `create` operations within a single `write` transaction incurs significant performance penalties because each operation crosses the React Native bridge individually. Utilizing `database.batch()` prevents this unnecessary bridge communication overhead.
+**Action:** When inserting multiple records, always replace a loop of `await collection.create(...)` with an array of `collection.prepareCreate(...)` passed to `await database.batch(...)`. This applies to repositories like `IngredientSynonymRepository`.
