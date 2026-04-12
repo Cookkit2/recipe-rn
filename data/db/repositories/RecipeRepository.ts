@@ -240,24 +240,36 @@ export class RecipeRepository extends BaseRepository<Recipe> {
     }
 
     try {
-      // Batch fetch all recipes using Q.oneOf
-      const recipes = await this.collection.query(Q.where("id", Q.oneOf(recipeIds))).fetch();
+      // Helper for chunked fetching to avoid SQLite variable limits (999 max)
+      const chunkedFetch = async <T>(collection: any, ids: string[], foreignKey: string) => {
+        const CHUNK_SIZE = 500;
+        const promises: Promise<T[]>[] = [];
+        for (let i = 0; i < ids.length; i += CHUNK_SIZE) {
+          const chunk = ids.slice(i, i + CHUNK_SIZE);
+          promises.push(collection.query(Q.where(foreignKey, Q.oneOf(chunk))).fetch());
+        }
+        const resultsArray = await Promise.all(promises);
+        return resultsArray.flat();
+      };
+
+      // Batch fetch all recipes
+      const recipes = await chunkedFetch<Recipe>(this.collection, recipeIds, "id");
 
       if (recipes.length === 0) {
         return new Map();
       }
 
-      // Batch fetch all steps for these recipes in a single query
+      // Batch fetch all steps for these recipes
       const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
-      const allSteps = await stepsCollection
-        .query(Q.where("recipe_id", Q.oneOf(recipeIds)))
-        .fetch();
+      const allSteps = await chunkedFetch<RecipeStep>(stepsCollection, recipeIds, "recipe_id");
 
-      // Batch fetch all ingredients for these recipes in a single query
+      // Batch fetch all ingredients for these recipes
       const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
-      const allIngredients = await ingredientsCollection
-        .query(Q.where("recipe_id", Q.oneOf(recipeIds)))
-        .fetch();
+      const allIngredients = await chunkedFetch<RecipeIngredient>(
+        ingredientsCollection,
+        recipeIds,
+        "recipe_id"
+      );
 
       // Build the result Map
       const resultMap = new Map<
