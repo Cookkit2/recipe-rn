@@ -80,6 +80,9 @@ const GroupButton = React.memo(function GroupButton<T>({
 
   return (
     <AnimatedPressable
+      accessibilityRole="button"
+      accessibilityLabel={item.label as string}
+      accessibilityState={{ selected: !!selected }}
       onPressIn={onPressIn}
       onPressOut={onPressOut}
       className={cn(
