@@ -1,0 +1,3 @@
+## 2024-04-13 - Add accessibility traits to custom animated segmented buttons
+**Learning:** In React Native, custom interactive components like `AnimatedPressable` used in complex patterns like `SegmentedButtons` or `GridButtons` often lack default accessibility traits. It is critical to explicitly provide `accessibilityRole="button"`, `accessibilityLabel`, and `accessibilityState={{ selected: ... }}` so that screen readers correctly identify the component type, its label, and its selection state.
+**Action:** When creating or reviewing custom button-like components, especially those used in groups (like segmented controls or grid selectors), always verify that `accessibilityRole`, `accessibilityLabel`, and `accessibilityState` are appropriately set.
