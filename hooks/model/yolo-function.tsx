@@ -44,15 +44,19 @@ export function postprocessOutputsYolo(
     if (!xCenter || !yCenter || !width || !height) {
       continue;
     }
-    // Extract class scores
-    const classScores: number[] = [];
+    // Optimization: find the class with highest score directly in a single pass
+    // This avoids allocating 8400 arrays of 80 elements per inference and expensive Math.max(...spreads)
+    let maxClassScore = -1;
+    let classId = -1;
     for (let c = 4; c < outputHeight; c++) {
-      classScores.push(output?.[c * outputWidth + i] ?? 0);
+      const score = output?.[c * outputWidth + i] ?? 0;
+      if (score > maxClassScore) {
+        maxClassScore = score;
+        classId = c - 4; // Classes start at index 4 in YOLO outputs
+      }
     }
-    // Find the class with highest score
-    const maxClassScore = Math.max(...classScores);
+
     if (maxClassScore > confThreshold) {
-      const classId = classScores.indexOf(maxClassScore);
       // Convert from normalized coordinates to pixel coordinates
       // YOLO outputs are in normalized format [0, 1]
       const xCenterPixel = xCenter * inputSize[0] * scaleX;

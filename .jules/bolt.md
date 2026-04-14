@@ -1,0 +1,3 @@
+## 2024-05-14 - Expensive Array Spreads in High-Frequency Inference Loops
+**Learning:** In object detection post-processing (YOLO), extracting arrays using `.push()` and calculating `Math.max(...classScores)` within an 8400-iteration loop causes severe frame drops. The spread operator combined with thousands of array allocations creates massive JS engine overhead and garbage collection pauses during React Native inference.
+**Action:** When processing flattened tensors or large model outputs, strictly use single-pass scalar variables (e.g., manually tracking `maxClassScore` and `classId`) rather than intermediate arrays to find maximums or perform aggregations.
