@@ -64,6 +64,8 @@ export default function RateRecipeModal({
               key={starValue}
               onPress={() => handleStarPress(starValue)}
               className="p-1"
+              accessibilityRole="button"
+              accessibilityState={{ selected: rating === starValue }}
               accessibilityLabel={`Rate ${starValue} stars`}
               accessibilityHint={rating === starValue ? "Selected" : "Tap to rate"}
             >
