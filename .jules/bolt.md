@@ -1,0 +1,3 @@
+## 2024-04-15 - Optimize batch insertion in WatermelonDB
+**Learning:** In WatermelonDB on React Native, executing sequential `create` operations and queries within a single `write` transaction incurs significant performance penalties because each operation crosses the React Native bridge individually.
+**Action:** Replaced sequential nested queries and `.create()` with a single pre-fetch query using `Q.oneOf` and collected prepared operations using `repo.prepareCreate(...)` into a `batchOps` array. Then, executed them together using `await database.batch(...batchOps)` to avoid N+1 execution bottlenecks and reduce bridge communication overhead.

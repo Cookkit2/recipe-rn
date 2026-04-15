@@ -55,28 +55,37 @@ export class IngredientSynonymRepository extends BaseRepository<IngredientSynony
   async addSynonymsToStock(stockId: string, synonyms: string[]): Promise<IngredientSynonym[]> {
     const db = this.collection.database;
     const created: IngredientSynonym[] = [];
+    const batchOps: any[] = [];
+    const uniqueSynonyms = Array.from(new Set(synonyms.map((s) => s.toLowerCase())));
+
+    if (uniqueSynonyms.length === 0) return created;
 
     await db.write(async () => {
-      for (const synonym of synonyms) {
-        // Check if synonym already exists for this stock (inline to avoid nested write)
-        const existing = await this.collection
-          .query(
-            Q.and(
-              Q.where("stock_id", Q.eq(stockId)),
-              Q.where("synonym", Q.eq(synonym.toLowerCase()))
-            )
-          )
-          .fetch();
+      // Fetch all existing synonyms for this stock and the requested names at once
+      const existing = await this.collection
+        .query(
+          Q.and(Q.where("stock_id", Q.eq(stockId)), Q.where("synonym", Q.oneOf(uniqueSynonyms)))
+        )
+        .fetch();
 
-        if (existing.length > 0) {
-          created.push(existing[0]!);
+      const existingSet = new Set(existing.map((syn) => syn.synonym));
+
+      for (const synonym of uniqueSynonyms) {
+        if (existingSet.has(synonym)) {
+          created.push(existing.find((e) => e.synonym === synonym)!);
         } else {
-          const syn = await this.collection.create((record: any) => {
+          const synRecord = this.collection.prepareCreate((record: any) => {
             record.stockId = stockId;
-            record.synonym = synonym.toLowerCase();
+            record.synonym = synonym;
           });
-          created.push(syn);
+          batchOps.push(synRecord);
+          // @ts-ignore - WatermelonDB prepareCreate returns a valid model instance synchronously
+          created.push(synRecord);
         }
+      }
+
+      if (batchOps.length > 0) {
+        await db.batch(...batchOps);
       }
     });
 
