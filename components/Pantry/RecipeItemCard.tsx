@@ -78,6 +78,9 @@ function RecipeItemCard({ recipe, completionPercentage, matchCategory }: RecipeI
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 toggleFavorite.mutate(recipe.id);
               }}
+              accessibilityRole="button"
+              accessibilityLabel={recipe.isFavorite ? "Remove from favorites" : "Add to favorites"}
+              accessibilityState={{ checked: recipe.isFavorite }}
             >
               <HeartIcon
                 size={18}
