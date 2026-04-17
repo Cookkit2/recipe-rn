@@ -57,26 +57,40 @@ export class IngredientSynonymRepository extends BaseRepository<IngredientSynony
     const created: IngredientSynonym[] = [];
 
     await db.write(async () => {
-      for (const synonym of synonyms) {
-        // Check if synonym already exists for this stock (inline to avoid nested write)
-        const existing = await this.collection
-          .query(
-            Q.and(
-              Q.where("stock_id", Q.eq(stockId)),
-              Q.where("synonym", Q.eq(synonym.toLowerCase()))
-            )
-          )
-          .fetch();
+      // ⚡ Bolt Performance Optimization:
+      // Replaced N+1 sequential await this.collection.create() calls inside a loop
+      // with prepareCreate() and a single database.batch().
 
-        if (existing.length > 0) {
-          created.push(existing[0]!);
-        } else {
-          const syn = await this.collection.create((record: any) => {
+      const lowerSynonyms = synonyms.map((s) => s.toLowerCase());
+
+      // Fetch all existing synonyms for this stockId that match the input synonyms
+      const existing = await this.collection
+        .query(
+          Q.and(Q.where("stock_id", Q.eq(stockId)), Q.where("synonym", Q.oneOf(lowerSynonyms)))
+        )
+        .fetch();
+
+      const existingSynonymsSet = new Set(existing.map((s) => s.synonym));
+
+      existing.forEach((e) => created.push(e));
+
+      const batchOps: import("@nozbe/watermelondb").Model[] = [];
+
+      for (const lowerSynonym of lowerSynonyms) {
+        if (!existingSynonymsSet.has(lowerSynonym)) {
+          // Add to set to prevent duplicates if input array has duplicates
+          existingSynonymsSet.add(lowerSynonym);
+          const syn = this.collection.prepareCreate((record: any) => {
             record.stockId = stockId;
-            record.synonym = synonym.toLowerCase();
-          });
+            record.synonym = lowerSynonym;
+          }) as IngredientSynonym;
+          batchOps.push(syn);
           created.push(syn);
         }
+      }
+
+      if (batchOps.length > 0) {
+        await db.batch(...batchOps);
       }
     });
 
