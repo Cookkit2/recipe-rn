@@ -75,8 +75,14 @@ export const createUser = async (
 
   await database.runAsync(
     `INSERT INTO users (id, email, display_name, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?)`,
-    [userId, email, displayName ?? null, new Date().toISOString(), new Date().toISOString()]
+     VALUES ($id, $email, $displayName, $createdAt, $updatedAt)`,
+    {
+      $id: userId,
+      $email: email,
+      $displayName: displayName ?? null,
+      $createdAt: new Date().toISOString(),
+      $updatedAt: new Date().toISOString(),
+    }
   );
 };
 
@@ -87,8 +93,8 @@ export const getUserByEmail = async (email: string): Promise<User | null> => {
   const database = await getDatabase();
 
   const result = await database.getFirstAsync<User | undefined>(
-    `SELECT * FROM users WHERE email = ?`,
-    [email]
+    `SELECT * FROM users WHERE email = $email`,
+    { $email: email }
   );
 
   return result || null;
@@ -101,8 +107,8 @@ export const getUserById = async (userId: string): Promise<User | null> => {
   const database = await getDatabase();
 
   const result = await database.getFirstAsync<User | undefined>(
-    `SELECT * FROM users WHERE id = ?`,
-    [userId]
+    `SELECT * FROM users WHERE id = $id`,
+    { $id: userId }
   );
 
   return result || null;
@@ -122,16 +128,16 @@ export const upsertSession = async (
 
   await database.runAsync(
     `INSERT OR REPLACE INTO sessions (id, user_id, access_token, refresh_token, expires_at, created_at, last_used)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [
-      `${userId}_${Crypto.randomUUID()}`,
-      userId,
-      accessToken,
-      refreshToken,
-      expiresAt,
-      new Date().toISOString(),
-      new Date().toISOString(),
-    ]
+     VALUES ($id, $userId, $accessToken, $refreshToken, $expiresAt, $createdAt, $lastUsed)`,
+    {
+      $id: `${userId}_${Crypto.randomUUID()}`,
+      $userId: userId,
+      $accessToken: accessToken,
+      $refreshToken: refreshToken,
+      $expiresAt: expiresAt,
+      $createdAt: new Date().toISOString(),
+      $lastUsed: new Date().toISOString(),
+    }
   );
 };
 
@@ -142,8 +148,8 @@ export const getSessionByToken = async (accessToken: string): Promise<Session | 
   const database = await getDatabase();
 
   const result = await database.getFirstAsync<Session | undefined>(
-    `SELECT * FROM sessions WHERE access_token = ? AND expires_at > ?`,
-    [accessToken, new Date().toISOString()]
+    `SELECT * FROM sessions WHERE access_token = $accessToken AND expires_at > $now`,
+    { $accessToken: accessToken, $now: new Date().toISOString() }
   );
 
   return result || null;
@@ -160,8 +166,8 @@ export const refreshToken = async (
 
   // Verify refresh token
   const session = await database.getFirstAsync<Session | undefined>(
-    `SELECT * FROM sessions WHERE user_id = ? AND refresh_token = ? AND expires_at > ?`,
-    [userId, oldRefreshToken, new Date().toISOString()]
+    `SELECT * FROM sessions WHERE user_id = $userId AND refresh_token = $refreshToken AND expires_at > $now`,
+    { $userId: userId, $refreshToken: oldRefreshToken, $now: new Date().toISOString() }
   );
 
   if (!session) {
@@ -173,15 +179,15 @@ export const refreshToken = async (
 
   // Update session
   await database.runAsync(
-    `UPDATE sessions SET access_token = ?, refresh_token = ?, expires_at = ?, last_used = ?
-     WHERE id = ?`,
-    [
-      accessToken,
-      refreshToken,
-      new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-      new Date().toISOString(),
-      session.id,
-    ]
+    `UPDATE sessions SET access_token = $accessToken, refresh_token = $refreshToken, expires_at = $expiresAt, last_used = $lastUsed
+     WHERE id = $id`,
+    {
+      $accessToken: accessToken,
+      $refreshToken: refreshToken,
+      $expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+      $lastUsed: new Date().toISOString(),
+      $id: session.id,
+    }
   );
 
   return { accessToken, refreshToken };
@@ -193,9 +199,9 @@ export const refreshToken = async (
 export const revokeSession = async (accessToken: string): Promise<void> => {
   const database = await getDatabase();
 
-  await database.runAsync(`UPDATE sessions SET is_revoked = 1 WHERE access_token = ?`, [
-    accessToken,
-  ]);
+  await database.runAsync(`UPDATE sessions SET is_revoked = 1 WHERE access_token = $accessToken`, {
+    $accessToken: accessToken,
+  });
 };
 
 /**
@@ -212,8 +218,14 @@ export const createRefreshToken = async (
 
   await database.runAsync(
     `INSERT INTO refresh_tokens (id, user_id, token_hash, expires_at, created_at)
-     VALUES (?, ?, ?, ?, ?)`,
-    [`${userId}_${Crypto.randomUUID()}`, userId, tokenHash, expiresAt, new Date().toISOString()]
+     VALUES ($id, $userId, $tokenHash, $expiresAt, $createdAt)`,
+    {
+      $id: `${userId}_${Crypto.randomUUID()}`,
+      $userId: userId,
+      $tokenHash: tokenHash,
+      $expiresAt: expiresAt,
+      $createdAt: new Date().toISOString(),
+    }
   );
 };
 
@@ -224,9 +236,10 @@ export const revokeRefreshToken = async (refreshToken: string): Promise<void> =>
   const database = await getDatabase();
   const tokenHash = await hashToken(refreshToken);
 
-  await database.runAsync(`UPDATE refresh_tokens SET is_revoked = 1 WHERE token_hash = ?`, [
-    tokenHash,
-  ]);
+  await database.runAsync(
+    `UPDATE refresh_tokens SET is_revoked = 1 WHERE token_hash = $tokenHash`,
+    { $tokenHash: tokenHash }
+  );
 };
 
 /**
@@ -238,8 +251,8 @@ export const isValidRefreshToken = async (refreshToken: string): Promise<boolean
 
   const result = await database.getFirstAsync<{ count: number } | undefined>(
     `SELECT COUNT(*) as count FROM refresh_tokens
-     WHERE token_hash = ? AND is_revoked = 0 AND expires_at > ?`,
-    [tokenHash, new Date().toISOString()]
+     WHERE token_hash = $tokenHash AND is_revoked = 0 AND expires_at > $now`,
+    { $tokenHash: tokenHash, $now: new Date().toISOString() }
   );
 
   return result?.count ? result.count > 0 : false;
@@ -275,9 +288,9 @@ const hashToken = async (token: string): Promise<string> => {
 export const refreshExpiredSessions = async (): Promise<void> => {
   const database = await getDatabase();
 
-  await database.runAsync(`UPDATE sessions SET is_revoked = 1 WHERE expires_at <= ?`, [
-    new Date().toISOString(),
-  ]);
+  await database.runAsync(`UPDATE sessions SET is_revoked = 1 WHERE expires_at <= $now`, {
+    $now: new Date().toISOString(),
+  });
 };
 
 /**
@@ -286,9 +299,9 @@ export const refreshExpiredSessions = async (): Promise<void> => {
 export const clearExpiredRefreshTokens = async (): Promise<void> => {
   const database = await getDatabase();
 
-  await database.runAsync(`DELETE FROM refresh_tokens WHERE expires_at <= ?`, [
-    new Date().toISOString(),
-  ]);
+  await database.runAsync(`DELETE FROM refresh_tokens WHERE expires_at <= $now`, {
+    $now: new Date().toISOString(),
+  });
 };
 
 // Type definitions
