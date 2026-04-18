@@ -10,9 +10,10 @@ import {
 } from "../input-sanitization";
 
 describe("sanitizeForDatabase", () => {
-  it("removes SQL keywords and prevents injection patterns", () => {
-    expect(sanitizeForDatabase("'; DROP TABLE stock; --")).not.toMatch(/DROP|;|'/);
-    expect(sanitizeForDatabase("1' OR '1'='1")).not.toMatch(/'/);
+  it("preserves SQL keywords and quotes", () => {
+    // We no longer strip these since WatermelonDB handles parameterization safely
+    expect(sanitizeForDatabase("'; DROP TABLE stock; --")).toBe("'; DROP TABLE stock; --");
+    expect(sanitizeForDatabase("1' OR '1'='1")).toBe("1' OR '1'='1");
   });
 
   it("enforces maxLength", () => {
@@ -26,7 +27,7 @@ describe("sanitizeForDatabase", () => {
   });
 
   it("strips HTML characters by default", () => {
-    expect(sanitizeForDatabase("<script>alert(1)</script>")).toBe("alert(1)/");
+    expect(sanitizeForDatabase("<script>alert(1)</script>")).toBe("scriptalert(1)/script");
   });
 
   it("retains HTML characters when allowHtml is true", () => {
@@ -74,15 +75,15 @@ describe("sanitizeSearchTerm", () => {
     expect(sanitizeSearchTerm("path\\to\\file")).toBe("%path\\\\to\\\\file%");
   });
 
-  it("removes SQL keywords and injection patterns", () => {
-    // DROP and SELECT are reserved keywords removed by sanitizeForDatabase
-    expect(sanitizeSearchTerm("DROP TABLE users")).toBe("%TABLE users%");
-    expect(sanitizeSearchTerm("SELECT * FROM users;")).toBe("%* FROM users%");
+  it("preserves SQL keywords and injection patterns", () => {
+    // We no longer strip these since WatermelonDB handles parameterization safely
+    expect(sanitizeSearchTerm("DROP TABLE users")).toBe("%DROP TABLE users%");
+    expect(sanitizeSearchTerm("SELECT * FROM users;")).toBe("%SELECT * FROM users;%");
   });
 
   it("removes HTML tags by default", () => {
     // SCRIPT is a keyword that gets removed! So <script> becomes <>, then <> is removed by allowHtml=false
-    expect(sanitizeSearchTerm("<script>alert('xss')</script>")).toBe("%alert(xss)/%");
+    expect(sanitizeSearchTerm("<script>alert('xss')</script>")).toBe("%scriptalert('xss')/script%");
     // "b" is not a keyword
     expect(sanitizeSearchTerm("<b>bold</b>")).toBe("%bbold/b%");
   });
@@ -273,7 +274,7 @@ describe("sanitizeObject", () => {
     };
 
     const expected = {
-      text: "TABLE stock",
+      text: "'; DROP TABLE stock; --",
       safeText: "Hello World",
       num: 123,
       bool: true,
@@ -294,7 +295,7 @@ describe("sanitizeObject", () => {
     const expected = {
       user: {
         name: "Bob",
-        query: "* FROM users",
+        query: "SELECT * FROM users",
       },
     };
 
@@ -307,7 +308,7 @@ describe("sanitizeObject", () => {
     };
 
     const expected = {
-      items: ["safe", "TABLE", { nested: "1 OR 1=1" }, 456, null],
+      items: ["safe", "DROP TABLE", { nested: "1' OR '1'='1" }, 456, null],
     };
 
     expect(sanitizeObject(input)).toEqual(expected);
