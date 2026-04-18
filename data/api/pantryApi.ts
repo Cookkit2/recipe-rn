@@ -647,43 +647,62 @@ const convertStockToPantryItemBatch = async (stocks: Stock[]): Promise<PantryIte
     stepsByStockId.set(stockId, list);
   });
 
-  return await Promise.all(
-    stocks.map(async (stock) => {
-      const synonyms = synonymsByStockId.get(stock.id) || [];
-      let categories = categoriesByStockId.get(stock.id) || [];
-      const stepsToStore = stepsByStockId.get(stock.id) || [];
-      stepsToStore.sort((a, b) => a.sequence - b.sequence);
+  // Pre-fetch missing categories to avoid N+1 query problem
+  const stocksMissingCategories = stocks.filter((stock) => {
+    const categories = categoriesByStockId.get(stock.id) || [];
+    return categories.length === 0;
+  });
 
-      // Fallback: if no local categories, try loading from BaseIngredient
-      if (categories.length === 0) {
-        try {
-          const baseIngredient = await baseIngredientApi.getBaseIngredientByName(stock.name);
-          if (baseIngredient?.categories?.length) {
-            categories = baseIngredient.categories;
-          }
-        } catch (error) {
-          log.warn("Could not fetch base ingredient categories for stock:", stock.name, error);
+  const missingCategoriesMap = new Map<string, any[]>();
+  if (stocksMissingCategories.length > 0) {
+    try {
+      const namesToFetch = stocksMissingCategories.map((s) => s.name);
+      // Ensure we use a batch fetch method avoiding N+1 requests over the network!
+      const baseIngredientsMap = await baseIngredientApi.getBaseIngredientsByNames(namesToFetch);
+
+      stocksMissingCategories.forEach((stock) => {
+        const baseIngredient = baseIngredientsMap.get(stock.name.toLowerCase());
+        if (baseIngredient?.categories?.length) {
+          missingCategoriesMap.set(stock.id, baseIngredient.categories);
         }
-      }
+      });
+    } catch (error) {
+      log.error("Error batch fetching base ingredient categories:", error);
+    }
+  }
 
-      return {
-        id: stock.id,
-        name: stock.name,
-        quantity: stock.quantity,
-        unit: stock.unit,
-        expiry_date: stock.expiryDate || undefined,
-        category: categories.length > 0 ? categories[0]?.name || "" : "",
-        categories,
-        type: mapDbTypeToType(stock.storageType),
-        image_url: stock.imageUrl,
-        background_color: stock.backgroundColor,
-        created_at: stock.createdAt,
-        updated_at: stock.updatedAt,
-        steps_to_store: stepsToStore,
-        synonyms,
-      };
-    })
-  );
+  // Use simple map instead of Promise.all with async map since all data is pre-fetched
+  return stocks.map((stock) => {
+    const synonyms = synonymsByStockId.get(stock.id) || [];
+    let categories = categoriesByStockId.get(stock.id) || [];
+    const stepsToStore = stepsByStockId.get(stock.id) || [];
+    stepsToStore.sort((a, b) => a.sequence - b.sequence);
+
+    // Fallback: if no local categories, try using pre-fetched from BaseIngredient
+    if (categories.length === 0) {
+      const fetchedCategories = missingCategoriesMap.get(stock.id);
+      if (fetchedCategories?.length) {
+        categories = fetchedCategories;
+      }
+    }
+
+    return {
+      id: stock.id,
+      name: stock.name,
+      quantity: stock.quantity,
+      unit: stock.unit,
+      expiry_date: stock.expiryDate || undefined,
+      category: categories.length > 0 ? categories[0]?.name || "" : "",
+      categories,
+      type: mapDbTypeToType(stock.storageType),
+      image_url: stock.imageUrl,
+      background_color: stock.backgroundColor,
+      created_at: stock.createdAt,
+      updated_at: stock.updatedAt,
+      steps_to_store: stepsToStore,
+      synonyms,
+    };
+  });
 };
 
 // Map database dbType to ItemType
