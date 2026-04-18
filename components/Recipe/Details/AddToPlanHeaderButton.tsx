@@ -29,6 +29,9 @@ export default function AddToPlanHeaderButton() {
       disabled={isDisabled}
       hitSlop={8}
       style={{ opacity: isDisabled ? 0.5 : 1 }}
+      accessibilityRole="button"
+      accessibilityLabel={isInPlan ? "Remove from meal plan" : "Add to meal plan"}
+      accessibilityState={{ disabled: isDisabled, checked: isInPlan }}
     >
       {isInPlan ? (
         <CalendarCheckIcon className="text-green-500" size={24} strokeWidth={2} />
