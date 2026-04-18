@@ -139,36 +139,6 @@ function AnimatedStack() {
               },
             ];
           },
-          // headerLargeTitleEnabled: true,
-          // headerLargeTitleStyle: {
-          //   fontFamily: "BowlbyOne-Regular",
-          //   fontSize: 30,
-          //   fontWeight: "bold",
-          //   color: headerColor,
-          // },
-          // headerTitleStyle: {
-          //   fontFamily: "BowlbyOne-Regular",
-          // },
-          // unstable_headerRightItems() {
-          //   return [
-          //     {
-          //       type: "custom",
-          //       element: (
-          //         <Link href="/ingredient/create" asChild className="mx-2">
-          //           <PlusIcon className="text-foreground" strokeWidth={2.618} />
-          //         </Link>
-          //       ),
-          //     },
-          //     {
-          //       type: "custom",
-          //       element: (
-          //         <Link href="/profile" asChild className="mx-2">
-          //           <UserIcon className="text-foreground" strokeWidth={2.618} />
-          //         </Link>
-          //       ),
-          //     },
-          //   ];
-          // },
         }}
       />
       {/* ======== INGREDIENT ======== */}
