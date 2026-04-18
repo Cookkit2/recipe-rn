@@ -1,44 +1,7 @@
 /**
  * Input Sanitization Utilities
- * 
- * Prov    // 1  // 1. Remove control characters and null bytes
-  sanitized = sanitized.replace(/[^\x20-\x7E\u00A0-\uFFFF]/g, "");
-
-  // 2. Remove potentially dangerous SQL keywords and patterns first
-  // Apply all patterns, then clean up remaining quotes and special characters
-  const sqlKeywords = /(\b|^)(DROP|DELETE|UPDATE|INSERT|ALTER|CREATE|EXEC|EXECUTE|SCRIPT|EVAL|SELECT|UNION|JOIN)\b/gi;
-  const sqlComments = /(--|\/\*|\*\/)/g;
-  
-  // Apply patterns in sequence
-  sanitized = sanitized.replace(sqlKeywords, "");
-  sanitized = sanitized.replace(sqlComments, "");
-  
-  // Remove individual dangerous characters with separate calls
-  sanitized = sanitized.replace(/;/g, "");
-  sanitized = sanitized.replace(/\|/g, "");
-  sanitized = sanitized.replace(/&/g, "");
-  sanitized = sanitized.replace(/'/g, "");  // Single quotes
-  sanitized = sanitized.replace(/"/g, "");  // Double quotes
-  
-  // Clean up any extra whitespace left by removals
-  sanitized = sanitized.replace(/\s+/g, " ").trim();
-
-  // 3. Escape SQL wildcards and backslashes AFTER removing dangerous patterns
-  sanitized = sanitized.replace(/[%_\\]/g, "\\$&");l characters and null bytes
-  sanitized = sanitized.replace(/[^\x20-\x7E\u00A0-\uFFFF]/g, "");
-
-  // 2. Escape SQL wildcards and backslashes BEFORE removing other patterns
-  sanitized = sanitized.replace(/[%_\\]/g, "\\$&");
-
-  // 3. Remove potentially dangerous SQL keywords and patterns2. Remove potentially dangerous SQL keywords and patterns
-  const sqlPatterns = [
-    /(\b|^)(DROP|DELETE|UPDATE|INSERT|ALTER|CREATE|EXEC|EXECUTE|SCRIPT|EVAL|SELECT|UNION|JOIN)\b/gi,
-    /(--|\/\*|\*\/|;|\||&|'|"|<|>)/g, // SQL operators, quotes, and comment syntax
-  ];emove potentially dangerous SQL keywords and patterns
-  const sqlPatterns = [
-    /(\b|^)(DROP|DELETE|UPDATE|INSERT|ALTER|CREATE|EXEC|EXECUTE|SCRIPT|EVAL|SELECT|UNION|JOIN)\b/gi,
-    /(--|\/\*|\*\/|;|\||&|'|"|<|>)/g, // SQL operators, quotes, and comment syntax
-  ];comprehensive input sanitization functions to prevent SQL injection,
+ *
+ * Provides comprehensive input sanitization functions to prevent SQL injection,
  * XSS attacks, and other security vulnerabilities.
  */
 
@@ -71,24 +34,10 @@ export function sanitizeForDatabase(input: string, options: SanitizationOptions 
   // 1. Remove control characters and null bytes
   sanitized = sanitized.replace(/[^\x20-\x7E\u00A0-\uFFFF]/g, "");
 
-  // 2. Remove potentially dangerous SQL keywords and patterns first
-  // Apply all patterns, then clean up remaining quotes and special characters
-  const sqlKeywords =
-    /(\b|^)(DROP|DELETE|UPDATE|INSERT|ALTER|CREATE|EXEC|EXECUTE|SCRIPT|EVAL|SELECT|UNION|JOIN)\b/gi;
-  const sqlComments = /(--|\/\*|\*\/)/g;
+  // 2. Note: SQL injection prevention is handled natively by WatermelonDB / SQLite parameterized queries.
+  // We no longer strip SQL keywords or quotes here, as doing so corrupts valid user input (e.g., "O'Connor", "drop off").
 
-  // Apply patterns in sequence
-  sanitized = sanitized.replace(sqlKeywords, "");
-  sanitized = sanitized.replace(sqlComments, "");
-
-  // Remove individual dangerous characters with separate calls
-  sanitized = sanitized.replace(/;/g, "");
-  sanitized = sanitized.replace(/\|/g, "");
-  sanitized = sanitized.replace(/&/g, "");
-  sanitized = sanitized.replace(/'/g, ""); // Single quotes
-  sanitized = sanitized.replace(/"/g, ""); // Double quotes
-
-  // Clean up any extra whitespace left by removals
+  // Clean up any extra whitespace
   sanitized = sanitized.replace(/\s+/g, " ").trim();
 
   // 3. Escape SQL wildcards and backslashes AFTER removing dangerous patterns
@@ -219,7 +168,7 @@ export function sanitizeFilename(filename: string): string {
 
   // Remove path traversal attempts
   sanitized = sanitized.replace(/\.\./g, "");
-  sanitized = sanitized.replace(/[/\\]/g, "");
+  sanitized = sanitized.replace(/[\/\\]/g, "");
 
   // Remove dangerous characters (control characters 0-31 and other unsafe chars)
   sanitized = sanitized.replace(/[<>:"|?*]/g, "");
