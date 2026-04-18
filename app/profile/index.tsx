@@ -33,23 +33,6 @@ const email = "fridgit132@gmail.com";
 export default function ProfileScreen() {
   const router = useRouter();
 
-  // const { signOut, isAuthenticated } = useAuth();
-  // const authStore = useAuthStore();
-
-  // const handleSignOut = async () => {
-  //   authStore.forceSignOut();
-  //   router.replace("/(auth)/sign-in");
-
-  //   // Try remote sign out in background (don't await it)
-  //   signOut()
-  //     .then((result) => {
-  //       log.info("Background sign out completed:", result);
-  //     })
-  //     .catch((error) => {
-  //       log.error("Background sign out failed:", error);
-  //     });
-  // };
-
   const handleContactUs = useCallback(async () => {
     try {
       const rcId = await Purchases.getAppUserID();
@@ -217,20 +200,6 @@ export default function ProfileScreen() {
       </View>
 
       <View className="mt-24"></View>
-
-      {/* <View className="px-6 my-12">
-        {isAuthenticated && (
-          <Button
-            variant="destructive"
-            className="w-full rounded-full"
-            onPress={handleSignOut}
-          >
-            <P className="text-lg text-destructive-foreground font-urbanist-semibold">
-              Logout
-            </P>
-          </Button>
-        )}
-      </View> */}
     </ScrollView>
   );
 }
