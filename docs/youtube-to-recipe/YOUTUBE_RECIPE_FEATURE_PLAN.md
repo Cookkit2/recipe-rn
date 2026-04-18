@@ -409,7 +409,6 @@ import type {
 
 /**
  * YouTube Data API v3 implementation (requires API key)
- * TODO: Implement when upgrading from MVP
  */
 export class AuthYouTubeService implements IYouTubeService {
   private readonly API_KEY = process.env.EXPO_PUBLIC_YOUTUBE_API_KEY;
