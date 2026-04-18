@@ -44,15 +44,18 @@ export function postprocessOutputsYolo(
     if (!xCenter || !yCenter || !width || !height) {
       continue;
     }
-    // Extract class scores
-    const classScores: number[] = [];
+    // Extract class scores directly (Bolt optimization: avoid array allocation and Math.max spread)
+    let maxClassScore = 0;
+    let classId = -1;
     for (let c = 4; c < outputHeight; c++) {
-      classScores.push(output?.[c * outputWidth + i] ?? 0);
+      const score = output?.[c * outputWidth + i] ?? 0;
+      if (score > maxClassScore) {
+        maxClassScore = score;
+        classId = c - 4;
+      }
     }
-    // Find the class with highest score
-    const maxClassScore = Math.max(...classScores);
-    if (maxClassScore > confThreshold) {
-      const classId = classScores.indexOf(maxClassScore);
+
+    if (maxClassScore > confThreshold && classId !== -1) {
       // Convert from normalized coordinates to pixel coordinates
       // YOLO outputs are in normalized format [0, 1]
       const xCenterPixel = xCenter * inputSize[0] * scaleX;
@@ -144,8 +147,15 @@ function applyNMS(detections: Detection[], iouThreshold: number = 0.5): Detectio
     remaining.push(...filteredRemaining);
   }
 
-  // Return filtered detections
-  return keep.map((i) => detections[i]).filter((d) => d !== undefined);
+  // Return filtered detections (Bolt optimization: avoid chained map/filter)
+  const finalDetections: Detection[] = [];
+  for (let idx = 0; idx < keep.length; idx++) {
+    const i = keep[idx];
+    if (i !== undefined && detections[i] !== undefined) {
+      finalDetections.push(detections[i]);
+    }
+  }
+  return finalDetections;
 }
 
 // Class names mapping
