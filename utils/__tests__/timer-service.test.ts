@@ -1,4 +1,4 @@
-import { timerService } from "../timer-service";
+import { timerService, formatTimerDuration, formatTimerDurationText } from "../timer-service";
 import * as Crypto from "expo-crypto";
 import { storage } from "~/data";
 import { log } from "~/utils/logger";
@@ -147,6 +147,58 @@ describe("TimerService", () => {
 
       // Cleanup
       unsubscribe();
+    });
+  });
+
+  describe("formatTimerDuration", () => {
+    it("formats seconds less than a minute correctly", () => {
+      expect(formatTimerDuration(0)).toBe("0:00");
+      expect(formatTimerDuration(5)).toBe("0:05");
+      expect(formatTimerDuration(59)).toBe("0:59");
+    });
+
+    it("formats exact minutes correctly", () => {
+      expect(formatTimerDuration(60)).toBe("1:00");
+      expect(formatTimerDuration(120)).toBe("2:00");
+    });
+
+    it("formats minutes and seconds correctly", () => {
+      expect(formatTimerDuration(65)).toBe("1:05");
+      expect(formatTimerDuration(125)).toBe("2:05");
+      expect(formatTimerDuration(3599)).toBe("59:59");
+    });
+
+    it("formats exact hours correctly", () => {
+      expect(formatTimerDuration(3600)).toBe("1:00:00");
+      expect(formatTimerDuration(7200)).toBe("2:00:00");
+    });
+
+    it("formats hours, minutes, and seconds correctly", () => {
+      expect(formatTimerDuration(3605)).toBe("1:00:05");
+      expect(formatTimerDuration(3665)).toBe("1:01:05");
+      expect(formatTimerDuration(3660)).toBe("1:01:00");
+    });
+  });
+
+  describe("formatTimerDurationText", () => {
+    it("formats seconds rounding up to minutes correctly", () => {
+      expect(formatTimerDurationText(0)).toBe("0 minutes");
+      expect(formatTimerDurationText(30)).toBe("1 minute");
+      expect(formatTimerDurationText(60)).toBe("1 minute");
+      expect(formatTimerDurationText(119)).toBe("2 minutes");
+      expect(formatTimerDurationText(120)).toBe("2 minutes");
+    });
+
+    it("formats exact hours correctly", () => {
+      expect(formatTimerDurationText(3600)).toBe("1 hour");
+      expect(formatTimerDurationText(7200)).toBe("2 hours");
+    });
+
+    it("formats hours and minutes correctly", () => {
+      expect(formatTimerDurationText(3660)).toBe("1 hour and 1 minute");
+      expect(formatTimerDurationText(3720)).toBe("1 hour and 2 minutes");
+      expect(formatTimerDurationText(7260)).toBe("2 hours and 1 minute");
+      expect(formatTimerDurationText(7320)).toBe("2 hours and 2 minutes");
     });
   });
 });

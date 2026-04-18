@@ -436,6 +436,44 @@ export function aggregateRecipeIngredients(
 }
 
 /**
+ * Builds a pre-computed index mapping normalized names and synonyms to an array of matching pantry items.
+ */
+function buildPantryIndex(pantryItems: any[] | null | undefined): Map<string, any[]> {
+  const index = new Map<string, any[]>();
+
+  if (!pantryItems) return index;
+
+  for (const pantryItem of pantryItems) {
+    const normalizedName = pantryItem.name.toLowerCase().trim();
+
+    if (!index.has(normalizedName)) {
+      index.set(normalizedName, []);
+    }
+    index.get(normalizedName)!.push(pantryItem);
+
+    if (pantryItem.synonyms && pantryItem.synonyms.length > 0) {
+      for (const synonymEntry of pantryItem.synonyms) {
+        // Handle both string and object synonym forms gracefully
+        const synonymText = typeof synonymEntry === "string" ? synonymEntry : synonymEntry.synonym;
+        if (!synonymText) continue;
+
+        const normalizedSynonym = synonymText.toLowerCase().trim();
+
+        if (!index.has(normalizedSynonym)) {
+          index.set(normalizedSynonym, []);
+        }
+        // Avoid duplicate items in the same normalized bucket
+        if (!index.get(normalizedSynonym)!.includes(pantryItem)) {
+          index.get(normalizedSynonym)!.push(pantryItem);
+        }
+      }
+    }
+  }
+
+  return index;
+}
+
+/**
  * Step 2: Calculates needed quantities by subtracting pantry stock.
  */
 export function calculateNeededQuantities(
@@ -445,24 +483,41 @@ export function calculateNeededQuantities(
 ): GroceryItem[] {
   const groceryItems: GroceryItem[] = [];
 
+  // O(N*M) Optimization: Build an O(1) index of pantry items for direct/synonym matches
+  const pantryIndex = buildPantryIndex(pantryItems);
+
   for (const [normalizedName, ingredient] of ingredientMap) {
     // Collect ALL matching pantry items (not just the first one)
     const matchingPantryItems: Array<{ quantity: number; unit: string }> = [];
 
     if (pantryItems) {
-      for (const pantryItem of pantryItems) {
-        const isMatch = isIngredientMatch(
-          pantryItem.name,
-          ingredient.name,
-          pantryItem.synonyms?.map((s: any) => s.synonym)
-        );
+      const ingredientNormalized = ingredient.name.toLowerCase().trim();
+      const directMatches = pantryIndex.get(ingredientNormalized);
 
-        if (isMatch) {
+      // Exact name or synonym match via O(1) index lookup
+      if (directMatches && directMatches.length > 0) {
+        for (const pantryItem of directMatches) {
           matchingPantryItems.push({
             quantity: pantryItem.quantity,
             unit: pantryItem.unit,
           });
-          // Don't break - aggregate all matching items
+        }
+      } else {
+        // Slow path: Fallback to scanning all pantry items for substring/complex matches
+        for (const pantryItem of pantryItems) {
+          const isMatch = isIngredientMatch(
+            pantryItem.name,
+            ingredient.name,
+            pantryItem.synonyms?.map((s: any) => s.synonym)
+          );
+
+          if (isMatch) {
+            matchingPantryItems.push({
+              quantity: pantryItem.quantity,
+              unit: pantryItem.unit,
+            });
+            // Don't break - aggregate all matching items
+          }
         }
       }
     }

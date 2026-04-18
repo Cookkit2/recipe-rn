@@ -1,12 +1,10 @@
-import React, { useCallback, useRef, useState } from "react";
+import React from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePantryStore } from "~/store/PantryContext";
 import IngredientItemCard from "./IngredientItemCard";
-import { View, ActivityIndicator, RefreshControl } from "react-native";
+import { View, ActivityIndicator } from "react-native";
 import { H4, P } from "~/components/ui/typography";
 import { usePantryItemsByType } from "~/hooks/queries/usePantryQueries";
-import { useRouter } from "expo-router";
-import * as Haptics from "expo-haptics";
 import Animated, { LinearTransition, useAnimatedStyle, withTiming } from "react-native-reanimated";
 import { CURVES } from "~/constants/curves";
 import IngredientCategoryButtonGroup from "./IngredientCategoryButtonGroup";
@@ -16,20 +14,9 @@ export default function IngredientLists() {
   const { selectedItemType, ingredientScrollRef, isRecipeOpen } = usePantryStore();
   const { data, isLoading, error } = usePantryItemsByType(selectedItemType);
   const items = data ?? [];
-  // const router = useRouter();
-
-  // const [isRefreshing, setIsRefreshing] = useState(false);
-
   const ingredientListStyle = useAnimatedStyle(() => ({
     paddingHorizontal: withTiming(isRecipeOpen ? 4 : 12, CURVES["expressive.default.spatial"]),
   }));
-
-  // const handleRefresh = useCallback(() => {
-  //   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-  //   // Reset immediately so the spinner doesn't stay frozen when returning to this screen
-  //   setIsRefreshing(false);
-  //   router.push("/search");
-  // }, [router]);
 
   const emptyState = () => {
     if (isLoading) {
@@ -76,14 +63,6 @@ export default function IngredientLists() {
       showsVerticalScrollIndicator={false}
       data={items}
       style={ingredientListStyle}
-      // refreshControl={
-      //   <RefreshControl
-      //     size="default"
-      //     refreshing={isRefreshing}
-      //     onRefresh={handleRefresh}
-      //     title="Pull to search"
-      //   />
-      // }
       ListHeaderComponent={
         <View className="bg-background pt-2">
           <IngredientCategoryButtonGroup />

@@ -93,12 +93,6 @@ export default function SearchScreen() {
     searchBarRef.current?.focus();
   };
 
-  // const handleSearch = async () => {
-  //   if (!input.trim()) return;
-  //   await sendMessage(input);
-  //   Keyboard.dismiss();
-  // };
-
   const handleDismiss = () => {
     Keyboard.dismiss();
     router.back();
