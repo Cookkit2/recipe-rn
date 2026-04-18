@@ -159,7 +159,7 @@ const Button = React.forwardRef<React.ComponentRef<typeof Pressable>, ButtonProp
             ref={ref}
             role="button"
             accessibilityRole={accessibilityRole}
-            accessibilityState={{ disabled: !!props.disabled, ...props.accessibilityState }}
+            accessibilityState={{ disabled: !!props.disabled }}
             style={[props.style, roundedStyle]}
             {...props}
           />
