@@ -225,6 +225,11 @@ const CATEGORY_KEYWORDS: Record<GroceryCategory, string[]> = {
   purchased: [], // Checked items go here - no keywords needed
 };
 
+// Pre-allocate active categories to avoid Object.entries and filtering on every call
+const ACTIVE_CATEGORIES = (
+  Object.entries(CATEGORY_KEYWORDS) as [GroceryCategory, string[]][]
+).filter(([category]) => category !== "other" && category !== "purchased");
+
 /**
  * Categorizes an ingredient based on its name
  *
@@ -238,13 +243,17 @@ const CATEGORY_KEYWORDS: Record<GroceryCategory, string[]> = {
 function categorizeIngredient(name: string): GroceryCategory {
   const lowerName = name.toLowerCase();
 
-  for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
-    // Skip 'other' and 'purchased' - 'other' is the fallback, 'purchased' is for checked items
-    if (category === "other" || category === "purchased") continue;
+  for (let i = 0; i < ACTIVE_CATEGORIES.length; i++) {
+    const entry = ACTIVE_CATEGORIES[i];
+    if (!entry) continue; // safety check
 
-    for (const keyword of keywords) {
-      if (lowerName.includes(keyword)) {
-        return category as GroceryCategory;
+    const category = entry[0];
+    const keywords = entry[1];
+
+    for (let j = 0; j < keywords.length; j++) {
+      const keyword = keywords[j];
+      if (keyword && lowerName.includes(keyword)) {
+        return category;
       }
     }
   }
