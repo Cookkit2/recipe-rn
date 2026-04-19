@@ -15,3 +15,8 @@
 **Vulnerability:** Relying on positional array parameters `?` in SQLite (especially via `expo-sqlite`) can lead to SQL injection vulnerabilities due to parameter misalignment, object-to-string coercion bugs, or parameter pollution. This is frequently flagged by code analysis tools.
 **Learning:** `expo-sqlite` and similar SQL libraries allow dynamic mapping, meaning using `?` binds parameters structurally by an index array.
 **Prevention:** Always use explicitly mapped named parameters like `$columnName` when using `runAsync` and `getFirstAsync` in `expo-sqlite` and pass the parameters as an object instead of an array.
+
+## 2024-05-27 - Zustand Persist Custom Storage with SecureStore
+**Vulnerability:** When using Zustand `persist` with Expo `SecureStore`, omitting the `storage` configuration (and attempting to use deprecated `deserialize` options) defaults the storage engine to an unencrypted fallback (like `localStorage` polyfills). This causes sensitive data (like `accessToken`, `refreshToken`, and user info) specified in `partialize` to be persisted in plaintext storage instead of the intended `SecureStore`.
+**Learning:** Zustand v4+ requires a custom `storage` object for `persist` when integrating with async secure storages like `expo-secure-store`. The state is wrapped in a `StorageValue` type.
+**Prevention:** Always implement a custom `storage` object containing `getItem`, `setItem`, and `removeItem` methods wrapped around `SecureStore` when using Zustand `persist` for sensitive data in Expo/React Native.
