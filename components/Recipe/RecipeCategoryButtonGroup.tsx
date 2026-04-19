@@ -47,6 +47,8 @@ export default function RecipeCategoryButtonGroup({
               : colors.mutedForeground,
           }}
           onPress={() => updateRecipeTag(tag)}
+          accessibilityRole="button"
+          accessibilityLabel={`Select ${label} category`}
         >
           {React.cloneElement(icon, {
             style: {
