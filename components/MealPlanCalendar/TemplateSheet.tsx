@@ -535,6 +535,7 @@ export default function TemplateSheet({ onTemplateApplied, onClose }: TemplateSh
                                 variant="ghost"
                                 onPress={() => handleDeleteTemplate(template)}
                                 disabled={deleteTemplate.isPending}
+                                accessibilityLabel="Delete template"
                               >
                                 <Trash2Icon size={16} className="text-destructive" />
                               </Button>
