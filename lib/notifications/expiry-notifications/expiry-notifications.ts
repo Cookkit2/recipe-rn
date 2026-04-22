@@ -111,10 +111,10 @@ export async function scheduleExpiryNotifications(items: ExpiryItem[]): Promise<
         ? EXPIRY_NOTIFICATION_TITLE
         : `${group.items.length} ingredients expiring soon`;
 
-    for (const item of group.items) {
+    const schedulePromises = group.items.map((item) => {
       const notificationId = getExpiryNotificationId(item.id);
 
-      await scheduleNotification({
+      return scheduleNotification({
         id: notificationId,
         title,
         body,
@@ -125,7 +125,9 @@ export async function scheduleExpiryNotifications(items: ExpiryItem[]): Promise<
         },
         trigger: { date: triggerDate },
       });
-    }
+    });
+
+    await Promise.all(schedulePromises);
   }
 }
 
