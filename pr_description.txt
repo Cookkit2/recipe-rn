@@ -1,0 +1,13 @@
+🧹 Code Health: Type renderRightActions arguments instead of using 'any'
+
+🎯 **What:**
+Replaced `any` types for the `renderRightActions` callback arguments in `GroceryListItem.tsx` with their specific Animated `SharedValue` types.
+
+💡 **Why:**
+The use of `any` disables TypeScript's strict type checking. By explicitly typing the callback arguments to match the `react-native-gesture-handler` `ReanimatedSwipeable` prop signature, we improve type safety, reduce potential runtime errors, and enhance the maintainability and readability of the codebase.
+
+✅ **Verification:**
+Confirmed via `pnpm test` and `pnpm lint` that the tests pass and there are no type-checking regressions. The functionality of the application remains unchanged.
+
+✨ **Result:**
+Better type safety for gesture handler components.
