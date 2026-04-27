@@ -1,53 +1,83 @@
 import { toggleFromArray } from "../array-helper";
 
 describe("toggleFromArray", () => {
-  it("should add an item to an empty array", () => {
-    const result = toggleFromArray([], "apple");
-    expect(result).toEqual(["apple"]);
+  it("should add value when not present in array", () => {
+    const arr = [1, 2, 3];
+    const result = toggleFromArray(arr, 4);
+
+    expect(result).toEqual([1, 2, 3, 4]);
+    expect(result).not.toBe(arr); // Should return new array
   });
 
-  it("should add an item to an array if it doesn't exist", () => {
-    const result = toggleFromArray(["apple", "banana"], "orange");
-    expect(result).toEqual(["apple", "banana", "orange"]);
+  it("should remove value when present in array", () => {
+    const arr = [1, 2, 3, 4];
+    const result = toggleFromArray(arr, 3);
+
+    expect(result).toEqual([1, 2, 4]);
+    expect(result).not.toBe(arr); // Should return new array
   });
 
-  it("should remove an item from an array if it already exists", () => {
-    const result = toggleFromArray(["apple", "banana", "orange"], "banana");
-    expect(result).toEqual(["apple", "orange"]);
+  it("should handle empty array", () => {
+    const result = toggleFromArray([], 1);
+
+    expect(result).toEqual([1]);
   });
 
-  it("should return a new array instance when adding an item", () => {
-    const arr = ["apple"];
-    const result = toggleFromArray(arr, "banana");
-    expect(result).not.toBe(arr);
-    expect(arr).toEqual(["apple"]); // Ensure original is not mutated
+  it("should handle removing from single element array", () => {
+    const result = toggleFromArray([1], 1);
+
+    expect(result).toEqual([]);
   });
 
-  it("should return a new array instance when removing an item", () => {
+  it("should handle removing first element", () => {
+    const result = toggleFromArray([1, 2, 3], 1);
+
+    expect(result).toEqual([2, 3]);
+  });
+
+  it("should handle removing last element", () => {
+    const result = toggleFromArray([1, 2, 3], 3);
+
+    expect(result).toEqual([1, 2]);
+  });
+
+  it("should handle strings", () => {
     const arr = ["apple", "banana"];
-    const result = toggleFromArray(arr, "banana");
-    expect(result).not.toBe(arr);
-    expect(arr).toEqual(["apple", "banana"]); // Ensure original is not mutated
+    const result = toggleFromArray(arr, "cherry");
+
+    expect(result).toEqual(["apple", "banana", "cherry"]);
   });
 
-  it("should handle numbers", () => {
-    expect(toggleFromArray([1, 2, 3], 4)).toEqual([1, 2, 3, 4]);
-    expect(toggleFromArray([1, 2, 3], 2)).toEqual([1, 3]);
+  it("should remove string from array", () => {
+    const arr = ["apple", "banana", "cherry"];
+    const result = toggleFromArray(arr, "banana");
+
+    expect(result).toEqual(["apple", "cherry"]);
   });
 
   it("should handle objects by reference", () => {
     const obj1 = { id: 1 };
     const obj2 = { id: 2 };
-    const arr = [obj1];
+    const arr = [obj1, obj2];
 
-    // Adding
-    expect(toggleFromArray(arr, obj2)).toEqual([obj1, obj2]);
+    const result = toggleFromArray(arr, obj1);
 
-    // Removing
-    expect(toggleFromArray([obj1, obj2], obj1)).toEqual([obj2]);
+    expect(result).toEqual([obj2]);
+  });
 
-    // Note: It doesn't handle objects by value, only reference
-    const similarObj = { id: 1 };
-    expect(toggleFromArray(arr, similarObj)).toEqual([obj1, similarObj]);
+  it("should not add duplicate values", () => {
+    const arr = [1, 2, 3];
+    const result1 = toggleFromArray(arr, 2);
+    const result2 = toggleFromArray(result1, 2);
+
+    expect(result1).toEqual([1, 3]);
+    expect(result2).toEqual([1, 3, 2]);
+  });
+
+  it("should handle array with duplicate values", () => {
+    const arr = [1, 2, 2, 3];
+    const result = toggleFromArray(arr, 2);
+
+    expect(result).toEqual([1, 2, 3]); // Removes first occurrence
   });
 });

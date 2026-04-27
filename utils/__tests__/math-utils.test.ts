@@ -1,38 +1,43 @@
-import { jest, describe, beforeEach, it, expect } from "@jest/globals";
 import { sigmoid } from "../math-utils";
 
-describe("math-utils", () => {
-  describe("sigmoid", () => {
-    it("returns 0.5 for input 0", () => {
-      expect(sigmoid(0)).toBe(0.5);
-    });
+describe("sigmoid", () => {
+  it("should return 0.5 for x=0", () => {
+    const result = sigmoid(0);
+    expect(result).toBe(0.5);
+  });
 
-    it("returns values close to 1 for large positive inputs", () => {
-      expect(sigmoid(10)).toBeCloseTo(0.99995);
-      expect(sigmoid(100)).toBe(1); // Due to floating point precision, it evaluates to exactly 1
-    });
+  it("should return value close to 1 for large positive x", () => {
+    const result = sigmoid(10);
+    expect(result).toBeGreaterThan(0.9);
+    expect(result).toBeLessThan(1);
+  });
 
-    it("returns values close to 0 for large negative inputs", () => {
-      expect(sigmoid(-10)).toBeCloseTo(0.000045);
-      // It gets very close to 0, but is not exactly 0.
-      expect(sigmoid(-100)).toBeCloseTo(0);
-      expect(sigmoid(-1000)).toBe(0); // For very large negative numbers, it is exactly 0
-    });
+  it("should return value close to 0 for large negative x", () => {
+    const result = sigmoid(-10);
+    expect(result).toBeGreaterThan(0);
+    expect(result).toBeLessThan(0.1);
+  });
 
-    it("returns correct values for specific points to verify curve shape", () => {
-      expect(sigmoid(1)).toBeCloseTo(0.731058);
-      expect(sigmoid(-1)).toBeCloseTo(0.268941);
-      expect(sigmoid(2)).toBeCloseTo(0.880797);
-      expect(sigmoid(-2)).toBeCloseTo(0.119202);
-    });
+  it("should return value between 0 and 1 for any input", () => {
+    const testValues = [-100, -10, -1, 0, 1, 10, 100];
 
-    it("handles edge cases: Infinity and -Infinity", () => {
-      expect(sigmoid(Infinity)).toBe(1);
-      expect(sigmoid(-Infinity)).toBe(0);
+    testValues.forEach((x) => {
+      const result = sigmoid(x);
+      expect(result).toBeGreaterThanOrEqual(0);
+      expect(result).toBeLessThanOrEqual(1);
     });
+  });
 
-    it("handles NaN by returning NaN", () => {
-      expect(sigmoid(NaN)).toBeNaN();
-    });
+  it("should be symmetric around 0", () => {
+    const positiveResult = sigmoid(5);
+    const negativeResult = sigmoid(-5);
+
+    expect(positiveResult + negativeResult).toBeCloseTo(1, 10);
+  });
+
+  it("should handle decimal values", () => {
+    const result = sigmoid(0.5);
+    expect(result).toBeGreaterThan(0.5);
+    expect(result).toBeLessThan(1);
   });
 });

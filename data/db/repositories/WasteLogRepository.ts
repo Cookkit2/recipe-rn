@@ -138,22 +138,22 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
     let totalQuantityWasted = 0;
     let totalEstimatedCost = 0;
 
+    // Single pass for grouping by reason, calculating totals, and finding most wasted items
     const wasteByReason: Record<string, { count: number; quantity: number; cost: number }> = {};
     const itemMap = new Map<
       string,
       { wasteCount: number; totalQuantity: number; totalCost: number }
     >();
 
-    for (let i = 0; i < totalWasteEntries; i++) {
-      const record = records[i];
-      if (!record) continue;
-
+    for (const record of records) {
       const quantity = record.quantityWasted;
       const cost = record.estimatedCost ?? 0;
 
+      // Update totals
       totalQuantityWasted += quantity;
       totalEstimatedCost += cost;
 
+      // Update waste by reason
       const reason = record.reason || "unknown";
       if (!wasteByReason[reason]) {
         wasteByReason[reason] = { count: 0, quantity: 0, cost: 0 };
@@ -162,6 +162,7 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
       wasteByReason[reason].quantity += quantity;
       wasteByReason[reason].cost += cost;
 
+      // Update most wasted items
       const existing = itemMap.get(record.stockId);
       if (existing) {
         existing.wasteCount++;

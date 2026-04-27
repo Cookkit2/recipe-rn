@@ -41,7 +41,7 @@ export default function RecipeCategoryButtonGroup({
         <Pressable
           key={tag}
           accessibilityRole="button"
-          accessibilityLabel={label}
+          accessibilityLabel={`Select ${label} category`}
           accessibilityState={{ selected: selectedRecipeTags.includes(tag) }}
           className={"border-continuous flex-row items-center gap-2 rounded-2xl"}
           style={{
@@ -50,8 +50,6 @@ export default function RecipeCategoryButtonGroup({
               : colors.mutedForeground,
           }}
           onPress={() => updateRecipeTag(tag)}
-          accessibilityRole="button"
-          accessibilityLabel={`Select ${label} category`}
         >
           {React.cloneElement(icon, {
             style: {

@@ -1,3 +1,0 @@
-## 2025-02-18 - Improve type safety for generic function constraints
-**Learning:** When defining a generic type constraint for a callback function (e.g., `T extends (...args: any[]) => any`), using `any` triggers ESLint warnings and bypasses strict type checking.
-**Action:** Replace `(...args: any[]) => any` with `(...args: never[]) => unknown`. Because function parameter types are contravariant (so `never[]` accepts any array type) and return types are covariant (`unknown` accepts any return value), this pattern correctly types any generic function signature while preserving strict type safety and eliminating the need for `eslint-disable` comments.
