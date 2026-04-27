@@ -135,44 +135,49 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
     const records = await query.fetch();
 
     const totalWasteEntries = records.length;
-    const totalQuantityWasted = records.reduce((sum, r) => sum + r.quantityWasted, 0);
-    const totalEstimatedCost = records.reduce((sum, r) => {
-      return sum + (r.estimatedCost ?? 0);
-    }, 0);
-    const averageWastePerEntry =
-      totalWasteEntries > 0 ? totalQuantityWasted / totalWasteEntries : 0;
+    let totalQuantityWasted = 0;
+    let totalEstimatedCost = 0;
 
-    // Group by reason
     const wasteByReason: Record<string, { count: number; quantity: number; cost: number }> = {};
-    for (const record of records) {
+    const itemMap = new Map<
+      string,
+      { wasteCount: number; totalQuantity: number; totalCost: number }
+    >();
+
+    for (let i = 0; i < totalWasteEntries; i++) {
+      const record = records[i];
+      if (!record) continue;
+
+      const quantity = record.quantityWasted;
+      const cost = record.estimatedCost ?? 0;
+
+      totalQuantityWasted += quantity;
+      totalEstimatedCost += cost;
+
       const reason = record.reason || "unknown";
       if (!wasteByReason[reason]) {
         wasteByReason[reason] = { count: 0, quantity: 0, cost: 0 };
       }
       wasteByReason[reason].count++;
-      wasteByReason[reason].quantity += record.quantityWasted;
-      wasteByReason[reason].cost += record.estimatedCost ?? 0;
-    }
+      wasteByReason[reason].quantity += quantity;
+      wasteByReason[reason].cost += cost;
 
-    // Find most wasted items
-    const itemMap = new Map<
-      string,
-      { wasteCount: number; totalQuantity: number; totalCost: number }
-    >();
-    for (const record of records) {
       const existing = itemMap.get(record.stockId);
       if (existing) {
         existing.wasteCount++;
-        existing.totalQuantity += record.quantityWasted;
-        existing.totalCost += record.estimatedCost ?? 0;
+        existing.totalQuantity += quantity;
+        existing.totalCost += cost;
       } else {
         itemMap.set(record.stockId, {
           wasteCount: 1,
-          totalQuantity: record.quantityWasted,
-          totalCost: record.estimatedCost ?? 0,
+          totalQuantity: quantity,
+          totalCost: cost,
         });
       }
     }
+
+    const averageWastePerEntry =
+      totalWasteEntries > 0 ? totalQuantityWasted / totalWasteEntries : 0;
 
     const mostWastedItems = Array.from(itemMap.entries())
       .map(([stockId, data]) => ({
