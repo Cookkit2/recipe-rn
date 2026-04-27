@@ -45,12 +45,27 @@ const initialState: AuthStateInitial = {
   error: null,
 };
 
+const isValidEmail = (email: string) => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+};
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       ...initialState,
 
       login: async (email: string, password: string) => {
+        if (!email || !isValidEmail(email)) {
+          const errorMsg = "Invalid email format";
+          set({ error: errorMsg, isLoading: false });
+          throw new Error(errorMsg);
+        }
+        if (!password || password.length < 6) {
+          const errorMsg = "Password must be at least 6 characters";
+          set({ error: errorMsg, isLoading: false });
+          throw new Error(errorMsg);
+        }
+
         set({ isLoading: true, error: null });
 
         try {
@@ -94,6 +109,17 @@ export const useAuthStore = create<AuthState>()(
       },
 
       register: async (email: string, password: string, displayName?: string) => {
+        if (!email || !isValidEmail(email)) {
+          const errorMsg = "Invalid email format";
+          set({ error: errorMsg, isLoading: false });
+          throw new Error(errorMsg);
+        }
+        if (!password || password.length < 6) {
+          const errorMsg = "Password must be at least 6 characters";
+          set({ error: errorMsg, isLoading: false });
+          throw new Error(errorMsg);
+        }
+
         set({ isLoading: true, error: null });
 
         try {
