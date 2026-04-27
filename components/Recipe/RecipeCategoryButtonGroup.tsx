@@ -37,39 +37,37 @@ export default function RecipeCategoryButtonGroup({
 
   return (
     <View className="flex-row gap-3 px-6">
-      {RECIPE_TAGS.map(({ label, icon, tag }) => (
-        <Pressable
-          key={tag}
-          accessibilityRole="button"
-          accessibilityLabel={`Select ${label} category`}
-          accessibilityState={{ selected: selectedRecipeTags.includes(tag) }}
-          className={"border-continuous flex-row items-center gap-2 rounded-2xl"}
-          style={{
-            backgroundColor: selectedRecipeTags.includes(tag)
-              ? colors.primary
-              : colors.mutedForeground,
-          }}
-          onPress={() => updateRecipeTag(tag)}
-        >
-          {React.cloneElement(icon, {
-            style: {
-              color: selectedRecipeTags.includes(tag)
-                ? colors.primaryForeground
-                : colors.background,
-            },
-          })}
-          <P
-            className={"font-urbanist-semibold text-lg leading-snug"}
+      {RECIPE_TAGS.map(({ label, icon, tag }) => {
+        const isSelected = selectedRecipeTags.includes(tag);
+
+        return (
+          <Pressable
+            key={tag}
+            accessibilityRole="button"
+            accessibilityLabel={`Filter by ${label}`}
+            accessibilityState={{ selected: isSelected }}
+            className={"border-continuous flex-row items-center gap-2 rounded-2xl"}
             style={{
-              color: selectedRecipeTags.includes(tag)
-                ? colors.primaryForeground
-                : colors.background,
+              backgroundColor: isSelected ? colors.primary : colors.mutedForeground,
             }}
+            onPress={() => updateRecipeTag(tag)}
           >
-            {label}
-          </P>
-        </Pressable>
-      ))}
+            {React.cloneElement(icon, {
+              style: {
+                color: isSelected ? colors.primaryForeground : colors.background,
+              },
+            })}
+            <P
+              className={"font-urbanist-semibold text-lg leading-snug"}
+              style={{
+                color: isSelected ? colors.primaryForeground : colors.background,
+              }}
+            >
+              {label}
+            </P>
+          </Pressable>
+        );
+      })}
     </View>
   );
 }
