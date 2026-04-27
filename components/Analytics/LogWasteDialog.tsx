@@ -236,6 +236,7 @@ export function LogWasteDialog({
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             setOpen(true);
           }}
+          accessibilityLabel="Log waste"
         >
           <PlusIcon className="text-foreground" size={18} strokeWidth={3} />
         </Button>
