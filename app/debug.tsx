@@ -68,13 +68,13 @@ export default function DebugScreen() {
       const allRecipes = await databaseFacade.getAllRecipes();
       setRecipes(allRecipes);
 
-      // Get first 3 recipes with details
-      const recipesWithDetails = await Promise.all(
-        allRecipes.slice(0, 3).map(async (r) => {
-          const details = await databaseFacade.getRecipeWithDetails(r.id);
-          return { ...r, details };
-        })
-      );
+      // Get first 3 recipes with details (batched)
+      const topRecipes = allRecipes.slice(0, 3);
+      const detailsMap = await databaseFacade.getRecipesWithDetails(topRecipes.map((r) => r.id));
+      const recipesWithDetails = topRecipes.map((r) => ({
+        ...r,
+        details: detailsMap.get(r.id) || null,
+      }));
 
       // Get recommendations
       const recs = await databaseFacade.getAvailableRecipes();

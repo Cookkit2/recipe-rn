@@ -267,15 +267,12 @@ export const useAuthStore = create<AuthState>()(
           refreshToken: state.refreshToken,
           isAuthenticated: state.isAuthenticated,
         }) as AuthState,
+      onRehydrateStorage: () => (state?: AuthState) => {
+        if (state) {
+          // Hydrated from storage, check auth
+          state.checkAuth();
+        }
+      },
     }
   )
 );
-
-// Custom middleware to sync with SecureStore
-const authStore = useAuthStore as any;
-authStore.persist.onRehydrateStorage = () => (state: AuthState | undefined) => {
-  if (state) {
-    // Hydrated from storage, check auth
-    state.checkAuth();
-  }
-};

@@ -5,7 +5,7 @@ import { Stack, useFocusEffect, useRouter } from "expo-router";
 import type { SearchBarCommands } from "react-native-screens";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ActivityIndicator, Text } from "react-native";
-import { useSearchRecipes } from "~/hooks/queries/useRecipeQueries";
+import { useSearchRecipes, type RecipeFilters } from "~/hooks/queries/useRecipeQueries";
 import { useSearchPantryItems } from "~/hooks/queries/usePantryQueries";
 import { IngredientResults } from "~/components/Search/IngredientResults";
 import { RecipeResults } from "~/components/Search/RecipeResults";
@@ -61,7 +61,7 @@ export default function SearchScreen() {
   const hasQuery = debouncedInput.trim().length > 0 || hasFilters;
 
   const activeFilters = useMemo(() => {
-    const filters: any = {};
+    const filters: RecipeFilters = {};
     if (selectedTime?.maxTotalTime) filters.maxTotalTime = selectedTime.maxTotalTime;
     if (selectedTime?.minTotalTime) filters.minTotalTime = selectedTime.minTotalTime;
     if (selectedDifficulty) filters.difficulty = selectedDifficulty;

@@ -121,6 +121,9 @@ export default function ImportYouTubeRecipe() {
             }`}
             onPress={handleImport}
             disabled={isImporting || !!urlError || !youtubeUrl.trim()}
+            accessibilityRole="button"
+            accessibilityLabel="Import Recipe"
+            accessibilityState={{ disabled: isImporting || !!urlError || !youtubeUrl.trim() }}
           >
             {isImporting ? (
               <ActivityIndicator color="white" size="small" />
