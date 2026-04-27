@@ -134,6 +134,8 @@ export function AddTimerDialog({ open, onOpenChange, recipeId, stepNumber }: Add
                 autoCapitalize="words"
                 autoCorrect={false}
                 editable={!isCreating}
+                accessibilityLabel="Timer name"
+                accessibilityLabelledBy="timer-name"
               />
             </View>
           </View>
@@ -152,6 +154,7 @@ export function AddTimerDialog({ open, onOpenChange, recipeId, stepNumber }: Add
                   keyboardType="number-pad"
                   maxLength={2}
                   editable={!isCreating}
+                  accessibilityLabel="Hours"
                 />
                 <Text className="text-xs text-muted-foreground text-center mt-1">Hours</Text>
               </View>
@@ -168,6 +171,7 @@ export function AddTimerDialog({ open, onOpenChange, recipeId, stepNumber }: Add
                   keyboardType="number-pad"
                   maxLength={2}
                   editable={!isCreating}
+                  accessibilityLabel="Minutes"
                 />
                 <Text className="text-xs text-muted-foreground text-center mt-1">Minutes</Text>
               </View>
@@ -184,6 +188,7 @@ export function AddTimerDialog({ open, onOpenChange, recipeId, stepNumber }: Add
                   keyboardType="number-pad"
                   maxLength={2}
                   editable={!isCreating}
+                  accessibilityLabel="Seconds"
                 />
                 <Text className="text-xs text-muted-foreground text-center mt-1">Seconds</Text>
               </View>
