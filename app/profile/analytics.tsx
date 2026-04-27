@@ -17,6 +17,7 @@ import { H4, P } from "~/components/ui/typography";
 import { LeafIcon, TrendingUpIcon } from "lucide-uniwind";
 import WasteMetricsCard from "~/components/Analytics/WasteMetricsCard";
 import WasteChart from "~/components/Analytics/WasteChart";
+import type { WasteStats } from "~/data/db/repositories/WasteLogRepository";
 import { AchievementBadge, type Achievement } from "~/components/Analytics/AchievementBadge";
 import WasteLogItem from "~/components/Analytics/WasteLogItem";
 import LogWasteDialog from "~/components/Analytics/LogWasteDialog";
@@ -50,7 +51,7 @@ function getDateRangeForPeriod(period: TimePeriod): { start?: number; end?: numb
 }
 
 // Helper function to calculate achievements from stats
-function calculateAchievements(stats: any): Achievement[] {
+function calculateAchievements(stats: Partial<WasteStats>): Achievement[] {
   const totalWasteEntries = stats.totalWasteEntries || 0;
   const totalMoneyWasted = (stats.totalEstimatedCost || 0) / 100; // Convert cents to dollars
   const totalCO2FromWaste = (stats.totalQuantityWasted || 0) * CO2_CONVERSION_FACTOR; // Apply conversion
