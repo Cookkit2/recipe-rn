@@ -17,6 +17,11 @@ import * as Crypto from "expo-crypto";
 import type { Prettify } from "~/utils/type-prettier";
 import { log } from "~/utils/logger";
 
+import { type BaseIngredientWithRelations } from "~/data/supabase-api/BaseIngredientApi";
+
+// Cache for base ingredients to avoid redundant API calls
+const baseIngredientCache = new Map<string, BaseIngredientWithRelations | null>();
+
 // Processing status for items being scanned (local to this context)
 export type ProcessingStatus = "processing" | "classifying" | "failed";
 
@@ -135,9 +140,13 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
 
         // Step 6: Fetch base ingredient data in the background
         try {
-          const baseIngredient = await baseIngredientApi.getBaseIngredientByName(
-            titleCase(content.name)
-          );
+          const formattedName = titleCase(content.name);
+          let baseIngredient = baseIngredientCache.get(formattedName);
+
+          if (baseIngredient === undefined) {
+            baseIngredient = await baseIngredientApi.getBaseIngredientByName(formattedName);
+            baseIngredientCache.set(formattedName, baseIngredient);
+          }
 
           if (baseIngredient) {
             const newExpiryDate = new Date(
@@ -265,7 +274,12 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
     // Fetch base ingredient data after debounce
     timeoutRef.current = setTimeout(async () => {
       try {
-        const baseIngredient = await baseIngredientApi.getBaseIngredientByName(currentItem.name);
+        let baseIngredient = baseIngredientCache.get(currentItem.name);
+
+        if (baseIngredient === undefined) {
+          baseIngredient = await baseIngredientApi.getBaseIngredientByName(currentItem.name);
+          baseIngredientCache.set(currentItem.name, baseIngredient);
+        }
 
         if (baseIngredient) {
           const expiryDate = new Date(

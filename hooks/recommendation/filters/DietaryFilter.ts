@@ -57,6 +57,13 @@ export class DietaryFilter implements RecipeFilterStrategy {
   private readonly checkAllergens: boolean;
   private readonly checkTagsForAllergens: boolean;
 
+  // Cached preference values to avoid repeated storage reads and parsing
+  private initialized = false;
+  private cachedUserDiet: string | null = null;
+  private cachedStandardAllergens: Allergen[] = [];
+  private cachedCustomAllergens: string[] = [];
+  private cachedAllAllergens: string[] = [];
+
   /**
    * Create a new dietary filter
    * @param options Configuration options for the filter behavior
@@ -68,58 +75,73 @@ export class DietaryFilter implements RecipeFilterStrategy {
   }
 
   /**
+   * Lazily loads dietary preferences and allergens from storage.
+   * Caches the results to prevent repeated reads on every filter call.
+   */
+  private ensureInitialized() {
+    if (this.initialized) return;
+
+    if (this.checkDietaryPreferences) {
+      const diet = storage.get(PREF_DIET_KEY) as Diet | undefined;
+      this.cachedUserDiet = diet && diet !== "none" ? diet.toLowerCase() : null;
+    }
+
+    if (this.checkAllergens) {
+      const { standardAllergens, customAllergens } = this.fetchAndParseAllergens();
+      this.cachedStandardAllergens = standardAllergens;
+      this.cachedCustomAllergens = customAllergens;
+      this.cachedAllAllergens = [...standardAllergens, ...customAllergens];
+    }
+
+    this.initialized = true;
+  }
+
+  /**
    * Check if a recipe is safe based on dietary preferences and allergens
    * @param recipe The recipe to check
    * @param _context Unused context (retained for interface compatibility)
    * @returns true if recipe is safe to eat, false if it violates dietary restrictions
    */
   filter(recipe: Recipe, _context?: FilterContext): boolean {
+    this.ensureInitialized();
+
     // Check dietary preferences
-    if (this.checkDietaryPreferences) {
-      const userDiet = storage.get(PREF_DIET_KEY) as Diet | undefined;
+    if (this.checkDietaryPreferences && this.cachedUserDiet) {
+      const recipeTags = recipe.tags?.map((tag) => tag.toLowerCase()) ?? [];
 
-      if (userDiet && userDiet !== "none") {
-        const recipeTags = recipe.tags?.map((tag) => tag.toLowerCase()) ?? [];
-
-        // Recipe must have matching dietary tag
-        if (!recipeTags.includes(userDiet.toLowerCase())) {
-          return false;
-        }
+      // Recipe must have matching dietary tag
+      if (!recipeTags.includes(this.cachedUserDiet)) {
+        return false;
       }
     }
 
     // Check allergens
-    if (this.checkAllergens) {
-      const { standardAllergens, customAllergens } = this.getAllergens();
-      const allAllergens = [...standardAllergens, ...customAllergens];
+    if (this.checkAllergens && this.cachedAllAllergens.length > 0) {
+      // Check recipe ingredients for allergens
+      for (const ingredient of recipe.ingredients) {
+        const ingredientName = ingredient.name.toLowerCase();
 
-      if (allAllergens.length > 0) {
-        // Check recipe ingredients for allergens
-        for (const ingredient of recipe.ingredients) {
-          const ingredientName = ingredient.name.toLowerCase();
-
-          // Check against standard allergens using keyword mappings
-          for (const allergen of standardAllergens) {
-            if (this.containsStandardAllergen(ingredientName, allergen)) {
-              return false;
-            }
-          }
-
-          // Check against custom allergens using smart ingredient matching
-          for (const allergen of customAllergens) {
-            if (isIngredientMatch(ingredientName, allergen.toLowerCase())) {
-              return false;
-            }
+        // Check against standard allergens using keyword mappings
+        for (const allergen of this.cachedStandardAllergens) {
+          if (this.containsStandardAllergen(ingredientName, allergen)) {
+            return false;
           }
         }
 
-        // Also check recipe tags for allergen mentions
-        if (this.checkTagsForAllergens) {
-          const recipeTags = recipe.tags?.map((tag) => tag.toLowerCase()) ?? [];
-          for (const allergen of allAllergens) {
-            if (recipeTags.some((tag) => tag.includes(allergen.toLowerCase()))) {
-              return false;
-            }
+        // Check against custom allergens using smart ingredient matching
+        for (const allergen of this.cachedCustomAllergens) {
+          if (isIngredientMatch(ingredientName, allergen.toLowerCase())) {
+            return false;
+          }
+        }
+      }
+
+      // Also check recipe tags for allergen mentions
+      if (this.checkTagsForAllergens) {
+        const recipeTags = recipe.tags?.map((tag) => tag.toLowerCase()) ?? [];
+        for (const allergen of this.cachedAllAllergens) {
+          if (recipeTags.some((tag) => tag.includes(allergen.toLowerCase()))) {
+            return false;
           }
         }
       }
@@ -145,7 +167,7 @@ export class DietaryFilter implements RecipeFilterStrategy {
    * Get allergens from storage, separated by type
    * @returns Object containing standard allergens array and custom allergens array
    */
-  private getAllergens(): { standardAllergens: Allergen[]; customAllergens: string[] } {
+  private fetchAndParseAllergens(): { standardAllergens: Allergen[]; customAllergens: string[] } {
     const standardAllergens: Allergen[] = [];
     const customAllergens: string[] = [];
 

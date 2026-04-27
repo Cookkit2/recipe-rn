@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, type StorageValue } from "zustand/middleware";
 import * as SecureStore from "expo-secure-store";
 import * as Crypto from "expo-crypto";
 import * as authDb from "~/src/services/database/auth-db";
@@ -247,27 +247,32 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: "auth-storage",
-      // Note: We need to handle custom serialization for SecureStore
-      partialize: (state: AuthState) => ({
-        user: state.user,
-        accessToken: state.accessToken,
-        refreshToken: state.refreshToken,
-        isAuthenticated: state.isAuthenticated,
-      }),
-      // Custom serialization to handle SecureStore
-      // @ts-ignore
-      deserialize: (str: string) => {
-        return safeJsonParse(str, initialState);
+      storage: {
+        getItem: async (name: string): Promise<StorageValue<AuthState> | null> => {
+          const str = await SecureStore.getItemAsync(name);
+          if (!str) return null;
+          return safeJsonParse<StorageValue<AuthState> | null>(str, null);
+        },
+        setItem: async (name: string, value: StorageValue<AuthState>): Promise<void> => {
+          await SecureStore.setItemAsync(name, JSON.stringify(value));
+        },
+        removeItem: async (name: string): Promise<void> => {
+          await SecureStore.deleteItemAsync(name);
+        },
+      },
+      partialize: (state: AuthState) =>
+        ({
+          user: state.user,
+          accessToken: state.accessToken,
+          refreshToken: state.refreshToken,
+          isAuthenticated: state.isAuthenticated,
+        }) as AuthState,
+      onRehydrateStorage: () => (state?: AuthState) => {
+        if (state) {
+          // Hydrated from storage, check auth
+          state.checkAuth();
+        }
       },
     }
   )
 );
-
-// Custom middleware to sync with SecureStore
-const authStore = useAuthStore as any;
-authStore.persist.onRehydrateStorage = () => (state: AuthState | undefined) => {
-  if (state) {
-    // Hydrated from storage, check auth
-    state.checkAuth();
-  }
-};

@@ -65,25 +65,35 @@ export class ChallengeRepository extends BaseRepository<Challenge> {
 
     let records = await query.fetch();
 
-    // Post-process filters that can't be done in SQL (computed properties)
-    const now = Date.now();
+    // ⚡ Bolt Performance Optimization:
+    // Prevent multiple intermediate array allocations by filtering
+    // through all post-process conditions in a single pass.
+    if (
+      options.active !== undefined ||
+      options.expired !== undefined ||
+      options.upcoming !== undefined
+    ) {
+      const filteredRecords: typeof records = [];
+      for (let i = 0; i < records.length; i++) {
+        const r = records[i];
+        if (!r) continue;
 
-    if (options.active === true) {
-      records = records.filter((r) => r.isActive);
-    } else if (options.active === false) {
-      records = records.filter((r) => !r.isActive);
-    }
+        let keep = true;
 
-    if (options.expired === true) {
-      records = records.filter((r) => r.isExpired);
-    } else if (options.expired === false) {
-      records = records.filter((r) => !r.isExpired);
-    }
+        if (options.active === true && !r.isActive) keep = false;
+        else if (options.active === false && r.isActive) keep = false;
 
-    if (options.upcoming === true) {
-      records = records.filter((r) => r.isUpcoming);
-    } else if (options.upcoming === false) {
-      records = records.filter((r) => !r.isUpcoming);
+        if (options.expired === true && !r.isExpired) keep = false;
+        else if (options.expired === false && r.isExpired) keep = false;
+
+        if (options.upcoming === true && !r.isUpcoming) keep = false;
+        else if (options.upcoming === false && r.isUpcoming) keep = false;
+
+        if (keep) {
+          filteredRecords.push(r);
+        }
+      }
+      records = filteredRecords;
     }
 
     return records;
