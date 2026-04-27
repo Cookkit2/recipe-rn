@@ -8,7 +8,7 @@ import {
   CheckCircleIcon,
   TrashIcon,
 } from "lucide-uniwind";
-import Animated, { useAnimatedStyle, withTiming } from "react-native-reanimated";
+import Animated, { useAnimatedStyle, withTiming, type SharedValue } from "react-native-reanimated";
 import type { GroceryItem } from "~/hooks/queries/useGroceryList";
 import {
   useToggleGroceryItemCheck,
@@ -66,7 +66,7 @@ export default function GroceryListItem({
     ? "✓ You have enough!"
     : `${item.neededQuantity} ${item.unit}`;
 
-  const renderRightActions = (_: any, dragX: any) => {
+  const renderRightActions = (_: SharedValue<number>, dragX: SharedValue<number>) => {
     return (
       <View className="bg-destructive justify-center items-end px-6 rounded-xl mb-2 flex-1">
         <TrashIcon className="text-destructive-foreground" size={24} />

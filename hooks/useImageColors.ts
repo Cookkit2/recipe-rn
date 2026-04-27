@@ -45,8 +45,7 @@ const useImageColors = (
         const key =
           cacheKey ??
           (typeof url === "string" ? url : ((url as { uri?: string })?.uri ?? String(url)));
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const color = await getColors(url as any, {
+        const color = await getColors(url as string, {
           cache: true,
           key,
         });
