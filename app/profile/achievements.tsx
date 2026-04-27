@@ -66,6 +66,8 @@ export default function AchievementsScreen() {
         className={`flex-1 flex-row items-center justify-center gap-2 py-3 rounded-2xl ${
           isActive ? "bg-primary" : "bg-muted/50"
         }`}
+        accessibilityRole="button"
+        accessibilityState={{ selected: isActive }}
       >
         {icon}
         <Small
