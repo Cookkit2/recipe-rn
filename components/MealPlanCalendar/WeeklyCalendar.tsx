@@ -58,14 +58,14 @@ export default function WeeklyCalendar({ onMealSlotPress, onMealSlotDrop }: Week
         }) || [];
 
       // Group by meal slot
-      const meals: Record<MealSlot, any> = {} as any;
+      const meals: Partial<Record<MealSlot, (typeof dayMealPlans)[0]>> = {};
       MEAL_SLOTS.forEach((slot) => {
         meals[slot] = dayMealPlans.find((plan) => plan.mealSlot === slot);
       });
 
       days.push({
         date,
-        meals,
+        meals: meals as DayMealPlan["meals"],
       });
     }
 

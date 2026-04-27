@@ -5,7 +5,7 @@ type RecipeWithDetails = {
   recipe: {
     id: string;
     title: string;
-    description: string;
+    description?: string | null;
     imageUrl?: string | null;
     prepMinutes?: number | null;
     cookMinutes?: number | null;
@@ -68,7 +68,7 @@ export const convertDbRecipesToUIRecipesBatch = (
     result.push({
       id: recipe.id,
       title: recipe.title,
-      description: recipe.description,
+      description: recipe.description || "",
       imageUrl: recipe.imageUrl || "",
       prepMinutes: recipe.prepMinutes ?? undefined,
       cookMinutes: recipe.cookMinutes ?? undefined,
