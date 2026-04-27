@@ -50,8 +50,7 @@ interface UseDebounceOptions {
  * ```
  */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const useDebounce = <T extends (...args: any[]) => any>(
+const useDebounce = <T extends (...args: never[]) => unknown>(
   callback: T,
   options: UseDebounceOptions = {}
 ): T => {

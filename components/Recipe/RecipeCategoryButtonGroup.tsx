@@ -40,6 +40,9 @@ export default function RecipeCategoryButtonGroup({
       {RECIPE_TAGS.map(({ label, icon, tag }) => (
         <Pressable
           key={tag}
+          accessibilityRole="button"
+          accessibilityLabel={`Select ${label} category`}
+          accessibilityState={{ selected: selectedRecipeTags.includes(tag) }}
           className={"border-continuous flex-row items-center gap-2 rounded-2xl"}
           style={{
             backgroundColor: selectedRecipeTags.includes(tag)
