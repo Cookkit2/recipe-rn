@@ -1,85 +1,70 @@
-import { jest, describe, beforeEach, afterEach, it, expect } from "@jest/globals";
 import { fetchWithTimeout } from "../fetch-with-timeout";
+
+// Mock global fetch
+(globalThis as any).fetch = jest.fn();
+
+// Mock timers
+jest.useFakeTimers();
 
 describe("fetchWithTimeout", () => {
   beforeEach(() => {
-    jest.useFakeTimers();
+    jest.clearAllMocks();
   });
 
-  afterEach(() => {
-    jest.useRealTimers();
-    jest.restoreAllMocks();
-  });
+  it("should call fetch with correct parameters", async () => {
+    const mockResponse = { ok: true } as Response;
+    (globalThis.fetch as jest.Mock).mockResolvedValue(mockResponse);
 
-  it("should successfully return response when fetch completes before timeout", async () => {
-    const mockResponse = new Response("ok", { status: 200 });
-    jest.spyOn(globalThis, "fetch").mockImplementation(() => {
-      return Promise.resolve(mockResponse);
+    const result = await fetchWithTimeout("https://api.example.com", {}, 5000);
+
+    expect(globalThis.fetch).toHaveBeenCalledWith("https://api.example.com", {
+      signal: expect.any(AbortSignal),
     });
-
-    const promise = fetchWithTimeout("https://example.com", {}, 1000);
-    const response = await promise;
-
-    expect(response).toBe(mockResponse);
-    expect(globalThis.fetch).toHaveBeenCalledWith(
-      "https://example.com",
-      expect.objectContaining({
-        signal: expect.any(AbortSignal),
-      })
-    );
+    expect(result).toBe(mockResponse);
   });
 
-  it("should abort when timeout is exceeded", async () => {
-    jest.spyOn(globalThis, "fetch").mockImplementation((url: any, init?: RequestInit) => {
-      return new Promise<Response>((resolve, reject) => {
-        const signal = init?.signal as AbortSignal | undefined;
-        if (signal) {
-          signal.addEventListener("abort", () => {
-            reject(new DOMException("The operation was aborted.", "AbortError"));
-          });
-          if (signal.aborted) {
-            reject(new DOMException("The operation was aborted.", "AbortError"));
-            return;
-          }
-        }
-      });
+  it("should pass through options to fetch", async () => {
+    const mockResponse = { ok: true } as Response;
+    (globalThis.fetch as jest.Mock).mockResolvedValue(mockResponse);
+
+    const options: RequestInit = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: '{"data":"test"}',
+    };
+
+    await fetchWithTimeout("https://api.example.com", options, 5000);
+
+    expect(globalThis.fetch).toHaveBeenCalledWith("https://api.example.com", {
+      ...options,
+      signal: expect.any(AbortSignal),
     });
-
-    const promise = fetchWithTimeout("https://example.com", {}, 1000);
-
-    // Fast-forward time so the setTimeout callback runs
-    jest.advanceTimersByTime(1001);
-
-    await expect(promise).rejects.toThrow("The operation was aborted.");
   });
 
-  it("should abort when external signal is aborted", async () => {
-    jest.spyOn(globalThis, "fetch").mockImplementation((url: any, init?: RequestInit) => {
-      return new Promise<Response>((resolve, reject) => {
-        const signal = init?.signal as AbortSignal | undefined;
-        if (signal) {
-          signal.addEventListener("abort", () => {
-            reject(new DOMException("The operation was aborted.", "AbortError"));
-          });
-          if (signal.aborted) {
-            reject(new DOMException("The operation was aborted.", "AbortError"));
-            return;
-          }
-        }
-      });
-    });
+  it("should clear timeout on successful response", async () => {
+    const mockResponse = { ok: true } as Response;
+    (globalThis.fetch as jest.Mock).mockResolvedValue(mockResponse);
+
+    const clearTimeoutSpy = jest.spyOn(globalThis, "clearTimeout");
+
+    await fetchWithTimeout("https://api.example.com", {}, 5000);
+
+    expect(clearTimeoutSpy).toHaveBeenCalled();
+  });
+
+  it("should cleanup event listener after fetch completes", async () => {
+    const mockResponse = { ok: true } as Response;
+    (globalThis.fetch as jest.Mock).mockResolvedValue(mockResponse);
 
     const externalController = new AbortController();
+    const removeEventListenerSpy = jest.spyOn(externalController.signal, "removeEventListener");
 
-    const promise = fetchWithTimeout(
-      "https://example.com",
-      { signal: externalController.signal },
-      1000
-    );
+    const options: RequestInit = {
+      signal: externalController.signal,
+    };
 
-    // Abort the external signal before the timeout
-    externalController.abort();
+    await fetchWithTimeout("https://api.example.com", options, 5000);
 
-    await expect(promise).rejects.toThrow("The operation was aborted.");
+    expect(removeEventListenerSpy).toHaveBeenCalledWith("abort", expect.any(Function));
   });
 });

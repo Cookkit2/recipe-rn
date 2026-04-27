@@ -36,17 +36,19 @@ export function useRecipe(id: string) {
 /**
  * Hook to search recipes with filters
  */
-export function useSearchRecipes(
-  searchTerm: string,
-  filters?: {
-    tags?: string[];
-    maxPrepTime?: number;
-    maxCookTime?: number;
-    minTotalTime?: number;
-    maxTotalTime?: number;
-    difficulty?: number;
-  }
-) {
+export interface RecipeFilters {
+  tags?: string[];
+  maxPrepTime?: number;
+  maxCookTime?: number;
+  minTotalTime?: number;
+  maxTotalTime?: number;
+  difficulty?: number;
+}
+
+/**
+ * Hook to search recipes
+ */
+export function useSearchRecipes(searchTerm: string, filters?: RecipeFilters) {
   return useQuery({
     queryKey: recipeQueryKeys.search(searchTerm, filters),
     queryFn: () => recipeApi.searchRecipes(searchTerm, filters),

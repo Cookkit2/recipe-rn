@@ -101,6 +101,8 @@ export default function EditIngredientItem({
       <Pressable
         onPress={showUnitPicker}
         className="min-w-12 h-10 flex items-center justify-center bg-muted rounded-lg border-continuous"
+        accessibilityRole="button"
+        accessibilityLabel={`Select unit, currently ${ingredient.unit}`}
       >
         <P className="text-center font-urbanist-medium text-base">{ingredient.unit}</P>
       </Pressable>
