@@ -1,13 +1,13 @@
-🧹 Code Health: Type renderRightActions arguments instead of using 'any'
+💡 What
+Added missing `accessibilityRole`, `accessibilityLabel`, and `accessibilityState` props to the `AnimatedPressable` instances within the shared `GroupButton` components in both `SegmentedButtons.tsx` and `GridButtons.tsx`.
 
-🎯 **What:**
-Replaced `any` types for the `renderRightActions` callback arguments in `GroceryListItem.tsx` with their specific Animated `SharedValue` types.
+🎯 Why
+Currently, the shared grid and segmented button components use a raw `Pressable` (via `AnimatedPressable`) without any accessibility tags. This means screen readers cannot announce their interactive nature (as a "button"), identify their label properly, or state whether they are currently selected. Adding these attributes significantly improves screen reader navigation across multiple screens that utilize these components.
 
-💡 **Why:**
-The use of `any` disables TypeScript's strict type checking. By explicitly typing the callback arguments to match the `react-native-gesture-handler` `ReanimatedSwipeable` prop signature, we improve type safety, reduce potential runtime errors, and enhance the maintainability and readability of the codebase.
+📸 Before/After
+No visual changes.
 
-✅ **Verification:**
-Confirmed via `pnpm test` and `pnpm lint` that the tests pass and there are no type-checking regressions. The functionality of the application remains unchanged.
-
-✨ **Result:**
-Better type safety for gesture handler components.
+♿ Accessibility
+- Added `accessibilityRole="button"` to allow screen readers to correctly announce the interaction type.
+- Added `accessibilityLabel={item.label}` so screen readers read the button's label text, especially important if the icon rendering differs.
+- Added `accessibilityState={{ selected: !!selected }}` so screen readers can announce whether the button is currently in the active/selected state.
