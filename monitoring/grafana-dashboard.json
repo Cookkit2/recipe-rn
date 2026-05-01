@@ -15,7 +15,7 @@
             "legendFormat": "{{method}} {{endpoint}}"
           }
         ],
-        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 }
       },
       {
         "id": 2,
@@ -27,7 +27,7 @@
             "legendFormat": "{{error_type}}"
           }
         ],
-        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 }
       },
       {
         "id": 3,
@@ -39,7 +39,7 @@
             "legendFormat": "p95 latency"
           }
         ],
-        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 }
       },
       {
         "id": 4,
@@ -51,7 +51,7 @@
             "legendFormat": "Active Users"
           }
         ],
-        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 16}
+        "gridPos": { "h": 4, "w": 6, "x": 0, "y": 16 }
       },
       {
         "id": 5,
@@ -63,7 +63,7 @@
             "legendFormat": "Connections"
           }
         ],
-        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 16}
+        "gridPos": { "h": 4, "w": 6, "x": 6, "y": 16 }
       },
       {
         "id": 6,
@@ -75,7 +75,7 @@
             "legendFormat": "Success Rate %"
           }
         ],
-        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 16}
+        "gridPos": { "h": 4, "w": 6, "x": 12, "y": 16 }
       },
       {
         "id": 7,
@@ -87,7 +87,7 @@
             "legendFormat": "{{le}}"
           }
         ],
-        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 }
       }
     ]
   }

@@ -11,6 +11,7 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 #### 1. CI Workflow (`.github/workflows/ci.yml`)
 
 **Triggers:**
+
 - Push to main, master, develop, staging branches
 - Pull requests to main, master, develop, staging
 
@@ -40,6 +41,7 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 #### 2. Security Scanning (`.github/workflows/security-scan.yml`)
 
 **Triggers:**
+
 - Push to main, master, develop, staging
 - Pull requests to main, master, develop, staging
 - Daily schedule at 2 AM UTC
@@ -83,6 +85,7 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 #### 3. Deploy Workflow (`.github/workflows/deploy.yml`)
 
 **Triggers:**
+
 - Push to staging branch
 - Push to main/master branch
 - Manual dispatch with environment selection
@@ -114,22 +117,26 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 ### Automated Security Scanning
 
 #### Static Application Security Testing (SAST)
+
 - **CodeQL**: GitHub's advanced static analysis
 - **Semgrep**: Community-driven security rules
 - **Coverage**: All JavaScript/TypeScript code
 
 #### Secrets Detection
+
 - **Gitleaks**: Scans for 200+ secret patterns
 - **Checks**: API keys, tokens, certificates, passwords
 - **Scope**: All commits and branches
 
 #### Dependency Scanning
+
 - **Snyk**: Known vulnerabilities in dependencies
 - **npm audit**: Official npm security audit
 - **pnpm audit**: Package manager audit
 - **Frequency**: Every commit + daily scan
 
 #### Security Gates
+
 - **Block merge** if any critical vulnerability found
 - **Block merge** if secrets detected
 - **Block merge** if security checks fail
@@ -138,18 +145,21 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 ### Quality Gates
 
 #### Code Quality
+
 - **TypeScript strict mode**: Must pass
 - **ESLint**: Zero errors allowed
 - **Prettier**: Code formatting enforced
 - **Build**: Must compile without errors
 
 #### Testing
+
 - **Unit tests**: Must all pass
 - **Coverage**: Minimum 80% required
 - **Integration tests**: Must pass
 - **E2E tests**: Must pass (if configured)
 
 #### Security
+
 - **SAST**: No critical findings
 - **Secrets scan**: No secrets detected
 - **Dependencies**: No high/critical vulnerabilities
@@ -160,12 +170,14 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 ### Blue-Green Deployment
 
 **Benefits:**
+
 - Zero downtime deployments
 - Instant rollback capability
 - Easy testing before traffic switch
 - Reduced deployment risk
 
 **Process:**
+
 1. Deploy to green environment
 2. Run health checks on green
 3. Run smoke tests on green
@@ -177,6 +189,7 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 ### Rollback Strategy
 
 **Automatic Rollback Triggers:**
+
 - Health check failures
 - Smoke test failures
 - Error rate spike (>5%)
@@ -184,6 +197,7 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 - Manual trigger via GitHub Actions
 
 **Rollback Process:**
+
 1. Detect failure condition
 2. Switch traffic back to blue
 3. Verify blue health
@@ -196,18 +210,21 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 ### Dependabot Configuration
 
 **Update Schedule:**
+
 - GitHub Actions: Weekly (Monday)
 - npm dependencies: Weekly (Tuesday)
 - Docker: Weekly (Wednesday)
 - Terraform: Weekly (Thursday)
 
 **Grouped Updates:**
+
 - React-related packages
 - Expo packages
 - Testing dependencies
 - Development dependencies
 
 **Blocked Updates:**
+
 - Major version updates for React/React Native
 - Major version updates for Expo
 - Requires manual review
@@ -215,11 +232,13 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 ### Security Updates
 
 **Automated:**
+
 - Dependabot PRs for security patches
 - Automated security scanning
 - Automated version pinning
 
 **Manual:**
+
 - Major version updates
 - Breaking changes
 - Security advisories review
@@ -229,6 +248,7 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 ### Prometheus Metrics
 
 **Application Metrics:**
+
 - Request rate
 - Error rate
 - Response time (p50, p95, p99)
@@ -236,6 +256,7 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 - Authentication success rate
 
 **Infrastructure Metrics:**
+
 - CPU usage
 - Memory usage
 - Disk usage
@@ -245,6 +266,7 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 ### Grafana Dashboards
 
 **Pre-configured Dashboards:**
+
 - Application overview
 - API performance
 - Database health
@@ -254,17 +276,20 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 ### Alerting
 
 **Critical Alerts:**
+
 - Service down (2min)
 - High error rate (>5%)
 - Brute force attack detected
 - Database pool exhausted
 
 **Warning Alerts:**
+
 - High latency (>1s p95)
 - High auth failure rate (>30%)
 - Slow queries detected
 
 **Info Alerts:**
+
 - Low user activity
 - High recipe creation rate
 
@@ -273,11 +298,13 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 ### Environment Variables
 
 **Required Files:**
+
 - `.env.example`: Template for all variables
 - `.env.staging.example`: Staging configuration
 - `.env.production.example`: Production configuration
 
 **Security Rules:**
+
 - Never commit `.env.local` or actual secrets
 - Use example files for documentation
 - Validate all required variables
@@ -286,12 +313,14 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 ### Secret Management
 
 **GitHub Secrets:**
+
 - `CODECOV_TOKEN`: Codecov coverage upload
 - `SNYK_TOKEN`: Snyk dependency scanning
 - `EXPO_TOKEN`: Expo/EAS builds
 - `GITLEAKS_LICENSE`: Gitleaks scanning
 
 **Environment-Specific:**
+
 - Staging secrets
 - Production secrets
 - Separate secret scopes
@@ -301,6 +330,7 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 ### Main/Master Branch
 
 **Rules:**
+
 - Require pull request reviews (1+)
 - Require CODEOWNER approval
 - All status checks must pass
@@ -310,6 +340,7 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 ### Staging Branch
 
 **Rules:**
+
 - Require pull request reviews (1+)
 - CI checks must pass
 - Tests must pass
@@ -318,11 +349,13 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 ### Feature Branches
 
 **Naming Convention:**
+
 - `feature/ticket-description`
 - `bugfix/ticket-description`
 - `hotfix/ticket-description`
 
 **Workflow:**
+
 1. Create from main/master
 2. Make changes with tests
 3. Create pull request
@@ -335,6 +368,7 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 ### Required Sections
 
 **Bug Reports:**
+
 - Description of bug
 - Steps to reproduce
 - Expected behavior
@@ -342,12 +376,14 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 - Screenshots (if applicable)
 
 **Feature Requests:**
+
 - Problem statement
 - Proposed solution
 - Alternatives considered
 - Implementation estimate
 
 **All PRs:**
+
 - Type of change
 - Related issues
 - Testing checklist
@@ -357,6 +393,7 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 ## Issue Templates
 
 ### Bug Report Template
+
 - Bug description
 - Reproduction steps
 - Expected vs actual behavior
@@ -364,12 +401,14 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 - Priority level
 
 ### Feature Request Template
+
 - Problem description
 - Proposed solution
 - Alternatives considered
 - Priority and estimate
 
 ### Security Report Template
+
 - Vulnerability description
 - Affected components
 - Impact assessment
@@ -379,6 +418,7 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 ## CODEOWNERS
 
 **File Ownership:**
+
 - Global: @ming
 - Documentation: @doc-team
 - CI/CD: @devops-team
@@ -394,6 +434,7 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 ### Terraform Configuration
 
 **Files:**
+
 - `terraform/main.tf`: Provider and backend config
 - `terraform/variables.tf`: Input variables
 - `terraform/outputs.tf`: Output values
@@ -401,6 +442,7 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 - `terraform/environments/production.tfvars`: Production config
 
 **Features:**
+
 - Multi-environment support
 - State management with S3
 - Lock management with DynamoDB
@@ -436,6 +478,7 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 ### Monitoring Setup
 
 1. **Start Monitoring Stack**
+
    ```bash
    docker-compose -f docker-compose.monitoring.yml up -d
    ```
@@ -460,12 +503,14 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
    - Create DynamoDB table for locks
 
 2. **Initialize Terraform**
+
    ```bash
    cd terraform
    terraform init
    ```
 
 3. **Plan Deployment**
+
    ```bash
    terraform plan -var-file=environments/staging.tfvars
    ```
@@ -480,22 +525,26 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 ### Common Issues
 
 **CI Failures:**
+
 - Check logs in Actions tab
 - Verify all secrets are configured
 - Ensure branch protection rules are set
 
 **Security Scan Failures:**
+
 - Review Security tab for details
 - Check for false positives
 - Update ignore patterns if needed
 
 **Deployment Failures:**
+
 - Check deployment logs
 - Verify environment variables
 - Check health endpoints
 - Review rollback logs
 
 **Coverage Failures:**
+
 - Run `pnpm test:coverage` locally
 - Check coverage threshold
 - Add tests for uncovered code
@@ -503,6 +552,7 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 ## Best Practices
 
 ### Development
+
 - Write tests for all new code
 - Run tests locally before pushing
 - Use TypeScript strict mode
@@ -510,6 +560,7 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 - Document complex logic
 
 ### Security
+
 - Never commit secrets
 - Rotate secrets regularly
 - Review dependencies monthly
@@ -517,6 +568,7 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 - Report security issues privately
 
 ### Deployment
+
 - Test in staging first
 - Use blue-green deployment
 - Monitor after deployment
@@ -524,6 +576,7 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 - Document all changes
 
 ### Monitoring
+
 - Set up alerts for critical metrics
 - Review dashboards regularly
 - Investigate anomalies promptly
@@ -535,17 +588,20 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 ### Regular Tasks
 
 **Daily:**
+
 - Review security scan results
 - Check deployment status
 - Review critical alerts
 
 **Weekly:**
+
 - Review Dependabot PRs
 - Update dependencies
 - Review error rates
 - Check performance metrics
 
 **Monthly:**
+
 - Security audit
 - Dependency review
 - Performance review
@@ -555,12 +611,14 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 ### Updates
 
 **CI/CD Updates:**
+
 - Update GitHub Actions versions monthly
 - Review and update security tools
 - Optimize workflow performance
 - Update documentation
 
 **Security Updates:**
+
 - Apply security patches immediately
 - Review security advisories
 - Update scanning tools
@@ -569,6 +627,7 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 ## Support
 
 For questions or issues:
+
 - Create an issue in the repository
 - Contact the DevOps team
 - Review troubleshooting section
@@ -577,6 +636,7 @@ For questions or issues:
 ## Changelog
 
 ### Version 1.0.0 (2024)
+
 - Initial CI/CD setup
 - Security scanning integration
 - Deployment automation

@@ -90,53 +90,53 @@
 ### Critical Severity (2)
 
 1. **Duplicate Type Definitions Across Layers**
-    - User interface in both authStore.ts and auth-db.ts
-    - Different naming conventions (camelCase vs snake_case)
-    - Violates DRY, indicates missing domain types layer
+   - User interface in both authStore.ts and auth-db.ts
+   - Different naming conventions (camelCase vs snake_case)
+   - Violates DRY, indicates missing domain types layer
 
 2. **Validation Logic Scattered Across Three Layers**
-    - authStore.ts (business logic)
-    - LoginScreen.tsx (presentation)
-    - RegisterScreen.tsx (presentation)
-    - Violates SRP, creates maintenance burden
+   - authStore.ts (business logic)
+   - LoginScreen.tsx (presentation)
+   - RegisterScreen.tsx (presentation)
+   - Violates SRP, creates maintenance burden
 
 ### High Severity (5)
 
 3. **Missing Service Layer - Direct DB Access from Store**
-    - authStore.ts directly calls database functions
-    - Violates Dependency Inversion Principle
-    - Makes testing difficult
+   - authStore.ts directly calls database functions
+   - Violates Dependency Inversion Principle
+   - Makes testing difficult
 
 4. **Inconsistent Error Handling Pattern**
-    - Three different patterns in same file
-    - No standardized error types
-    - Poor error recovery
+   - Three different patterns in same file
+   - No standardized error types
+   - Poor error recovery
 
 5. **Hardcoded Mock Authentication in Production Code**
-    - No clear separation between dev and prod
-    - Creates security vulnerabilities
-    - Makes real API integration difficult
+   - No clear separation between dev and prod
+   - Creates security vulnerabilities
+   - Makes real API integration difficult
 
 6. **Missing Repository Pattern**
-    - auth-db.ts mixes connection management, SQL, business logic
-    - Violates SRP
-    - Tight coupling to SQLite
+   - auth-db.ts mixes connection management, SQL, business logic
+   - Violates SRP
+   - Tight coupling to SQLite
 
 7. **Presentation Layer Contains Business Logic**
-    - Validation in screens
-    - Error handling in components
-    - Violates separation of concerns
+   - Validation in screens
+   - Error handling in components
+   - Violates separation of concerns
 
 ### Medium Severity (3)
 
 8. **Overly Complex Authentication Provider Wrapper**
-    - AppAuthProvider adds no value
-    - Unnecessary indirection
+   - AppAuthProvider adds no value
+   - Unnecessary indirection
 
 9. **Context Pattern Redundancy**
-    - AuthContext is thin wrapper around authStore
-    - No additional logic
-    - Two ways to access same state
+   - AuthContext is thin wrapper around authStore
+   - No additional logic
+   - Two ways to access same state
 
 10. **Missing Token Management Strategy**
     - No automatic refresh before expiry
@@ -145,14 +145,14 @@
 
 ## Architecture Pattern Scores
 
-| Pattern | Score | Notes |
-|---------|-------|-------|
-| Component Boundaries | 4/10 | Poor layer separation |
-| Dependency Management | 4/10 | Direct DB access, no DI |
-| State Management | 7/10 | Zustand good, redundant Context |
-| Data Layer | 4/10 | No repository, no service layer |
-| Design Patterns | 5/10 | Some good, missing key patterns |
-| React Native Patterns | 7/10 | Proper hooks, SecureStore |
+| Pattern               | Score | Notes                           |
+| --------------------- | ----- | ------------------------------- |
+| Component Boundaries  | 4/10  | Poor layer separation           |
+| Dependency Management | 4/10  | Direct DB access, no DI         |
+| State Management      | 7/10  | Zustand good, redundant Context |
+| Data Layer            | 4/10  | No repository, no service layer |
+| Design Patterns       | 5/10  | Some good, missing key patterns |
+| React Native Patterns | 7/10  | Proper hooks, SecureStore       |
 
 ## Critical Issues for Phase 2 Context
 
@@ -171,12 +171,14 @@ The following findings should inform the security and performance review:
 **Current Level**: **HIGH**
 
 **Key Debt Items**:
+
 - 90%+ code duplication between login/register
 - Type safety violations throughout
 - Missing architectural layers (service, repository)
 - Mock code in production
 
 **Estimated Remediation**: 32-48 hours
+
 - Critical fixes: 4-6 hours
 - High priority refactoring: 16-24 hours
 - Medium priority: 8-12 hours

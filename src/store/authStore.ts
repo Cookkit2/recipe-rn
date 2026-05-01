@@ -97,7 +97,9 @@ const performAuthFlow = async (
   }
 
   // Generate tokens
-  const userId = isRegister ? `user_${Crypto.randomUUID()}` : (await authDb.getUserByEmail(email))!.id;
+  const userId = isRegister
+    ? `user_${Crypto.randomUUID()}`
+    : (await authDb.getUserByEmail(email))!.id;
   const accessToken = `access_${Crypto.randomUUID()}`;
   const refreshToken = `refresh_${Crypto.randomUUID()}`;
 
@@ -111,17 +113,16 @@ const performAuthFlow = async (
   await Promise.all([
     authDb.upsertSession(userId, accessToken, refreshToken, 900), // 15 minutes
     authDb.createRefreshToken(userId, refreshToken, 604800000), // 7 days
-    SecureStore.setItemAsync(
-      "user_session",
-      JSON.stringify({ userId, accessToken, refreshToken })
-    ),
+    SecureStore.setItemAsync("user_session", JSON.stringify({ userId, accessToken, refreshToken })),
   ]);
 
   return {
     user: {
       id: userId,
       email,
-      displayName: displayName || (isRegister ? undefined : (await authDb.getUserByEmail(email))!.display_name),
+      displayName:
+        displayName ||
+        (isRegister ? undefined : (await authDb.getUserByEmail(email))!.display_name),
     },
     accessToken,
     refreshToken,
@@ -189,9 +190,10 @@ export const useAuthStore = create<AuthState>()(
           });
         } catch (error) {
           const authError = error instanceof Error ? error : new Error("Registration failed");
-          const safeError = authError.message === "User already exists"
-            ? "Registration failed"
-            : "Registration failed";
+          const safeError =
+            authError.message === "User already exists"
+              ? "Registration failed"
+              : "Registration failed";
           set({
             error: safeError,
             isLoading: false,
@@ -205,7 +207,7 @@ export const useAuthStore = create<AuthState>()(
           const { accessToken } = get();
 
           const logoutPromises: Array<Promise<unknown>> = [
-            SecureStore.deleteItemAsync("user_session")
+            SecureStore.deleteItemAsync("user_session"),
           ];
 
           if (accessToken) {

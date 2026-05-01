@@ -16,7 +16,10 @@ const userCache = new Map<string, { data: User; timestamp: number }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 // Refresh debounce tracking to prevent multiple simultaneous refresh requests
-let refreshInProgress: Map<string, Promise<{ accessToken: string; refreshToken: string } | null>> = new Map();
+let refreshInProgress: Map<
+  string,
+  Promise<{ accessToken: string; refreshToken: string } | null>
+> = new Map();
 
 // Cleanup interval for expired sessions (5 minutes)
 const CLEANUP_INTERVAL = 5 * 60 * 1000;
@@ -117,7 +120,7 @@ export const initializeDatabase = async (): Promise<void> => {
   try {
     await runAuthMigrations(database);
   } catch (error) {
-    console.error('Failed to run migrations, continuing with table creation:', error);
+    console.error("Failed to run migrations, continuing with table creation:", error);
   }
 
   // Users table
@@ -392,10 +395,9 @@ export const refreshToken = async (
 export const revokeSession = async (accessToken: string): Promise<void> => {
   const database = await getDatabase();
 
-  await database.runAsync(
-    `UPDATE sessions SET is_revoked = 1 WHERE access_token = $accessToken`,
-    { $accessToken: accessToken }
-  );
+  await database.runAsync(`UPDATE sessions SET is_revoked = 1 WHERE access_token = $accessToken`, {
+    $accessToken: accessToken,
+  });
 };
 
 /**
@@ -404,10 +406,9 @@ export const revokeSession = async (accessToken: string): Promise<void> => {
 export const revokeAllUserSessions = async (userId: string): Promise<void> => {
   const database = await getDatabase();
 
-  await database.runAsync(
-    `UPDATE sessions SET is_revoked = 1 WHERE user_id = $userId`,
-    { $userId: userId }
-  );
+  await database.runAsync(`UPDATE sessions SET is_revoked = 1 WHERE user_id = $userId`, {
+    $userId: userId,
+  });
 
   // Clear user cache
   clearUserCache(userId);
@@ -492,7 +493,9 @@ const getOrCreateJWTSecret = async (): Promise<string> => {
 /**
  * Generate JWT tokens with proper expiration
  */
-const generateTokens = async (userId: string): Promise<{ accessToken: string; refreshToken: string }> => {
+const generateTokens = async (
+  userId: string
+): Promise<{ accessToken: string; refreshToken: string }> => {
   const secret = await getOrCreateJWTSecret();
   const now = Date.now();
   const exp = now + 15 * 60 * 1000; // 15 minutes
@@ -500,7 +503,7 @@ const generateTokens = async (userId: string): Promise<{ accessToken: string; re
   const payload = {
     userId,
     iat: Math.floor(now / 1000),
-    exp: Math.floor(exp / 1000)
+    exp: Math.floor(exp / 1000),
   };
 
   const accessToken = jwtEncode(payload, secret);
@@ -525,10 +528,10 @@ const verifyJWT = (token: string): JWTPayload | null => {
   try {
     // For production, use actual JWT verification library
     // This is a simplified version for demonstration
-    const parts = token.split('.');
+    const parts = token.split(".");
     if (parts.length !== 3) return null;
 
-    const payload = JSON.parse(atob(parts[1] || '')) as JWTPayload;
+    const payload = JSON.parse(atob(parts[1] || "")) as JWTPayload;
     const now = Math.floor(Date.now() / 1000);
 
     if (payload.exp && payload.exp < now) {
@@ -563,9 +566,12 @@ export const hashPassword = async (password: string): Promise<string> => {
 /**
  * Verify password against hash
  */
-export const verifyPassword = async (password: string, hashedPassword: string): Promise<boolean> => {
+export const verifyPassword = async (
+  password: string,
+  hashedPassword: string
+): Promise<boolean> => {
   try {
-    const [salt, hash] = hashedPassword.split(':');
+    const [salt, hash] = hashedPassword.split(":");
     if (!salt || !hash) return false;
 
     const computedHash = await Crypto.digestStringAsync(
@@ -607,10 +613,9 @@ export const revokeExpiredSessions = async (): Promise<void> => {
 export const clearExpiredRefreshTokens = async (): Promise<void> => {
   const database = await getDatabase();
 
-  await database.runAsync(
-    `DELETE FROM refresh_tokens WHERE expires_at <= $now`,
-    { $now: new Date().toISOString() }
-  );
+  await database.runAsync(`DELETE FROM refresh_tokens WHERE expires_at <= $now`, {
+    $now: new Date().toISOString(),
+  });
 };
 
 /**

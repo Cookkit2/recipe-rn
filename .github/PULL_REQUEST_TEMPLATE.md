@@ -1,7 +1,9 @@
 ## Description
+
 <!-- Briefly describe the changes in this PR -->
 
 ## Type of Change
+
 - [ ] Bug fix
 - [ ] New feature
 - [ ] Breaking change
@@ -11,9 +13,11 @@
 - [ ] Security fix
 
 ## Related Issues
+
 <!-- Closes #issue_number, Fixes #issue_number, or Related to #issue_number -->
 
 ## Testing
+
 - [ ] Unit tests added/updated
 - [ ] Integration tests added/updated
 - [ ] E2E tests added/updated
@@ -21,6 +25,7 @@
 - [ ] Test coverage above 80%
 
 ## Security Checklist
+
 - [ ] No sensitive data exposed (API keys, tokens, passwords)
 - [ ] Dependencies audited and up-to-date
 - [ ] Input validation implemented
@@ -28,6 +33,7 @@
 - [ ] Authentication/authorization properly implemented
 
 ## Code Quality
+
 - [ ] TypeScript strict mode passing
 - [ ] ESLint passing with no errors
 - [ ] Prettier formatting applied
@@ -35,9 +41,11 @@
 - [ ] No console.log statements left in code
 
 ## Screenshots (if applicable)
+
 <!-- Add screenshots for UI changes -->
 
 ## Checklist
+
 - [ ] I have read the CONTRIBUTING.md
 - [ ] My code follows the style guidelines
 - [ ] I have performed a self-review of my code
@@ -50,4 +58,5 @@
 - [ ] Any dependent changes have been merged
 
 ## Additional Notes
+
 <!-- Any additional information for reviewers -->

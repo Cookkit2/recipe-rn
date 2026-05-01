@@ -15,6 +15,7 @@ This directory contains comprehensive test coverage for the authentication modul
 ### 1. Store Tests (`src/store/__tests__/authStore.test.ts`)
 
 Tests for the Zustand authentication store including:
+
 - Initial state verification
 - Login flow (success, failure, validation)
 - Registration flow (success, failure, validation)
@@ -26,6 +27,7 @@ Tests for the Zustand authentication store including:
 - Security (account enumeration prevention)
 
 **Coverage Areas:**
+
 - ✅ State management
 - ✅ Action creators
 - ✅ Error handling
@@ -36,6 +38,7 @@ Tests for the Zustand authentication store including:
 ### 2. Database Tests (`src/services/database/__tests__/auth-db.test.ts`)
 
 Tests for the authentication database layer including:
+
 - Database initialization
 - User CRUD operations
 - Session management
@@ -48,6 +51,7 @@ Tests for the authentication database layer including:
 - Performance (caching effectiveness)
 
 **Coverage Areas:**
+
 - ✅ Database schema
 - ✅ CRUD operations
 - ✅ Indexes and constraints
@@ -58,6 +62,7 @@ Tests for the authentication database layer including:
 ### 3. Login Screen Tests (`src/screens/auth/__tests__/LoginScreen.test.tsx`)
 
 Tests for the LoginScreen component including:
+
 - Rendering and layout
 - User input handling
 - Form validation
@@ -70,6 +75,7 @@ Tests for the LoginScreen component including:
 - Security (generic error messages, account enumeration prevention)
 
 **Coverage Areas:**
+
 - ✅ Component rendering
 - ✅ User interactions
 - ✅ Form validation
@@ -80,6 +86,7 @@ Tests for the LoginScreen component including:
 ### 4. Register Screen Tests (`src/screens/auth/__tests__/RegisterScreen.test.tsx`)
 
 Tests for the RegisterScreen component including:
+
 - Rendering and layout
 - User input handling
 - Form validation
@@ -92,6 +99,7 @@ Tests for the RegisterScreen component including:
 - Security (generic error messages, information leakage prevention)
 
 **Coverage Areas:**
+
 - ✅ Component rendering
 - ✅ User interactions
 - ✅ Form validation
@@ -102,6 +110,7 @@ Tests for the RegisterScreen component including:
 ### 5. AuthContext Tests (`src/contexts/__tests__/AuthContext.test.tsx`)
 
 Tests for the AuthContext provider and hook including:
+
 - Context provider functionality
 - Hook behavior
 - State propagation
@@ -112,6 +121,7 @@ Tests for the AuthContext provider and hook including:
 - Edge cases (concurrent method calls, rapid login/logout)
 
 **Coverage Areas:**
+
 - ✅ Context provider
 - ✅ Custom hook
 - ✅ State management
@@ -121,11 +131,13 @@ Tests for the AuthContext provider and hook including:
 ## Running Tests
 
 ### Run All Tests
+
 ```bash
 npm test
 ```
 
 ### Run Specific Test Suite
+
 ```bash
 # Store tests
 npm test -- --testPathPatterns=authStore
@@ -144,11 +156,13 @@ npm test -- --testPathPatterns=AuthContext
 ```
 
 ### Run with Coverage
+
 ```bash
 npm test -- --coverage
 ```
 
 ### Run in Watch Mode
+
 ```bash
 npm test -- --watch
 ```
@@ -167,15 +181,17 @@ npm test -- --watch
 All tests follow the AAA pattern:
 
 ```typescript
-it('should login successfully with valid credentials', async () => {
+it("should login successfully with valid credentials", async () => {
   // Arrange
-  const mockUser = { /* ... */ };
+  const mockUser = {
+    /* ... */
+  };
   mockAuthDb.getUserByEmail.mockResolvedValue(mockUser);
   mockAuthDb.verifyPassword.mockResolvedValue(true);
 
   // Act
   await act(async () => {
-    await useAuthStore.getState().login('test@example.com', 'password123');
+    await useAuthStore.getState().login("test@example.com", "password123");
   });
 
   // Assert
@@ -188,28 +204,36 @@ it('should login successfully with valid credentials', async () => {
 ### Test Categories
 
 #### 1. Happy Path Tests
+
 Tests for expected successful scenarios:
+
 - Valid credentials login
 - Valid user registration
 - Successful logout
 - Token refresh
 
 #### 2. Validation Tests
+
 Tests for input validation:
+
 - Invalid email format
 - Short password
 - Empty fields
 - Invalid characters
 
 #### 3. Error Handling Tests
+
 Tests for error scenarios:
+
 - Network failures
 - Database errors
 - Invalid credentials
 - User already exists
 
 #### 4. Security Tests
+
 Tests for security vulnerabilities:
+
 - SQL injection attempts
 - XSS attempts
 - Account enumeration
@@ -217,7 +241,9 @@ Tests for security vulnerabilities:
 - Information leakage
 
 #### 5. Edge Case Tests
+
 Tests for boundary conditions:
+
 - Very long inputs
 - Empty strings
 - Null values
@@ -226,7 +252,9 @@ Tests for boundary conditions:
 - Concurrent operations
 
 #### 6. Performance Tests
+
 Tests for performance characteristics:
+
 - Caching effectiveness
 - Memory leak detection
 - Concurrent operation handling
@@ -238,10 +266,10 @@ Tests for performance characteristics:
 All external dependencies are mocked:
 
 ```typescript
-jest.mock('~/src/services/database/auth-db');
-jest.mock('expo-secure-store');
-jest.mock('expo-crypto');
-jest.mock('expo-router');
+jest.mock("~/src/services/database/auth-db");
+jest.mock("expo-secure-store");
+jest.mock("expo-crypto");
+jest.mock("expo-router");
 ```
 
 ### Mock Behavior
@@ -250,9 +278,9 @@ Mocks return realistic but deterministic values:
 
 ```typescript
 mockAuthDb.getUserByEmail.mockResolvedValue({
-  id: 'user-123',
-  email: 'test@example.com',
-  password_hash: 'hash',
+  id: "user-123",
+  email: "test@example.com",
+  password_hash: "hash",
   // ...
 });
 ```
@@ -260,12 +288,14 @@ mockAuthDb.getUserByEmail.mockResolvedValue({
 ## CI/CD Integration
 
 ### Pre-commit Hook
+
 ```bash
 # Run tests before commit
 npm test && npm run lint
 ```
 
 ### GitHub Actions
+
 ```yaml
 - name: Run tests
   run: npm test -- --coverage --ci
@@ -283,55 +313,62 @@ npm test && npm run lint
 ### Test Smells to Avoid
 
 ❌ **Testing Implementation Details**
+
 ```typescript
 // DON'T
-expect(component.state.count).toBe(5)
+expect(component.state.count).toBe(5);
 ```
 
 ✅ **Testing User Behavior**
+
 ```typescript
 // DO
-expect(screen.getByText('Count: 5')).toBeInTheDocument()
+expect(screen.getByText("Count: 5")).toBeInTheDocument();
 ```
 
 ❌ **Brittle Tests**
+
 ```typescript
 // DON'T - depends on internal structure
-expect(container.children[0].children[1]).toBeTruthy()
+expect(container.children[0].children[1]).toBeTruthy();
 ```
 
 ✅ **Resilient Tests**
+
 ```typescript
 // DO - uses semantic queries
-expect(screen.getByRole('button', { name: 'Submit' })).toBeTruthy()
+expect(screen.getByRole("button", { name: "Submit" })).toBeTruthy();
 ```
 
 ## Test Data
 
 ### Valid Test Data
+
 ```typescript
 const validCredentials = {
-  email: 'test@example.com',
-  password: 'password123',
-  displayName: 'Test User',
+  email: "test@example.com",
+  password: "password123",
+  displayName: "Test User",
 };
 ```
 
 ### Invalid Test Data
+
 ```typescript
 const invalidCredentials = {
-  email: 'invalid-email',
-  password: '12345', // Too short
-  displayName: '',
+  email: "invalid-email",
+  password: "12345", // Too short
+  displayName: "",
 };
 ```
 
 ### Malicious Test Data
+
 ```typescript
 const maliciousInputs = {
   sqlInjection: "'; DROP TABLE users; --",
   xss: '<script>alert("xss")</script>',
-  pathTraversal: '../../../etc/passwd',
+  pathTraversal: "../../../etc/passwd",
 };
 ```
 
@@ -340,18 +377,26 @@ const maliciousInputs = {
 ### Common Issues
 
 #### 1. Tests Fail Due to Mock Setup
+
 **Solution**: Ensure all external dependencies are properly mocked
 
 #### 2. Async Tests Timeout
+
 **Solution**: Use `waitFor` or increase timeout
+
 ```typescript
-await waitFor(() => {
-  expect(element).toBeTruthy();
-}, { timeout: 5000 });
+await waitFor(
+  () => {
+    expect(element).toBeTruthy();
+  },
+  { timeout: 5000 }
+);
 ```
 
 #### 3. Tests Pass Individually But Fail in Suite
+
 **Solution**: Ensure proper cleanup in `afterEach`
+
 ```typescript
 afterEach(() => {
   jest.clearAllMocks();
@@ -361,40 +406,44 @@ afterEach(() => {
 ## Best Practices
 
 ### 1. Test Isolation
+
 Each test should be independent and not rely on other tests.
 
 ### 2. Descriptive Test Names
+
 ```typescript
 // Good
-it('should reject login with invalid email format', async () => {
+it("should reject login with invalid email format", async () => {
   // ...
 });
 
 // Bad
-it('should work', async () => {
+it("should work", async () => {
   // ...
 });
 ```
 
 ### 3. One Assertion Per Test
+
 ```typescript
 // Good
-it('should set isAuthenticated to true', async () => {
+it("should set isAuthenticated to true", async () => {
   // ...
   expect(state.isAuthenticated).toBe(true);
 });
 
-it('should set user object', async () => {
+it("should set user object", async () => {
   // ...
   expect(state.user).toEqual(expectedUser);
 });
 ```
 
 ### 4. Use Test Helpers
-```typescript
-import { mockUser, mockCredentials } from '~/utils/test-helpers';
 
-it('should login successfully', async () => {
+```typescript
+import { mockUser, mockCredentials } from "~/utils/test-helpers";
+
+it("should login successfully", async () => {
   // Use helpers for consistent test data
   await login(mockCredentials.validEmail, mockCredentials.validPassword);
 });
@@ -403,12 +452,14 @@ it('should login successfully', async () => {
 ## Coverage Reports
 
 ### Generate HTML Coverage Report
+
 ```bash
 npm test -- --coverage --coverageReporters=html
 open coverage/lcov-report/index.html
 ```
 
 ### View Coverage in Terminal
+
 ```bash
 npm test -- --coverage
 ```

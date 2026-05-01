@@ -7,20 +7,25 @@ React Native authentication module in `/Users/ming/Documents/GitHub/recipe-rn/sr
 ## Files
 
 ### Contexts (2 files)
+
 - `contexts/AppAuthProvider.tsx` - Authentication provider component
 - `contexts/AuthContext.tsx` - Authentication context definition
 
 ### Screens (2 files)
+
 - `screens/auth/LoginScreen.tsx` - Login screen component
 - `screens/auth/RegisterScreen.tsx` - Registration screen component
 
 ### Services (1 file)
+
 - `services/database/auth-db.ts` - Authentication database operations
 
 ### Store (1 file)
+
 - `store/authStore.ts` - Authentication state management (8.9K, largest file)
 
 ### Documentation
+
 - `AGENTS.md` - Project agent configuration
 
 **Total: 7 files (6 TypeScript/TSX files, 1 markdown)**
@@ -43,6 +48,7 @@ React Native authentication module in `/Users/ming/Documents/GitHub/recipe-rn/sr
 ## Module Context
 
 This appears to be a focused authentication module for a React Native recipe application. The module includes:
+
 - React Context-based auth state management
 - Zustand-style store (`authStore.ts`)
 - Database service for auth operations

@@ -161,44 +161,25 @@ The following findings should inform the best practices review:
 ### Immediate (Critical - This Week)
 
 **Testing:**
+
 1. Add password verification tests
 2. Fix database schema and add integration tests
 3. Add error path tests for logout
 4. Create security test suite (SQL injection, XSS)
 
-**Documentation:**
-5. Add prominent MOCK warnings to all auth functions
-6. Create authentication ADR
-7. Document security vulnerabilities
-8. Add authentication security documentation
+**Documentation:** 5. Add prominent MOCK warnings to all auth functions 6. Create authentication ADR 7. Document security vulnerabilities 8. Add authentication security documentation
 
 ### Short-term (High Priority - Next Sprint)
 
-**Testing:**
-9. Add unit tests for auth store
-10. Add integration tests for auth flows
-11. Add type safety tests
-12. Add edge case tests
+**Testing:** 9. Add unit tests for auth store 10. Add integration tests for auth flows 11. Add type safety tests 12. Add edge case tests
 
-**Documentation:**
-13. Create authentication flow diagrams
-14. Add authentication API documentation
-15. Document token management
-16. Add testing documentation
+**Documentation:** 13. Create authentication flow diagrams 14. Add authentication API documentation 15. Document token management 16. Add testing documentation
 
 ### Long-term (Medium Priority - Backlog)
 
-**Testing:**
-17. Add E2E test suite
-18. Add performance/load tests
-19. Add concurrent operation tests
-20. Set up CI/CD testing pipeline
+**Testing:** 17. Add E2E test suite 18. Add performance/load tests 19. Add concurrent operation tests 20. Set up CI/CD testing pipeline
 
-**Documentation:**
-21. Create production readiness checklist
-22. Add migration guide from mock to production
-23. Standardize terminology
-24. Add comprehensive JSDoc
+**Documentation:** 21. Create production readiness checklist 22. Add migration guide from mock to production 23. Standardize terminology 24. Add comprehensive JSDoc
 
 ## Estimated Effort
 

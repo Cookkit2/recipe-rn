@@ -10,8 +10,8 @@ export const migrateAddPasswordHash = async (database: SQLite.SQLiteDatabase): P
     `SELECT sql FROM sqlite_master WHERE type='table' AND name='users'`
   );
 
-  if (result && result.sql && result.sql.includes('password_hash')) {
-    console.log('Password hash column already exists');
+  if (result && result.sql && result.sql.includes("password_hash")) {
+    console.log("Password hash column already exists");
     return;
   }
 
@@ -20,7 +20,7 @@ export const migrateAddPasswordHash = async (database: SQLite.SQLiteDatabase): P
     ALTER TABLE users ADD COLUMN password_hash TEXT;
   `);
 
-  console.log('Added password_hash column to users table');
+  console.log("Added password_hash column to users table");
 };
 
 /**
@@ -32,8 +32,8 @@ export const migrateAddIsRevoked = async (database: SQLite.SQLiteDatabase): Prom
     `SELECT sql FROM sqlite_master WHERE type='table' AND name='sessions'`
   );
 
-  if (result && result.sql && result.sql.includes('is_revoked')) {
-    console.log('is_revoked column already exists');
+  if (result && result.sql && result.sql.includes("is_revoked")) {
+    console.log("is_revoked column already exists");
     return;
   }
 
@@ -42,21 +42,23 @@ export const migrateAddIsRevoked = async (database: SQLite.SQLiteDatabase): Prom
     ALTER TABLE sessions ADD COLUMN is_revoked BOOLEAN DEFAULT 0;
   `);
 
-  console.log('Added is_revoked column to sessions table');
+  console.log("Added is_revoked column to sessions table");
 };
 
 /**
  * Migration to add performance indexes for authentication queries
  * This provides 10-100x performance improvement on auth queries
  */
-export const migrateAddPerformanceIndexes = async (database: SQLite.SQLiteDatabase): Promise<void> => {
+export const migrateAddPerformanceIndexes = async (
+  database: SQLite.SQLiteDatabase
+): Promise<void> => {
   // Check if indexes already exist by checking one of them
   const existingIndex = await database.getFirstAsync<{ name: string }>(
     `SELECT name FROM sqlite_master WHERE type='index' AND name='idx_users_email'`
   );
 
   if (existingIndex) {
-    console.log('Performance indexes already exist');
+    console.log("Performance indexes already exist");
     return;
   }
 
@@ -85,21 +87,23 @@ export const migrateAddPerformanceIndexes = async (database: SQLite.SQLiteDataba
     WHERE is_revoked = 0;
   `);
 
-  console.log('Added performance indexes to authentication tables');
+  console.log("Added performance indexes to authentication tables");
 };
 
 /**
  * Migration to set default password hash for existing users
  * This should only be used in development - in production, users should reset passwords
  */
-export const migrateSetDefaultPasswords = async (database: SQLite.SQLiteDatabase): Promise<void> => {
+export const migrateSetDefaultPasswords = async (
+  database: SQLite.SQLiteDatabase
+): Promise<void> => {
   // Check if users without password hash exist
   const usersWithoutHash = await database.getAllAsync<{ id: string; email: string }>(
     `SELECT id, email FROM users WHERE password_hash IS NULL OR password_hash = ''`
   );
 
   if (usersWithoutHash.length === 0) {
-    console.log('All users have password hashes');
+    console.log("All users have password hashes");
     return;
   }
 
@@ -108,7 +112,7 @@ export const migrateSetDefaultPasswords = async (database: SQLite.SQLiteDatabase
   // For each user without a password hash, set a default one
   // In production, you should force these users to reset their passwords
   for (const user of usersWithoutHash) {
-    const defaultPassword = 'ChangeMe123!';
+    const defaultPassword = "ChangeMe123!";
     const salt = Array.from(Crypto.getRandomBytes(16))
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
@@ -121,13 +125,10 @@ export const migrateSetDefaultPasswords = async (database: SQLite.SQLiteDatabase
 
     const passwordHash = `${salt}:${hash}`;
 
-    await database.runAsync(
-      `UPDATE users SET password_hash = $passwordHash WHERE id = $userId`,
-      {
-        $passwordHash: passwordHash,
-        $userId: user.id,
-      }
-    );
+    await database.runAsync(`UPDATE users SET password_hash = $passwordHash WHERE id = $userId`, {
+      $passwordHash: passwordHash,
+      $userId: user.id,
+    });
 
     console.log(`Set default password for user: ${user.email}`);
   }
@@ -138,16 +139,16 @@ export const migrateSetDefaultPasswords = async (database: SQLite.SQLiteDatabase
  */
 export const runAuthMigrations = async (database: SQLite.SQLiteDatabase): Promise<void> => {
   try {
-    console.log('Running authentication database migrations...');
+    console.log("Running authentication database migrations...");
 
     await migrateAddPasswordHash(database);
     await migrateAddIsRevoked(database);
     await migrateAddPerformanceIndexes(database);
     await migrateSetDefaultPasswords(database);
 
-    console.log('Authentication database migrations completed successfully');
+    console.log("Authentication database migrations completed successfully");
   } catch (error) {
-    console.error('Error running authentication migrations:', error);
+    console.error("Error running authentication migrations:", error);
     throw error;
   }
 };

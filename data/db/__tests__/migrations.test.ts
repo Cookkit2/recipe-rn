@@ -3,7 +3,7 @@ import migrations from "../migrations";
 describe("database migrations", () => {
   it("does not recreate tables that already exist in schema version 1", () => {
     const versionTwoMigration = migrations.sortedMigrations.find(
-      (migration) => migration.toVersion === 2,
+      (migration) => migration.toVersion === 2
     );
 
     expect(versionTwoMigration).toBeDefined();
@@ -24,7 +24,7 @@ describe("database migrations", () => {
         "ingredient_synonym",
         "stock_category",
         "cooking_history",
-      ]),
+      ])
     );
   });
 });

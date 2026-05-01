@@ -38,10 +38,7 @@ export const validatePassword = (password: string): ValidationResult => {
 /**
  * Validate credentials before authentication
  */
-export const validateCredentials = (
-  email: string,
-  password: string
-): ValidationResult => {
+export const validateCredentials = (email: string, password: string): ValidationResult => {
   const emailResult = validateEmail(email);
   if (!emailResult.isValid) {
     return emailResult;
@@ -130,9 +127,7 @@ export const handleAuthError = (error: unknown): AuthError => {
 /**
  * Parse session from secure store
  */
-export const parseSession = async (
-  sessionStr: string | null
-): Promise<AuthSession | null> => {
+export const parseSession = async (sessionStr: string | null): Promise<AuthSession | null> => {
   if (!sessionStr) {
     return null;
   }

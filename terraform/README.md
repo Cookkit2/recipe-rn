@@ -5,6 +5,7 @@ This directory contains the Terraform configuration for deploying Recipe RN infr
 ## Overview
 
 The Terraform configuration provisions:
+
 - AWS infrastructure (EC2, RDS, S3, CloudFront)
 - Networking (VPC, subnets, security groups)
 - Database (PostgreSQL with backups)
@@ -47,11 +48,13 @@ terraform init
 ### 3. Plan Deployment
 
 For staging:
+
 ```bash
 terraform plan -var-file=environments/staging.tfvars
 ```
 
 For production:
+
 ```bash
 terraform plan -var-file=environments/production.tfvars
 ```
@@ -59,11 +62,13 @@ terraform plan -var-file=environments/production.tfvars
 ### 4. Deploy
 
 For staging:
+
 ```bash
 terraform apply -var-file=environments/staging.tfvars
 ```
 
 For production:
+
 ```bash
 terraform apply -var-file=environments/production.tfvars
 ```
@@ -122,11 +127,13 @@ After deployment, the following outputs are available:
 ⚠️ **WARNING**: This will destroy all resources!
 
 For staging:
+
 ```bash
 terraform destroy -var-file=environments/staging.tfvars
 ```
 
 For production:
+
 ```bash
 terraform destroy -var-file=environments/production.tfvars
 ```
@@ -172,6 +179,7 @@ terraform destroy -var-file=environments/production.tfvars
 ### State Lock Issues
 
 If state is locked:
+
 ```bash
 terraform force-unlock <LOCK_ID>
 ```
@@ -179,6 +187,7 @@ terraform force-unlock <LOCK_ID>
 ### Drift Detection
 
 Check for drift:
+
 ```bash
 terraform plan -refresh-only
 ```
@@ -186,6 +195,7 @@ terraform plan -refresh-only
 ### Import Existing Resources
 
 If you need to import existing resources:
+
 ```bash
 terraform import <ADDRESS> <ID>
 ```
@@ -233,6 +243,7 @@ terraform validate
 ## Support
 
 For infrastructure issues:
+
 - Create an issue in the repository
 - Contact the DevOps team
 - Review AWS documentation

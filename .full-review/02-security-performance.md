@@ -169,6 +169,7 @@
 ## Estimated Performance Improvements
 
 If all recommendations implemented:
+
 - **App startup**: 1-2 seconds faster (40-60% improvement)
 - **Auth operations**: 40-70% faster
 - **Database queries**: 10-100x faster with indexes
@@ -198,12 +199,14 @@ The following security/performance findings affect testing requirements:
 ## Implementation Priority
 
 ### Phase 1 (Critical - Fix Immediately)
+
 1. Add `is_revoked` column to sessions table
 2. Implement password hashing and verification
 3. Fix JWT secret management
 4. Remove hardcoded "Test User"
 
 ### Phase 2 (High - This Sprint)
+
 5. Add database indexes
 6. Implement connection pooling
 7. Add transaction batching
@@ -211,6 +214,7 @@ The following security/performance findings affect testing requirements:
 9. Fix silent logout failures
 
 ### Phase 3 (Medium - Next Sprint)
+
 10. Add caching for user data
 11. Optimize re-renders
 12. Add timeout handling
@@ -218,6 +222,7 @@ The following security/performance findings affect testing requirements:
 14. Add screen capture protection
 
 ### Phase 4 (Low - Backlog)
+
 15. Add biometric authentication
 16. Implement session timeout
 17. Add lazy loading

@@ -4,4 +4,7 @@
 global.__ADEXPERIMENTAL__ = true;
 
 // Mock ActivityIndicator for testing
-jest.mock('react-native/Libraries/Components/ActivityIndicator/ActivityIndicator', () => 'ActivityIndicator');
+jest.mock(
+  "react-native/Libraries/Components/ActivityIndicator/ActivityIndicator",
+  () => "ActivityIndicator"
+);
