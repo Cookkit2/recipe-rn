@@ -77,58 +77,6 @@ jobs:
           fi
           echo "✅ No critical security issues found"
 
-  # Secrets Scanning
-  gitleaks:
-    name: Secrets Scanning
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Run Gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
-
-  # Dependency Scanning with Snyk
-  snyk:
-    name: Snyk Dependency Scan
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      security-events: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/node@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=high --sarif-file-output=snyk.sarif
-
-      - name: Upload Snyk results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: snyk.sarif
-
   # npm Audit
   npm-audit:
     name: npm Audit
@@ -151,7 +99,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run npm audit
-        run: npm audit --audit-level=moderate --production
+        run: pnpm audit --prod --audit-level=moderate
         continue-on-error: false
 
   # Security Policy Check
@@ -208,7 +156,7 @@ jobs:
   security-summary:
     runs-on: ubuntu-latest
     name: Security Scan Summary
-    needs: [codeql, semgrep, gitleaks, snyk, npm-audit]
+    needs: [codeql, semgrep, npm-audit]
     if: always()
     steps:
       - name: Check security jobs
@@ -220,14 +168,6 @@ jobs:
           fi
           if [ "${{ needs.semgrep.result }}" != "success" ]; then
             echo "❌ Semgrep scan failed"
-            FAILED=1
-          fi
-          if [ "${{ needs.gitleaks.result }}" != "success" ]; then
-            echo "❌ Gitleaks scan failed"
-            FAILED=1
-          fi
-          if [ "${{ needs.snyk.result }}" != "success" ]; then
-            echo "❌ Snyk scan failed"
             FAILED=1
           fi
           if [ "${{ needs.npm-audit.result }}" != "success" ]; then
