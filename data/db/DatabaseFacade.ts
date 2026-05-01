@@ -1263,12 +1263,20 @@ export class DatabaseFacade {
           if (matchingItem === undefined) {
             matchingItem = pantryIndex.get(normalizedIngredientName) || null;
             if (!matchingItem) {
-              matchingItem =
-                pantryItemsWithMetadata.find((pantryItem) =>
+              // ⚡ Bolt Optimization: Use a standard for-loop instead of Array.prototype.find
+              // to eliminate closure creation overhead in this heavily nested hot path.
+              for (let k = 0; k < pantryItemsWithMetadata.length; k++) {
+                const pantryItem = pantryItemsWithMetadata[k];
+                if (
+                  pantryItem &&
                   isIngredientMatch(pantryItem.name, ingredient.name, pantryItem.synonyms)
-                ) || null;
+                ) {
+                  matchingItem = pantryItem;
+                  break;
+                }
+              }
             }
-            ingredientMatchCache.set(normalizedIngredientName, matchingItem);
+            ingredientMatchCache.set(normalizedIngredientName, matchingItem || null);
           }
 
           if (matchingItem !== null) {
