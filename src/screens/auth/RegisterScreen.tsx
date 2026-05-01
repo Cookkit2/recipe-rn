@@ -46,7 +46,8 @@ export default function RegisterScreen() {
       await register(email, password, displayName);
       router.replace("/");
     } catch (err: unknown) {
-      setError(err instanceof Error && err.message ? err.message : "Registration failed");
+      // Use generic error message to prevent information leakage
+      setError("Registration failed. Please try again.");
     }
   };
 

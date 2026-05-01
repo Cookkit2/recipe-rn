@@ -18,7 +18,7 @@ module.exports = {
     ],
   },
   transformIgnorePatterns: [
-    "node_modules/(?!(react-native|@react-native|@nozbe|@expo|expo|expo-modules-core|expo-constants|react-navigation|llama\\.rn|expo-file-system)/)",
+    "node_modules/(?!(react-native|@react-native|@nozbe|@expo|expo|expo-modules-core|expo-constants|react-navigation|llama\\.rn|expo-file-system|@testing-library)/)",
   ],
   moduleNameMapper: {
     "^expo-constants$": "<rootDir>/test/mocks/expo-constants.ts",

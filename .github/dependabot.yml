@@ -1,0 +1,84 @@
+version: 2
+updates:
+  # GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "automated"
+
+  # npm dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+    open-pull-requests-limit: 10
+    versioning-strategy: increase
+    labels:
+      - "dependencies"
+      - "javascript"
+      - "automated"
+    ignore:
+      # Ignore major version updates for these packages
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-native"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "expo*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      # Group React-related updates together
+      react-dependencies:
+        patterns:
+          - "react*"
+          - "@react-native*"
+        exclude-patterns:
+          - "react-native-web"
+      # Group Expo updates together
+      expo-dependencies:
+        patterns:
+          - "expo*"
+          - "@expo*"
+      # Group testing dependencies together
+      testing-dependencies:
+        patterns:
+          - "jest*"
+          - "@testing-library*"
+          - "ts-jest"
+      # Group development dependencies together
+      dev-dependencies:
+        patterns:
+          - "typescript"
+          - "prettier"
+          - "eslint*"
+          - "@types/*"
+
+  # Docker dependencies (if you add Docker later)
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "docker"
+      - "automated"
+
+  # Terraform dependencies (if you add Terraform later)
+  - package-ecosystem: "terraform"
+    directory: "/terraform"
+    schedule:
+      interval: "weekly"
+      day: "thursday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "terraform"
+      - "automated"

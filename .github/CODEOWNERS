@@ -1,0 +1,47 @@
+# Code Owners File
+# This file controls who gets automatically requested for review in pull requests.
+
+# Global owners - will be requested for all changes
+* @ming
+
+# Documentation - technical writers
+*.md @doc-team
+
+# CI/CD - DevOps team
+.github/ @devops-team
+
+# Security - security team
+SECURITY.md @security-team
+*.pem @security-team
+*.key @security-team
+
+# Infrastructure - infrastructure team
+terraform/ @infrastructure-team
+docker/ @infrastructure-team
+
+# Frontend - frontend team
+components/ @frontend-team
+app/ @frontend-team
+*.tsx @frontend-team
+*.jsx @frontend-team
+
+# Backend - backend team
+api/ @backend-team
+server/ @backend-team
+lib/ @backend-team
+
+# Database - database team
+data/db/ @database-team
+migrations/ @database-team
+
+# Testing - QA team
+__tests__/ @qa-team
+*.test.ts @qa-team
+*.test.tsx @qa-team
+*.spec.ts @qa-team
+
+# Mobile - mobile team
+ios/ @mobile-team
+android/ @mobile-team
+
+# Emergency override - empty line to allow anyone

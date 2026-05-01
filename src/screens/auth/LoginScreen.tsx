@@ -40,7 +40,8 @@ export default function LoginScreen() {
       await login(email, password);
       router.replace("/");
     } catch (err: unknown) {
-      setError(err instanceof Error && err.message ? err.message : "Login failed");
+      // Use generic error message to prevent account enumeration
+      setError("Invalid email or password");
     }
   };
 

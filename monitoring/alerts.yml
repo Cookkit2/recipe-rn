@@ -1,0 +1,113 @@
+# Alert rules for Recipe RN application
+
+groups:
+  - name: api_alerts
+    interval: 30s
+    rules:
+      # High error rate alert
+      - alert: HighErrorRate
+        expr: rate(http_errors_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value }} errors/sec for the last 5 minutes"
+
+      # High latency alert
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+        for: 10m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High API latency detected"
+          description: "P95 latency is {{ $value }} seconds"
+
+      # Service down alert
+      - alert: ServiceDown
+        expr: up{job="recipe-rn-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          team: devops
+        annotations:
+          summary: "Service is down"
+          description: "Recipe RN API has been down for more than 2 minutes"
+
+  - name: auth_alerts
+    interval: 30s
+    rules:
+      # High failed authentication rate
+      - alert: HighFailedAuthRate
+        expr: rate(auth_failures_total[5m]) / rate(auth_attempts_total[5m]) > 0.3
+        for: 5m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "High authentication failure rate"
+          description: "Authentication failure rate is {{ $value | humanizePercentage }}"
+
+      # Brute force attack suspected
+      - alert: BruteForceAttack
+        expr: rate(auth_failures_total[1m]) > 10
+        for: 2m
+        labels:
+          severity: critical
+          team: security
+        annotations:
+          summary: "Possible brute force attack"
+          description: "More than 10 failed auth attempts per second detected"
+
+  - name: database_alerts
+    interval: 30s
+    rules:
+      # Database connection pool exhausted
+      - alert: DatabasePoolExhausted
+        expr: pg_stat_database_numbackends{datname="recipe_rn"} / pg_settings_max_connections > 0.9
+        for: 5m
+        labels:
+          severity: critical
+          team: database
+        annotations:
+          summary: "Database connection pool nearly exhausted"
+          description: "Database connection usage is at {{ $value | humanizePercentage }}"
+
+      # Slow query alert
+      - alert: SlowQueries
+        expr: rate(pg_stat_statements_calls_total{queryid="slow"}[5m]) > 1
+        for: 10m
+        labels:
+          severity: warning
+          team: database
+        annotations:
+          summary: "Slow queries detected"
+          description: "Database slow query rate is {{ $value }} queries/sec"
+
+  - name: business_alerts
+    interval: 1m
+    rules:
+      # Low user activity
+      - alert: LowUserActivity
+        expr: count(active_users) < 10
+        for: 30m
+        labels:
+          severity: info
+          team: product
+        annotations:
+          summary: "Unusually low user activity"
+          description: "Only {{ $value }} active users in the last 30 minutes"
+
+      # High recipe creation rate
+      - alert: HighRecipeCreationRate
+        expr: rate(recipes_created_total[5m]) > 100
+        for: 5m
+        labels:
+          severity: info
+          team: product
+        annotations:
+          summary: "Spike in recipe creation"
+          description: "Recipe creation rate is {{ $value }} recipes/sec"
