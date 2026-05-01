@@ -56,20 +56,20 @@ jobs:
           semgrep scan \
             --config auto \
             --severity ERROR \
-            --json \
-            --output semgrep-report.json \
+            --sarif \
+            --output semgrep-report.sarif \
             || true
 
       - name: Upload Semgrep results
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
-          sarif_file: semgrep-report.json
+          sarif_file: semgrep-report.sarif
 
       - name: Check for critical vulnerabilities
         run: |
-          if [ -f semgrep-report.json ]; then
-            CRITICAL=$(jq '[.results[] | select(.extra.severity == "ERROR")] | length' semgrep-report.json)
+          if [ -f semgrep-report.sarif ]; then
+            CRITICAL=$(jq '[.runs[].results[]? | select(.level == "error" or .level == "warning")] | length' semgrep-report.sarif)
             if [ "$CRITICAL" -gt 0 ]; then
               echo "❌ Found $CRITICAL critical security issues"
               exit 1
