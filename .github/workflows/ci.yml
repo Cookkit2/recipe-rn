@@ -80,7 +80,7 @@ jobs:
           echo "✅ Coverage ${COVERAGE}% meets 80% threshold"
 
       - name: Upload coverage reports
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/coverage-final.json
