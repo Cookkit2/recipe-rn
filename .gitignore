@@ -104,3 +104,4 @@ credentials.json
 # OS
 Thumbs.db
 
+ios/.xcode.env

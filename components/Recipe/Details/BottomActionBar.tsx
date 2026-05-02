@@ -93,6 +93,7 @@ const BottomActionBar = ({
           className="rounded-full px-4"
           onPress={onToggleFavorite}
           disabled={isTailoring}
+          accessibilityLabel={isFavorite ? "Remove from favorites" : "Add to favorites"}
         >
           <HeartIcon
             className={isFavorite ? "text-red-600" : "text-foreground"}
