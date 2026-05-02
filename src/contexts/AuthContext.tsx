@@ -1,5 +1,6 @@
-import React, { createContext, useContext, type ReactNode, useEffect } from "react";
-import { useAuthStore, type User } from "~/src/store/authStore";
+import React, { createContext, useContext, type ReactNode, useEffect, useMemo } from "react";
+import { useAuthStore } from "~/src/store/authStore";
+import type { User } from "~/src/types/auth";
 
 interface AuthContextType {
   user: User | null;
@@ -35,27 +36,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     checkAuth();
   }, [checkAuth]);
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated,
-        isLoading,
-        error,
-        login,
-        register,
-        logout,
-        refreshSession,
-        checkAuth,
-        clearError,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  // Memoize context value to prevent unnecessary re-renders in consumers
+  // This ensures that components using this context only re-render when the actual values change
+  const contextValue = useMemo<AuthContextType>(
+    () => ({
+      user,
+      isAuthenticated,
+      isLoading,
+      error,
+      login,
+      register,
+      logout,
+      refreshSession,
+      checkAuth,
+      clearError,
+    }),
+    [
+      user,
+      isAuthenticated,
+      isLoading,
+      error,
+      login,
+      register,
+      logout,
+      refreshSession,
+      checkAuth,
+      clearError,
+    ]
   );
+
+  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");

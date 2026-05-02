@@ -45,3 +45,62 @@ expo-env.d.ts
 
 coverage/
 
+# Testing
+/coverage
+*.lcov
+
+# CI/CD and Infrastructure
+# Terraform
+*.tfstate
+*.tfstate.*
+*.tfvars
+!terraform/environments/*.tfvars
+.terraform/
+.terraform.lock.hcl
+crash.log
+crash.*.log
+
+# Monitoring
+prometheus-data/
+grafana-data/
+alertmanager-data/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Build artifacts
+*.apk
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Bundles
+*.jsbundle
+
+# Secrets (redundant but explicit)
+secrets/
+credentials.json
+*.pfx
+
+# Cache
+.cache/
+.parcel-cache/
+
+# IDE
+.vscode/
+.idea/
+
+# Version control
+*.orig
+
+# OS
+Thumbs.db
+

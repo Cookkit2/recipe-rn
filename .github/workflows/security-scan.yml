@@ -1,0 +1,242 @@
+name: Security Scanning
+
+on:
+  push:
+    branches: [main, master, develop, staging]
+  pull_request:
+    branches: [main, master, develop, staging]
+  schedule:
+    # Run security scans daily at 2 AM UTC
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: "20"
+  PNPM_VERSION: 10
+
+jobs:
+  # Static Application Security Testing (SAST)
+  codeql:
+    name: CodeQL SAST
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript, typescript
+          queries: security-extended, security-and-quality
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript-typescript"
+
+  # Semgrep SAST
+  semgrep:
+    name: Semgrep SAST
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Semgrep
+        run: |
+          semgrep scan \
+            --config auto \
+            --severity ERROR \
+            --json \
+            --output semgrep-report.json \
+            || true
+
+      - name: Upload Semgrep results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: semgrep-report.json
+
+      - name: Check for critical vulnerabilities
+        run: |
+          if [ -f semgrep-report.json ]; then
+            CRITICAL=$(jq '[.results[] | select(.extra.severity == "ERROR")] | length' semgrep-report.json)
+            if [ "$CRITICAL" -gt 0 ]; then
+              echo "❌ Found $CRITICAL critical security issues"
+              exit 1
+            fi
+          fi
+          echo "✅ No critical security issues found"
+
+  # Secrets Scanning
+  gitleaks:
+    name: Secrets Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+  # Dependency Scanning with Snyk
+  snyk:
+    name: Snyk Dependency Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high --sarif-file-output=snyk.sarif
+
+      - name: Upload Snyk results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: snyk.sarif
+
+  # npm Audit
+  npm-audit:
+    name: npm Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run npm audit
+        run: npm audit --audit-level=moderate --production
+        continue-on-error: false
+
+  # Security Policy Check
+  security-policy:
+    name: Security Policy Compliance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for SECURITY.md
+        run: |
+          if [ ! -f "SECURITY.md" ]; then
+            echo "⚠️  WARNING: SECURITY.md file not found"
+            echo "Consider adding a security policy file"
+          else
+            echo "✅ SECURITY.md file exists"
+          fi
+
+      - name: Check for sensitive file exposure
+        run: |
+          echo "Checking for potentially exposed sensitive files..."
+          if git ls-files | grep -E "\.(env|key|pem|p12|pfx)$"; then
+            echo "❌ ERROR: Sensitive files found in git"
+            exit 1
+          fi
+          echo "✅ No sensitive files exposed"
+
+  # Security Scorecard
+  scorecard:
+    name: OSSF Scorecard
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Run Scorecard
+        uses: ossf/scorecard-action@v2.3.1
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          publish_results: true
+
+      - name: Upload Scorecard results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
+
+  # Security Summary
+  security-summary:
+    runs-on: ubuntu-latest
+    name: Security Scan Summary
+    needs: [codeql, semgrep, gitleaks, snyk, npm-audit]
+    if: always()
+    steps:
+      - name: Check security jobs
+        run: |
+          FAILED=0
+          if [ "${{ needs.codeql.result }}" != "success" ]; then
+            echo "❌ CodeQL scan failed"
+            FAILED=1
+          fi
+          if [ "${{ needs.semgrep.result }}" != "success" ]; then
+            echo "❌ Semgrep scan failed"
+            FAILED=1
+          fi
+          if [ "${{ needs.gitleaks.result }}" != "success" ]; then
+            echo "❌ Gitleaks scan failed"
+            FAILED=1
+          fi
+          if [ "${{ needs.snyk.result }}" != "success" ]; then
+            echo "❌ Snyk scan failed"
+            FAILED=1
+          fi
+          if [ "${{ needs.npm-audit.result }}" != "success" ]; then
+            echo "❌ npm audit failed"
+            FAILED=1
+          fi
+
+          if [ $FAILED -eq 1 ]; then
+            echo "❌ Security scanning failed"
+            exit 1
+          fi
+          echo "✅ All security scans passed"

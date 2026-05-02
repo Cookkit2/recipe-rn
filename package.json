@@ -122,7 +122,6 @@
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",
-    "@testing-library/react-hooks": "^8.0.1",
     "@testing-library/react-native": "^13.3.3",
     "@types/jest": "^30.0.0",
     "@types/jwt-encode": "^1.0.3",

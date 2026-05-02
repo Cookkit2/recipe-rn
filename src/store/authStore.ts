@@ -3,8 +3,11 @@ import { persist, type StorageValue } from "zustand/middleware";
 import * as SecureStore from "expo-secure-store";
 import * as Crypto from "expo-crypto";
 import * as authDb from "~/src/services/database/auth-db";
-import type { Session } from "~/src/services/database/auth-db";
 import { safeJsonParse } from "~/utils/json-parsing";
+import type { User, AuthSession, AuthError } from "~/src/types/auth";
+
+// Single-flight pattern for token refresh to prevent multiple simultaneous requests
+let refreshInProgress: Promise<void> | null = null;
 
 interface AuthState {
   user: User | null;
@@ -23,14 +26,6 @@ interface AuthState {
   clearError: () => void;
 }
 
-export interface User {
-  id: string;
-  email: string;
-  displayName?: string;
-  avatarUrl?: string;
-  preferences?: any;
-}
-
 type AuthStateInitial = Omit<
   AuthState,
   "login" | "register" | "logout" | "refreshSession" | "checkAuth" | "clearError"
@@ -45,8 +40,93 @@ const initialState: AuthStateInitial = {
   error: null,
 };
 
-const isValidEmail = (email: string) => {
+/**
+ * Email validation
+ */
+const isValidEmail = (email: string): boolean => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+};
+
+/**
+ * Common validation logic for login and register
+ */
+const validateCredentials = (
+  email: string,
+  password: string,
+  displayName?: string
+): { isValid: boolean; error?: string } => {
+  if (!email || !isValidEmail(email)) {
+    return { isValid: false, error: "Invalid email format" };
+  }
+  if (!password || password.length < 6) {
+    return { isValid: false, error: "Password must be at least 6 characters" };
+  }
+  if (displayName !== undefined && displayName.trim().length === 0) {
+    return { isValid: false, error: "Display name is required" };
+  }
+  return { isValid: true };
+};
+
+/**
+ * Common authentication flow for login and register
+ */
+const performAuthFlow = async (
+  email: string,
+  password: string,
+  displayName: string | undefined,
+  isRegister: boolean
+): Promise<{ user: User; accessToken: string; refreshToken: string }> => {
+  // Check if user exists (for registration)
+  if (isRegister) {
+    const existingUser = await authDb.getUserByEmail(email);
+    if (existingUser) {
+      throw new Error("User already exists");
+    }
+  } else {
+    // For login, verify user exists
+    const user = await authDb.getUserByEmail(email);
+    if (!user || !user.password_hash) {
+      throw new Error("Invalid credentials");
+    }
+
+    // Verify password
+    const isPasswordValid = await authDb.verifyPassword(password, user.password_hash);
+    if (!isPasswordValid) {
+      throw new Error("Invalid credentials");
+    }
+  }
+
+  // Generate tokens
+  const userId = isRegister
+    ? `user_${Crypto.randomUUID()}`
+    : (await authDb.getUserByEmail(email))!.id;
+  const accessToken = `access_${Crypto.randomUUID()}`;
+  const refreshToken = `refresh_${Crypto.randomUUID()}`;
+
+  if (isRegister) {
+    // Hash password before storing
+    const passwordHash = await authDb.hashPassword(password);
+    await authDb.createUser(userId, email, passwordHash, displayName);
+  }
+
+  // Store session
+  await Promise.all([
+    authDb.upsertSession(userId, accessToken, refreshToken, 900), // 15 minutes
+    authDb.createRefreshToken(userId, refreshToken, 604800000), // 7 days
+    SecureStore.setItemAsync("user_session", JSON.stringify({ userId, accessToken, refreshToken })),
+  ]);
+
+  return {
+    user: {
+      id: userId,
+      email,
+      displayName:
+        displayName ||
+        (isRegister ? undefined : (await authDb.getUserByEmail(email))!.display_name),
+    },
+    accessToken,
+    refreshToken,
+  };
 };
 
 export const useAuthStore = create<AuthState>()(
@@ -55,13 +135,10 @@ export const useAuthStore = create<AuthState>()(
       ...initialState,
 
       login: async (email: string, password: string) => {
-        if (!email || !isValidEmail(email)) {
-          const errorMsg = "Invalid email format";
-          set({ error: errorMsg, isLoading: false });
-          throw new Error(errorMsg);
-        }
-        if (!password || password.length < 6) {
-          const errorMsg = "Password must be at least 6 characters";
+        // Validate credentials
+        const validation = validateCredentials(email, password);
+        if (!validation.isValid) {
+          const errorMsg = "Invalid credentials";
           set({ error: errorMsg, isLoading: false });
           throw new Error(errorMsg);
         }
@@ -69,53 +146,31 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
 
         try {
-          // Simulate API call to login endpoint
-          // In production, this would call your auth API
-          const userId = `user_${Crypto.randomUUID()}`;
-          const accessToken = `access_${Crypto.randomUUID()}`;
-          const refreshToken = `refresh_${Crypto.randomUUID()}`;
-
-          // Ensure user is created before tokens to prevent FK constraint violations
-          await authDb.createUser(userId, email, "Test User");
-
-          await Promise.all([
-            authDb.upsertSession(userId, accessToken, refreshToken, 900), // 15 minutes
-            authDb.createRefreshToken(userId, refreshToken, 604800000), // 7 days
-            SecureStore.setItemAsync(
-              "user_session",
-              JSON.stringify({ userId, accessToken, refreshToken })
-            ),
-          ]);
+          const result = await performAuthFlow(email, password, undefined, false);
 
           // Update state
           set({
-            user: {
-              id: userId,
-              email,
-              displayName: "Test User",
-            },
-            accessToken,
-            refreshToken,
+            user: result.user,
+            accessToken: result.accessToken,
+            refreshToken: result.refreshToken,
             isAuthenticated: true,
             isLoading: false,
           });
-        } catch (error: any) {
+        } catch (error) {
+          const authError = error instanceof Error ? error : new Error("Invalid credentials");
           set({
-            error: error.message || "Login failed",
+            error: "Invalid credentials",
             isLoading: false,
           });
-          throw error;
+          throw authError;
         }
       },
 
       register: async (email: string, password: string, displayName?: string) => {
-        if (!email || !isValidEmail(email)) {
-          const errorMsg = "Invalid email format";
-          set({ error: errorMsg, isLoading: false });
-          throw new Error(errorMsg);
-        }
-        if (!password || password.length < 6) {
-          const errorMsg = "Password must be at least 6 characters";
+        // Validate credentials
+        const validation = validateCredentials(email, password, displayName);
+        if (!validation.isValid) {
+          const errorMsg = validation.error || "Registration failed";
           set({ error: errorMsg, isLoading: false });
           throw new Error(errorMsg);
         }
@@ -123,41 +178,27 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
 
         try {
-          // Simulate API call to register endpoint
-          const userId = `user_${Crypto.randomUUID()}`;
-          const accessToken = `access_${Crypto.randomUUID()}`;
-          const refreshToken = `refresh_${Crypto.randomUUID()}`;
-
-          // Ensure user is created before tokens to prevent FK constraint violations
-          await authDb.createUser(userId, email, displayName);
-
-          await Promise.all([
-            authDb.upsertSession(userId, accessToken, refreshToken, 900),
-            authDb.createRefreshToken(userId, refreshToken, 604800000),
-            SecureStore.setItemAsync(
-              "user_session",
-              JSON.stringify({ userId, accessToken, refreshToken })
-            ),
-          ]);
+          const result = await performAuthFlow(email, password, displayName, true);
 
           // Update state
           set({
-            user: {
-              id: userId,
-              email,
-              displayName,
-            },
-            accessToken,
-            refreshToken,
+            user: result.user,
+            accessToken: result.accessToken,
+            refreshToken: result.refreshToken,
             isAuthenticated: true,
             isLoading: false,
           });
-        } catch (error: any) {
+        } catch (error) {
+          const authError = error instanceof Error ? error : new Error("Registration failed");
+          const safeError =
+            authError.message === "User already exists"
+              ? "Registration failed"
+              : "Registration failed";
           set({
-            error: error.message || "Registration failed",
+            error: safeError,
             isLoading: false,
           });
-          throw error;
+          throw new Error(safeError);
         }
       },
 
@@ -165,19 +206,22 @@ export const useAuthStore = create<AuthState>()(
         try {
           const { accessToken } = get();
 
-          const logoutPromises: Promise<any>[] = [SecureStore.deleteItemAsync("user_session")];
+          const logoutPromises: Array<Promise<unknown>> = [
+            SecureStore.deleteItemAsync("user_session"),
+          ];
 
           if (accessToken) {
             // Revoke session in database concurrently
             logoutPromises.push(authDb.revokeSession(accessToken));
           }
 
-          await Promise.all(logoutPromises);
+          await Promise.allSettled(logoutPromises);
 
-          // Reset state
+          // Reset state - ALWAYS do this, even if errors occur
           set(initialState);
-        } catch (error: any) {
-          console.error("Logout error:", error);
+        } catch (error) {
+          // Always reset state on logout, regardless of errors
+          set(initialState);
         }
       },
 
@@ -188,40 +232,58 @@ export const useAuthStore = create<AuthState>()(
           return;
         }
 
+        // Single-flight pattern: if a refresh is already in progress, wait for it
+        if (refreshInProgress) {
+          console.log("[AuthStore] Token refresh already in progress, waiting...");
+          try {
+            await refreshInProgress;
+          } catch {
+            // If the in-progress refresh failed, try again
+          }
+          return;
+        }
+
         set({ isLoading: true, error: null });
 
-        try {
-          // Refresh token via database
-          const newTokens = await authDb.refreshToken(user.id, refreshToken);
+        refreshInProgress = (async () => {
+          try {
+            // Refresh token via database (with debouncing built-in)
+            const newTokens = await authDb.refreshToken(user.id, refreshToken);
 
-          if (newTokens) {
-            // Update secure store
-            await SecureStore.setItemAsync(
-              "user_session",
-              JSON.stringify({
-                userId: user.id,
+            if (newTokens) {
+              // Update secure store
+              await SecureStore.setItemAsync(
+                "user_session",
+                JSON.stringify({
+                  userId: user.id,
+                  accessToken: newTokens.accessToken,
+                  refreshToken: newTokens.refreshToken,
+                })
+              );
+
+              // Update state
+              set({
                 accessToken: newTokens.accessToken,
                 refreshToken: newTokens.refreshToken,
-              })
-            );
-
-            // Update state
+                isLoading: false,
+              });
+            } else {
+              // Token refresh failed, logout user
+              await get().logout();
+            }
+          } catch (error) {
+            const authError = error instanceof Error ? error : new Error("Session refresh failed");
             set({
-              accessToken: newTokens.accessToken,
-              refreshToken: newTokens.refreshToken,
+              error: authError.message || "Session refresh failed",
               isLoading: false,
             });
-          } else {
-            // Token refresh failed, logout user
             await get().logout();
+          } finally {
+            refreshInProgress = null;
           }
-        } catch (error: any) {
-          set({
-            error: error.message || "Session refresh failed",
-            isLoading: false,
-          });
-          await get().logout();
-        }
+        })();
+
+        await refreshInProgress;
       },
 
       checkAuth: async () => {
@@ -236,22 +298,22 @@ export const useAuthStore = create<AuthState>()(
             return;
           }
 
-          const { userId, accessToken, refreshToken } = safeJsonParse<any>(sessionStr, {});
+          const session = safeJsonParse<AuthSession>(sessionStr, {} as AuthSession);
 
           // Check if tokens are still valid
-          const session = await authDb.getSessionByToken(accessToken);
+          const dbSession = await authDb.getSessionByToken(session.accessToken);
 
-          if (session) {
+          if (dbSession && !dbSession.is_revoked) {
             const [, user] = await Promise.all([
-              authDb.upsertSession(userId, accessToken, refreshToken, 900),
-              authDb.getUserById(userId),
+              authDb.upsertSession(session.userId, session.accessToken, session.refreshToken, 900),
+              authDb.getUserById(session.userId),
             ]);
 
             if (user) {
               set({
                 user,
-                accessToken,
-                refreshToken,
+                accessToken: session.accessToken,
+                refreshToken: session.refreshToken,
                 isAuthenticated: true,
                 isLoading: false,
               });
@@ -261,8 +323,8 @@ export const useAuthStore = create<AuthState>()(
 
           // Session is invalid, logout
           await get().logout();
-        } catch (error: any) {
-          console.error("Auth check error:", error);
+        } catch (error) {
+          // Sanitize error logging - don't log sensitive information
           set({ isLoading: false, isAuthenticated: false });
         }
       },
