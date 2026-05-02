@@ -12,3 +12,7 @@
 ## 2025-02-06 - Eliminate Closure Overhead in Nested Matching Loops
 **Learning:** When converting \`Array.prototype.find()\` or similar array methods to a standard \`for\` loop to eliminate closure overhead in deeply nested paths, remember that accessing array elements by index (e.g., \`array[i]\`) can type as possibly \`undefined\` in strict TypeScript environments.
 **Action:** Always include a truthiness check (e.g., \`if (item && ...)\`) before accessing element properties to prevent TS18048 errors during compilation checks.
+
+## 2024-05-18 - Replacing O(N²) Arrays with O(N) Sets in Hot Paths
+**Learning:** Checking for deletions by using `.some()` on an array inside a `for...of` loop creates an O(N²) bottleneck, particularly detrimental in React Native UI threads during save operations.
+**Action:** When filtering or comparing two lists to find deleted/missing items, pre-compute a `Set` of the target IDs beforehand to turn the O(N²) check into an O(N) hash map lookup.

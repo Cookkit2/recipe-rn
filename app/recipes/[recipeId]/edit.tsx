@@ -154,8 +154,11 @@ export default function RecipeEdit() {
         );
 
         // Delete removed ingredients
+        const editableIngredientIds = new Set(
+          editable.ingredients.map((ing: any) => ing.id).filter(Boolean)
+        );
         for (const existing of existingIngredients) {
-          if (!editable.ingredients.some((ing: any) => ing.id === existing.id)) {
+          if (!editableIngredientIds.has(existing.id)) {
             batchOperations.push(existing.prepareDestroyPermanently());
           }
         }
@@ -194,8 +197,9 @@ export default function RecipeEdit() {
         const existingStepsMap = new Map(existingSteps.map((step: any) => [step.id, step]));
 
         // Delete removed steps
+        const editableStepIds = new Set(editable.steps.map((step: any) => step.id).filter(Boolean));
         for (const existing of existingSteps) {
-          if (!editable.steps.some((step: any) => step.id === existing.id)) {
+          if (!editableStepIds.has(existing.id)) {
             batchOperations.push(existing.prepareDestroyPermanently());
           }
         }
