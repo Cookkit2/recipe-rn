@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Quality Gate
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -50,7 +50,7 @@ jobs:
     name: Test Suite
     needs: quality-gate
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install pnpm
         uses: pnpm/action-setup@v3
@@ -80,7 +80,7 @@ jobs:
           echo "✅ Coverage ${COVERAGE}% meets 80% threshold"
 
       - name: Upload coverage reports
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/coverage-final.json
@@ -93,7 +93,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Dependency Audit
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install pnpm
         uses: pnpm/action-setup@v3
@@ -123,7 +123,7 @@ jobs:
     name: Build Verification
     needs: [test, audit]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install pnpm
         uses: pnpm/action-setup@v3
