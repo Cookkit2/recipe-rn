@@ -88,6 +88,9 @@ const GroupButton = React.memo(function GroupButton<T>({
       )}
       style={[animatedStyle, roundedStyle]}
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={item.label}
+      accessibilityState={{ selected: !!selected }}
     >
       {React.cloneElement(item.icon, {
         className: cn(
