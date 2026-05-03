@@ -6,6 +6,7 @@ import { Button } from "~/components/ui/button";
 import { AuthContainer, AuthCard, AuthInput } from "~/components/auth";
 import { useAuth } from "~/auth";
 import { ArrowLeftIcon } from "lucide-uniwind";
+import { TEST_IDS } from "~/constants/test-ids";
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState("");
@@ -57,7 +58,7 @@ export default function ForgotPasswordScreen() {
 
   if (emailSent) {
     return (
-      <AuthContainer>
+      <AuthContainer testID={TEST_IDS.auth.forgotPasswordScreen}>
         <AuthCard title="Check Your Email" subtitle="We've sent you a password reset link">
           <View className="space-y-6">
             {/* Success Icon */}
@@ -110,7 +111,7 @@ export default function ForgotPasswordScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <AuthContainer>
+        <AuthContainer testID={TEST_IDS.auth.forgotPasswordScreen}>
           <AuthCard title="Reset Password" subtitle="Enter your email to receive a reset link">
             <View className="space-y-6">
               {/* Back Button */}
@@ -126,6 +127,7 @@ export default function ForgotPasswordScreen() {
 
               {/* Email Input */}
               <AuthInput
+                testID={TEST_IDS.auth.emailInput}
                 label="Email Address"
                 value={email}
                 onChangeText={setEmail}
@@ -144,7 +146,12 @@ export default function ForgotPasswordScreen() {
               </View>
 
               {/* Reset Button */}
-              <Button onPress={handleResetPassword} disabled={isLoading} className="w-full">
+              <Button
+                testID={TEST_IDS.auth.resetPasswordButton}
+                onPress={handleResetPassword}
+                disabled={isLoading}
+                className="w-full"
+              >
                 <Text>{isLoading ? "Sending..." : "Send Reset Link"}</Text>
               </Button>
 

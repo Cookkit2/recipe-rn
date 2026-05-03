@@ -3,10 +3,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   ActivityIndicator,
-  Pressable,
   type NativeSyntheticEvent,
   type NativeScrollEvent,
-  ScrollView,
 } from "react-native";
 import { useRecipeStore } from "~/store/RecipeContext";
 import { H4, P } from "~/components/ui/typography";
@@ -293,21 +291,8 @@ export default function RecipeLists() {
       );
     }
 
-    // Show load more button
-    if (hasMoreToLoad) {
-      return (
-        <View className="py-4 items-center justify-center">
-          <Pressable onPress={() => loadMore()} className="px-6 py-3 bg-muted rounded-full">
-            <P className="text-foreground font-medium">
-              Load More ({recipes.length - displayLimit} remaining)
-            </P>
-          </Pressable>
-        </View>
-      );
-    }
-
     return null;
-  }, [isLoading, isLoadingMore, hasMoreToLoad, displayLimit, recipes.length, loadMore]);
+  }, [isLoading, isLoadingMore, hasMoreToLoad, recipes.length]);
 
   return (
     <>

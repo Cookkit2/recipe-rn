@@ -67,26 +67,33 @@ function containsSensitiveDataInObject(obj: any): boolean {
  * Returns sanitized arguments safe for logging to external services
  */
 function filterSensitiveData(args: any[]): any[] {
-  return args.map((arg) => {
-    if (typeof arg === "string") {
-      // Check string for sensitive patterns
-      if (containsSensitiveData(arg)) {
-        return "[REDACTED]";
-      }
-      return arg;
-    }
+  return args.map((arg) => sanitizeArg(arg));
+}
 
-    if (typeof arg === "object" && arg !== null) {
-      // Check object for sensitive data
-      if (containsSensitiveDataInObject(arg)) {
-        return "[REDACTED]";
-      }
-      // Recursively filter nested objects
-      return filterSensitiveData(Object.values(arg));
+function sanitizeArg(arg: any): any {
+  if (typeof arg === "string") {
+    if (containsSensitiveData(arg)) {
+      return "[REDACTED]";
     }
-
     return arg;
-  });
+  }
+
+  if (Array.isArray(arg)) {
+    return arg.map((item) => sanitizeArg(item));
+  }
+
+  if (typeof arg === "object" && arg !== null) {
+    if (containsSensitiveDataInObject(arg)) {
+      return "[REDACTED]";
+    }
+    const filtered: Record<string, unknown> = {};
+    for (const key of Object.keys(arg)) {
+      filtered[key] = sanitizeArg((arg as Record<string, unknown>)[key]);
+    }
+    return filtered;
+  }
+
+  return arg;
 }
 
 /**

@@ -2,14 +2,15 @@ import React, { useCallback, useMemo, useRef, useState } from "react";
 import { View, Keyboard, Pressable, TouchableOpacity, FlatList, StyleSheet } from "react-native";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { Portal } from "@rn-primitives/portal";
-import { SlidersHorizontalIcon } from "lucide-uniwind";
 import { cn } from "~/lib/utils";
 import { Stack, useFocusEffect, useRouter } from "expo-router";
 import type { SearchBarCommands } from "react-native-screens";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ActivityIndicator, Text } from "react-native";
-import { useSearchRecipes, type RecipeFilters } from "~/hooks/queries/useRecipeQueries";
-import { useSearchPantryItems } from "~/hooks/queries/usePantryQueries";
+import { useRecipes, type RecipeFilters } from "~/hooks/queries/useRecipeQueries";
+import { usePantryItems } from "~/hooks/queries/usePantryQueries";
+import { filterPantryItemsByName } from "~/utils/filterPantryItemsByName";
+import { filterRecipesForSearch } from "~/utils/filterRecipesForSearch";
 import { IngredientResults } from "~/components/Search/IngredientResults";
 import { RecipeResults } from "~/components/Search/RecipeResults";
 import useColors from "~/hooks/useColor";
@@ -58,7 +59,8 @@ export default function SearchScreen() {
 
   const hasFilters =
     selectedTime !== null || selectedDifficulty !== null || selectedTags.length > 0;
-  const hasQuery = input.trim().length > 0 || hasFilters;
+  const trimmedInput = input.trim();
+  const hasQuery = trimmedInput.length > 0 || hasFilters;
   const activeFilterCount =
     (selectedTime ? 1 : 0) + (selectedDifficulty ? 1 : 0) + selectedTags.length;
 
@@ -71,13 +73,21 @@ export default function SearchScreen() {
     return Object.keys(filters).length > 0 ? filters : undefined;
   }, [selectedTime, selectedDifficulty, selectedTags]);
 
-  const { data: recipeResults, isLoading: isLoadingRecipes } = useSearchRecipes(
-    input.trim(),
-    activeFilters
+  const { data: allRecipes = [], isPending: isRecipesCatalogPending } = useRecipes();
+  const { data: pantryItems = [], isPending: isPantryPending } = usePantryItems();
+
+  const recipeResults = useMemo(
+    () => filterRecipesForSearch(allRecipes, trimmedInput, activeFilters),
+    [allRecipes, trimmedInput, activeFilters]
   );
-  const { data: ingredientResults, isLoading: isLoadingIngredients } = useSearchPantryItems(
-    input.trim()
+
+  const ingredientResults = useMemo(
+    () => filterPantryItemsByName(pantryItems, trimmedInput),
+    [pantryItems, trimmedInput]
   );
+
+  const showSearchLoading =
+    (hasQuery && isRecipesCatalogPending) || (trimmedInput.length > 0 && isPantryPending);
 
   useFocusEffect(
     useCallback(() => {
@@ -116,9 +126,7 @@ export default function SearchScreen() {
     setSelectedTags([]);
   };
 
-  const hasResults =
-    (recipeResults && recipeResults.length > 0) ||
-    (ingredientResults && ingredientResults.length > 0);
+  const hasResults = (recipeResults && recipeResults.length > 0) || ingredientResults.length > 0;
 
   type SectionItem =
     | { key: "loading" }
@@ -131,22 +139,14 @@ export default function SearchScreen() {
   const sections = useMemo<SectionItem[]>(() => {
     if (hasQuery) {
       const items: SectionItem[] = [];
-      if (isLoadingRecipes || isLoadingIngredients) items.push({ key: "loading" });
-      if (ingredientResults?.length) items.push({ key: "ingredients" });
+      if (showSearchLoading) items.push({ key: "loading" });
+      if (ingredientResults.length) items.push({ key: "ingredients" });
       if (recipeResults?.length) items.push({ key: "recipes" });
-      if (!isLoadingRecipes && !isLoadingIngredients && !hasResults)
-        items.push({ key: "no-results" });
+      if (!showSearchLoading && !hasResults) items.push({ key: "no-results" });
       return items;
     }
     return [{ key: "empty" }];
-  }, [
-    hasQuery,
-    isLoadingRecipes,
-    isLoadingIngredients,
-    ingredientResults,
-    recipeResults,
-    hasResults,
-  ]);
+  }, [hasQuery, showSearchLoading, ingredientResults, recipeResults, hasResults]);
 
   const renderFilterChip = ({
     label,
@@ -337,27 +337,14 @@ export default function SearchScreen() {
 
   return (
     <>
-      <Stack.Toolbar placement="bottom">
-        <Stack.Toolbar.Button
-          icon="camera.filters"
-          onPress={openFilterSheet}
-          accessibilityLabel="Open filters"
-        />
-        <Stack.Toolbar.SearchBarSlot
-        // placeholder="Search"
-        // onChangeText={(e) => setInput(e.nativeEvent.text)}
-        // onCancelButtonPress={handleDismiss}
-        // onClose={handleDismiss}
-        />
-      </Stack.Toolbar>
-      {/* <Stack.SearchBar
+      <Stack.SearchBar
         ref={searchBarRef}
         autoFocus
         onCancelButtonPress={handleDismiss}
         onClose={handleDismiss}
         onChangeText={(e) => setInput(e.nativeEvent.text)}
         placeholder="Search"
-      /> */}
+      />
       <Pressable className="flex-1" onPress={handleDismiss}>
         <FlatList
           className="flex-1 bg-background"

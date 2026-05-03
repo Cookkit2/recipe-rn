@@ -59,6 +59,8 @@ export function usePantryItemsByType(type: ItemType) {
  * @remarks
  * - Query is disabled until a search term is provided (query.length > 0)
  * - staleTime: 30 seconds for search results
+ * - **Performance:** each run calls `fetchAllPantryItems` (full hydration). For typeahead UIs,
+ *   prefer `usePantryItems()` plus client-side `filterPantryItemsByName` from `~/utils/filterPantryItemsByName`.
  */
 export function useSearchPantryItems(query: string) {
   return useQuery({

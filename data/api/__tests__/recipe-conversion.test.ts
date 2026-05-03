@@ -1,4 +1,7 @@
-import { convertDbRecipesToUIRecipesBatch } from "../recipe-conversion";
+import {
+  convertDbRecipesToUIRecipesBatch,
+  convertDbRecipesToUISearchSummaries,
+} from "../recipe-conversion";
 import type { DbRecipeForConversion } from "../recipe-conversion";
 
 // Mock logger
@@ -310,6 +313,37 @@ describe("recipe-conversion", () => {
       const result = convertDbRecipesToUIRecipesBatch([dbRecipe], map);
 
       expect(result[0]!!.tags).toEqual([]);
+    });
+  });
+
+  describe("convertDbRecipesToUISearchSummaries", () => {
+    it("returns empty ingredients and instructions for list rows", () => {
+      const dbRecipe: DbRecipeForConversion = {
+        id: "r1",
+        title: "Soup",
+        description: "Nice",
+        imageUrl: "https://x/img.jpg",
+        prepMinutes: 5,
+        cookMinutes: 10,
+        difficultyStars: 2,
+      };
+      const out = convertDbRecipesToUISearchSummaries([dbRecipe]);
+      expect(out).toHaveLength(1);
+      expect(out[0]!).toMatchObject({
+        id: "r1",
+        title: "Soup",
+        description: "Nice",
+        imageUrl: "https://x/img.jpg",
+        prepMinutes: 5,
+        cookMinutes: 10,
+        difficultyStars: 2,
+      });
+      expect(out[0]!.ingredients).toEqual([]);
+      expect(out[0]!.instructions).toEqual([]);
+    });
+
+    it("handles empty input", () => {
+      expect(convertDbRecipesToUISearchSummaries([])).toEqual([]);
     });
   });
 });

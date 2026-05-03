@@ -17,6 +17,9 @@ jest.mock("~/lib/supabase/supabase-client", () => ({
       signOut: jest.fn(),
       getUser: jest.fn(),
       getSession: jest.fn(),
+      onAuthStateChange: jest.fn(() => ({
+        data: { subscription: { unsubscribe: jest.fn() } },
+      })),
     },
   },
 }));
@@ -35,16 +38,29 @@ jest.mock("~/utils/logger", () => ({
 jest.mock("~/utils/rate-limiter", () => ({
   authRateLimiter: {
     canAttempt: jest.fn(() => true),
+    getResetTime: jest.fn(() => 60_000),
     reset: jest.fn(),
   },
+}));
+
+jest.mock("expo-auth-session", () => ({
+  makeRedirectUri: jest.fn(() => "cookkit://redirect"),
+}));
+
+jest.mock("expo-linking", () => ({
+  createURL: jest.fn(() => "cookkit://"),
+  openURL: jest.fn(async () => {}),
 }));
 
 describe("SupabaseAuthStrategy", () => {
   let authStrategy: SupabaseAuthStrategy;
 
   beforeEach(() => {
-    authStrategy = new SupabaseAuthStrategy();
     jest.clearAllMocks();
+    const { authRateLimiter } = require("~/utils/rate-limiter");
+    authRateLimiter.canAttempt.mockReturnValue(true);
+    authRateLimiter.getResetTime.mockReturnValue(60_000);
+    authStrategy = new SupabaseAuthStrategy();
   });
 
   describe("signInWithEmail", () => {
@@ -239,15 +255,24 @@ describe("SupabaseAuthStrategy", () => {
 
     it("should handle provider unavailable", async () => {
       const { supabase } = require("~/lib/supabase/supabase-client");
-      Object.defineProperty(supabase, "auth", {
-        get: () => undefined,
-        configurable: true,
-      });
+      const originalAuth = supabase.auth;
+      try {
+        Object.defineProperty(supabase, "auth", {
+          get: () => undefined,
+          configurable: true,
+        });
 
-      const result = await authStrategy.signInWithProvider(validOAuthConfig);
+        const result = await authStrategy.signInWithProvider(validOAuthConfig);
 
-      expect(result.success).toBe(false);
-      expect(result.error?.code).toBe("SUPABASE_UNAVAILABLE");
+        expect(result.success).toBe(false);
+        expect(result.error?.code).toBe("SUPABASE_UNAVAILABLE");
+      } finally {
+        Object.defineProperty(supabase, "auth", {
+          value: originalAuth,
+          writable: true,
+          configurable: true,
+        });
+      }
     });
   });
 

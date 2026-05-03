@@ -4,10 +4,10 @@ import { H4, Small } from "~/components/ui/typography";
 import OutlinedImage from "~/components/ui/outlined-image";
 import ShapeContainer from "~/components/Shared/Shapes/ShapeContainer";
 import useColors from "~/hooks/useColor";
-import { useSearchPantryItems } from "~/hooks/queries/usePantryQueries";
+import type { PantryItem } from "~/types/PantryItem";
 import { SearchResultSection, SearchResultRow } from "./SearchResultPrimitives";
 
-type Item = NonNullable<ReturnType<typeof useSearchPantryItems>["data"]>[number];
+type Item = PantryItem;
 
 type IngredientResultItemProps = {
   item: Item;
@@ -51,7 +51,7 @@ function IngredientResultItem({ item, index, isLast, colors }: IngredientResultI
 }
 
 type IngredientResultsProps = {
-  items: ReturnType<typeof useSearchPantryItems>["data"];
+  items: readonly PantryItem[] | undefined;
   colors: ReturnType<typeof useColors>;
 };
 

@@ -69,7 +69,7 @@ rg -n "from \"~/" app/ components/ hooks/
 - `bun test` passes for affected code; extend `__tests__` when Jest covers your change.
 - New screens/routes live under `app/` with patterns from [app/AGENTS.md](app/AGENTS.md), not under legacy `src/screens/`.
 
-## Learned preferences (maintenance)
+## Learned User Preferences
 
 - Include useful **debug output** when sharing command results or repro steps.
 - **Read files before editing**; keep diffs focused on the task.
@@ -78,6 +78,9 @@ rg -n "from \"~/" app/ components/ hooks/
 - Prefer concise, understated UI helper copy for simple empty states; avoid large explanatory cards unless requested.
 - For Reanimated values derived from props/state, prefer `useDerivedValue` over syncing `useSharedValue` in a `useEffect`.
 - Prefer lean PR CI: typecheck/format/tests plus one high-signal dependency audit; run heavier security scans on schedules or protected branches.
+- Voice cooking UI (mic / transcript panel) should default to collapsed; expand only when the user opens it.
+- For pantry-style lists and similar feeds, prefer silent automatic refetch over prominent manual “refresh” prompts when data may be stale.
+- Local pantry/recipe search should feel instant on keystroke; keep filtering and list work cheap enough that typing stays responsive on large offline datasets.
 
 ## Learned Workspace Facts
 
@@ -88,3 +91,7 @@ rg -n "from \"~/" app/ components/ hooks/
 - The recipe cooking Finish action intentionally skips `RateRecipeModal`; complete the recipe directly and return home through the no-rating completion path.
 - Keep the create-ingredient camera pipeline quiet by default: avoid high-volume `[create-camera]` info/profiling logs, but preserve warnings and errors.
 - Until iPad support is ready, App Store iOS builds should stay iPhone-only (`expo.ios.supportsTablet: false` / `TARGETED_DEVICE_FAMILY = 1`).
+- Full-app Supabase ingredient sync must upsert or dedupe by stable IDs; duplicate pantry rows after cold start usually means merges on refetch are wrong.
+- Changing the meal plan should invalidate or refresh grocery-list aggregation so shopping items stay aligned with planned meals.
+- For targeted Jest runs use `bun run test -- …` (package script); plain `bun test -- …` invokes Bun’s native runner and fails on React Native Flow syntax in dependencies.
+- `AuthProvider` from `~/auth` is not mounted in the root layout today; first-run/main-shell entry follows onboarding flags, premium follows RevenueCat, not `ProtectedRoute` / `useAuth` guards—see auth spec in `docs/superpowers/specs/` when wiring sync.

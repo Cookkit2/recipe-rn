@@ -1,7 +1,7 @@
 import "~/global.css";
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { Link, SplashScreen, Stack, useNavigationContainerRef, useRouter } from "expo-router";
-import { Platform } from "react-native";
+import { Platform, View } from "react-native";
 import { PortalHost } from "@rn-primitives/portal";
 import { setAndroidNavigationBar } from "~/lib/android-navigation-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -12,7 +12,7 @@ import { QueryProvider } from "~/store/QueryProvider";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { storage } from "~/data";
 import { ONBOARDING_COMPLETED_KEY, PREF_COLOR_SCHEME_KEY } from "~/constants/storage-keys";
-import Purchases, { LOG_LEVEL } from "react-native-purchases";
+import Purchases, { LOG_LEVEL, type CustomerInfoUpdateListener } from "react-native-purchases";
 import Constants from "expo-constants";
 import { StatusBar } from "expo-status-bar";
 import { isRunningInExpoGo } from "expo";
@@ -32,6 +32,10 @@ import {
   INGREDIENT_EXPIRY_TYPE,
 } from "~/lib/notifications";
 import { initImageCache } from "~/lib/image-cache";
+import { AuthProvider, MockAuthStrategy, SupabaseAuthStrategy } from "~/auth";
+import { TEST_IDS } from "~/constants/test-ids";
+import { IS_E2E } from "~/utils/e2e-flags";
+import { invalidateSubscriptionEntitlementsQuery } from "~/lib/subscription-query-sync";
 
 function useNotificationHandlers(router: ReturnType<typeof useRouter>) {
   // Single handler for ingredient_expiry: deep link to first recipe or pantry
@@ -73,15 +77,19 @@ function useNotificationHandlers(router: ReturnType<typeof useRouter>) {
 }
 
 function useOnboardingCheck(router: ReturnType<typeof useRouter>) {
-  // Check onboarding status on mount
   useEffect(() => {
-    // router.push("/profile/preferences/voice-settings");
     setTimeout(() => {
+      if (IS_E2E) {
+        storage.set(ONBOARDING_COMPLETED_KEY, true);
+        void SplashScreen.hideAsync();
+        return;
+      }
+
       const completed = storage.get<boolean>(ONBOARDING_COMPLETED_KEY);
       if (completed !== true) {
         router.replace("/onboarding");
       }
-      SplashScreen.hideAsync();
+      void SplashScreen.hideAsync();
     }, 0);
   }, [router]);
 }
@@ -193,7 +201,7 @@ function AnimatedStack() {
         }}
       />
       <Stack.Screen
-        name="import-youtube"
+        name="(misc)/import-youtube"
         options={{
           presentation: "card",
           headerShown: true,
@@ -265,7 +273,7 @@ function AnimatedStack() {
       />
       {/* ======== SEARCH ======== */}
       <Stack.Screen
-        name="search"
+        name="(misc)/search"
         options={{
           headerShown: false,
           headerTransparent: true,
@@ -277,7 +285,7 @@ function AnimatedStack() {
         }}
       />
       {/* ======== MISCELLANOUS ======== */}
-      <Stack.Screen name="debug" options={{ headerShown: false }} />
+      <Stack.Screen name="(misc)/debug" options={{ headerShown: false }} />
       <Stack.Screen name="+not-found" />
     </Stack>
   );
@@ -320,7 +328,17 @@ if (sentryDsn) {
 
 export default function RootLayout() {
   usePlatformSpecificSetup();
-  const router = useRouter();
+
+  const authStrategy = useMemo(
+    () =>
+      IS_E2E
+        ? new MockAuthStrategy({
+            delay: 50,
+            preloadUsers: [{ email: "e2e@example.com", password: "ValidPassword123!" }],
+          })
+        : new SupabaseAuthStrategy(),
+    []
+  );
 
   // Register the navigation container with Sentry for automatic route tracking
   const ref = useNavigationContainerRef();
@@ -341,6 +359,8 @@ export default function RootLayout() {
 
   // Defer RevenueCat initialization until the JS thread is idle
   useEffect(() => {
+    let customerInfoListener: CustomerInfoUpdateListener | undefined;
+
     const handle = requestIdleCallback(() => {
       Purchases.setLogLevel(LOG_LEVEL.ERROR);
 
@@ -356,31 +376,42 @@ export default function RootLayout() {
         Purchases.configure({ apiKey: appleApiKey });
       } else if (Platform.OS === "android" && googleApiKey) {
         Purchases.configure({ apiKey: googleApiKey });
+      } else {
+        return;
       }
+
+      customerInfoListener = () => {
+        invalidateSubscriptionEntitlementsQuery();
+      };
+      Purchases.addCustomerInfoUpdateListener(customerInfoListener);
     });
 
-    return () => cancelIdleCallback(handle);
+    return () => {
+      cancelIdleCallback(handle);
+      if (customerInfoListener) {
+        Purchases.removeCustomerInfoUpdateListener(customerInfoListener);
+      }
+    };
   }, []);
 
   return (
     <GestureHandlerRootView className="flex-1 bg-background">
-      <SafeAreaProvider>
-        <QueryProvider>
-          {/* <AuthProvider
-              strategy={new SupabaseAuthStrategy()}
-              autoInitialize={true}
-            > */}
-          <NotificationProvider>
-            <KeyboardProvider>
-              <StatusBar style="auto" />
-              <AnimatedStack />
-              <Toaster visibleToasts={2} position="bottom-center" offset={80} />
-              <PortalHost />
-            </KeyboardProvider>
-          </NotificationProvider>
-          {/* </AuthProvider> */}
-        </QueryProvider>
-      </SafeAreaProvider>
+      <View testID={TEST_IDS.appRoot} collapsable={false} style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <QueryProvider>
+            <AuthProvider strategy={authStrategy} autoInitialize={true}>
+              <NotificationProvider>
+                <KeyboardProvider>
+                  <StatusBar style="auto" />
+                  <AnimatedStack />
+                  <Toaster visibleToasts={2} position="bottom-center" offset={80} />
+                  <PortalHost />
+                </KeyboardProvider>
+              </NotificationProvider>
+            </AuthProvider>
+          </QueryProvider>
+        </SafeAreaProvider>
+      </View>
     </GestureHandlerRootView>
   );
 }

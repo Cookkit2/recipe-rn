@@ -11,7 +11,8 @@ import {
 import { useMemo } from "react";
 
 /**
- * Hook to fetch all recipes
+ * Hook to fetch all recipes (summary rows: title, times, tags, etc.; empty
+ * `ingredients` / `instructions`). Use `useRecipe(id)` for full detail.
  */
 export function useRecipes() {
   return useQuery({
@@ -65,6 +66,17 @@ export interface RecipeFilters {
   difficulty?: number;
 }
 
+function recipeFiltersApply(filters?: RecipeFilters): boolean {
+  if (!filters) return false;
+  if (filters.tags && filters.tags.length > 0) return true;
+  if (filters.difficulty !== undefined) return true;
+  if (filters.maxTotalTime !== undefined) return true;
+  if (filters.minTotalTime !== undefined) return true;
+  if (filters.maxPrepTime !== undefined) return true;
+  if (filters.maxCookTime !== undefined) return true;
+  return false;
+}
+
 /**
  * Hook to search recipes
  */
@@ -72,7 +84,7 @@ export function useSearchRecipes(searchTerm: string, filters?: RecipeFilters) {
   return useQuery({
     queryKey: recipeQueryKeys.search(searchTerm, filters),
     queryFn: () => recipeApi.searchRecipes(searchTerm, filters),
-    enabled: searchTerm.length > 0, // Only run query if there's a search term
+    enabled: searchTerm.length > 0 || recipeFiltersApply(filters),
     staleTime: 2 * 60 * 1000, // 2 minutes for search results
   });
 }

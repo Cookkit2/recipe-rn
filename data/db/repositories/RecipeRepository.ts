@@ -454,12 +454,25 @@ export class RecipeRepository extends BaseRepository<Recipe> {
       // This avoids "Cannot update a record with pending changes" errors
       const batchOps: import("@nozbe/watermelondb").Model[] = [];
 
-      // Delete all existing local recipes that need updating
+      // Delete all existing local recipes that need updating.
+      // WatermelonDB does not cascade deletes: destroying only the parent recipe leaves
+      // `recipe_step` / `recipe_ingredient` rows with the same recipe_id, so the subsequent
+      // `prepareSyncSingleRecipe` insert duplicates steps and ingredients on every app open.
       for (const supabaseRecipe of existingRecipesToUpdate) {
         const recipeId = supabaseRecipe.recipe.id;
         const localRecipe = existingRecipesMap.get(recipeId);
         if (localRecipe) {
           try {
+            const [existingSteps, existingIngredients] = await Promise.all([
+              localRecipe.steps.fetch(),
+              localRecipe.ingredients.fetch(),
+            ]);
+            for (const step of existingSteps) {
+              batchOps.push(step.prepareDestroyPermanently());
+            }
+            for (const ingredient of existingIngredients) {
+              batchOps.push(ingredient.prepareDestroyPermanently());
+            }
             batchOps.push(localRecipe.prepareDestroyPermanently());
           } catch (error) {
             log.error(`Failed to prepare destroy for recipe ${recipeId}:`, error);

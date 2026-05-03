@@ -5,7 +5,7 @@ import { Text } from "~/components/ui/text";
 import { Button } from "~/components/ui/button";
 import { AuthContainer, AuthCard, AuthInput, SocialAuthButton } from "~/components/auth";
 import { useAuth } from "~/auth";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { TEST_IDS } from "~/constants/test-ids";
 
 export default function SignUpScreen() {
   const [email, setEmail] = useState("");
@@ -18,7 +18,6 @@ export default function SignUpScreen() {
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
 
   const auth = useAuth();
-  const { bottom: pb } = useSafeAreaInsets();
 
   const getPasswordStrength = (password: string) => {
     let strength = 0;
@@ -186,11 +185,12 @@ export default function SignUpScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <AuthContainer>
+        <AuthContainer testID={TEST_IDS.auth.signUpScreen}>
           <AuthCard title="Create Account" subtitle="Join us to start your cooking journey">
             <View className="space-y-4">
               {/* Email Input */}
               <AuthInput
+                testID={TEST_IDS.auth.emailInput}
                 label="Email"
                 value={email}
                 onChangeText={setEmail}
@@ -203,6 +203,7 @@ export default function SignUpScreen() {
               {/* Password Input */}
               <View>
                 <AuthInput
+                  testID={TEST_IDS.auth.passwordInput}
                   label="Password"
                   value={password}
                   onChangeText={setPassword}
@@ -245,6 +246,7 @@ export default function SignUpScreen() {
 
               {/* Confirm Password Input */}
               <AuthInput
+                testID={TEST_IDS.auth.confirmPasswordInput}
                 label="Confirm Password"
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
@@ -256,6 +258,7 @@ export default function SignUpScreen() {
 
               {/* Sign Up Button */}
               <Button
+                testID={TEST_IDS.auth.signUpButton}
                 onPress={handleSignUp}
                 disabled={isLoading || !!socialLoading}
                 className="w-full"

@@ -225,8 +225,20 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
     if (!supabase)
       return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
 
+    const email = credentials.email?.trim() ?? "";
+    if (!email) {
+      return this.createErrorResult("VALIDATION_ERROR", "Email is required", false);
+    }
+    if (!credentials.password || credentials.password.length < 8) {
+      return this.createErrorResult(
+        "VALIDATION_ERROR",
+        "Password must be at least 8 characters",
+        false
+      );
+    }
+
     // Rate limiting check
-    const identifier = credentials.email?.toLowerCase().trim() || "anonymous";
+    const identifier = email.toLowerCase();
     if (!authRateLimiter.canAttempt(identifier)) {
       const resetTime = authRateLimiter.getResetTime(identifier);
       const resetMinutes = Math.ceil(resetTime / 60000);
@@ -279,6 +291,9 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   async signInWithProvider(config: SocialAuthConfig): Promise<AuthResult> {
     if (!supabase)
       return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
+    if (!supabase.auth) {
+      return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
+    }
     try {
       const scheme = Linking.createURL("").split(":")[0] || "cookkit";
       const redirectUrl = config.redirectUrl || ExpoAuthSession.makeRedirectUri({ scheme });

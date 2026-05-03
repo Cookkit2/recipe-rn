@@ -5,10 +5,8 @@ import type GroceryItemCheck from "~/data/db/models/GroceryItemCheck";
 import type Recipe from "~/data/db/models/Recipe";
 import { MealPlanRepository } from "~/data/db/repositories/MealPlanRepository";
 import { GroceryItemCheckRepository } from "~/data/db/repositories/GroceryItemCheckRepository";
-import { StockRepository } from "~/data/db/repositories/StockRepository"; // Added
 import { log } from "~/utils/logger";
 import { pantryApi } from "~/data/api/pantryApi";
-import { isIngredientMatch } from "~/utils/ingredient-matching";
 import { withErrorHandling, withErrorLogging, logAndWrapResult } from "~/utils/api-error-handler";
 import type { AppResult } from "~/utils/result";
 import type { AppError } from "~/types/AppError";
@@ -16,7 +14,6 @@ import type { AppError } from "~/types/AppError";
 // Lazy initialization of repositories to avoid timing issues
 let _mealPlanRepository: MealPlanRepository | null = null;
 let _groceryItemCheckRepository: GroceryItemCheckRepository | null = null;
-let _stockRepository: StockRepository | null = null; // Added
 
 function getMealPlanRepository(): MealPlanRepository {
   if (!_mealPlanRepository) {
@@ -30,13 +27,6 @@ function getGroceryItemCheckRepository(): GroceryItemCheckRepository {
     _groceryItemCheckRepository = new GroceryItemCheckRepository();
   }
   return _groceryItemCheckRepository;
-}
-
-function getStockRepository(): StockRepository {
-  if (!_stockRepository) {
-    _stockRepository = new StockRepository();
-  }
-  return _stockRepository;
 }
 
 export interface MealPlanItemWithRecipe {
@@ -261,38 +251,13 @@ export const mealPlanApi = {
       // 2. Fetch recipe data (Read)
       const result = await this.getMealPlanItemByRecipeId(recipeId);
 
-      // Post-processing: Check against pantry and mark existing items as deleted
-      if (result && result.recipe && result.recipe.ingredients) {
-        try {
-          // Optimization: Use efficient query method instead of full pantry fetch
-          const stockRepo = getStockRepository();
-          const stockItems = await stockRepo.getAllWithSynonyms();
-
-          const itemsToHide: { name: string; isDeleted: boolean }[] = [];
-
-          for (const ingredient of result.recipe.ingredients) {
-            const baseServings = result.recipe.servings || 1;
-            const neededQuantity = (ingredient.quantity / baseServings) * result.servings;
-
-            const matchingStock = stockItems.find((p) =>
-              isIngredientMatch(p.name, ingredient.name, p.synonyms)
-            );
-
-            if (matchingStock) {
-              // Check if we have enough
-              if (matchingStock.quantity >= neededQuantity) {
-                itemsToHide.push({ name: ingredient.name, isDeleted: true });
-              }
-            }
-          }
-
-          // Execute batch write if needed
-          if (itemsToHide.length > 0) {
-            await this.setGroceryItemsDeletedBatch(itemsToHide);
-          }
-        } catch (err) {
-          log.warn("⚠️ Failed to auto-hide pantry items:", err);
-        }
+      if (result?.recipe?.ingredients.length) {
+        await this.setGroceryItemsDeletedBatch(
+          result.recipe.ingredients.map((ingredient) => ({
+            name: ingredient.name,
+            isDeleted: false,
+          }))
+        );
       }
 
       return result;
@@ -326,32 +291,13 @@ export const mealPlanApi = {
 
       const result = await this.getMealPlanItemByRecipeId(recipeId);
 
-      if (result && result.recipe && result.recipe.ingredients) {
-        try {
-          const stockRepo = getStockRepository();
-          const stockItems = await stockRepo.getAllWithSynonyms();
-
-          const itemsToHide: { name: string; isDeleted: boolean }[] = [];
-
-          for (const ingredient of result.recipe.ingredients) {
-            const baseServings = result.recipe.servings || 1;
-            const neededQuantity = (ingredient.quantity / baseServings) * result.servings;
-
-            const matchingStock = stockItems.find((p) =>
-              isIngredientMatch(p.name, ingredient.name, p.synonyms)
-            );
-
-            if (matchingStock && matchingStock.quantity >= neededQuantity) {
-              itemsToHide.push({ name: ingredient.name, isDeleted: true });
-            }
-          }
-
-          if (itemsToHide.length > 0) {
-            await this.setGroceryItemsDeletedBatch(itemsToHide);
-          }
-        } catch (err) {
-          log.warn("⚠️ Failed to auto-hide pantry items:", err);
-        }
+      if (result?.recipe?.ingredients.length) {
+        await this.setGroceryItemsDeletedBatch(
+          result.recipe.ingredients.map((ingredient) => ({
+            name: ingredient.name,
+            isDeleted: false,
+          }))
+        );
       }
 
       return result;

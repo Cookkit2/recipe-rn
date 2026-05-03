@@ -13,6 +13,12 @@
     "typecheck": "tsc --noEmit",
     "lint": "prettier --check . && tsc --noEmit",
     "lint:fix": "prettier --write .",
+    "e2e:build:ios": "EXPO_PUBLIC_E2E=true detox build -c ios.sim.debug",
+    "e2e:test:ios": "EXPO_PUBLIC_E2E=true detox test -c ios.sim.debug",
+    "e2e:ios": "bun run e2e:build:ios && bun run e2e:test:ios",
+    "e2e:build:ios:release": "EXPO_PUBLIC_E2E=true detox build -c ios.sim.release",
+    "e2e:test:ios:release": "EXPO_PUBLIC_E2E=true detox test -c ios.sim.release",
+    "e2e:ios:release": "bun run e2e:build:ios:release && bun run e2e:test:ios:release",
     "prepare": "husky"
   },
   "dependencies": {
@@ -121,11 +127,15 @@
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",
+    "@config-plugins/detox": "^11.0.0",
     "@testing-library/react-hooks": "^8.0.1",
     "@testing-library/react-native": "^13.3.3",
+    "@types/detox": "^18.1.3",
     "@types/jest": "29.5.14",
     "@types/jwt-encode": "^1.0.3",
     "@types/react": "~19.2.10",
+    "babel-jest": "29.7.0",
+    "detox": "^20.51.0",
     "husky": "^9.1.7",
     "jest-expo": "^55.0.16",
     "prettier": "^3.6.2",

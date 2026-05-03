@@ -20,8 +20,8 @@ export interface VoiceCookingSettingsType {
 }
 
 const DEFAULT_SETTINGS: VoiceCookingSettingsType = {
-  enabled: true,
-  autoReadSteps: true,
+  enabled: false,
+  autoReadSteps: false,
   speechRate: 0.9,
   speechPitch: 1.0,
   language: "en-US",
