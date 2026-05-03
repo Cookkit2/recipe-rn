@@ -1,4 +1,5 @@
 import { Pressable, View, Dimensions } from "react-native";
+import { TEST_IDS } from "~/constants/test-ids";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import RecipeButton from "~/components/Pantry/RecipeButton";
 import Animated, {
@@ -93,15 +94,15 @@ export default function PantryWrapper() {
   const containerStyle = useAnimatedStyle(() => {
     return {
       borderBottomLeftRadius: withTiming(
-        isRecipeOpen ? borderRadius : 0,
+        isRecipeOpen ? borderRadius - 8 : 0,
         CURVES["expressive.default.spatial"]
       ),
       borderBottomRightRadius: withTiming(
-        isRecipeOpen ? borderRadius : 0,
+        isRecipeOpen ? borderRadius - 8 : 0,
         CURVES["expressive.default.spatial"]
       ),
-      borderTopRightRadius: isRecipeOpen ? borderRadius : 0,
-      borderTopLeftRadius: isRecipeOpen ? borderRadius : 0,
+      borderTopRightRadius: isRecipeOpen ? borderRadius - 8 : 0,
+      borderTopLeftRadius: isRecipeOpen ? borderRadius - 8 : 0,
       marginHorizontal: withTiming(isRecipeOpen ? 8 : 0, CURVES["expressive.default.spatial"]),
       marginTop: withSpring(isRecipeOpen ? 8 : 0, SPRING_CONFIG),
       // Keep spacing in sync with the sheet height, but avoid re-starting a spring on every frame
@@ -126,30 +127,32 @@ export default function PantryWrapper() {
   }, [collapsedHeight]);
 
   return (
-    <Animated.View className="relative flex-1 bg-black">
-      <AnimatedPressable
-        className="relative flex-1 bg-background overflow-hidden"
-        style={containerStyle}
-        onPress={closeRecipe}
-      >
-        <IngredientLists />
-      </AnimatedPressable>
-
-      <RecipeButton />
-
-      <GestureDetector gesture={panGesture}>
-        <Animated.View
-          className="absolute left-0 right-0 h-full"
-          pointerEvents={isRecipeOpen ? "auto" : "none"}
-          style={[recipeGroupStyle]}
+    <View testID={TEST_IDS.home.screen} collapsable={false} style={{ flex: 1 }}>
+      <Animated.View className="relative flex-1 bg-black rounded-xl">
+        <AnimatedPressable
+          className="relative flex-1 bg-background overflow-hidden"
+          style={containerStyle}
+          onPress={closeRecipe}
         >
-          <View className="bg-muted/80 h-1 w-16 rounded-full self-center mb-2" />
-          {/* Invisible touch area overlay for easier grabbing */}
-          <View className="absolute top-0 left-0 right-0 h-12" />
-          <RecipeCategoryButtonGroup />
-          <RecipeLists />
-        </Animated.View>
-      </GestureDetector>
-    </Animated.View>
+          <IngredientLists />
+        </AnimatedPressable>
+
+        <RecipeButton />
+
+        <GestureDetector gesture={panGesture}>
+          <Animated.View
+            className="absolute left-0 right-0 h-full"
+            pointerEvents={isRecipeOpen ? "auto" : "none"}
+            style={[recipeGroupStyle]}
+          >
+            <View className="bg-muted/80 h-1 w-16 rounded-full self-center mb-2" />
+            {/* Invisible touch area overlay for easier grabbing */}
+            <View className="absolute top-0 left-0 right-0 h-12" />
+            <RecipeCategoryButtonGroup />
+            <RecipeLists />
+          </Animated.View>
+        </GestureDetector>
+      </Animated.View>
+    </View>
   );
 }

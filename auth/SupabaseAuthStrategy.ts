@@ -14,6 +14,7 @@ import * as Linking from "expo-linking";
 import { APP_CONFIG } from "~/lib/constants";
 import { supabase } from "~/lib/supabase/supabase-client";
 import { log } from "~/utils/logger";
+import { authRateLimiter } from "~/utils/rate-limiter";
 
 /**
  * Supabase authentication strategy implementation
@@ -23,9 +24,43 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   private currentUser: User | null = null;
   private currentSession: AuthSession | null = null;
 
+  // Allowed schemes and domains for OAuth redirects
+  private readonly ALLOWED_SCHEMES = ["cookkit", "recipe-app", "exp", "https"];
+  private readonly ALLOWED_DOMAINS = ["cookkit.app", "auth.cookkit.app"];
+
   constructor() {
     super();
     this.setupAuthListener();
+  }
+
+  /**
+   * Validate OAuth redirect URL against whitelist
+   */
+  private validateRedirectUrl(url: string): boolean {
+    try {
+      const urlObj = new URL(url);
+      const scheme = urlObj.protocol.replace(":", "");
+
+      // Check if scheme is allowed
+      if (!this.ALLOWED_SCHEMES.includes(scheme)) {
+        log.error("[SupabaseAuthStrategy] Invalid redirect scheme:", scheme);
+        return false;
+      }
+
+      // For HTTPS, validate domain
+      if (scheme === "https") {
+        const domain = urlObj.hostname;
+        if (!this.ALLOWED_DOMAINS.includes(domain)) {
+          log.error("[SupabaseAuthStrategy] Invalid redirect domain:", domain);
+          return false;
+        }
+      }
+
+      return true;
+    } catch (error) {
+      log.error("[SupabaseAuthStrategy] Failed to parse redirect URL:", error);
+      return false;
+    }
   }
 
   /**
@@ -104,11 +139,12 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
 
   /**
    * Handle Supabase auth errors
+   * Sanitizes error messages to prevent information disclosure
    */
   private handleSupabaseError(error: AuthError): AuthResult {
     const errorCode = error.message || "UNKNOWN_ERROR";
     let retryable = true;
-    let friendlyMessage = error.message;
+    let friendlyMessage = "An authentication error occurred"; // Default generic message
 
     // Map common Supabase errors to our error codes
     if (error.message?.includes("Invalid login credentials")) {
@@ -124,6 +160,13 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
       friendlyMessage = "Too many attempts. Please try again later";
       retryable = true;
     }
+
+    // Log detailed error for debugging (server-side only)
+    log.error("[SupabaseAuthStrategy] Auth error:", {
+      code: errorCode,
+      message: error.message,
+      retryable,
+    });
 
     return this.createErrorResult(errorCode, friendlyMessage, retryable, error);
   }
@@ -181,6 +224,31 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   async signInWithEmail(credentials: SignInCredentials): Promise<AuthResult> {
     if (!supabase)
       return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
+
+    const email = credentials.email?.trim() ?? "";
+    if (!email) {
+      return this.createErrorResult("VALIDATION_ERROR", "Email is required", false);
+    }
+    if (!credentials.password || credentials.password.length < 8) {
+      return this.createErrorResult(
+        "VALIDATION_ERROR",
+        "Password must be at least 8 characters",
+        false
+      );
+    }
+
+    // Rate limiting check
+    const identifier = email.toLowerCase();
+    if (!authRateLimiter.canAttempt(identifier)) {
+      const resetTime = authRateLimiter.getResetTime(identifier);
+      const resetMinutes = Math.ceil(resetTime / 60000);
+      return this.createErrorResult(
+        "TOO_MANY_ATTEMPTS",
+        `Too many sign-in attempts. Please try again later.`,
+        false
+      );
+    }
+
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: credentials.email,
@@ -197,6 +265,9 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
 
         this.currentUser = user;
         this.currentSession = session;
+
+        // Reset rate limit on successful login
+        authRateLimiter.reset(identifier);
 
         return this.createSuccessResult(user, session);
       }
@@ -220,14 +291,26 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   async signInWithProvider(config: SocialAuthConfig): Promise<AuthResult> {
     if (!supabase)
       return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
+    if (!supabase.auth) {
+      return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
+    }
     try {
-      const scheme = Linking.createURL("").split(":")[0] || "recipe-app";
-      const redirectUrl = ExpoAuthSession.makeRedirectUri({ scheme });
+      const scheme = Linking.createURL("").split(":")[0] || "cookkit";
+      const redirectUrl = config.redirectUrl || ExpoAuthSession.makeRedirectUri({ scheme });
+
+      // Validate redirect URL for security
+      if (!this.validateRedirectUrl(redirectUrl)) {
+        return this.createErrorResult(
+          "INVALID_REDIRECT",
+          "Invalid redirect URL. Please contact support if this issue persists.",
+          false
+        );
+      }
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: config.provider,
         options: {
-          redirectTo: config.redirectUrl || redirectUrl,
+          redirectTo: redirectUrl,
           scopes: config.scopes?.join(" "),
         },
       });
@@ -291,6 +374,19 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   async signUpWithEmail(credentials: SignInCredentials): Promise<AuthResult> {
     if (!supabase)
       return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
+
+    // Rate limiting check
+    const identifier = credentials.email?.toLowerCase().trim() || "anonymous";
+    if (!authRateLimiter.canAttempt(identifier)) {
+      const resetTime = authRateLimiter.getResetTime(identifier);
+      const resetMinutes = Math.ceil(resetTime / 60000);
+      return this.createErrorResult(
+        "TOO_MANY_ATTEMPTS",
+        `Too many sign-up attempts. Please try again later.`,
+        false
+      );
+    }
+
     try {
       const { data, error } = await supabase.auth.signUp({
         email: credentials.email,
@@ -304,6 +400,9 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
       if (data.user) {
         // Check if email confirmation is required
         if (!data.session && data.user && !data.user.email_confirmed_at) {
+          // Reset rate limit on successful registration
+          authRateLimiter.reset(identifier);
+
           return {
             success: true,
             user: this.mapSupabaseUserToUser(data.user),

@@ -5,14 +5,45 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "APP_ENV": "development"
+      }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "APP_ENV": "staging"
+      },
+      "ios": {
+        "bundleIdentifier": "com.cookkit.app.staging"
+      },
+      "android": {
+        "applicationId": "com.cookkit.app.staging"
+      }
     },
-    "production": {}
+    "production": {
+      "env": {
+        "APP_ENV": "production"
+      },
+      "ios": {
+        "autoIncrement": true
+      },
+      "android": {
+        "autoIncrement": true
+      }
+    }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "appleId": "${APPLE_ID}",
+        "ascAppId": "${ASC_APP_ID}",
+        "appleTeamId": "${APPLE_TEAM_ID}"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account.json"
+      }
+    }
   }
 }

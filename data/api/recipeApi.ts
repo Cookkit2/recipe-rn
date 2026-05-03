@@ -26,7 +26,10 @@ import {
   parseTailoredRecipeResponse,
   convertDbTailoredRecipeToUIRecipe,
 } from "~/lib/tailored-recipe/helpers";
-import { convertDbRecipesToUIRecipesBatch } from "./recipe-conversion";
+import {
+  convertDbRecipesToUIRecipesBatch,
+  convertDbRecipesToUISearchSummaries,
+} from "./recipe-conversion";
 import {
   type RecipeRankingStrategy,
   type RankingContext,
@@ -55,7 +58,8 @@ import type { AppError } from "~/types/AppError";
  */
 export const recipeApi = {
   /**
-   * Fetch all recipes from database
+   * Fetch all recipes from the local database as lightweight list rows (no steps/ingredients).
+   * Full detail for a recipe: `getRecipeById` / `useRecipe`.
    */
   async fetchAllRecipes(): Promise<Recipe[]> {
     return withErrorLogging(async () => {
@@ -63,22 +67,8 @@ export const recipeApi = {
         throw new Error("DatabaseFacade is undefined - import failed");
       }
 
-      // Run health check
-      const isHealthy = await databaseFacade.isHealthy();
-      if (!isHealthy) {
-        throw new Error("Database health check failed");
-      }
-
       const dbRecipes = await databaseFacade.getAllRecipes();
-
-      // Use batch query to get all recipe details in one call
-      const recipeIds = dbRecipes.map((r) => r.id);
-      const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
-
-      // Use batch conversion to avoid N+1 queries
-      const uiRecipes = convertDbRecipesToUIRecipesBatch(dbRecipes, recipeDetailsMap);
-
-      return uiRecipes;
+      return convertDbRecipesToUISearchSummaries(dbRecipes);
     }, "Error fetching all recipes");
   },
 
@@ -91,18 +81,107 @@ export const recipeApi = {
         throw new Error("DatabaseFacade is undefined - import failed");
       }
 
+      const dbRecipes = await databaseFacade.getAllRecipes();
+      return convertDbRecipesToUISearchSummaries(dbRecipes);
+    }, "Error fetching all recipes");
+  },
+
+  /**
+   * Fetch recipes with pagination for better performance
+   * @param page - Page number (0-indexed)
+   * @param pageSize - Number of recipes per page (default: 20)
+   * @returns Paginated recipe list with metadata
+   */
+  async fetchRecipesPaginated(
+    page: number = 0,
+    pageSize: number = 20
+  ): Promise<{
+    recipes: Recipe[];
+    hasMore: boolean;
+    nextPage: number | null;
+    totalCount: number;
+  }> {
+    return withErrorLogging(async () => {
+      if (!databaseFacade) {
+        throw new Error("DatabaseFacade is undefined - import failed");
+      }
+
       const isHealthy = await databaseFacade.isHealthy();
       if (!isHealthy) {
         throw new Error("Database health check failed");
       }
 
-      const dbRecipes = await databaseFacade.getAllRecipes();
+      // Get paginated recipes from database
+      const offset = page * pageSize;
+      const dbRecipes = await databaseFacade.getRecipesPaginated(offset, pageSize);
+
+      // Get total count for pagination metadata
+      const totalCount = await databaseFacade.getRecipesCount();
+
+      // Use batch query to get recipe details in one call
+      const recipeIds = dbRecipes.map((r) => r.id);
+      const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
+
+      // Use batch conversion to avoid N+1 queries
+      const uiRecipes = convertDbRecipesToUIRecipesBatch(dbRecipes, recipeDetailsMap);
+
+      const hasMore = offset + dbRecipes.length < totalCount;
+      const nextPage = hasMore ? page + 1 : null;
+
+      return {
+        recipes: uiRecipes,
+        hasMore,
+        nextPage,
+        totalCount,
+      };
+    }, "Error fetching paginated recipes");
+  },
+
+  /**
+   * Result-based variant of fetchRecipesPaginated (does not throw).
+   */
+  async fetchRecipesPaginatedResult(
+    page: number = 0,
+    pageSize: number = 20
+  ): Promise<
+    AppResult<
+      {
+        recipes: Recipe[];
+        hasMore: boolean;
+        nextPage: number | null;
+        totalCount: number;
+      },
+      AppError
+    >
+  > {
+    return logAndWrapResult(async () => {
+      if (!databaseFacade) {
+        throw new Error("DatabaseFacade is undefined - import failed");
+      }
+
+      const isHealthy = await databaseFacade.isHealthy();
+      if (!isHealthy) {
+        throw new Error("Database health check failed");
+      }
+
+      const offset = page * pageSize;
+      const dbRecipes = await databaseFacade.getRecipesPaginated(offset, pageSize);
+      const totalCount = await databaseFacade.getRecipesCount();
+
       const recipeIds = dbRecipes.map((r) => r.id);
       const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
       const uiRecipes = convertDbRecipesToUIRecipesBatch(dbRecipes, recipeDetailsMap);
 
-      return uiRecipes;
-    }, "Error fetching all recipes");
+      const hasMore = offset + dbRecipes.length < totalCount;
+      const nextPage = hasMore ? page + 1 : null;
+
+      return {
+        recipes: uiRecipes,
+        hasMore,
+        nextPage,
+        totalCount,
+      };
+    }, "Error fetching paginated recipes");
   },
 
   /**
@@ -166,12 +245,7 @@ export const recipeApi = {
           difficulty: filters?.difficulty,
         });
 
-        // Use batch query to get all recipe details in one call
-        const recipeIds = dbRecipes.map((r) => r.id);
-        const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
-
-        // Use batch conversion to avoid N+1 queries
-        return convertDbRecipesToUIRecipesBatch(dbRecipes, recipeDetailsMap);
+        return convertDbRecipesToUISearchSummaries(dbRecipes);
       },
       "Error searching recipes",
       []
@@ -202,9 +276,7 @@ export const recipeApi = {
         difficulty: filters?.difficulty,
       });
 
-      const recipeIds = dbRecipes.map((r) => r.id);
-      const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
-      return convertDbRecipesToUIRecipesBatch(dbRecipes, recipeDetailsMap);
+      return convertDbRecipesToUISearchSummaries(dbRecipes);
     }, "Error searching recipes");
   },
 

@@ -95,3 +95,27 @@ export const convertDbRecipesToUIRecipesBatch = (
 
   return result;
 };
+
+/**
+ * Lightweight list rows for search: no steps/ingredients fetch.
+ * Matches fields used by `RecipeResults` and satisfies `Recipe` with empty arrays.
+ */
+export const convertDbRecipesToUISearchSummaries = (
+  dbRecipes: ReadonlyArray<DbRecipeForConversion>
+): Recipe[] => {
+  return dbRecipes.map((r) => ({
+    id: r.id,
+    title: r.title,
+    description: r.description ?? "",
+    imageUrl: r.imageUrl ?? "",
+    prepMinutes: r.prepMinutes ?? undefined,
+    cookMinutes: r.cookMinutes ?? undefined,
+    difficultyStars: r.difficultyStars ?? undefined,
+    servings: r.servings ?? undefined,
+    sourceUrl: r.sourceUrl ?? undefined,
+    calories: r.calories ?? undefined,
+    tags: r.tags ?? undefined,
+    ingredients: [],
+    instructions: [],
+  }));
+};

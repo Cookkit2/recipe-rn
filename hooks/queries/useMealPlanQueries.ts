@@ -178,6 +178,9 @@ export function useAddToMealPlan() {
         queryKey: mealPlanQueryKeys.count(),
       });
       queryClient.invalidateQueries({
+        queryKey: ["grocery_attributes"],
+      });
+      queryClient.invalidateQueries({
         queryKey: mealPlanQueryKeys.isInPlan(recipeId),
         exact: true,
       });

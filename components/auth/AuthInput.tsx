@@ -16,6 +16,7 @@ interface AuthInputProps {
   error?: string;
   className?: string;
   disabled?: boolean;
+  testID?: string;
 }
 
 export function AuthInput({
@@ -30,6 +31,7 @@ export function AuthInput({
   error,
   className,
   disabled = false,
+  testID,
 }: AuthInputProps) {
   const [isSecureTextVisible, setIsSecureTextVisible] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -43,6 +45,7 @@ export function AuthInput({
       <View className="relative">
         <TextInput
           accessibilityLabel={label}
+          testID={testID}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}

@@ -1,10 +1,11 @@
 import { setStatusBarStyle } from "expo-status-bar";
 import Purchases from "react-native-purchases";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
+import { invalidateSubscriptionEntitlementsQuery } from "~/lib/subscription-query-sync";
 import { log } from "./logger";
 
-// Shared entitlement identifier constant
-const ENTITLEMENT_IDENTIFIER = "Cookkit Pro";
+// Must match RevenueCat dashboard entitlement identifier (see customerInfo.entitlements.active)
+const ENTITLEMENT_IDENTIFIER = "Pro";
 
 export const isValidSubscription = async () => {
   try {
@@ -25,11 +26,14 @@ export async function presentPaywall(): Promise<boolean> {
 
   switch (paywallResult) {
     case PAYWALL_RESULT.NOT_PRESENTED:
+      invalidateSubscriptionEntitlementsQuery();
+      return false;
     case PAYWALL_RESULT.ERROR:
     case PAYWALL_RESULT.CANCELLED:
       return false;
     case PAYWALL_RESULT.PURCHASED:
     case PAYWALL_RESULT.RESTORED:
+      invalidateSubscriptionEntitlementsQuery();
       return true;
     default:
       return false;
@@ -42,12 +46,13 @@ export async function presentPaywallIfNeeded(): Promise<boolean> {
     const customerInfo = await Purchases.getCustomerInfo();
     log.info("presentPaywallIfNeeded - Customer Info:", customerInfo);
 
-    // Check if user has active "Cookkit Pro" entitlement
+    // Check if user has active Pro entitlement
     const hasActiveSubscription = customerInfo.entitlements.active[ENTITLEMENT_IDENTIFIER];
 
     if (hasActiveSubscription) {
       // User already has a valid subscription, no need to show paywall
       log.info("User already has active subscription, skipping paywall");
+      invalidateSubscriptionEntitlementsQuery();
       return true;
     }
 
@@ -66,6 +71,7 @@ export async function presentPaywallIfNeeded(): Promise<boolean> {
     switch (paywallResult) {
       case PAYWALL_RESULT.NOT_PRESENTED:
         log.info("Paywall not presented");
+        invalidateSubscriptionEntitlementsQuery();
         return false;
       case PAYWALL_RESULT.ERROR:
         log.error("Paywall error");
@@ -75,9 +81,11 @@ export async function presentPaywallIfNeeded(): Promise<boolean> {
         return false;
       case PAYWALL_RESULT.PURCHASED:
         log.info("User purchased subscription");
+        invalidateSubscriptionEntitlementsQuery();
         return true;
       case PAYWALL_RESULT.RESTORED:
         log.info("User restored subscription");
+        invalidateSubscriptionEntitlementsQuery();
         return true;
       default:
         log.warn("Unknown paywall result:", paywallResult);

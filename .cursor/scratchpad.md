@@ -15,6 +15,11 @@ This feature will help users plan their shopping trips efficiently by showing th
 - The user wants PR #389 investigated because several CI checks are failing after the Bun migration and workflow edits.
 - The goal is to identify true root failures, decide whether the current CI surface is appropriate for each PR, and avoid spending time fixing noisy or duplicated gates before agreeing on the desired CI shape.
 
+2026-05-03 Detox E2E planning note:
+
+- The user asked to execute the approved Detox E2E testing design, but the linked document is a design/spec rather than a bite-sized implementation plan.
+- The selected next step is to write a detailed implementation plan first, then execute it from a project-local `.worktrees/` worktree.
+
 ---
 
 ## Key Challenges and Analysis
@@ -159,6 +164,9 @@ The core intelligence of this feature:
 - [x] 2026-05-03: Triage PR #389 CI failures and choose a lean PR/merge CI policy.
 - [ ] 2026-05-03: Execute lean PR CI plan from `docs/superpowers/plans/2026-05-03-lean-pr-ci.md`.
 - [x] 2026-05-03: Remove noisy create-camera pipeline info/profiling logs while keeping warnings and errors.
+- [x] 2026-05-03: Create detailed Detox E2E implementation plan from approved design.
+- [x] 2026-05-03: Make voice cooking default to closed/off.
+- [x] 2026-05-03: Fix grocery list not reflecting newly needed quantities after meal-plan updates.
 
 ---
 
@@ -241,6 +249,19 @@ All phases have been implemented. The grocery list feature is now ready for test
 - Removed high-volume create-camera `log.info` and segmentation/classification profiling output from the create ingredient camera pipeline.
 - Kept warning/error logs for capture, gallery picker, model preload, segmentation, retry, and processing failures so real debugging signals remain visible.
 - Verification: no remaining `log.info("[create-camera] ...")` or `[Profiling]` logs in TypeScript/TSX files; focused Prettier check passed; `bun run typecheck` passed; IDE lints report no errors for touched files.
+
+2026-05-03 executor update:
+
+- Changed voice cooking defaults so new/no stored settings start with `enabled: false` and `autoReadSteps: false`.
+- Added `utils/__tests__/voice-cooking.test.ts` coverage for default-off behavior while preserving stored user choices.
+- Verification: focused voice cooking Jest test passed, touched-file Prettier check passed, `bun run typecheck` passed, and IDE lints report no errors for touched files.
+
+2026-05-03 executor update:
+
+- Root cause: `mealPlanApi.addToPlan` auto-marked pantry-covered recipe ingredients as `isDeleted`, so later meal-plan additions could leave newly-needed ingredients hidden from the grocery list.
+- Fix: stopped auto-writing pantry-covered ingredients as deleted, clear stale hidden flags for ingredients when their recipe is added again, and invalidate grocery attributes after add-to-plan.
+- Added focused coverage in `data/api/__tests__/mealPlanApi-addToPlan.test.ts` and `hooks/queries/__tests__/useGroceryList.test.ts`.
+- Verification: focused grocery-list/API Jest tests passed, touched-file Prettier check passed, `bun run typecheck` passed, and IDE lints report no errors for touched files.
 
 ---
 
@@ -400,3 +421,16 @@ _(To be updated during implementation)_
 - `bun audit --audit-level=high` could not run locally because installed Bun is `1.1.43` and reports `error: Script not found "audit"`.
 - `bun pm audit --audit-level=high` also could not run locally because Bun `1.1.43` reports `error: "audit" unknown command`.
 - CI previously ran Bun `1.3.13`, where `bun audit` exists; the workflow keeps `bun audit --audit-level=high` for CI.
+
+2026-05-03 precommit executor update:
+
+- Investigating Husky precommit failure from `bun run typecheck`.
+- Root causes found so far: stale pantry component test fixtures, WatermelonDB batch operation typing left as function callbacks, strict indexed-access checks in achievement/streak verification paths, storage facade narrowing to `never` after capability guards, and URL regex capture groups returning `string | undefined`.
+- Applied focused TypeScript fixes and formatted the files reported by Prettier.
+- Verification: `bun run typecheck` passed, `bun run lint` passed, and IDE lints report no errors for the TypeScript files touched for the precommit fix.
+
+2026-05-03 Detox E2E planning update:
+
+- Created `docs/superpowers/plans/2026-05-03-detox-e2e-testing.md` from the approved design.
+- Plan covers worktree setup, Detox dependencies/config, E2E boot flags, centralized test IDs, Page Object Model scaffolding, smoke/auth/core scenarios, and final local verification.
+- Execution note: `.worktrees/` is not currently ignored, so implementation should add it to `.gitignore` before creating the selected project-local worktree.

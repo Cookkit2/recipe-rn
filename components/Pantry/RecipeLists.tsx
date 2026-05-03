@@ -1,5 +1,5 @@
 import RecipeItemCard from "./RecipeItemCard";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   ActivityIndicator,
@@ -21,21 +21,31 @@ import { LegendList } from "@legendapp/list";
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from "react-native-reanimated";
 import {
   useRecipeRecommendations,
+  useRecipesPaginated,
   type RecipeWithCompletion,
 } from "~/hooks/queries/useRecipeQueries";
 import { useImagePreloader } from "~/hooks/useImagePreloader";
 import ExpiringRecipesSection from "./ExpiringRecipesSection";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const NUM_COLUMNS = 2;
 const PRELOAD_WINDOW_SIZE = 6;
 const SCROLL_PREFETCH_THROTTLE_MS = 200;
+const INITIAL_RECIPE_LIMIT = 30;
+const LOAD_MORE_THRESHOLD = 10; // Load more when 10 items from bottom
 
 export default function RecipeLists() {
+  const { bottom } = useSafeAreaInsets();
   const { selectedRecipeTags } = useRecipeStore();
   const scrollY = useSharedValue(0);
   const { prefetch } = useImagePreloader({ priority: "low", delay: 50 });
   const lastPrefetchStartRef = useRef(-1);
   const throttleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // State for progressive loading
+  const [displayLimit, setDisplayLimit] = useState(INITIAL_RECIPE_LIMIT);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const isLoadingMoreRef = useRef(false);
 
   // Regular scroll handler that updates shared value (LegendList doesn't support Reanimated handlers)
   const handleScroll = useCallback(
@@ -74,12 +84,38 @@ export default function RecipeLists() {
       .addStrategy(new ReadinessStrategy({ multiplier: 1 }), 1);
   }, []);
 
-  // Fetch recipes with filtering and ranking
+  // Fetch recipes with filtering and ranking (fetch more than we display initially)
   const { recipes, isLoading, error } = useRecipeRecommendations({
+    maxRecommendations: 200, // Fetch up to 200 recipes total
     categories: selectedRecipeTags.length > 0 ? selectedRecipeTags : undefined,
     filterStrategy,
     rankingStrategy,
   });
+
+  // Display only a subset of recipes for performance
+  const displayedRecipes = useMemo(() => {
+    return recipes.slice(0, displayLimit);
+  }, [recipes, displayLimit]);
+
+  // Load more function
+  const loadMore = useCallback(() => {
+    if (isLoadingMoreRef.current || displayLimit >= recipes.length) return;
+
+    isLoadingMoreRef.current = true;
+    setIsLoadingMore(true);
+
+    // Simulate async loading for smooth UX
+    setTimeout(() => {
+      setDisplayLimit((prev) => Math.min(prev + INITIAL_RECIPE_LIMIT, recipes.length));
+      setIsLoadingMore(false);
+      isLoadingMoreRef.current = false;
+    }, 100);
+  }, [displayLimit, recipes.length]);
+
+  // Reset display limit when filters change
+  useEffect(() => {
+    setDisplayLimit(INITIAL_RECIPE_LIMIT);
+  }, [selectedRecipeTags]);
 
   // Create display text for selected categories
   const selectedCategoriesText = useMemo(() => {
@@ -106,7 +142,8 @@ export default function RecipeLists() {
     height: scrollY.value > 10 ? 1 : 0,
   }));
 
-  const listData = isLoading || error ? [] : recipes;
+  const listData = isLoading || error ? [] : displayedRecipes;
+  const hasMoreToLoad = displayLimit < recipes.length;
 
   // Preload first screen of recipe images when list data is available
   useEffect(() => {
@@ -154,8 +191,25 @@ export default function RecipeLists() {
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       handleScroll(event);
       scheduleScrollPrefetch(event.nativeEvent.contentOffset.y, listData);
+
+      // Load more recipes when near bottom
+      const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+      const distanceFromBottom = contentSize.height - (layoutMeasurement.height + contentOffset.y);
+
+      // Trigger load more when within 500px of bottom (about 2-3 items)
+      if (distanceFromBottom < 500 && hasMoreToLoad && !isLoadingMoreRef.current) {
+        loadMore();
+      }
     },
-    [handleScroll, listData, scheduleScrollPrefetch]
+    [
+      handleScroll,
+      listData,
+      scheduleScrollPrefetch,
+      hasMoreToLoad,
+      loadMore,
+      recipes.length,
+      displayLimit,
+    ]
   );
 
   const emptyState = () => {
@@ -211,6 +265,35 @@ export default function RecipeLists() {
   // Approximate item height for estimatedItemSize (image is square + text below)
   const ITEM_HEIGHT = 200;
 
+  // Footer component for loading more indicator
+  const ListFooter = useCallback(() => {
+    // Don't show footer if we're still loading initial data
+    if (isLoading) return null;
+
+    // Show all recipes loaded message if we have recipes but no more to load
+    if (!hasMoreToLoad && recipes.length > 0) {
+      return (
+        <View className="py-6 items-center justify-center">
+          <P className="text-muted-foreground text-sm">
+            You've seen all {recipes.length} recipe{recipes.length !== 1 ? "s" : ""}
+          </P>
+        </View>
+      );
+    }
+
+    // Show loading indicator
+    if (isLoadingMore) {
+      return (
+        <View className="py-4 items-center justify-center">
+          <ActivityIndicator size="small" />
+          <P className="mt-2 text-muted-foreground text-sm">Loading more recipes...</P>
+        </View>
+      );
+    }
+
+    return null;
+  }, [isLoading, isLoadingMore, hasMoreToLoad, recipes.length]);
+
   return (
     <>
       <Animated.View
@@ -223,10 +306,12 @@ export default function RecipeLists() {
           keyExtractor={(item) => item.recipe.id.toString()}
           numColumns={2}
           style={{ paddingHorizontal: 12, paddingTop: 8 }}
+          contentContainerStyle={{ paddingBottom: bottom + 200 }}
           showsVerticalScrollIndicator={false}
           data={listData}
           renderItem={renderRecipeItem}
           ListEmptyComponent={emptyState}
+          ListFooterComponent={ListFooter}
           // LegendList performance optimizations
           recycleItems
           estimatedItemSize={ITEM_HEIGHT}

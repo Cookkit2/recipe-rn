@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { recipeQueryKeys } from "./recipeQueryKeys";
 import type { Recipe } from "~/types/Recipe";
 import { recipeApi } from "~/data/api/recipeApi";
@@ -11,13 +11,34 @@ import {
 import { useMemo } from "react";
 
 /**
- * Hook to fetch all recipes
+ * Hook to fetch all recipes (summary rows: title, times, tags, etc.; empty
+ * `ingredients` / `instructions`). Use `useRecipe(id)` for full detail.
  */
 export function useRecipes() {
   return useQuery({
     queryKey: recipeQueryKeys.recipes(),
     queryFn: recipeApi.fetchAllRecipes,
     staleTime: 5 * 60 * 1000, // 5 minutes - recipes don't change as frequently
+  });
+}
+
+/**
+ * Hook to fetch paginated recipes with infinite scroll support
+ * @param pageSize - Number of recipes to fetch per page (default: 20)
+ */
+export function useRecipesPaginated(pageSize = 20) {
+  return useInfiniteQuery({
+    queryKey: [...recipeQueryKeys.recipes(), "paginated", pageSize],
+    queryFn: ({ pageParam = 0 }) => recipeApi.fetchRecipesPaginated(pageParam, pageSize),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.hasMore) {
+        return lastPage.nextPage;
+      }
+      return undefined;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -45,6 +66,17 @@ export interface RecipeFilters {
   difficulty?: number;
 }
 
+function recipeFiltersApply(filters?: RecipeFilters): boolean {
+  if (!filters) return false;
+  if (filters.tags && filters.tags.length > 0) return true;
+  if (filters.difficulty !== undefined) return true;
+  if (filters.maxTotalTime !== undefined) return true;
+  if (filters.minTotalTime !== undefined) return true;
+  if (filters.maxPrepTime !== undefined) return true;
+  if (filters.maxCookTime !== undefined) return true;
+  return false;
+}
+
 /**
  * Hook to search recipes
  */
@@ -52,7 +84,7 @@ export function useSearchRecipes(searchTerm: string, filters?: RecipeFilters) {
   return useQuery({
     queryKey: recipeQueryKeys.search(searchTerm, filters),
     queryFn: () => recipeApi.searchRecipes(searchTerm, filters),
-    enabled: searchTerm.length > 0, // Only run query if there's a search term
+    enabled: searchTerm.length > 0 || recipeFiltersApply(filters),
     staleTime: 2 * 60 * 1000, // 2 minutes for search results
   });
 }

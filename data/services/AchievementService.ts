@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Achievement Service
  *
@@ -7,14 +6,17 @@
  */
 
 import { AchievementRepository } from "../db/repositories/AchievementRepository";
-import { Q } from "@nozbe/watermelondb";
 import { UserAchievementRepository } from "../db/repositories/UserAchievementRepository";
 import { CookingHistoryRepository } from "../db/repositories/CookingHistoryRepository";
 import { RecipeRepository } from "../db/repositories/RecipeRepository";
 import { StreakService } from "./StreakService";
 import { StockRepository } from "../db/repositories/StockRepository";
 import { IngredientCategoryRepository } from "../db/repositories/IngredientCategoryRepository";
-import type { AchievementRequirement, AchievementProgress } from "~/types/achievements";
+import type {
+  AchievementRequirement,
+  AchievementProgress,
+  AchievementStatus,
+} from "~/types/achievements";
 import { log } from "~/utils/logger";
 import { scheduleAchievementUnlock } from "~/lib/notifications/achievement-notifications";
 import { storage } from "~/data";
@@ -78,9 +80,7 @@ export class AchievementService {
       let userAchievementsMap = new Map();
       if (achievementIds.length > 0) {
         // Chunk queries if there are too many, but typically achievements are < 100
-        const userAchievements = await this.userAchievementRepo.collection
-          .query(Q.where("achievement_id", Q.oneOf(achievementIds)))
-          .fetch();
+        const userAchievements = await this.userAchievementRepo.getByAchievementIds(achievementIds);
         userAchievementsMap = new Map(userAchievements.map((ua: any) => [ua.achievementId, ua]));
       }
 
@@ -275,10 +275,8 @@ export class AchievementService {
       return {
         achievement: {
           id: achievement.id,
-          // @ts-expect-error
-          type: achievement.type,
-          // @ts-expect-error
-          category: achievement.category,
+          type: (achievement as any).type,
+          category: (achievement as any).category,
           title: achievement.title,
           description: achievement.description,
           icon: achievement.icon,
@@ -288,15 +286,14 @@ export class AchievementService {
           sortOrder: achievement.sortOrder,
           hidden: achievement.isHidden,
         },
-        // @ts-expect-error
         userAchievement: userAchievement
           ? {
               id: userAchievement.id,
               achievementId: userAchievement.achievementId,
-              status: userAchievement.status,
+              status: userAchievement.status as AchievementStatus,
               progress: userAchievement.progress,
-              unlockedAt: userAchievement.unlockedAtDate,
-              lastCheckedAt: userAchievement.lastCheckedAtDate,
+              unlockedAt: (userAchievement as any).unlockedAtDate,
+              lastCheckedAt: (userAchievement as any).lastCheckedAtDate,
             }
           : undefined,
         progress,

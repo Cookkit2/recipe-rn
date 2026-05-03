@@ -106,3 +106,6 @@ Thumbs.db
 
 ios/.xcode.env
 .full-review/
+
+# Local git worktrees (superpowers / parallel branches)
+.worktrees/

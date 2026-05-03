@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Achievement Categories
 export const ACHIEVEMENT_CATEGORIES = [
   "streak",

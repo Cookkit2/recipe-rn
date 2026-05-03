@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Q } from "@nozbe/watermelondb";
 import UserAchievement, { type UserAchievementData } from "../models/UserAchievement";
 import { BaseRepository, type SearchOptions } from "./BaseRepository";
@@ -21,8 +20,8 @@ export class UserAchievementRepository extends BaseRepository<UserAchievement> {
     const existing = await this.collection.query(Q.where("achievement_id", achievementId)).fetch();
 
     if (existing.length > 0) {
-      // @ts-expect-error
-      return existing[0];
+      const first = existing[0];
+      if (first) return first;
     }
 
     // Create new one
@@ -146,6 +145,14 @@ export class UserAchievementRepository extends BaseRepository<UserAchievement> {
 
     // @ts-expect-error
     return results.length > 0 ? results[0] : null;
+  }
+
+  async getByAchievementIds(achievementIds: string[]): Promise<UserAchievement[]> {
+    if (achievementIds.length === 0) {
+      return [];
+    }
+
+    return await this.collection.query(Q.where("achievement_id", Q.oneOf(achievementIds))).fetch();
   }
 
   // Get recently unlocked achievements

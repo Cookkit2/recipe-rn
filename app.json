@@ -137,7 +137,13 @@
       "expo-web-browser",
       "expo-video",
       "expo-notifications",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "@config-plugins/detox",
+        {
+          "skipProguard": true
+        }
+      ]
     ],
     "extra": {
       "llama": {

@@ -1,5 +1,6 @@
 import React from "react";
 import { View } from "react-native";
+import { subscriptionQueryKeys } from "~/hooks/queries/subscriptionQueryKeys";
 import { isValidSubscription, presentPaywallIfNeeded } from "~/utils/subscription-utils";
 import { Card, CardContent } from "~/components/ui/card";
 import { H4, P } from "~/components/ui/typography";
@@ -8,7 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 
 export default function SubscriptionCard() {
   const { data: currentEntitlements } = useQuery({
-    queryKey: ["subscription", "entitlements"],
+    queryKey: subscriptionQueryKeys.entitlements(),
     queryFn: async () => {
       const result = await isValidSubscription();
       return result ?? null;

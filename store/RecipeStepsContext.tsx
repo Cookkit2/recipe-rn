@@ -137,7 +137,7 @@ export function RecipeStepsProvider({
             }
           }
         } catch (error) {
-          console.error("Failed to record ingredient consumption:", error);
+          log.error("Failed to record ingredient consumption:", error);
         }
 
         // Check for achievements after recording cooking
@@ -376,6 +376,30 @@ export function RecipeStepsProvider({
     }
     log.info("═══════════════════════════════════════════════════════════\n");
   }, [currentStep]);
+
+  // Cleanup on unmount to prevent memory leaks
+  React.useEffect(() => {
+    return () => {
+      // Reset SharedValue to prevent memory leaks
+      progress.value = 0;
+
+      // Clear refs to prevent memory leaks
+      startTime.current = 0;
+      pendingServings.current = 0;
+
+      // Clear carousel ref
+      if (carouselRef.current) {
+        carouselRef.current = null;
+      }
+
+      // Clear loop ref
+      if (loopRef.current) {
+        loopRef.current = null;
+      }
+
+      log.info("[RecipeStepsContext] Cleaned up resources");
+    };
+  }, [progress]);
 
   return (
     <RecipeStepsContext.Provider

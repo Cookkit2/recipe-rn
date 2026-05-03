@@ -1,4 +1,3 @@
-// @ts-nocheck
 import type { IStorage, IStorageCapabilities } from "./storage-types";
 import { StorageFactory } from "./storage-factory";
 
@@ -256,8 +255,9 @@ export class StorageFacade implements IStorage {
       throw new Error("AsyncStorage requires async operations. Use getBatch(keys, true) instead.");
     }
 
-    if (hasMethod(this.storage, "getBatch")) {
-      return this.storage.getBatch(keys) as Record<string, T | null>;
+    const getBatch = (this.storage as IStorageCapabilities).getBatch;
+    if (typeof getBatch === "function") {
+      return getBatch.call(this.storage, keys) as Record<string, T | null>;
     }
 
     // Fallback to individual operations
@@ -287,8 +287,9 @@ export class StorageFacade implements IStorage {
       throw new Error("AsyncStorage requires async operations. Use setBatch(data, true) instead.");
     }
 
-    if (hasMethod(this.storage, "setBatch")) {
-      this.storage.setBatch(data);
+    const setBatch = (this.storage as IStorageCapabilities).setBatch;
+    if (typeof setBatch === "function") {
+      setBatch.call(this.storage, data);
     } else {
       // Fallback to individual operations
       for (const [key, value] of Object.entries(data)) {
@@ -318,8 +319,9 @@ export class StorageFacade implements IStorage {
       );
     }
 
-    if (hasMethod(this.storage, "deleteBatch")) {
-      this.storage.deleteBatch(keys);
+    const deleteBatch = (this.storage as IStorageCapabilities).deleteBatch;
+    if (typeof deleteBatch === "function") {
+      deleteBatch.call(this.storage, keys);
     } else {
       // Fallback to individual operations
       for (const key of keys) {

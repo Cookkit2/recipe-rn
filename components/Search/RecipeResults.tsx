@@ -2,10 +2,8 @@ import React from "react";
 import { View, Image } from "react-native";
 import { ChefHatIcon, StarIcon } from "lucide-uniwind";
 import { H4, Small } from "~/components/ui/typography";
-import { useSearchRecipes } from "~/hooks/queries/useRecipeQueries";
+import type { Recipe } from "~/types/Recipe";
 import { SearchResultSection, SearchResultRow } from "./SearchResultPrimitives";
-
-type Recipe = NonNullable<ReturnType<typeof useSearchRecipes>["data"]>[number];
 
 type RecipeResultItemProps = {
   recipe: Recipe;
@@ -40,17 +38,17 @@ function RecipeResultItem({ recipe, isLast }: RecipeResultItemProps) {
             {`${recipe.prepMinutes + (recipe.cookMinutes ?? 0)}m · `}
           </Small>
         )}
-        {recipe.difficultyStars != null && (
+        {recipe.difficultyStars != null && recipe.difficultyStars > 0 && (
           <View className="flex-row items-center gap-0.5">
-            {Array.from({ length: 5 }).map((_, i) => (
+            {Array.from({
+              length: Math.min(5, Math.max(0, recipe.difficultyStars)),
+            }).map((_, i) => (
               <StarIcon
                 key={i}
                 size={11}
                 strokeWidth={2}
-                className={
-                  i < recipe.difficultyStars! ? "text-amber-400" : "text-muted-foreground/30"
-                }
-                fill={i < recipe.difficultyStars! ? "#fbbf24" : "transparent"}
+                className="text-amber-400"
+                fill="#fbbf24"
               />
             ))}
           </View>
@@ -61,7 +59,7 @@ function RecipeResultItem({ recipe, isLast }: RecipeResultItemProps) {
 }
 
 type RecipeResultsProps = {
-  recipes: ReturnType<typeof useSearchRecipes>["data"];
+  recipes: readonly Recipe[] | undefined;
 };
 
 export function RecipeResults({ recipes }: RecipeResultsProps) {

@@ -1,6 +1,7 @@
 module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
+  setupFiles: ["<rootDir>/node_modules/react-native/jest/setup.js"],
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
   testMatch: ["**/__tests__/**/*.test.(js|jsx|ts|tsx)"],
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json"],
@@ -9,16 +10,17 @@ module.exports = {
       "ts-jest",
       {
         tsconfig: {
-          jsx: "react",
+          jsx: "react-jsx",
           esModuleInterop: true,
           allowSyntheticDefaultImports: true,
           skipLibCheck: true,
         },
       },
     ],
+    "^.+\\.(js|jsx)$": ["babel-jest", { presets: ["babel-preset-expo"] }],
   },
   transformIgnorePatterns: [
-    "node_modules/(?!(react-native|@react-native|@nozbe|@expo|expo|expo-modules-core|expo-constants|react-navigation|llama\\.rn|expo-file-system|@testing-library)/)",
+    "node_modules/(?!(react-native|@react-native|@nozbe|@expo|expo|expo-modules-core|expo-constants|expo-auth-session|expo-linking|react-navigation|react-native-reanimated|react-native-worklets|@rn-primitives|llama\\.rn|expo-file-system|@testing-library)/)",
   ],
   moduleNameMapper: {
     "^expo-constants$": "<rootDir>/__mocks__/expo-constants.ts",

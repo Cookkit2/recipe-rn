@@ -5,7 +5,7 @@ import { Text } from "~/components/ui/text";
 import { Button } from "~/components/ui/button";
 import { AuthContainer, AuthCard, AuthInput, SocialAuthButton } from "~/components/auth";
 import { useAuth } from "~/auth";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { TEST_IDS } from "~/constants/test-ids";
 
 export default function SignInScreen() {
   const [email, setEmail] = useState("");
@@ -16,7 +16,6 @@ export default function SignInScreen() {
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
 
   const auth = useAuth();
-  const { bottom: pb } = useSafeAreaInsets();
 
   const validateForm = () => {
     let isValid = true;
@@ -35,12 +34,24 @@ export default function SignInScreen() {
       isValid = false;
     }
 
-    // Password validation
+    // Password validation - strong password requirements
     if (!password) {
       setPasswordError("Password is required");
       isValid = false;
-    } else if (password.length < 6) {
-      setPasswordError("Password must be at least 6 characters");
+    } else if (password.length < 12) {
+      setPasswordError("Password must be at least 12 characters");
+      isValid = false;
+    } else if (!/[A-Z]/.test(password)) {
+      setPasswordError("Password must contain at least one uppercase letter");
+      isValid = false;
+    } else if (!/[a-z]/.test(password)) {
+      setPasswordError("Password must contain at least one lowercase letter");
+      isValid = false;
+    } else if (!/\d/.test(password)) {
+      setPasswordError("Password must contain at least one number");
+      isValid = false;
+    } else if (!/[^A-Za-z0-9]/.test(password)) {
+      setPasswordError("Password must contain at least one special character");
       isValid = false;
     }
 
@@ -116,11 +127,12 @@ export default function SignInScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <AuthContainer>
+        <AuthContainer testID={TEST_IDS.auth.signInScreen}>
           <AuthCard title="Welcome Back" subtitle="Sign in to your account to continue">
             <View className="space-y-4">
               {/* Email Input */}
               <AuthInput
+                testID={TEST_IDS.auth.emailInput}
                 label="Email"
                 value={email}
                 onChangeText={setEmail}
@@ -132,6 +144,7 @@ export default function SignInScreen() {
 
               {/* Password Input */}
               <AuthInput
+                testID={TEST_IDS.auth.passwordInput}
                 label="Password"
                 value={password}
                 onChangeText={setPassword}
@@ -144,7 +157,7 @@ export default function SignInScreen() {
               {/* Forgot Password Link */}
               <View className="items-end">
                 <Link href="/(auth)/forgot-password" asChild>
-                  <Pressable accessibilityRole="link">
+                  <Pressable testID={TEST_IDS.auth.forgotPasswordLink} accessibilityRole="link">
                     <Text className="text-sm text-primary font-medium">Forgot password?</Text>
                   </Pressable>
                 </Link>
@@ -152,6 +165,7 @@ export default function SignInScreen() {
 
               {/* Sign In Button */}
               <Button
+                testID={TEST_IDS.auth.signInButton}
                 onPress={handleSignIn}
                 disabled={isLoading || !!socialLoading}
                 className="w-full"
@@ -187,6 +201,7 @@ export default function SignInScreen() {
 
               {/* Guest Sign In */}
               <Button
+                testID={TEST_IDS.auth.guestButton}
                 variant="ghost"
                 onPress={handleGuestSignIn}
                 disabled={isLoading || !!socialLoading}

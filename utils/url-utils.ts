@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * URL Parsing & Detection Utilities
  * Handles detection of URL types (YouTube, website, etc.)
@@ -42,19 +41,17 @@ export function isValidInstagramUrl(url: string): boolean {
 /**
  * Extract TikTok video ID from URL (if available)
  */
-export function extractTikTokVideoId(url: string): string | undefined | null {
+export function extractTikTokVideoId(url: string): string | null {
   const match = url.match(/tiktok\.com\/@[\w.-]+\/video\/(\d+)/i);
-  // @ts-expect-error
-  return match ? match[1] : null;
+  return match?.[1] ?? null;
 }
 
 /**
  * Extract Instagram post/reel ID from URL
  */
-export function extractInstagramPostId(url: string): string | undefined | null {
+export function extractInstagramPostId(url: string): string | null {
   const match = url.match(/instagram\.com\/(?:p|reel|reels)\/([\w-]+)/i);
-  // @ts-expect-error
-  return match ? match[1] : null;
+  return match?.[1] ?? null;
 }
 
 /**
