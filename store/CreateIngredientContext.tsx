@@ -83,16 +83,19 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
     y: height / 2 - 48, // Center vertically (minus half frame height: 96px / 2 = 48px)
   });
 
-  const updateFramePosition = useCallback((framePosition: { x: number; y: number }) => {
-    log.info("[create-camera] frame position updated", {
-      x: framePosition.x,
-      y: framePosition.y,
-      screenWidth: width,
-      screenHeight: height,
-    });
+  const updateFramePosition = useCallback(
+    (framePosition: { x: number; y: number }) => {
+      log.info("[create-camera] frame position updated", {
+        x: framePosition.x,
+        y: framePosition.y,
+        screenWidth: width,
+        screenHeight: height,
+      });
 
-    setFramePosition(framePosition);
-  }, [height, width]);
+      setFramePosition(framePosition);
+    },
+    [height, width]
+  );
 
   // Process a single item (runs independently, updates state when done)
   const processItem = useCallback(

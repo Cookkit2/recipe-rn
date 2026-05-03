@@ -695,7 +695,8 @@ export const trimTransparentBordersAndResizeImage = (
 
   const outSnap = outSurface.makeImageSnapshot();
   return {
-    base64: outSnap?.encodeToBase64(ImageFormat.PNG, 85) ?? image.encodeToBase64(ImageFormat.PNG, 85),
+    base64:
+      outSnap?.encodeToBase64(ImageFormat.PNG, 85) ?? image.encodeToBase64(ImageFormat.PNG, 85),
     width: outW,
     height: outH,
   };
