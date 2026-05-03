@@ -30,6 +30,8 @@ const IngredientItemCard = ({ item, index }: { item: PantryItem; index: number }
     <Animated.View style={[animatedStyle]} className="p-3 max-w-[50%]">
       <Link href={`/ingredient/${item.id}`} asChild>
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`View details for ${item.name}`}
           onPress={debouncedPress}
           onPressIn={() => {
             if (onPressIn && !isRecipeOpen) {
