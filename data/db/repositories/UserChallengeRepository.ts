@@ -323,7 +323,7 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
           r.status = "expired";
         })
       );
-      await database.batch(...batchOps);
+      await database.batch(batchOps);
     });
   }
 

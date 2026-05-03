@@ -108,7 +108,7 @@ async function syncRecipeIngredients(
   }
 
   if (batchOps.length > 0) {
-    await ingredientsCollection.database.batch(...batchOps);
+    await ingredientsCollection.database.batch(batchOps);
   }
 }
 
@@ -160,7 +160,7 @@ async function syncRecipeSteps(
   }
 
   if (batchOps.length > 0) {
-    await stepsCollection.database.batch(...batchOps);
+    await stepsCollection.database.batch(batchOps);
   }
 }
 

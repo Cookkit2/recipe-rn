@@ -74,3 +74,9 @@ rg -n "from \"~/" app/ components/ hooks/
 - Include useful **debug output** when sharing command results or repro steps.
 - **Read files before editing**; keep diffs focused on the task.
 - If npm/pnpm reports dependency vulnerabilities, run **`npm audit`** first (per team preference), then address or document.
+- When asked to handle many open GitHub PRs, prefer consolidating them into one review PR and closing/superseding the originals after confirmation.
+
+## Learned Workspace Facts
+
+- `@shopify/react-native-skia` needs its postinstall binaries present before iOS prebuild/pod install; with Bun, trust the package so the Skia iOS `.xcframework` files are downloaded.
+- WatermelonDB `database.batch` should receive operation arrays directly instead of spread arguments to avoid large-batch runtime warnings.

@@ -684,7 +684,7 @@ export class DatabaseFacade {
         }
 
         if (batchOperations.length > 0) {
-          await database.batch(...batchOperations);
+          await database.batch(batchOperations);
         }
       });
 
@@ -1497,7 +1497,7 @@ export class DatabaseFacade {
   async batch(operations: import("@nozbe/watermelondb").Model[]): Promise<void> {
     if (operations.length === 0) return;
     await database.write(async () => {
-      await database.batch(...operations);
+      await database.batch(operations);
     });
   }
 

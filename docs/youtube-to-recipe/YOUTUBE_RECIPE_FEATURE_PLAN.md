@@ -474,7 +474,7 @@ export class RecipeAnalyzer {
     const prompt = this.buildAnalysisPrompt(videoInfo, transcript);
 
     const response = await this.gemini.generateContent(
-      "gemini-2.0-flash",
+      "gemini-2.0-flash-lite",
       JSON.stringify({
         contents: [
           {

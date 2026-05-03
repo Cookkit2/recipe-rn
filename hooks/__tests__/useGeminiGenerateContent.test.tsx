@@ -2,7 +2,7 @@ import { renderHook, act } from "@testing-library/react-hooks";
 import { useGeminiGenerateContent, useGeminiListModels } from "../useGeminiGenerateContent";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
-import { GeminiAPI } from "~/utils/gemini-api";
+import { GeminiAPI, DEFAULT_GEMINI_MODEL } from "~/utils/gemini-api";
 
 // Create the mock variables
 const mockGenerateContent = jest.fn();
@@ -70,7 +70,7 @@ describe("useGeminiGenerateContent hooks", () => {
       expect(result.current.isSuccess).toBe(true);
       expect(result.current.data).toBe("Mock response content");
       expect(mockGenerateContent).toHaveBeenCalledWith(
-        "gemini-2.0-flash",
+        DEFAULT_GEMINI_MODEL,
         "test prompt",
         expect.any(AbortSignal)
       );

@@ -115,7 +115,7 @@ export abstract class BaseRepository<T extends Model> {
 
     await database.write(async () => {
       const batchOps = recordsToDelete.map((record) => record.prepareDestroyPermanently());
-      await database.batch(...batchOps);
+      await database.batch(batchOps);
     });
   }
 

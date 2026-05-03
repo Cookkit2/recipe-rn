@@ -242,7 +242,7 @@ export class StockRepository extends BaseRepository<Stock> {
       }
 
       if (batchOps.length > 0) {
-        await this.collection.database.batch(...batchOps);
+        await this.collection.database.batch(batchOps);
       }
 
       return stock;

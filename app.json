@@ -39,19 +39,6 @@
       "output": "static",
       "favicon": "./assets/favicon.png"
     },
-    "linking": {
-      "prefixes": ["recipe-app://"],
-      "config": {
-        "screens": {
-          "auth": {
-            "screens": {
-              "callback": "auth/callback",
-              "reset-password": "auth/reset-password"
-            }
-          }
-        }
-      }
-    },
     "plugins": [
       [
         "expo-font",
@@ -140,12 +127,6 @@
       ],
       "expo-router",
       [
-        "react-native-vision-camera",
-        {
-          "cameraPermission": "Allow Cookkit to use your camera to take photos of ingredients"
-        }
-      ],
-      [
         "@sentry/react-native/expo",
         {
           "url": "https://sentry.io/",
@@ -155,7 +136,8 @@
       ],
       "expo-web-browser",
       "expo-video",
-      "expo-notifications"
+      "expo-notifications",
+      "@react-native-community/datetimepicker"
     ],
     "extra": {
       "llama": {

@@ -11,17 +11,17 @@ import useLocalStorageState from "~/hooks/useLocalStorageState";
 import { presentPaywallIfNeeded } from "~/utils/subscription-utils";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
-import type { Camera } from "react-native-vision-camera";
+import type { CameraPhotoOutput } from "react-native-vision-camera";
 import Animated from "react-native-reanimated";
 import ImagePointPickerOverlay from "./ImagePointPickerOverlay";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export default function CameraActionRow({
-  camera,
+  photoOutput,
   isCameraAvailable,
 }: {
-  camera: React.RefObject<Camera | null>;
+  photoOutput: CameraPhotoOutput;
   isCameraAvailable: boolean;
 }) {
   const router = useRouter();
@@ -48,16 +48,23 @@ export default function CameraActionRow({
       }
     }
 
-    if (camera.current) {
-      try {
-        const photo = await camera.current.takePhoto();
+    if (!isCameraAvailable) {
+      return;
+    }
 
-        if (photo?.path) {
-          processImage(photo.path, { ...framePosition });
-        }
-      } catch (error) {
-        toast.error("Error taking picture");
-      }
+    try {
+      const photo = await photoOutput.capturePhotoToFile(
+        {
+          enableDepthData: false,
+          enableShutterSound: true,
+          flashMode: "off",
+        },
+        {}
+      );
+
+      processImage(photo.filePath, { ...framePosition });
+    } catch (error) {
+      toast.error("Error taking picture");
     }
   };
 

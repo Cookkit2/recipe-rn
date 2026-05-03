@@ -23,7 +23,7 @@ class AllModelSingleton {
 
     this.loadPromise = (async () => {
       const [magicTouchModel] = await Promise.all([
-        loadTensorflowModel(require("~/assets/model/magic_touch.tflite"), "default"),
+        loadTensorflowModel(require("~/assets/model/magic_touch.tflite"), []),
       ]);
 
       this.models = { magicTouchModel };

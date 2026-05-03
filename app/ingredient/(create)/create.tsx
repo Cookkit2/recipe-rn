@@ -1,5 +1,12 @@
-import { Camera, useCameraDevice, useCameraFormat, type Point } from "react-native-vision-camera";
-import { useEffect, useRef } from "react";
+import {
+  Camera,
+  useCameraDevice,
+  usePhotoOutput,
+  type CameraRef,
+  type Constraint,
+  type Point,
+} from "react-native-vision-camera";
+import { useEffect, useMemo, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
 import allModel from "~/hooks/model/allModel";
@@ -20,13 +27,17 @@ export default function CreateIngredient() {
   const { hasPermission, handlePermissionRequest } = useCameraPermissions();
   const { updateFramePosition } = useCreateIngredientStore();
 
-  const camera = useRef<Camera>(null);
+  const camera = useRef<CameraRef>(null);
   const device = useCameraDevice("back");
   const isCameraAvailable = !!device;
-  const format = useCameraFormat(device, [
-    { photoResolution: CAMERA_RESOLUTION },
-    { videoResolution: CAMERA_RESOLUTION },
-  ]);
+  const photoOutput = usePhotoOutput({
+    targetResolution: CAMERA_RESOLUTION,
+    qualityPrioritization: "speed",
+  });
+  const cameraConstraints = useMemo(
+    () => [{ resolutionBias: photoOutput }] satisfies Constraint[],
+    [photoOutput]
+  );
 
   // Tap to focus gesture
   const handleTap = (x: number, y: number) => {
@@ -35,7 +46,7 @@ export default function CreateIngredient() {
 
     // Focus the camera at the tapped point
     const point: Point = { x, y };
-    camera.current?.focus(point);
+    camera.current?.focusTo(point);
   };
 
   const tapGesture = Gesture.Tap().onEnd(({ x, y }) => {
@@ -85,14 +96,12 @@ export default function CreateIngredient() {
           <GestureDetector gesture={tapGesture}>
             <Camera
               ref={camera}
-              photo
               style={[StyleSheet.absoluteFill]}
-              photoQualityBalance="speed"
               device={device!}
-              format={format}
-              enableDepthData={false}
+              outputs={[photoOutput]}
+              constraints={cameraConstraints}
               isActive={true}
-              enableZoomGesture={true}
+              enableNativeZoomGesture={true}
             />
           </GestureDetector>
         ) : (
@@ -109,7 +118,7 @@ export default function CreateIngredient() {
         {isCameraAvailable && <FocusingAreaIndicator />}
       </View>
 
-      <CameraActionRow camera={camera} isCameraAvailable={isCameraAvailable} />
+      <CameraActionRow photoOutput={photoOutput} isCameraAvailable={isCameraAvailable} />
     </CameraLayout>
   );
 }

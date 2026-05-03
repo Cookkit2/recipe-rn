@@ -309,17 +309,17 @@ export class RecipeRepository extends BaseRepository<Recipe> {
   async clearAllRecipes(): Promise<void> {
     await database.write(async () => {
       const allRecipes = await this.collection.query().fetch();
-      await database.batch(...allRecipes.map((recipe) => recipe.prepareDestroyPermanently()));
+      await database.batch(allRecipes.map((recipe) => recipe.prepareDestroyPermanently()));
 
       // Also clear related steps and ingredients
       const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
       const allSteps = await stepsCollection.query().fetch();
-      await database.batch(...allSteps.map((step) => step.prepareDestroyPermanently()));
+      await database.batch(allSteps.map((step) => step.prepareDestroyPermanently()));
 
       const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
       const allIngredients = await ingredientsCollection.query().fetch();
       await database.batch(
-        ...allIngredients.map((ingredient) => ingredient.prepareDestroyPermanently())
+        allIngredients.map((ingredient) => ingredient.prepareDestroyPermanently())
       );
     });
   }
@@ -509,7 +509,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
         await database.write(async () => {
           const BATCH_SIZE = 500;
           for (let i = 0; i < batchOps.length; i += BATCH_SIZE) {
-            await database.batch(...batchOps.slice(i, i + BATCH_SIZE));
+            await database.batch(batchOps.slice(i, i + BATCH_SIZE));
           }
         });
       }
@@ -700,7 +700,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
       });
     }
 
-    await database.batch(...batchOps);
+    await database.batch(batchOps);
 
     return recipe;
   }
@@ -830,7 +830,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
       }
 
       if (batchOps.length > 0) {
-        await database.batch(...batchOps);
+        await database.batch(batchOps);
       }
 
       return recipe;

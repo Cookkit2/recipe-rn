@@ -225,7 +225,7 @@ export default function RecipeEdit() {
           }
         }
 
-        await database.batch(...batchOperations);
+        await database.batch(batchOperations);
       });
 
       router.back();

@@ -5,7 +5,7 @@
  * Uses Gemini's video understanding capabilities.
  */
 
-import { GeminiAPI } from "~/utils/gemini-api";
+import { GeminiAPI, DEFAULT_GEMINI_MODEL } from "~/utils/gemini-api";
 import { log } from "~/utils/logger";
 import type { RecipeAnalysisResult, GeneratedRecipe } from "~/types/ScrappedRecipe";
 import { isValidRecipe } from "./validation-utils";
@@ -60,7 +60,7 @@ export class SocialRecipeService {
         },
       });
 
-      const response = await this.gemini.generateContent("gemini-2.0-flash", requestBody);
+      const response = await this.gemini.generateContent(DEFAULT_GEMINI_MODEL, requestBody);
 
       const result = this.parseResponse(response, content.url);
       return result;

@@ -321,28 +321,11 @@ export const recipeImportApi = {
             rawRecipe
           )) as GeneratedRecipe;
         } else {
-          // Use AI to analyze website content
-          onStatusChange?.("analyzing");
-          log.info("Website Import: Analyzing content with AI...");
-
-          const analysisResult = await recipeAnalyzer.analyzeWebsiteForRecipe(websiteContent, url);
-
-          if (!analysisResult.isCookingVideo || analysisResult.confidence < MIN_RECIPE_CONFIDENCE) {
-            const confidencePercent = (analysisResult.confidence * 100).toFixed(0);
-            throw new Error(
-              `This page does not appear to contain a recipe. ` +
-                `Confidence: ${confidencePercent}% (minimum: ${MIN_RECIPE_CONFIDENCE * 100}%). ` +
-                `Try a different page with clear recipe instructions.`
-            );
-          }
-
-          if (!analysisResult.recipe) {
-            throw new Error(
-              "Could not extract recipe from page. The page may not contain clear recipe instructions."
-            );
-          }
-
-          generatedRecipe = analysisResult.recipe;
+          // No structured data available - throw error
+          throw new Error(
+            `This page does not contain structured recipe data that we can extract. ` +
+              `Try a different recipe website with clear recipe schema or ingredients list.`
+          );
         }
 
         log.info("Website Import: Recipe extracted:", generatedRecipe.title);

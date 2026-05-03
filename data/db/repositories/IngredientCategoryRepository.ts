@@ -92,7 +92,7 @@ export class IngredientCategoryRepository extends BaseRepository<IngredientCateg
         })
       );
 
-      await db.batch(...batchOps);
+      await db.batch(batchOps);
     });
   }
 }

@@ -8,6 +8,8 @@ const API_KEY =
 
 const BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 
+export const DEFAULT_GEMINI_MODEL = "gemini-2.0-flash-lite";
+
 // Gemini 2.0 Flash pricing (per 1M tokens)
 const PRICING = {
   prompt: 0.075, // $0.075 per 1M tokens
@@ -90,7 +92,7 @@ export class GeminiAPI {
    * When signal is omitted (imperative callers), a 60s timeout is applied so the request does not hang.
    */
   async generateContent(
-    model: string = "gemini-2.0-flash",
+    model: string = DEFAULT_GEMINI_MODEL,
     body: string,
     signal?: AbortSignal
   ): Promise<string> {
@@ -198,7 +200,7 @@ export class GeminiAPI {
 // Simple helper function for quick content generation
 export const generateGeminiContent = async (body: string): Promise<string> => {
   const client = new GeminiAPI();
-  return await client.generateContent("gemini-2.0-flash-lite-001", body);
+  return await client.generateContent(DEFAULT_GEMINI_MODEL, body);
 };
 
 // Export pricing info for reference

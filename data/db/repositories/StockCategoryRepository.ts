@@ -53,7 +53,7 @@ export class StockCategoryRepository extends BaseRepository<StockCategory> {
         sc.prepareMarkAsDeleted()
       );
       if (batchOps.length > 0) {
-        await db.batch(...batchOps);
+        await db.batch(batchOps);
       }
     });
   }
@@ -93,7 +93,7 @@ export class StockCategoryRepository extends BaseRepository<StockCategory> {
       }
 
       if (batchOps.length > 0) {
-        await db.batch(...batchOps);
+        await db.batch(batchOps);
       }
     });
 
@@ -108,7 +108,7 @@ export class StockCategoryRepository extends BaseRepository<StockCategory> {
       const stockCategories = await this.collection
         .query(Q.where("stock_id", Q.eq(stockId)))
         .fetch();
-      await db.batch(...stockCategories.map((sc) => sc.prepareMarkAsDeleted()));
+      await db.batch(stockCategories.map((sc) => sc.prepareMarkAsDeleted()));
     });
   }
 
@@ -134,7 +134,7 @@ export class StockCategoryRepository extends BaseRepository<StockCategory> {
         );
       }
 
-      await db.batch(...batchOps);
+      await db.batch(batchOps);
 
       // We still need to return the created categories. They are the newly created records in the batchOps.
       for (const op of batchOps) {

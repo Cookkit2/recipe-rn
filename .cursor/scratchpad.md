@@ -148,6 +148,7 @@ The core intelligence of this feature:
 - [x] 2026-03-17: Fix failing Jest tests (update expectations for `safeJsonParse` + corrupted auth session handling). ✅
 - [ ] 2026-03-12: Fix `SegmentedButtons` column layout regression caused by dynamic NativeWind basis classes.
 - [ ] 2026-03-12: Resolve iOS archive failure caused by building the CocoaPods app project without its workspace.
+- [x] 2026-05-03: Replace WatermelonDB `database.batch(...ops)` spread calls with array calls repo-wide to remove large-batch warnings.
 
 ---
 
@@ -177,6 +178,13 @@ All phases have been implemented. The grocery list feature is now ready for test
 - Opened a single combined PR: `https://github.com/Cookkit2/recipe-rn/pull/172`.
 - Follow-up: PR `#172` is now **merged**, and GitHub currently reports **no open PRs** remaining in this repo.
 - Notable recurring conflict resolutions: kept `package-lock.json` and `fix-ts-13.js` deleted (repo uses `pnpm-lock.yaml`), unified JSON parsing via `utils/json-parsing.ts`, and merged/expanded sanitizer/text-formatter test suites without dropping prior cases.
+
+2026-05-03 executor update:
+
+- Root cause of repeated runtime warning: WatermelonDB accepts `Model[]` directly, but many call sites still spread arrays into `database.batch(...ops)`. Large sync chunks of 500 operations become 500 function arguments and trigger WatermelonDB's performance warning.
+- Plan: replace spread-based batch calls with array-form calls in the affected repository/API/hook/screen files, then run typecheck or focused validation.
+- Completed repo-wide conversion of spread-based WatermelonDB batch calls to array-form calls.
+- Verification: `bun run typecheck` passed; `bunx prettier --check` passed for touched files; no remaining `.batch(...` spread-array call sites were found.
 
 ---
 

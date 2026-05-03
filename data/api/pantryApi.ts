@@ -337,7 +337,7 @@ export const pantryApi = {
       }
 
       if (batchOps.length > 0) {
-        await database.batch(...batchOps);
+        await database.batch(batchOps);
       }
     });
 
@@ -385,7 +385,7 @@ export const pantryApi = {
     if (stockRecordsToCreate.length > 0) {
       try {
         await database.write(async () => {
-          await database.batch(...stockRecordsToCreate);
+          await database.batch(stockRecordsToCreate);
         });
 
         // After batch insert is successful, convert to PantryItem

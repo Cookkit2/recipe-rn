@@ -318,7 +318,7 @@ if (sentryDsn) {
   );
 }
 
-export default Sentry.wrap(function RootLayout() {
+export default function RootLayout() {
   usePlatformSpecificSetup();
   const router = useRouter();
 
@@ -383,7 +383,7 @@ export default Sentry.wrap(function RootLayout() {
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
-});
+}
 
 const useIsomorphicLayoutEffect =
   Platform.OS === "web" && typeof window === "undefined" ? React.useEffect : React.useLayoutEffect;

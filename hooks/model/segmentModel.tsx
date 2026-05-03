@@ -44,7 +44,7 @@ export const segmentStaticImage = async (
 
     // Step 3: Model Inference
     const inferenceStart = performance.now();
-    const magicTouchOutputs = magicTouchModel.runSync([input]) as Float32Array[];
+    const magicTouchOutputs = magicTouchModel.runSync([input.buffer]);
     const inferenceEnd = performance.now();
     const inferenceDuration = inferenceEnd - inferenceStart;
     log.info(`📊 [Profiling] Model inference took ${inferenceDuration.toFixed(2)}ms`);
@@ -54,7 +54,10 @@ export const segmentStaticImage = async (
     // Step 4: Applying Mask
     const maskStart = performance.now();
     if (magicTouchOutputs[0]) {
-      const magicMaskOutputs = applyMagicTouchMaskAndExport(skImage, magicTouchOutputs[0]);
+      const magicMaskOutputs = applyMagicTouchMaskAndExport(
+        skImage,
+        new Float32Array(magicTouchOutputs[0])
+      );
 
       if (magicMaskOutputs?.finalImage) {
         returnSkImage = magicMaskOutputs?.finalImage;

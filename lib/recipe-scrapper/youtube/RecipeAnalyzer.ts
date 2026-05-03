@@ -5,7 +5,7 @@
  * Supports both YouTube videos and website content.
  */
 
-import { GeminiAPI } from "~/utils/gemini-api";
+import { GeminiAPI, DEFAULT_GEMINI_MODEL } from "~/utils/gemini-api";
 import { log } from "~/utils/logger";
 import type { YouTubeVideoInfo, YouTubeTranscript } from "./types";
 import type { RecipeAnalysisResult, GeneratedRecipe } from "~/types/ScrappedRecipe";
@@ -77,28 +77,28 @@ export class RecipeAnalyzer {
         });
       }
 
-      const response = await this.gemini.generateContent("gemini-2.0-flash", requestBody);
+      const response = await this.gemini.generateContent(DEFAULT_GEMINI_MODEL, requestBody);
 
       const result = this.parseResponse(response, sourceUrl);
       return result;
     } catch (error) {
-      log.error("Error analyzing video for recipe:", error);
+      log.error("Error analyzing website for recipe:", error);
 
       return {
         isCookingVideo: false,
         confidence: 0,
-        errorMessage: error instanceof Error ? error.message : "Failed to analyze video content",
+        errorMessage: error instanceof Error ? error.message : "Failed to analyze website content",
       };
     }
   }
 
   /**
-   * Analyze website content to extract recipe information.
-   * Uses AI when structured data is not available or incomplete.
+   * Analyze website content to determine if it contains a recipe
+   * and extract recipe information.
    */
   async analyzeWebsiteForRecipe(
     websiteContent: WebsiteContent,
-    sourceUrl: string
+    sourceUrl?: string
   ): Promise<RecipeAnalysisResult> {
     try {
       log.debug("RecipeAnalyzer: Analyzing website content for recipe");
@@ -117,8 +117,7 @@ export class RecipeAnalyzer {
         },
       });
 
-      const response = await this.gemini.generateContent("gemini-2.0-flash", requestBody);
-
+      const response = await this.gemini.generateContent(DEFAULT_GEMINI_MODEL, requestBody);
       const result = this.parseResponse(response, sourceUrl);
       return result;
     } catch (error) {

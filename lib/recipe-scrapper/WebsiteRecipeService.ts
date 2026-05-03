@@ -9,7 +9,7 @@
  */
 
 import { log } from "~/utils/logger";
-import { GeminiAPI } from "~/utils/gemini-api";
+import { GeminiAPI, DEFAULT_GEMINI_MODEL } from "~/utils/gemini-api";
 import { fetchWithTimeout } from "~/utils/fetch-with-timeout";
 import { isValidRecipe } from "./validation-utils";
 
@@ -554,7 +554,7 @@ Return the cleaned recipe as valid JSON with the exact same structure as the inp
         },
       });
 
-      const response = await gemini.generateContent("gemini-2.0-flash", requestBody);
+      const response = await gemini.generateContent(DEFAULT_GEMINI_MODEL, requestBody);
       let cleanedRecipe;
       try {
         cleanedRecipe = JSON.parse(response);
