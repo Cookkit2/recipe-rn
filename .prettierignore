@@ -4,18 +4,11 @@ node_modules
 dist
 build
 
-# Native build artifacts / vendored dependencies
-ios/Pods
-ios/build
-android/build
-android/.gradle
+# Native projects / generated artifacts
+ios
+android
 
 # Generated / caches
-ios/build/generated
-ios/Cookkit/Images.xcassets/AppIcon.appiconset/Contents.json
-ios/Cookkit/Images.xcassets/Contents.json
-ios/Cookkit/Images.xcassets/SplashScreenBackground.colorset/Contents.json
-ios/Cookkit/Images.xcassets/SplashScreenLegacy.imageset/Contents.json
 uniwind-types.d.ts
 
 # Large lockfiles
@@ -23,4 +16,6 @@ pnpm-lock.yaml
 
 # Agent/assistant scratch files
 .jules
-.Jules
+.agents
+.claude
+.cursor
