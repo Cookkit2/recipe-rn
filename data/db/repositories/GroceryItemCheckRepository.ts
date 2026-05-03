@@ -205,7 +205,7 @@ export class GroceryItemCheckRepository extends BaseRepository<GroceryItemCheck>
       }
 
       if (batchOps.length > 0) {
-        await database.batch(...batchOps);
+        await database.batch(batchOps);
       }
     });
   }
@@ -216,7 +216,7 @@ export class GroceryItemCheckRepository extends BaseRepository<GroceryItemCheck>
 
     await database.write(async () => {
       await database.batch(
-        ...checkedItems.map((item) =>
+        checkedItems.map((item) =>
           item.prepareUpdate((record) => {
             record.isChecked = false;
           })
@@ -230,7 +230,7 @@ export class GroceryItemCheckRepository extends BaseRepository<GroceryItemCheck>
     const allItems = await this.findAll();
 
     await database.write(async () => {
-      await database.batch(...allItems.map((item) => item.prepareDestroyPermanently()));
+      await database.batch(allItems.map((item) => item.prepareDestroyPermanently()));
     });
   }
 

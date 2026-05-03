@@ -3,11 +3,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import RecipeButton from "~/components/Pantry/RecipeButton";
 import Animated, {
   useAnimatedStyle,
-  useSharedValue,
+  useDerivedValue,
   withSpring,
   withTiming,
 } from "react-native-reanimated";
-import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
+import { scheduleOnRN } from "react-native-worklets";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { CURVES } from "~/constants/curves";
 import useDeviceCornerRadius from "~/hooks/useDeviceCornerRadius";
@@ -35,23 +35,14 @@ export default function PantryWrapper() {
   const { isRecipeOpen, updateRecipeOpen, translateY, context, isGestureActive, collapsedHeight } =
     usePantryStore();
 
-  const entranceOffset = useSharedValue(isRecipeOpen ? 1 : 0);
+  const entranceOffset = useDerivedValue(
+    () => withSpring(isRecipeOpen ? 1 : 0, SPRING_CONFIG),
+    [isRecipeOpen]
+  );
 
   useEffect(() => {
     setStatusBarStyle("auto", true);
   }, []);
-
-  useEffect(() => {
-    const target = isRecipeOpen ? 1 : 0;
-    scheduleOnUI((t: number) => {
-      "worklet";
-      entranceOffset.value = withSpring(t, {
-        damping: 15,
-        mass: 0.8,
-        stiffness: 400,
-      });
-    }, target);
-  }, [isRecipeOpen]);
 
   // Pan gesture handler - memoized to avoid recreation on every render
   const panGesture = Gesture.Pan()
@@ -122,11 +113,7 @@ export default function PantryWrapper() {
   const closeRecipe = useCallback(() => {
     if (isRecipeOpen) {
       updateRecipeOpen(false);
-      translateY.value = withSpring(0, {
-        damping: 15,
-        mass: 1,
-        stiffness: 300,
-      });
+      translateY.value = withSpring(0, SPRING_CONFIG);
     }
   }, [isRecipeOpen, updateRecipeOpen, translateY]);
 
@@ -134,7 +121,6 @@ export default function PantryWrapper() {
     const visibleHeight = collapsedHeight - 8 - translateY.value;
     return {
       opacity: entranceOffset.value,
-      // entranceOffset springs 0→1 on open (bounce), 1→0 on close; translateY drives drag directly
       top: SCREEN_HEIGHT - entranceOffset.value * visibleHeight,
     };
   }, [collapsedHeight]);

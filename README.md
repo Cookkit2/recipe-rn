@@ -46,7 +46,7 @@ Cookkit is a smart cooking companion app that helps you manage your pantry, disc
 ### Prerequisites
 
 - Node.js 18+
-- npm/yarn/pnpm
+- npm/yarn/bun
 - iOS: macOS with Xcode (for iOS development)
 - Android: Android Studio with SDK (for Android development)
 - Expo Go app (for quick device testing)

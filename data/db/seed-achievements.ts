@@ -368,7 +368,7 @@ export async function seedAchievements(): Promise<void> {
 
     // Batch create all achievements
     await database.batch(
-      ...initialAchievements.map((achievement) =>
+      initialAchievements.map((achievement) =>
         achievements.prepareCreate((record: any) => {
           record.type = achievement.type;
           record.category = achievement.category;

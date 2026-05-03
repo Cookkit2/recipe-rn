@@ -100,7 +100,7 @@ export class MealPlanRepository extends BaseRepository<MealPlan> {
   async clearAllPlannedRecipes(): Promise<void> {
     const allItems = await this.findAll();
     await database.write(async () => {
-      await database.batch(...allItems.map((item) => item.prepareDestroyPermanently()));
+      await database.batch(allItems.map((item) => item.prepareDestroyPermanently()));
     });
   }
 
@@ -204,7 +204,7 @@ export class MealPlanRepository extends BaseRepository<MealPlan> {
     if (batchOps.length === 0) return [];
 
     await database.write(async () => {
-      await database.batch(...batchOps);
+      await database.batch(batchOps);
     });
 
     // We can't easily return the exact records created since they are just instances,

@@ -380,7 +380,7 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
   async deleteByStockId(stockId: string): Promise<void> {
     await database.write(async () => {
       const records = await this.collection.query(Q.where("stock_id", stockId)).fetch();
-      await database.batch(...records.map((record) => record.prepareDestroyPermanently()));
+      await database.batch(records.map((record) => record.prepareDestroyPermanently()));
     });
   }
 

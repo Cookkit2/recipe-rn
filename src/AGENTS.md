@@ -6,7 +6,7 @@ Small tree holding an **alternate `AuthContext`** (`src/contexts/AuthContext.tsx
 
 ## Setup & run
 
-No separate commands — build via root `pnpm run dev`. Prefer deleting or migrating legacy code when touching auth instead of expanding this folder.
+No separate commands — build via root `bun run dev`. Prefer deleting or migrating legacy code when touching auth instead of expanding this folder.
 
 ## Patterns & conventions
 
@@ -31,5 +31,5 @@ rg -n "src/contexts|src/screens|src/store/authStore" .
 When deleting or migrating this folder, run full regression:
 
 ```bash
-pnpm run typecheck && pnpm run lint && pnpm test
+bun run typecheck && bun run lint && bun test
 ```

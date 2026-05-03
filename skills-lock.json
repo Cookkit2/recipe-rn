@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "app-store-preflight-skills": {
+      "source": "truongduy2611/app-store-preflight-skills",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "3e4cc0450924279cadbc6373da64c1c25d4380dd8f08f97e478770aa06cfc599"
+    }
+  }
+}

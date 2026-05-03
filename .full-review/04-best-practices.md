@@ -113,7 +113,7 @@
    - GDPR/PCI compliance failures
 
 10. **Dependency Audit Continues on Error** (CI:59)
-    - `continue-on-error: true` on `pnpm audit`
+    - `continue-on-error: true` on `bun audit`
     - High-severity vulnerabilities don't block builds
 
 ### High Severity (5)

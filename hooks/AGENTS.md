@@ -7,9 +7,9 @@ Client-side data orchestration: **TanStack Query** hooks under `hooks/queries/` 
 ## Setup & run
 
 ```bash
-pnpm install
-pnpm run typecheck
-pnpm test -- hooks/
+bun install
+bun run typecheck
+bun test -- hooks/
 ```
 
 ## Patterns & conventions
@@ -43,5 +43,5 @@ rg -n "queryKey" hooks/queries
 ## Pre-PR checks
 
 ```bash
-pnpm run typecheck && pnpm test -- hooks/
+bun run typecheck && bun test -- hooks/
 ```

@@ -89,7 +89,8 @@ jest.mock("~/data/db/database", () => ({
       await action();
     },
     batch: async (...ops: any[]) => {
-      for (const op of ops) {
+      const operations = ops.flat();
+      for (const op of operations) {
         if (op && op._type === "update") {
           op.updater(op.record);
         }

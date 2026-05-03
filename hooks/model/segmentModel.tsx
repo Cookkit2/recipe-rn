@@ -18,119 +18,47 @@ export const segmentStaticImage = async (
   skImage: SkImage,
   coordinate: { x: number; y: number }
 ) => {
-  const startTime = performance.now();
-  log.info("📊 [Profiling] Starting image segmentation...");
-
   // Step 1: Model Loading
-  const modelLoadStart = performance.now();
   const { magicTouchModel } = await allModel.get();
-  const modelLoadEnd = performance.now();
-  const modelLoadDuration = modelLoadEnd - modelLoadStart;
-  log.info(`📊 [Profiling] Model loading took ${modelLoadDuration.toFixed(2)}ms`);
 
   try {
     // Step 2: Preprocessing Input
-    const preprocessStart = performance.now();
     const input = preprocessMagicTouchInput(skImage, {
       x: coordinate.x,
       y: coordinate.y,
     }); // Float32Array length 512*512*4
-    const preprocessEnd = performance.now();
-    const preprocessDuration = preprocessEnd - preprocessStart;
-    log.info(`📊 [Profiling] Preprocessing took ${preprocessDuration.toFixed(2)}ms`);
-    log.info(
-      `📊 [Profiling] Input array size: ${input.length} (${((input.length * 4) / 1024).toFixed(2)} KB)`
-    );
 
     // Step 3: Model Inference
-    const inferenceStart = performance.now();
-    const magicTouchOutputs = magicTouchModel.runSync([input]) as Float32Array[];
-    const inferenceEnd = performance.now();
-    const inferenceDuration = inferenceEnd - inferenceStart;
-    log.info(`📊 [Profiling] Model inference took ${inferenceDuration.toFixed(2)}ms`);
+    const magicTouchOutputs = magicTouchModel.runSync([input.buffer]);
 
     let returnSkImage: SkImage = skImage;
 
     // Step 4: Applying Mask
-    const maskStart = performance.now();
     if (magicTouchOutputs[0]) {
-      const magicMaskOutputs = applyMagicTouchMaskAndExport(skImage, magicTouchOutputs[0]);
+      const magicMaskOutputs = applyMagicTouchMaskAndExport(
+        skImage,
+        new Float32Array(magicTouchOutputs[0])
+      );
 
       if (magicMaskOutputs?.finalImage) {
         returnSkImage = magicMaskOutputs?.finalImage;
       }
     }
-    const maskEnd = performance.now();
-    const maskDuration = maskEnd - maskStart;
-    log.info(`📊 [Profiling] Applying mask took ${maskDuration.toFixed(2)}ms`);
 
     // Step 5: Create Thumbnail for Color Extraction
     // Using a tiny 32x32 PNG thumbnail for fast color extraction
-    const thumbnailStart = performance.now();
     const thumbnailBase64 = createThumbnailForColors(returnSkImage, 32);
     const url = `data:image/png;base64,${thumbnailBase64}`;
-    const thumbnailEnd = performance.now();
-    const thumbnailDuration = thumbnailEnd - thumbnailStart;
-    log.info(`📊 [Profiling] Thumbnail creation took ${thumbnailDuration.toFixed(2)}ms`);
-    log.info(`📊 [Profiling] Thumbnail size: ${thumbnailBase64.length} characters (vs full image)`);
 
     // Step 6: Color Extraction
-    const colorStart = performance.now();
     const backgroundColor = await fetchColors(url);
-    const colorEnd = performance.now();
-    const colorDuration = colorEnd - colorStart;
-    log.info(`📊 [Profiling] Color extraction took ${colorDuration.toFixed(2)}ms`);
-
-    // Overall timing
-    const endTime = performance.now();
-    const duration = endTime - startTime;
-
-    log.info("\n📊 [Profiling] ===== SUMMARY =====");
-    log.info(
-      `📊 [Profiling] Model loading:     ${modelLoadDuration.toFixed(2)}ms (${(
-        (modelLoadDuration / duration) *
-        100
-      ).toFixed(1)}%)`
-    );
-    log.info(
-      `📊 [Profiling] Preprocessing:     ${preprocessDuration.toFixed(2)}ms (${(
-        (preprocessDuration / duration) *
-        100
-      ).toFixed(1)}%)`
-    );
-    log.info(
-      `📊 [Profiling] Model inference:   ${inferenceDuration.toFixed(2)}ms (${(
-        (inferenceDuration / duration) *
-        100
-      ).toFixed(1)}%)`
-    );
-    log.info(
-      `📊 [Profiling] Applying mask:     ${maskDuration.toFixed(2)}ms (${(
-        (maskDuration / duration) *
-        100
-      ).toFixed(1)}%)`
-    );
-    log.info(
-      `📊 [Profiling] Thumbnail creation: ${thumbnailDuration.toFixed(2)}ms (${(
-        (thumbnailDuration / duration) *
-        100
-      ).toFixed(1)}%)`
-    );
-    log.info(
-      `📊 [Profiling] Color extraction:  ${colorDuration.toFixed(2)}ms (${(
-        (colorDuration / duration) *
-        100
-      ).toFixed(1)}%)`
-    );
-    log.info(`📊 [Profiling] TOTAL:             ${duration.toFixed(2)}ms`);
-    log.info("📊 [Profiling] ==================\n");
 
     return {
       background_color: backgroundColor,
       skImage: returnSkImage,
     };
   } catch (error) {
-    log.error("Error processing static image:", error);
+    log.error("[create-camera] segmentStaticImage failed", error);
     return {
       background_color: undefined,
       skImage: skImage,
@@ -577,5 +505,112 @@ export const resizeImagePreserveAlpha = (
   return {
     finalImage: finalImage ?? image,
     base64: base64 ?? image.encodeToBase64(ImageFormat.PNG, 85),
+  };
+};
+
+export const trimTransparentBordersAndResizeImage = (
+  image: SkImage,
+  targetWidth: number,
+  padding: number = 0
+): { base64: string; width: number; height: number } => {
+  const imgW = image.width();
+  const imgH = image.height();
+
+  const maxScan = 512;
+  const scale = Math.min(1, maxScan / Math.max(imgW, imgH));
+  const scanW = Math.max(1, Math.round(imgW * scale));
+  const scanH = Math.max(1, Math.round(imgH * scale));
+
+  const surface = Skia.Surface.MakeOffscreen(scanW, scanH);
+  const canvas = surface?.getCanvas();
+  if (!surface || !canvas) {
+    const resized = resizeImagePreserveAlpha(image, targetWidth);
+    return {
+      base64: resized.base64,
+      width: resized.finalImage.width(),
+      height: resized.finalImage.height(),
+    };
+  }
+
+  const srcRect: SkRect = { x: 0, y: 0, width: imgW, height: imgH };
+  const dstRect: SkRect = { x: 0, y: 0, width: scanW, height: scanH };
+  const paint = Skia.Paint();
+  paint.setAntiAlias(true);
+  canvas.drawImageRect(image, srcRect, dstRect, paint);
+
+  const snapshot = surface.makeImageSnapshot();
+  const pixels = snapshot?.readPixels();
+  if (!pixels) {
+    const resized = resizeImagePreserveAlpha(image, targetWidth);
+    return {
+      base64: resized.base64,
+      width: resized.finalImage.width(),
+      height: resized.finalImage.height(),
+    };
+  }
+
+  let minX = scanW;
+  let minY = scanH;
+  let maxX = -1;
+  let maxY = -1;
+  const threshold = 1;
+
+  for (let y = 0; y < scanH; y++) {
+    for (let x = 0; x < scanW; x++) {
+      const idx = (y * scanW + x) * 4 + 3;
+      const a = pixels[idx] || 0;
+      if (a > threshold) {
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+
+  if (maxX < 0 || maxY < 0) {
+    const resized = resizeImagePreserveAlpha(image, targetWidth);
+    return {
+      base64: resized.base64,
+      width: resized.finalImage.width(),
+      height: resized.finalImage.height(),
+    };
+  }
+
+  const scaleX = imgW / scanW;
+  const scaleY = imgH / scanH;
+  const x1 = Math.max(0, Math.floor(minX * scaleX) - padding);
+  const y1 = Math.max(0, Math.floor(minY * scaleY) - padding);
+  const x2 = Math.min(imgW, Math.ceil((maxX + 1) * scaleX) + padding);
+  const y2 = Math.min(imgH, Math.ceil((maxY + 1) * scaleY) + padding);
+
+  const cropW = Math.max(1, x2 - x1);
+  const cropH = Math.max(1, y2 - y1);
+  const outW = Math.max(1, Math.min(targetWidth, cropW));
+  const outH = Math.max(1, Math.round((cropH / cropW) * outW));
+
+  const outSurface = Skia.Surface.MakeOffscreen(outW, outH);
+  const outCanvas = outSurface?.getCanvas();
+  if (!outSurface || !outCanvas) {
+    const resized = resizeImagePreserveAlpha(image, targetWidth);
+    return {
+      base64: resized.base64,
+      width: resized.finalImage.width(),
+      height: resized.finalImage.height(),
+    };
+  }
+
+  const cropSrc: SkRect = { x: x1, y: y1, width: cropW, height: cropH };
+  const cropDst: SkRect = { x: 0, y: 0, width: outW, height: outH };
+  const outPaint = Skia.Paint();
+  outPaint.setAntiAlias(true);
+  outCanvas.drawImageRect(image, cropSrc, cropDst, outPaint);
+
+  const outSnap = outSurface.makeImageSnapshot();
+  return {
+    base64:
+      outSnap?.encodeToBase64(ImageFormat.PNG, 85) ?? image.encodeToBase64(ImageFormat.PNG, 85),
+    width: outW,
+    height: outH,
   };
 };

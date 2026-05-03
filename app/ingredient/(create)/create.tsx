@@ -1,5 +1,12 @@
-import { Camera, useCameraDevice, useCameraFormat, type Point } from "react-native-vision-camera";
-import { useEffect, useRef } from "react";
+import {
+  Camera,
+  useCameraDevice,
+  usePhotoOutput,
+  type CameraRef,
+  type Constraint,
+  type Point,
+} from "react-native-vision-camera";
+import { useEffect, useMemo, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
 import allModel from "~/hooks/model/allModel";
@@ -12,7 +19,7 @@ import { setStatusBarStyle } from "expo-status-bar";
 import { useCameraPermissions } from "~/hooks/useCameraPermissions";
 import CameraActionRow from "~/components/Camera/CameraActionRow";
 import CameraLayout from "~/components/Camera/CameraLayout";
-import { CAMERA_RESOLUTION } from "~/constants/camera";
+import { CAMERA_PHOTO_OUTPUT_OPTIONS } from "~/constants/camera";
 import { useCreateIngredientStore } from "~/store/CreateIngredientContext";
 import { scheduleOnRN } from "react-native-worklets";
 
@@ -20,13 +27,14 @@ export default function CreateIngredient() {
   const { hasPermission, handlePermissionRequest } = useCameraPermissions();
   const { updateFramePosition } = useCreateIngredientStore();
 
-  const camera = useRef<Camera>(null);
+  const camera = useRef<CameraRef>(null);
   const device = useCameraDevice("back");
   const isCameraAvailable = !!device;
-  const format = useCameraFormat(device, [
-    { photoResolution: CAMERA_RESOLUTION },
-    { videoResolution: CAMERA_RESOLUTION },
-  ]);
+  const photoOutput = usePhotoOutput(CAMERA_PHOTO_OUTPUT_OPTIONS);
+  const cameraConstraints = useMemo(
+    () => [{ resolutionBias: photoOutput }] satisfies Constraint[],
+    [photoOutput]
+  );
 
   // Tap to focus gesture
   const handleTap = (x: number, y: number) => {
@@ -35,7 +43,7 @@ export default function CreateIngredient() {
 
     // Focus the camera at the tapped point
     const point: Point = { x, y };
-    camera.current?.focus(point);
+    camera.current?.focusTo(point);
   };
 
   const tapGesture = Gesture.Tap().onEnd(({ x, y }) => {
@@ -48,7 +56,7 @@ export default function CreateIngredient() {
       // Load the model if not already loaded
       if (!allModel.isLoaded()) {
         allModel.get().catch((error) => {
-          log.error("Failed to load model:", error);
+          log.error("[create-camera] failed to preload segmentation model", error);
         });
       }
     });
@@ -85,14 +93,12 @@ export default function CreateIngredient() {
           <GestureDetector gesture={tapGesture}>
             <Camera
               ref={camera}
-              photo
               style={[StyleSheet.absoluteFill]}
-              photoQualityBalance="speed"
               device={device!}
-              format={format}
-              enableDepthData={false}
+              outputs={[photoOutput]}
+              constraints={cameraConstraints}
               isActive={true}
-              enableZoomGesture={true}
+              enableNativeZoomGesture={true}
             />
           </GestureDetector>
         ) : (
@@ -109,7 +115,7 @@ export default function CreateIngredient() {
         {isCameraAvailable && <FocusingAreaIndicator />}
       </View>
 
-      <CameraActionRow camera={camera} isCameraAvailable={isCameraAvailable} />
+      <CameraActionRow photoOutput={photoOutput} isCameraAvailable={isCameraAvailable} />
     </CameraLayout>
   );
 }

@@ -2,11 +2,7 @@ import { ScrollView } from "react-native";
 import RotationCard from "~/components/Shared/RotationCard";
 import { OutlinedImage } from "~/components/ui/outlined-image";
 import ShapeContainer from "~/components/Shared/Shapes/ShapeContainer";
-
-interface IngredientPreviewData {
-  matched: { name: string; imageUrl: string; quantity: number; unit: string }[];
-  missing: { name: string; index: number; quantity: number; unit: string }[];
-}
+import type { IngredientPreviewData } from "~/utils/ingredient-preview";
 
 interface IngredientVisualPreviewProps {
   ingredientPreviewData: IngredientPreviewData;
@@ -27,7 +23,7 @@ export default function IngredientVisualPreview({
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      className="flex-row gap-2 mt-2 -mx-6 px-12 overflow-visible"
+      className="flex-row mt-2 -mx-6 px-12 overflow-visible"
     >
       {/* Matched ingredients with images */}
       {ingredientPreviewData.matched.map((item, index) => (

@@ -1,5 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { View, Keyboard, Pressable, TouchableOpacity, FlatList, ScrollView } from "react-native";
+import React, { useCallback, useMemo, useRef, useState } from "react";
+import { View, Keyboard, Pressable, TouchableOpacity, FlatList, StyleSheet } from "react-native";
+import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { Portal } from "@rn-primitives/portal";
+import { SlidersHorizontalIcon } from "lucide-uniwind";
 import { cn } from "~/lib/utils";
 import { Stack, useFocusEffect, useRouter } from "expo-router";
 import type { SearchBarCommands } from "react-native-screens";
@@ -26,22 +29,22 @@ const DIFFICULTY_OPTIONS = [
 
 const DIETARY_TAGS = ["Vegetarian", "Vegan", "Gluten-Free"];
 
-const QUICK_ACTIONS = [
-  "What do I have?",
-  "What's expiring soon?",
-  "Suggest a meal",
-  "Find recipes",
-];
+// const QUICK_ACTIONS = [
+//   "What do I have?",
+//   "What's expiring soon?",
+//   "Suggest a meal",
+//   "Find recipes",
+// ];
 
 export default function SearchScreen() {
   const { top, bottom } = useSafeAreaInsets();
   const colors = useColors();
   const router = useRouter();
   const searchBarRef = useRef<SearchBarCommands>(null);
+  const filterSheetRef = useRef<BottomSheet>(null);
+  const filterSnapPoints = useMemo(() => ["55%"], []);
 
   const [input, setInput] = useState("");
-
-  const [debouncedInput, setDebouncedInput] = useState("");
 
   // Filters state
   const [selectedTime, setSelectedTime] = useState<{
@@ -52,13 +55,11 @@ export default function SearchScreen() {
   const [selectedDifficulty, setSelectedDifficulty] = useState<number | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
-  useEffect(() => {
-    const t = setTimeout(() => setDebouncedInput(input), 250);
-    return () => clearTimeout(t);
-  }, [input]);
   const hasFilters =
     selectedTime !== null || selectedDifficulty !== null || selectedTags.length > 0;
-  const hasQuery = debouncedInput.trim().length > 0 || hasFilters;
+  const hasQuery = input.trim().length > 0 || hasFilters;
+  const activeFilterCount =
+    (selectedTime ? 1 : 0) + (selectedDifficulty ? 1 : 0) + selectedTags.length;
 
   const activeFilters = useMemo(() => {
     const filters: RecipeFilters = {};
@@ -70,11 +71,11 @@ export default function SearchScreen() {
   }, [selectedTime, selectedDifficulty, selectedTags]);
 
   const { data: recipeResults, isLoading: isLoadingRecipes } = useSearchRecipes(
-    debouncedInput.trim(),
+    input.trim(),
     activeFilters
   );
   const { data: ingredientResults, isLoading: isLoadingIngredients } = useSearchPantryItems(
-    debouncedInput.trim()
+    input.trim()
   );
 
   useFocusEffect(
@@ -87,15 +88,30 @@ export default function SearchScreen() {
     }, [])
   );
 
-  const handleQuickAction = (action: string) => {
-    setInput(action);
-    searchBarRef.current?.setText(action);
-    searchBarRef.current?.focus();
-  };
+  // const handleQuickAction = (action: string) => {
+  //   setInput(action);
+  //   searchBarRef.current?.setText(action);
+  //   searchBarRef.current?.focus();
+  // };
 
   const handleDismiss = () => {
     Keyboard.dismiss();
     router.back();
+  };
+
+  const openFilterSheet = () => {
+    Keyboard.dismiss();
+    filterSheetRef.current?.expand();
+  };
+
+  const closeFilterSheet = () => {
+    filterSheetRef.current?.close();
+  };
+
+  const clearFilters = () => {
+    setSelectedTime(null);
+    setSelectedDifficulty(null);
+    setSelectedTags([]);
   };
 
   const hasResults =
@@ -103,16 +119,16 @@ export default function SearchScreen() {
     (ingredientResults && ingredientResults.length > 0);
 
   type SectionItem =
-    | { key: "filters" }
     | { key: "loading" }
     | { key: "ingredients" }
     | { key: "recipes" }
     | { key: "no-results" }
+    | { key: "empty" }
     | { key: "suggestions" };
 
   const sections = useMemo<SectionItem[]>(() => {
     if (hasQuery) {
-      const items: SectionItem[] = [{ key: "filters" }];
+      const items: SectionItem[] = [];
       if (isLoadingRecipes || isLoadingIngredients) items.push({ key: "loading" });
       if (ingredientResults?.length) items.push({ key: "ingredients" });
       if (recipeResults?.length) items.push({ key: "recipes" });
@@ -120,8 +136,7 @@ export default function SearchScreen() {
         items.push({ key: "no-results" });
       return items;
     }
-    const items: SectionItem[] = [{ key: "filters" }];
-    return items;
+    return [{ key: "empty" }];
   }, [
     hasQuery,
     isLoadingRecipes,
@@ -131,103 +146,142 @@ export default function SearchScreen() {
     hasResults,
   ]);
 
+  const renderFilterChip = ({
+    label,
+    isActive,
+    onPress,
+  }: {
+    label: string;
+    isActive: boolean;
+    onPress: () => void;
+  }) => (
+    <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityState={{ selected: isActive }}
+      onPress={onPress}
+      className={cn(
+        "px-4 py-2 rounded-full border border-border",
+        isActive ? "bg-primary border-primary" : "bg-card"
+      )}
+    >
+      <Text
+        className={cn(
+          "text-sm font-urbanist-semibold",
+          isActive ? "text-primary-foreground" : "text-foreground"
+        )}
+      >
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
+
+  const renderFilterSheet = () => (
+    <Portal name="search-filter-sheet">
+      <BottomSheet
+        ref={filterSheetRef}
+        index={-1}
+        snapPoints={filterSnapPoints}
+        enablePanDownToClose
+        backgroundStyle={[styles.sheetBackground, { backgroundColor: colors.card }]}
+        handleIndicatorStyle={styles.handleIndicator}
+      >
+        <BottomSheetScrollView
+          className="flex-1"
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: bottom + 24 }}
+        >
+          <View className="flex-row items-start justify-between mb-6">
+            <View>
+              <Text className="text-2xl font-bowlby-one text-foreground">Filters</Text>
+              <Text className="text-sm text-muted-foreground font-urbanist-medium mt-1">
+                Narrow recipes by time, difficulty, or diet
+              </Text>
+            </View>
+
+            {hasFilters ? (
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel="Clear search filters"
+                onPress={clearFilters}
+                className="px-3 py-2 rounded-full bg-muted"
+              >
+                <Text className="text-sm font-urbanist-semibold text-foreground">Clear</Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
+
+          <View className="gap-6">
+            <View className="gap-3">
+              <Text className="text-xs text-muted-foreground font-urbanist-semibold uppercase tracking-wider">
+                Cooking time
+              </Text>
+              <View className="flex-row flex-wrap gap-2">
+                {TIME_OPTIONS.map((opt) => (
+                  <React.Fragment key={opt.label}>
+                    {renderFilterChip({
+                      label: opt.label,
+                      isActive: selectedTime?.label === opt.label,
+                      onPress: () =>
+                        setSelectedTime(selectedTime?.label === opt.label ? null : opt),
+                    })}
+                  </React.Fragment>
+                ))}
+              </View>
+            </View>
+
+            <View className="gap-3">
+              <Text className="text-xs text-muted-foreground font-urbanist-semibold uppercase tracking-wider">
+                Difficulty
+              </Text>
+              <View className="flex-row flex-wrap gap-2">
+                {DIFFICULTY_OPTIONS.map((opt) => (
+                  <React.Fragment key={opt.label}>
+                    {renderFilterChip({
+                      label: opt.label,
+                      isActive: selectedDifficulty === opt.value,
+                      onPress: () =>
+                        setSelectedDifficulty(selectedDifficulty === opt.value ? null : opt.value),
+                    })}
+                  </React.Fragment>
+                ))}
+              </View>
+            </View>
+
+            <View className="gap-3">
+              <Text className="text-xs text-muted-foreground font-urbanist-semibold uppercase tracking-wider">
+                Dietary
+              </Text>
+              <View className="flex-row flex-wrap gap-2">
+                {DIETARY_TAGS.map((tag) => (
+                  <React.Fragment key={tag}>
+                    {renderFilterChip({
+                      label: tag,
+                      isActive: selectedTags.includes(tag),
+                      onPress: () =>
+                        setSelectedTags((prev) =>
+                          prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+                        ),
+                    })}
+                  </React.Fragment>
+                ))}
+              </View>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Close search filters"
+            onPress={closeFilterSheet}
+            className="mt-8 rounded-2xl bg-foreground py-4 items-center"
+          >
+            <Text className="text-background font-urbanist-semibold text-base">Done</Text>
+          </TouchableOpacity>
+        </BottomSheetScrollView>
+      </BottomSheet>
+    </Portal>
+  );
+
   const renderSection = ({ item }: { item: SectionItem }) => {
     switch (item.key) {
-      case "filters":
-        return (
-          <View className="mb-4">
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              className="px-4"
-              contentContainerStyle={{ gap: 8, paddingRight: 32 }}
-            >
-              {TIME_OPTIONS.map((opt) => {
-                const isActive = selectedTime?.label === opt.label;
-                return (
-                  <TouchableOpacity
-                    key={opt.label}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: isActive }}
-                    onPress={() => setSelectedTime(isActive ? null : opt)}
-                    className={cn(
-                      "px-4 py-2 rounded-full border border-border",
-                      isActive ? "bg-primary border-primary" : "bg-card"
-                    )}
-                  >
-                    <Text
-                      className={cn(
-                        "text-sm font-urbanist-semibold",
-                        isActive ? "text-primary-foreground" : "text-foreground"
-                      )}
-                    >
-                      {opt.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-
-              <View className="w-[1px] h-6 bg-border mx-1 self-center" />
-
-              {DIFFICULTY_OPTIONS.map((opt) => {
-                const isActive = selectedDifficulty === opt.value;
-                return (
-                  <TouchableOpacity
-                    key={opt.label}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: isActive }}
-                    onPress={() => setSelectedDifficulty(isActive ? null : opt.value)}
-                    className={cn(
-                      "px-4 py-2 rounded-full border border-border",
-                      isActive ? "bg-primary border-primary" : "bg-card"
-                    )}
-                  >
-                    <Text
-                      className={cn(
-                        "text-sm font-urbanist-semibold",
-                        isActive ? "text-primary-foreground" : "text-foreground"
-                      )}
-                    >
-                      {opt.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-
-              <View className="w-[1px] h-6 bg-border mx-1 self-center" />
-
-              {DIETARY_TAGS.map((tag) => {
-                const isActive = selectedTags.includes(tag);
-                return (
-                  <TouchableOpacity
-                    key={tag}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: isActive }}
-                    onPress={() =>
-                      setSelectedTags((prev) =>
-                        isActive ? prev.filter((t) => t !== tag) : [...prev, tag]
-                      )
-                    }
-                    className={cn(
-                      "px-4 py-2 rounded-full border border-border",
-                      isActive ? "bg-primary border-primary" : "bg-card"
-                    )}
-                  >
-                    <Text
-                      className={cn(
-                        "text-sm font-urbanist-semibold",
-                        isActive ? "text-primary-foreground" : "text-foreground"
-                      )}
-                    >
-                      {tag}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </View>
-        );
-
       case "loading":
         return (
           <View className="flex-row items-center gap-2 px-1 mt-12 mx-auto">
@@ -244,6 +298,14 @@ export default function SearchScreen() {
           <View className="items-center py-8 gap-2">
             <Text className="text-sm text-muted-foreground font-urbanist-medium">
               No results found
+            </Text>
+          </View>
+        );
+      case "empty":
+        return (
+          <View className="items-center px-6 pt-16">
+            <Text className="text-sm text-muted-foreground font-urbanist-medium text-center">
+              Search pantry items or recipes.
             </Text>
           </View>
         );
@@ -293,6 +355,40 @@ export default function SearchScreen() {
           renderItem={renderSection}
         />
       </Pressable>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={
+          hasFilters ? `Open filters, ${activeFilterCount} active` : "Open filters"
+        }
+        onPress={openFilterSheet}
+        className="absolute right-4 z-50 rounded-full border border-border bg-card p-2 shadow-sm"
+        style={{ top: top + 8 }}
+      >
+        <SlidersHorizontalIcon
+          className={hasFilters ? "text-primary" : "text-foreground"}
+          size={22}
+          strokeWidth={2.4}
+        />
+        {hasFilters ? (
+          <View className="absolute -right-1 -top-1 min-w-4 h-4 rounded-full bg-primary items-center justify-center px-1">
+            <Text className="text-[10px] leading-3 text-primary-foreground font-urbanist-bold">
+              {activeFilterCount}
+            </Text>
+          </View>
+        ) : null}
+      </Pressable>
+      {renderFilterSheet()}
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  sheetBackground: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+  },
+  handleIndicator: {
+    width: 40,
+    height: 4,
+  },
+});

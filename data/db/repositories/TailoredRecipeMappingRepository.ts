@@ -179,7 +179,7 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
 
       // ⚡ Bolt Performance Optimization:
       // Prevent N+1 transactional overhead by batching all operations together.
-      await database.batch(...batchOps);
+      await database.batch(batchOps);
 
       return recipe;
     });
@@ -220,7 +220,7 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
       }
 
       if (batchOps.length > 0) {
-        await database.batch(...batchOps);
+        await database.batch(batchOps);
       }
     });
   }
@@ -263,7 +263,7 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
         ...ingredients.map((i) => i.prepareDestroyPermanently()),
       ];
 
-      await database.batch(...deletions);
+      await database.batch(deletions);
     });
 
     return expiredMappings.length;
@@ -308,7 +308,7 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
         ...tailoredRecipes.map((r) => r.prepareDestroyPermanently()),
       ];
 
-      await database.batch(...deletions);
+      await database.batch(deletions);
     });
   }
 }

@@ -6,13 +6,10 @@ import { classifyStaticImage } from "~/hooks/model/classifyModel";
 import { loadImageIntoSkia } from "~/hooks/model/processImage";
 import {
   segmentStaticImage,
-  trimTransparentBorders,
-  resizeImagePreserveAlpha,
+  trimTransparentBordersAndResizeImage,
 } from "~/hooks/model/segmentModel";
-import { CAMERA_RESOLUTION } from "~/constants/camera";
 import { File, Paths } from "expo-file-system";
 import { titleCase } from "~/utils/text-formatter";
-import * as Haptics from "expo-haptics";
 import * as Crypto from "expo-crypto";
 import type { Prettify } from "~/utils/type-prettier";
 import { log } from "~/utils/logger";
@@ -50,6 +47,30 @@ interface CreateIngredientContextType {
 
 const CreateIngredientContext = createContext<CreateIngredientContextType | null>(null);
 
+function getImageFileDebugInfo(imagePath: string) {
+  try {
+    const file = new File(imagePath);
+    return {
+      normalizedUri: file.uri,
+      exists: file.exists,
+      size: file.size,
+      type: file.type || "unknown",
+      extension: file.extension || "unknown",
+      hasFileUriScheme: imagePath.startsWith("file://"),
+    };
+  } catch (error) {
+    return {
+      normalizedUri: imagePath,
+      exists: false,
+      size: 0,
+      type: "unknown",
+      extension: "unknown",
+      hasFileUriScheme: imagePath.startsWith("file://"),
+      fileInfoError: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
 export function CreateIngredientProvider({ children }: { children: React.ReactNode }) {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -68,17 +89,19 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
   // Process a single item (runs independently, updates state when done)
   const processItem = useCallback(
     async (itemId: string, imagePath: string, itemFramePosition: { x: number; y: number }) => {
-      try {
-        const normalizedFramePosition = {
-          x: (itemFramePosition.x / width) * CAMERA_RESOLUTION.width,
-          y: (itemFramePosition.y / ((width * 4) / 3)) * CAMERA_RESOLUTION.height,
-        };
+      const pipelineStart = performance.now();
 
+      try {
         const skImage = await loadImageIntoSkia(imagePath);
 
         if (!skImage) {
           throw new Error("Failed to load image");
         }
+
+        const normalizedFramePosition = {
+          x: (itemFramePosition.x / width) * skImage.width(),
+          y: (itemFramePosition.y / ((width * 4) / 3)) * skImage.height(),
+        };
 
         // Step 1: Segment the image first
         const segmentedImage = await segmentStaticImage(skImage, normalizedFramePosition);
@@ -91,8 +114,8 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
         const filename = `masked-${Date.now()}-${itemId}.png`;
         const file = new File(Paths.cache, filename);
 
-        const { finalImage: trimmedImage } = trimTransparentBorders(segmentedImage.skImage, 2);
-        const { base64 } = resizeImagePreserveAlpha(trimmedImage, 300);
+        const resizedImage = trimTransparentBordersAndResizeImage(segmentedImage.skImage, 300, 2);
+        const { base64 } = resizedImage;
 
         file.write(base64, { encoding: "base64" });
 
@@ -175,11 +198,14 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
           log.error("Error fetching base ingredient after processing:", error);
           // Continue with default values if fetch fails
         }
-
-        // Haptic feedback for success
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } catch (error) {
-        log.error("Processing error:", error);
+        log.error("[create-camera] processing error", {
+          itemId,
+          imagePath,
+          error: error instanceof Error ? error.message : String(error),
+          durationMs: Number((performance.now() - pipelineStart).toFixed(2)),
+          ...getImageFileDebugInfo(imagePath),
+        });
 
         // Mark as failed
         setProcessPantryItems((prev) =>
@@ -193,10 +219,9 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
               : i
           )
         );
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
     },
-    [width]
+    [height, width]
   );
 
   // Add item and immediately start processing (fire and forget, parallel)
@@ -250,6 +275,7 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
             i.id === id ? { ...i, status: "processing" as const, error: undefined } : i
           );
         }
+        log.warn("[create-camera] retry skipped because source image data is missing", { id });
         return prev;
       });
     },
@@ -306,7 +332,7 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
           );
         }
       } catch (error) {
-        log.error("Error fetching base ingredient on update:", error);
+        log.error("[create-camera] error fetching base ingredient on update", error);
       }
 
       timeoutRef.current = null;

@@ -106,7 +106,7 @@ Address all **Critical/High** and selected **Medium** findings from:
 ### Step 9: @babel/runtime vulnerability
 
 - **Deliverable**: Resolved version ≥ 7.26.10; no known ReDoS from GHSA-968p-4wvh-cqc8.
-- Run `npm ls @babel/runtime` and confirm version. If WatermelonDB pulls in an older version, add an override in `package.json` if using npm overrides (or resolutions in Yarn/PNPM) to force `@babel/runtime@>=7.26.10`.
+- Run `npm ls @babel/runtime` and confirm version. If WatermelonDB pulls in an older version, add an override in `package.json` if using npm overrides (or resolutions in Yarn/bun) to force `@babel/runtime@>=7.26.10`.
 - Document in a short “Dependencies” or “Security” note: keep @babel/runtime at or above 7.26.10; plan WatermelonDB upgrade when a version with patched dependency is available.
 
 ---

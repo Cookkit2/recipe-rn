@@ -9,12 +9,12 @@ File-based routes and layouts for Cookkit (Expo Router ~55). Colocated route com
 From repo root:
 
 ```bash
-pnpm install
-pnpm run dev          # expo start -c
-pnpm run ios          # expo run ios
-pnpm run android      # expo start -c --android
-pnpm run web          # expo start -c --web
-pnpm run typecheck && pnpm test
+bun install
+bun run dev          # expo start -c
+bun run ios          # expo run ios
+bun run android      # expo start -c --android
+bun run web          # expo start -c --web
+bun run typecheck && bun test
 ```
 
 ## Patterns & conventions
@@ -49,5 +49,5 @@ rg -n "useRouter|router\.push" app/
 ## Pre-PR checks
 
 ```bash
-pnpm run typecheck && pnpm run lint && pnpm test
+bun run typecheck && bun run lint && bun test
 ```

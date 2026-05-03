@@ -38,7 +38,7 @@ We need to extract recipe information from YouTube cooking videos. The key chall
 - Uses existing Gemini API infrastructure
 - Cost-effective (transcript is text-based)
 - Fast processing (no video streaming required)
-- Works with `gemini-2.0-flash` model
+- Works with `gemini-2.5-flash-lite` model
 
 **Cons:**
 

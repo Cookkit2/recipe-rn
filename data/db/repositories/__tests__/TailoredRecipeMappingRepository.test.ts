@@ -84,14 +84,14 @@ describe("TailoredRecipeMappingRepository", () => {
       const count = await repository.cleanupExpired();
 
       expect(count).toBe(2);
-      expect(database.batch).toHaveBeenCalledWith(
+      expect(database.batch).toHaveBeenCalledWith([
         "del_m1",
         "del_m2",
         "del_r1",
         "del_r2",
         "del_s1",
-        "del_i1"
-      );
+        "del_i1",
+      ]);
 
       // Verify Q.oneOf was used
       expect(mockRecipeCollection.query).toHaveBeenCalledWith(
@@ -126,7 +126,7 @@ describe("TailoredRecipeMappingRepository", () => {
 
       await repository.clearForBaseRecipe("base1");
 
-      expect(database.batch).toHaveBeenCalledWith("del_m1", "del_ts1", "del_ti1", "del_tr1");
+      expect(database.batch).toHaveBeenCalledWith(["del_m1", "del_ts1", "del_ti1", "del_tr1"]);
     });
   });
 });

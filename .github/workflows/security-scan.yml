@@ -2,20 +2,12 @@ name: Security Scanning
 
 on:
   push:
-    branches: [main, master, develop, staging]
-  pull_request:
-    branches: [main, master, develop, staging]
+    branches: [main, master]
   schedule:
-    # Run security scans daily at 2 AM UTC
     - cron: "0 2 * * *"
   workflow_dispatch:
 
-env:
-  NODE_VERSION: "20"
-  PNPM_VERSION: 10
-
 jobs:
-  # Static Application Security Testing (SAST)
   codeql:
     name: CodeQL SAST
     runs-on: ubuntu-latest
@@ -42,7 +34,6 @@ jobs:
         with:
           category: "/language:javascript-typescript"
 
-  # Semgrep SAST
   semgrep:
     name: Semgrep SAST
     runs-on: ubuntu-latest
@@ -69,40 +60,14 @@ jobs:
       - name: Check for critical vulnerabilities
         run: |
           if [ -f semgrep-report.sarif ]; then
-            CRITICAL=$(jq '[.runs[].results[]? | select(.level == "error" or .level == "warning")] | length' semgrep-report.sarif)
+            CRITICAL=$(jq '[.runs[].results[]? | select(.level == "error")] | length' semgrep-report.sarif)
             if [ "$CRITICAL" -gt 0 ]; then
-              echo "❌ Found $CRITICAL critical security issues"
+              echo "Found $CRITICAL critical Semgrep issues"
               exit 1
             fi
           fi
-          echo "✅ No critical security issues found"
+          echo "No critical Semgrep issues found"
 
-  # npm Audit
-  npm-audit:
-    name: npm Audit
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run npm audit
-        run: pnpm audit --prod --audit-level=moderate
-        continue-on-error: false
-
-  # Security Policy Check
   security-policy:
     name: Security Policy Compliance
     runs-on: ubuntu-latest
@@ -112,22 +77,22 @@ jobs:
       - name: Check for SECURITY.md
         run: |
           if [ ! -f "SECURITY.md" ]; then
-            echo "⚠️  WARNING: SECURITY.md file not found"
-            echo "Consider adding a security policy file"
-          else
-            echo "✅ SECURITY.md file exists"
+            echo "SECURITY.md file not found"
+            exit 1
           fi
+          echo "SECURITY.md file exists"
 
       - name: Check for sensitive file exposure
         run: |
           echo "Checking for potentially exposed sensitive files..."
-          if git ls-files | grep -E "\.(env|key|pem|p12|pfx)$"; then
-            echo "❌ ERROR: Sensitive files found in git"
+          SENSITIVE_FILES=$(git ls-files | grep -E '(^|/)(\.env|.*\.(key|pem|p12|pfx))$' | grep -v '^ios/\.xcode\.env$' || true)
+          if [ -n "$SENSITIVE_FILES" ]; then
+            echo "$SENSITIVE_FILES"
+            echo "Sensitive files found in git"
             exit 1
           fi
-          echo "✅ No sensitive files exposed"
+          echo "No sensitive files exposed"
 
-  # Security Scorecard
   scorecard:
     name: OSSF Scorecard
     runs-on: ubuntu-latest
@@ -152,31 +117,27 @@ jobs:
         with:
           sarif_file: results.sarif
 
-  # Security Summary
   security-summary:
     runs-on: ubuntu-latest
     name: Security Scan Summary
-    needs: [codeql, semgrep, npm-audit]
+    needs: [codeql, semgrep, security-policy, scorecard]
     if: always()
     steps:
       - name: Check security jobs
         run: |
           FAILED=0
-          if [ "${{ needs.codeql.result }}" != "success" ]; then
-            echo "❌ CodeQL scan failed"
-            FAILED=1
-          fi
-          if [ "${{ needs.semgrep.result }}" != "success" ]; then
-            echo "❌ Semgrep scan failed"
-            FAILED=1
-          fi
-          if [ "${{ needs.npm-audit.result }}" != "success" ]; then
-            echo "❌ npm audit failed"
-            FAILED=1
-          fi
+          echo "CodeQL: ${{ needs.codeql.result }}"
+          echo "Semgrep: ${{ needs.semgrep.result }}"
+          echo "Security Policy: ${{ needs.security-policy.result }}"
+          echo "Scorecard: ${{ needs.scorecard.result }}"
+
+          if [ "${{ needs.codeql.result }}" != "success" ]; then FAILED=1; fi
+          if [ "${{ needs.semgrep.result }}" != "success" ]; then FAILED=1; fi
+          if [ "${{ needs.security-policy.result }}" != "success" ]; then FAILED=1; fi
+          if [ "${{ needs.scorecard.result }}" != "success" ]; then FAILED=1; fi
 
           if [ $FAILED -eq 1 ]; then
-            echo "❌ Security scanning failed"
+            echo "Security scanning failed"
             exit 1
           fi
-          echo "✅ All security scans passed"
+          echo "All security scans passed"

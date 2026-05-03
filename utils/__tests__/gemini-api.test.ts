@@ -1,4 +1,9 @@
-import { GeminiAPI, calculateTokenCost, generateGeminiContent } from "../gemini-api";
+import {
+  GeminiAPI,
+  calculateTokenCost,
+  generateGeminiContent,
+  DEFAULT_GEMINI_MODEL,
+} from "../gemini-api";
 import { log } from "~/utils/logger";
 import Constants from "expo-constants";
 
@@ -24,6 +29,10 @@ describe("gemini-api", () => {
     jest.clearAllMocks();
   });
 
+  it("uses a currently supported Flash-Lite model by default", () => {
+    expect(DEFAULT_GEMINI_MODEL).toBe("gemini-2.5-flash-lite");
+  });
+
   describe("calculateTokenCost", () => {
     it("should calculate correct token cost based on PRICING constants", () => {
       const usage = {
@@ -33,14 +42,14 @@ describe("gemini-api", () => {
 
       const result = calculateTokenCost(usage);
 
-      // Prompt cost: (2,000,000 / 1,000,000) * 0.075 = 0.15
-      // Candidates cost: (1,000,000 / 1,000,000) * 0.3 = 0.30
-      // Total estimated cost: 0.15 + 0.30 = 0.45
+      // Prompt cost: (2,000,000 / 1,000,000) * 0.1 = 0.20
+      // Candidates cost: (1,000,000 / 1,000,000) * 0.4 = 0.40
+      // Total estimated cost: 0.20 + 0.40 = 0.60
 
       expect(result.promptTokenCount).toBe(2_000_000);
       expect(result.candidatesTokenCount).toBe(1_000_000);
       expect(result.totalTokenCount).toBe(3_000_000);
-      expect(result.estimatedCost).toBeCloseTo(0.45);
+      expect(result.estimatedCost).toBeCloseTo(0.6);
     });
 
     it("should handle zero tokens", () => {
@@ -81,10 +90,10 @@ describe("gemini-api", () => {
           json: async () => mockResponse,
         });
 
-        const result = await api.generateContent("gemini-2.0-flash", "Hello");
+        const result = await api.generateContent("DEFAULT_GEMINI_MODEL", "Hello");
 
         expect(globalThis.fetch).toHaveBeenCalledWith(
-          "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+          "https://generativelanguage.googleapis.com/v1beta/models/DEFAULT_GEMINI_MODEL:generateContent",
           expect.objectContaining({
             method: "POST",
             headers: {
@@ -116,7 +125,7 @@ describe("gemini-api", () => {
           json: async () => mockResponse,
         });
 
-        await api.generateContent("gemini-2.0-flash", "Hello");
+        await api.generateContent("DEFAULT_GEMINI_MODEL", "Hello");
 
         expect(log.info).toHaveBeenCalledWith(expect.stringContaining("Gemini API Token Usage"));
         expect(log.info).toHaveBeenCalledWith(expect.stringContaining("Prompt: 100"));
@@ -130,7 +139,7 @@ describe("gemini-api", () => {
           text: async () => `Bad request for API key ${API_KEY}`,
         });
 
-        await expect(api.generateContent("gemini-2.0-flash", "Hello")).rejects.toThrow(
+        await expect(api.generateContent("DEFAULT_GEMINI_MODEL", "Hello")).rejects.toThrow(
           "Gemini API request failed. Please try again later."
         );
 
@@ -150,7 +159,7 @@ describe("gemini-api", () => {
           json: async () => mockResponse,
         });
 
-        await expect(api.generateContent("gemini-2.0-flash", "Hello")).rejects.toThrow(
+        await expect(api.generateContent("DEFAULT_GEMINI_MODEL", "Hello")).rejects.toThrow(
           "No response generated from Gemini API"
         );
       });
@@ -169,7 +178,7 @@ describe("gemini-api", () => {
           json: async () => mockResponse,
         });
 
-        await expect(api.generateContent("gemini-2.0-flash", "Hello")).rejects.toThrow(
+        await expect(api.generateContent("DEFAULT_GEMINI_MODEL", "Hello")).rejects.toThrow(
           "Invalid response format from Gemini API"
         );
       });
@@ -185,7 +194,7 @@ describe("gemini-api", () => {
           }),
         });
 
-        await api.generateContent("gemini-2.0-flash", "Hello", signal);
+        await api.generateContent("DEFAULT_GEMINI_MODEL", "Hello", signal);
 
         expect(globalThis.fetch).toHaveBeenCalledWith(
           expect.any(String),
@@ -198,7 +207,7 @@ describe("gemini-api", () => {
       it("should successfully list models", async () => {
         const mockResponse = {
           models: [
-            { name: "models/gemini-2.0-flash", version: "001" },
+            { name: "models/DEFAULT_GEMINI_MODEL", version: "001" },
             { name: "models/gemini-pro", version: "001" },
           ],
         };
@@ -260,7 +269,7 @@ describe("gemini-api", () => {
       const result = await generateGeminiContent("Hello helper");
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-001:generateContent",
+        `https://generativelanguage.googleapis.com/v1beta/models/${DEFAULT_GEMINI_MODEL}:generateContent`,
         expect.objectContaining({
           body: "Hello helper",
         })

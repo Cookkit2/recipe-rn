@@ -7,9 +7,9 @@ Offline-first **WatermelonDB** layer (`data/db/`), **repositories** per entity, 
 ## Setup & run
 
 ```bash
-pnpm install
-pnpm run typecheck
-pnpm test -- data/
+bun install
+bun run typecheck
+bun test -- data/
 ```
 
 DB is created at runtime (SQLite on native, LokiJS/IndexedDB on web) — see `data/db/database.ts`.
@@ -57,5 +57,5 @@ rg -n "fetch|supabase" data/api
 ## Pre-PR checks
 
 ```bash
-pnpm run typecheck && pnpm test -- data/
+bun run typecheck && bun test -- data/
 ```

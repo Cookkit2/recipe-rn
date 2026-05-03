@@ -231,7 +231,7 @@ export default function AddToPlanModal({ recipeId }: AddToPlanModalProps) {
             <Pressable onPress={() => setShowDatePicker(true)} className="w-full">
               <View className="flex-row items-center gap-3">
                 <CalendarIcon size={18} className="text-muted-foreground" />
-                <P className="text-lg text-foreground">
+                <P className="text-lg font-urbanist-semibold text-foreground">
                   {format(selectedDate, "EEEE, MMM d, yyyy")}
                 </P>
               </View>

@@ -17,8 +17,7 @@ import { Skia, type SkImage } from "@shopify/react-native-skia";
  */
 export const loadImageIntoSkia = async (imageUri: string) => {
   const imageData = await Skia.Data.fromURI(imageUri);
-  const image = Skia.Image.MakeImageFromEncoded(imageData);
-  return image;
+  return Skia.Image.MakeImageFromEncoded(imageData);
 };
 
 /**

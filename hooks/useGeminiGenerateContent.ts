@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { GeminiAPI } from "~/utils/gemini-api";
+import { GeminiAPI, DEFAULT_GEMINI_MODEL } from "~/utils/gemini-api";
 
 const GEMINI_MUTATION_TIMEOUT_MS = 60_000;
 const geminiApi = new GeminiAPI();
@@ -10,7 +10,7 @@ export interface GenerateContentParams {
 }
 
 async function generateContentMutation({
-  model = "gemini-2.0-flash",
+  model = DEFAULT_GEMINI_MODEL,
   body,
 }: GenerateContentParams): Promise<string> {
   const controller = new AbortController();

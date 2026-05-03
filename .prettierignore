@@ -4,18 +4,20 @@ node_modules
 dist
 build
 
-# Native build artifacts / vendored dependencies
-ios/Pods
-ios/build
-android/build
-android/.gradle
+# Native projects / generated artifacts
+ios
+android
+docs
 
 # Generated / caches
-ios/build/generated
+uniwind-types.d.ts
 
 # Large lockfiles
-pnpm-lock.yaml
+bun.lock
+bun.lockb
 
 # Agent/assistant scratch files
 .jules
-.Jules
+.agents
+.claude
+.cursor

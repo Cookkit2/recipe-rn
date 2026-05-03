@@ -91,7 +91,7 @@ export class IngredientSynonymRepository extends BaseRepository<IngredientSynony
 
     if (batchOps.length > 0) {
       await db.write(async () => {
-        await db.batch(...batchOps);
+        await db.batch(batchOps);
       });
     }
 
@@ -104,7 +104,7 @@ export class IngredientSynonymRepository extends BaseRepository<IngredientSynony
 
     await db.write(async () => {
       const synonyms = await this.collection.query(Q.where("stock_id", Q.eq(stockId))).fetch();
-      await db.batch(...synonyms.map((syn) => syn.prepareMarkAsDeleted()));
+      await db.batch(synonyms.map((syn) => syn.prepareMarkAsDeleted()));
     });
   }
 

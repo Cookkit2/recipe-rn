@@ -9,7 +9,6 @@ import { convertToUnitSystem } from "~/utils/unit-converter";
 // import z from "zod/v4";
 // import Constants from "expo-constants";
 import { generateGeminiContent } from "~/utils/gemini-api";
-import { log } from "~/utils/logger";
 
 // Dynamic prompt builder that includes unit system preference
 const buildVegePrompt = (unitSystem: "metric" | "imperial") => {
@@ -40,8 +39,6 @@ Rules:
 const GEMINI_MODEL_INPUT_SIZE = 256; // Reduced from 400 for faster API calls
 
 export const classifyStaticImage = async (skImage: SkImage) => {
-  const startTime = performance.now();
-
   // Get user's preferred unit system for prompt guidance
   const storedUnit = storage.get(PREF_UNIT_SYSTEM_KEY) as string | undefined;
   // Handle legacy "si" value and default to "metric"
@@ -68,13 +65,7 @@ export const classifyStaticImage = async (skImage: SkImage) => {
     })
   );
 
-  log.info("Gemini response:", geminiResponse);
-
   const ingredientName = postProcessResponse(geminiResponse);
-  const endTime = performance.now();
-  const duration = endTime - startTime;
-
-  log.info(`classifyStaticImage took ${duration} milliseconds`);
   return ingredientName;
 };
 
@@ -162,13 +153,6 @@ const postProcessResponse = (responseText: string) => {
 
   // Convert to user's preferred unit system
   const convertedUnitAndQuantity = convertToUnitSystem(quantity, unit, preferredUnit);
-
-  // Log if API returned a unit that needed conversion (for debugging)
-  if (convertedUnitAndQuantity.unit !== unit) {
-    log.info(
-      `Unit converted from ${unit} to ${convertedUnitAndQuantity.unit} (preferred: ${preferredUnit})`
-    );
-  }
 
   return { name, ...convertedUnitAndQuantity };
 };

@@ -20,7 +20,7 @@ Frequently asked questions about DoneDish development, architecture, and common 
 **Required:**
 
 - Node.js 18+ ([Download](https://nodejs.org/))
-- npm, yarn, or pnpm
+- npm, yarn, or bun
 - macOS with Xcode (for iOS development) OR Android Studio (for Android)
 
 **Recommended:**
