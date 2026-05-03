@@ -42,14 +42,14 @@ describe("gemini-api", () => {
 
       const result = calculateTokenCost(usage);
 
-      // Prompt cost: (2,000,000 / 1,000,000) * 0.075 = 0.15
-      // Candidates cost: (1,000,000 / 1,000,000) * 0.3 = 0.30
-      // Total estimated cost: 0.15 + 0.30 = 0.45
+      // Prompt cost: (2,000,000 / 1,000,000) * 0.1 = 0.20
+      // Candidates cost: (1,000,000 / 1,000,000) * 0.4 = 0.40
+      // Total estimated cost: 0.20 + 0.40 = 0.60
 
       expect(result.promptTokenCount).toBe(2_000_000);
       expect(result.candidatesTokenCount).toBe(1_000_000);
       expect(result.totalTokenCount).toBe(3_000_000);
-      expect(result.estimatedCost).toBeCloseTo(0.45);
+      expect(result.estimatedCost).toBeCloseTo(0.6);
     });
 
     it("should handle zero tokens", () => {

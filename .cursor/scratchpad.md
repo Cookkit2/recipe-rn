@@ -158,6 +158,7 @@ The core intelligence of this feature:
 - [x] 2026-05-03: Fix Reanimated `useScrollOffset` warning on recipe detail loading states.
 - [x] 2026-05-03: Triage PR #389 CI failures and choose a lean PR/merge CI policy.
 - [ ] 2026-05-03: Execute lean PR CI plan from `docs/superpowers/plans/2026-05-03-lean-pr-ci.md`.
+- [x] 2026-05-03: Remove noisy create-camera pipeline info/profiling logs while keeping warnings and errors.
 
 ---
 
@@ -234,6 +235,12 @@ All phases have been implemented. The grocery list feature is now ready for test
 - Updated plan: keep the rating modal disabled, make the final Finish action complete the recipe directly, and return home through the existing completion path.
 - Completed: removed the modal render from `CongratulationsContent`, changed the final `goToNextStep` branch to call `skipRatingAndComplete`, and updated the regression test to assert the modal is not rendered.
 - Verification: focused Jest test passed; `bun run typecheck` passed; Prettier check passed for touched files; IDE lints report no errors.
+
+2026-05-03 executor update:
+
+- Removed high-volume create-camera `log.info` and segmentation/classification profiling output from the create ingredient camera pipeline.
+- Kept warning/error logs for capture, gallery picker, model preload, segmentation, retry, and processing failures so real debugging signals remain visible.
+- Verification: no remaining `log.info("[create-camera] ...")` or `[Profiling]` logs in TypeScript/TSX files; focused Prettier check passed; `bun run typecheck` passed; IDE lints report no errors for touched files.
 
 ---
 
@@ -364,3 +371,32 @@ _(To be updated during implementation)_
 2026-05-03 CI executor update:
 
 - Simplified `.github/workflows/ci.yml` to PR-quality checks: typecheck, Prettier, Jest, and one high/critical Bun audit.
+
+2026-05-03 CI executor update:
+
+- Moved CodeQL, Semgrep, OSSF Scorecard, and repository security policy checks to scheduled/manual/main/master runs. Removed duplicate Bun audit from `security-scan.yml`.
+
+2026-05-03 CI executor update:
+
+- Updated test expectations for Gemini 2.5 Flash Lite pricing and WatermelonDB array-form `database.batch` calls.
+
+2026-05-03 CI executor update:
+
+- Corrected Jest commands from `bun test` to `bun run test` because bare `bun test` invokes Bun's native runner and fails on React Native Flow syntax before Jest configuration is applied.
+
+2026-05-03 CI executor update:
+
+- Chose duplicate pantry quantity aggregation for `addPantryItemsWithMetadata`: the implementation comment, pre-aggregation path, and existing-stock update branch all indicate incoming duplicate quantities should be added to pantry stock while refreshing metadata. Fixed the focused Jest mock to apply WatermelonDB array-form `database.batch(batchOps)` updates, preserving the expected `4 + 2 = 6` behavior.
+
+2026-05-03 CI executor update:
+
+- Quarantined legacy `src/` auth Jest suites from default PR CI because `src/AGENTS.md` marks that tree as unused legacy auth code.
+
+2026-05-03 CI verification update:
+
+- `bun run typecheck` passed with `tsc --noEmit`.
+- `bunx prettier --check .github/workflows/ci.yml .github/workflows/security-scan.yml jest.config.js utils/__tests__/gemini-api.test.ts data/db/repositories/__tests__/TailoredRecipeMappingRepository.test.ts data/api/__tests__/pantryApi-addPantryItemsWithMetadata.test.ts .cursor/scratchpad.md docs/superpowers/specs/2026-05-03-lean-pr-ci-design.md docs/superpowers/plans/2026-05-03-lean-pr-ci.md` passed.
+- `bun run test` passed: 45 suites, 579 tests. Jest emitted a Watchman recrawl warning and an open-handle warning after completion.
+- `bun audit --audit-level=high` could not run locally because installed Bun is `1.1.43` and reports `error: Script not found "audit"`.
+- `bun pm audit --audit-level=high` also could not run locally because Bun `1.1.43` reports `error: "audit" unknown command`.
+- CI previously ran Bun `1.3.13`, where `bun audit` exists; the workflow keeps `bun audit --audit-level=high` for CI.

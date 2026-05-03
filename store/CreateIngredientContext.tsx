@@ -8,7 +8,6 @@ import {
   segmentStaticImage,
   trimTransparentBordersAndResizeImage,
 } from "~/hooks/model/segmentModel";
-import { CAMERA_RESOLUTION } from "~/constants/camera";
 import { File, Paths } from "expo-file-system";
 import { titleCase } from "~/utils/text-formatter";
 import * as Crypto from "expo-crypto";
@@ -83,46 +82,17 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
     y: height / 2 - 48, // Center vertically (minus half frame height: 96px / 2 = 48px)
   });
 
-  const updateFramePosition = useCallback(
-    (framePosition: { x: number; y: number }) => {
-      log.info("[create-camera] frame position updated", {
-        x: framePosition.x,
-        y: framePosition.y,
-        screenWidth: width,
-        screenHeight: height,
-      });
-
-      setFramePosition(framePosition);
-    },
-    [height, width]
-  );
+  const updateFramePosition = useCallback((framePosition: { x: number; y: number }) => {
+    setFramePosition(framePosition);
+  }, []);
 
   // Process a single item (runs independently, updates state when done)
   const processItem = useCallback(
     async (itemId: string, imagePath: string, itemFramePosition: { x: number; y: number }) => {
       const pipelineStart = performance.now();
-      log.info("[create-camera] process item started", {
-        itemId,
-        imagePath,
-        frameX: itemFramePosition.x,
-        frameY: itemFramePosition.y,
-        screenWidth: width,
-        screenHeight: height,
-        ...getImageFileDebugInfo(imagePath),
-      });
 
       try {
-        const skiaStart = performance.now();
         const skImage = await loadImageIntoSkia(imagePath);
-        const skiaDuration = performance.now() - skiaStart;
-
-        log.info("[create-camera] Skia image load returned", {
-          itemId,
-          loaded: !!skImage,
-          width: skImage?.width() ?? 0,
-          height: skImage?.height() ?? 0,
-          durationMs: Number(skiaDuration.toFixed(2)),
-        });
 
         if (!skImage) {
           throw new Error("Failed to load image");
@@ -133,32 +103,8 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
           y: (itemFramePosition.y / ((width * 4) / 3)) * skImage.height(),
         };
 
-        log.info("[create-camera] frame position normalized", {
-          itemId,
-          inputX: itemFramePosition.x,
-          inputY: itemFramePosition.y,
-          normalizedX: Number(normalizedFramePosition.x.toFixed(2)),
-          normalizedY: Number(normalizedFramePosition.y.toFixed(2)),
-          imageWidth: skImage.width(),
-          imageHeight: skImage.height(),
-          targetCameraWidth: CAMERA_RESOLUTION.width,
-          targetCameraHeight: CAMERA_RESOLUTION.height,
-        });
-
         // Step 1: Segment the image first
-        const segmentStart = performance.now();
-        log.info("[create-camera] segmentation starting", { itemId });
         const segmentedImage = await segmentStaticImage(skImage, normalizedFramePosition);
-        const segmentDuration = performance.now() - segmentStart;
-
-        log.info("[create-camera] segmentation completed", {
-          itemId,
-          hasSegmentedImage: !!segmentedImage,
-          backgroundColor: segmentedImage?.background_color ?? "none",
-          segmentedWidth: segmentedImage?.skImage.width() ?? 0,
-          segmentedHeight: segmentedImage?.skImage.height() ?? 0,
-          durationMs: Number(segmentDuration.toFixed(2)),
-        });
 
         if (!segmentedImage) {
           throw new Error("Segmentation failed");
@@ -168,23 +114,10 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
         const filename = `masked-${Date.now()}-${itemId}.png`;
         const file = new File(Paths.cache, filename);
 
-        const saveStart = performance.now();
-        log.info("[create-camera] trimming and resizing segmented image", { itemId, filename });
         const resizedImage = trimTransparentBordersAndResizeImage(segmentedImage.skImage, 300, 2);
         const { base64 } = resizedImage;
 
         file.write(base64, { encoding: "base64" });
-
-        log.info("[create-camera] processed image written", {
-          itemId,
-          uri: file.uri,
-          exists: file.exists,
-          size: file.size,
-          base64Length: base64.length,
-          outputWidth: resizedImage.width,
-          outputHeight: resizedImage.height,
-          durationMs: Number((performance.now() - saveStart).toFixed(2)),
-        });
 
         // Step 3: Update the item with the segmented image first
         setProcessPantryItems((prev) =>
@@ -201,19 +134,7 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
         );
 
         // Step 4: Classify the image
-        const classifyStart = performance.now();
-        log.info("[create-camera] classification starting", { itemId });
         const content = await classifyStaticImage(skImage);
-        const classifyDuration = performance.now() - classifyStart;
-
-        log.info("[create-camera] classification completed", {
-          itemId,
-          hasContent: !!content,
-          name: content?.name ?? "none",
-          quantity: content?.quantity ?? 0,
-          unit: content?.unit ?? "none",
-          durationMs: Number(classifyDuration.toFixed(2)),
-        });
 
         if (!content) {
           throw new Error("Classification failed");
@@ -246,26 +167,9 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
           let baseIngredient = baseIngredientCache.get(formattedName);
 
           if (baseIngredient === undefined) {
-            log.info("[create-camera] base ingredient fetch starting", {
-              itemId,
-              formattedName,
-            });
             baseIngredient = await baseIngredientApi.getBaseIngredientByName(formattedName);
             baseIngredientCache.set(formattedName, baseIngredient);
-          } else {
-            log.info("[create-camera] base ingredient cache hit", {
-              itemId,
-              formattedName,
-              found: !!baseIngredient,
-            });
           }
-
-          log.info("[create-camera] base ingredient fetch completed", {
-            itemId,
-            formattedName,
-            found: !!baseIngredient,
-            baseIngredientId: baseIngredient?.id ?? "none",
-          });
 
           if (baseIngredient) {
             const newExpiryDate = new Date(
@@ -294,11 +198,6 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
           log.error("Error fetching base ingredient after processing:", error);
           // Continue with default values if fetch fails
         }
-
-        log.info("[create-camera] process item completed", {
-          itemId,
-          durationMs: Number((performance.now() - pipelineStart).toFixed(2)),
-        });
       } catch (error) {
         log.error("[create-camera] processing error", {
           itemId,
@@ -329,14 +228,6 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
   const processImage = useCallback(
     (imagePath: string, itemFramePosition: { x: number; y: number }) => {
       const itemId = `item-${Date.now()}-${Crypto.randomUUID()}`;
-      log.info("[create-camera] process image queued", {
-        itemId,
-        imagePath,
-        frameX: itemFramePosition.x,
-        frameY: itemFramePosition.y,
-        currentItemCount: processPantryItems.length,
-        ...getImageFileDebugInfo(imagePath),
-      });
 
       const newItem: CreatePantryItem = {
         id: itemId,
@@ -364,30 +255,20 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
       // Start processing in parallel (fire and forget)
       processItem(itemId, imagePath, itemFramePosition);
     },
-    [processItem, processPantryItems.length]
+    [processItem]
   );
 
   // Remove item from list
   const removeItem = useCallback((id: string) => {
-    log.info("[create-camera] removing process item", { id });
     setProcessPantryItems((prev) => prev.filter((item) => item.id !== id));
   }, []);
 
   // Retry a failed item
   const retryItem = useCallback(
     (id: string) => {
-      log.info("[create-camera] retry requested", { id });
       setProcessPantryItems((prev) => {
         const item = prev.find((i) => i.id === id);
         if (item?.imagePath && item?.framePosition) {
-          log.info("[create-camera] retry starting", {
-            id,
-            imagePath: item.imagePath,
-            frameX: item.framePosition.x,
-            frameY: item.framePosition.y,
-            ...getImageFileDebugInfo(item.imagePath),
-          });
-
           // Restart processing
           processItem(id, item.imagePath, item.framePosition);
           return prev.map((i) =>
@@ -403,18 +284,10 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
 
   // Clear all failed items
   const clearFailedItems = useCallback(() => {
-    log.info("[create-camera] clearing failed process items");
     setProcessPantryItems((prev) => prev.filter((item) => item.status !== "failed"));
   }, []);
 
   const updateProcessPantryItems = useCallback((currentItem: PantryItem) => {
-    log.info("[create-camera] process item manually updated", {
-      id: currentItem.id,
-      name: currentItem.name,
-      quantity: currentItem.quantity,
-      unit: currentItem.unit,
-    });
-
     setProcessPantryItems((prev) =>
       prev.map((item) => (item.id === currentItem.id ? currentItem : item))
     );
@@ -430,10 +303,6 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
         let baseIngredient = baseIngredientCache.get(currentItem.name);
 
         if (baseIngredient === undefined) {
-          log.info("[create-camera] base ingredient fetch after manual update starting", {
-            id: currentItem.id,
-            name: currentItem.name,
-          });
           baseIngredient = await baseIngredientApi.getBaseIngredientByName(currentItem.name);
           baseIngredientCache.set(currentItem.name, baseIngredient);
         }
@@ -471,7 +340,6 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
   }, []);
 
   const deleteProcessPantryItems = useCallback((id: string) => {
-    log.info("[create-camera] deleting process item", { id });
     setProcessPantryItems((prev) => prev.filter((item) => item.id !== id));
   }, []);
 

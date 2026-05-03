@@ -9,7 +9,6 @@ import { convertToUnitSystem } from "~/utils/unit-converter";
 // import z from "zod/v4";
 // import Constants from "expo-constants";
 import { generateGeminiContent } from "~/utils/gemini-api";
-import { log } from "~/utils/logger";
 
 // Dynamic prompt builder that includes unit system preference
 const buildVegePrompt = (unitSystem: "metric" | "imperial") => {
@@ -40,30 +39,14 @@ Rules:
 const GEMINI_MODEL_INPUT_SIZE = 256; // Reduced from 400 for faster API calls
 
 export const classifyStaticImage = async (skImage: SkImage) => {
-  const startTime = performance.now();
-  log.info("[create-camera] classifyStaticImage starting", {
-    imageWidth: skImage.width(),
-    imageHeight: skImage.height(),
-  });
-
   // Get user's preferred unit system for prompt guidance
   const storedUnit = storage.get(PREF_UNIT_SYSTEM_KEY) as string | undefined;
   // Handle legacy "si" value and default to "metric"
   const preferredUnit = storedUnit === "imperial" ? "imperial" : "metric";
   const prompt = buildVegePrompt(preferredUnit);
 
-  const compressStart = performance.now();
   const imageCompressed = compressImage(skImage, GEMINI_MODEL_INPUT_SIZE);
-  const compressDuration = performance.now() - compressStart;
 
-  log.info("[create-camera] classification image compressed", {
-    preferredUnit,
-    compressedLength: imageCompressed?.length ?? 0,
-    durationMs: Number(compressDuration.toFixed(2)),
-  });
-
-  const geminiStart = performance.now();
-  log.info("[create-camera] Gemini classification request starting");
   const geminiResponse = await generateGeminiContent(
     JSON.stringify({
       contents: [
@@ -81,23 +64,8 @@ export const classifyStaticImage = async (skImage: SkImage) => {
       ],
     })
   );
-  const geminiDuration = performance.now() - geminiStart;
-
-  log.info("[create-camera] Gemini classification response received", {
-    response: geminiResponse,
-    durationMs: Number(geminiDuration.toFixed(2)),
-  });
 
   const ingredientName = postProcessResponse(geminiResponse);
-  const endTime = performance.now();
-  const duration = endTime - startTime;
-
-  log.info("[create-camera] classifyStaticImage completed", {
-    name: ingredientName.name,
-    quantity: ingredientName.quantity,
-    unit: ingredientName.unit,
-    durationMs: Number(duration.toFixed(2)),
-  });
   return ingredientName;
 };
 
@@ -185,13 +153,6 @@ const postProcessResponse = (responseText: string) => {
 
   // Convert to user's preferred unit system
   const convertedUnitAndQuantity = convertToUnitSystem(quantity, unit, preferredUnit);
-
-  // Log if API returned a unit that needed conversion (for debugging)
-  if (convertedUnitAndQuantity.unit !== unit) {
-    log.info(
-      `Unit converted from ${unit} to ${convertedUnitAndQuantity.unit} (preferred: ${preferredUnit})`
-    );
-  }
 
   return { name, ...convertedUnitAndQuantity };
 };

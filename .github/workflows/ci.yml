@@ -68,7 +68,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Run Jest
-        run: bun test
+        run: bun run test
 
   dependency-audit:
     runs-on: ubuntu-latest

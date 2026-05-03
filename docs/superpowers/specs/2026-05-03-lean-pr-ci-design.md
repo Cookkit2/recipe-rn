@@ -22,7 +22,7 @@ Pull requests should run only checks that are fast, deterministic, and directly 
 - Install dependencies with `bun install --frozen-lockfile`.
 - Run TypeScript checks with `bun run typecheck`.
 - Run formatting checks with the repository's Prettier command.
-- Run Jest with `bun test` on pull requests. Coverage reporting can remain a protected-branch or scheduled check until the baseline is stable enough to be a useful PR gate.
+- Run Jest with `bun run test` on pull requests. Coverage reporting can remain a protected-branch or scheduled check until the baseline is stable enough to be a useful PR gate.
 - Run one dependency audit with Bun, not both Bun and npm. Pull requests should block on high or critical advisories; moderate transitive advisories should be reported and handled through scheduled security work unless a compatible fix is available.
 
 Heavy security scans should still exist, but they should not all block every pull request:

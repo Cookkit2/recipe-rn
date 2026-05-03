@@ -18,47 +18,22 @@ export const segmentStaticImage = async (
   skImage: SkImage,
   coordinate: { x: number; y: number }
 ) => {
-  const startTime = performance.now();
-  log.info("[create-camera] segmentStaticImage starting", {
-    imageWidth: skImage.width(),
-    imageHeight: skImage.height(),
-    coordinateX: Number(coordinate.x.toFixed(2)),
-    coordinateY: Number(coordinate.y.toFixed(2)),
-  });
-  log.info("📊 [Profiling] Starting image segmentation...");
-
   // Step 1: Model Loading
-  const modelLoadStart = performance.now();
   const { magicTouchModel } = await allModel.get();
-  const modelLoadEnd = performance.now();
-  const modelLoadDuration = modelLoadEnd - modelLoadStart;
-  log.info(`📊 [Profiling] Model loading took ${modelLoadDuration.toFixed(2)}ms`);
 
   try {
     // Step 2: Preprocessing Input
-    const preprocessStart = performance.now();
     const input = preprocessMagicTouchInput(skImage, {
       x: coordinate.x,
       y: coordinate.y,
     }); // Float32Array length 512*512*4
-    const preprocessEnd = performance.now();
-    const preprocessDuration = preprocessEnd - preprocessStart;
-    log.info(`📊 [Profiling] Preprocessing took ${preprocessDuration.toFixed(2)}ms`);
-    log.info(
-      `📊 [Profiling] Input array size: ${input.length} (${((input.length * 4) / 1024).toFixed(2)} KB)`
-    );
 
     // Step 3: Model Inference
-    const inferenceStart = performance.now();
     const magicTouchOutputs = magicTouchModel.runSync([input.buffer]);
-    const inferenceEnd = performance.now();
-    const inferenceDuration = inferenceEnd - inferenceStart;
-    log.info(`📊 [Profiling] Model inference took ${inferenceDuration.toFixed(2)}ms`);
 
     let returnSkImage: SkImage = skImage;
 
     // Step 4: Applying Mask
-    const maskStart = performance.now();
     if (magicTouchOutputs[0]) {
       const magicMaskOutputs = applyMagicTouchMaskAndExport(
         skImage,
@@ -69,76 +44,14 @@ export const segmentStaticImage = async (
         returnSkImage = magicMaskOutputs?.finalImage;
       }
     }
-    const maskEnd = performance.now();
-    const maskDuration = maskEnd - maskStart;
-    log.info(`📊 [Profiling] Applying mask took ${maskDuration.toFixed(2)}ms`);
 
     // Step 5: Create Thumbnail for Color Extraction
     // Using a tiny 32x32 PNG thumbnail for fast color extraction
-    const thumbnailStart = performance.now();
     const thumbnailBase64 = createThumbnailForColors(returnSkImage, 32);
     const url = `data:image/png;base64,${thumbnailBase64}`;
-    const thumbnailEnd = performance.now();
-    const thumbnailDuration = thumbnailEnd - thumbnailStart;
-    log.info(`📊 [Profiling] Thumbnail creation took ${thumbnailDuration.toFixed(2)}ms`);
-    log.info(`📊 [Profiling] Thumbnail size: ${thumbnailBase64.length} characters (vs full image)`);
 
     // Step 6: Color Extraction
-    const colorStart = performance.now();
     const backgroundColor = await fetchColors(url);
-    const colorEnd = performance.now();
-    const colorDuration = colorEnd - colorStart;
-    log.info(`📊 [Profiling] Color extraction took ${colorDuration.toFixed(2)}ms`);
-
-    // Overall timing
-    const endTime = performance.now();
-    const duration = endTime - startTime;
-
-    log.info("\n📊 [Profiling] ===== SUMMARY =====");
-    log.info(
-      `📊 [Profiling] Model loading:     ${modelLoadDuration.toFixed(2)}ms (${(
-        (modelLoadDuration / duration) *
-        100
-      ).toFixed(1)}%)`
-    );
-    log.info(
-      `📊 [Profiling] Preprocessing:     ${preprocessDuration.toFixed(2)}ms (${(
-        (preprocessDuration / duration) *
-        100
-      ).toFixed(1)}%)`
-    );
-    log.info(
-      `📊 [Profiling] Model inference:   ${inferenceDuration.toFixed(2)}ms (${(
-        (inferenceDuration / duration) *
-        100
-      ).toFixed(1)}%)`
-    );
-    log.info(
-      `📊 [Profiling] Applying mask:     ${maskDuration.toFixed(2)}ms (${(
-        (maskDuration / duration) *
-        100
-      ).toFixed(1)}%)`
-    );
-    log.info(
-      `📊 [Profiling] Thumbnail creation: ${thumbnailDuration.toFixed(2)}ms (${(
-        (thumbnailDuration / duration) *
-        100
-      ).toFixed(1)}%)`
-    );
-    log.info(
-      `📊 [Profiling] Color extraction:  ${colorDuration.toFixed(2)}ms (${(
-        (colorDuration / duration) *
-        100
-      ).toFixed(1)}%)`
-    );
-    log.info(`📊 [Profiling] TOTAL:             ${duration.toFixed(2)}ms`);
-    log.info("📊 [Profiling] ==================\n");
-    log.info("[create-camera] segmentStaticImage completed", {
-      backgroundColor,
-      outputWidth: returnSkImage.width(),
-      outputHeight: returnSkImage.height(),
-      durationMs: Number(duration.toFixed(2)),
-    });
 
     return {
       background_color: backgroundColor,
