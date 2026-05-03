@@ -12,6 +12,11 @@ android/.gradle
 
 # Generated / caches
 ios/build/generated
+ios/Cookkit/Images.xcassets/AppIcon.appiconset/Contents.json
+ios/Cookkit/Images.xcassets/Contents.json
+ios/Cookkit/Images.xcassets/SplashScreenBackground.colorset/Contents.json
+ios/Cookkit/Images.xcassets/SplashScreenLegacy.imageset/Contents.json
+uniwind-types.d.ts
 
 # Large lockfiles
 pnpm-lock.yaml
