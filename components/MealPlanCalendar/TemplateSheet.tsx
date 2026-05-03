@@ -231,7 +231,10 @@ function showImportResults(
   }
 }
 
-export default function TemplateSheet({ onTemplateApplied, onClose }: TemplateSheetProps) {
+const TemplateSheetMemo = function TemplateSheet({
+  onTemplateApplied,
+  onClose,
+}: TemplateSheetProps) {
   const { selectedWeek } = useMealPlanCalendar();
   const { bottom } = useSafeAreaInsets();
   const router = useRouter();
@@ -607,4 +610,13 @@ export default function TemplateSheet({ onTemplateApplied, onClose }: TemplateSh
       )}
     </SheetModalWrapper>
   );
-}
+};
+
+// Export with React.memo for performance optimization
+// Only re-render when onTemplateApplied or onClose callbacks change
+export default React.memo(TemplateSheetMemo, (prevProps, nextProps) => {
+  return (
+    prevProps.onTemplateApplied === nextProps.onTemplateApplied &&
+    prevProps.onClose === nextProps.onClose
+  );
+});

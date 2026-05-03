@@ -22,7 +22,7 @@ export default function SignUpScreen() {
 
   const getPasswordStrength = (password: string) => {
     let strength = 0;
-    if (password.length >= 8) strength++;
+    if (password.length >= 12) strength++;
     if (/[a-z]/.test(password)) strength++;
     if (/[A-Z]/.test(password)) strength++;
     if (/[0-9]/.test(password)) strength++;
@@ -84,15 +84,24 @@ export default function SignUpScreen() {
       isValid = false;
     }
 
-    // Password validation
+    // Password validation - strong password requirements
     if (!password) {
       setPasswordError("Password is required");
       isValid = false;
-    } else if (password.length < 8) {
-      setPasswordError("Password must be at least 8 characters");
+    } else if (password.length < 12) {
+      setPasswordError("Password must be at least 12 characters");
       isValid = false;
-    } else if (getPasswordStrength(password) < 3) {
-      setPasswordError("Password is too weak. Include uppercase, lowercase, numbers, and symbols");
+    } else if (!/[A-Z]/.test(password)) {
+      setPasswordError("Password must contain at least one uppercase letter");
+      isValid = false;
+    } else if (!/[a-z]/.test(password)) {
+      setPasswordError("Password must contain at least one lowercase letter");
+      isValid = false;
+    } else if (!/\d/.test(password)) {
+      setPasswordError("Password must contain at least one number");
+      isValid = false;
+    } else if (!/[^A-Za-z0-9]/.test(password)) {
+      setPasswordError("Password must contain at least one special character");
       isValid = false;
     }
 

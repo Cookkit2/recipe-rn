@@ -168,5 +168,12 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 4,
+      steps: [
+        // Indexes are now defined in schema.ts using isIndexed: true
+        // No additional migration steps needed
+      ],
+    },
   ],
 });

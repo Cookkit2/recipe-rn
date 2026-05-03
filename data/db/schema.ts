@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from "@nozbe/watermelondb";
 
 export default appSchema({
-  version: 3,
+  version: 4,
   tables: [
     // ========================================
     // RECIPE CACHE (3 tables)
@@ -12,7 +12,7 @@ export default appSchema({
     tableSchema({
       name: "recipe",
       columns: [
-        { name: "title", type: "string" },
+        { name: "title", type: "string", isIndexed: true }, // Indexed for recipe search
         { name: "description", type: "string" },
         { name: "image_url", type: "string", isOptional: true },
         { name: "prep_minutes", type: "number" },
@@ -22,10 +22,10 @@ export default appSchema({
         { name: "source_url", type: "string", isOptional: true },
         { name: "calories", type: "number", isOptional: true },
         { name: "tags", type: "string", isOptional: true }, // JSON string array
-        { name: "synced_at", type: "number" }, // NEW: Track last sync time (daily refresh)
-        { name: "is_favorite", type: "boolean" }, // NEW: User can favorite recipes
-        { name: "type", type: "string", isOptional: true }, // RecipeType enum: standard | tailored | converted
-        { name: "created_at", type: "number" },
+        { name: "synced_at", type: "number", isIndexed: true }, // Indexed for sync operations
+        { name: "is_favorite", type: "boolean", isIndexed: true }, // Indexed for favorites list
+        { name: "type", type: "string", isOptional: true, isIndexed: true }, // Indexed for filtering by recipe type
+        { name: "created_at", type: "number", isIndexed: true }, // Indexed for pagination
         { name: "updated_at", type: "number" },
       ],
     }),

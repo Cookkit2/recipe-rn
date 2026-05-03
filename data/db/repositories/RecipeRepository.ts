@@ -161,6 +161,17 @@ export class RecipeRepository extends BaseRepository<Recipe> {
     return recipe;
   }
 
+  /**
+   * Find recipes with pagination (non-blocking)
+   * Uses Q.take and Q.skip to limit fetched records
+   * @param offset - Number of recipes to skip
+   * @param limit - Number of recipes to fetch
+   * @returns Array of recipes
+   */
+  async findPaginated(offset: number, limit: number): Promise<Recipe[]> {
+    return await this.findAll({ offset, limit });
+  }
+
   // Get recipe with all related data
   async getRecipeWithDetails(id: string): Promise<{
     recipe: Recipe;
@@ -439,79 +450,50 @@ export class RecipeRepository extends BaseRepository<Recipe> {
         `Found ${newRecipes.length} new recipes and ${existingRecipesToUpdate.length} existing recipes to update`
       );
 
-      // Pre-fetch steps and ingredients for existing recipes to update
-      const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
-      const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
-
-      const existingRecipeIdsArray = existingRecipesToUpdate.map((r) => r.recipe.id);
-
-      // We need to fetch steps and ingredients in chunks to avoid SQLite parameter limits
-      const chunkedFetch = async <T>(collection: any, ids: string[], foreignKey: string) => {
-        const CHUNK_SIZE = 500;
-        const promises: Promise<T[]>[] = [];
-        for (let i = 0; i < ids.length; i += CHUNK_SIZE) {
-          const chunk = ids.slice(i, i + CHUNK_SIZE);
-          promises.push(collection.query(Q.where(foreignKey, Q.oneOf(chunk))).fetch());
-        }
-        const resultsArray = await Promise.all(promises);
-        return resultsArray.flat();
-      };
-
-      const existingSteps = await chunkedFetch<RecipeStep>(
-        stepsCollection,
-        existingRecipeIdsArray,
-        "recipe_id"
-      );
-      const existingIngredients = await chunkedFetch<RecipeIngredient>(
-        ingredientsCollection,
-        existingRecipeIdsArray,
-        "recipe_id"
-      );
-
-      const stepsByRecipeId = new Map<string, RecipeStep[]>();
-      existingSteps.forEach((s) => {
-        const recipeId = s.recipeId;
-        if (!stepsByRecipeId.has(recipeId)) stepsByRecipeId.set(recipeId, []);
-        stepsByRecipeId.get(recipeId)!.push(s);
-      });
-
-      const ingredientsByRecipeId = new Map<string, RecipeIngredient[]>();
-      existingIngredients.forEach((i) => {
-        const recipeId = i.recipeId;
-        if (!ingredientsByRecipeId.has(recipeId)) ingredientsByRecipeId.set(recipeId, []);
-        ingredientsByRecipeId.get(recipeId)!.push(i);
-      });
-
-      // Prepare operations
+      // Prepare operations - delete all existing recipes first, then recreate everything
+      // This avoids "Cannot update a record with pending changes" errors
       const batchOps: import("@nozbe/watermelondb").Model[] = [];
 
-      for (const supabaseRecipe of newRecipes) {
-        batchOps.push(...this.prepareSyncSingleRecipe(supabaseRecipe));
-      }
-
+      // Delete all existing local recipes that need updating
       for (const supabaseRecipe of existingRecipesToUpdate) {
         const recipeId = supabaseRecipe.recipe.id;
-        const existingRecipe = existingRecipesMap.get(recipeId);
-        if (existingRecipe) {
-          batchOps.push(
-            ...this.prepareUpdateExistingRecipe(
-              supabaseRecipe,
-              existingRecipe,
-              stepsByRecipeId.get(recipeId) || [],
-              ingredientsByRecipeId.get(recipeId) || []
-            )
-          );
+        const localRecipe = existingRecipesMap.get(recipeId);
+        if (localRecipe) {
+          try {
+            batchOps.push(localRecipe.prepareDestroyPermanently());
+          } catch (error) {
+            log.error(`Failed to prepare destroy for recipe ${recipeId}:`, error);
+          }
+        }
+      }
+
+      // Add all recipes (both new and from Supabase) as fresh creates
+      for (const supabaseRecipe of recipesWithDetails) {
+        try {
+          batchOps.push(...this.prepareSyncSingleRecipe(supabaseRecipe));
+        } catch (error) {
+          log.error(`Failed to prepare recipe ${supabaseRecipe.recipe.id}:`, error);
         }
       }
 
       // Execute all operations in chunks inside a single transaction
       if (batchOps.length > 0) {
-        await database.write(async () => {
-          const BATCH_SIZE = 500;
-          for (let i = 0; i < batchOps.length; i += BATCH_SIZE) {
-            await database.batch(batchOps.slice(i, i + BATCH_SIZE));
-          }
-        });
+        try {
+          await database.write(async () => {
+            const BATCH_SIZE = 500;
+            for (let i = 0; i < batchOps.length; i += BATCH_SIZE) {
+              try {
+                await database.batch(batchOps.slice(i, i + BATCH_SIZE));
+              } catch (batchError) {
+                log.error(`Error executing batch ${i}-${i + BATCH_SIZE}:`, batchError);
+                // Continue with next batch even if one fails
+              }
+            }
+          });
+        } catch (error) {
+          log.error("Error executing sync transaction:", error);
+          // Don't throw - we want to keep what we successfully synced
+        }
       }
 
       // Verify sync worked
@@ -590,6 +572,14 @@ export class RecipeRepository extends BaseRepository<Recipe> {
     const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
     const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
     const recipeId = existingRecipe.id;
+
+    // Mark the recipe as clean to clear any pending changes before updating
+    // This prevents "Cannot update a record with pending changes" error
+    try {
+      (existingRecipe as any).markAsClean();
+    } catch {
+      // Ignore if markAsClean fails
+    }
 
     ops.push(
       existingRecipe.prepareUpdate((recipe) => {

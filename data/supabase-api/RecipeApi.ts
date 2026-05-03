@@ -78,27 +78,60 @@ export const recipeApi = {
     limit: number = 1000
   ): Promise<SupabaseRecipeWithDetails[]> => {
     if (!guardSupabase()) return [];
-    const { data, error } = await supabase!
+
+    // Fetch all recipes first (without joins) to get the complete list
+    const { data: allRecipes, error: recipesError } = await supabase!
       .from("recipe")
-      .select(
-        `
-        *,
-        recipe_step!recipe_step_recipe_id_fkey(*),
-        pivot_recipe_ingredient!pivot_recipe_ingredient_recipe_id_fkey(*)
-      `
-      )
+      .select("*")
       .order("id", { ascending: false })
-      .order("step", { referencedTable: "recipe_step", ascending: true })
       .limit(limit);
 
-    if (error) throw error;
-    if (!data) return [];
+    if (recipesError) {
+      console.error("[RecipeApi] Error fetching recipes:", recipesError);
+      throw recipesError;
+    }
 
-    // Transform the nested structure to match our interface
-    return data.map((recipe) => ({
+    if (!allRecipes || allRecipes.length === 0) {
+      return [];
+    }
+
+    // Fetch steps and ingredients separately for better performance
+    const recipeIds = allRecipes.map((r) => r.id);
+
+    const { data: steps } = await supabase!
+      .from("recipe_step")
+      .select("*")
+      .in("recipe_id", recipeIds);
+
+    const { data: ingredients } = await supabase!
+      .from("pivot_recipe_ingredient")
+      .select("*")
+      .in("recipe_id", recipeIds);
+
+    // Group by recipe ID
+    const stepsByRecipe = new Map<string, Tables<"recipe_step">[]>();
+    steps?.forEach((step) => {
+      const recipeId = step.recipe_id;
+      if (!stepsByRecipe.has(recipeId)) {
+        stepsByRecipe.set(recipeId, []);
+      }
+      stepsByRecipe.get(recipeId)!.push(step);
+    });
+
+    const ingredientsByRecipe = new Map<string, Tables<"pivot_recipe_ingredient">[]>();
+    ingredients?.forEach((ingredient) => {
+      const recipeId = ingredient.recipe_id;
+      if (!ingredientsByRecipe.has(recipeId)) {
+        ingredientsByRecipe.set(recipeId, []);
+      }
+      ingredientsByRecipe.get(recipeId)!.push(ingredient);
+    });
+
+    // Transform to our format
+    return allRecipes.map((recipe) => ({
       recipe,
-      steps: (recipe.recipe_step || []) as Tables<"recipe_step">[],
-      ingredients: (recipe.pivot_recipe_ingredient || []) as Tables<"pivot_recipe_ingredient">[],
+      steps: stepsByRecipe.get(recipe.id) || [],
+      ingredients: ingredientsByRecipe.get(recipe.id) || [],
     }));
   },
 

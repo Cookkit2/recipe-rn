@@ -1,4 +1,3 @@
-// @ts-nocheck
 jest.mock("expo-constants", () => ({ manifest: { extra: {} } }));
 jest.mock("react-native-mmkv", () => ({ MMKV: jest.fn() }));
 jest.mock("expo-modules-core", () => ({
@@ -26,6 +25,7 @@ type Stock = {
   backgroundColor?: string;
   imageUrl?: string;
   update: (updater: (stock: Stock) => void) => Promise<void>;
+  prepareUpdate?: (updater: (stock: Stock) => void) => unknown;
 };
 
 const stocks: Stock[] = [];

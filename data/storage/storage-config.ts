@@ -12,8 +12,57 @@ function getEncryptionKey(): string | undefined {
 }
 
 /**
+ * Get encrypted storage configuration with lazy validation
+ * Defers encryption key check until storage is actually accessed
+ * to avoid timing issues with Expo's environment initialization
+ */
+function getEncryptedConfig(): StorageConfig {
+  const key = getEncryptionKey();
+
+  // Always require encryption key for sensitive data storage
+  if (!key) {
+    throw new Error(
+      "CRITICAL: EXPO_PUBLIC_MMKV_ENCRYPTION_KEY must be set for encrypted auth storage. Sensitive credentials cannot be stored without encryption."
+    );
+  }
+
+  // Validate encryption key format and strength
+  if (key.length < 32) {
+    throw new Error(
+      `CRITICAL: EXPO_PUBLIC_MMKV_ENCRYPTION_KEY must be at least 32 characters. Current length: ${key.length}. Use a strong, randomly generated key.`
+    );
+  }
+
+  // Validate key contains sufficient entropy (mix of character types)
+  const hasUpperCase = /[A-Z]/.test(key);
+  const hasLowerCase = /[a-z]/.test(key);
+  const hasNumbers = /\d/.test(key);
+  const hasSpecial = /[^A-Za-z0-9]/.test(key);
+
+  const characterTypes = [hasUpperCase, hasLowerCase, hasNumbers, hasSpecial].filter(
+    Boolean
+  ).length;
+  if (characterTypes < 3) {
+    log.warn(
+      "[storage-config] Encryption key should contain at least 3 of: uppercase, lowercase, numbers, special characters for optimal security."
+    );
+  }
+
+  return {
+    type: "mmkv" as const,
+    options: {
+      id: "encrypted",
+      encryptionKey: key,
+    },
+  };
+}
+
+/**
  * Storage configuration for different environments and use cases
  * You can easily switch between different storage implementations here
+ *
+ * Note: 'encrypted' config uses a getter to defer validation until first access,
+ * avoiding timing issues with Expo environment initialization
  */
 export const storageConfigs: Record<string, StorageConfig> = {
   production: {
@@ -24,26 +73,10 @@ export const storageConfigs: Record<string, StorageConfig> = {
     type: "mmkv",
   },
 
-  encrypted: (() => {
-    const key = getEncryptionKey();
-    if (!key) {
-      if (typeof __DEV__ !== "undefined" && !__DEV__) {
-        throw new Error(
-          "CRITICAL: EXPO_PUBLIC_MMKV_ENCRYPTION_KEY must be set in production for encrypted auth storage. Refusing to fallback to unencrypted storage for sensitive credentials."
-        );
-      }
-      log.warn(
-        "[storage-config] No encryption key found. Set EXPO_PUBLIC_MMKV_ENCRYPTION_KEY (env or app.json extra) for encrypted auth storage. Using non-encrypted MMKV for this instance in development."
-      );
-    }
-    return {
-      type: "mmkv" as const,
-      options: {
-        id: "encrypted",
-        ...(key && { encryptionKey: key }),
-      },
-    };
-  })(),
+  // Getter defers encryption key validation until runtime when first accessed
+  get encrypted(): StorageConfig {
+    return getEncryptedConfig();
+  },
 };
 
 /**

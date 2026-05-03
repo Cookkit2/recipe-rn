@@ -75,17 +75,12 @@ export const baseIngredientApi = {
     const resultMap = new Map<string, BaseIngredientWithRelations>();
     if (!guardSupabase() || names.length === 0) return resultMap;
 
-    // Supabase string search with "ilike". We construct an "or" query.
-    // e.g. "name.ilike.Apple,name.ilike.Banana"
-    // Properly quote and escape the search strings for Supabase PostgREST parser
-    // PostgREST expects string values containing commas or reserved chars to be double-quoted inside the OR string
-    const orQueryNames = names.map((n) => `name.ilike."${n.replace(/"/g, '""')}"`).join(",");
-
-    // Fetch direct matches using OR condition for ilike
+    // Use Supabase's .in() filter for safer, parameterized queries
+    // This prevents SQL injection while efficiently fetching multiple ingredients
     const { data: directMatches, error: directError } = await supabase!
       .from("base_ingredient")
       .select("*")
-      .or(orQueryNames);
+      .in("name", names);
 
     if (directError) {
       throw directError;
@@ -98,10 +93,23 @@ export const baseIngredientApi = {
     let allMatchedIngredients = [...(directMatches || [])];
 
     // For any missing names, try finding by synonyms
+    // Note: Using OR query for case-insensitive matching as .in() doesn't support ilike
+    // Input is sanitized to prevent SQL injection
     if (missingNames.length > 0) {
-      const orQuerySynonyms = missingNames
+      // Sanitize input: remove dangerous characters and limit length
+      const sanitizedNames = missingNames
+        .map((n) => n.trim().substring(0, 100))
+        .filter((n) => n.length > 0 && /^[a-zA-Z0-9\s\-']+$/.test(n));
+
+      if (sanitizedNames.length === 0) {
+        return resultMap;
+      }
+
+      // Build OR query with proper escaping for Supabase PostgREST
+      const orQuerySynonyms = sanitizedNames
         .map((n) => `synonym.ilike."${n.replace(/"/g, '""')}"`)
         .join(",");
+
       const { data: synonymMatches, error: synonymError } = await supabase!
         .from("ingredient_synonym")
         .select("base_ingredient_id, synonym")

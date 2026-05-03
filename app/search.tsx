@@ -13,6 +13,7 @@ import { useSearchPantryItems } from "~/hooks/queries/usePantryQueries";
 import { IngredientResults } from "~/components/Search/IngredientResults";
 import { RecipeResults } from "~/components/Search/RecipeResults";
 import useColors from "~/hooks/useColor";
+import * as Haptics from "expo-haptics";
 
 const TIME_OPTIONS = [
   { label: "15m", maxTotalTime: 15 },
@@ -100,6 +101,7 @@ export default function SearchScreen() {
   };
 
   const openFilterSheet = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     Keyboard.dismiss();
     filterSheetRef.current?.expand();
   };
@@ -335,14 +337,27 @@ export default function SearchScreen() {
 
   return (
     <>
-      <Stack.SearchBar
+      <Stack.Toolbar placement="bottom">
+        <Stack.Toolbar.Button
+          icon="camera.filters"
+          onPress={openFilterSheet}
+          accessibilityLabel="Open filters"
+        />
+        <Stack.Toolbar.SearchBarSlot
+        // placeholder="Search"
+        // onChangeText={(e) => setInput(e.nativeEvent.text)}
+        // onCancelButtonPress={handleDismiss}
+        // onClose={handleDismiss}
+        />
+      </Stack.Toolbar>
+      {/* <Stack.SearchBar
         ref={searchBarRef}
         autoFocus
         onCancelButtonPress={handleDismiss}
         onClose={handleDismiss}
         onChangeText={(e) => setInput(e.nativeEvent.text)}
         placeholder="Search"
-      />
+      /> */}
       <Pressable className="flex-1" onPress={handleDismiss}>
         <FlatList
           className="flex-1 bg-background"
@@ -355,7 +370,7 @@ export default function SearchScreen() {
           renderItem={renderSection}
         />
       </Pressable>
-      <Pressable
+      {/* <Pressable
         accessibilityRole="button"
         accessibilityLabel={
           hasFilters ? `Open filters, ${activeFilterCount} active` : "Open filters"
@@ -376,7 +391,7 @@ export default function SearchScreen() {
             </Text>
           </View>
         ) : null}
-      </Pressable>
+      </Pressable> */}
       {renderFilterSheet()}
     </>
   );

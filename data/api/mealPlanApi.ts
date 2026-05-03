@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { database } from "~/data/db/database";
 import { databaseFacade } from "~/data/db/DatabaseFacade";
 import type MealPlan from "~/data/db/models/MealPlan";
@@ -768,18 +767,18 @@ export const mealPlanApi = {
         };
       }
 
-      const date =
+      const resultDate =
         updated.date instanceof Date
           ? updated.date
           : new Date((updated as unknown as { date?: number }).date ?? Date.now());
-      const mealSlot = updated.mealSlot ?? "dinner";
+      const resultMealSlot = updated.mealSlot ?? "dinner";
 
       return {
         id: updated.id,
         recipeId: updated.recipeId,
         servings: updated.servings,
-        date: date as any,
-        mealSlot: mealSlot as any,
+        date: resultDate as any,
+        mealSlot: resultMealSlot as any,
         templateId: updated.templateId,
         createdAt: updated.createdAt,
         recipe: recipeData,

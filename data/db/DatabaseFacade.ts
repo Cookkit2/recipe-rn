@@ -237,6 +237,26 @@ export class DatabaseFacade {
   }
 
   /**
+   * Get paginated recipes from the local database
+   * Uses non-blocking query with limit to avoid fetching all records
+   * @param offset - Number of recipes to skip
+   * @param limit - Number of recipes to fetch
+   * @returns Array of recipes
+   */
+  async getRecipesPaginated(offset: number, limit: number): Promise<Recipe[]> {
+    return await this.recipes.findPaginated(offset, limit);
+  }
+
+  /**
+   * Get the total count of recipes in the database
+   * Uses non-blocking query count instead of fetching all records
+   * @returns Total number of recipes
+   */
+  async getRecipesCount(): Promise<number> {
+    return await this.recipes.count();
+  }
+
+  /**
    * Get a single recipe by ID
    */
   async getRecipeById(id: string): Promise<Recipe | null> {

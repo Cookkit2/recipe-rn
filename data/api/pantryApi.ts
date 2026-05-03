@@ -1,4 +1,4 @@
-import { Q } from "@nozbe/watermelondb";
+import { Q, type Model } from "@nozbe/watermelondb";
 import { databaseFacade } from "~/data/db/DatabaseFacade";
 import { baseIngredientApi } from "~/data/supabase-api/BaseIngredientApi";
 import { database } from "~/data/db/database";
@@ -46,7 +46,7 @@ export const pantryApi = {
         }
 
         // Convert items in smaller batches to prevent JSI overload
-        const batchSize = 10;
+        const batchSize = 100;
         const pantryItemsConverted: PantryItem[] = [];
 
         for (let i = 0; i < stockItems.length; i += batchSize) {
@@ -261,7 +261,7 @@ export const pantryApi = {
     const uniqueItems = Array.from(aggregatedItems.values());
 
     const createdOrUpdatedStockRefs: Stock[] = [];
-    const batchOps: any[] = [];
+    const batchOps: Model[] = [];
 
     await database.write(async () => {
       const stockCollection = database.collections.get("stock");

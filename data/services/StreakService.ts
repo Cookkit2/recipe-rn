@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Streak Service
  *
@@ -61,15 +60,15 @@ export class StreakService {
 
       for (let i = 1; i < sortedDates.length; i++) {
         const prevDate = sortedDates[i];
+        if (!prevDate) break; // Handle potential undefined
+
         const daysDiff = Math.floor(
-          // @ts-expect-error
           (currentDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24)
         );
 
         // If exactly 1 day difference, continue streak
         if (daysDiff === 1) {
           currentStreak++;
-          // @ts-expect-error
           currentDate = prevDate;
         } else {
           // Streak broken
@@ -154,8 +153,8 @@ export class StreakService {
 
       let lastCookingDate: Date | undefined;
       if (allHistory.length > 0) {
-        // @ts-expect-error
-        lastCookingDate = allHistory[0].cookedAtDate;
+        const firstEntry = allHistory[0];
+        lastCookingDate = firstEntry?.cookedAtDate;
       }
 
       // Build streak history (all streaks with their dates)
@@ -205,8 +204,11 @@ export class StreakService {
         return null;
       }
 
-      // @ts-expect-error
-      const lastCookingDate = this.normalizeToDate(allHistory[0].cookedAtDate);
+      const firstEntry = allHistory[0];
+      if (!firstEntry?.cookedAtDate) {
+        return null;
+      }
+      const lastCookingDate = this.normalizeToDate(firstEntry.cookedAtDate);
       const today = this.normalizeToDate(new Date());
 
       const daysSinceLastCooking = Math.floor(
@@ -271,16 +273,24 @@ export class StreakService {
     const cookingDays = this.groupCookingDaysByDate(history);
     const sortedDates = Array.from(cookingDays.keys()).sort((a, b) => a.getTime() - b.getTime());
 
+    if (sortedDates.length === 0) {
+      return [];
+    }
+
     const streakHistory: StreakEntry[] = [];
     let currentStreak = 1;
     let streakStartDate = sortedDates[0];
+    if (streakStartDate === undefined) {
+      return [];
+    }
 
     for (let i = 1; i < sortedDates.length; i++) {
       const prevDate = sortedDates[i - 1];
       const currDate = sortedDates[i];
 
+      if (!prevDate || !currDate) break;
+
       const daysDiff = Math.floor(
-        // @ts-expect-error
         (currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24)
       );
 
@@ -290,7 +300,6 @@ export class StreakService {
       } else {
         // Streak ended, record it
         streakHistory.push({
-          // @ts-expect-error
           date: streakStartDate,
           streakCount: currentStreak,
         });
@@ -303,7 +312,6 @@ export class StreakService {
 
     // Don't forget the last streak
     streakHistory.push({
-      // @ts-expect-error
       date: streakStartDate,
       streakCount: currentStreak,
     });

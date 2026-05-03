@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Achievement System Verification Script
  *
@@ -20,6 +19,15 @@ interface VerificationResult {
   details?: string;
 }
 
+type VerificationStatus = VerificationResult["status"];
+
+interface IntegrationPoint {
+  name: string;
+  file: string;
+  expected: string;
+  status: VerificationStatus;
+}
+
 const results: VerificationResult[] = [];
 
 function logResult(result: VerificationResult) {
@@ -37,6 +45,7 @@ async function verifyDatabaseSchema(database: DatabaseFacade): Promise<void> {
   try {
     // Check if achievement table exists and has records
     const achievements = await database.getAchievements();
+    const sampleAchievement = achievements[0];
     logResult({
       name: "Achievement Table",
       status: achievements.length > 0 ? "pass" : "fail",
@@ -44,7 +53,7 @@ async function verifyDatabaseSchema(database: DatabaseFacade): Promise<void> {
         achievements.length > 0
           ? `Found ${achievements.length} achievements`
           : "No achievements found in database",
-      details: achievements.length > 0 ? `Sample achievement: ${achievements[0].title}` : undefined,
+      details: sampleAchievement ? `Sample achievement: ${sampleAchievement.title}` : undefined,
     });
 
     // Check if user_achievement table exists (via unlocked achievements accessor)
@@ -57,6 +66,7 @@ async function verifyDatabaseSchema(database: DatabaseFacade): Promise<void> {
 
     // Check if challenge table exists and has records
     const challenges = await database.getChallenges();
+    const sampleChallenge = challenges[0];
     logResult({
       name: "Challenge Table",
       status: challenges.length > 0 ? "pass" : "fail",
@@ -64,7 +74,7 @@ async function verifyDatabaseSchema(database: DatabaseFacade): Promise<void> {
         challenges.length > 0
           ? `Found ${challenges.length} challenges`
           : "No challenges found in database",
-      details: challenges.length > 0 ? `Sample challenge: ${challenges[0].title}` : undefined,
+      details: sampleChallenge ? `Sample challenge: ${sampleChallenge.title}` : undefined,
     });
 
     // Check if user_challenge table exists (via active challenges accessor)
@@ -167,7 +177,7 @@ function verifyCodebaseIntegration(): void {
 
   // These would be checked by examining the actual files
   // For now, we document what should be present
-  const integrationPoints = [
+  const integrationPoints: IntegrationPoint[] = [
     {
       name: "Recipe Completion Flow",
       file: "store/RecipeStepsContext.tsx",

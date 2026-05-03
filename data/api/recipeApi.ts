@@ -106,6 +106,104 @@ export const recipeApi = {
   },
 
   /**
+   * Fetch recipes with pagination for better performance
+   * @param page - Page number (0-indexed)
+   * @param pageSize - Number of recipes per page (default: 20)
+   * @returns Paginated recipe list with metadata
+   */
+  async fetchRecipesPaginated(
+    page: number = 0,
+    pageSize: number = 20
+  ): Promise<{
+    recipes: Recipe[];
+    hasMore: boolean;
+    nextPage: number | null;
+    totalCount: number;
+  }> {
+    return withErrorLogging(async () => {
+      if (!databaseFacade) {
+        throw new Error("DatabaseFacade is undefined - import failed");
+      }
+
+      const isHealthy = await databaseFacade.isHealthy();
+      if (!isHealthy) {
+        throw new Error("Database health check failed");
+      }
+
+      // Get paginated recipes from database
+      const offset = page * pageSize;
+      const dbRecipes = await databaseFacade.getRecipesPaginated(offset, pageSize);
+
+      // Get total count for pagination metadata
+      const totalCount = await databaseFacade.getRecipesCount();
+
+      // Use batch query to get recipe details in one call
+      const recipeIds = dbRecipes.map((r) => r.id);
+      const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
+
+      // Use batch conversion to avoid N+1 queries
+      const uiRecipes = convertDbRecipesToUIRecipesBatch(dbRecipes, recipeDetailsMap);
+
+      const hasMore = offset + dbRecipes.length < totalCount;
+      const nextPage = hasMore ? page + 1 : null;
+
+      return {
+        recipes: uiRecipes,
+        hasMore,
+        nextPage,
+        totalCount,
+      };
+    }, "Error fetching paginated recipes");
+  },
+
+  /**
+   * Result-based variant of fetchRecipesPaginated (does not throw).
+   */
+  async fetchRecipesPaginatedResult(
+    page: number = 0,
+    pageSize: number = 20
+  ): Promise<
+    AppResult<
+      {
+        recipes: Recipe[];
+        hasMore: boolean;
+        nextPage: number | null;
+        totalCount: number;
+      },
+      AppError
+    >
+  > {
+    return logAndWrapResult(async () => {
+      if (!databaseFacade) {
+        throw new Error("DatabaseFacade is undefined - import failed");
+      }
+
+      const isHealthy = await databaseFacade.isHealthy();
+      if (!isHealthy) {
+        throw new Error("Database health check failed");
+      }
+
+      const offset = page * pageSize;
+      const dbRecipes = await databaseFacade.getRecipesPaginated(offset, pageSize);
+      const totalCount = await databaseFacade.getRecipesCount();
+
+      const recipeIds = dbRecipes.map((r) => r.id);
+      const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
+      const uiRecipes = convertDbRecipesToUIRecipesBatch(dbRecipes, recipeDetailsMap);
+
+      const hasMore = offset + dbRecipes.length < totalCount;
+      const nextPage = hasMore ? page + 1 : null;
+
+      return {
+        recipes: uiRecipes,
+        hasMore,
+        nextPage,
+        totalCount,
+      };
+    }, "Error fetching paginated recipes");
+  },
+
+  /**
    * Get a single recipe by ID
    */
   async getRecipeById(id: string): Promise<Recipe | null> {

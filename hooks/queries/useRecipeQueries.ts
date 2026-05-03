@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { recipeQueryKeys } from "./recipeQueryKeys";
 import type { Recipe } from "~/types/Recipe";
 import { recipeApi } from "~/data/api/recipeApi";
@@ -18,6 +18,26 @@ export function useRecipes() {
     queryKey: recipeQueryKeys.recipes(),
     queryFn: recipeApi.fetchAllRecipes,
     staleTime: 5 * 60 * 1000, // 5 minutes - recipes don't change as frequently
+  });
+}
+
+/**
+ * Hook to fetch paginated recipes with infinite scroll support
+ * @param pageSize - Number of recipes to fetch per page (default: 20)
+ */
+export function useRecipesPaginated(pageSize = 20) {
+  return useInfiniteQuery({
+    queryKey: [...recipeQueryKeys.recipes(), "paginated", pageSize],
+    queryFn: ({ pageParam = 0 }) => recipeApi.fetchRecipesPaginated(pageParam, pageSize),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.hasMore) {
+        return lastPage.nextPage;
+      }
+      return undefined;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
   });
 }
 

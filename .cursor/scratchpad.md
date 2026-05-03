@@ -400,3 +400,10 @@ _(To be updated during implementation)_
 - `bun audit --audit-level=high` could not run locally because installed Bun is `1.1.43` and reports `error: Script not found "audit"`.
 - `bun pm audit --audit-level=high` also could not run locally because Bun `1.1.43` reports `error: "audit" unknown command`.
 - CI previously ran Bun `1.3.13`, where `bun audit` exists; the workflow keeps `bun audit --audit-level=high` for CI.
+
+2026-05-03 precommit executor update:
+
+- Investigating Husky precommit failure from `bun run typecheck`.
+- Root causes found so far: stale pantry component test fixtures, WatermelonDB batch operation typing left as function callbacks, strict indexed-access checks in achievement/streak verification paths, storage facade narrowing to `never` after capability guards, and URL regex capture groups returning `string | undefined`.
+- Applied focused TypeScript fixes and formatted the files reported by Prettier.
+- Verification: `bun run typecheck` passed, `bun run lint` passed, and IDE lints report no errors for the TypeScript files touched for the precommit fix.
