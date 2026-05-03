@@ -373,7 +373,7 @@ This document provides a comprehensive summary of all CI/CD improvements, securi
 3. **Dependency Scanning**
    - Snyk: Known vulnerabilities
    - npm audit: Official npm scanning
-   - pnpm audit: Package manager audit
+   - Bun audit: Package manager audit
    - Frequency: Every commit + daily
 
 4. **Security Gates**

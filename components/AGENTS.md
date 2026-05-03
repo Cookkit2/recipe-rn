@@ -7,9 +7,9 @@ React Native UI for Cookkit: shared primitives under `components/ui/`, feature f
 ## Setup & run
 
 ```bash
-pnpm install
-pnpm run dev
-pnpm run typecheck
+bun install
+bun run dev
+bun run typecheck
 ```
 
 No separate build — components ship with the Expo app.
@@ -44,11 +44,11 @@ rg -n "uniwind|className=" components/ui
 
 ## Common gotchas
 
-- **Tailwind class strings**: Prettier runs with `prettier-plugin-tailwindcss` — run `pnpm run lint:fix` after large JSX churn.
+- **Tailwind class strings**: Prettier runs with `prettier-plugin-tailwindcss` — run `bun run lint:fix` after large JSX churn.
 - **Portal / overlays**: root uses `@rn-primitives/portal` from `app/_layout.tsx`; modal/dialog components should stay consistent with that stack.
 
 ## Pre-PR checks
 
 ```bash
-pnpm run typecheck && pnpm run lint
+bun run typecheck && bun run lint
 ```

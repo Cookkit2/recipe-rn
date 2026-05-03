@@ -7,9 +7,9 @@ Stateless **helpers** (recipe scaling, ingredient matching, JSON parsing, YouTub
 ## Setup & run
 
 ```bash
-pnpm install
-pnpm test -- utils/
-pnpm run typecheck
+bun install
+bun test -- utils/
+bun run typecheck
 ```
 
 ## Patterns & conventions
@@ -30,7 +30,7 @@ pnpm run typecheck
 ```bash
 rg -n "export function" utils/*.ts
 ls utils/__tests__
-pnpm test -- utils/__tests__/recipe-scaling.test.ts   # example single file
+bun test -- utils/__tests__/recipe-scaling.test.ts   # example single file
 ```
 
 ## Common gotchas
@@ -40,5 +40,5 @@ pnpm test -- utils/__tests__/recipe-scaling.test.ts   # example single file
 ## Pre-PR checks
 
 ```bash
-pnpm run typecheck && pnpm test -- utils/
+bun run typecheck && bun test -- utils/
 ```

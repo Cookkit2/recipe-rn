@@ -29,6 +29,10 @@ describe("gemini-api", () => {
     jest.clearAllMocks();
   });
 
+  it("uses a currently supported Flash-Lite model by default", () => {
+    expect(DEFAULT_GEMINI_MODEL).toBe("gemini-2.5-flash-lite");
+  });
+
   describe("calculateTokenCost", () => {
     it("should calculate correct token cost based on PRICING constants", () => {
       const usage = {

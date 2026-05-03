@@ -149,6 +149,8 @@ The core intelligence of this feature:
 - [ ] 2026-03-12: Fix `SegmentedButtons` column layout regression caused by dynamic NativeWind basis classes.
 - [ ] 2026-03-12: Resolve iOS archive failure caused by building the CocoaPods app project without its workspace.
 - [x] 2026-05-03: Replace WatermelonDB `database.batch(...ops)` spread calls with array calls repo-wide to remove large-batch warnings.
+- [x] 2026-05-03: Move search filters from inline horizontal chips into a toolbar-triggered bottom sheet.
+- [x] 2026-05-03: Fix Reanimated `useScrollOffset` warning on recipe detail loading states.
 
 ---
 
@@ -177,7 +179,7 @@ All phases have been implemented. The grocery list feature is now ready for test
 - Consolidated all currently open PR branches (#118–#171) into `consolidate/open-prs-2026-03-17`.
 - Opened a single combined PR: `https://github.com/Cookkit2/recipe-rn/pull/172`.
 - Follow-up: PR `#172` is now **merged**, and GitHub currently reports **no open PRs** remaining in this repo.
-- Notable recurring conflict resolutions: kept `package-lock.json` and `fix-ts-13.js` deleted (repo uses `pnpm-lock.yaml`), unified JSON parsing via `utils/json-parsing.ts`, and merged/expanded sanitizer/text-formatter test suites without dropping prior cases.
+- Notable recurring conflict resolutions: kept `package-lock.json` and `fix-ts-13.js` deleted (repo uses `bun.lockb`), unified JSON parsing via `utils/json-parsing.ts`, and merged/expanded sanitizer/text-formatter test suites without dropping prior cases.
 
 2026-05-03 executor update:
 
@@ -185,6 +187,19 @@ All phases have been implemented. The grocery list feature is now ready for test
 - Plan: replace spread-based batch calls with array-form calls in the affected repository/API/hook/screen files, then run typecheck or focused validation.
 - Completed repo-wide conversion of spread-based WatermelonDB batch calls to array-form calls.
 - Verification: `bun run typecheck` passed; `bunx prettier --check` passed for touched files; no remaining `.batch(...` spread-array call sites were found.
+
+2026-05-03 executor update:
+
+- Search UX change in progress: remove the always-visible filter chip row from `app/search.tsx`, add a top-right filter toolbar button, and show time/difficulty/dietary controls inside a bottom sheet.
+- Success criteria: selected filters still feed `useSearchRecipes`, users can clear filters from the sheet, and `bun run typecheck` passes for the route.
+- Completed the search filter UX change in `app/search.tsx`.
+- Verification: `bun run typecheck` passed; `bunx prettier --check app/search.tsx .cursor/scratchpad.md` passed; IDE lints report no errors for `app/search.tsx`.
+- Follow-up fix: moved the filter button out of the native navigation header because `Stack.SearchBar`/hidden header can hide header buttons, and added an initial empty state that explains users can search pantry items or recipes.
+
+2026-05-03 executor update:
+
+- Root cause of Reanimated warning: `app/recipes/[recipeId]/index.tsx` initialized `useScrollOffset(scrollRef)` before recipe data loaded, then returned loading/error/not-found UI without mounting the `Animated.ScrollView` that owns `scrollRef`.
+- Fix: split the route into a loader component and `RecipeDetailsContent`, so `useScrollOffset` is only mounted once the recipe content and its scroll view are rendered together.
 
 ---
 

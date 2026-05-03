@@ -19,7 +19,7 @@ import { setStatusBarStyle } from "expo-status-bar";
 import { useCameraPermissions } from "~/hooks/useCameraPermissions";
 import CameraActionRow from "~/components/Camera/CameraActionRow";
 import CameraLayout from "~/components/Camera/CameraLayout";
-import { CAMERA_RESOLUTION } from "~/constants/camera";
+import { CAMERA_PHOTO_OUTPUT_OPTIONS, CAMERA_RESOLUTION } from "~/constants/camera";
 import { useCreateIngredientStore } from "~/store/CreateIngredientContext";
 import { scheduleOnRN } from "react-native-worklets";
 
@@ -30,10 +30,7 @@ export default function CreateIngredient() {
   const camera = useRef<CameraRef>(null);
   const device = useCameraDevice("back");
   const isCameraAvailable = !!device;
-  const photoOutput = usePhotoOutput({
-    targetResolution: CAMERA_RESOLUTION,
-    qualityPrioritization: "speed",
-  });
+  const photoOutput = usePhotoOutput(CAMERA_PHOTO_OUTPUT_OPTIONS);
   const cameraConstraints = useMemo(
     () => [{ resolutionBias: photoOutput }] satisfies Constraint[],
     [photoOutput]
@@ -41,6 +38,14 @@ export default function CreateIngredient() {
 
   // Tap to focus gesture
   const handleTap = (x: number, y: number) => {
+    log.info("[create-camera] focus tap", {
+      x,
+      y,
+      frameX: x - 48,
+      frameY: y - 48,
+      hasCameraRef: !!camera.current,
+    });
+
     // Update the frame position (subtract 48 to center the frame)
     updateFramePosition({ x: x - 48, y: y - 48 });
 
@@ -55,21 +60,36 @@ export default function CreateIngredient() {
   });
 
   useEffect(() => {
+    log.info("[create-camera] create screen mounted", {
+      hasPermission,
+      isCameraAvailable,
+      deviceId: device?.id ?? "none",
+      deviceName: device?.name ?? "none",
+      targetWidth: CAMERA_RESOLUTION.width,
+      targetHeight: CAMERA_RESOLUTION.height,
+      photoContainerFormat: CAMERA_PHOTO_OUTPUT_OPTIONS.containerFormat,
+      qualityPrioritization: CAMERA_PHOTO_OUTPUT_OPTIONS.qualityPrioritization,
+    });
+
     const requestId = requestIdleCallback(() => {
       // Load the model if not already loaded
       if (!allModel.isLoaded()) {
+        log.info("[create-camera] preloading segmentation model");
         allModel.get().catch((error) => {
-          log.error("Failed to load model:", error);
+          log.error("[create-camera] failed to preload segmentation model", error);
         });
+      } else {
+        log.info("[create-camera] segmentation model already loaded");
       }
     });
 
     setStatusBarStyle("light", true);
     return () => {
+      log.info("[create-camera] create screen unmounted");
       setStatusBarStyle("auto", true);
       cancelIdleCallback(requestId);
     };
-  }, []);
+  }, [device?.id, device?.name, hasPermission, isCameraAvailable]);
 
   if (!hasPermission) {
     // Camera permissions are not granted yet.

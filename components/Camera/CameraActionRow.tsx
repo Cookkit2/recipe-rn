@@ -14,6 +14,7 @@ import * as ImagePicker from "expo-image-picker";
 import type { CameraPhotoOutput } from "react-native-vision-camera";
 import Animated from "react-native-reanimated";
 import ImagePointPickerOverlay from "./ImagePointPickerOverlay";
+import { log } from "~/utils/logger";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -39,20 +40,38 @@ export default function CameraActionRow({
 
   // Camera and gallery functions
   const takePicture = async () => {
+    log.info("[create-camera] shutter pressed", {
+      isCameraAvailable,
+      isRecipeCooked,
+      frameX: framePosition.x,
+      frameY: framePosition.y,
+      pendingItems: processPantryItems.length,
+    });
+
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     if (isRecipeCooked) {
+      log.info("[create-camera] paywall check before capture");
       const isPurchased = await presentPaywallIfNeeded();
+      log.info("[create-camera] paywall result before capture", { isPurchased });
       if (!isPurchased) {
         return;
       }
     }
 
     if (!isCameraAvailable) {
+      log.warn("[create-camera] capture skipped because camera is unavailable");
       return;
     }
 
     try {
+      const captureStart = performance.now();
+      log.info("[create-camera] capturePhotoToFile starting", {
+        enableDepthData: false,
+        enableShutterSound: true,
+        flashMode: "off",
+      });
+
       const photo = await photoOutput.capturePhotoToFile(
         {
           enableDepthData: false,
@@ -61,26 +80,52 @@ export default function CameraActionRow({
         },
         {}
       );
+      const captureDuration = performance.now() - captureStart;
+
+      log.info("[create-camera] capturePhotoToFile completed", {
+        filePath: photo.filePath,
+        hasFileUriScheme: photo.filePath.startsWith("file://"),
+        inferredExtension: photo.filePath.split(".").pop() ?? "none",
+        durationMs: Number(captureDuration.toFixed(2)),
+      });
 
       processImage(photo.filePath, { ...framePosition });
     } catch (error) {
+      log.error("[create-camera] capturePhotoToFile failed", error);
       toast.error("Error taking picture");
     }
   };
 
   const pickFromGallery = async () => {
+    log.info("[create-camera] gallery button pressed", {
+      isRecipeCooked,
+      pendingItems: processPantryItems.length,
+    });
+
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (isRecipeCooked) {
+      log.info("[create-camera] paywall check before gallery picker");
       const isPurchased = await presentPaywallIfNeeded();
+      log.info("[create-camera] paywall result before gallery picker", { isPurchased });
       if (!isPurchased) {
         return;
       }
     }
 
     try {
+      log.info("[create-camera] gallery picker starting");
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
         quality: 0.8,
+      });
+
+      log.info("[create-camera] gallery picker completed", {
+        canceled: result.canceled,
+        assetCount: result.assets?.length ?? 0,
+        firstUri: result.assets?.[0]?.uri ?? "none",
+        firstMimeType: result.assets?.[0]?.mimeType ?? "unknown",
+        firstWidth: result.assets?.[0]?.width ?? 0,
+        firstHeight: result.assets?.[0]?.height ?? 0,
       });
 
       if (!result.canceled && result.assets?.[0]) {
@@ -90,11 +135,19 @@ export default function CameraActionRow({
         setShowPointPicker(true);
       }
     } catch (error) {
+      log.error("[create-camera] gallery picker failed", error);
       toast.error("Error picking from gallery");
     }
   };
 
   const handlePointConfirm = (point: { x: number; y: number }) => {
+    log.info("[create-camera] gallery point confirmed", {
+      hasPickedImageUri: !!pickedImageUri,
+      pickedImageUri: pickedImageUri ?? "none",
+      x: point.x,
+      y: point.y,
+    });
+
     if (pickedImageUri) {
       processImage(pickedImageUri, point);
     }
@@ -103,11 +156,18 @@ export default function CameraActionRow({
   };
 
   const handlePointCancel = () => {
+    log.info("[create-camera] gallery point picker canceled");
     setShowPointPicker(false);
     setPickedImageUri(null);
   };
 
   const onConfirm = () => {
+    log.info("[create-camera] save/confirm pressed", {
+      itemCount: processPantryItems.length,
+      processingCount: processPantryItems.filter((item) => item.status === "processing").length,
+      failedCount: processPantryItems.filter((item) => item.status === "failed").length,
+    });
+
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push("/ingredient/confirmation");
   };

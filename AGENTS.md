@@ -7,16 +7,16 @@ Single-package **Expo SDK 55** app (React Native 0.83, React 19) with **expo-rou
 ## Root setup commands
 
 ```bash
-pnpm install
-pnpm run dev              # Expo dev server (clears cache)
-pnpm run typecheck        # tsc --noEmit
-pnpm run lint             # Prettier --check + typecheck
-pnpm run lint:fix         # Prettier --write
-pnpm test                 # Jest (Node, ts-jest)
-pnpm run test:coverage    # Jest with coverage (see jest.config.js globs)
+bun install
+bun run dev              # Expo dev server (clears cache)
+bun run typecheck        # tsc --noEmit
+bun run lint             # Prettier --check + typecheck
+bun run lint:fix         # Prettier --write
+bun test                 # Jest (Node, ts-jest)
+bun run test:coverage    # Jest with coverage (see jest.config.js globs)
 ```
 
-Platform targets: `pnpm run android`, `pnpm run ios`, `pnpm run web` (see `package.json`).
+Platform targets: `bun run android`, `bun run ios`, `bun run web` (see `package.json`).
 
 ## Universal conventions
 
@@ -25,7 +25,7 @@ Platform targets: `pnpm run android`, `pnpm run ios`, `pnpm run web` (see `packa
 - **Exhaustive switches**: handle all members for TS unions/enums (no silent fall-through).
 - **Workflow**: Planner/Executor notes live in `.cursor/scratchpad.md` — plan first, one executor step at a time when using that flow.
 - **TDD**: add or extend tests in `**/__tests__/**/*.test.ts(x)` when fixing bugs or adding logic covered by Jest.
-- **Formatting**: Prettier (+ `prettier-plugin-tailwindcss`). Pre-commit runs `pnpm run typecheck && pnpm run lint` (`.husky/pre-commit`).
+- **Formatting**: Prettier (+ `prettier-plugin-tailwindcss`). Pre-commit runs `bun run typecheck && bun run lint` (`.husky/pre-commit`).
 
 ## Security & secrets
 
@@ -65,15 +65,15 @@ rg -n "from \"~/" app/ components/ hooks/
 
 ## Definition of done
 
-- `pnpm run typecheck` and `pnpm run lint` pass (matches Husky).
-- `pnpm test` passes for affected code; extend `__tests__` when Jest covers your change.
+- `bun run typecheck` and `bun run lint` pass (matches Husky).
+- `bun test` passes for affected code; extend `__tests__` when Jest covers your change.
 - New screens/routes live under `app/` with patterns from [app/AGENTS.md](app/AGENTS.md), not under legacy `src/screens/`.
 
 ## Learned preferences (maintenance)
 
 - Include useful **debug output** when sharing command results or repro steps.
 - **Read files before editing**; keep diffs focused on the task.
-- If npm/pnpm reports dependency vulnerabilities, run **`npm audit`** first (per team preference), then address or document.
+- If npm/bun reports dependency vulnerabilities, run **`npm audit`** first (per team preference), then address or document.
 - When asked to handle many open GitHub PRs, prefer consolidating them into one review PR and closing/superseding the originals after confirmation.
 
 ## Learned Workspace Facts

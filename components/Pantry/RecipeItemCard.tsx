@@ -71,7 +71,7 @@ function RecipeItemCard({ recipe, completionPercentage, matchCategory }: RecipeI
             )}
 
             {/* Favorite button */}
-            <Pressable
+            {/* <Pressable
               className="absolute top-2 left-2 p-2 rounded-full bg-black/40"
               onPress={(e) => {
                 e.stopPropagation();
@@ -85,7 +85,7 @@ function RecipeItemCard({ recipe, completionPercentage, matchCategory }: RecipeI
                 fill={recipe.isFavorite ? "currentColor" : "none"}
                 strokeWidth={2.5}
               />
-            </Pressable>
+            </Pressable> */}
 
             {/* Completion percentage bar */}
             {/* {hasIngredients && !canMake && (

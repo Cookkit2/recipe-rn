@@ -19,6 +19,12 @@ export const segmentStaticImage = async (
   coordinate: { x: number; y: number }
 ) => {
   const startTime = performance.now();
+  log.info("[create-camera] segmentStaticImage starting", {
+    imageWidth: skImage.width(),
+    imageHeight: skImage.height(),
+    coordinateX: Number(coordinate.x.toFixed(2)),
+    coordinateY: Number(coordinate.y.toFixed(2)),
+  });
   log.info("📊 [Profiling] Starting image segmentation...");
 
   // Step 1: Model Loading
@@ -127,13 +133,19 @@ export const segmentStaticImage = async (
     );
     log.info(`📊 [Profiling] TOTAL:             ${duration.toFixed(2)}ms`);
     log.info("📊 [Profiling] ==================\n");
+    log.info("[create-camera] segmentStaticImage completed", {
+      backgroundColor,
+      outputWidth: returnSkImage.width(),
+      outputHeight: returnSkImage.height(),
+      durationMs: Number(duration.toFixed(2)),
+    });
 
     return {
       background_color: backgroundColor,
       skImage: returnSkImage,
     };
   } catch (error) {
-    log.error("Error processing static image:", error);
+    log.error("[create-camera] segmentStaticImage failed", error);
     return {
       background_color: undefined,
       skImage: skImage,
@@ -580,5 +592,111 @@ export const resizeImagePreserveAlpha = (
   return {
     finalImage: finalImage ?? image,
     base64: base64 ?? image.encodeToBase64(ImageFormat.PNG, 85),
+  };
+};
+
+export const trimTransparentBordersAndResizeImage = (
+  image: SkImage,
+  targetWidth: number,
+  padding: number = 0
+): { base64: string; width: number; height: number } => {
+  const imgW = image.width();
+  const imgH = image.height();
+
+  const maxScan = 512;
+  const scale = Math.min(1, maxScan / Math.max(imgW, imgH));
+  const scanW = Math.max(1, Math.round(imgW * scale));
+  const scanH = Math.max(1, Math.round(imgH * scale));
+
+  const surface = Skia.Surface.MakeOffscreen(scanW, scanH);
+  const canvas = surface?.getCanvas();
+  if (!surface || !canvas) {
+    const resized = resizeImagePreserveAlpha(image, targetWidth);
+    return {
+      base64: resized.base64,
+      width: resized.finalImage.width(),
+      height: resized.finalImage.height(),
+    };
+  }
+
+  const srcRect: SkRect = { x: 0, y: 0, width: imgW, height: imgH };
+  const dstRect: SkRect = { x: 0, y: 0, width: scanW, height: scanH };
+  const paint = Skia.Paint();
+  paint.setAntiAlias(true);
+  canvas.drawImageRect(image, srcRect, dstRect, paint);
+
+  const snapshot = surface.makeImageSnapshot();
+  const pixels = snapshot?.readPixels();
+  if (!pixels) {
+    const resized = resizeImagePreserveAlpha(image, targetWidth);
+    return {
+      base64: resized.base64,
+      width: resized.finalImage.width(),
+      height: resized.finalImage.height(),
+    };
+  }
+
+  let minX = scanW;
+  let minY = scanH;
+  let maxX = -1;
+  let maxY = -1;
+  const threshold = 1;
+
+  for (let y = 0; y < scanH; y++) {
+    for (let x = 0; x < scanW; x++) {
+      const idx = (y * scanW + x) * 4 + 3;
+      const a = pixels[idx] || 0;
+      if (a > threshold) {
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+
+  if (maxX < 0 || maxY < 0) {
+    const resized = resizeImagePreserveAlpha(image, targetWidth);
+    return {
+      base64: resized.base64,
+      width: resized.finalImage.width(),
+      height: resized.finalImage.height(),
+    };
+  }
+
+  const scaleX = imgW / scanW;
+  const scaleY = imgH / scanH;
+  const x1 = Math.max(0, Math.floor(minX * scaleX) - padding);
+  const y1 = Math.max(0, Math.floor(minY * scaleY) - padding);
+  const x2 = Math.min(imgW, Math.ceil((maxX + 1) * scaleX) + padding);
+  const y2 = Math.min(imgH, Math.ceil((maxY + 1) * scaleY) + padding);
+
+  const cropW = Math.max(1, x2 - x1);
+  const cropH = Math.max(1, y2 - y1);
+  const outW = Math.max(1, Math.min(targetWidth, cropW));
+  const outH = Math.max(1, Math.round((cropH / cropW) * outW));
+
+  const outSurface = Skia.Surface.MakeOffscreen(outW, outH);
+  const outCanvas = outSurface?.getCanvas();
+  if (!outSurface || !outCanvas) {
+    const resized = resizeImagePreserveAlpha(image, targetWidth);
+    return {
+      base64: resized.base64,
+      width: resized.finalImage.width(),
+      height: resized.finalImage.height(),
+    };
+  }
+
+  const cropSrc: SkRect = { x: x1, y: y1, width: cropW, height: cropH };
+  const cropDst: SkRect = { x: 0, y: 0, width: outW, height: outH };
+  const outPaint = Skia.Paint();
+  outPaint.setAntiAlias(true);
+  outCanvas.drawImageRect(image, cropSrc, cropDst, outPaint);
+
+  const outSnap = outSurface.makeImageSnapshot();
+  return {
+    base64: outSnap?.encodeToBase64(ImageFormat.PNG, 85) ?? image.encodeToBase64(ImageFormat.PNG, 85),
+    width: outW,
+    height: outH,
   };
 };

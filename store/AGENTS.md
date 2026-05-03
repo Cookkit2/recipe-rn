@@ -7,9 +7,9 @@ Long-lived **React contexts** for cooking flows, pantry, meal-plan calendar, tim
 ## Setup & run
 
 ```bash
-pnpm install
-pnpm run typecheck
-pnpm test
+bun install
+bun run typecheck
+bun test
 ```
 
 ## Patterns & conventions
@@ -41,5 +41,5 @@ rg -n "QueryClient|QueryClientProvider" store/
 ## Pre-PR checks
 
 ```bash
-pnpm run typecheck && pnpm run lint
+bun run typecheck && bun run lint
 ```

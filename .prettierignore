@@ -12,7 +12,8 @@ android
 uniwind-types.d.ts
 
 # Large lockfiles
-pnpm-lock.yaml
+bun.lock
+bun.lockb
 
 # Agent/assistant scratch files
 .jules

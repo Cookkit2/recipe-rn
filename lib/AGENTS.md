@@ -7,9 +7,9 @@ Non-UI modules that sit outside `data/` and `utils/`: **on-device ML** (`functio
 ## Setup & run
 
 ```bash
-pnpm install
-pnpm run typecheck
-pnpm test -- lib/
+bun install
+bun run typecheck
+bun test -- lib/
 ```
 
 ## Patterns & conventions
@@ -40,5 +40,5 @@ rg -n "Sentry|Notifications|expo-" lib/
 ## Pre-PR checks
 
 ```bash
-pnpm run typecheck && pnpm test -- lib/
+bun run typecheck && bun test -- lib/
 ```

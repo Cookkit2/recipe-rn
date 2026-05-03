@@ -42,24 +42,85 @@ import { RecipeStep } from "~/components/RecipeStep";
 import { useUniwind } from "uniwind";
 import { Button } from "~/components/ui/button";
 import { useIngredientMatcher } from "~/hooks/useIngredientMatcher";
+import useRecipeScaling from "~/hooks/useRecipeScaling";
+import { buildIngredientPreviewData } from "~/utils/ingredient-preview";
 import { titleCase } from "~/utils/text-formatter";
 
 const AnimatedH1 = Animated.createAnimatedComponent(H1);
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
 export default function RecipeDetails() {
+  const { recipeId } = useLocalSearchParams<{ recipeId: string }>();
+  const { data: recipe, isLoading, error, refetch, isRefetching } = useRecipe(recipeId);
+
+  const handleRefresh = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator size="large" />
+        <P className="mt-4 text-muted-foreground">Loading recipe...</P>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background">
+        <P className="text-destructive text-center mb-4">{error.message}</P>
+        <Button onPress={handleRefresh}>
+          <P className="text-primary-foreground font-urbanist-semibold">Retry</P>
+        </Button>
+      </View>
+    );
+  }
+
+  if (!recipe) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background">
+        <H1 className="text-center">Recipe not found</H1>
+        <P className="mt-2 mb-4 text-muted-foreground text-center">
+          The recipe you're looking for doesn't exist.
+        </P>
+        <Button onPress={handleRefresh}>
+          <P className="text-primary-foreground font-urbanist-semibold">Retry</P>
+        </Button>
+      </View>
+    );
+  }
+
+  return (
+    <RecipeDetailsContent
+      recipe={recipe}
+      recipeId={recipeId}
+      isRefetching={isRefetching}
+      onRefresh={handleRefresh}
+    />
+  );
+}
+
+function RecipeDetailsContent({
+  recipe,
+  recipeId,
+  isRefetching,
+  onRefresh,
+}: {
+  recipe: Recipe;
+  recipeId: string;
+  isRefetching: boolean;
+  onRefresh: () => void;
+}) {
   const { theme } = useUniwind();
   const isDark = theme === "dark";
   const missingIngredientPalette = isDark
     ? ["#9CA3AF", "#D1D5DB", "#A1A1AA", "#E5E7EB", "#CBD5E1", "#94A3B8"]
     : ["#4B5563", "#6B7280", "#9CA3AF", "#374151", "#525966", "#78818F"];
 
-  const { recipeId } = useLocalSearchParams<{ recipeId: string }>();
   const { width: windowWidth } = useWindowDimensions();
-  const { data: recipe, isLoading, error, refetch, isRefetching } = useRecipe(recipeId);
   const { data: filteredPantryItems = [] } = usePantryItemsByType("all");
-  const { servings, scaledIngredients, scalingFactor, isScaled, originalServings } =
-    useRecipeDetailStore();
+  const { servings, updateServings } = useRecipeDetailStore();
   const [tailoredRecipe, setTailoredRecipe] = useState<Recipe | null>(null);
   const [mode, setMode] = useState<"original" | "tailored">("original");
   const [isTailoring, setIsTailoring] = useState(false);
@@ -105,6 +166,8 @@ export default function RecipeDetails() {
     return mode === "tailored" && tailoredRecipe ? tailoredRecipe : recipe;
   }, [mode, tailoredRecipe, recipe]);
 
+  const { scaledIngredients, isScaled } = useRecipeScaling(activeRecipe, servings);
+
   const totalMinutes = useMemo(() => {
     return (activeRecipe?.prepMinutes ?? 0) + (activeRecipe?.cookMinutes ?? 0);
   }, [activeRecipe]);
@@ -112,39 +175,12 @@ export default function RecipeDetails() {
   // Separate matched and missing ingredients for visual display
   // Use scaled ingredients to display the correct quantities
   const ingredientPreviewData = useMemo(() => {
-    if (!scaledIngredients.length || !activeRecipe?.ingredients) {
+    if (!scaledIngredients.length) {
       return { matched: [], missing: [] };
     }
 
-    const matched: { name: string; imageUrl: string; quantity: number; unit: string }[] = [];
-    const missing: { name: string; index: number; quantity: number; unit: string }[] = [];
-
-    activeRecipe.ingredients.forEach((ingredient, idx) => {
-      const matchingPantryItem = findMatch(ingredient);
-
-      if (matchingPantryItem?.image_url) {
-        matched.push({
-          name: ingredient.name,
-          imageUrl: matchingPantryItem.image_url as string,
-          quantity: ingredient.quantity,
-          unit: ingredient.unit,
-        });
-      } else {
-        missing.push({
-          name: ingredient.name,
-          index: idx,
-          quantity: ingredient.quantity,
-          unit: ingredient.unit,
-        });
-      }
-    });
-
-    // Limit total items for performance
-    return {
-      matched: matched.slice(0, 6),
-      missing: missing.slice(0, 6),
-    };
-  }, [activeRecipe?.ingredients, findMatch]);
+    return buildIngredientPreviewData(scaledIngredients, findMatch);
+  }, [scaledIngredients, findMatch]);
 
   const canTailor = useMemo(() => {
     if (!recipe?.ingredients?.length) return false;
@@ -242,9 +278,10 @@ export default function RecipeDetails() {
 
   useEffect(() => {
     if (!recipe) return;
+    updateServings(recipe.servings ?? 1);
     setTailoredRecipe(null);
     setMode("original");
-  }, [recipe?.id]);
+  }, [recipe?.id, recipe?.servings, updateServings]);
 
   useEffect(() => {
     setStatusBarStyle("light", true);
@@ -265,42 +302,6 @@ export default function RecipeDetails() {
       time: rel,
     };
   }, [activeRecipe]);
-
-  if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator size="large" />
-        <P className="mt-4 text-muted-foreground">Loading recipe...</P>
-      </View>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <P className="text-destructive text-center mb-4">{error.message}</P>
-        <Button onPress={() => refetch()}>
-          <P className="text-primary-foreground font-urbanist-semibold">Retry</P>
-        </Button>
-      </View>
-    );
-  }
-
-  // Recipe not found
-  if (!recipe) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <H1 className="text-center">Recipe not found</H1>
-        <P className="mt-2 mb-4 text-muted-foreground text-center">
-          The recipe you're looking for doesn't exist.
-        </P>
-        <Button onPress={() => refetch()}>
-          <P className="text-primary-foreground font-urbanist-semibold">Retry</P>
-        </Button>
-      </View>
-    );
-  }
 
   const displayedRecipe = activeRecipe ?? recipe;
 
@@ -330,7 +331,7 @@ export default function RecipeDetails() {
         contentContainerStyle={{ paddingTop: windowWidth }}
         style={{ flex: 1 }}
         refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#f97316" />
+          <RefreshControl refreshing={isRefetching} onRefresh={onRefresh} tintColor="#f97316" />
         }
       >
         <Animated.View
@@ -368,12 +369,12 @@ export default function RecipeDetails() {
           <Separator className="my-8" />
 
           {/* Ingredient use summary */}
-          <IngredientList
+          {/* <IngredientList
             scaledIngredients={scaledIngredients}
             isScaled={isScaled}
             servings={servings}
             findMatch={findMatch}
-          />
+          /> */}
 
           {/* Ingredient visual preview */}
           <IngredientVisualPreview
@@ -388,26 +389,6 @@ export default function RecipeDetails() {
             isAddingToPlan={addToMealPlan.isPending}
             onAddToPlan={handleAddMissingToGrocery}
           />
-
-          <Separator className="my-8" />
-
-          <Separator className="my-8" />
-
-          {/* Instructions */}
-          {displayedRecipe.instructions && displayedRecipe.instructions.length > 0 && (
-            <View>
-              <H4 className="font-bowlby-one text-foreground/70 mb-4">Instructions</H4>
-              <View className="bg-card/60 rounded-xl px-4 py-2">
-                {displayedRecipe.instructions.map((step, idx) => (
-                  <RecipeStep
-                    key={idx}
-                    step={step}
-                    isLast={idx === displayedRecipe.instructions.length - 1}
-                  />
-                ))}
-              </View>
-            </View>
-          )}
 
           <Separator className="my-8" />
           {/* Description */}

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { View, ActivityIndicator } from "react-native";
-import Animated, { LinearTransition } from "react-native-reanimated";
+import Animated, { Easing, LinearTransition } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCreateIngredientStore } from "~/store/CreateIngredientContext";
-import { H1, H4, P } from "~/components/ui/typography";
+import { H4, P } from "~/components/ui/typography";
 import HorizontalIngredientItemCard from "~/components/Confirmation/HorizontalIngredientItemCard";
 import { Button } from "~/components/ui/button";
 import TextShimmer from "~/components/ui/TextShimmer";
@@ -79,11 +79,7 @@ export default function ConfirmationPage() {
         data={processPantryItems}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
-        itemLayoutAnimation={LinearTransition.springify()
-          .damping(20)
-          .mass(1)
-          .stiffness(300)
-          .overshootClamping(0)}
+        itemLayoutAnimation={LinearTransition.easing(Easing.out(Easing.cubic))}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: bottom + 80 }}
         keyboardShouldPersistTaps="handled"

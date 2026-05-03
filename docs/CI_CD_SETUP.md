@@ -30,7 +30,7 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
    - Blocks merge if coverage below threshold
 
 3. **Dependency Audit**
-   - pnpm audit (moderate level)
+   - Bun audit (moderate level)
    - npm audit (moderate level)
    - Blocks merge on vulnerabilities
 
@@ -70,8 +70,8 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
    - Checks license compliance
    - Results to GitHub Security
 
-5. **npm Audit**
-   - Additional dependency check
+5. **Bun Audit**
+   - Production dependency check
    - Production dependencies only
 
 6. **Security Policy Check**
@@ -132,7 +132,7 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 
 - **Snyk**: Known vulnerabilities in dependencies
 - **npm audit**: Official npm security audit
-- **pnpm audit**: Package manager audit
+- **Bun audit**: Package manager audit
 - **Frequency**: Every commit + daily scan
 
 #### Security Gates
@@ -545,7 +545,7 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
 
 **Coverage Failures:**
 
-- Run `pnpm test:coverage` locally
+- Run `bun run test:coverage` locally
 - Check coverage threshold
 - Add tests for uncovered code
 

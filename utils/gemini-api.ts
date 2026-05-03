@@ -8,12 +8,12 @@ const API_KEY =
 
 const BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 
-export const DEFAULT_GEMINI_MODEL = "gemini-2.0-flash-lite";
+export const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash-lite";
 
-// Gemini 2.0 Flash pricing (per 1M tokens)
+// Gemini 2.5 Flash Lite pricing (per 1M tokens)
 const PRICING = {
-  prompt: 0.075, // $0.075 per 1M tokens
-  candidates: 0.3, // $0.30 per 1M tokens
+  prompt: 0.1, // $0.10 per 1M tokens
+  candidates: 0.4, // $0.40 per 1M tokens
 } as const;
 
 interface TokenUsage {

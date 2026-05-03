@@ -107,7 +107,6 @@ export default function GroceryListPage() {
   if (isEmpty) {
     return (
       <View className="flex-1 items-center justify-center bg-background px-6">
-        <H3 className="font-bowlby-one text-center mb-2">Grocery list is empty</H3>
         <P className="text-muted-foreground text-center">You haven't added any items yet.</P>
       </View>
     );

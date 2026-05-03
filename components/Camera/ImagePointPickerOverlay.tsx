@@ -9,6 +9,7 @@ import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import ScanFrame from "./ScanFrame";
 import useOnPressScale from "~/hooks/animation/useOnPressScale";
+import { log } from "~/utils/logger";
 
 interface ImagePointPickerOverlayProps {
   imageUri: string;
@@ -42,17 +43,37 @@ export default function ImagePointPickerOverlay({
 
   const handleTouch = (event: { nativeEvent: { locationX: number; locationY: number } }) => {
     const { locationX, locationY } = event.nativeEvent;
+    log.info("[create-camera] gallery point picker touched", {
+      imageUri,
+      x: locationX,
+      y: locationY,
+      displayWidth: width,
+      displayHeight: imageDisplayHeight,
+    });
+
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedPoint({ x: locationX, y: locationY });
     setHasSelected(true);
   };
 
   const handleConfirm = () => {
+    log.info("[create-camera] gallery point picker confirm pressed", {
+      imageUri,
+      x: selectedPoint.x,
+      y: selectedPoint.y,
+      hasSelected,
+    });
+
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onConfirm(selectedPoint);
   };
 
   const handleCancel = () => {
+    log.info("[create-camera] gallery point picker cancel pressed", {
+      imageUri,
+      hasSelected,
+    });
+
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setHasSelected(false);
     setSelectedPoint({

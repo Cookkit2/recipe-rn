@@ -1,4 +1,5 @@
 import { Skia, type SkImage } from "@shopify/react-native-skia";
+import { log } from "~/utils/logger";
 
 /**
  * Loads an image from a URI into a Skia image object for processing.
@@ -16,8 +17,35 @@ import { Skia, type SkImage } from "@shopify/react-native-skia";
  * }
  */
 export const loadImageIntoSkia = async (imageUri: string) => {
+  const start = performance.now();
+  log.info("[create-camera] Skia.Data.fromURI starting", {
+    imageUri,
+    hasFileUriScheme: imageUri.startsWith("file://"),
+    inferredExtension: imageUri.split(".").pop() ?? "none",
+  });
+
   const imageData = await Skia.Data.fromURI(imageUri);
+  const dataByteLength =
+    typeof (imageData as unknown as { size?: () => number }).size === "function"
+      ? (imageData as unknown as { size: () => number }).size()
+      : -1;
+
+  log.info("[create-camera] Skia.Data.fromURI completed", {
+    imageUri,
+    byteLength: dataByteLength,
+  });
+
   const image = Skia.Image.MakeImageFromEncoded(imageData);
+  const duration = performance.now() - start;
+
+  log.info("[create-camera] Skia.Image.MakeImageFromEncoded completed", {
+    imageUri,
+    decoded: !!image,
+    width: image?.width() ?? 0,
+    height: image?.height() ?? 0,
+    durationMs: Number(duration.toFixed(2)),
+  });
+
   return image;
 };
 

@@ -7,9 +7,9 @@ App-wide **auth context**, **Zustand store**, and **pluggable strategies** (`Sup
 ## Setup & run
 
 ```bash
-pnpm install
-pnpm run typecheck
-pnpm test -- auth/
+bun install
+bun run typecheck
+bun test -- auth/
 ```
 
 Requires `EXPO_PUBLIC_SUPABASE_*` in `.env` for real Supabase auth (see root `.env.example`).
@@ -46,5 +46,5 @@ rg -n "AuthStrategy|MockAuth|Supabase" auth/
 ## Pre-PR checks
 
 ```bash
-pnpm run typecheck && pnpm test -- auth/
+bun run typecheck && bun test -- auth/
 ```
