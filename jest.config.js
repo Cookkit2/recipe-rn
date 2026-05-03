@@ -21,9 +21,9 @@ module.exports = {
     "node_modules/(?!(react-native|@react-native|@nozbe|@expo|expo|expo-modules-core|expo-constants|react-navigation|llama\\.rn|expo-file-system|@testing-library)/)",
   ],
   moduleNameMapper: {
-    "^expo-constants$": "<rootDir>/test/mocks/expo-constants.ts",
+    "^expo-constants$": "<rootDir>/__mocks__/expo-constants.ts",
     "^~/(.*)$": "<rootDir>/$1",
-    "^@sentry/react-native$": "<rootDir>/test/mocks/sentry-react-native.ts",
+    "^@sentry/react-native$": "<rootDir>/__mocks__/@sentry/react-native.ts",
   },
   collectCoverageFrom: [
     "utils/**/*.{ts,tsx}",

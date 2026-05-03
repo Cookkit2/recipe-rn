@@ -60,7 +60,7 @@ rg -n "from \"~/" app/ components/ hooks/
 ### Jest notes
 
 - Mapper: `^~/(.*)$` → `<rootDir>/$1` (`jest.config.js`).
-- Mocks: `test/mocks/expo-constants.ts`, `test/mocks/sentry-react-native.ts`.
+- Mocks: `__mocks__/expo-constants.ts`, `__mocks__/@sentry/react-native.ts`.
 - `@sentry/react-native` is ESM-heavy; keep mocks/mappers aligned when upgrading.
 
 ## Definition of done
@@ -77,6 +77,7 @@ rg -n "from \"~/" app/ components/ hooks/
 - When asked to handle many open GitHub PRs, prefer consolidating them into one review PR and closing/superseding the originals after confirmation.
 - Prefer concise, understated UI helper copy for simple empty states; avoid large explanatory cards unless requested.
 - For Reanimated values derived from props/state, prefer `useDerivedValue` over syncing `useSharedValue` in a `useEffect`.
+- Prefer lean PR CI: typecheck/format/tests plus one high-signal dependency audit; run heavier security scans on schedules or protected branches.
 
 ## Learned Workspace Facts
 
@@ -84,3 +85,6 @@ rg -n "from \"~/" app/ components/ hooks/
 - WatermelonDB `database.batch` should receive operation arrays directly instead of spread arguments to avoid large-batch runtime warnings.
 - Active package-manager automation has been migrated to Bun; use `bun`, `bunx`, and `bun.lockb` instead of pnpm commands or lockfiles.
 - Create-ingredient camera captures should use shared JPEG output near `1512x2016`; iOS native/HEIC output fails Skia decode and full-resolution photos slow segmentation/classification.
+- The recipe cooking Finish action intentionally skips `RateRecipeModal`; complete the recipe directly and return home through the no-rating completion path.
+- Keep the create-ingredient camera pipeline quiet by default: avoid high-volume `[create-camera]` info/profiling logs, but preserve warnings and errors.
+- Until iPad support is ready, App Store iOS builds should stay iPhone-only (`expo.ios.supportsTablet: false` / `TARGETED_DEVICE_FAMILY = 1`).
