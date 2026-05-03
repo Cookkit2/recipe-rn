@@ -7,7 +7,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import useColors from "~/hooks/useColor";
 import { titleCase } from "~/utils/text-formatter";
 import ShapeContainer from "~/components/Shared/Shapes/ShapeContainer";
-import { isIngredientMatch } from "~/utils/ingredient-matching";
+import { useIngredientMatcher } from "~/hooks/useIngredientMatcher";
 import { useRouter } from "expo-router";
 import useOnPressScale from "~/hooks/animation/useOnPressScale";
 import Animated from "react-native-reanimated";
@@ -19,6 +19,8 @@ export const IngredientsContent: React.FC<{
   totalSteps: number;
 }> = ({ ingredients }) => {
   const colors = useColors();
+  const { data: filteredPantryItems = [] } = usePantryItemsByType("all");
+  const { findMatch } = useIngredientMatcher({ pantryItems: filteredPantryItems });
 
   return (
     <View
@@ -49,7 +51,12 @@ export const IngredientsContent: React.FC<{
           scrollEnabled={false}
           keyExtractor={(item) => item.name}
           renderItem={({ item, index }) => (
-            <IngredientItem key={item.relatedIngredientId} ingredient={item} index={index} />
+            <IngredientItem
+              key={item.relatedIngredientId}
+              ingredient={item}
+              index={index}
+              findMatch={findMatch}
+            />
           )}
           ItemSeparatorComponent={() => <View className="h-3" />}
         />
@@ -63,23 +70,13 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const IngredientItem: React.FC<{
   ingredient: RecipeIngredient;
   index: number;
-}> = ({ ingredient, index }) => {
+  findMatch: (ingredient: RecipeIngredient) => any;
+}> = ({ ingredient, index, findMatch }) => {
   const { servings } = useRecipeDetailStore();
   const colors = useColors();
   const router = useRouter();
   const { animatedStyle, handlePressIn, handlePressOut } = useOnPressScale();
-  const { data: filteredPantryItems = [] } = usePantryItemsByType("all");
-
-  const currentIngredient = useMemo(() => {
-    // Find pantry item that matches this ingredient by name (same logic as index page)
-    return filteredPantryItems.find((pantryItem) =>
-      isIngredientMatch(
-        pantryItem.name,
-        ingredient.name,
-        pantryItem.synonyms?.map((s) => s.synonym)
-      )
-    );
-  }, [filteredPantryItems, ingredient.name]);
+  const currentIngredient = useMemo(() => findMatch(ingredient), [findMatch, ingredient]);
 
   const previewImage = currentIngredient?.image_url;
 

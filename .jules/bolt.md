@@ -12,3 +12,6 @@
 ## 2025-02-06 - Eliminate Closure Overhead in Nested Matching Loops
 **Learning:** When converting \`Array.prototype.find()\` or similar array methods to a standard \`for\` loop to eliminate closure overhead in deeply nested paths, remember that accessing array elements by index (e.g., \`array[i]\`) can type as possibly \`undefined\` in strict TypeScript environments.
 **Action:** Always include a truthiness check (e.g., \`if (item && ...)\`) before accessing element properties to prevent TS18048 errors during compilation checks.
+## 2025-02-12 - Eliminate Array.find and Regex operations per item in lists
+**Learning:** Calling `Array.prototype.find()` accompanied with `regex` operations in a `FlatList` component's child components (like `IngredientItem` nested in `IngredientsContent`) causes performance degradation due to O(N) lookup repeatedly executed per row.
+**Action:** Lift the lookup operation up to the parent and pre-process the source list by generating an O(1) hash-map index (e.g. `useIngredientMatcher`). Pass the pre-processed `findMatch` method down to children to enable O(1) matching inside list items.
