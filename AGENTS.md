@@ -75,8 +75,12 @@ rg -n "from \"~/" app/ components/ hooks/
 - **Read files before editing**; keep diffs focused on the task.
 - If npm/bun reports dependency vulnerabilities, run **`npm audit`** first (per team preference), then address or document.
 - When asked to handle many open GitHub PRs, prefer consolidating them into one review PR and closing/superseding the originals after confirmation.
+- Prefer concise, understated UI helper copy for simple empty states; avoid large explanatory cards unless requested.
+- For Reanimated values derived from props/state, prefer `useDerivedValue` over syncing `useSharedValue` in a `useEffect`.
 
 ## Learned Workspace Facts
 
 - `@shopify/react-native-skia` needs its postinstall binaries present before iOS prebuild/pod install; with Bun, trust the package so the Skia iOS `.xcframework` files are downloaded.
 - WatermelonDB `database.batch` should receive operation arrays directly instead of spread arguments to avoid large-batch runtime warnings.
+- Active package-manager automation has been migrated to Bun; use `bun`, `bunx`, and `bun.lockb` instead of pnpm commands or lockfiles.
+- Create-ingredient camera captures should use shared JPEG output near `1512x2016`; iOS native/HEIC output fails Skia decode and full-resolution photos slow segmentation/classification.

@@ -7,6 +7,7 @@ build
 # Native projects / generated artifacts
 ios
 android
+docs
 
 # Generated / caches
 uniwind-types.d.ts

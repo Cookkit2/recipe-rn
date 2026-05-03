@@ -6,21 +6,10 @@ import { Image } from "expo-image";
 import MaskedView from "@react-native-masked-view/masked-view";
 import ShapeContainer from "~/components/Shared/Shapes/ShapeContainer";
 import { formatDuration } from "~/utils/time-formatter";
-import { useUniwind } from "uniwind";
 import { cn } from "~/lib/utils";
-import RateRecipeModal from "~/components/Recipe/Step/RateRecipeModal";
 
 const CongratulationsContent = () => {
-  const {
-    recipe,
-    duration,
-    showRatingModal,
-    closeRatingModal,
-    saveRatingAndComplete,
-    skipRatingAndComplete,
-    isCompletingRecipe,
-  } = useRecipeSteps();
-  const { theme } = useUniwind();
+  const { recipe, duration } = useRecipeSteps();
 
   return (
     <>
@@ -51,13 +40,7 @@ const CongratulationsContent = () => {
         </P>
       </View>
 
-      <RateRecipeModal
-        modalVisible={showRatingModal}
-        onCancel={closeRatingModal}
-        onSave={saveRatingAndComplete}
-        onSkip={skipRatingAndComplete}
-        isSaving={isCompletingRecipe}
-      />
+      {/* Rating modal intentionally disabled; Finish completes and returns home. */}
     </>
   );
 };

@@ -10,6 +10,11 @@ The user wants to implement a grocery list feature that allows them to:
 
 This feature will help users plan their shopping trips efficiently by showing them exactly what ingredients they need to buy based on the recipes they want to cook.
 
+2026-05-03 CI triage note:
+
+- The user wants PR #389 investigated because several CI checks are failing after the Bun migration and workflow edits.
+- The goal is to identify true root failures, decide whether the current CI surface is appropriate for each PR, and avoid spending time fixing noisy or duplicated gates before agreeing on the desired CI shape.
+
 ---
 
 ## Key Challenges and Analysis
@@ -151,6 +156,8 @@ The core intelligence of this feature:
 - [x] 2026-05-03: Replace WatermelonDB `database.batch(...ops)` spread calls with array calls repo-wide to remove large-batch warnings.
 - [x] 2026-05-03: Move search filters from inline horizontal chips into a toolbar-triggered bottom sheet.
 - [x] 2026-05-03: Fix Reanimated `useScrollOffset` warning on recipe detail loading states.
+- [x] 2026-05-03: Triage PR #389 CI failures and choose a lean PR/merge CI policy.
+- [ ] 2026-05-03: Execute lean PR CI plan from `docs/superpowers/plans/2026-05-03-lean-pr-ci.md`.
 
 ---
 
@@ -200,6 +207,33 @@ All phases have been implemented. The grocery list feature is now ready for test
 
 - Root cause of Reanimated warning: `app/recipes/[recipeId]/index.tsx` initialized `useScrollOffset(scrollRef)` before recipe data loaded, then returned loading/error/not-found UI without mounting the `Animated.ScrollView` that owns `scrollRef`.
 - Fix: split the route into a loader component and `RecipeDetailsContent`, so `useScrollOffset` is only mounted once the recipe content and its scroll view are rendered together.
+
+2026-05-03 CI triage update:
+
+- PR #389 check rollup has five red checks, but two are summary jobs. Root failures are `Dependency Audit`, `Test Suite`, `Bun Audit`, and `Security Policy Compliance`.
+- `Dependency Audit` and `Bun Audit` fail on the same three moderate advisories: `file-type`, `postcss`, and `uuid`. Local `npm audit --audit-level=moderate` cannot run because this Bun-only repo has no npm lockfile.
+- `Security Policy Compliance` fails because the workflow treats any tracked `*.env` file as a secret and catches `ios/.xcode.env`, which is a normal React Native/Xcode helper file.
+- `Test Suite` fails across nine suites: legacy `src/` auth tests have Jest transform/mocking issues, `utils/__tests__/gemini-api.test.ts` has a changed cost expectation, pantry metadata aggregation expects quantity 6 but receives 4, and TailoredRecipeMappingRepository tests still expect spread `database.batch` arguments instead of the new array form.
+
+2026-05-03 CI planning update:
+
+- Approved design written to `docs/superpowers/specs/2026-05-03-lean-pr-ci-design.md`.
+- Implementation plan written to `docs/superpowers/plans/2026-05-03-lean-pr-ci.md`.
+- Plan decomposes execution into six checkpoints: simplify PR CI, move heavy security scans, update known behavior-change tests, resolve pantry duplicate quantity behavior, quarantine legacy `src/` auth Jest suites, and run final verification.
+
+2026-05-03 executor update:
+
+- Bug in progress: pressing Finish on the final recipe cooking congratulations page calls `goToNextStep`, which sets `showRatingModal`, but `CongratulationsContent` has the `RateRecipeModal` import/render and completion handlers commented out.
+- Plan: add a focused regression test for the congratulations page modal wiring, reconnect the modal to `RecipeStepsContext`, then run the focused test/typecheck.
+- Completed: restored the rating/completion modal wiring in `CongratulationsContent` and added `components/Recipe/Step/__tests__/CongratulationsContent.test.tsx`.
+- Verification: focused Jest test passed; `bun run typecheck` passed; Prettier check passed for touched files; IDE lints report no errors.
+
+2026-05-03 executor correction:
+
+- User clarified they do not want the rating modal in the cooking flow.
+- Updated plan: keep the rating modal disabled, make the final Finish action complete the recipe directly, and return home through the existing completion path.
+- Completed: removed the modal render from `CongratulationsContent`, changed the final `goToNextStep` branch to call `skipRatingAndComplete`, and updated the regression test to assert the modal is not rendered.
+- Verification: focused Jest test passed; `bun run typecheck` passed; Prettier check passed for touched files; IDE lints report no errors.
 
 ---
 

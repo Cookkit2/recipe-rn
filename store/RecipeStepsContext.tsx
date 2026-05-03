@@ -327,6 +327,12 @@ export function RecipeStepsProvider({
       log.info("[RecipeStepsContext] Total steps:", stepPages.length);
       log.info("[RecipeStepsContext] Servings:", servings);
 
+      if (isCompletingRecipe) {
+        log.info("[RecipeStepsContext] Completion already in progress");
+        log.info("═══════════════════════════════════════════════════════════\n");
+        return;
+      }
+
       if (currentStep < stepPages.length - 1) {
         const nextIndex = currentStep + 1;
         log.info("[RecipeStepsContext] ✅ Moving to next step");
@@ -340,15 +346,13 @@ export function RecipeStepsProvider({
         carouselRef.current?.scrollTo({ index: nextIndex, animated: true });
         log.info("[RecipeStepsContext] carousel.scrollTo called");
       } else {
-        log.info("[RecipeStepsContext] ✅ At end, showing rating modal");
-        // Store the servings for the completion
+        log.info("[RecipeStepsContext] ✅ At end, completing recipe");
         pendingServings.current = servings;
-        // Show the rating modal instead of completing directly
-        setShowRatingModal(true);
+        void skipRatingAndComplete();
       }
       log.info("═══════════════════════════════════════════════════════════\n");
     },
-    [currentStep, stepPages.length]
+    [currentStep, stepPages.length, isCompletingRecipe, skipRatingAndComplete]
   );
 
   const goToPreviousStep = useCallback(() => {
