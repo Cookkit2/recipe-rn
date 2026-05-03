@@ -358,3 +358,9 @@ _(To be updated during implementation)_
   - Route checked items into a trailing `Purchased` section while leaving unchecked items in their original categories.
 - [ ] Update `GroceryListSection` UI to visually distinguish the Purchased section (muted colors, lower emphasis) while keeping existing behavior for other categories.
 - [ ] Run lint/type checks and manually validate unit conversion and Purchased section behavior in the running app.
+
+---
+
+2026-05-03 CI executor update:
+
+- Simplified `.github/workflows/ci.yml` to PR-quality checks: typecheck, Prettier, Jest, and one high/critical Bun audit.

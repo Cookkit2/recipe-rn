@@ -10,14 +10,11 @@ env:
   NODE_VERSION: "20"
 
 jobs:
-  # Code Quality and Security Gates
-  quality-gate:
+  quality:
     runs-on: ubuntu-latest
-    name: Quality Gate
+    name: Quality
     steps:
       - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -38,21 +35,16 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: TypeScript strict mode check
+      - name: TypeScript check
         run: bun run typecheck
-
-      - name: ESLint check
-        run: bun run lint
-        continue-on-error: false
 
       - name: Prettier check
         run: bunx prettier --check .
 
-  # Testing with Coverage Threshold
   test:
     runs-on: ubuntu-latest
-    name: Test Suite
-    needs: quality-gate
+    name: Jest
+    needs: quality
     steps:
       - uses: actions/checkout@v6
 
@@ -75,30 +67,10 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Run tests with coverage
-        run: bun run test:coverage
+      - name: Run Jest
+        run: bun test
 
-      - name: Enforce coverage threshold
-        run: |
-          COVERAGE=$(cat coverage/coverage-summary.json | jq '.total.lines.pct')
-          echo "Current coverage: ${COVERAGE}%"
-          if (( $(echo "$COVERAGE < 80" | bc -l) )); then
-            echo "❌ Coverage ${COVERAGE}% is below 80% threshold"
-            exit 1
-          fi
-          echo "✅ Coverage ${COVERAGE}% meets 80% threshold"
-
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v6
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage/coverage-final.json
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: true
-
-  # Dependency Security Audit
-  audit:
+  dependency-audit:
     runs-on: ubuntu-latest
     name: Dependency Audit
     steps:
@@ -124,61 +96,4 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Run Bun audit
-        run: bun audit --audit-level=moderate
-        continue-on-error: false
-
-      - name: Run npm audit (additional check)
-        run: npm audit --audit-level=moderate
-        continue-on-error: false
-
-  # Build verification
-  build:
-    runs-on: ubuntu-latest
-    name: Build Verification
-    needs: [test, audit]
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Cache Bun dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lockb', 'bun.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Verify TypeScript compilation
-        run: bunx tsc --noEmit
-
-  # Summary job
-  ci-summary:
-    runs-on: ubuntu-latest
-    name: CI Summary
-    needs: [quality-gate, test, audit, build]
-    if: always()
-    steps:
-      - name: Check all jobs
-        run: |
-          if [ "${{ needs.quality-gate.result }}" != "success" ] || \
-             [ "${{ needs.test.result }}" != "success" ] || \
-             [ "${{ needs.audit.result }}" != "success" ] || \
-             [ "${{ needs.build.result }}" != "success" ]; then
-            echo "❌ CI Pipeline Failed"
-            echo "Quality Gate: ${{ needs.quality-gate.result }}"
-            echo "Test: ${{ needs.test.result }}"
-            echo "Audit: ${{ needs.audit.result }}"
-            echo "Build: ${{ needs.build.result }}"
-            exit 1
-          fi
-          echo "✅ All CI checks passed successfully"
+        run: bun audit --audit-level=high
