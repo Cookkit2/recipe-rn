@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@babel/plugin-proposal-decorators": "^7.28.6",
-    "@gorhom/bottom-sheet": "^5.2.8",
+    "@gorhom/bottom-sheet": "^5.2.13",
     "@legendapp/list": "^2.0.19",
     "@lucide/lab": "^0.1.2",
     "@nozbe/watermelondb": "^0.28.0",
