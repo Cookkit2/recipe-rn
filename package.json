@@ -46,7 +46,7 @@
     "@rn-primitives/popover": "^1.4.0",
     "@rn-primitives/portal": "~1.3.0",
     "@rn-primitives/progress": "^1.2.0",
-    "@rn-primitives/radio-group": "^1.2.0",
+    "@rn-primitives/radio-group": "^1.4.0",
     "@rn-primitives/select": "^1.2.0",
     "@rn-primitives/separator": "^1.2.0",
     "@rn-primitives/slot": "^1.2.0",
