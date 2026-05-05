@@ -92,7 +92,7 @@
     "expo-video": "~55.0.15",
     "expo-web-browser": "~55.0.14",
     "jwt-encode": "^1.0.1",
-    "llama.rn": "^0.11.0",
+    "llama.rn": "^0.11.5",
     "lucide-react-native": "^0.553.0",
     "lucide-uniwind": "^0.553.0",
     "neverthrow": "^8.2.0",
