@@ -100,6 +100,11 @@ export default function GroceryListItem({
         onPress={handlePress}
         style={[opacityStyle]}
         className="flex-row items-center py-3 px-5 rounded-xl mb-2 bg-background"
+        accessibilityRole={isSelectionMode ? "button" : "checkbox"}
+        accessibilityState={{
+          checked: isSelectionMode ? isSelected : item.isChecked || item.isCovered,
+        }}
+        accessibilityLabel={`${item.name}, ${quantityDisplay}`}
       >
         {/* Content */}
         <View className="flex-1">
