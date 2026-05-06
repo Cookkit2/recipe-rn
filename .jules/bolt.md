@@ -12,3 +12,7 @@
 ## 2025-02-06 - Eliminate Closure Overhead in Nested Matching Loops
 **Learning:** When converting \`Array.prototype.find()\` or similar array methods to a standard \`for\` loop to eliminate closure overhead in deeply nested paths, remember that accessing array elements by index (e.g., \`array[i]\`) can type as possibly \`undefined\` in strict TypeScript environments.
 **Action:** Always include a truthiness check (e.g., \`if (item && ...)\`) before accessing element properties to prevent TS18048 errors during compilation checks.
+
+## 2025-02-06 - Dynamic RegExp Construction from Arrays
+**Learning:** When dynamically constructing a \`RegExp\` using an array of strings via \`.join('|')\`, an empty array evaluates to an empty string, which generates a regex that incorrectly matches *everything*.
+**Action:** Always filter empty strings before mapping or joining. If the resulting array length is zero, fallback to a regex that never matches (e.g., \`/(?!)/\`) instead of constructing an empty \`RegExp\`.
