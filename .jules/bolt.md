@@ -12,3 +12,7 @@
 ## 2025-02-06 - Eliminate Closure Overhead in Nested Matching Loops
 **Learning:** When converting \`Array.prototype.find()\` or similar array methods to a standard \`for\` loop to eliminate closure overhead in deeply nested paths, remember that accessing array elements by index (e.g., \`array[i]\`) can type as possibly \`undefined\` in strict TypeScript environments.
 **Action:** Always include a truthiness check (e.g., \`if (item && ...)\`) before accessing element properties to prevent TS18048 errors during compilation checks.
+
+## 2025-03-04 - Strict TypeScript Indexing in Hash Map Optimizations
+**Learning:** When indexing a TypeScript `Record` or `Partial<Record>` mapped to specific string literal types (e.g., union types like `'breakfast' | 'lunch'`), explicitly cast the dynamic string key to the expected type (e.g., `const key = stringVal as ExpectedType`) before using it as an index to prevent TS7053 implicitly 'any' compilation errors.
+**Action:** When converting Array `.find()` and `.filter()` operations over strongly-typed enums/unions to an $O(1)$ hash map lookup, ensure the keys extracted dynamically from the data model are cast (e.g., `plan.mealSlot as MealSlot`) prior to indexing.
