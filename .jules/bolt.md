@@ -12,3 +12,7 @@
 ## 2025-02-06 - Eliminate Closure Overhead in Nested Matching Loops
 **Learning:** When converting \`Array.prototype.find()\` or similar array methods to a standard \`for\` loop to eliminate closure overhead in deeply nested paths, remember that accessing array elements by index (e.g., \`array[i]\`) can type as possibly \`undefined\` in strict TypeScript environments.
 **Action:** Always include a truthiness check (e.g., \`if (item && ...)\`) before accessing element properties to prevent TS18048 errors during compilation checks.
+
+## 2024-05-18 - Date Parsing Overhead in Nested Loops
+**Learning:** In calendar or grouped data views, using `new Date()` to parse strings or evaluate dates repeatedly inside nested `.filter` and `.find` operations causes a massive performance bottleneck. Date instantiation and string parsing are computationally expensive ($O(N \times \text{Days})$).
+**Action:** When grouping time-series data for UI components like a calendar, do a single $O(N)$ pass over the source array to instantiate Dates once, extract a simple string key (e.g., `YYYY-MM-DD`), and build a hash map or Dictionary. Subsequent daily/hourly lookups then become lightweight $O(1)$ property access.
