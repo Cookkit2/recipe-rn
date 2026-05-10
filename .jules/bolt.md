@@ -12,3 +12,7 @@
 ## 2025-02-06 - Eliminate Closure Overhead in Nested Matching Loops
 **Learning:** When converting \`Array.prototype.find()\` or similar array methods to a standard \`for\` loop to eliminate closure overhead in deeply nested paths, remember that accessing array elements by index (e.g., \`array[i]\`) can type as possibly \`undefined\` in strict TypeScript environments.
 **Action:** Always include a truthiness check (e.g., \`if (item && ...)\`) before accessing element properties to prevent TS18048 errors during compilation checks.
+
+## 2024-05-10 - O(N*7) Loops in Calendar Components
+**Learning:** In calendar components that map over a 7-day week, performing array scans (`.filter()` or `.find()`) inside the daily loop results in `O(N * 7)` operations, which scales poorly when rendering many events.
+**Action:** When mapping events to calendar days, build a hash map grouped by simple date strings (e.g. `YYYY-MM-DD`) in a single `O(N)` pass *before* iterating over the days. Then, use `O(1)` lookups inside the day loop.
