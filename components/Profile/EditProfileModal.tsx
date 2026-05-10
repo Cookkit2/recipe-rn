@@ -125,6 +125,7 @@ export default function EditProfileModal({
           selectTextOnFocus={true}
           className="w-full mb-2"
           error={!!errors.name}
+          accessibilityLabel="Name"
         />
         <ErrorText text={errors.name} />
 
@@ -143,6 +144,7 @@ export default function EditProfileModal({
           autoCorrect={false}
           className="w-full mb-2"
           error={!!errors.email}
+          accessibilityLabel="Email"
         />
         <ErrorText text={errors.email} />
 
@@ -162,6 +164,7 @@ export default function EditProfileModal({
             autoCorrect={false}
             className="w-full pl-12 pr-12 text-center"
             error={!!errors.password}
+            accessibilityLabel="Password"
           />
           <Pressable
             onPress={() => setShowPassword(!showPassword)}
