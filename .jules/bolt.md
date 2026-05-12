@@ -12,7 +12,3 @@
 ## 2025-02-06 - Eliminate Closure Overhead in Nested Matching Loops
 **Learning:** When converting \`Array.prototype.find()\` or similar array methods to a standard \`for\` loop to eliminate closure overhead in deeply nested paths, remember that accessing array elements by index (e.g., \`array[i]\`) can type as possibly \`undefined\` in strict TypeScript environments.
 **Action:** Always include a truthiness check (e.g., \`if (item && ...)\`) before accessing element properties to prevent TS18048 errors during compilation checks.
-
-## 2024-05-18 - Nested Loop Array Processing in Render
-**Learning:** Performing multiple array filtering `.filter()` and searching `.find()` operations inside a rendering loop (like generating days of a week for a calendar) results in $O(M \times N)$ time complexity and degrades main-thread performance when data sets grow.
-**Action:** When grouping or filtering lists by date and category strings during render, perform a single O(N) pass to construct an O(1) dictionary (`Map`) using a unique combined string key (e.g., `YYYY-MM-DD-category`). Then execute O(1) dictionary lookups inside the render loop to eliminate closure allocations and drastically speed up computations.

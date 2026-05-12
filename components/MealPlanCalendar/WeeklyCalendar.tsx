@@ -42,39 +42,26 @@ export default function WeeklyCalendar({ onMealSlotPress, onMealSlotDrop }: Week
   const weekDays = React.useMemo(() => {
     const days: DayMealPlan[] = [];
 
-    // O(1) map indexed by Date string and MealSlot
-    // We create a dictionary rather than filtering array in a nested loop
-    const mealPlansByDateAndSlot = new Map<string, NonNullable<typeof mealPlans>[0]>();
-
-    if (mealPlans && mealPlans.length > 0) {
-      for (let i = 0; i < mealPlans.length; i++) {
-        const plan = mealPlans[i];
-        if (!plan) continue;
-
-        const planDate = new Date(plan.date);
-        // Key format: YYYY-MM-DD-slot
-        const key = `${planDate.getFullYear()}-${planDate.getMonth()}-${planDate.getDate()}-${plan.mealSlot}`;
-        mealPlansByDateAndSlot.set(key, plan);
-      }
-    }
-
     for (let i = 0; i < 7; i++) {
       const date = new Date(weekStartDate);
       date.setDate(date.getDate() + i);
 
-      const datePrefix = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+      // Find meal plans for this day
+      const dayMealPlans =
+        mealPlans?.filter((plan) => {
+          const planDate = new Date(plan.date);
+          return (
+            planDate.getDate() === date.getDate() &&
+            planDate.getMonth() === date.getMonth() &&
+            planDate.getFullYear() === date.getFullYear()
+          );
+        }) || [];
 
-      const meals: Partial<Record<MealSlot, NonNullable<typeof mealPlans>[0]>> = {};
-
-      for (let j = 0; j < MEAL_SLOTS.length; j++) {
-        const slot = MEAL_SLOTS[j];
-        if (!slot) continue;
-
-        const plan = mealPlansByDateAndSlot.get(`${datePrefix}-${slot}`);
-        if (plan) {
-          meals[slot] = plan;
-        }
-      }
+      // Group by meal slot
+      const meals: Partial<Record<MealSlot, (typeof dayMealPlans)[0]>> = {};
+      MEAL_SLOTS.forEach((slot) => {
+        meals[slot] = dayMealPlans.find((plan) => plan.mealSlot === slot);
+      });
 
       days.push({
         date,
