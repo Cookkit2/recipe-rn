@@ -136,7 +136,6 @@
     "@types/react": "~19.2.10",
     "babel-jest": "29.7.0",
     "detox": "^20.51.0",
-    "fast-uri": "^3.1.2",
     "husky": "^9.1.7",
     "jest-expo": "^55.0.16",
     "prettier": "^3.6.2",
@@ -146,11 +145,12 @@
     "typescript": "~5.9.2",
     "zustand": "^5.0.12"
   },
+  "resolutions": {
+    "fast-uri": "^3.1.2"
+  },
   "overrides": {
     "hermes-compiler": "250829098.0.4",
-    "@babel/runtime": ">=7.26.10"
-  },
-  "resolutions": {
+    "@babel/runtime": ">=7.26.10",
     "fast-uri": "^3.1.2"
   },
   "private": true,
@@ -163,10 +163,6 @@
     }
   },
   "trustedDependencies": [
-    "@sentry/cli",
-    "@shopify/react-native-skia",
-    "detox",
-    "dtrace-provider",
-    "unrs-resolver"
+    "@shopify/react-native-skia"
   ]
 }
