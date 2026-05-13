@@ -35,18 +35,18 @@ export class StreakService {
       const cookingDays = this.groupCookingDaysByDate(allHistory);
 
       // Sort dates in descending order (most recent first)
-      const sortedDates = Array.from(cookingDays.keys()).sort((a, b) => b.getTime() - a.getTime());
+      const sortedDates = Array.from(cookingDays.keys()).sort((a, b) => b - a);
 
       if (sortedDates.length === 0) {
         return 0;
       }
 
-      const today = this.normalizeToDate(new Date());
+      const today = this.normalizeToTimestamp(new Date());
       const mostRecentCookingDate = sortedDates[0]!;
 
       // Calculate days since last cooking
       const daysSinceLastCooking = Math.floor(
-        (today.getTime() - mostRecentCookingDate.getTime()) / (1000 * 60 * 60 * 24)
+        (today - mostRecentCookingDate) / (1000 * 60 * 60 * 24)
       );
 
       // If the last cooking was more than 1 day ago, streak is broken
@@ -62,9 +62,7 @@ export class StreakService {
         const prevDate = sortedDates[i];
         if (!prevDate) break; // Handle potential undefined
 
-        const daysDiff = Math.floor(
-          (currentDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24)
-        );
+        const daysDiff = Math.floor((currentDate - prevDate) / (1000 * 60 * 60 * 24));
 
         // If exactly 1 day difference, continue streak
         if (daysDiff === 1) {
@@ -101,7 +99,7 @@ export class StreakService {
       const cookingDays = this.groupCookingDaysByDate(allHistory);
 
       // Sort dates in ascending order (oldest first)
-      const sortedDates = Array.from(cookingDays.keys()).sort((a, b) => a.getTime() - b.getTime());
+      const sortedDates = Array.from(cookingDays.keys()).sort((a, b) => a - b);
 
       if (sortedDates.length === 0) {
         return 0;
@@ -114,9 +112,7 @@ export class StreakService {
         const prevDate = sortedDates[i - 1]!;
         const currDate = sortedDates[i]!;
 
-        const daysDiff = Math.floor(
-          (currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24)
-        );
+        const daysDiff = Math.floor((currDate - prevDate) / (1000 * 60 * 60 * 24));
 
         // If exactly 1 day difference, continue streak
         if (daysDiff === 1) {
@@ -208,12 +204,10 @@ export class StreakService {
       if (!firstEntry?.cookedAtDate) {
         return null;
       }
-      const lastCookingDate = this.normalizeToDate(firstEntry.cookedAtDate);
-      const today = this.normalizeToDate(new Date());
+      const lastCookingDate = this.normalizeToTimestamp(firstEntry.cookedAtDate);
+      const today = this.normalizeToTimestamp(new Date());
 
-      const daysSinceLastCooking = Math.floor(
-        (today.getTime() - lastCookingDate.getTime()) / (1000 * 60 * 60 * 24)
-      );
+      const daysSinceLastCooking = Math.floor((today - lastCookingDate) / (1000 * 60 * 60 * 24));
 
       // If already more than 1 day, streak is broken
       if (daysSinceLastCooking > 1) {
@@ -233,11 +227,11 @@ export class StreakService {
    */
   private groupCookingDaysByDate(
     history: Awaited<ReturnType<typeof this.cookingHistoryRepo.getCookingHistory>>
-  ): Map<Date, Set<string>> {
-    const cookingDays = new Map<Date, Set<string>>();
+  ): Map<number, Set<string>> {
+    const cookingDays = new Map<number, Set<string>>();
 
     for (const record of history) {
-      const dateKey = this.normalizeToDate(record.cookedAtDate);
+      const dateKey = this.normalizeToTimestamp(record.cookedAtDate);
 
       if (!cookingDays.has(dateKey)) {
         cookingDays.set(dateKey, new Set());
@@ -251,12 +245,10 @@ export class StreakService {
   }
 
   /**
-   * Normalize a date to midnight (remove time component)
+   * Normalize a date to midnight timestamp (remove time component)
    */
-  private normalizeToDate(date: Date): Date {
-    const normalized = new Date(date);
-    normalized.setHours(0, 0, 0, 0);
-    return normalized;
+  private normalizeToTimestamp(date: Date): number {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
   }
 
   /**
@@ -271,7 +263,7 @@ export class StreakService {
     }
 
     const cookingDays = this.groupCookingDaysByDate(history);
-    const sortedDates = Array.from(cookingDays.keys()).sort((a, b) => a.getTime() - b.getTime());
+    const sortedDates = Array.from(cookingDays.keys()).sort((a, b) => a - b);
 
     if (sortedDates.length === 0) {
       return [];
@@ -290,9 +282,7 @@ export class StreakService {
 
       if (!prevDate || !currDate) break;
 
-      const daysDiff = Math.floor(
-        (currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24)
-      );
+      const daysDiff = Math.floor((currDate - prevDate) / (1000 * 60 * 60 * 24));
 
       if (daysDiff === 1) {
         // Continue current streak
@@ -300,7 +290,7 @@ export class StreakService {
       } else {
         // Streak ended, record it
         streakHistory.push({
-          date: streakStartDate,
+          date: new Date(streakStartDate),
           streakCount: currentStreak,
         });
 
@@ -312,7 +302,7 @@ export class StreakService {
 
     // Don't forget the last streak
     streakHistory.push({
-      date: streakStartDate,
+      date: new Date(streakStartDate),
       streakCount: currentStreak,
     });
 

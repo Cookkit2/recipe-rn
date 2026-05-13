@@ -12,3 +12,6 @@
 ## 2025-02-06 - Eliminate Closure Overhead in Nested Matching Loops
 **Learning:** When converting \`Array.prototype.find()\` or similar array methods to a standard \`for\` loop to eliminate closure overhead in deeply nested paths, remember that accessing array elements by index (e.g., \`array[i]\`) can type as possibly \`undefined\` in strict TypeScript environments.
 **Action:** Always include a truthiness check (e.g., \`if (item && ...)\`) before accessing element properties to prevent TS18048 errors during compilation checks.
+## 2024-05-13 - Primitive Keys in Map Avoid Date Object Allocation & Reference Bugs
+**Learning:** Using `Date` objects as keys in a JavaScript `Map` inside hot paths (like grouping records) causes two major issues. First, performance degrades severely due to thousands of `Date` allocations and subsequent garbage collection. Second, `Map` compares object keys by reference, not value, so `map.has(new Date(sameTime))` will always return `false`, causing severe logical bugs.
+**Action:** When grouping records by date in a `Map`, always convert the date to a primitive `number` timestamp (e.g., `new Date(y, m, d).getTime()`) to use as the map key. This ensures correct duplicate detection and eliminates object allocation overhead in loops.
