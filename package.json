@@ -148,7 +148,8 @@
   },
   "overrides": {
     "hermes-compiler": "250829098.0.4",
-    "@babel/runtime": ">=7.26.10"
+    "@babel/runtime": ">=7.26.10",
+    "fast-uri": "^3.1.2"
   },
   "private": true,
   "reanimated": {
@@ -161,5 +162,8 @@
   },
   "trustedDependencies": [
     "@shopify/react-native-skia"
-  ]
+  ],
+  "resolutions": {
+    "fast-uri": "^3.1.2"
+  }
 }
