@@ -15,3 +15,8 @@
 **Vulnerability:** Relying on positional array parameters `?` in SQLite (especially via `expo-sqlite`) can lead to SQL injection vulnerabilities due to parameter misalignment, object-to-string coercion bugs, or parameter pollution. This is frequently flagged by code analysis tools.
 **Learning:** `expo-sqlite` and similar SQL libraries allow dynamic mapping, meaning using `?` binds parameters structurally by an index array.
 **Prevention:** Always use explicitly mapped named parameters like `$columnName` when using `runAsync` and `getFirstAsync` in `expo-sqlite` and pass the parameters as an object instead of an array.
+
+## 2024-05-03 - Prevent SSRF and Parameter Injection in API Calls
+**Vulnerability:** Constructing URLs via template literals without encoding parameters (e.g. `` url = `${BASE_URL}?id=${videoId}&key=${API_KEY}` ``) allows an attacker to inject arbitrary query parameters (like `123&key=fake`), bypassing intended API keys or causing SSRF/parameter pollution.
+**Learning:** Raw string interpolation for URL components leaves APIs open to manipulation, even for seemingly simple identifiers.
+**Prevention:** When constructing URLs for external API requests (e.g., using `fetch`), always sanitize interpolated variables (like `videoId`) using `encodeURIComponent()` to prevent Server-Side Request Forgery (SSRF) and parameter injection vulnerabilities.
