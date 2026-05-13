@@ -151,6 +151,7 @@ export function LogWasteDialog({
               onChangeText={setStockName}
               placeholder="e.g., Milk, Bread, etc."
               className={cn(errors.stockName && "border-destructive")}
+              accessibilityLabelledBy="stock-name"
             />
             {errors.stockName && (
               <P className="text-destructive text-xs font-urbanist-medium">{errors.stockName}</P>
@@ -172,10 +173,16 @@ export function LogWasteDialog({
                   placeholder="1"
                   keyboardType="decimal-pad"
                   className={cn(errors.quantity && "border-destructive")}
+                  accessibilityLabelledBy="quantity"
                 />
               </View>
               <View className="w-24">
-                <Input value={unit} onChangeText={setUnit} placeholder="unit" />
+                <Input
+                  value={unit}
+                  onChangeText={setUnit}
+                  placeholder="unit"
+                  accessibilityLabel="Unit"
+                />
               </View>
             </View>
             {errors.quantity && (
@@ -206,6 +213,7 @@ export function LogWasteDialog({
                 placeholder="0.00"
                 keyboardType="decimal-pad"
                 className="flex-1"
+                accessibilityLabelledBy="cost"
               />
               <P className="text-muted-foreground font-urbanist-medium">$</P>
             </View>
