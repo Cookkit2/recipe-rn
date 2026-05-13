@@ -62,7 +62,9 @@ export class StreakService {
         const prevDate = sortedDates[i];
         if (!prevDate) break; // Handle potential undefined
 
-        const daysDiff = Math.floor((currentDate - prevDate) / (1000 * 60 * 60 * 24));
+        const daysDiff = Math.floor(
+          (currentDate - prevDate) / (1000 * 60 * 60 * 24)
+        );
 
         // If exactly 1 day difference, continue streak
         if (daysDiff === 1) {
@@ -112,7 +114,9 @@ export class StreakService {
         const prevDate = sortedDates[i - 1]!;
         const currDate = sortedDates[i]!;
 
-        const daysDiff = Math.floor((currDate - prevDate) / (1000 * 60 * 60 * 24));
+        const daysDiff = Math.floor(
+          (currDate - prevDate) / (1000 * 60 * 60 * 24)
+        );
 
         // If exactly 1 day difference, continue streak
         if (daysDiff === 1) {
@@ -207,7 +211,9 @@ export class StreakService {
       const lastCookingDate = this.normalizeToTimestamp(firstEntry.cookedAtDate);
       const today = this.normalizeToTimestamp(new Date());
 
-      const daysSinceLastCooking = Math.floor((today - lastCookingDate) / (1000 * 60 * 60 * 24));
+      const daysSinceLastCooking = Math.floor(
+        (today - lastCookingDate) / (1000 * 60 * 60 * 24)
+      );
 
       // If already more than 1 day, streak is broken
       if (daysSinceLastCooking > 1) {
@@ -248,7 +254,11 @@ export class StreakService {
    * Normalize a date to midnight timestamp (remove time component)
    */
   private normalizeToTimestamp(date: Date): number {
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+    return new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    ).getTime();
   }
 
   /**
@@ -282,7 +292,9 @@ export class StreakService {
 
       if (!prevDate || !currDate) break;
 
-      const daysDiff = Math.floor((currDate - prevDate) / (1000 * 60 * 60 * 24));
+      const daysDiff = Math.floor(
+        (currDate - prevDate) / (1000 * 60 * 60 * 24)
+      );
 
       if (daysDiff === 1) {
         // Continue current streak
