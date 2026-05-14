@@ -12,3 +12,6 @@
 ## 2025-02-06 - Eliminate Closure Overhead in Nested Matching Loops
 **Learning:** When converting \`Array.prototype.find()\` or similar array methods to a standard \`for\` loop to eliminate closure overhead in deeply nested paths, remember that accessing array elements by index (e.g., \`array[i]\`) can type as possibly \`undefined\` in strict TypeScript environments.
 **Action:** Always include a truthiness check (e.g., \`if (item && ...)\`) before accessing element properties to prevent TS18048 errors during compilation checks.
+## 2025-02-06 - Preserve `.find()` Behavior when Creating Hash Map Lookups
+**Learning:** When optimizing O(N) array traversals containing `.find()` with O(1) hash map lookups, standard object assignments (`map[key] = item`) in a loop will constantly overwrite the value with the last matching item, changing the behavior from "resolve to first" to "resolve to last".
+**Action:** When creating index lookups to replace `.find()` operations, always include a guard (e.g. `if (!map[key]) map[key] = item;`) to ensure the first matched item is preserved, matching the original semantics exactly.

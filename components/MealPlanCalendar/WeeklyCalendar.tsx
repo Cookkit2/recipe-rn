@@ -40,28 +40,42 @@ export default function WeeklyCalendar({ onMealSlotPress, onMealSlotDrop }: Week
 
   // Group meal plans by day
   const weekDays = React.useMemo(() => {
+    const plansByDateAndSlot: Record<string, Record<string, NonNullable<typeof mealPlans>[0]>> = {};
+
+    if (mealPlans) {
+      for (let i = 0; i < mealPlans.length; i++) {
+        const plan = mealPlans[i];
+        if (plan) {
+          const planDate = new Date(plan.date);
+          const dateKey = `${planDate.getFullYear()}-${planDate.getMonth()}-${planDate.getDate()}`;
+
+          if (!plansByDateAndSlot[dateKey]) {
+            plansByDateAndSlot[dateKey] = {};
+          }
+          // Only assign the first matching plan to preserve original .find() behavior
+          if (!plansByDateAndSlot[dateKey][plan.mealSlot]) {
+            plansByDateAndSlot[dateKey][plan.mealSlot] = plan;
+          }
+        }
+      }
+    }
+
     const days: DayMealPlan[] = [];
 
     for (let i = 0; i < 7; i++) {
       const date = new Date(weekStartDate);
       date.setDate(date.getDate() + i);
+      const dateKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
 
-      // Find meal plans for this day
-      const dayMealPlans =
-        mealPlans?.filter((plan) => {
-          const planDate = new Date(plan.date);
-          return (
-            planDate.getDate() === date.getDate() &&
-            planDate.getMonth() === date.getMonth() &&
-            planDate.getFullYear() === date.getFullYear()
-          );
-        }) || [];
+      const dayPlans = plansByDateAndSlot[dateKey] || {};
 
-      // Group by meal slot
-      const meals: Partial<Record<MealSlot, (typeof dayMealPlans)[0]>> = {};
-      MEAL_SLOTS.forEach((slot) => {
-        meals[slot] = dayMealPlans.find((plan) => plan.mealSlot === slot);
-      });
+      const meals: Partial<Record<MealSlot, NonNullable<typeof mealPlans>[0]>> = {};
+      for (let j = 0; j < MEAL_SLOTS.length; j++) {
+        const slot = MEAL_SLOTS[j];
+        if (slot && dayPlans[slot]) {
+          meals[slot] = dayPlans[slot];
+        }
+      }
 
       days.push({
         date,
