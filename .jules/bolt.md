@@ -12,3 +12,6 @@
 ## 2025-02-06 - Eliminate Closure Overhead in Nested Matching Loops
 **Learning:** When converting \`Array.prototype.find()\` or similar array methods to a standard \`for\` loop to eliminate closure overhead in deeply nested paths, remember that accessing array elements by index (e.g., \`array[i]\`) can type as possibly \`undefined\` in strict TypeScript environments.
 **Action:** Always include a truthiness check (e.g., \`if (item && ...)\`) before accessing element properties to prevent TS18048 errors during compilation checks.
+## 2026-05-15 - Prevent React Native Hook Bottlenecks in FlatLists
+**Learning:** Calling hooks that subscribe to global stores or execute data queries (like `usePantryItemsByType`) inside child components iteratively rendered by a `FlatList` creates a severe performance bottleneck with redundant hook executions and state subscriptions for every list item.
+**Action:** Hoist these expensive hooks to the parent component level. If the child components require specific matched data from those hooks, use an O(1) index lookup (like `useIngredientMatcher`) in the parent and pass the resulting matched data down as standard React props.

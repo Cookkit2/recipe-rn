@@ -7,7 +7,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import useColors from "~/hooks/useColor";
 import { titleCase } from "~/utils/text-formatter";
 import ShapeContainer from "~/components/Shared/Shapes/ShapeContainer";
-import { isIngredientMatch } from "~/utils/ingredient-matching";
+import { useIngredientMatcher } from "~/hooks/useIngredientMatcher";
+import type { PantryItem } from "~/types/PantryItem";
 import { useRouter } from "expo-router";
 import useOnPressScale from "~/hooks/animation/useOnPressScale";
 import Animated from "react-native-reanimated";
@@ -19,6 +20,12 @@ export const IngredientsContent: React.FC<{
   totalSteps: number;
 }> = ({ ingredients }) => {
   const colors = useColors();
+  const { data: filteredPantryItems = [] } = usePantryItemsByType("all");
+
+  // Optimization: Move O(N) pantry item matching to the parent component
+  // using the O(1) indexed `useIngredientMatcher` rather than doing it
+  // inside each child component, preventing unnecessary closure/lookup overhead
+  const { findMatch } = useIngredientMatcher({ pantryItems: filteredPantryItems });
 
   return (
     <View
@@ -49,7 +56,12 @@ export const IngredientsContent: React.FC<{
           scrollEnabled={false}
           keyExtractor={(item) => item.name}
           renderItem={({ item, index }) => (
-            <IngredientItem key={item.relatedIngredientId} ingredient={item} index={index} />
+            <IngredientItem
+              key={item.relatedIngredientId}
+              ingredient={item}
+              index={index}
+              matchedPantryItem={findMatch(item)}
+            />
           )}
           ItemSeparatorComponent={() => <View className="h-3" />}
         />
@@ -63,29 +75,18 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const IngredientItem: React.FC<{
   ingredient: RecipeIngredient;
   index: number;
-}> = ({ ingredient, index }) => {
+  matchedPantryItem: PantryItem | null | undefined;
+}> = ({ ingredient, index, matchedPantryItem }) => {
   const { servings } = useRecipeDetailStore();
   const colors = useColors();
   const router = useRouter();
   const { animatedStyle, handlePressIn, handlePressOut } = useOnPressScale();
-  const { data: filteredPantryItems = [] } = usePantryItemsByType("all");
 
-  const currentIngredient = useMemo(() => {
-    // Find pantry item that matches this ingredient by name (same logic as index page)
-    return filteredPantryItems.find((pantryItem) =>
-      isIngredientMatch(
-        pantryItem.name,
-        ingredient.name,
-        pantryItem.synonyms?.map((s) => s.synonym)
-      )
-    );
-  }, [filteredPantryItems, ingredient.name]);
-
-  const previewImage = currentIngredient?.image_url;
+  const previewImage = matchedPantryItem?.image_url;
 
   return (
     <AnimatedPressable
-      onPress={() => router.push(`/ingredient/${currentIngredient?.id}`)}
+      onPress={() => router.push(`/ingredient/${matchedPantryItem?.id}`)}
       className="flex-1 mb-3 px-1"
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
