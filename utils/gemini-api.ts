@@ -3,7 +3,8 @@ import { log } from "~/utils/logger";
 
 const GEMINI_REQUEST_TIMEOUT_MS = 60_000;
 
-const getApiKey = () => process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+const getApiKey = () =>
+  process.env.EXPO_PUBLIC_GEMINI_API_KEY || Constants.expoConfig?.extra?.EXPO_PUBLIC_GEMINI_API_KEY;
 const BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 
 export const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash-lite";

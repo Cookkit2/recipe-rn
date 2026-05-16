@@ -300,6 +300,11 @@ describe("GeminiAPI missing API KEY", () => {
       // Remove API keys from env
       process.env.EXPO_PUBLIC_GEMINI_API_KEY = "";
 
+      // Override the module mock for this specific isolated module environment
+      jest.doMock("expo-constants", () => ({
+        expoConfig: { extra: { EXPO_PUBLIC_GEMINI_API_KEY: undefined } },
+      }));
+
       const { GeminiAPI } = require("../gemini-api");
       localApi = new GeminiAPI();
     });
