@@ -70,7 +70,6 @@ export class CookkitToolExecutor implements ToolExecutor {
         ingredient: { id: newStock.id, name: newStock.name },
         message: `Added ${quantity ?? 1} ${unit ?? "piece"} of ${name} to ${location || "fridge"}`,
       };
-      console.log("[CookkitToolExecutor] addItem success:", result);
       return result;
     });
   }
