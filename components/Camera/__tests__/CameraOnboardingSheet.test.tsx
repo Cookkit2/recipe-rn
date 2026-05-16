@@ -10,8 +10,6 @@ const mockClose = jest.fn();
 const mockPlay = jest.fn();
 const mockPause = jest.fn();
 
-// Let React Native Reanimated jest setup happen first
-// And just mock the Button component instead to avoid reanimated Animated.Image issues
 jest.mock("~/components/ui/button", () => {
   const React = require("react");
   const { Pressable, Text } = require("react-native");
@@ -102,7 +100,6 @@ jest.mock("~/utils/logger", () => ({
   },
 }));
 
-// Mock local storage state hook
 let mockIsOnboardingComplete = false;
 let mockIsLoading = false;
 const mockSetIsOnboardingComplete = jest.fn((val: boolean) => {
@@ -120,7 +117,6 @@ jest.mock("~/hooks/useLocalStorageState", () => {
   };
 });
 
-// Mock PoweredByAI to avoid rendering complex nested components
 jest.mock("../../Shared/PoweredByAI", () => {
   const React = require("react");
   const { Text } = require("react-native");
