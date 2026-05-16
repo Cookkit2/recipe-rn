@@ -19,13 +19,15 @@ jest.mock("~/utils/logger", () => ({
 }));
 
 // Setup initial API_KEY expectation for our tests
+process.env.EXPO_PUBLIC_GEMINI_API_KEY = "test-api-key";
 const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 
 describe("gemini-api", () => {
-  const originalEnv = process.env;
+  const originalEnv = { ...process.env };
 
   beforeEach(() => {
     jest.clearAllMocks();
+    process.env.EXPO_PUBLIC_GEMINI_API_KEY = "test-api-key";
   });
 
   it("uses a currently supported Flash-Lite model by default", () => {

@@ -3,8 +3,7 @@ import { log } from "~/utils/logger";
 
 const GEMINI_REQUEST_TIMEOUT_MS = 60_000;
 
-const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
-
+const getApiKey = () => process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 const BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 
 export const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash-lite";
@@ -95,7 +94,8 @@ export class GeminiAPI {
     body: string,
     signal?: AbortSignal
   ): Promise<string> {
-    if (!API_KEY) {
+    const apiKey = getApiKey();
+    if (!apiKey) {
       throw new Error("Gemini API key is not set");
     }
 
@@ -111,7 +111,7 @@ export class GeminiAPI {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-goog-api-key": API_KEY,
+          "X-goog-api-key": apiKey,
         },
         body: body,
         signal: effectiveSignal,
@@ -120,8 +120,8 @@ export class GeminiAPI {
 
       if (!response.ok) {
         const errorText = await response.text();
-        const sanitizedErrorText = API_KEY
-          ? errorText.replaceAll(API_KEY, "[REDACTED_API_KEY]")
+        const sanitizedErrorText = apiKey
+          ? errorText.replaceAll(apiKey, "[REDACTED_API_KEY]")
           : errorText;
         log.error(`Gemini API error: ${response.status} - ${sanitizedErrorText}`);
         throw new Error("Gemini API request failed. Please try again later.");
@@ -163,7 +163,8 @@ export class GeminiAPI {
    * Pass signal when using from TanStack Query; otherwise a 60s timeout is applied.
    */
   async listModels(signal?: AbortSignal): Promise<ModelListResponse> {
-    if (!API_KEY) {
+    const apiKey = getApiKey();
+    if (!apiKey) {
       throw new Error("Gemini API key is not set");
     }
 
@@ -178,7 +179,7 @@ export class GeminiAPI {
       const response = await fetch(`${BASE_URL}/models`, {
         method: "GET",
         headers: {
-          "X-goog-api-key": API_KEY,
+          "X-goog-api-key": apiKey,
         },
         signal: effectiveSignal,
       });
@@ -186,8 +187,8 @@ export class GeminiAPI {
 
       if (!response.ok) {
         const errorText = await response.text();
-        const sanitizedErrorText = API_KEY
-          ? errorText.replaceAll(API_KEY, "[REDACTED_API_KEY]")
+        const sanitizedErrorText = apiKey
+          ? errorText.replaceAll(apiKey, "[REDACTED_API_KEY]")
           : errorText;
         log.error(`Gemini API error: ${response.status} - ${sanitizedErrorText}`);
         throw new Error("Gemini API request failed. Please try again later.");
