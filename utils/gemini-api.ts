@@ -3,8 +3,7 @@ import { log } from "~/utils/logger";
 
 const GEMINI_REQUEST_TIMEOUT_MS = 60_000;
 
-const API_KEY =
-  process.env.EXPO_PUBLIC_GEMINI_API_KEY || Constants.expoConfig?.extra?.EXPO_PUBLIC_GEMINI_API_KEY;
+const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 
 const BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 
@@ -164,6 +163,10 @@ export class GeminiAPI {
    * Pass signal when using from TanStack Query; otherwise a 60s timeout is applied.
    */
   async listModels(signal?: AbortSignal): Promise<ModelListResponse> {
+    if (!API_KEY) {
+      throw new Error("Gemini API key is not set");
+    }
+
     const controller = signal ? undefined : new AbortController();
     const timeoutId =
       controller === undefined
