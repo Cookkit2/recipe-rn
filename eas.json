@@ -14,12 +14,6 @@
       "distribution": "internal",
       "env": {
         "APP_ENV": "staging"
-      },
-      "ios": {
-        "bundleIdentifier": "com.cookkit.app.staging"
-      },
-      "android": {
-        "applicationId": "com.cookkit.app.staging"
       }
     },
     "production": {
