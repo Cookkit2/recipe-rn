@@ -1,6 +1,6 @@
 import "~/global.css";
 import React, { useEffect, useMemo } from "react";
-import { Link, SplashScreen, Stack, useNavigationContainerRef, useRouter } from "expo-router";
+import { useNavigationContainerRef } from "expo-router";
 import { Platform, View } from "react-native";
 import { PortalHost } from "@rn-primitives/portal";
 import { setAndroidNavigationBar } from "~/lib/android-navigation-bar";
@@ -11,286 +11,21 @@ export { ErrorBoundary } from "expo-router";
 import { QueryProvider } from "~/store/QueryProvider";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { storage } from "~/data";
-import { ONBOARDING_COMPLETED_KEY, PREF_COLOR_SCHEME_KEY } from "~/constants/storage-keys";
+import { PREF_COLOR_SCHEME_KEY } from "~/constants/storage-keys";
 import Purchases, { LOG_LEVEL, type CustomerInfoUpdateListener } from "react-native-purchases";
 import Constants from "expo-constants";
 import { StatusBar } from "expo-status-bar";
 import { isRunningInExpoGo } from "expo";
-import { Uniwind, useUniwind } from "uniwind";
-import AddToPlanHeaderButton from "~/components/Recipe/Details/AddToPlanHeaderButton";
-import IngredientDeleteButton from "~/components/Ingredient/IngredientDeleteButton";
-import useColors from "~/hooks/useColor";
+import { Uniwind } from "uniwind";
+
 import * as Sentry from "@sentry/react-native";
-import { H1 } from "~/components/ui/typography";
-import {
-  NotificationProvider,
-  registerNotificationHandler,
-  unregisterNotificationHandler,
-  extractNotificationData,
-  ACHIEVEMENT_UNLOCKED_TYPE,
-  CHALLENGE_COMPLETED_TYPE,
-  INGREDIENT_EXPIRY_TYPE,
-} from "~/lib/notifications";
 import { initImageCache } from "~/lib/image-cache";
 import { AuthProvider, MockAuthStrategy, SupabaseAuthStrategy } from "~/auth";
 import { TEST_IDS } from "~/constants/test-ids";
 import { IS_E2E } from "~/utils/e2e-flags";
 import { invalidateSubscriptionEntitlementsQuery } from "~/lib/subscription-query-sync";
-
-function useNotificationHandlers(router: ReturnType<typeof useRouter>) {
-  // Single handler for ingredient_expiry: deep link to first recipe or pantry
-  useEffect(() => {
-    registerNotificationHandler(INGREDIENT_EXPIRY_TYPE, (response) => {
-      const data = extractNotificationData(response);
-      const recipeIds = data?.recipeIds as string[] | undefined;
-      if (recipeIds && recipeIds.length > 0) {
-        router.push(`/recipes/${recipeIds[0]}`);
-      } else {
-        router.push("/");
-      }
-    });
-
-    return () => {
-      unregisterNotificationHandler(INGREDIENT_EXPIRY_TYPE);
-    };
-  }, [router]);
-
-  useEffect(() => {
-    registerNotificationHandler(ACHIEVEMENT_UNLOCKED_TYPE, () => {
-      router.push("/profile/achievements");
-    });
-
-    return () => {
-      unregisterNotificationHandler(ACHIEVEMENT_UNLOCKED_TYPE);
-    };
-  }, [router]);
-
-  useEffect(() => {
-    registerNotificationHandler(CHALLENGE_COMPLETED_TYPE, () => {
-      router.push("/profile/achievements");
-    });
-
-    return () => {
-      unregisterNotificationHandler(CHALLENGE_COMPLETED_TYPE);
-    };
-  }, [router]);
-}
-
-function useOnboardingCheck(router: ReturnType<typeof useRouter>) {
-  useEffect(() => {
-    setTimeout(() => {
-      if (IS_E2E) {
-        storage.set(ONBOARDING_COMPLETED_KEY, true);
-        void SplashScreen.hideAsync();
-        return;
-      }
-
-      const completed = storage.get<boolean>(ONBOARDING_COMPLETED_KEY);
-      if (completed !== true) {
-        router.replace("/onboarding");
-      }
-      void SplashScreen.hideAsync();
-    }, 0);
-  }, [router]);
-}
-
-function AnimatedStack() {
-  const router = useRouter();
-  const colors = useColors();
-
-  const commonHeaderOptions = {
-    presentation: "card",
-    headerShown: true,
-    headerTransparent: true,
-    headerLargeTitleEnabled: true,
-    headerLargeTitleStyle: {
-      fontFamily: "BowlbyOne-Regular",
-      fontSize: 28,
-      fontWeight: "bold",
-      color: colors.foreground,
-    },
-    headerTitleStyle: {
-      fontFamily: "BowlbyOne-Regular",
-    },
-    headerTintColor: colors.foreground,
-    headerBackButtonDisplayMode: "minimal",
-  } as const;
-
-  // Register the navigation container with Sentry for automatic route tracking
-  const ref = useNavigationContainerRef();
-
-  // Hide splash screen once the navigation stack is mounted
-  useEffect(() => {
-    if (ref) {
-      navigationIntegration.registerNavigationContainer(ref);
-    }
-  }, [ref]);
-
-  useNotificationHandlers(router);
-  useOnboardingCheck(router);
-
-  return (
-    <Stack>
-      {/* ======== PANTRY ======== */}
-      <Stack.Screen
-        name="index"
-        options={{
-          headerShown: true,
-          headerTitle: "",
-          headerTransparent: true,
-          unstable_headerLeftItems() {
-            return [
-              {
-                type: "custom",
-                hidesSharedBackground: true,
-                element: <H1 className="font-bowlby-one pt-5 pb-2">Pantry</H1>,
-              },
-            ];
-          },
-        }}
-      />
-      {/* ======== INGREDIENT ======== */}
-      <Stack.Screen
-        name="ingredient/[ingredientId]"
-        options={{
-          presentation: "card",
-          headerShown: true,
-          headerTransparent: true,
-          headerTitle: "",
-          headerBackButtonDisplayMode: "minimal",
-          // headerTintColor: "#fff",
-          headerRight: () => <IngredientDeleteButton />,
-        }}
-      />
-      <Stack.Screen
-        name="ingredient/(create)"
-        options={{ presentation: "card", headerShown: false }}
-      />
-      {/* ======== RECIPE ======== */}
-      <Stack.Screen
-        name="recipes/favorites"
-        options={{
-          presentation: "card",
-          headerShown: true,
-          headerTransparent: true,
-          headerTitle: "Favorites",
-          headerLargeTitleEnabled: true,
-          headerLargeTitleStyle: {
-            fontFamily: "BowlbyOne-Regular",
-            fontSize: 28,
-            fontWeight: "bold",
-            color: colors.foreground,
-          },
-          headerTitleStyle: {
-            fontFamily: "BowlbyOne-Regular",
-          },
-          headerTintColor: colors.foreground,
-          headerBackButtonDisplayMode: "minimal",
-        }}
-      />
-      <Stack.Screen
-        name="recipes/[recipeId]"
-        options={{
-          presentation: "card",
-          headerShown: true,
-          headerTransparent: true,
-          headerTitle: "",
-          headerBackButtonDisplayMode: "minimal",
-          headerTintColor: "#fff",
-          headerRight: () => <AddToPlanHeaderButton />,
-        }}
-      />
-      <Stack.Screen
-        name="(misc)/import-youtube"
-        options={{
-          presentation: "card",
-          headerShown: true,
-          headerTransparent: true,
-          headerTitle: "Create Recipe",
-          headerBackButtonDisplayMode: "minimal",
-          headerTintColor: colors.foreground,
-        }}
-      />
-
-      {/* ======== PROFILE ======== */}
-      <Stack.Screen
-        name="profile/index"
-        options={{ ...commonHeaderOptions, headerTitle: "Profile" }}
-      />
-      <Stack.Screen
-        name="profile/cooked-recipes"
-        options={{ ...commonHeaderOptions, headerTitle: "Cooked Recipes" }}
-      />
-      <Stack.Screen
-        name="profile/analytics"
-        options={{ ...commonHeaderOptions, headerTitle: "Analytics" }}
-      />
-      <Stack.Screen
-        name="profile/achievements"
-        options={{ ...commonHeaderOptions, headerTitle: "Achievements" }}
-      />
-      <Stack.Screen
-        name="profile/notification"
-        options={{ ...commonHeaderOptions, headerTitle: "Notification" }}
-      />
-      <Stack.Screen
-        name="profile/preferences/index"
-        options={{ ...commonHeaderOptions, headerTitle: "Preferences" }}
-      />
-      <Stack.Screen
-        name="profile/preferences/dietary-preference"
-        options={{ ...commonHeaderOptions, headerTitle: "Dietary Preference" }}
-      />
-      <Stack.Screen
-        name="profile/preferences/allergy"
-        options={{ ...commonHeaderOptions, headerTitle: "Food Allergies" }}
-      />
-      <Stack.Screen
-        name="profile/preferences/voice-settings"
-        options={{ ...commonHeaderOptions, headerTitle: "Voice Settings" }}
-      />
-      {/* ======== ONBOARDING ======== */}
-      <Stack.Screen name="onboarding/index" options={{ headerShown: false }} />
-      <Stack.Screen
-        name="onboarding/tutorial"
-        options={{
-          presentation: "card",
-          headerShown: true,
-          headerTransparent: true,
-          headerTitle: "",
-          // headerTintColor: colors.foreground,
-          headerBackButtonDisplayMode: "minimal",
-        }}
-      />
-      <Stack.Screen
-        name="preferences/index"
-        options={{ presentation: "modal", headerShown: false }}
-      />
-      {/* ======== GROCERY LIST ======== */}
-      <Stack.Screen
-        name="grocery-list/index"
-        options={{ ...commonHeaderOptions, headerTitle: "Grocery List" }}
-      />
-      {/* ======== SEARCH ======== */}
-      <Stack.Screen
-        name="(misc)/search"
-        options={{
-          headerShown: false,
-          headerTransparent: true,
-          headerTitle: "",
-          presentation: "card",
-          animation: "fade",
-          animationDuration: 100,
-          headerBackVisible: false,
-        }}
-      />
-      {/* ======== MISCELLANOUS ======== */}
-      <Stack.Screen name="(misc)/debug" options={{ headerShown: false }} />
-      <Stack.Screen name="+not-found" />
-    </Stack>
-  );
-}
-
+import { AnimatedStack } from "~/components/AnimatedStack";
+import { NotificationProvider } from "~/lib/notifications";
 const usePlatformSpecificSetup = Platform.select({
   web: useSetWebBackgroundClassName,
   android: useSetAndroidNavigationBar,
@@ -301,32 +36,26 @@ const navigationIntegration = Sentry.reactNavigationIntegration({
   enableTimeToInitialDisplay: !isRunningInExpoGo(),
 });
 
-const sentryDsn =
-  process.env.EXPO_PUBLIC_SENTRY_DSN || Constants.expoConfig?.extra?.EXPO_PUBLIC_SENTRY_DSN;
-const sentrySendPii =
-  process.env.EXPO_PUBLIC_SENTRY_SEND_PII === "true" ||
-  Constants.expoConfig?.extra?.EXPO_PUBLIC_SENTRY_SEND_PII === true;
+Sentry.init({
+  dsn: "https://024f0a62aa8bac8c1a2eb0f752e1ea88@o4511397617336320.ingest.de.sentry.io/4511397626576976",
 
-if (sentryDsn) {
-  Sentry.init({
-    dsn: sentryDsn,
-    sendDefaultPii: sentrySendPii,
-    tracesSampleRate: __DEV__ ? 1.0 : 0.1,
-    profilesSampleRate: __DEV__ ? 1.0 : 0.1,
-    enableAutoSessionTracking: true,
-    enableAutoPerformanceTracing: true,
-    enableUserInteractionTracing: true,
-    enableLogs: true,
-    integrations: [navigationIntegration],
-    enableNativeFramesTracking: !isRunningInExpoGo(),
-  });
-} else if (!__DEV__) {
-  console.warn(
-    "[Sentry] EXPO_PUBLIC_SENTRY_DSN not set; error reporting disabled. Set in .env or app.json extra for production."
-  );
-}
+  // Adds more context data to events (IP address, cookies, user, etc.)
+  // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
+  sendDefaultPii: true,
 
-export default function RootLayout() {
+  // Enable Logs
+  enableLogs: true,
+
+  // Configure Session Replay
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1,
+  integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
+
+  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
+  // spotlight: __DEV__,
+});
+
+export default Sentry.wrap(function RootLayout() {
   usePlatformSpecificSetup();
 
   const authStrategy = useMemo(
@@ -355,7 +84,7 @@ export default function RootLayout() {
     if (storedTheme && ["light", "dark", "system"].includes(storedTheme)) {
       Uniwind.setTheme(storedTheme);
     }
-  }, []);
+  }, [ref]);
 
   // Defer RevenueCat initialization until the JS thread is idle
   useEffect(() => {
@@ -414,7 +143,7 @@ export default function RootLayout() {
       </View>
     </GestureHandlerRootView>
   );
-}
+});
 
 const useIsomorphicLayoutEffect =
   Platform.OS === "web" && typeof window === "undefined" ? React.useEffect : React.useLayoutEffect;

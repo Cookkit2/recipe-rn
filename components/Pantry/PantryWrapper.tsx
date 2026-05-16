@@ -1,4 +1,4 @@
-import { Pressable, View, Dimensions } from "react-native";
+import { Pressable, View, Dimensions, Button } from "react-native";
 import { TEST_IDS } from "~/constants/test-ids";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import RecipeButton from "~/components/Pantry/RecipeButton";
@@ -19,6 +19,7 @@ import { usePantryStore } from "~/store/PantryContext";
 import IngredientLists from "~/components/Pantry/IngredientLists";
 import { useCallback, useEffect } from "react";
 import { setStatusBarStyle } from "expo-status-bar";
+import * as Sentry from "@sentry/react-native";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -136,6 +137,12 @@ export default function PantryWrapper() {
         >
           <IngredientLists />
         </AnimatedPressable>
+        <Button
+          title="Try!"
+          onPress={() => {
+            Sentry.captureException(new Error("First error"));
+          }}
+        />
 
         <RecipeButton />
 

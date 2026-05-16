@@ -120,6 +120,15 @@
         }
       ],
       [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "15.1"
+          }
+        }
+      ],
+      "./plugins/withIosDisableUserScriptSandbox.js",
+      [
         "react-native-fast-tflite",
         {
           "enableCoreMLDelegate": true
@@ -131,7 +140,7 @@
         {
           "url": "https://sentry.io/",
           "project": "react-native",
-          "organization": "cookkit-d6"
+          "organization": "cookkit-w4"
         }
       ],
       "expo-web-browser",

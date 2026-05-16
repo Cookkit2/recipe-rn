@@ -109,3 +109,5 @@ ios/.xcode.env
 
 # Local git worktrees (superpowers / parallel branches)
 .worktrees/
+
+.env.local

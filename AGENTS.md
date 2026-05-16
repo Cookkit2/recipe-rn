@@ -81,6 +81,7 @@ rg -n "from \"~/" app/ components/ hooks/
 - Voice cooking UI (mic / transcript panel) should default to collapsed; expand only when the user opens it.
 - For pantry-style lists and similar feeds, prefer silent automatic refetch over prominent manual “refresh” prompts when data may be stale.
 - Local pantry/recipe search should feel instant on keystroke; keep filtering and list work cheap enough that typing stays responsive on large offline datasets.
+- After RevenueCat purchase or restore, invalidate subscription/entitlement queries (or use `Purchases.addCustomerInfoUpdateListener`) so Pro UI updates immediately; the app treats **`Cookkit Pro`** in `utils/subscription-utils.ts` as the active entitlement—keep that identifier aligned with the RevenueCat dashboard.
 
 ## Learned Workspace Facts
 
@@ -95,3 +96,4 @@ rg -n "from \"~/" app/ components/ hooks/
 - Changing the meal plan should invalidate or refresh grocery-list aggregation so shopping items stay aligned with planned meals.
 - For targeted Jest runs use `bun run test -- …` (package script); plain `bun test -- …` invokes Bun’s native runner and fails on React Native Flow syntax in dependencies.
 - `AuthProvider` from `~/auth` is not mounted in the root layout today; first-run/main-shell entry follows onboarding flags, premium follows RevenueCat, not `ProtectedRoute` / `useAuth` guards—see auth spec in `docs/superpowers/specs/` when wiring sync.
+- **Xcode User Script Sandbox** (`ENABLE_USER_SCRIPT_SANDBOXING`) should stay **NO** for React Native “Bundle JS” and Sentry phases that read across `ios/`, Pods, and DerivedData; **`expo-build-properties` (SDK 55)** does not flip this flag, so **`./plugins/withIosDisableUserScriptSandbox.js`** reapplies it after **`expo prebuild`**.
