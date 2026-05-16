@@ -85,7 +85,7 @@ jest.mock("~/components/ui/modal", () => {
   };
 });
 
-jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+jest.spyOn(Alert, "alert").mockImplementation(() => {});
 
 describe("SlidingNumber", () => {
   beforeEach(() => {
@@ -116,7 +116,9 @@ describe("SlidingNumber", () => {
   });
 
   it("should use custom decimal separator", () => {
-    const { getByText } = render(<SlidingNumber value={67.89} decimalSeparator="," editable={false} />);
+    const { getByText } = render(
+      <SlidingNumber value={67.89} decimalSeparator="," editable={false} />
+    );
     expect(getByText(",")).toBeTruthy();
   });
 
