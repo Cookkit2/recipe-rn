@@ -3,8 +3,7 @@ import { log } from "~/utils/logger";
 
 const GEMINI_REQUEST_TIMEOUT_MS = 60_000;
 
-const API_KEY =
-  process.env.EXPO_PUBLIC_GEMINI_API_KEY || Constants.expoConfig?.extra?.EXPO_PUBLIC_GEMINI_API_KEY;
+const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 
 const BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 
@@ -112,7 +111,7 @@ export class GeminiAPI {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-goog-api-key": API_KEY,
+          "X-goog-api-key": API_KEY as string,
         },
         body: body,
         signal: effectiveSignal,
@@ -175,7 +174,7 @@ export class GeminiAPI {
       const response = await fetch(`${BASE_URL}/models`, {
         method: "GET",
         headers: {
-          "X-goog-api-key": API_KEY,
+          "X-goog-api-key": API_KEY as string,
         },
         signal: effectiveSignal,
       });

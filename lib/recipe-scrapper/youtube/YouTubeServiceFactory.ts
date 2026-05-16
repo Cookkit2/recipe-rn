@@ -30,10 +30,7 @@ export function createYouTubeService(type: YouTubeServiceType = "noauth"): IYouT
  */
 export function getDefaultYouTubeService(): IYouTubeService {
   // Check if YouTube Data API key is configured
-  const hasApiKey = !!(
-    process.env.EXPO_PUBLIC_YOUTUBE_API_KEY ||
-    Constants.expoConfig?.extra?.EXPO_PUBLIC_YOUTUBE_API_KEY
-  );
+  const hasApiKey = !!process.env.EXPO_PUBLIC_YOUTUBE_API_KEY;
 
   return createYouTubeService(hasApiKey ? "auth" : "noauth");
 }

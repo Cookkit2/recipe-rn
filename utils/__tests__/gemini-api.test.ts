@@ -19,8 +19,7 @@ jest.mock("~/utils/logger", () => ({
 }));
 
 // Setup initial API_KEY expectation for our tests
-const API_KEY =
-  process.env.EXPO_PUBLIC_GEMINI_API_KEY || Constants.expoConfig?.extra?.EXPO_PUBLIC_GEMINI_API_KEY;
+const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 
 describe("gemini-api", () => {
   const originalEnv = process.env;
@@ -298,11 +297,6 @@ describe("GeminiAPI missing API KEY", () => {
     jest.isolateModules(() => {
       // Remove API keys from env
       process.env.EXPO_PUBLIC_GEMINI_API_KEY = "";
-
-      // Override the module mock for this specific isolated module environment
-      jest.doMock("expo-constants", () => ({
-        expoConfig: { extra: { EXPO_PUBLIC_GEMINI_API_KEY: undefined } },
-      }));
 
       const { GeminiAPI } = require("../gemini-api");
       localApi = new GeminiAPI();

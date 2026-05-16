@@ -15,3 +15,11 @@
 **Vulnerability:** Relying on positional array parameters `?` in SQLite (especially via `expo-sqlite`) can lead to SQL injection vulnerabilities due to parameter misalignment, object-to-string coercion bugs, or parameter pollution. This is frequently flagged by code analysis tools.
 **Learning:** `expo-sqlite` and similar SQL libraries allow dynamic mapping, meaning using `?` binds parameters structurally by an index array.
 **Prevention:** Always use explicitly mapped named parameters like `$columnName` when using `runAsync` and `getFirstAsync` in `expo-sqlite` and pass the parameters as an object instead of an array.
+## 2026-05-16 - Remove Insecure API Key Fallbacks
+**Vulnerability:** API keys for YouTube and Gemini relied on insecure fallbacks () which could potentially expose secrets in the Expo configuration object.
+**Learning:** Always load secrets or API keys strictly from secure environment variables () rather than relying on configuration object fallbacks which might expose the keys to unexpected contexts.
+**Prevention:** Removed all usages of  for API keys across YouTube service factories and Gemini API utilities, explicitly casting keys  where needed for header compatibility.
+## 2025-05-16 - Remove Insecure API Key Fallbacks
+**Vulnerability:** API keys for YouTube and Gemini relied on insecure fallbacks (`Constants.expoConfig?.extra`) which could potentially expose secrets in the Expo configuration object.
+**Learning:** Always load secrets or API keys strictly from secure environment variables (`process.env.EXPO_PUBLIC_...`) rather than relying on configuration object fallbacks which might expose the keys to unexpected contexts.
+**Prevention:** Removed all usages of `Constants.expoConfig?.extra` for API keys across YouTube service factories and Gemini API utilities, explicitly casting keys `as string` where needed for header compatibility.
