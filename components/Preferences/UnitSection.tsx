@@ -16,13 +16,11 @@ export default function UnitSection() {
   // Handle legacy "si" value - treat as "metric"
   const storedValue = storage.get(PREF_UNIT_SYSTEM_KEY) as string | undefined;
   const [unit, setUnit] = useState<UnitSystem>(storedValue === "imperial" ? "imperial" : "metric");
-  // const [isLoading, setIsLoading] = useState(false);
   const { refresh: refreshPantry } = useRefreshPantryItems();
   const { refresh: refreshRecipe } = useRefreshRecipes();
 
   const handleSelectUnit = useCallback(
     async (value: UnitSystem) => {
-      // setIsLoading(true);
       const previousUnit = unit;
       try {
         setUnit(value);
@@ -35,8 +33,6 @@ export default function UnitSection() {
         toast.error("Failed to convert units");
         setUnit(previousUnit);
         storage.set(PREF_UNIT_SYSTEM_KEY, previousUnit);
-      } finally {
-        // setIsLoading(false);
       }
     },
     [refreshPantry, refreshRecipe, unit]
@@ -48,11 +44,6 @@ export default function UnitSection() {
         <View className="gap-1">
           <View className="flex-row items-center justify-between gap-2">
             <H4 className="font-urbanist-bold">Units</H4>
-            {/* {isLoading && (
-              <TextShimmer>
-                <P className="text-sm text-muted-foreground">Converting...</P>
-              </TextShimmer>
-            )} */}
           </View>
           <P className="font-urbanist-regular text-muted-foreground">
             Choose your preferred measurement system
