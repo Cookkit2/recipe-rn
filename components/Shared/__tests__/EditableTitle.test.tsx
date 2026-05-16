@@ -101,7 +101,7 @@ describe("EditableTitle", () => {
     fireEvent.press(getByText("Title"));
 
     // Submit the input
-    fireEvent(getByDisplayValue("Title"), 'submitEditing');
+    fireEvent(getByDisplayValue("Title"), "submitEditing");
 
     // Both submit and end editing handlers should be called
     expect(mockOnSubmitEditing).toHaveBeenCalledTimes(1);
@@ -125,7 +125,7 @@ describe("EditableTitle", () => {
     fireEvent.press(getByText("Title"));
 
     // Blur the input
-    fireEvent(getByDisplayValue("Title"), 'blur');
+    fireEvent(getByDisplayValue("Title"), "blur");
 
     // Only end editing handler should be called, not submit
     expect(mockOnEndEditing).toHaveBeenCalledTimes(1);
