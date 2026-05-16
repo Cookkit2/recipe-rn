@@ -19,7 +19,7 @@ jest.mock("~/utils/logger", () => ({
 }));
 
 // Setup initial API_KEY expectation for our tests
-const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+let API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 
 describe("gemini-api", () => {
   const originalEnv = process.env;
@@ -295,6 +295,7 @@ describe("GeminiAPI missing API KEY", () => {
     // Completely unmock the expo-constants and then isolate module
     // the previous test mocked expo-constants, we want the empty mock now
     jest.isolateModules(() => {
+      process.env.EXPO_PUBLIC_GEMINI_API_KEY = "";
       // Remove API keys from env
       process.env.EXPO_PUBLIC_GEMINI_API_KEY = "";
 
