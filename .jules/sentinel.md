@@ -15,3 +15,7 @@
 **Vulnerability:** Relying on positional array parameters `?` in SQLite (especially via `expo-sqlite`) can lead to SQL injection vulnerabilities due to parameter misalignment, object-to-string coercion bugs, or parameter pollution. This is frequently flagged by code analysis tools.
 **Learning:** `expo-sqlite` and similar SQL libraries allow dynamic mapping, meaning using `?` binds parameters structurally by an index array.
 **Prevention:** Always use explicitly mapped named parameters like `$columnName` when using `runAsync` and `getFirstAsync` in `expo-sqlite` and pass the parameters as an object instead of an array.
+## 2025-02-23 - Remove Insecure API Key Fallback
+**Vulnerability:** Apple and Google RevenueCat API keys were falling back to `Constants.expoConfig?.extra`, which can expose sensitive keys if the Expo config is misconfigured or embedded insecurely.
+**Learning:** Security-critical tokens and API keys should strictly be loaded from environment variables (`process.env`) to prevent accidental leakage through build configuration artifacts.
+**Prevention:** Remove fallback logic for sensitive keys and enforce strict environment variable retrieval.
