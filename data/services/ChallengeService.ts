@@ -451,36 +451,103 @@ export class ChallengeService {
 
       const activeChallenges = await this.challengeRepo.getActiveChallenges();
 
-      for (const challenge of activeChallenges) {
+      // Filter relevant challenges first
+      const relevantChallenges = activeChallenges.filter((challenge) =>
+        this.isChallengeRelevant(challenge.parsedRequirement, metric)
+      );
+
+      if (relevantChallenges.length === 0) {
+        return result;
+      }
+
+      // Batch fetch all relevant user challenges
+      const challengeIds = relevantChallenges.map((c) => c.id);
+      const userChallenges = await this.userChallengeRepo.getByChallengeIds(challengeIds);
+      const userChallengeMap = new Map();
+      userChallenges.forEach((uc) => userChallengeMap.set(uc.challengeId, uc));
+
+      const updates = [];
+      const notificationsToSchedule = [];
+
+      // Calculate progress updates in memory
+      for (const challenge of relevantChallenges) {
         const requirement = challenge.parsedRequirement;
+        const userChallenge = userChallengeMap.get(challenge.id);
+        const previousStatus = userChallenge?.status;
 
-        // Check if this challenge is relevant to the metric
-        if (!this.isChallengeRelevant(requirement, metric)) {
-          continue;
-        }
-
-        const userChallenge = await this.userChallengeRepo.getByChallengeId(challenge.id);
         const currentProgress = userChallenge?.progress ?? 0;
         const newProgress = currentProgress + amount;
 
-        // Update progress
-        await this.updateProgress(challenge.id, newProgress);
-
-        result.progressUpdated.push({
+        updates.push({
           challengeId: challenge.id,
-          title: challenge.title,
-          progress: newProgress,
-          target: requirement.target,
-        });
+          currentProgress: newProgress,
+          targetProgress: requirement.target,
 
-        // Check if newly completed
-        if (newProgress >= requirement.target && !userChallenge?.isCompleted) {
-          result.newlyCompleted.push({
+          // Need these for pushing to results
+          challenge,
+          previousStatus,
+          isCompleted: userChallenge?.isCompleted ?? false,
+        });
+      }
+
+      // Batch apply updates to the database
+      const dbUpdatePayload = updates.map((u) => ({
+        challengeId: u.challengeId,
+        currentProgress: u.currentProgress,
+        targetProgress: u.targetProgress,
+      }));
+
+      if (dbUpdatePayload.length > 0) {
+        const updatedUserChallenges =
+          await this.userChallengeRepo.checkAndUpdateStatusBatch(dbUpdatePayload);
+        const updatedMap = new Map();
+        updatedUserChallenges.forEach((uc) => updatedMap.set(uc.challengeId, uc));
+
+        // Process results
+        for (const update of updates) {
+          const { challenge, currentProgress, targetProgress, previousStatus, isCompleted } =
+            update;
+          const updatedUserChallenge = updatedMap.get(challenge.id);
+
+          if (!updatedUserChallenge) continue;
+
+          result.progressUpdated.push({
             challengeId: challenge.id,
             title: challenge.title,
-            description: challenge.description,
-            xp: challenge.xpValue,
+            progress: currentProgress,
+            target: targetProgress,
           });
+
+          // Check if newly completed
+          if (updatedUserChallenge.status === "completed" && previousStatus !== "completed") {
+            log.info(`✅ Challenge completed: ${challenge.title}`);
+
+            result.newlyCompleted.push({
+              challengeId: challenge.id,
+              title: challenge.title,
+              description: challenge.description,
+              xp: challenge.xpValue,
+            });
+
+            notificationsToSchedule.push({
+              challengeId: challenge.id,
+              title: challenge.title,
+              description: challenge.description,
+              xp: challenge.xpValue,
+              reward: challenge.parsedReward?.bonus,
+            });
+          }
+        }
+
+        // Schedule all notifications concurrently
+        if (notificationsToSchedule.length > 0) {
+          Promise.all(
+            notificationsToSchedule.map((notif) =>
+              scheduleChallengeComplete(notif).catch((notifError) =>
+                log.warn(`Failed to schedule challenge notification: ${notifError}`)
+              )
+            )
+          ).catch((err) => log.error(`Error in batch scheduling notifications:`, err));
         }
       }
 
