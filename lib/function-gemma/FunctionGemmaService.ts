@@ -664,7 +664,6 @@ export class FunctionGemmaService {
 
     for (const toolCall of toolCalls) {
       const { name, arguments: args } = toolCall.function;
-      console.log(`[FunctionGemma] Executing tool: ${name}`, { id: toolCall.id, args });
 
       try {
         let result;
