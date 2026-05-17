@@ -1,6 +1,6 @@
-import React, { useRef, useState, useCallback } from "react";
+import React, { useRef, useState, useCallback, useMemo } from "react";
 import { View, StyleSheet, ActivityIndicator, Text } from "react-native";
-import { Stack, useRouter } from "expo-router";
+import { Stack } from "expo-router";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { MapLayer } from "~/components/GroceryMap/MapLayer";
 import { MiniStoreList } from "~/components/GroceryMap/MiniStoreList";
@@ -11,14 +11,17 @@ import { useDistanceCalculation } from "~/hooks/useDistanceCalculation";
 import { toast } from "sonner-native";
 import { openDirections } from "~/services/geolocation";
 
+// Default location (Kuala Lumpur, Malaysia)
+const DEFAULT_LATITUDE = 3.1577;
+const DEFAULT_LONGITUDE = 101.7122;
+
 export default function GroceryMapPage() {
-  const router = useRouter();
   const { location, loading: locationLoading, error: locationError } = useLocation();
   const [selectedStore, setSelectedStore] = useState<string | null>(null);
 
   const { data: stores = [], isLoading: storesLoading } = useNearbyStores(
-    location?.latitude || 3.1577,
-    location?.longitude || 101.7122,
+    location?.latitude ?? DEFAULT_LATITUDE,
+    location?.longitude ?? DEFAULT_LONGITUDE,
     !!location
   );
 
@@ -26,12 +29,7 @@ export default function GroceryMapPage() {
 
   const bottomSheetRef = useRef<BottomSheet>(null);
 
-  const handleMarkerPress = useCallback((storeId: string) => {
-    setSelectedStore(storeId);
-    bottomSheetRef.current?.snapToIndex(2); // Expand to 50%
-  }, []);
-
-  const handleStorePress = useCallback((storeId: string) => {
+  const handleStoreSelect = useCallback((storeId: string) => {
     setSelectedStore(storeId);
     bottomSheetRef.current?.snapToIndex(2); // Expand to 50%
   }, []);
@@ -40,10 +38,17 @@ export default function GroceryMapPage() {
     (store: StoreInfo) => {
       const storeData = storesWithDistance.find((s) => s.id === selectedStore);
       if (storeData) {
-        openDirections(
-          { latitude: storeData.latitude || 0, longitude: storeData.longitude || 0 },
-          store.name
-        );
+        try {
+          openDirections(
+            {
+              latitude: storeData.latitude ?? DEFAULT_LATITUDE,
+              longitude: storeData.longitude ?? DEFAULT_LONGITUDE,
+            },
+            store.name
+          );
+        } catch (error) {
+          toast.error("Failed to open directions");
+        }
       }
     },
     [selectedStore, storesWithDistance]
@@ -58,11 +63,20 @@ export default function GroceryMapPage() {
     setSelectedStore(null);
   }, []);
 
+  const handleSheetChange = useCallback(
+    (index: number) => {
+      if (index === 0) handleSheetClose();
+    },
+    [handleSheetClose]
+  );
+
   if (locationLoading || storesLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
-        <Text style={styles.loadingText}>Finding nearby stores...</Text>
+        <ActivityIndicator size="large" accessibilityLiveRegion="polite" />
+        <Text style={styles.loadingText} accessibilityLiveRegion="polite">
+          Finding nearby stores...
+        </Text>
       </View>
     );
   }
@@ -70,32 +84,45 @@ export default function GroceryMapPage() {
   if (locationError) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorTitle}>Location Error</Text>
-        <Text style={styles.errorMessage}>{locationError}</Text>
+        <Text style={styles.errorTitle} accessibilityLiveRegion="assertive">
+          Location Error
+        </Text>
+        <Text style={styles.errorMessage} accessibilityLiveRegion="polite">
+          {locationError}
+        </Text>
       </View>
     );
   }
 
   const userLocation = {
-    latitude: location?.latitude || 3.1577,
-    longitude: location?.longitude || 101.7122,
+    latitude: location?.latitude ?? DEFAULT_LATITUDE,
+    longitude: location?.longitude ?? DEFAULT_LONGITUDE,
   };
-  const mapStores = storesWithDistance.map((store) => ({
-    id: store.id,
-    name: store.name,
-    latitude: store.latitude || 0,
-    longitude: store.longitude || 0,
-    totalPriceCents: 1500, // TODO: Calculate from grocery list
-    distance: store.distance,
-  }));
 
-  const miniListStores = storesWithDistance.map((store) => ({
-    id: store.id,
-    name: store.name,
-    address: (store as any).address || "Unknown address",
-    distance: store.distance,
-    totalPriceCents: 1500, // TODO: Calculate from grocery list
-  }));
+  const mapStores = useMemo(
+    () =>
+      storesWithDistance.map((store) => ({
+        id: store.id,
+        name: store.name,
+        latitude: store.latitude ?? DEFAULT_LATITUDE,
+        longitude: store.longitude ?? DEFAULT_LONGITUDE,
+        totalPriceCents: 0, // TODO: Calculate from grocery list
+        distance: store.distance,
+      })),
+    [storesWithDistance]
+  );
+
+  const miniListStores = useMemo(
+    () =>
+      storesWithDistance.map((store) => ({
+        id: store.id,
+        name: store.name,
+        address: store.address ?? "Unknown address",
+        distance: store.distance,
+        totalPriceCents: 0, // TODO: Calculate from grocery list
+      })),
+    [storesWithDistance]
+  );
 
   const selectedStoreData = storesWithDistance.find((s) => s.id === selectedStore);
 
@@ -107,40 +134,38 @@ export default function GroceryMapPage() {
         <MapLayer
           stores={mapStores}
           userLocation={userLocation}
-          onMarkerPress={handleMarkerPress}
+          onMarkerPress={handleStoreSelect}
         />
 
         <BottomSheet
           ref={bottomSheetRef}
           snapPoints={["10%", "25%", "50%"]}
           index={1}
-          onChange={(index) => {
-            if (index === 0) handleSheetClose();
-          }}
+          onChange={handleSheetChange}
         >
           {selectedStoreData ? (
             <StoreInfoCard
               store={{
                 name: selectedStoreData.name,
-                address: (selectedStoreData as any).address || "Unknown address",
+                address: selectedStoreData.address ?? "Unknown address",
                 distance: selectedStoreData.distance,
-                totalPriceCents: 1500, // TODO: Calculate from grocery list
-                isOpen: true,
-                closingTime: "22:00",
+                totalPriceCents: 0, // TODO: Calculate from grocery list
+                isOpen: false, // TODO: Calculate from opening hours
+                closingTime: undefined, // TODO: Calculate from opening hours
               }}
               onPressViewPrices={() => handleViewPrices(selectedStoreData.id)}
               onPressNavigate={() =>
                 handleNavigate({
                   name: selectedStoreData.name,
-                  address: (selectedStoreData as any).address || "",
+                  address: selectedStoreData.address ?? "",
                   distance: selectedStoreData.distance,
-                  totalPriceCents: 1500,
-                  isOpen: true,
+                  totalPriceCents: 0, // TODO: Calculate from grocery list
+                  isOpen: false, // TODO: Calculate from opening hours
                 })
               }
             />
           ) : (
-            <MiniStoreList stores={miniListStores} onStorePress={handleStorePress} />
+            <MiniStoreList stores={miniListStores} onStorePress={handleStoreSelect} />
           )}
         </BottomSheet>
       </View>
