@@ -1,5 +1,7 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Pressable } from "react-native";
+import { ShoppingCart } from "lucide-react-native";
+import { formatCurrency } from "~/utils/price-calculator";
 
 export interface StoreMarkerProps {
   totalPriceCents: number;
@@ -7,21 +9,37 @@ export interface StoreMarkerProps {
 }
 
 export function StoreMarker({ totalPriceCents, onPress }: StoreMarkerProps) {
-  const formattedPrice = (totalPriceCents / 100).toFixed(0);
+  const formattedPrice = formatCurrency(totalPriceCents);
 
   return (
-    <View
-      style={styles.container}
-      onStartShouldSetResponder={onPress ? () => true : undefined}
-      onResponderRelease={onPress}
-    >
-      <View style={styles.marker}>
-        <Text style={styles.markerEmoji}>🛒</Text>
-      </View>
+    <View style={styles.container}>
+      {onPress ? (
+        <Pressable
+          style={styles.pressable}
+          onPress={onPress}
+          accessibilityRole="button"
+          accessibilityLabel={`Store with price ${formattedPrice}`}
+          hitSlop={8}
+        >
+          <View style={styles.marker}>
+            <ShoppingCart size={18} color="#FFFFFF" strokeWidth={2.5} />
+          </View>
 
-      <View style={styles.priceBadge}>
-        <Text style={styles.priceText}>${formattedPrice}</Text>
-      </View>
+          <View style={styles.priceBadge}>
+            <Text style={styles.priceText}>{formattedPrice}</Text>
+          </View>
+        </Pressable>
+      ) : (
+        <>
+          <View style={styles.marker}>
+            <ShoppingCart size={18} color="#FFFFFF" strokeWidth={2.5} />
+          </View>
+
+          <View style={styles.priceBadge}>
+            <Text style={styles.priceText}>{formattedPrice}</Text>
+          </View>
+        </>
+      )}
     </View>
   );
 }
@@ -34,6 +52,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  pressable: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
   marker: {
     width: 36,
     height: 36,
@@ -43,9 +65,6 @@ const styles = StyleSheet.create({
     borderColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
-  },
-  markerEmoji: {
-    fontSize: 18,
   },
   priceBadge: {
     position: "absolute",
