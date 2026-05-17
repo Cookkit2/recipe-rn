@@ -3,7 +3,18 @@ import { View } from "react-native";
 
 export const GoogleMaps = {
   View: React.forwardRef((props: any, ref: any) => {
-    return <View ref={ref} {...props} testID="MapView" />;
+    return (
+      <View
+        ref={ref}
+        {...props}
+        testID="MapView"
+        onMarkerClick={(e: any) => {
+          if (props.onMarkerClick) {
+            props.onMarkerClick(e);
+          }
+        }}
+      />
+    );
   }),
   MapType: {
     NORMAL: "NORMAL",

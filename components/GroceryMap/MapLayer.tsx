@@ -1,38 +1,28 @@
-import React from "react";
-import { View } from "react-native";
+import React, { useMemo } from "react";
+import { View, StyleSheet } from "react-native";
 import { GoogleMaps } from "expo-maps";
+import type { MapLayerProps, StoreLocation } from "~/types/StoreLocation";
 
-export interface StoreLocation {
-  id: string;
-  name: string;
-  latitude: number;
-  longitude: number;
-  totalPriceCents: number;
-  distance: number;
-}
-
-export interface MapLayerProps {
-  stores: StoreLocation[];
-  userLocation: { latitude: number; longitude: number };
-  onMarkerPress: (storeId: string) => void;
-}
+const DEFAULT_MAP_ZOOM = 12;
 
 export function MapLayer({ stores, userLocation, onMarkerPress }: MapLayerProps) {
-  const markers = stores.map((store) => ({
-    id: store.id,
-    coordinate: {
-      latitude: store.latitude,
-      longitude: store.longitude,
-    },
-  }));
+  const markers = useMemo(() => {
+    return stores.map((store: StoreLocation) => ({
+      id: store.id,
+      coordinates: {
+        latitude: store.latitude,
+        longitude: store.longitude,
+      },
+    }));
+  }, [stores]);
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.container}>
       <GoogleMaps.View
-        style={{ flex: 1 }}
+        style={styles.map}
         cameraPosition={{
           coordinates: userLocation,
-          zoom: 12,
+          zoom: DEFAULT_MAP_ZOOM,
         }}
         markers={markers}
         onMarkerClick={(marker) => {
@@ -44,3 +34,12 @@ export function MapLayer({ stores, userLocation, onMarkerPress }: MapLayerProps)
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  map: {
+    flex: 1,
+  },
+});

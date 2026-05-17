@@ -1,6 +1,6 @@
 // components/GroceryMap/__tests__/MapLayer.test.tsx
 import React from "react";
-import { render } from "@testing-library/react-native";
+import { render, fireEvent } from "@testing-library/react-native";
 import { MapLayer } from "../MapLayer";
 
 describe("MapLayer", () => {
@@ -57,12 +57,14 @@ describe("MapLayer", () => {
       />
     );
 
-    // Verify markers are rendered
     const mapView = getByTestId("MapView");
     expect(mapView).toBeTruthy();
 
-    // Marker press handling verified
-    // Note: Full integration test requires expo-maps mock to simulate marker press events
-    // The implementation correctly sets up onPress handlers on each Marker component
+    // Simulate marker click event
+    // The GoogleMaps.View mock spreads props, so onMarkerClick is available
+    fireEvent(mapView, "markerClick", { id: "1" });
+
+    expect(mockOnPress).toHaveBeenCalledWith("1");
+    expect(mockOnPress).toHaveBeenCalledTimes(1);
   });
 });
