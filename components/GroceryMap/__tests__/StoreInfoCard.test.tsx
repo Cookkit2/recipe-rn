@@ -32,7 +32,7 @@ describe("StoreInfoCard", () => {
       closingTime: "22:00",
     };
 
-    const { getByText } = render(
+    const { getByTestId } = render(
       <StoreInfoCard
         store={mockStore}
         onPressViewPrices={mockOnViewPrices}
@@ -40,7 +40,7 @@ describe("StoreInfoCard", () => {
       />
     );
 
-    fireEvent.press(getByText("View Prices"));
+    fireEvent.press(getByTestId("viewPricesButton"));
     expect(mockOnViewPrices).toHaveBeenCalled();
   });
 
@@ -55,7 +55,7 @@ describe("StoreInfoCard", () => {
       closingTime: "22:00",
     };
 
-    const { getByText } = render(
+    const { getByTestId } = render(
       <StoreInfoCard
         store={mockStore}
         onPressViewPrices={jest.fn()}
@@ -63,7 +63,7 @@ describe("StoreInfoCard", () => {
       />
     );
 
-    fireEvent.press(getByText("Navigate"));
+    fireEvent.press(getByTestId("navigateButton"));
     expect(mockOnNavigate).toHaveBeenCalled();
   });
 
