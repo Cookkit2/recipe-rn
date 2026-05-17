@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import { formatCurrency } from "~/utils/price-calculator";
+import { formatDistance, formatOpenStatus } from "~/utils/store-display";
 
 export interface StoreInfo {
   name: string;
@@ -30,13 +31,9 @@ export function StoreInfoCard({ store, onPressViewPrices, onPressNavigate }: Sto
       <Text style={styles.address}>{store.address}</Text>
 
       <View style={styles.metaRow}>
-        <Text style={styles.distance}>
-          {store.distance < 1
-            ? `${Math.round(store.distance * 1000)}m away`
-            : `${store.distance.toFixed(1)}km away`}
-        </Text>
+        <Text style={styles.distance}>{formatDistance(store.distance)}</Text>
         <Text style={[styles.status, { color: store.isOpen ? "#4CAF50" : "#F44336" }]}>
-          {store.isOpen ? `Open until ${store.closingTime || "unknown"}` : "Closed"}
+          {formatOpenStatus(store.isOpen, store.closingTime)}
         </Text>
       </View>
 
@@ -44,14 +41,16 @@ export function StoreInfoCard({ store, onPressViewPrices, onPressNavigate }: Sto
         <Pressable
           style={styles.outlineButton}
           onPress={onPressViewPrices}
-          accessibilityRole="button"
+          role="button"
+          accessibilityLabel="View prices at this store"
         >
           <Text style={styles.buttonText}>View Prices</Text>
         </Pressable>
         <Pressable
           style={styles.primaryButton}
           onPress={onPressNavigate}
-          accessibilityRole="button"
+          role="button"
+          accessibilityLabel="Navigate to this store"
         >
           <Text style={styles.buttonTextPrimary}>Navigate</Text>
         </Pressable>
