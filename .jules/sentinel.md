@@ -15,3 +15,9 @@
 **Vulnerability:** Relying on positional array parameters `?` in SQLite (especially via `expo-sqlite`) can lead to SQL injection vulnerabilities due to parameter misalignment, object-to-string coercion bugs, or parameter pollution. This is frequently flagged by code analysis tools.
 **Learning:** `expo-sqlite` and similar SQL libraries allow dynamic mapping, meaning using `?` binds parameters structurally by an index array.
 **Prevention:** Always use explicitly mapped named parameters like `$columnName` when using `runAsync` and `getFirstAsync` in `expo-sqlite` and pass the parameters as an object instead of an array.
+
+## 2024-05-28 - Unsanitized URL Parameters in External API Calls
+
+**Vulnerability:** Interpolating unsanitized variables (like `videoId`) directly into URLs using string literals makes the application susceptible to Server-Side Request Forgery (SSRF) and Parameter Injection if a maliciously crafted input containing control characters (like `&` or `?`) is passed to internal fetch functions.
+**Learning:** Even internal helper classes (`AuthYouTubeService`, `NoAuthYouTubeService`) processing seemingly safe IDs must defend against manipulated input to ensure requests are explicitly routed to the intended path.
+**Prevention:** Always wrap interpolated variables with `encodeURIComponent()` when constructing URLs for external or internal `fetch()` calls.
