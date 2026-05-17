@@ -15,6 +15,13 @@ export interface MiniStoreListProps {
   onStorePress: (storeId: string) => void;
 }
 
+function formatDistance(km: number): string {
+  if (km < 1) {
+    return `${Math.round(km * 1000)}m`;
+  }
+  return `${km.toFixed(1)}km`;
+}
+
 export function MiniStoreList({ stores, onStorePress }: MiniStoreListProps) {
   const nearestStores = stores.slice(0, 5);
 
@@ -26,16 +33,13 @@ export function MiniStoreList({ stores, onStorePress }: MiniStoreListProps) {
           style={styles.card}
           onPress={() => onStorePress(store.id)}
           accessibilityRole="button"
-          accessibilityLabel={store.name}
+          accessibilityLabel={`${store.name}, ${formatCurrency(store.totalPriceCents, "MYR")}, ${formatDistance(store.distance)}`}
+          accessibilityHint="View store details"
           hitSlop={8}
         >
           <Text style={styles.name}>{store.name}</Text>
           <Text style={styles.price}>{formatCurrency(store.totalPriceCents, "MYR")}</Text>
-          <Text style={styles.distance}>
-            {store.distance < 1
-              ? `${Math.round(store.distance * 1000)}m`
-              : `${store.distance.toFixed(1)}km`}
-          </Text>
+          <Text style={styles.distance}>{formatDistance(store.distance)}</Text>
         </Pressable>
       ))}
     </ScrollView>
