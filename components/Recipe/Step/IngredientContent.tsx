@@ -19,6 +19,31 @@ export const IngredientsContent: React.FC<{
   totalSteps: number;
 }> = ({ ingredients }) => {
   const colors = useColors();
+  const { data: filteredPantryItems = [] } = usePantryItemsByType("all");
+
+  const matchedIngredients = useMemo(() => {
+    const map: Record<string, any> = {};
+    for (let i = 0; i < ingredients.length; i++) {
+      const ing = ingredients[i];
+      if (ing && !map[ing.name]) {
+        for (let j = 0; j < filteredPantryItems.length; j++) {
+          const pantryItem = filteredPantryItems[j];
+          if (
+            pantryItem &&
+            isIngredientMatch(
+              pantryItem.name,
+              ing.name,
+              pantryItem.synonyms?.map((s) => s.synonym)
+            )
+          ) {
+            map[ing.name] = pantryItem;
+            break;
+          }
+        }
+      }
+    }
+    return map;
+  }, [ingredients, filteredPantryItems]);
 
   return (
     <View
@@ -49,7 +74,12 @@ export const IngredientsContent: React.FC<{
           scrollEnabled={false}
           keyExtractor={(item) => item.name}
           renderItem={({ item, index }) => (
-            <IngredientItem key={item.relatedIngredientId} ingredient={item} index={index} />
+            <IngredientItem
+              key={item.relatedIngredientId}
+              ingredient={item}
+              index={index}
+              matchedPantryItem={matchedIngredients[item.name]}
+            />
           )}
           ItemSeparatorComponent={() => <View className="h-3" />}
         />
@@ -63,29 +93,18 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const IngredientItem: React.FC<{
   ingredient: RecipeIngredient;
   index: number;
-}> = ({ ingredient, index }) => {
+  matchedPantryItem?: any;
+}> = ({ ingredient, index, matchedPantryItem }) => {
   const { servings } = useRecipeDetailStore();
   const colors = useColors();
   const router = useRouter();
   const { animatedStyle, handlePressIn, handlePressOut } = useOnPressScale();
-  const { data: filteredPantryItems = [] } = usePantryItemsByType("all");
 
-  const currentIngredient = useMemo(() => {
-    // Find pantry item that matches this ingredient by name (same logic as index page)
-    return filteredPantryItems.find((pantryItem) =>
-      isIngredientMatch(
-        pantryItem.name,
-        ingredient.name,
-        pantryItem.synonyms?.map((s) => s.synonym)
-      )
-    );
-  }, [filteredPantryItems, ingredient.name]);
-
-  const previewImage = currentIngredient?.image_url;
+  const previewImage = matchedPantryItem?.image_url;
 
   return (
     <AnimatedPressable
-      onPress={() => router.push(`/ingredient/${currentIngredient?.id}`)}
+      onPress={() => router.push(`/ingredient/${matchedPantryItem?.id}`)}
       className="flex-1 mb-3 px-1"
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
