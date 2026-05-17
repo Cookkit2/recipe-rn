@@ -42,20 +42,24 @@ export default function WeeklyCalendar({ onMealSlotPress, onMealSlotDrop }: Week
   const weekDays = React.useMemo(() => {
     const days: DayMealPlan[] = [];
 
+    // O(N) lookup map to prevent parsing Date strings repeatedly in the 7-day loop
+    const mealPlansByDate = new Map<string, typeof mealPlans>();
+    mealPlans?.forEach((plan) => {
+      const planDate = new Date(plan.date);
+      const dateKey = `${planDate.getFullYear()}-${planDate.getMonth()}-${planDate.getDate()}`;
+      if (!mealPlansByDate.has(dateKey)) {
+        mealPlansByDate.set(dateKey, []);
+      }
+      mealPlansByDate.get(dateKey)!.push(plan);
+    });
+
     for (let i = 0; i < 7; i++) {
       const date = new Date(weekStartDate);
       date.setDate(date.getDate() + i);
+      const dateKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
 
       // Find meal plans for this day
-      const dayMealPlans =
-        mealPlans?.filter((plan) => {
-          const planDate = new Date(plan.date);
-          return (
-            planDate.getDate() === date.getDate() &&
-            planDate.getMonth() === date.getMonth() &&
-            planDate.getFullYear() === date.getFullYear()
-          );
-        }) || [];
+      const dayMealPlans = mealPlansByDate.get(dateKey) || [];
 
       // Group by meal slot
       const meals: Partial<Record<MealSlot, (typeof dayMealPlans)[0]>> = {};
