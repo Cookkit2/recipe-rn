@@ -20,10 +20,11 @@ module.exports = {
     "^.+\\.(js|jsx)$": ["babel-jest", { presets: ["babel-preset-expo"] }],
   },
   transformIgnorePatterns: [
-    "node_modules/(?!(react-native|@react-native|@nozbe|@expo|expo|expo-modules-core|expo-constants|expo-auth-session|expo-linking|react-navigation|react-native-reanimated|react-native-worklets|@rn-primitives|llama\\.rn|expo-file-system|@testing-library)/)",
+    "node_modules/(?!(react-native|@react-native|@nozbe|@expo|expo|expo-modules-core|expo-constants|expo-auth-session|expo-linking|react-navigation|react-native-reanimated|react-native-worklets|@rn-primitives|llama\\.rn|expo-file-system|expo-maps|@testing-library)/)",
   ],
   moduleNameMapper: {
     "^expo-constants$": "<rootDir>/__mocks__/expo-constants.ts",
+    "^expo-maps$": "<rootDir>/__mocks__/expo-maps.tsx",
     "^~/(.*)$": "<rootDir>/$1",
     "^@sentry/react-native$": "<rootDir>/__mocks__/@sentry/react-native.ts",
   },
