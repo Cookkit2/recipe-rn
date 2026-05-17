@@ -1,6 +1,6 @@
 import React from "react";
 import { View } from "react-native";
-import { GoogleMaps } from "expo-maps";
+import { MapView, Marker } from "expo-maps";
 
 export interface StoreLocation {
   id: string;
@@ -20,26 +20,25 @@ export interface MapLayerProps {
 export function MapLayer({ stores, userLocation, onMarkerPress }: MapLayerProps) {
   return (
     <View style={{ flex: 1 }}>
-      <GoogleMaps.View
+      <MapView
         style={{ flex: 1 }}
-        cameraPosition={{
-          coordinates: userLocation,
+        initialCameraPosition={{
+          target: userLocation,
           zoom: 12,
         }}
-        markers={stores.map((store) => ({
-          id: store.id,
-          coordinates: {
-            latitude: store.latitude,
-            longitude: store.longitude,
-          },
-          title: store.name,
-        }))}
-        onMarkerClick={(event) => {
-          if (event.id) {
-            onMarkerPress(event.id);
-          }
-        }}
-      />
+      >
+        {stores.map((store) => (
+          <Marker
+            key={store.id}
+            identifier={store.id}
+            coordinate={{
+              latitude: store.latitude,
+              longitude: store.longitude,
+            }}
+            onPress={() => onMarkerPress(store.id)}
+          />
+        ))}
+      </MapView>
     </View>
   );
 }
