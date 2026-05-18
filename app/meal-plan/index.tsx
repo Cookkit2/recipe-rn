@@ -75,14 +75,14 @@ export default function MealPlanPage() {
   }, [selectedWeek]);
 
   // Check if current week is this week
-  const isCurrentWeek = () => {
+  const isCurrentWeek = React.useMemo(() => {
     const now = new Date();
     const weekStart = new Date(selectedWeek);
     const weekEnd = new Date(selectedWeek);
     weekEnd.setDate(weekEnd.getDate() + 6);
 
     return now >= weekStart && now <= weekEnd;
-  };
+  }, [selectedWeek]);
 
   // Handle meal slot press to open recipe selection
   const handleMealSlotPress = (date: Date, mealSlot: MealSlot) => {
@@ -192,7 +192,7 @@ export default function MealPlanPage() {
           </Pressable>
         </View>
 
-        {!isCurrentWeek() && (
+        {!isCurrentWeek && (
           <View className="items-center mt-2">
             <Button variant="ghost" size="sm" onPress={goToToday} className="h-7 px-3 rounded-full">
               <CalendarIcon size={14} strokeWidth={2} className="text-foreground mr-1" />
