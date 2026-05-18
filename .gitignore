@@ -111,3 +111,6 @@ ios/.xcode.env
 .worktrees/
 
 .env.local
+
+# Auto Claude data directory
+.auto-claude/

@@ -85,9 +85,12 @@ export default function MealPlanPage() {
   }, [selectedWeek]);
 
   // Handle meal slot press to open recipe selection
-  const handleMealSlotPress = (date: Date, mealSlot: MealSlot) => {
-    updateRecipeSheetOpen(true);
-  };
+  const handleMealSlotPress = useCallback(
+    (date: Date, mealSlot: MealSlot) => {
+      updateRecipeSheetOpen(true);
+    },
+    [updateRecipeSheetOpen]
+  );
 
   // Handle recipe drop on meal slot (from drag-and-drop)
   const handleMealSlotDrop = useCallback(
