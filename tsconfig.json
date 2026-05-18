@@ -13,6 +13,7 @@
     "downlevelIteration": true,
     "noErrorTruncation": true,
     "experimentalDecorators": true,
+    "ignoreDeprecations": "6.0",
     "paths": {
       "~/*": ["*"]
     },
