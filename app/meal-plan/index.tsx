@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { View, Pressable, ActivityIndicator, FlatList } from "react-native";
 import { H3, P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
@@ -48,7 +48,7 @@ export default function MealPlanPage() {
   };
 
   // Format week range for display
-  const formatWeekRange = () => {
+  const formatWeekRange = React.useMemo(() => {
     const startDate = new Date(selectedWeek);
     const endDate = new Date(selectedWeek);
     endDate.setDate(endDate.getDate() + 6);
@@ -72,7 +72,7 @@ export default function MealPlanPage() {
     }
 
     return `${start} - ${end}`;
-  };
+  }, [selectedWeek]);
 
   // Check if current week is this week
   const isCurrentWeek = () => {
@@ -178,7 +178,7 @@ export default function MealPlanPage() {
 
           <View className="flex-1 items-center">
             <P className="text-muted-foreground text-xs font-urbanist-semibold uppercase tracking-wide">
-              {formatWeekRange()}
+              {formatWeekRange}
             </P>
           </View>
 
