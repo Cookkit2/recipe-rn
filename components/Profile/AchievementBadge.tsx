@@ -90,6 +90,8 @@ export default function AchievementBadge({
                   }}
                   className="p-1 -mr-1"
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Share achievement"
                 >
                   <Share2Icon
                     className={isUnlocked ? "text-primary" : "text-muted-foreground"}
@@ -139,6 +141,7 @@ export default function AchievementBadge({
       <AnimatedPressable
         className={`rounded-3xl shadow-md shadow-foreground/10 border-none ${getStatusColor()}`}
         onPress={onPress}
+        accessibilityRole="button"
       >
         {content}
       </AnimatedPressable>
