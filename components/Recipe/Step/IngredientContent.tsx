@@ -7,7 +7,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import useColors from "~/hooks/useColor";
 import { titleCase } from "~/utils/text-formatter";
 import ShapeContainer from "~/components/Shared/Shapes/ShapeContainer";
-import { isIngredientMatch } from "~/utils/ingredient-matching";
+import { useIngredientMatcher } from "~/hooks/useIngredientMatcher";
+import type { PantryItem } from "~/types/PantryItem";
 import { useRouter } from "expo-router";
 import useOnPressScale from "~/hooks/animation/useOnPressScale";
 import Animated from "react-native-reanimated";
@@ -21,29 +22,10 @@ export const IngredientsContent: React.FC<{
   const colors = useColors();
   const { data: filteredPantryItems = [] } = usePantryItemsByType("all");
 
-  const matchedIngredients = useMemo(() => {
-    const map: Record<string, any> = {};
-    for (let i = 0; i < ingredients.length; i++) {
-      const ing = ingredients[i];
-      if (ing && !map[ing.name]) {
-        for (let j = 0; j < filteredPantryItems.length; j++) {
-          const pantryItem = filteredPantryItems[j];
-          if (
-            pantryItem &&
-            isIngredientMatch(
-              pantryItem.name,
-              ing.name,
-              pantryItem.synonyms?.map((s) => s.synonym)
-            )
-          ) {
-            map[ing.name] = pantryItem;
-            break;
-          }
-        }
-      }
-    }
-    return map;
-  }, [ingredients, filteredPantryItems]);
+  // Optimization: Move O(N) pantry item matching to the parent component
+  // using the O(1) indexed `useIngredientMatcher` rather than doing it
+  // inside each child component, preventing unnecessary closure/lookup overhead
+  const { findMatch } = useIngredientMatcher({ pantryItems: filteredPantryItems });
 
   return (
     <View
@@ -78,7 +60,7 @@ export const IngredientsContent: React.FC<{
               key={item.relatedIngredientId}
               ingredient={item}
               index={index}
-              matchedPantryItem={matchedIngredients[item.name]}
+              matchedPantryItem={findMatch(item)}
             />
           )}
           ItemSeparatorComponent={() => <View className="h-3" />}
@@ -93,7 +75,7 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const IngredientItem: React.FC<{
   ingredient: RecipeIngredient;
   index: number;
-  matchedPantryItem?: any;
+  matchedPantryItem: PantryItem | null | undefined;
 }> = ({ ingredient, index, matchedPantryItem }) => {
   const { servings } = useRecipeDetailStore();
   const colors = useColors();
