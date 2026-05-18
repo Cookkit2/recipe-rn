@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { FlatList, View, StyleSheet, ScrollView, Pressable } from "react-native";
 import type { RecipeIngredient } from "~/types/Recipe";
 import { H2, P } from "~/components/ui/typography";

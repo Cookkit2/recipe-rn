@@ -31,8 +31,10 @@ jest.mock("react-native-reanimated", () => {
   return {
     __esModule: true,
     default: {
-      View: ({ children, style, ...props }: any) => React.createElement(View, { style, ...props }, children),
-      ScrollView: ({ children, style, ...props }: any) => React.createElement(ScrollView, { style, ...props }, children),
+      View: ({ children, style, ...props }: any) =>
+        React.createElement(View, { style, ...props }, children),
+      ScrollView: ({ children, style, ...props }: any) =>
+        React.createElement(ScrollView, { style, ...props }, children),
     },
     useSharedValue: (val: any) => ({ value: val }),
     useAnimatedStyle: (fn: any) => fn(),

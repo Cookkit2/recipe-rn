@@ -101,7 +101,7 @@ export function getStorageConfig(): StorageConfig {
  */
 export const storageFeatures = {
   // Use encrypted storage for sensitive user data
-  useEncryptedForUserData: true,
+  useEncryptedForUserData: __DEV__,
 
   // Use SQLite for complex recipe queries
   useSQLiteForRecipes: false,

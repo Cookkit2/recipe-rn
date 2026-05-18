@@ -4,7 +4,6 @@ import { H3, P } from "~/components/ui/typography";
 import { useMealPlanCalendar } from "~/store/MealPlanCalendarContext";
 import { useCalendarMealPlans } from "~/hooks/queries/useCalendarMealPlans";
 import type { DayMealPlan, MealSlot } from "~/types/MealPlan";
-import { MEAL_SLOTS } from "~/types/MealPlan";
 import DayColumn from "./DayColumn";
 import { CalendarPlusIcon } from "lucide-uniwind";
 
