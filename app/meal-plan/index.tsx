@@ -31,21 +31,21 @@ export default function MealPlanPage() {
   const [isTemplateSheetOpen, setIsTemplateSheetOpen] = useState(false);
 
   // Week navigation
-  const goToPreviousWeek = () => {
+  const goToPreviousWeek = useCallback(() => {
     const newDate = new Date(selectedWeek);
     newDate.setDate(newDate.getDate() - 7);
     changeSelectedWeek(newDate);
-  };
+  }, [selectedWeek, changeSelectedWeek]);
 
-  const goToNextWeek = () => {
+  const goToNextWeek = useCallback(() => {
     const newDate = new Date(selectedWeek);
     newDate.setDate(newDate.getDate() + 7);
     changeSelectedWeek(newDate);
-  };
+  }, [selectedWeek, changeSelectedWeek]);
 
-  const goToToday = () => {
+  const goToToday = useCallback(() => {
     changeSelectedWeek(new Date());
-  };
+  }, [changeSelectedWeek]);
 
   // Format week range for display
   const formatWeekRange = React.useMemo(() => {
