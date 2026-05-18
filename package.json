@@ -146,6 +146,7 @@
     "zustand": "^5.0.12"
   },
   "overrides": {
+    "fast-uri": "^3.1.2",
     "hermes-compiler": "250829098.0.4",
     "@babel/runtime": ">=7.26.10"
   },
@@ -159,6 +160,10 @@
     }
   },
   "trustedDependencies": [
-    "@shopify/react-native-skia"
+    "@sentry/cli",
+    "@shopify/react-native-skia",
+    "detox",
+    "dtrace-provider",
+    "unrs-resolver"
   ]
 }
