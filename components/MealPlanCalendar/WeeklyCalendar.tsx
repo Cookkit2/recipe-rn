@@ -40,29 +40,21 @@ export default function WeeklyCalendar({ onMealSlotPress, onMealSlotDrop }: Week
 
   // Group meal plans by day
   const weekDays = React.useMemo(() => {
-    // Optimization: Build an O(N) lookup map instead of O(N * 7) nested loops
-    const mealPlansByDate = new Map<
-      string,
-      Partial<Record<MealSlot, NonNullable<typeof mealPlans>[0]>>
-    >();
+    // Single pass to group meal plans by date string (O(N))
+    const mealPlansByDate = new Map<string, typeof mealPlans>();
 
     if (mealPlans) {
-      mealPlans.forEach((plan) => {
-        const planDate = new Date(plan.date);
-        const dateKey = `${planDate.getFullYear()}-${planDate.getMonth()}-${planDate.getDate()}`;
-
-        let dayMeals = mealPlansByDate.get(dateKey);
-        if (!dayMeals) {
-          dayMeals = {};
-          mealPlansByDate.set(dateKey, dayMeals);
+      for (let i = 0; i < mealPlans.length; i++) {
+        const plan = mealPlans[i];
+        if (plan && plan.date) {
+          const planDate = new Date(plan.date);
+          const dateKey = `${planDate.getFullYear()}-${planDate.getMonth()}-${planDate.getDate()}`;
+          if (!mealPlansByDate.has(dateKey)) {
+            mealPlansByDate.set(dateKey, []);
+          }
+          mealPlansByDate.get(dateKey)!.push(plan);
         }
-
-        // Use the first one we find for a given slot, to match original .find() behavior
-        const slotKey = plan.mealSlot as MealSlot;
-        if (!dayMeals[slotKey]) {
-          dayMeals[slotKey] = plan;
-        }
-      });
+      }
     }
 
     const days: DayMealPlan[] = [];
@@ -72,16 +64,19 @@ export default function WeeklyCalendar({ onMealSlotPress, onMealSlotDrop }: Week
       date.setDate(date.getDate() + i);
 
       const dateKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-      const dayMeals = mealPlansByDate.get(dateKey) || {};
+      const dayMealPlans = mealPlansByDate.get(dateKey) || [];
 
       // Group by meal slot
-      const meals: Partial<Record<MealSlot, NonNullable<typeof mealPlans>[0]>> = {};
-      MEAL_SLOTS.forEach((slot) => {
-        const meal = dayMeals[slot];
-        if (meal) {
-          meals[slot] = meal;
+      const meals: Partial<Record<MealSlot, (typeof dayMealPlans)[0]>> = {};
+
+      // Fast path instead of finding per slot inside nested array
+      for (let j = 0; j < dayMealPlans.length; j++) {
+        const plan = dayMealPlans[j];
+        if (plan && plan.mealSlot) {
+          const slotKey = plan.mealSlot as MealSlot;
+          meals[slotKey] = plan;
         }
-      });
+      }
 
       days.push({
         date,
