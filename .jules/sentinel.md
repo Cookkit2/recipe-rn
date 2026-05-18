@@ -15,7 +15,6 @@
 **Vulnerability:** Relying on positional array parameters `?` in SQLite (especially via `expo-sqlite`) can lead to SQL injection vulnerabilities due to parameter misalignment, object-to-string coercion bugs, or parameter pollution. This is frequently flagged by code analysis tools.
 **Learning:** `expo-sqlite` and similar SQL libraries allow dynamic mapping, meaning using `?` binds parameters structurally by an index array.
 **Prevention:** Always use explicitly mapped named parameters like `$columnName` when using `runAsync` and `getFirstAsync` in `expo-sqlite` and pass the parameters as an object instead of an array.
-## 2024-05-25 - Fallback Pattern for Environment Variables
-**Vulnerability:** Hardcoded secrets and configuration values (like Sentry DSN or API keys) can leak sensitive information when committed to source control.
-**Learning:** In this Expo application, environment variables must use the established fallback pattern `process.env.EXPO_PUBLIC_[NAME] || Constants.expoConfig?.extra?.EXPO_PUBLIC_[NAME]` to ensure availability across different build environments (e.g., local development vs. EAS build).
-**Prevention:** Always source configuration values and secrets from environment variables using the established fallback pattern, rather than hardcoding them in the codebase.
+## 2024-05-25 - Bun Lockfile Audit Issues
+**Learning:** Modifying the `bun.lockb` file (e.g. `bun update`) in an effort to resolve a vulnerability that breaks the GitHub Actions pipeline causes subsequent build caching and `npm audit`/`bun audit` tools to fail.
+**Prevention:** If `bun.lockb` is required for caching or the pipeline expects `fast-uri` issue to be solved through `bun` commands, ensure that modifying `package.json` directly avoids breaking the `lockb` file. In this case, running `bun add fast-uri@3.1.2` fixes the issue locally, but you must be careful to commit both `package.json` and `bun.lockb`.

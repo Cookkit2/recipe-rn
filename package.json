@@ -91,6 +91,7 @@
     "expo-updates": "~55.0.21",
     "expo-video": "~55.0.15",
     "expo-web-browser": "~55.0.14",
+    "fast-uri": "3.1.2",
     "jwt-encode": "^1.0.1",
     "llama.rn": "^0.11.0",
     "lucide-react-native": "^0.553.0",
