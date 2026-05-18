@@ -137,35 +137,39 @@ export default function MealPlanPage() {
     log.info("Template applied, calendar will refresh");
   }, []);
 
+  // Memoize header options to prevent unnecessary re-renders
+  const headerOptions = React.useMemo(
+    () => ({
+      headerShown: true,
+      headerTransparent: true,
+      headerTitle: "",
+      headerRight: () => (
+        <View className="flex-row items-center gap-2">
+          <Pressable
+            onPress={() => setIsTemplateSheetOpen(true)}
+            className="px-2 py-2"
+            accessibilityRole="button"
+            accessibilityLabel="Meal plan templates"
+          >
+            <BookTemplateIcon className="text-foreground" strokeWidth={2} size={22} />
+          </Pressable>
+          <Pressable
+            onPress={() => updateRecipeSheetOpen(true)}
+            className="px-4 py-2"
+            accessibilityRole="button"
+            accessibilityLabel="Add recipe"
+          >
+            <PlusIcon className="text-foreground" strokeWidth={2.618} />
+          </Pressable>
+        </View>
+      ),
+    }),
+    [updateRecipeSheetOpen]
+  );
+
   return (
     <View className="flex-1 bg-background">
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          headerTransparent: true,
-          headerTitle: "",
-          headerRight: () => (
-            <View className="flex-row items-center gap-2">
-              <Pressable
-                onPress={() => setIsTemplateSheetOpen(true)}
-                className="px-2 py-2"
-                accessibilityRole="button"
-                accessibilityLabel="Meal plan templates"
-              >
-                <BookTemplateIcon className="text-foreground" strokeWidth={2} size={22} />
-              </Pressable>
-              <Pressable
-                onPress={() => updateRecipeSheetOpen(true)}
-                className="px-4 py-2"
-                accessibilityRole="button"
-                accessibilityLabel="Add recipe"
-              >
-                <PlusIcon className="text-foreground" strokeWidth={2.618} />
-              </Pressable>
-            </View>
-          ),
-        }}
-      />
+      <Stack.Screen options={headerOptions} />
 
       {/* Week Navigation Header */}
       <View className="bg-background/95 backdrop-blur-sm border-b border-border/20 px-4 py-3">
