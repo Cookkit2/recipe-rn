@@ -42,26 +42,36 @@ export default function WeeklyCalendar({ onMealSlotPress, onMealSlotDrop }: Week
   const weekDays = React.useMemo(() => {
     const days: DayMealPlan[] = [];
 
+    // O(N) pass to group meal plans by date string (YYYY-MM-DD)
+    const mealPlansByDate = new Map<string, typeof mealPlans>();
+    if (mealPlans) {
+      for (const plan of mealPlans) {
+        const planDate = new Date(plan.date);
+        const dateString = `${planDate.getFullYear()}-${planDate.getMonth()}-${planDate.getDate()}`;
+        if (!mealPlansByDate.has(dateString)) {
+          mealPlansByDate.set(dateString, []);
+        }
+        mealPlansByDate.get(dateString)!.push(plan);
+      }
+    }
+
     for (let i = 0; i < 7; i++) {
       const date = new Date(weekStartDate);
       date.setDate(date.getDate() + i);
+      const dateString = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
 
-      // Find meal plans for this day
-      const dayMealPlans =
-        mealPlans?.filter((plan) => {
-          const planDate = new Date(plan.date);
-          return (
-            planDate.getDate() === date.getDate() &&
-            planDate.getMonth() === date.getMonth() &&
-            planDate.getFullYear() === date.getFullYear()
-          );
-        }) || [];
+      // O(1) lookup for meal plans for this day
+      const dayMealPlans = mealPlansByDate.get(dateString) || [];
 
-      // Group by meal slot
+      // Group by meal slot directly without iterating MEAL_SLOTS or calling find()
       const meals: Partial<Record<MealSlot, (typeof dayMealPlans)[0]>> = {};
-      MEAL_SLOTS.forEach((slot) => {
-        meals[slot] = dayMealPlans.find((plan) => plan.mealSlot === slot);
-      });
+      if (dayMealPlans.length > 0) {
+        for (const plan of dayMealPlans) {
+          if (!meals[plan.mealSlot as MealSlot]) {
+            meals[plan.mealSlot as MealSlot] = plan;
+          }
+        }
+      }
 
       days.push({
         date,
