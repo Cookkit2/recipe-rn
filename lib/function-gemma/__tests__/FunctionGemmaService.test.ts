@@ -3,6 +3,14 @@ import { describe, it, expect, jest, beforeEach, afterEach } from "@jest/globals
 const mockReleaseAllLlama: any = jest.fn();
 const mockInitLlama: any = jest.fn();
 
+jest.mock("../../../utils/logger", () => ({
+  log: {
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  },
+}));
+
 jest.mock("llama.rn", () => ({
   initLlama: (...args: any[]) => mockInitLlama(...args),
   releaseAllLlama: (...args: any[]) => mockReleaseAllLlama(...args),
@@ -23,6 +31,8 @@ jest.mock("expo-file-system", () => {
     },
   };
 });
+
+import { log } from "../../../utils/logger";
 
 import {
   FunctionGemmaService,
@@ -118,7 +128,7 @@ describe("parseFunctionCalls", () => {
     const result = parseFunctionCalls(input);
 
     expect(result).toHaveLength(0);
-    expect(console.warn).toHaveBeenCalledWith(
+    expect(log.warn).toHaveBeenCalledWith(
       expect.stringContaining('Parsed unknown tool name: "launch_nukes", skipping')
     );
   });
