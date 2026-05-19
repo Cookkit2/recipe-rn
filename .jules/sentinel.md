@@ -15,3 +15,7 @@
 **Vulnerability:** Relying on positional array parameters `?` in SQLite (especially via `expo-sqlite`) can lead to SQL injection vulnerabilities due to parameter misalignment, object-to-string coercion bugs, or parameter pollution. This is frequently flagged by code analysis tools.
 **Learning:** `expo-sqlite` and similar SQL libraries allow dynamic mapping, meaning using `?` binds parameters structurally by an index array.
 **Prevention:** Always use explicitly mapped named parameters like `$columnName` when using `runAsync` and `getFirstAsync` in `expo-sqlite` and pass the parameters as an object instead of an array.
+## 2025-02-28 - [Hardcoded Sentry DSN Fix]
+**Vulnerability:** Hardcoded Sentry DSN in codebase allowing potential misuse or spoofing of analytics and error reports.
+**Learning:** Always use environment variables for sensitive configuration options, and fallback securely to app configuration values.
+**Prevention:** In React Native/Expo, read such configurations from `process.env` or `Constants.expoConfig` instead of embedding strings in source control.
