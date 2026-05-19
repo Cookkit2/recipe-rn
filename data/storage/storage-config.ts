@@ -1,14 +1,42 @@
 import Constants from "expo-constants";
+import * as SecureStore from "expo-secure-store";
+import * as Crypto from "expo-crypto";
 import type { StorageConfig } from ".";
 import { log } from "~/utils/logger";
 
-const ENCRYPTION_KEY_ENV = "EXPO_PUBLIC_MMKV_ENCRYPTION_KEY";
+const SECURE_STORE_KEY = "mmkv_encryption_key";
+// Fallback for tests/development
+const TEST_ENV_KEY = "MMKV_ENCRYPTION_KEY";
 
 function getEncryptionKey(): string | undefined {
-  return (
-    (typeof process !== "undefined" && process.env?.[ENCRYPTION_KEY_ENV]) ||
-    Constants.expoConfig?.extra?.[ENCRYPTION_KEY_ENV]
-  );
+  // Check for test override first
+  if (typeof process !== "undefined" && process.env?.[TEST_ENV_KEY]) {
+    return process.env[TEST_ENV_KEY];
+  }
+
+  if (Constants.expoConfig?.extra?.[TEST_ENV_KEY]) {
+    return Constants.expoConfig.extra[TEST_ENV_KEY];
+  }
+
+  try {
+    // Try to get existing key
+    let key = SecureStore.getItem(SECURE_STORE_KEY);
+
+    if (!key) {
+      // Generate a new secure 32+ char key using crypto if one doesn't exist
+      // randomUUID is 36 chars long (with dashes), which meets our > 32 length requirement
+      key = Crypto.randomUUID() + "-" + Crypto.randomUUID().substring(0, 8);
+      SecureStore.setItem(SECURE_STORE_KEY, key);
+      log.info("Generated new per-device MMKV encryption key");
+    }
+
+    return key;
+  } catch (error) {
+    log.error("Failed to access SecureStore for encryption key:", error);
+    // If SecureStore fails (e.g. during certain testing environments), we'll return undefined
+    // which will be caught by getEncryptedConfig's validation
+    return undefined;
+  }
 }
 
 /**
@@ -22,14 +50,14 @@ function getEncryptedConfig(): StorageConfig {
   // Always require encryption key for sensitive data storage
   if (!key) {
     throw new Error(
-      "CRITICAL: EXPO_PUBLIC_MMKV_ENCRYPTION_KEY must be set for encrypted auth storage. Sensitive credentials cannot be stored without encryption."
+      "CRITICAL: Encryption key could not be generated or retrieved for encrypted auth storage. Sensitive credentials cannot be stored without encryption."
     );
   }
 
   // Validate encryption key format and strength
   if (key.length < 32) {
     throw new Error(
-      `CRITICAL: EXPO_PUBLIC_MMKV_ENCRYPTION_KEY must be at least 32 characters. Current length: ${key.length}. Use a strong, randomly generated key.`
+      `CRITICAL: Encryption key must be at least 32 characters. Current length: ${key.length}. Use a strong, randomly generated key.`
     );
   }
 
