@@ -5,7 +5,7 @@
  * data layer (WatermelonDB and Supabase)
  */
 
-import type { ToolExecutor } from "./FunctionGemmaService";
+import type { ToolExecutor, ToolResponse } from "./FunctionGemmaService";
 import { Q } from "@nozbe/watermelondb";
 import { database } from "~/data/db/database";
 import Stock from "~/data/db/models/Stock";
@@ -31,7 +31,10 @@ const groceryCollection = () => database.collections.get<GroceryItemCheck>("groc
 /**
  * Helper to wrap tool execution with common error handling
  */
-async function executeTool<T>(name: string, fn: () => Promise<T>): Promise<any> {
+async function executeTool<T extends ToolResponse>(
+  name: string,
+  fn: () => Promise<T>
+): Promise<ToolResponse> {
   try {
     return await fn();
   } catch (error) {
@@ -48,7 +51,7 @@ export class CookkitToolExecutor implements ToolExecutor {
   // INVENTORY MANAGEMENT
   // ============================================================================
 
-  async addItem(params: any): Promise<any> {
+  async addItem(params: any): Promise<ToolResponse> {
     return executeTool("addItem", async () => {
       const { name, quantity, unit, location, expiry_date } = params;
 
@@ -75,7 +78,7 @@ export class CookkitToolExecutor implements ToolExecutor {
     });
   }
 
-  async removeItem(params: any): Promise<any> {
+  async removeItem(params: any): Promise<ToolResponse> {
     return executeTool("removeItem", async () => {
       const { item_id, quantity } = params;
 
@@ -109,7 +112,7 @@ export class CookkitToolExecutor implements ToolExecutor {
     });
   }
 
-  async getInventory(params: any = {}): Promise<any> {
+  async getInventory(params: any = {}): Promise<ToolResponse> {
     return executeTool("getInventory", async () => {
       const { location } = params;
 
@@ -139,7 +142,7 @@ export class CookkitToolExecutor implements ToolExecutor {
   // EXPIRATION TRACKING
   // ============================================================================
 
-  async getExpiringItems(params: any = {}): Promise<any> {
+  async getExpiringItems(params: any = {}): Promise<ToolResponse> {
     return executeTool("getExpiringItems", async () => {
       const { days_ahead = 3 } = params;
       const now = Date.now();
@@ -171,7 +174,7 @@ export class CookkitToolExecutor implements ToolExecutor {
     });
   }
 
-  async setExpiryAlert(params: any): Promise<any> {
+  async setExpiryAlert(params: any): Promise<ToolResponse> {
     return executeTool("setExpiryAlert", async () => {
       const { item_id, alert_time } = params;
 
@@ -224,7 +227,7 @@ export class CookkitToolExecutor implements ToolExecutor {
   // GROCERY LIST
   // ============================================================================
 
-  async addToGroceryList(params: any): Promise<any> {
+  async addToGroceryList(params: any): Promise<ToolResponse> {
     return executeTool("addToGroceryList", async () => {
       const { name, quantity } = params;
 
@@ -250,7 +253,7 @@ export class CookkitToolExecutor implements ToolExecutor {
     });
   }
 
-  async getGroceryList(params: any = {}): Promise<any> {
+  async getGroceryList(params: any = {}): Promise<ToolResponse> {
     return executeTool("getGroceryList", async () => {
       const items = await groceryCollection()
         .query(Q.where("is_deleted", Q.notEq(true)))
@@ -272,7 +275,7 @@ export class CookkitToolExecutor implements ToolExecutor {
   // RECIPE & MEAL PLANNING
   // ============================================================================
 
-  async findRecipes(params: any): Promise<any> {
+  async findRecipes(params: any): Promise<ToolResponse> {
     return executeTool("findRecipes", async () => {
       // Fetch all recipes from Supabase and filter client-side
       const allRecipes = await recipeApi.getAllRecipes();
@@ -305,7 +308,7 @@ export class CookkitToolExecutor implements ToolExecutor {
     });
   }
 
-  async suggestMeals(params: any = {}): Promise<any> {
+  async suggestMeals(params: any = {}): Promise<ToolResponse> {
     return executeTool("suggestMeals", async () => {
       // Get current inventory
       const inventoryResult = await this.getInventory();
@@ -331,7 +334,7 @@ export class CookkitToolExecutor implements ToolExecutor {
   // PRODUCT IDENTIFICATION
   // ============================================================================
 
-  async scanBarcode(params: any): Promise<any> {
+  async scanBarcode(params: any): Promise<ToolResponse> {
     return executeTool("scanBarcode", async () => {
       const { barcode } = params;
 
