@@ -52,7 +52,7 @@
     "@rn-primitives/slot": "^1.2.0",
     "@rn-primitives/switch": "^1.2.0",
     "@rn-primitives/tabs": "^1.2.0",
-    "@rn-primitives/toggle": "^1.2.0",
+    "@rn-primitives/toggle": "^1.4.0",
     "@rn-primitives/toggle-group": "^1.2.0",
     "@rn-primitives/tooltip": "^1.2.0",
     "@sentry/react-native": "~7.11.0",
