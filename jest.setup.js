@@ -115,6 +115,37 @@ jest.mock("react-native-reanimated", () => {
   };
 });
 
+// Mock NativeEventEmitter to prevent "requires non-null argument" errors
+jest.mock("react-native/Libraries/EventEmitter/NativeEventEmitter", () => {
+  const EventEmitter = require("events");
+  return {
+    __esModule: true,
+    default: class NativeEventEmitter extends EventEmitter {
+      addListener() {
+        return { remove: () => {} };
+      }
+      removeAllListeners() {}
+    },
+  };
+});
+
+// Mock NativeAnimatedHelper to prevent "Native animated module is not available" errors
+jest.mock("react-native/src/private/animated/NativeAnimatedHelper", () => {
+  const API = {
+    flushQueue: () => {},
+    startOperation: () => {},
+    finishOperation: () => {},
+    setWaitingForIdentifier: () => {},
+    unsetWaitingForIdentifier: () => {},
+  };
+  return {
+    __esModule: true,
+    default: {
+      API,
+    },
+  };
+});
+
 // Mock ActivityIndicator for testing
 jest.mock(
   "react-native/Libraries/Components/ActivityIndicator/ActivityIndicator",

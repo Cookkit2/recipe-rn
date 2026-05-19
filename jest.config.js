@@ -43,6 +43,11 @@ module.exports = {
     "!data/db/database.ts",
     "!data/db/migrations/**",
   ],
+  // Prevent worktree __mocks__ and node_modules from being indexed by the
+  // haste map.  Without this, Jest discovers duplicate manual mocks in
+  // .claude/worktrees/*/  and .auto-claude/worktrees/*/  which can resolve
+  // to unconfigured copies of react-native.
+  modulePathIgnorePatterns: ["/.claude/worktrees/", "/.auto-claude/worktrees/"],
   // Legacy src/ auth tests target an unused pre-router auth stack with incompatible native mocks.
   // Keep them out of default PR CI until the legacy stack is deleted or migrated.
   testPathIgnorePatterns: [

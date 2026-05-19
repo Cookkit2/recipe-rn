@@ -68,9 +68,8 @@ jest.mock("~/components/ui/button", () => {
 
 jest.mock("~/components/ui/input", () => {
   const React = require("react");
-  const { TextInput } = require("react-native");
   return {
-    Input: (props: any) => <TextInput {...props} />,
+    Input: (props: any) => React.createElement("TextInput", props),
   };
 });
 

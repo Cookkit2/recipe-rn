@@ -1,5 +1,6 @@
 import React from "react";
 import { render, fireEvent } from "@testing-library/react-native";
+import { TextInput } from "react-native";
 import AllergySection from "../AllergySection";
 import useLocalStorageState from "~/hooks/useLocalStorageState";
 import { useQueryClient } from "@tanstack/react-query";
@@ -74,11 +75,14 @@ describe("AllergySection", () => {
   });
 
   it("renders correctly with allergens and other allergens", () => {
-    const { getByText, getByDisplayValue } = render(<AllergySection />);
+    const { getByText, UNSAFE_queryAllByType } = render(<AllergySection />);
 
     expect(getByText("Allergens")).toBeTruthy();
     expect(getByText("Other allergens (comma-separated)")).toBeTruthy();
-    expect(getByDisplayValue("peanuts")).toBeTruthy();
+
+    const textInputs = UNSAFE_queryAllByType(TextInput);
+    expect(textInputs).toHaveLength(1);
+    expect(textInputs[0]!.props.value).toBe("peanuts");
   });
 
   it("toggles an allergen and invalidates queries", () => {
@@ -107,9 +111,9 @@ describe("AllergySection", () => {
   });
 
   it("updates other allergens and invalidates queries", () => {
-    const { getByDisplayValue } = render(<AllergySection />);
+    const { UNSAFE_queryAllByType } = render(<AllergySection />);
 
-    const textInput = getByDisplayValue("peanuts");
+    const textInput = UNSAFE_queryAllByType(TextInput)[0]!;
     fireEvent.changeText(textInput, "peanuts, soy");
 
     expect(mockSetOtherAllergens).toHaveBeenCalledWith("peanuts, soy");
