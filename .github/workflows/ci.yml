@@ -7,7 +7,7 @@ on:
     branches: [main, master, develop, staging]
 
 env:
-  NODE_VERSION: "24"
+  NODE_VERSION: "20"
 
 jobs:
   quality:
