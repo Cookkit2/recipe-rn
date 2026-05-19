@@ -36,7 +36,6 @@ interface AuthStore {
   initialize: () => Promise<void>;
   clearError: () => void;
   validateSession: () => Promise<boolean>;
-  forceSignOut: () => void; // Add force sign out method
 
   // Internal state management
   _setAuthState: (state: AuthState) => void;
@@ -483,16 +482,6 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   // Clear error state
   clearError: () => {
     set({ error: null });
-  },
-
-  // Force sign out (bypass strategy)
-  forceSignOut: () => {
-    log.info("Force sign out called - clearing all auth state");
-    get()._setUser(null);
-    get()._setSession(null);
-    get()._setAuthState("unauthenticated");
-    get()._setError(null);
-    get()._setLoading(false);
   },
 
   // Internal state management helpers

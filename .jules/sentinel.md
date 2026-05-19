@@ -15,3 +15,8 @@
 **Vulnerability:** Relying on positional array parameters `?` in SQLite (especially via `expo-sqlite`) can lead to SQL injection vulnerabilities due to parameter misalignment, object-to-string coercion bugs, or parameter pollution. This is frequently flagged by code analysis tools.
 **Learning:** `expo-sqlite` and similar SQL libraries allow dynamic mapping, meaning using `?` binds parameters structurally by an index array.
 **Prevention:** Always use explicitly mapped named parameters like `$columnName` when using `runAsync` and `getFirstAsync` in `expo-sqlite` and pass the parameters as an object instead of an array.
+
+## 2025-02-28 - Removed Vulnerable forceSignOut Method
+**Vulnerability:** The `forceSignOut` method in `AuthStore` bypassed the remote authentication strategy entirely and only cleared the local session state. This left the user's remote session and tokens valid, allowing a potential attacker who captured the tokens to continue making authorized requests even after the user believed they were securely logged out.
+**Learning:** Bypassing remote sign-out strategies for the sake of "forcing" a local sign-out can lead to orphaned, active backend sessions. Fallback mechanisms should always attempt remote invalidation first.
+**Prevention:** Rely on standard logout methods (e.g., `signOut`) that attempt a remote sign-out (e.g., `strategy.signOut()`) before clearing local state, and avoid introducing local-only state clearing bypasses.
