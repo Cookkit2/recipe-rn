@@ -12,3 +12,6 @@
 ## 2025-02-06 - Eliminate Closure Overhead in Nested Matching Loops
 **Learning:** When converting \`Array.prototype.find()\` or similar array methods to a standard \`for\` loop to eliminate closure overhead in deeply nested paths, remember that accessing array elements by index (e.g., \`array[i]\`) can type as possibly \`undefined\` in strict TypeScript environments.
 **Action:** Always include a truthiness check (e.g., \`if (item && ...)\`) before accessing element properties to prevent TS18048 errors during compilation checks.
+## 2024-05-18 - Replacing In-Memory Filtering with SQLite Queries in WatermelonDB
+**Learning:** Fetching an entire table using `findAll()` and performing filtering using JavaScript's `Array.prototype.filter()` is highly inefficient, as it instantiates thousands of WatermelonDB model records in memory unnecessarily.
+**Action:** Always delegate filtering to the SQLite layer using WatermelonDB query conditions (e.g., `this.collection.query(Q.where("column", Q.lt(value))).fetch()`) to dramatically reduce memory allocation and bridge transfer times.

@@ -72,11 +72,12 @@ export class StockRepository extends BaseRepository<Stock> {
       estimatedCost?: number;
     }>
   > {
-    const items = await this.findAll();
     const now = new Date();
+    const expiredItems = await this.collection
+      .query(Q.where("expiry_date", Q.lt(now.getTime())))
+      .fetch();
 
-    return items
-      .filter((item) => item.isExpired)
+    return expiredItems
       .map((stock) => {
         let daysExpired = 0;
         if (stock.expiryDate) {
