@@ -29,10 +29,11 @@ import {
   parseFunctionCalls,
   type ToolExecutor,
 } from "../FunctionGemmaService";
+import { log } from "~/utils/logger";
 
 describe("parseFunctionCalls", () => {
   beforeEach(() => {
-    jest.spyOn(console, "warn").mockImplementation(() => {});
+    jest.spyOn(log, "warn").mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -118,7 +119,7 @@ describe("parseFunctionCalls", () => {
     const result = parseFunctionCalls(input);
 
     expect(result).toHaveLength(0);
-    expect(console.warn).toHaveBeenCalledWith(
+    expect(log.warn).toHaveBeenCalledWith(
       expect.stringContaining('Parsed unknown tool name: "launch_nukes", skipping')
     );
   });
