@@ -127,7 +127,7 @@ export default function RecipeEdit() {
       const { database } = await import("~/data/db/database");
 
       await database.write(async () => {
-        const batchOperations: any[] = [];
+        const batchOperations: import("@nozbe/watermelondb").Model[] = [];
 
         // Prepare recipe update
         batchOperations.push(
