@@ -28,7 +28,10 @@ const osName = Platform.OS;
 const osVersion = String(Platform.Version ?? "");
 
 const subject = `${appName} Feedback`;
-const email = "fridgit132@gmail.com";
+const email =
+  process.env.EXPO_PUBLIC_SUPPORT_EMAIL ||
+  Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPPORT_EMAIL ||
+  "support@cookkit.app";
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -85,7 +88,7 @@ export default function ProfileScreen() {
         duration: 5000,
       });
     } catch {
-      toast.error("Please email us at: fridgit132@gmail.com");
+      toast.error(`Please email us at: ${email}`);
     }
   }, []);
 
