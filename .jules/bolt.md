@@ -12,3 +12,6 @@
 ## 2025-02-06 - Eliminate Closure Overhead in Nested Matching Loops
 **Learning:** When converting \`Array.prototype.find()\` or similar array methods to a standard \`for\` loop to eliminate closure overhead in deeply nested paths, remember that accessing array elements by index (e.g., \`array[i]\`) can type as possibly \`undefined\` in strict TypeScript environments.
 **Action:** Always include a truthiness check (e.g., \`if (item && ...)\`) before accessing element properties to prevent TS18048 errors during compilation checks.
+## 2024-03-08 - [Optimize WatermelonDB queries for date ranges]
+**Learning:** In WatermelonDB, it's highly inefficient to fetch all models (`findAll`) to perform in-memory filtering logic (like checking `expiryDate`), as it creates significant memory/CPU overhead scaling O(N). Filtering conditions should be pushed down into the DB using `Q.where`. Additionally, since WatermelonDB stores date objects as timestamps, date comparisons require `.getTime()`.
+**Action:** Always prefer pushing array filter operations directly down into `this.collection.query` and when checking date bounds, use `new Date().getTime()` to ensure safe numerical comparison.
