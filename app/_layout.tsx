@@ -93,13 +93,9 @@ export default Sentry.wrap(function RootLayout() {
     const handle = requestIdleCallback(() => {
       Purchases.setLogLevel(LOG_LEVEL.ERROR);
 
-      const appleApiKey =
-        process.env.EXPO_PUBLIC_REVENUECAT_PROJECT_APPLE_API_KEY ||
-        Constants.expoConfig?.extra?.EXPO_PUBLIC_REVENUECAT_PROJECT_APPLE_API_KEY;
+      const appleApiKey = process.env.EXPO_PUBLIC_REVENUECAT_PROJECT_APPLE_API_KEY;
 
-      const googleApiKey =
-        process.env.EXPO_PUBLIC_REVENUECAT_PROJECT_GOOGLE_API_KEY ||
-        Constants.expoConfig?.extra?.EXPO_PUBLIC_REVENUECAT_PROJECT_GOOGLE_API_KEY;
+      const googleApiKey = process.env.EXPO_PUBLIC_REVENUECAT_PROJECT_GOOGLE_API_KEY;
 
       if (Platform.OS === "ios" && appleApiKey) {
         Purchases.configure({ apiKey: appleApiKey });
