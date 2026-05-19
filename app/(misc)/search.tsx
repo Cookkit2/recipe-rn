@@ -120,8 +120,7 @@ export default function SearchScreen() {
     | { key: "ingredients" }
     | { key: "recipes" }
     | { key: "no-results" }
-    | { key: "empty" }
-    | { key: "suggestions" };
+    | { key: "empty" };
 
   const sections = useMemo<SectionItem[]>(() => {
     if (hasQuery) {
