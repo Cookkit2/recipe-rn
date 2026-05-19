@@ -10,6 +10,7 @@ import { View, ScrollView, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TimerItem } from "./TimerItem";
 import { timerService } from "~/utils/timer-service";
+import { log } from "~/utils/logger";
 import type { Timer } from "~/types/Timer";
 import { P } from "~/components/ui/typography";
 import { cn } from "~/lib/utils";
