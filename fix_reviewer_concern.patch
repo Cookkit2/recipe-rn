@@ -1,0 +1,43 @@
+--- data/services/AchievementService.ts
++++ data/services/AchievementService.ts
+@@ -342,22 +342,26 @@
+     userAchievementsMap = new Map(userAchievements.map((ua: any) => [ua.achievementId, ua]));
+
+     // Gather unique metrics to minimize progress calculations
+-    const metricsToCalculate = new Map<string, AchievementRequirement>();
++    const metricsToCalculate = new Map<string, AchievementRequirement>(); // Using stringified req to cover everything
+     achievements.forEach((a) => {
+       const req = a.parsedRequirement as AchievementRequirement;
+-      if (req?.metric && !metricsToCalculate.has(req.metric)) {
+-        metricsToCalculate.set(req.metric, req);
++      // We use JSON.stringify(req) as the cache key to guarantee unique parameters (e.g. action types, sub-conditions)
++      // don't get skipped.
++      const reqKey = JSON.stringify(req);
++      if (!metricsToCalculate.has(reqKey)) {
++        metricsToCalculate.set(reqKey, req);
+       }
+     });
+
+-    // Calculate current progress for each unique metric just once
+-    const progressByMetric = new Map<string, number>();
++    // Calculate current progress for each unique requirement signature just once
++    const progressByReqKey = new Map<string, number>();
+     const metricPromises = Array.from(metricsToCalculate.values()).map(async (req) => {
+-      if (req && req.metric) {
+-        const progress = await this.getCurrentProgress(req);
+-        progressByMetric.set(req.metric, progress);
+-      }
++      const progress = await this.getCurrentProgress(req);
++      progressByReqKey.set(JSON.stringify(req), progress);
+     });
+     await Promise.all(metricPromises);
+
+     // Build results locally
+     return achievements.map((achievement) => {
+       const userAchievement = userAchievementsMap.get(achievement.id);
+       const req = achievement.parsedRequirement as AchievementRequirement;
+-      const currentProgress = (req && req.metric) ? progressByMetric.get(req.metric) ?? 0 : 0;
++      const currentProgress = progressByReqKey.get(JSON.stringify(req)) ?? 0;
+       return this._buildAchievementProgress(achievement, userAchievement, currentProgress);
+     });
+   }

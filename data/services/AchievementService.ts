@@ -239,6 +239,66 @@ export class AchievementService {
   }
 
   /**
+   * Internal helper to build an AchievementProgress object
+   */
+  private _buildAchievementProgress(
+    achievement: any,
+    userAchievement: any | undefined,
+    currentProgress: number
+  ): AchievementProgress {
+    const requirement = achievement.parsedRequirement as AchievementRequirement;
+    const target = requirement.target;
+
+    // Use user achievement progress if available
+    const progress = userAchievement?.progress ?? currentProgress;
+    const isUnlocked = userAchievement?.status === "unlocked";
+
+    const progressPercentage = Math.min(100, (progress / target) * 100);
+
+    // Calculate next milestone
+    let nextMilestone;
+    if (!isUnlocked && progress < target) {
+      nextMilestone = {
+        target,
+        current: progress,
+        remaining: target - progress,
+      };
+    }
+
+    return {
+      achievement: {
+        id: achievement.id,
+        type: achievement.type,
+        category: achievement.category,
+        title: achievement.title,
+        description: achievement.description,
+        icon: achievement.icon,
+        requirement,
+        reward: achievement.parsedReward,
+        xp: achievement.xpValue,
+        sortOrder: achievement.sortOrder,
+        hidden: achievement.isHidden,
+      },
+      userAchievement: userAchievement
+        ? {
+            id: userAchievement.id,
+            achievementId: userAchievement.achievementId,
+            status: userAchievement.status as AchievementStatus,
+            progress: userAchievement.progress,
+            unlockedAt: userAchievement.unlockedAtDate,
+            lastCheckedAt: userAchievement.lastCheckedAtDate,
+          }
+        : undefined,
+      progress,
+      progressPercentage,
+      isUnlocked,
+      isLocked: !isUnlocked && progress === 0,
+      isInProgress: !isUnlocked && progress > 0,
+      nextMilestone,
+    };
+  }
+
+  /**
    * Get progress for a specific achievement
    */
   async getProgress(achievementId: string): Promise<AchievementProgress | null> {
@@ -251,62 +311,56 @@ export class AchievementService {
 
       const userAchievement = await this.userAchievementRepo.getByAchievementId(achievementId);
       const requirement = achievement.parsedRequirement as AchievementRequirement;
-      const target = requirement.target;
 
       // Get current progress
       const currentProgress = await this.getCurrentProgress(requirement);
 
-      // Use user achievement progress if available
-      const progress = userAchievement?.progress ?? currentProgress;
-      const isUnlocked = userAchievement?.status === "unlocked";
-
-      const progressPercentage = Math.min(100, (progress / target) * 100);
-
-      // Calculate next milestone
-      let nextMilestone;
-      if (!isUnlocked && progress < target) {
-        nextMilestone = {
-          target,
-          current: progress,
-          remaining: target - progress,
-        };
-      }
-
-      return {
-        achievement: {
-          id: achievement.id,
-          type: (achievement as any).type,
-          category: (achievement as any).category,
-          title: achievement.title,
-          description: achievement.description,
-          icon: achievement.icon,
-          requirement,
-          reward: achievement.parsedReward,
-          xp: achievement.xpValue,
-          sortOrder: achievement.sortOrder,
-          hidden: achievement.isHidden,
-        },
-        userAchievement: userAchievement
-          ? {
-              id: userAchievement.id,
-              achievementId: userAchievement.achievementId,
-              status: userAchievement.status as AchievementStatus,
-              progress: userAchievement.progress,
-              unlockedAt: (userAchievement as any).unlockedAtDate,
-              lastCheckedAt: (userAchievement as any).lastCheckedAtDate,
-            }
-          : undefined,
-        progress,
-        progressPercentage,
-        isUnlocked,
-        isLocked: !isUnlocked && progress === 0,
-        isInProgress: !isUnlocked && progress > 0,
-        nextMilestone,
-      };
+      return this._buildAchievementProgress(achievement, userAchievement, currentProgress);
     } catch (error) {
       log.error(`Error getting progress for achievement ${achievementId}:`, error);
       return null;
     }
+  }
+
+  /**
+   * Helper to batch get progress for multiple achievements
+   */
+  private async _getBatchProgress(achievements: any[]): Promise<AchievementProgress[]> {
+    if (achievements.length === 0) return [];
+
+    // Pre-fetch all related user achievements in one query
+    const achievementIds = achievements.map((a) => a.id);
+    let userAchievementsMap = new Map();
+    const userAchievements = await this.userAchievementRepo.getByAchievementIds(achievementIds);
+    userAchievementsMap = new Map(userAchievements.map((ua: any) => [ua.achievementId, ua]));
+
+    // Gather unique requirements to minimize progress calculations
+    const metricsToCalculate = new Map<string, AchievementRequirement>();
+    achievements.forEach((a) => {
+      const req = a.parsedRequirement as AchievementRequirement;
+      // We use JSON.stringify(req) as the cache key to guarantee unique parameters
+      // (e.g. timeframe, sub-conditions) don't get accidentally skipped.
+      const reqKey = JSON.stringify(req);
+      if (!metricsToCalculate.has(reqKey)) {
+        metricsToCalculate.set(reqKey, req);
+      }
+    });
+
+    // Calculate current progress for each unique requirement signature just once
+    const progressByReqKey = new Map<string, number>();
+    const metricPromises = Array.from(metricsToCalculate.values()).map(async (req) => {
+      const progress = await this.getCurrentProgress(req);
+      progressByReqKey.set(JSON.stringify(req), progress);
+    });
+    await Promise.all(metricPromises);
+
+    // Build results locally
+    return achievements.map((achievement) => {
+      const userAchievement = userAchievementsMap.get(achievement.id);
+      const req = achievement.parsedRequirement as AchievementRequirement;
+      const currentProgress = progressByReqKey.get(JSON.stringify(req)) ?? 0;
+      return this._buildAchievementProgress(achievement, userAchievement, currentProgress);
+    });
   }
 
   /**
@@ -315,9 +369,7 @@ export class AchievementService {
   async getProgressByCategory(category: string): Promise<AchievementProgress[]> {
     try {
       const achievements = await this.achievementRepo.getAchievementsByCategory(category);
-      const progressPromises = achievements.map((a) => this.getProgress(a.id));
-      const results = await Promise.all(progressPromises);
-      return results.filter((p): p is AchievementProgress => p !== null);
+      return await this._getBatchProgress(achievements);
     } catch (error) {
       log.error(`Error getting progress for category ${category}:`, error);
       return [];
@@ -330,9 +382,7 @@ export class AchievementService {
   async getAllProgress(): Promise<AchievementProgress[]> {
     try {
       const achievements = await this.achievementRepo.getVisibleAchievements();
-      const progressPromises = achievements.map((a) => this.getProgress(a.id));
-      const results = await Promise.all(progressPromises);
-      return results.filter((p): p is AchievementProgress => p !== null);
+      return await this._getBatchProgress(achievements);
     } catch (error) {
       log.error("Error getting all achievement progress:", error);
       return [];
