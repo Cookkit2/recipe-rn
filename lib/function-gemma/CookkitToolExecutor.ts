@@ -5,7 +5,7 @@
  * data layer (WatermelonDB and Supabase)
  */
 
-import type { ToolExecutor } from "./FunctionGemmaService";
+import type { ToolExecutor, GroceryListParams } from "./FunctionGemmaService";
 import { Q } from "@nozbe/watermelondb";
 import { database } from "~/data/db/database";
 import Stock from "~/data/db/models/Stock";
@@ -224,7 +224,7 @@ export class CookkitToolExecutor implements ToolExecutor {
   // GROCERY LIST
   // ============================================================================
 
-  async addToGroceryList(params: any): Promise<any> {
+  async addToGroceryList(params: GroceryListParams): Promise<any> {
     return executeTool("addToGroceryList", async () => {
       const { name, quantity } = params;
 

@@ -390,13 +390,18 @@ export function parseFunctionCalls(
 // TOOL EXECUTOR INTERFACE
 // ============================================================================
 
+export interface GroceryListParams {
+  name: string;
+  quantity?: number;
+}
+
 export interface ToolExecutor {
   addItem(params: any): Promise<any>;
   removeItem(params: any): Promise<any>;
   getInventory(params?: any): Promise<any>;
   getExpiringItems(params?: any): Promise<any>;
   setExpiryAlert(params: any): Promise<any>;
-  addToGroceryList(params: any): Promise<any>;
+  addToGroceryList(params: GroceryListParams): Promise<any>;
   getGroceryList(params?: any): Promise<any>;
   findRecipes(params: any): Promise<any>;
   suggestMeals(params: any): Promise<any>;
@@ -688,7 +693,7 @@ export class FunctionGemmaService {
             result = await this.toolExecutor.setExpiryAlert(args);
             break;
           case "add_to_grocery_list":
-            result = await this.toolExecutor.addToGroceryList(args);
+            result = await this.toolExecutor.addToGroceryList(args as GroceryListParams);
             break;
           case "get_grocery_list":
             result = await this.toolExecutor.getGroceryList(args);
