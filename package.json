@@ -147,7 +147,10 @@
   },
   "overrides": {
     "hermes-compiler": "250829098.0.4",
-    "@babel/runtime": ">=7.26.10"
+    "@babel/runtime": ">=7.26.10",
+    "fast-uri": ">=3.1.2",
+    "file-type": ">=16.5.4",
+    "postcss": ">=8.4.31"
   },
   "private": true,
   "reanimated": {
