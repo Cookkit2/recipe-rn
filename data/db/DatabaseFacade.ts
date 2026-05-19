@@ -664,7 +664,7 @@ export class DatabaseFacade {
       const conversionCache = new Map<string, { quantity: number; unit: string }>();
 
       await database.write(async () => {
-        const batchOperations: any[] = [];
+        const batchOperations: import("@nozbe/watermelondb").Model[] = [];
         for (const stockItem of allStockItems) {
           try {
             const cacheKey = `${stockItem.quantity}_${stockItem.unit}`;
