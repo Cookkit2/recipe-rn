@@ -3,6 +3,58 @@
 // Mock native modules that might not be available in test environment
 global.__ADEXPERIMENTAL__ = true;
 global.__DEV__ = true;
+global.IS_REACT_ACT_ENVIRONMENT = true;
+global.IS_REACT_NATIVE_TEST_ENVIRONMENT = true;
+
+// Provide minimal native module stubs so `require('react-native')` works in test mocks
+// without the old react-native/jest/setup.js (removed in RN 0.85)
+jest.mock("react-native/Libraries/BatchedBridge/NativeModules", () => {
+  const handler = {
+    get: (_, name) =>
+      new Proxy(
+        {},
+        {
+          get: (_, method) => {
+            if (method === "getConstants") return () => ({});
+            return () => {};
+          },
+        }
+      ),
+  };
+  return { __esModule: true, default: new Proxy({}, handler) };
+});
+
+jest.mock("react-native/Libraries/TurboModule/TurboModuleRegistry", () => ({
+  __esModule: true,
+  getEnforcing: (name) => {
+    const stub = new Proxy(
+      {},
+      {
+        get: (_, method) => {
+          if (method === "getConstants") return () => ({});
+          if (method === "addListener") return () => {};
+          if (method === "removeListeners") return () => {};
+          return () => {};
+        },
+      }
+    );
+    // Special-case modules that return specific constants
+    if (name === "SourceCode") return { getConstants: () => ({ scriptURL: "" }) };
+    if (name === "PlatformConstants")
+      return { getConstants: () => ({ forceTouchAvailable: false, interfaceIdiom: "phone" }) };
+    if (name === "DeviceInfo")
+      return {
+        getConstants: () => ({
+          Dimensions: {
+            window: { width: 375, height: 812, scale: 3 },
+            screen: { width: 375, height: 812, scale: 3 },
+          },
+        }),
+      };
+    return stub;
+  },
+  get: () => null,
+}));
 
 // Jest resolves `Platform.js` incorrectly vs Metro (self-import shim); Pressable needs a real `OS`.
 jest.mock("react-native/Libraries/Utilities/Platform", () => ({

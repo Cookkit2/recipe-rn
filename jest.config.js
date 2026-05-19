@@ -1,7 +1,9 @@
+const path = require("path");
+
 module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
-  setupFiles: ["<rootDir>/node_modules/react-native/jest/setup.js"],
+  rootDir: path.resolve(__dirname),
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
   testMatch: ["**/__tests__/**/*.test.(js|jsx|ts|tsx)"],
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json"],
@@ -14,6 +16,7 @@ module.exports = {
           esModuleInterop: true,
           allowSyntheticDefaultImports: true,
           skipLibCheck: true,
+          rootDir: "<rootDir>",
         },
       },
     ],
@@ -45,6 +48,8 @@ module.exports = {
   testPathIgnorePatterns: [
     "/node_modules/",
     "/.expo/",
+    "/.claude/worktrees/",
+    "/.auto-claude/worktrees/",
     "/src/store/__tests__/",
     "/src/screens/auth/__tests__/",
     "/src/contexts/__tests__/",
