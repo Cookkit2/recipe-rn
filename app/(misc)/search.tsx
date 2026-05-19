@@ -31,13 +31,6 @@ const DIFFICULTY_OPTIONS = [
 
 const DIETARY_TAGS = ["Vegetarian", "Vegan", "Gluten-Free"];
 
-// const QUICK_ACTIONS = [
-//   "What do I have?",
-//   "What's expiring soon?",
-//   "Suggest a meal",
-//   "Find recipes",
-// ];
-
 export default function SearchScreen() {
   const { top, bottom } = useSafeAreaInsets();
   const colors = useColors();
@@ -61,9 +54,6 @@ export default function SearchScreen() {
     selectedTime !== null || selectedDifficulty !== null || selectedTags.length > 0;
   const trimmedInput = input.trim();
   const hasQuery = trimmedInput.length > 0 || hasFilters;
-  const activeFilterCount =
-    (selectedTime ? 1 : 0) + (selectedDifficulty ? 1 : 0) + selectedTags.length;
-
   const activeFilters = useMemo(() => {
     const filters: RecipeFilters = {};
     if (selectedTime?.maxTotalTime) filters.maxTotalTime = selectedTime.maxTotalTime;
@@ -99,12 +89,6 @@ export default function SearchScreen() {
     }, [])
   );
 
-  // const handleQuickAction = (action: string) => {
-  //   setInput(action);
-  //   searchBarRef.current?.setText(action);
-  //   searchBarRef.current?.focus();
-  // };
-
   const handleDismiss = () => {
     Keyboard.dismiss();
     router.back();
@@ -133,8 +117,7 @@ export default function SearchScreen() {
     | { key: "ingredients" }
     | { key: "recipes" }
     | { key: "no-results" }
-    | { key: "empty" }
-    | { key: "suggestions" };
+    | { key: "empty" };
 
   const sections = useMemo<SectionItem[]>(() => {
     if (hasQuery) {
@@ -311,25 +294,6 @@ export default function SearchScreen() {
             </Text>
           </View>
         );
-      // case "suggestions":
-      //   return (
-      //     <View className="mt-4 px-5">
-      //       <Text className="text-xs text-muted-foreground font-urbanist-semibold mb-2.5 uppercase tracking-wider">
-      //         Suggestions
-      //       </Text>
-      //       <View className="flex-row flex-wrap gap-2">
-      //         {QUICK_ACTIONS.map((action, index) => (
-      //           <TouchableOpacity
-      //             key={index}
-      //             onPress={() => handleQuickAction(action)}
-      //             className="bg-card border border-border px-3.5 py-2 rounded-full"
-      //           >
-      //             <Text className="text-sm text-foreground font-urbanist-medium">{action}</Text>
-      //           </TouchableOpacity>
-      //         ))}
-      //       </View>
-      //     </View>
-      //   );
       default:
         return null;
     }
@@ -357,28 +321,6 @@ export default function SearchScreen() {
           renderItem={renderSection}
         />
       </Pressable>
-      {/* <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={
-          hasFilters ? `Open filters, ${activeFilterCount} active` : "Open filters"
-        }
-        onPress={openFilterSheet}
-        className="absolute right-4 z-50 rounded-full border border-border bg-card p-2 shadow-sm"
-        style={{ top: top + 8 }}
-      >
-        <SlidersHorizontalIcon
-          className={hasFilters ? "text-primary" : "text-foreground"}
-          size={22}
-          strokeWidth={2.4}
-        />
-        {hasFilters ? (
-          <View className="absolute -right-1 -top-1 min-w-4 h-4 rounded-full bg-primary items-center justify-center px-1">
-            <Text className="text-[10px] leading-3 text-primary-foreground font-urbanist-bold">
-              {activeFilterCount}
-            </Text>
-          </View>
-        ) : null}
-      </Pressable> */}
       {renderFilterSheet()}
     </>
   );
