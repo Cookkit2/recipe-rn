@@ -13,6 +13,7 @@ import { timerService } from "~/utils/timer-service";
 import type { Timer } from "~/types/Timer";
 import { P } from "~/components/ui/typography";
 import { cn } from "~/lib/utils";
+import { log } from "~/utils/logger";
 
 interface TimerListProps {
   /**
@@ -104,7 +105,7 @@ export function TimerList({
               await timerService.startTimer(timerId);
             }
           } catch (error) {
-            console.error("Failed to toggle timer", { timerId, error });
+            log.error("Failed to toggle timer", { timerId, error });
           }
         }
       }
@@ -120,7 +121,7 @@ export function TimerList({
         try {
           await timerService.cancelTimer(timerId);
         } catch (error) {
-          console.error("Failed to cancel timer", error);
+          log.error("Failed to cancel timer", error);
         }
       }
     },
