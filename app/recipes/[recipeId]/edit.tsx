@@ -7,7 +7,7 @@ import { databaseFacade } from "~/data/db/DatabaseFacade";
 import type RecipeIngredientModel from "~/data/db/models/RecipeIngredient";
 import type RecipeStepModel from "~/data/db/models/RecipeStep";
 import type { Recipe as DbRecipe } from "~/data/db/models";
-import type { EditableRecipe } from "~/hooks/useRecipeEdit";
+import type { EditableRecipe, EditableIngredient, EditableStep } from "~/hooks/useRecipeEdit";
 import { log } from "~/utils/logger";
 import RecipeEditForm from "~/components/Recipe/Edit/RecipeEditForm";
 import type { Recipe } from "~/types/Recipe";
@@ -150,12 +150,12 @@ export default function RecipeEdit() {
 
         const existingIngredients = await dbRecipe.ingredients.fetch();
         const existingIngredientsMap = new Map(
-          existingIngredients.map((ing: any) => [ing.id, ing])
+          existingIngredients.map((ing: RecipeIngredientModel) => [ing.id, ing])
         );
 
         // Delete removed ingredients
         for (const existing of existingIngredients) {
-          if (!editable.ingredients.some((ing: any) => ing.id === existing.id)) {
+          if (!editable.ingredients.some((ing: EditableIngredient) => ing.id === existing.id)) {
             batchOperations.push(existing.prepareDestroyPermanently());
           }
         }
@@ -166,7 +166,7 @@ export default function RecipeEdit() {
             const existing = existingIngredientsMap.get(ingredient.id);
             if (existing) {
               batchOperations.push(
-                existing.prepareUpdate((ing: any) => {
+                existing.prepareUpdate((ing: RecipeIngredientModel) => {
                   if (ingredient.name !== undefined) ing.name = ingredient.name;
                   if (ingredient.quantity !== undefined) ing.quantity = ingredient.quantity;
                   if (ingredient.unit !== undefined) ing.unit = ingredient.unit;
@@ -176,7 +176,7 @@ export default function RecipeEdit() {
             }
           } else {
             batchOperations.push(
-              ingredientsCollection.prepareCreate((ing: any) => {
+              ingredientsCollection.prepareCreate((ing: RecipeIngredientModel) => {
                 ing.recipeId = dbRecipe.id;
                 ing.name = ingredient.name;
                 if (ingredient.quantity !== undefined) ing.quantity = ingredient.quantity;
@@ -191,11 +191,13 @@ export default function RecipeEdit() {
         const stepsCollection = database.collections.get<RecipeStepModel>("recipe_step");
 
         const existingSteps = await dbRecipe.steps.fetch();
-        const existingStepsMap = new Map(existingSteps.map((step: any) => [step.id, step]));
+        const existingStepsMap = new Map(
+          existingSteps.map((step: RecipeStepModel) => [step.id, step])
+        );
 
         // Delete removed steps
         for (const existing of existingSteps) {
-          if (!editable.steps.some((step: any) => step.id === existing.id)) {
+          if (!editable.steps.some((step: EditableStep) => step.id === existing.id)) {
             batchOperations.push(existing.prepareDestroyPermanently());
           }
         }
@@ -206,7 +208,7 @@ export default function RecipeEdit() {
             const existing = existingStepsMap.get(step.id);
             if (existing) {
               batchOperations.push(
-                existing.prepareUpdate((s: any) => {
+                existing.prepareUpdate((s: RecipeStepModel) => {
                   if (step.step !== undefined) s.step = step.step;
                   if (step.title !== undefined) s.title = step.title;
                   if (step.description !== undefined) s.description = step.description;
@@ -215,7 +217,7 @@ export default function RecipeEdit() {
             }
           } else {
             batchOperations.push(
-              stepsCollection.prepareCreate((s: any) => {
+              stepsCollection.prepareCreate((s: RecipeStepModel) => {
                 s.step = step.step;
                 s.title = step.title;
                 if (step.description !== undefined) s.description = step.description;
