@@ -2,18 +2,18 @@ import { formatDistance, formatOpenStatus } from "../store-display";
 
 describe("formatDistance", () => {
   it("formats distances under 1km in meters", () => {
-    expect(formatDistance(0.5)).toBe("500m away");
-    expect(formatDistance(0.05)).toBe("50m away");
-    expect(formatDistance(0.999)).toBe("999m away");
-    expect(formatDistance(0.001)).toBe("1m away");
-    expect(formatDistance(0.049)).toBe("49m away");
+    expect(formatDistance(0.5)).toBe("500m");
+    expect(formatDistance(0.05)).toBe("50m");
+    expect(formatDistance(0.999)).toBe("999m");
+    expect(formatDistance(0.001)).toBe("1m");
+    expect(formatDistance(0.049)).toBe("49m");
   });
 
   it("formats distances 1km and above in kilometers", () => {
-    expect(formatDistance(1)).toBe("1.0km away");
-    expect(formatDistance(1.5)).toBe("1.5km away");
-    expect(formatDistance(2.25)).toBe("2.3km away");
-    expect(formatDistance(10.123)).toBe("10.1km away");
+    expect(formatDistance(1)).toBe("1.0km");
+    expect(formatDistance(1.5)).toBe("1.5km");
+    expect(formatDistance(2.25)).toBe("2.3km");
+    expect(formatDistance(10.123)).toBe("10.1km");
   });
 
   it("throws error for negative distances", () => {
@@ -22,7 +22,7 @@ describe("formatDistance", () => {
   });
 
   it("handles zero distance", () => {
-    expect(formatDistance(0)).toBe("0m away");
+    expect(formatDistance(0)).toBe("0m");
   });
 });
 

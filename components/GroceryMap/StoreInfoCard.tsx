@@ -10,6 +10,8 @@ export interface StoreInfo {
   totalPriceCents: number;
   isOpen: boolean;
   closingTime?: string;
+  latitude: number;
+  longitude: number;
 }
 
 export interface StoreInfoCardProps {

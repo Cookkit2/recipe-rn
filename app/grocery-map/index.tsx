@@ -14,6 +14,11 @@ import { openDirections } from "~/services/geolocation";
 // Default location (Kuala Lumpur, Malaysia)
 const DEFAULT_LATITUDE = 3.1577;
 const DEFAULT_LONGITUDE = 101.7122;
+const DEFAULT_CURRENCY = "MYR";
+
+const SNAP_HIDDEN = 0;
+const SNAP_COMPACT = 1;
+const SNAP_EXPANDED = 2;
 
 export default function GroceryMapPage() {
   const { location, loading: locationLoading, error: locationError } = useLocation();
@@ -31,28 +36,22 @@ export default function GroceryMapPage() {
 
   const handleStoreSelect = useCallback((storeId: string) => {
     setSelectedStore(storeId);
-    bottomSheetRef.current?.snapToIndex(2); // Expand to 50%
+    bottomSheetRef.current?.snapToIndex(SNAP_EXPANDED);
   }, []);
 
-  const handleNavigate = useCallback(
-    (store: StoreInfo) => {
-      const storeData = storesWithDistance.find((s) => s.id === selectedStore);
-      if (storeData) {
-        try {
-          openDirections(
-            {
-              latitude: storeData.latitude ?? DEFAULT_LATITUDE,
-              longitude: storeData.longitude ?? DEFAULT_LONGITUDE,
-            },
-            store.name
-          );
-        } catch (error) {
-          toast.error("Failed to open directions");
-        }
-      }
-    },
-    [selectedStore, storesWithDistance]
-  );
+  const handleNavigate = useCallback((store: StoreInfo) => {
+    try {
+      openDirections(
+        {
+          latitude: store.latitude,
+          longitude: store.longitude,
+        },
+        store.name
+      );
+    } catch (error) {
+      toast.error("Failed to open directions");
+    }
+  }, []);
 
   const handleViewPrices = useCallback((storeId: string) => {
     setSelectedStore(storeId);
@@ -65,7 +64,7 @@ export default function GroceryMapPage() {
 
   const handleSheetChange = useCallback(
     (index: number) => {
-      if (index === 0) handleSheetClose();
+      if (index === SNAP_HIDDEN) handleSheetClose();
     },
     [handleSheetClose]
   );
@@ -152,6 +151,8 @@ export default function GroceryMapPage() {
                 totalPriceCents: 0, // TODO: Calculate from grocery list
                 isOpen: false, // TODO: Calculate from opening hours
                 closingTime: undefined, // TODO: Calculate from opening hours
+                latitude: selectedStoreData.latitude ?? DEFAULT_LATITUDE,
+                longitude: selectedStoreData.longitude ?? DEFAULT_LONGITUDE,
               }}
               onPressViewPrices={() => handleViewPrices(selectedStoreData.id)}
               onPressNavigate={() =>
@@ -161,6 +162,8 @@ export default function GroceryMapPage() {
                   distance: selectedStoreData.distance,
                   totalPriceCents: 0, // TODO: Calculate from grocery list
                   isOpen: false, // TODO: Calculate from opening hours
+                  latitude: selectedStoreData.latitude ?? DEFAULT_LATITUDE,
+                  longitude: selectedStoreData.longitude ?? DEFAULT_LONGITUDE,
                 })
               }
             />

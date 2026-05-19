@@ -11,6 +11,8 @@ describe("StoreInfoCard", () => {
       totalPriceCents: 1200,
       isOpen: true,
       closingTime: "22:00",
+      latitude: 3.1577,
+      longitude: 101.7122,
     };
 
     const { getByText } = render(
@@ -30,6 +32,8 @@ describe("StoreInfoCard", () => {
       totalPriceCents: 1200,
       isOpen: true,
       closingTime: "22:00",
+      latitude: 3.1577,
+      longitude: 101.7122,
     };
 
     const { getByTestId } = render(
@@ -53,6 +57,8 @@ describe("StoreInfoCard", () => {
       totalPriceCents: 1200,
       isOpen: true,
       closingTime: "22:00",
+      latitude: 3.1577,
+      longitude: 101.7122,
     };
 
     const { getByTestId } = render(
@@ -75,6 +81,8 @@ describe("StoreInfoCard", () => {
       totalPriceCents: 1500,
       isOpen: false,
       closingTime: undefined,
+      latitude: 3.158,
+      longitude: 101.713,
     };
 
     const { getByText } = render(

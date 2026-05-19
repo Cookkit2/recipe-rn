@@ -7,7 +7,7 @@
  * Shows meters for distances under 1km.
  *
  * @param km - Distance in kilometers
- * @returns Formatted distance string (e.g., "500m away", "1.5km away")
+ * @returns Formatted distance string (e.g., "500m", "1.5km")
  */
 export function formatDistance(km: number): string {
   if (km < 0) {
@@ -15,10 +15,10 @@ export function formatDistance(km: number): string {
   }
 
   if (km < 1) {
-    return `${Math.round(km * 1000)}m away`;
+    return `${Math.round(km * 1000)}m`;
   }
 
-  return `${km.toFixed(1)}km away`;
+  return `${km.toFixed(1)}km`;
 }
 
 /**

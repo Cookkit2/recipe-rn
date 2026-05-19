@@ -1,3 +1,6 @@
+// NOTE: This component is not yet integrated into MapLayer.
+// expo-maps currently uses plain coordinate markers. This is
+// kept for future custom marker rendering support.
 import React from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import { ShoppingCart } from "lucide-react-native";

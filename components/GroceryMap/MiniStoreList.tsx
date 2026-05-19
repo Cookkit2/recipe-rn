@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import { formatCurrency } from "~/utils/price-calculator";
+import { formatDistance } from "~/utils/store-display";
 
 export interface MiniStoreItem {
   id: string;
@@ -13,13 +14,6 @@ export interface MiniStoreItem {
 export interface MiniStoreListProps {
   stores: MiniStoreItem[];
   onStorePress: (storeId: string) => void;
-}
-
-function formatDistance(km: number): string {
-  if (km < 1) {
-    return `${Math.round(km * 1000)}m`;
-  }
-  return `${km.toFixed(1)}km`;
 }
 
 export function MiniStoreList({ stores, onStorePress }: MiniStoreListProps) {
