@@ -1,0 +1,3 @@
+🎯 **What**: Added unit tests for the VoiceHelpSheet component to ensure it properly renders voice commands based on state.
+📊 **Coverage**: Added coverage for VoiceHelpSheet component, checking different rendering states, categories, and command phrase visibility.
+✨ **Result**: Improved test coverage ensuring the UI help sheet robustly presents voice commands.

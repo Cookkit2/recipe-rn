@@ -484,3 +484,53 @@ export const Constants = {
     Enums: {},
   },
 } as const;
+
+// Grocery Store Price Finder Types
+
+export interface StoreChain {
+  id: string;
+  name: string;
+  logo_url: string | null;
+  website_url: string | null;
+  color_hex: string | null;
+}
+
+export interface OpeningHour {
+  day: number; // 0-6, 0 = Sunday
+  open: string; // "HH:MM" format
+  close: string; // "HH:MM" format
+}
+
+export interface Store {
+  id: string;
+  chain_id: string;
+  name: string;
+  address: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  phone: string | null;
+  opening_hours: OpeningHour[] | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface IngredientProductMatch {
+  id: string;
+  base_ingredient_id: string | null;
+  product_name: string;
+  hargapedia_product_id: string | null;
+  confidence_score: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface StorePrice {
+  id: string;
+  store_id: string;
+  ingredient_product_match_id: string;
+  price_cents: number;
+  currency: string;
+  source_url: string | null;
+  scraped_at: string;
+  created_at: string;
+}

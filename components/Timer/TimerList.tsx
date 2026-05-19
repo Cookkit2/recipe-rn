@@ -10,6 +10,7 @@ import { View, ScrollView, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TimerItem } from "./TimerItem";
 import { timerService } from "~/utils/timer-service";
+import { log } from "~/utils/logger";
 import type { Timer } from "~/types/Timer";
 import { P } from "~/components/ui/typography";
 import { cn } from "~/lib/utils";
@@ -104,7 +105,7 @@ export function TimerList({
               await timerService.startTimer(timerId);
             }
           } catch (error) {
-            console.error("Failed to toggle timer", { timerId, error });
+            log.error("Failed to toggle timer", { timerId, error });
           }
         }
       }
@@ -120,7 +121,7 @@ export function TimerList({
         try {
           await timerService.cancelTimer(timerId);
         } catch (error) {
-          console.error("Failed to cancel timer", error);
+          log.error("Failed to cancel timer", error);
         }
       }
     },

@@ -97,3 +97,17 @@ rg -n "from \"~/" app/ components/ hooks/
 - For targeted Jest runs use `bun run test -- …` (package script); plain `bun test -- …` invokes Bun’s native runner and fails on React Native Flow syntax in dependencies.
 - `AuthProvider` from `~/auth` is not mounted in the root layout today; first-run/main-shell entry follows onboarding flags, premium follows RevenueCat, not `ProtectedRoute` / `useAuth` guards—see auth spec in `docs/superpowers/specs/` when wiring sync.
 - **Xcode User Script Sandbox** (`ENABLE_USER_SCRIPT_SANDBOXING`) should stay **NO** for React Native “Bundle JS” and Sentry phases that read across `ios/`, Pods, and DerivedData; **`expo-build-properties` (SDK 55)** does not flip this flag, so **`./plugins/withIosDisableUserScriptSandbox.js`** reapplies it after **`expo prebuild`**.
+
+## Agent skills
+
+### Issue tracker
+
+GitHub issues for Cookkit2/recipe-rn. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default GitHub issue labels for triage workflow. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one CONTEXT.md at repo root with docs/adr/ for ADRs. See `docs/agents/domain.md`.

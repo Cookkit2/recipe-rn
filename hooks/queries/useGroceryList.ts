@@ -13,6 +13,7 @@ import {
   roundToReasonablePrecision,
 } from "~/utils/unit-converter";
 import { aggregateQuantities, compareQuantities } from "~/utils/quantity-comparison";
+import { log } from "~/utils/logger";
 
 /**
  * Grocery category for organizing items
@@ -225,10 +226,23 @@ const CATEGORY_KEYWORDS: Record<GroceryCategory, string[]> = {
   purchased: [], // Checked items go here - no keywords needed
 };
 
-// Pre-allocate active categories to avoid Object.entries and filtering on every call
-const ACTIVE_CATEGORIES = (
-  Object.entries(CATEGORY_KEYWORDS) as [GroceryCategory, string[]][]
-).filter(([category]) => category !== "other" && category !== "purchased");
+// Pre-allocate active categories and precompile regexes to avoid
+// Object.entries and O(M*N) string matching overhead on every call.
+const ACTIVE_CATEGORY_REGEXES = (Object.entries(CATEGORY_KEYWORDS) as [GroceryCategory, string[]][])
+  .filter(([category]) => category !== "other" && category !== "purchased")
+  .map(([category, keywords]) => {
+    const validKeywords = keywords
+      .filter((k) => k && k.length > 0)
+      .map((k) => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+
+    // If a category has no valid keywords, return a regex that never matches anything
+    const regex = validKeywords.length > 0 ? new RegExp(validKeywords.join("|"), "i") : /(?!)/;
+
+    return {
+      category,
+      regex,
+    };
+  });
 
 /**
  * Categorizes an ingredient based on its name
@@ -237,24 +251,14 @@ const ACTIVE_CATEGORIES = (
  * @returns The grocery category for this ingredient
  *
  * @remarks
- * Uses keyword matching to determine category.
+ * Uses precompiled regex matching to determine category efficiently.
  * Returns "other" if no matching keywords are found.
  */
 function categorizeIngredient(name: string): GroceryCategory {
-  const lowerName = name.toLowerCase();
-
-  for (let i = 0; i < ACTIVE_CATEGORIES.length; i++) {
-    const entry = ACTIVE_CATEGORIES[i];
-    if (!entry) continue; // safety check
-
-    const category = entry[0];
-    const keywords = entry[1];
-
-    for (let j = 0; j < keywords.length; j++) {
-      const keyword = keywords[j];
-      if (keyword && lowerName.includes(keyword)) {
-        return category;
-      }
+  for (let i = 0; i < ACTIVE_CATEGORY_REGEXES.length; i++) {
+    const entry = ACTIVE_CATEGORY_REGEXES[i];
+    if (entry && entry.regex.test(name)) {
+      return entry.category;
     }
   }
 
@@ -419,7 +423,7 @@ export function aggregateRecipeIngredients(
           existing.unit = combined.unit;
         } else {
           // Units are incompatible; keep existing quantity and unit but log a warning.
-          console.warn("Incompatible units when combining ingredient in grocery list:", {
+          log.warn("Incompatible units when combining ingredient in grocery list:", {
             ingredientName: ingredient.name,
             existingQuantity: existing.totalQuantity,
             existingUnit: existing.unit,

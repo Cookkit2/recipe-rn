@@ -31,13 +31,6 @@ const DIFFICULTY_OPTIONS = [
 
 const DIETARY_TAGS = ["Vegetarian", "Vegan", "Gluten-Free"];
 
-// const QUICK_ACTIONS = [
-//   "What do I have?",
-//   "What's expiring soon?",
-//   "Suggest a meal",
-//   "Find recipes",
-// ];
-
 export default function SearchScreen() {
   const { top, bottom } = useSafeAreaInsets();
   const colors = useColors();
@@ -99,12 +92,6 @@ export default function SearchScreen() {
     }, [])
   );
 
-  // const handleQuickAction = (action: string) => {
-  //   setInput(action);
-  //   searchBarRef.current?.setText(action);
-  //   searchBarRef.current?.focus();
-  // };
-
   const handleDismiss = () => {
     Keyboard.dismiss();
     router.back();
@@ -133,8 +120,7 @@ export default function SearchScreen() {
     | { key: "ingredients" }
     | { key: "recipes" }
     | { key: "no-results" }
-    | { key: "empty" }
-    | { key: "suggestions" };
+    | { key: "empty" };
 
   const sections = useMemo<SectionItem[]>(() => {
     if (hasQuery) {
@@ -311,25 +297,6 @@ export default function SearchScreen() {
             </Text>
           </View>
         );
-      // case "suggestions":
-      //   return (
-      //     <View className="mt-4 px-5">
-      //       <Text className="text-xs text-muted-foreground font-urbanist-semibold mb-2.5 uppercase tracking-wider">
-      //         Suggestions
-      //       </Text>
-      //       <View className="flex-row flex-wrap gap-2">
-      //         {QUICK_ACTIONS.map((action, index) => (
-      //           <TouchableOpacity
-      //             key={index}
-      //             onPress={() => handleQuickAction(action)}
-      //             className="bg-card border border-border px-3.5 py-2 rounded-full"
-      //           >
-      //             <Text className="text-sm text-foreground font-urbanist-medium">{action}</Text>
-      //           </TouchableOpacity>
-      //         ))}
-      //       </View>
-      //     </View>
-      //   );
       default:
         return null;
     }

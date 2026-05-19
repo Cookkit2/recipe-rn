@@ -167,7 +167,14 @@ export function SlidingNumber({
   return (
     <>
       {editable && onValueChange ? (
-        <Pressable onPress={handlePress}>{numberDisplay}</Pressable>
+        <Pressable
+          onPress={handlePress}
+          accessibilityRole="button"
+          accessibilityLabel="Edit quantity"
+          accessibilityHint="Opens modal to edit the quantity"
+        >
+          {numberDisplay}
+        </Pressable>
       ) : (
         numberDisplay
       )}

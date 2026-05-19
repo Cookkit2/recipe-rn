@@ -19,6 +19,7 @@ import {
   getNotificationPermissions,
   requestNotificationPermissions,
 } from "~/lib/notifications";
+import { log } from "~/utils/logger";
 
 // Typed collection helpers
 const stockCollection = () => database.collections.get<Stock>("stock");
@@ -35,7 +36,7 @@ async function executeTool<T>(name: string, fn: () => Promise<T>): Promise<any> 
   try {
     return await fn();
   } catch (error) {
-    console.error(`[CookkitToolExecutor] ${name} error:`, error);
+    log.error(`[CookkitToolExecutor] ${name} error:`, error);
     return {
       success: false,
       error: String(error),
@@ -70,7 +71,7 @@ export class CookkitToolExecutor implements ToolExecutor {
         ingredient: { id: newStock.id, name: newStock.name },
         message: `Added ${quantity ?? 1} ${unit ?? "piece"} of ${name} to ${location || "fridge"}`,
       };
-      console.log("[CookkitToolExecutor] addItem success:", result);
+      log.info("[CookkitToolExecutor] addItem success:", result);
       return result;
     });
   }
@@ -231,10 +232,7 @@ export class CookkitToolExecutor implements ToolExecutor {
       // The grocery list is meal-plan-based (derived from planned recipes).
       // Standalone grocery items are not supported in the current architecture.
       // Redirect to addItem (pantry) so the user's food is still tracked.
-      console.log(
-        "[CookkitToolExecutor] addToGroceryList redirecting to addItem (pantry) for:",
-        name
-      );
+      log.info("[CookkitToolExecutor] addToGroceryList redirecting to addItem (pantry) for:", name);
 
       const result = await this.addItem({
         name,
