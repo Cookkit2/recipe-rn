@@ -3,7 +3,12 @@ import { View, Alert, ScrollView, Pressable, ActivityIndicator } from "react-nat
 import { H1, H2, H3, P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
 import { seedDatabase, addQuickSampleData, checkDatabase } from "~/data/db/seed";
-import { databaseFacade } from "~/data/db/DatabaseFacade";
+import {
+  databaseFacade,
+  type AvailableRecipesResult,
+  type RecipeWithDetails,
+} from "~/data/db/DatabaseFacade";
+import type Recipe from "~/data/db/models/Recipe";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { ArrowLeftIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-uniwind";
@@ -22,6 +27,8 @@ import {
 } from "~/constants/storage-keys";
 import { log } from "~/utils/logger";
 
+type DebugRecipe = Recipe & { details?: RecipeWithDetails | null };
+
 export default function DebugScreen() {
   const { top } = useSafeAreaInsets();
   const router = useRouter();
@@ -35,8 +42,8 @@ export default function DebugScreen() {
   // Database inspection states (from debug-db)
   const [inspectionLoading, setInspectionLoading] = useState(false);
   const [stockItems, setStockItems] = useState<any[]>([]);
-  const [recipes, setRecipes] = useState<any[]>([]);
-  const [recommendations, setRecommendations] = useState<any>(null);
+  const [recipes, setRecipes] = useState<DebugRecipe[]>([]);
+  const [recommendations, setRecommendations] = useState<AvailableRecipesResult | null>(null);
 
   // Collapsible section states
   const [expandedSections, setExpandedSections] = useState({
@@ -71,10 +78,12 @@ export default function DebugScreen() {
       // Get first 3 recipes with details (batched)
       const topRecipes = allRecipes.slice(0, 3);
       const detailsMap = await databaseFacade.getRecipesWithDetails(topRecipes.map((r) => r.id));
-      const recipesWithDetails = topRecipes.map((r) => ({
-        ...r,
-        details: detailsMap.get(r.id) || null,
-      }));
+      const recipesWithDetails = topRecipes.map((r) => {
+        const debugRecipe = Object.assign(r, {
+          details: detailsMap.get(r.id) || null,
+        }) as DebugRecipe;
+        return debugRecipe;
+      });
 
       // Get recommendations
       const recs = await databaseFacade.getAvailableRecipes();
@@ -368,7 +377,7 @@ export default function DebugScreen() {
                   {recipes.length === 0 ? (
                     <P className="text-muted-foreground ml-2">No recipes in local database</P>
                   ) : (
-                    recipes.map((recipe: any, i) => (
+                    recipes.map((recipe: DebugRecipe, i) => (
                       <View key={i} className="ml-2 mb-2">
                         <P className="font-semibold text-sm">{recipe.title}</P>
                         {recipe.details?.ingredients && (
@@ -387,7 +396,7 @@ export default function DebugScreen() {
                   {recommendations ? (
                     <>
                       <P className="ml-2">✅ Can make: {recommendations.canMake.length} recipes</P>
-                      {recommendations.canMake.slice(0, 3).map((r: any, i: number) => (
+                      {recommendations.canMake.slice(0, 3).map((r: Recipe, i: number) => (
                         <P key={i} className="ml-6 text-sm">
                           • {r.title}
                         </P>
@@ -396,7 +405,7 @@ export default function DebugScreen() {
                       <P className="ml-2 mt-2">
                         🔶 Partial: {recommendations.partiallyCanMake.length} recipes
                       </P>
-                      {recommendations.partiallyCanMake.slice(0, 3).map((item: any, i: number) => (
+                      {recommendations.partiallyCanMake.slice(0, 3).map((item, i: number) => (
                         <P key={i} className="ml-6 text-sm">
                           • {item.recipe.title} ({item.completionPercentage}%)
                         </P>
