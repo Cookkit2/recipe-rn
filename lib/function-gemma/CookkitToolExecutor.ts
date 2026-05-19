@@ -232,10 +232,7 @@ export class CookkitToolExecutor implements ToolExecutor {
       // The grocery list is meal-plan-based (derived from planned recipes).
       // Standalone grocery items are not supported in the current architecture.
       // Redirect to addItem (pantry) so the user's food is still tracked.
-      log.info(
-        "[CookkitToolExecutor] addToGroceryList redirecting to addItem (pantry) for:",
-        name
-      );
+      log.info("[CookkitToolExecutor] addToGroceryList redirecting to addItem (pantry) for:", name);
 
       const result = await this.addItem({
         name,
