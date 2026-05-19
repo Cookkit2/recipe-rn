@@ -62,7 +62,7 @@ export class AuthYouTubeService implements IYouTubeService {
           );
         }
 
-        const rawMessage = errorData.error?.message || `API error: HTTP ${response.status}`;
+        const rawMessage = String(errorData.error?.message || `API error: HTTP ${response.status}`);
         const sanitizedMessage = API_KEY
           ? rawMessage.replaceAll(API_KEY, "[REDACTED_API_KEY]")
           : rawMessage;
@@ -91,7 +91,9 @@ export class AuthYouTubeService implements IYouTubeService {
         throw error;
       }
 
-      const rawMessage = `Network error: ${error instanceof Error ? error.message : "Unknown error"}`;
+      const rawMessage = String(
+        `Network error: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
       const sanitizedMessage = API_KEY
         ? rawMessage.replaceAll(API_KEY, "[REDACTED_API_KEY]")
         : rawMessage;
