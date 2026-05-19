@@ -3,7 +3,7 @@ import { View, Alert, ScrollView, Pressable, ActivityIndicator } from "react-nat
 import { H1, H2, H3, P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
 import { seedDatabase, addQuickSampleData, checkDatabase } from "~/data/db/seed";
-import { databaseFacade } from "~/data/db/DatabaseFacade";
+import { databaseFacade, type DatabaseStats } from "~/data/db/DatabaseFacade";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { ArrowLeftIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-uniwind";
@@ -26,7 +26,7 @@ export default function DebugScreen() {
   const { top } = useSafeAreaInsets();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<DatabaseStats | null>(null);
 
   // Get context refresh functions
   const { refresh } = useRefreshPantryItems();
