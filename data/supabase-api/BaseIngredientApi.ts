@@ -105,17 +105,19 @@ export const baseIngredientApi = {
         return resultMap;
       }
 
-      // Build OR query with proper escaping for Supabase PostgREST
-      const orQuerySynonyms = sanitizedNames
-        .map((n) => `synonym.ilike."${n.replace(/"/g, '""')}"`)
-        .join(",");
+      // Run parallel safe queries for each sanitized name to prevent SQL injection
+      const synonymPromises = sanitizedNames.map((n) =>
+        supabase!
+          .from("ingredient_synonym")
+          .select("base_ingredient_id, synonym")
+          .ilike("synonym", n)
+      );
 
-      const { data: synonymMatches, error: synonymError } = await supabase!
-        .from("ingredient_synonym")
-        .select("base_ingredient_id, synonym")
-        .or(orQuerySynonyms);
+      const synonymResults = await Promise.all(synonymPromises);
+      const synonymError = synonymResults.find((r) => r.error)?.error;
+      const synonymMatches = synonymResults.flatMap((r) => r.data || []);
 
-      if (!synonymError && synonymMatches) {
+      if (!synonymError && synonymMatches && synonymMatches.length > 0) {
         const synonymIngredientIds = [
           ...new Set(
             synonymMatches
