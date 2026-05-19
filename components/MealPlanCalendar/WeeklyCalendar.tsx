@@ -4,7 +4,6 @@ import { H3, P } from "~/components/ui/typography";
 import { useMealPlanCalendar } from "~/store/MealPlanCalendarContext";
 import { useCalendarMealPlans } from "~/hooks/queries/useCalendarMealPlans";
 import type { DayMealPlan, MealSlot } from "~/types/MealPlan";
-import { MEAL_SLOTS } from "~/types/MealPlan";
 import DayColumn from "./DayColumn";
 import { CalendarPlusIcon } from "lucide-uniwind";
 
@@ -40,28 +39,43 @@ export default function WeeklyCalendar({ onMealSlotPress, onMealSlotDrop }: Week
 
   // Group meal plans by day
   const weekDays = React.useMemo(() => {
+    // Single pass to group meal plans by date string (O(N))
+    const mealPlansByDate = new Map<string, typeof mealPlans>();
+
+    if (mealPlans) {
+      for (let i = 0; i < mealPlans.length; i++) {
+        const plan = mealPlans[i];
+        if (plan && plan.date) {
+          const planDate = new Date(plan.date);
+          const dateKey = `${planDate.getFullYear()}-${planDate.getMonth()}-${planDate.getDate()}`;
+          if (!mealPlansByDate.has(dateKey)) {
+            mealPlansByDate.set(dateKey, []);
+          }
+          mealPlansByDate.get(dateKey)!.push(plan);
+        }
+      }
+    }
+
     const days: DayMealPlan[] = [];
 
     for (let i = 0; i < 7; i++) {
       const date = new Date(weekStartDate);
       date.setDate(date.getDate() + i);
 
-      // Find meal plans for this day
-      const dayMealPlans =
-        mealPlans?.filter((plan) => {
-          const planDate = new Date(plan.date);
-          return (
-            planDate.getDate() === date.getDate() &&
-            planDate.getMonth() === date.getMonth() &&
-            planDate.getFullYear() === date.getFullYear()
-          );
-        }) || [];
+      const dateKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+      const dayMealPlans = mealPlansByDate.get(dateKey) || [];
 
       // Group by meal slot
       const meals: Partial<Record<MealSlot, (typeof dayMealPlans)[0]>> = {};
-      MEAL_SLOTS.forEach((slot) => {
-        meals[slot] = dayMealPlans.find((plan) => plan.mealSlot === slot);
-      });
+
+      // Fast path instead of finding per slot inside nested array
+      for (let j = 0; j < dayMealPlans.length; j++) {
+        const plan = dayMealPlans[j];
+        if (plan && plan.mealSlot) {
+          const slotKey = plan.mealSlot as MealSlot;
+          meals[slotKey] = plan;
+        }
+      }
 
       days.push({
         date,
