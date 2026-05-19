@@ -4,6 +4,7 @@
 
 import { describe, it, expect, jest, beforeEach } from "@jest/globals";
 import { render, fireEvent } from "@testing-library/react-native";
+import type { ReactTestInstance } from "react-test-renderer";
 import React from "react";
 import { SlidingNumber } from "../SlidingNumber";
 import { Alert } from "react-native";
@@ -134,7 +135,7 @@ describe("SlidingNumber", () => {
       <SlidingNumber value={42} onValueChange={onValueChange} editable={true} />
     );
 
-    const pressableArea = getAllByText("4")[0];
+    const pressableArea = getAllByText("4")[0] as ReactTestInstance;
     fireEvent.press(pressableArea);
 
     expect(getByText("Enter Quantity")).toBeTruthy();
@@ -147,7 +148,7 @@ describe("SlidingNumber", () => {
       <SlidingNumber value={42} onValueChange={onValueChange} editable={false} />
     );
 
-    const pressableArea = getAllByText("4")[0];
+    const pressableArea = getAllByText("4")[0] as ReactTestInstance;
     fireEvent.press(pressableArea);
 
     expect(queryByText("Enter Quantity")).toBeNull();
@@ -159,7 +160,7 @@ describe("SlidingNumber", () => {
       <SlidingNumber value={42} onValueChange={onValueChange} editable={true} />
     );
 
-    fireEvent.press(getAllByText("4")[0]);
+    fireEvent.press(getAllByText("4")[0] as ReactTestInstance);
 
     const input = getByDisplayValue("42");
     fireEvent.changeText(input, "100");
@@ -175,7 +176,7 @@ describe("SlidingNumber", () => {
       <SlidingNumber value={42} onValueChange={onValueChange} editable={true} />
     );
 
-    fireEvent.press(getAllByText("4")[0]);
+    fireEvent.press(getAllByText("4")[0] as ReactTestInstance);
 
     const input = getByDisplayValue("42");
     fireEvent.changeText(input, "abc");
@@ -192,7 +193,7 @@ describe("SlidingNumber", () => {
       <SlidingNumber value={42} onValueChange={onValueChange} editable={true} />
     );
 
-    fireEvent.press(getAllByText("4")[0]);
+    fireEvent.press(getAllByText("4")[0] as ReactTestInstance);
 
     const input = getByDisplayValue("42");
     fireEvent.changeText(input, "10000");
@@ -208,7 +209,7 @@ describe("SlidingNumber", () => {
       <SlidingNumber value={42} onValueChange={onValueChange} editable={true} />
     );
 
-    fireEvent.press(getAllByText("4")[0]);
+    fireEvent.press(getAllByText("4")[0] as ReactTestInstance);
 
     const input = getByDisplayValue("42");
     fireEvent.changeText(input, "100");
@@ -216,7 +217,7 @@ describe("SlidingNumber", () => {
     fireEvent.press(getByText("Cancel"));
 
     expect(onValueChange).not.toHaveBeenCalled();
-    fireEvent.press(getAllByText("4")[0]);
+    fireEvent.press(getAllByText("4")[0] as ReactTestInstance);
     expect(getByDisplayValue("42")).toBeTruthy();
   });
 });
