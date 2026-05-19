@@ -23,9 +23,7 @@ import { YouTubeServiceError } from "./types";
 import { NoAuthYouTubeService } from "./NoAuthYouTubeService";
 import Constants from "expo-constants";
 
-const API_KEY =
-  process.env.EXPO_PUBLIC_YOUTUBE_API_KEY ||
-  Constants.expoConfig?.extra?.EXPO_PUBLIC_YOUTUBE_API_KEY;
+const API_KEY = process.env.EXPO_PUBLIC_YOUTUBE_API_KEY;
 
 export class AuthYouTubeService implements IYouTubeService {
   private readonly BASE_URL = "https://www.googleapis.com/youtube/v3";
