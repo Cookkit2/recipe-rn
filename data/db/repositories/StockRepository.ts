@@ -60,8 +60,10 @@ export class StockRepository extends BaseRepository<Stock> {
 
   // Get expired items
   async getExpiredItems(): Promise<Stock[]> {
-    const items = await this.findAll();
-    return items.filter((item) => item.isExpired);
+    const nowTime = new Date().getTime();
+    return await this.collection
+      .query(Q.where("expiry_date", Q.notEq(null)), Q.where("expiry_date", Q.lt(nowTime)))
+      .fetch();
   }
 
   // Detect expired waste - finds items that are expired and returns them with metadata
@@ -72,11 +74,11 @@ export class StockRepository extends BaseRepository<Stock> {
       estimatedCost?: number;
     }>
   > {
-    const items = await this.findAll();
+    // Re-use the optimized getExpiredItems query
+    const expiredItems = await this.getExpiredItems();
     const now = new Date();
 
-    return items
-      .filter((item) => item.isExpired)
+    return expiredItems
       .map((stock) => {
         let daysExpired = 0;
         if (stock.expiryDate) {
@@ -95,14 +97,18 @@ export class StockRepository extends BaseRepository<Stock> {
 
   // Get items expiring soon
   async getExpiringSoonItems(days: number = 3): Promise<Stock[]> {
-    const items = await this.findAll();
+    const nowTime = new Date().getTime();
     const threshold = new Date();
     threshold.setDate(threshold.getDate() + days);
+    const thresholdTime = threshold.getTime();
 
-    return items.filter((item) => {
-      if (!item.expiryDate) return false;
-      return item.expiryDate <= threshold && !item.isExpired;
-    });
+    return await this.collection
+      .query(
+        Q.where("expiry_date", Q.notEq(null)),
+        Q.where("expiry_date", Q.gte(nowTime)),
+        Q.where("expiry_date", Q.lte(thresholdTime))
+      )
+      .fetch();
   }
 
   // Get stock by storage type
