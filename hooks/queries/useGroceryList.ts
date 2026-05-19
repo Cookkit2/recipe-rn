@@ -13,6 +13,7 @@ import {
   roundToReasonablePrecision,
 } from "~/utils/unit-converter";
 import { aggregateQuantities, compareQuantities } from "~/utils/quantity-comparison";
+import { log } from "~/utils/logger";
 
 /**
  * Grocery category for organizing items
@@ -419,7 +420,7 @@ export function aggregateRecipeIngredients(
           existing.unit = combined.unit;
         } else {
           // Units are incompatible; keep existing quantity and unit but log a warning.
-          console.warn("Incompatible units when combining ingredient in grocery list:", {
+          log.warn("Incompatible units when combining ingredient in grocery list:", {
             ingredientName: ingredient.name,
             existingQuantity: existing.totalQuantity,
             existingUnit: existing.unit,
