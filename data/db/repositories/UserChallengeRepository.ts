@@ -263,6 +263,76 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
     });
   }
 
+  // Batch check and update challenge statuses based on progress
+  async checkAndUpdateStatusBatch(
+    updates: Array<{ challengeId: string; currentProgress: number; targetProgress: number }>
+  ): Promise<UserChallenge[]> {
+    if (updates.length === 0) return [];
+
+    // Extract challenge IDs and get existing user challenges
+    const challengeIds = updates.map((u) => u.challengeId);
+    const existingChallenges = await this.getByChallengeIds(challengeIds);
+    const existingMap = new Map<string, UserChallenge>();
+    existingChallenges.forEach((uc) => existingMap.set(uc.challengeId, uc));
+
+    // Determine what needs to be created vs updated
+    const recordsToCreate = updates.filter((u) => !existingMap.has(u.challengeId));
+
+    // First, let's create the missing ones
+    if (recordsToCreate.length > 0) {
+      await database.write(async () => {
+        const batchOps = recordsToCreate.map((u) =>
+          this.collection.prepareCreate((record) => {
+            record.challengeId = u.challengeId;
+            record.status = "available";
+            record.progress = 0;
+          })
+        );
+        await database.batch(batchOps);
+      });
+
+      // Re-fetch all to get the newly created instances
+      const allChallenges = await this.getByChallengeIds(challengeIds);
+      allChallenges.forEach((uc) => existingMap.set(uc.challengeId, uc));
+    }
+
+    // Now process updates
+    return await database.write(async () => {
+      const batchOps = updates
+        .map((update) => {
+          const userChallenge = existingMap.get(update.challengeId);
+          if (!userChallenge) return null; // Should not happen
+
+          let newStatus = userChallenge.status;
+          if (
+            update.currentProgress >= update.targetProgress &&
+            userChallenge.status !== "completed"
+          ) {
+            newStatus = "completed";
+          } else if (update.currentProgress > 0 && userChallenge.status === "available") {
+            newStatus = "active";
+          }
+
+          return userChallenge.prepareUpdate((record) => {
+            record.progress = update.currentProgress;
+            record.status = newStatus;
+            if (newStatus === "active" && !record.startedAt) {
+              record.startedAt = Date.now();
+            }
+            if (newStatus === "completed" && !record.completedAt) {
+              record.completedAt = Date.now();
+            }
+          });
+        })
+        .filter(Boolean) as any[];
+
+      await database.batch(batchOps);
+
+      // Return updated records by fetching again
+      return await this.getByChallengeIds(challengeIds);
+    });
+  }
+
   // Get challenges that need to be expired
   // (active or available challenges whose parent challenge has expired)
   async getChallengesToExpire(): Promise<UserChallenge[]> {
