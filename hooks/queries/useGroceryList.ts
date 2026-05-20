@@ -518,11 +518,7 @@ export function calculateNeededQuantities(
       } else {
         // Slow path: Fallback to scanning all pantry items for substring/complex matches
         for (const pantryItem of pantryItems) {
-          const isMatch = isIngredientMatch(
-            pantryItem.name,
-            ingredient.name,
-            pantryItem.synonyms?.map((s: any) => s.synonym)
-          );
+          const isMatch = isIngredientMatch(pantryItem.name, ingredient.name, pantryItem.synonyms);
 
           if (isMatch) {
             matchingPantryItems.push({
