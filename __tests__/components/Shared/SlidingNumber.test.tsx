@@ -3,9 +3,11 @@ import { render, fireEvent } from "@testing-library/react-native";
 import React from "react";
 import { View, Pressable, Alert } from "react-native";
 
-jest.mock("react-native/Libraries/Alert/Alert", () => ({
-  alert: jest.fn(),
-}));
+jest.mock("react-native", () => {
+  const RN = jest.requireActual("react-native") as any;
+  RN.Alert.alert = jest.fn();
+  return RN;
+});
 
 jest.mock("react-native-keyboard-controller", () => {
   const React = require("react");
