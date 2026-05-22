@@ -95,14 +95,19 @@ export class StockRepository extends BaseRepository<Stock> {
 
   // Get items expiring soon
   async getExpiringSoonItems(days: number = 3): Promise<Stock[]> {
-    const items = await this.findAll();
+    const now = new Date().getTime();
     const threshold = new Date();
     threshold.setDate(threshold.getDate() + days);
 
-    return items.filter((item) => {
-      if (!item.expiryDate) return false;
-      return item.expiryDate <= threshold && !item.isExpired;
-    });
+    return await this.collection
+      .query(
+        Q.and(
+          Q.where("expiry_date", Q.notEq(null)),
+          Q.where("expiry_date", Q.lte(threshold.getTime())),
+          Q.where("expiry_date", Q.gte(now))
+        )
+      )
+      .fetch();
   }
 
   // Get stock by storage type

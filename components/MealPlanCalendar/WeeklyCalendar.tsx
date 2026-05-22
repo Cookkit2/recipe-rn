@@ -43,15 +43,14 @@ export default function WeeklyCalendar({ onMealSlotPress, onMealSlotDrop }: Week
     const mealPlansByDate = new Map<string, typeof mealPlans>();
 
     if (mealPlans) {
-      for (let i = 0; i < mealPlans.length; i++) {
-        const plan = mealPlans[i];
+      for (const plan of mealPlans) {
         if (plan && plan.date) {
           const planDate = new Date(plan.date);
-          const dateKey = `${planDate.getFullYear()}-${planDate.getMonth()}-${planDate.getDate()}`;
-          if (!mealPlansByDate.has(dateKey)) {
-            mealPlansByDate.set(dateKey, []);
+          const dateString = `${planDate.getFullYear()}-${planDate.getMonth()}-${planDate.getDate()}`;
+          if (!mealPlansByDate.has(dateString)) {
+            mealPlansByDate.set(dateString, []);
           }
-          mealPlansByDate.get(dateKey)!.push(plan);
+          mealPlansByDate.get(dateString)!.push(plan);
         }
       }
     }
@@ -61,19 +60,18 @@ export default function WeeklyCalendar({ onMealSlotPress, onMealSlotDrop }: Week
     for (let i = 0; i < 7; i++) {
       const date = new Date(weekStartDate);
       date.setDate(date.getDate() + i);
+      const dateString = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
 
-      const dateKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-      const dayMealPlans = mealPlansByDate.get(dateKey) || [];
+      // O(1) lookup for meal plans for this day
+      const dayMealPlans = mealPlansByDate.get(dateString) || [];
 
-      // Group by meal slot
+      // Group by meal slot directly without iterating MEAL_SLOTS or calling find()
       const meals: Partial<Record<MealSlot, (typeof dayMealPlans)[0]>> = {};
-
-      // Fast path instead of finding per slot inside nested array
-      for (let j = 0; j < dayMealPlans.length; j++) {
-        const plan = dayMealPlans[j];
-        if (plan && plan.mealSlot) {
-          const slotKey = plan.mealSlot as MealSlot;
-          meals[slotKey] = plan;
+      if (dayMealPlans.length > 0) {
+        for (const plan of dayMealPlans) {
+          if (!meals[plan.mealSlot as MealSlot]) {
+            meals[plan.mealSlot as MealSlot] = plan;
+          }
         }
       }
 

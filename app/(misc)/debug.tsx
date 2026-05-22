@@ -3,19 +3,16 @@ import { View, Alert, ScrollView, Pressable, ActivityIndicator } from "react-nat
 import { H1, H2, H3, P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
 import { seedDatabase, addQuickSampleData, checkDatabase } from "~/data/db/seed";
-import {
-  databaseFacade,
-  type AvailableRecipesResult,
-  type RecipeWithDetails,
-} from "~/data/db/DatabaseFacade";
+import { databaseFacade, type DatabaseStats } from "~/data/db/DatabaseFacade";
 import type Recipe from "~/data/db/models/Recipe";
+import type AvailableRecipesResult from "~/data/db/DatabaseFacade";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { ArrowLeftIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-uniwind";
 import { useRefreshPantryItems } from "~/hooks/queries/usePantryQueries";
 import { storage } from "~/data";
 import { recipeApi } from "~/data/api/recipeApi";
-import { mealPlanApi } from "~/data/api/mealPlanApi";
+import { mealPlanApi, type MealPlanItemWithRecipe } from "~/data/api/mealPlanApi";
 import {
   ONBOARDING_COMPLETED_KEY,
   PREFERENCE_COMPLETED_KEY,
@@ -27,23 +24,23 @@ import {
 } from "~/constants/storage-keys";
 import { log } from "~/utils/logger";
 
-type DebugRecipe = Recipe & { details?: RecipeWithDetails | null };
+type DebugRecipe = Recipe & { details?: any | null };
 
 export default function DebugScreen() {
   const { top } = useSafeAreaInsets();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<DatabaseStats | null>(null);
 
   // Get context refresh functions
   const { refresh } = useRefreshPantryItems();
-  const [mealPlanData, setMealPlanData] = useState<any[]>([]);
+  const [mealPlanData, setMealPlanData] = useState<MealPlanItemWithRecipe[]>([]);
 
   // Database inspection states (from debug-db)
   const [inspectionLoading, setInspectionLoading] = useState(false);
   const [stockItems, setStockItems] = useState<any[]>([]);
-  const [recipes, setRecipes] = useState<DebugRecipe[]>([]);
-  const [recommendations, setRecommendations] = useState<AvailableRecipesResult | null>(null);
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [recommendations, setRecommendations] = useState<any | null>(null);
 
   // Collapsible section states
   const [expandedSections, setExpandedSections] = useState({
@@ -377,12 +374,12 @@ export default function DebugScreen() {
                   {recipes.length === 0 ? (
                     <P className="text-muted-foreground ml-2">No recipes in local database</P>
                   ) : (
-                    recipes.map((recipe: DebugRecipe, i) => (
+                    recipes.map((recipe: Recipe, i) => (
                       <View key={i} className="ml-2 mb-2">
                         <P className="font-semibold text-sm">{recipe.title}</P>
-                        {recipe.details?.ingredients && (
+                        {(recipe as any).details?.ingredients && (
                           <P className="text-xs text-muted-foreground ml-2">
-                            {recipe.details.ingredients.length} ingredients
+                            {(recipe as any).details.ingredients.length} ingredients
                           </P>
                         )}
                       </View>
@@ -405,7 +402,7 @@ export default function DebugScreen() {
                       <P className="ml-2 mt-2">
                         🔶 Partial: {recommendations.partiallyCanMake.length} recipes
                       </P>
-                      {recommendations.partiallyCanMake.slice(0, 3).map((item, i: number) => (
+                      {recommendations.partiallyCanMake.slice(0, 3).map((item: any, i: number) => (
                         <P key={i} className="ml-6 text-sm">
                           • {item.recipe.title} ({item.completionPercentage}%)
                         </P>
