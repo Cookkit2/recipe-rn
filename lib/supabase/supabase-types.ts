@@ -167,6 +167,7 @@ export type Database = {
       };
       recipe: {
         Row: {
+          avg_rating: number | null;
           calories: number | null;
           cook_minutes: number | null;
           description: string | null;
@@ -174,12 +175,14 @@ export type Database = {
           id: string;
           image_url: string | null;
           prep_minutes: number | null;
+          review_count: number;
           servings: number | null;
           source_url: string | null;
           tags: string[] | null;
           title: string;
         };
         Insert: {
+          avg_rating?: number | null;
           calories?: number | null;
           cook_minutes?: number | null;
           description?: string | null;
@@ -187,12 +190,14 @@ export type Database = {
           id?: string;
           image_url?: string | null;
           prep_minutes?: number | null;
+          review_count?: number;
           servings?: number | null;
           source_url?: string | null;
           tags?: string[] | null;
           title: string;
         };
         Update: {
+          avg_rating?: number | null;
           calories?: number | null;
           cook_minutes?: number | null;
           description?: string | null;
@@ -200,6 +205,7 @@ export type Database = {
           id?: string;
           image_url?: string | null;
           prep_minutes?: number | null;
+          review_count?: number;
           servings?: number | null;
           source_url?: string | null;
           tags?: string[] | null;
@@ -347,6 +353,224 @@ export type Database = {
           username?: string | null;
         };
         Relationships: [];
+      };
+      feature_flags: {
+        Row: {
+          key: string;
+          enabled: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          key: string;
+          enabled: boolean;
+          updated_at?: string;
+        };
+        Update: {
+          key?: string;
+          enabled?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      recipe_review: {
+        Row: {
+          id: string;
+          recipe_id: string;
+          user_id: string;
+          rating: number;
+          title: string | null;
+          body: string;
+          helpful_count: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          recipe_id: string;
+          user_id: string;
+          rating: number;
+          title?: string | null;
+          body: string;
+          helpful_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          recipe_id?: string;
+          user_id?: string;
+          rating?: number;
+          title?: string | null;
+          body?: string;
+          helpful_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "recipe_review_recipe_id_fkey";
+            columns: ["recipe_id"];
+            isOneToOne: false;
+            referencedRelation: "recipe";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "recipe_review_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      review_photo: {
+        Row: {
+          id: string;
+          review_id: string;
+          photo_url: string;
+          position: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          review_id: string;
+          photo_url: string;
+          position: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          review_id?: string;
+          photo_url?: string;
+          position?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "review_photo_review_id_fkey";
+            columns: ["review_id"];
+            isOneToOne: false;
+            referencedRelation: "recipe_review";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      review_helpful_vote: {
+        Row: {
+          id: string;
+          review_id: string;
+          user_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          review_id: string;
+          user_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          review_id?: string;
+          user_id?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "review_helpful_vote_review_id_fkey";
+            columns: ["review_id"];
+            isOneToOne: false;
+            referencedRelation: "recipe_review";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "review_helpful_vote_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      recipe_tip: {
+        Row: {
+          id: string;
+          recipe_id: string;
+          user_id: string;
+          body: string;
+          helpful_count: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          recipe_id: string;
+          user_id: string;
+          body: string;
+          helpful_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          recipe_id?: string;
+          user_id?: string;
+          body?: string;
+          helpful_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "recipe_tip_recipe_id_fkey";
+            columns: ["recipe_id"];
+            isOneToOne: false;
+            referencedRelation: "recipe";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "recipe_tip_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      tip_helpful_vote: {
+        Row: {
+          id: string;
+          tip_id: string;
+          user_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tip_id: string;
+          user_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tip_id?: string;
+          user_id?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tip_helpful_vote_tip_id_fkey";
+            columns: ["tip_id"];
+            isOneToOne: false;
+            referencedRelation: "recipe_tip";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tip_helpful_vote_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
       };
     };
     Views: {
