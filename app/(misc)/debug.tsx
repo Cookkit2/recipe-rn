@@ -10,7 +10,7 @@ import { ArrowLeftIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-uniwind";
 import { useRefreshPantryItems } from "~/hooks/queries/usePantryQueries";
 import { storage } from "~/data";
 import { recipeApi } from "~/data/api/recipeApi";
-import { mealPlanApi } from "~/data/api/mealPlanApi";
+import { mealPlanApi, type MealPlanItemWithRecipe } from "~/data/api/mealPlanApi";
 import {
   ONBOARDING_COMPLETED_KEY,
   PREFERENCE_COMPLETED_KEY,
@@ -30,7 +30,7 @@ export default function DebugScreen() {
 
   // Get context refresh functions
   const { refresh } = useRefreshPantryItems();
-  const [mealPlanData, setMealPlanData] = useState<any[]>([]);
+  const [mealPlanData, setMealPlanData] = useState<MealPlanItemWithRecipe[]>([]);
 
   // Database inspection states (from debug-db)
   const [inspectionLoading, setInspectionLoading] = useState(false);
