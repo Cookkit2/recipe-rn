@@ -1,6 +1,9 @@
 import React, { useCallback, useRef } from "react";
 import { Alert, StyleSheet, View } from "react-native";
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet, {
+  BottomSheetView,
+  type BottomSheetMethods,
+} from "@expo/ui/community/bottom-sheet";
 import { Portal } from "@rn-primitives/portal";
 import { H2, H3, P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
@@ -23,7 +26,7 @@ export default function VersionHistorySheet({
   onRevert,
   onClose,
 }: VersionHistorySheetProps) {
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const bottomSheetRef = useRef<BottomSheetMethods>(null);
   const { bottom } = useSafeAreaInsets();
   const colors = useColors();
 
