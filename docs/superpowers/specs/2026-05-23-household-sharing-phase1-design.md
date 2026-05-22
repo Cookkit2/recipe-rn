@@ -2,12 +2,12 @@
 
 ## Overview
 
-Multiple users share a household with a synced pantry, grocery list, and meal plans. Phase 1 delivers the core household model, invite flow, shared pantry, and poll-based sync.
+Multiple users share a household with a synced pantry, grocery list, and meal plans. Phase 1 delivers the core household model, invite flow, and shared pantry with poll-based sync.
 
 **Phased approach:**
 - **Phase 1** (this spec): Household model, invite/accept, shared pantry, flat permissions, poll-based sync
-- **Phase 2**: Real-time sync engine with conflict resolution
-- **Phase 3**: Read-only role, activity log, household settings (dietary restrictions, cuisine preferences)
+- **Phase 2**: Real-time sync engine with conflict resolution, shared grocery lists and meal plans
+- **Phase 3**: Read-only role, activity log, household settings (dietary restrictions, cuisine preferences), shared recipe collections
 
 ## Decisions
 
@@ -19,7 +19,7 @@ Multiple users share a household with a synced pantry, grocery list, and meal pl
 | Data on creation | Creator's stock seeds household | Natural onboarding; joiners don't merge |
 | Member limits | Free=2, Pro=6 | Free tier gets a taste, Pro unlocks families |
 | Permissions | Flat (everyone equal) | Simplest for Phase 1; creator can dissolve |
-| Data on leaving | Back to solo + copy of recipes you added | Members keep their contributions |
+| Data on leaving | Back to solo, added items stay with household | Members' pantry contributions remain shared |
 | Architecture | WatermelonDB primary, Supabase mirror | Preserves offline-first; sync in background |
 
 ## Data Model
@@ -107,6 +107,7 @@ Existing stock items without `household_id` remain solo/personal.
 4. All existing `stock` rows for this user get `household_id` set — creator's data seeds the household
 5. An `invite_code` is generated (random 8-char alphanumeric, expires in 7 days)
 6. Invite code is shareable as a deep link: `cookkit://join/{invite_code}`
+7. Creator can regenerate the invite code from Household Settings (generates a new code, old code is invalidated)
 
 ### Joining a household
 
@@ -123,9 +124,10 @@ Existing stock items without `household_id` remain solo/personal.
 1. Member taps "Leave Household"
 2. `household_members` row is deleted
 3. Stock items they added (where `added_by_user_id` matches) stay with the household
-4. Recipes they added to the shared collection are copied to their personal collection
-5. Shared stock items are removed from their local WatermelonDB
-6. They revert to solo mode
+4. Shared stock items are removed from their local WatermelonDB
+5. They revert to solo mode with any personal (non-shared) items intact
+
+Note: Recipe collection sharing and per-member recipe ownership tracking is deferred to Phase 3 (shared recipe collections).
 
 ### Dissolving a household (creator only)
 
@@ -177,13 +179,13 @@ Poll-based sync — simple, reliable, good enough for first release.
 
 - Can create or join a household
 - Max 2 members per household
-- Shared pantry and grocery list included
+- Shared pantry included
 
 ### Pro tier
 
 - Everything in free, plus:
 - Max 6 members per household
-- Shared meal plans (when that feature ships)
+- Shared grocery lists and meal plans (Phase 2+)
 
 ### Enforcement
 
@@ -200,6 +202,7 @@ Poll-based sync — simple, reliable, good enough for first release.
 1. **Household Settings** (accessible from Profile)
    - Household name, invite code, member list
    - "Share Invite Link" button (copies deep link to clipboard)
+   - "Regenerate Invite Code" button (invalidates old code, generates new one)
    - "Leave Household" button
    - "Dissolve Household" button (creator only)
    - Member count vs max (e.g., "3 of 6 members")
@@ -263,7 +266,7 @@ Poll-based sync — simple, reliable, good enough for first release.
 
 - Create household and share invite link
 - Join household via deep link, verify shared pantry items appear
-- Leave household, verify recipes copied and pantry items removed
+- Leave household, verify pantry items removed and personal items intact
 
 ## Phase 2 and 3 Preview
 
