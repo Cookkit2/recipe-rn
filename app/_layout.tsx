@@ -37,11 +37,14 @@ const navigationIntegration = Sentry.reactNavigationIntegration({
 });
 
 Sentry.init({
-  dsn: "https://024f0a62aa8bac8c1a2eb0f752e1ea88@o4511397617336320.ingest.de.sentry.io/4511397626576976",
+  dsn: (process.env.EXPO_PUBLIC_SENTRY_DSN ||
+    Constants.expoConfig?.extra?.EXPO_PUBLIC_SENTRY_DSN) as string | undefined,
 
   // Adds more context data to events (IP address, cookies, user, etc.)
   // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
-  sendDefaultPii: true,
+  sendDefaultPii:
+    (process.env.EXPO_PUBLIC_SENTRY_SEND_PII ||
+      Constants.expoConfig?.extra?.EXPO_PUBLIC_SENTRY_SEND_PII) === "true",
 
   // Enable Logs
   enableLogs: true,
