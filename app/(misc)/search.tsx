@@ -1,6 +1,9 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { View, Keyboard, Pressable, TouchableOpacity, FlatList, StyleSheet } from "react-native";
-import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import BottomSheet, {
+  BottomSheetScrollView,
+  type BottomSheetMethods,
+} from "@expo/ui/community/bottom-sheet";
 import { Portal } from "@rn-primitives/portal";
 import { cn } from "~/lib/utils";
 import { Stack, useFocusEffect, useRouter } from "expo-router";
@@ -36,7 +39,7 @@ export default function SearchScreen() {
   const colors = useColors();
   const router = useRouter();
   const searchBarRef = useRef<SearchBarCommands>(null);
-  const filterSheetRef = useRef<BottomSheet>(null);
+  const filterSheetRef = useRef<BottomSheetMethods>(null);
   const filterSnapPoints = useMemo(() => ["55%"], []);
 
   const [input, setInput] = useState("");
