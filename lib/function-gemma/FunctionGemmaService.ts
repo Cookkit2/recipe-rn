@@ -48,6 +48,12 @@ export interface CompletionResult {
   };
 }
 
+export interface ToolResponse {
+  success: boolean;
+  error?: string;
+  [key: string]: any;
+}
+
 export interface ModelConfig {
   fileName: string;
   url: string;
@@ -392,16 +398,16 @@ export function parseFunctionCalls(
 // ============================================================================
 
 export interface ToolExecutor {
-  addItem(params: any): Promise<any>;
-  removeItem(params: any): Promise<any>;
-  getInventory(params?: any): Promise<any>;
-  getExpiringItems(params?: any): Promise<any>;
-  setExpiryAlert(params: any): Promise<any>;
-  addToGroceryList(params: any): Promise<any>;
-  getGroceryList(params?: any): Promise<any>;
-  findRecipes(params: any): Promise<any>;
-  suggestMeals(params: any): Promise<any>;
-  scanBarcode(params: any): Promise<any>;
+  addItem(params: any): Promise<ToolResponse>;
+  removeItem(params: any): Promise<ToolResponse>;
+  getInventory(params?: any): Promise<ToolResponse>;
+  getExpiringItems(params?: any): Promise<ToolResponse>;
+  setExpiryAlert(params: any): Promise<ToolResponse>;
+  addToGroceryList(params: any): Promise<ToolResponse>;
+  getGroceryList(params?: any): Promise<ToolResponse>;
+  findRecipes(params: any): Promise<ToolResponse>;
+  suggestMeals(params: any): Promise<ToolResponse>;
+  scanBarcode(params: any): Promise<ToolResponse>;
 }
 
 // ============================================================================
