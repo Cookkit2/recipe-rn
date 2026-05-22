@@ -52,6 +52,11 @@ export function filterRecipesForSearch(
       if (totalMinutes(r) < filters.minTotalTime) return false;
     }
 
+    if (filters?.minRating !== undefined) {
+      const rating = r.avgRating ?? 0;
+      if (rating < filters.minRating) return false;
+    }
+
     return true;
   });
 }

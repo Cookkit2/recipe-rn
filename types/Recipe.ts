@@ -34,6 +34,7 @@ export interface Recipe {
   calories?: number; // Added from previous recipe list example
   tags?: string[];
   isFavorite?: boolean;
+  avgRating?: number | null; // Average rating from reviews (1-5)
 }
 
 // Re-export recipe matching types for convenience
