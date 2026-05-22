@@ -1,6 +1,9 @@
 import React, { useCallback, useEffect, useRef } from "react";
 import { StyleSheet, View } from "react-native";
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet, {
+  BottomSheetView,
+  type BottomSheetMethods,
+} from "@expo/ui/community/bottom-sheet";
 import { Portal } from "@rn-primitives/portal";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { Image } from "expo-image";
@@ -32,7 +35,7 @@ export default function CameraOnboardingSheet() {
       defaultValue: false,
     }
   );
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const bottomSheetRef = useRef<BottomSheetMethods>(null);
   const { bottom } = useSafeAreaInsets();
   const colors = useColors();
 
