@@ -3,9 +3,13 @@ import { View, Alert, ScrollView, Pressable, ActivityIndicator } from "react-nat
 import { H1, H2, H3, P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
 import { seedDatabase, addQuickSampleData, checkDatabase } from "~/data/db/seed";
-import { databaseFacade, type DatabaseStats } from "~/data/db/DatabaseFacade";
+import {
+  databaseFacade,
+  type AvailableRecipesResult,
+  type RecipeWithDetails,
+  type DatabaseStats,
+} from "~/data/db/DatabaseFacade";
 import type Recipe from "~/data/db/models/Recipe";
-import type AvailableRecipesResult from "~/data/db/DatabaseFacade";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { ArrowLeftIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-uniwind";
@@ -24,7 +28,7 @@ import {
 } from "~/constants/storage-keys";
 import { log } from "~/utils/logger";
 
-type DebugRecipe = Recipe & { details?: any | null };
+type DebugRecipe = Recipe & { details?: RecipeWithDetails | null };
 
 export default function DebugScreen() {
   const { top } = useSafeAreaInsets();
@@ -39,8 +43,8 @@ export default function DebugScreen() {
   // Database inspection states (from debug-db)
   const [inspectionLoading, setInspectionLoading] = useState(false);
   const [stockItems, setStockItems] = useState<any[]>([]);
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [recommendations, setRecommendations] = useState<any | null>(null);
+  const [recipes, setRecipes] = useState<DebugRecipe[]>([]);
+  const [recommendations, setRecommendations] = useState<AvailableRecipesResult | null>(null);
 
   // Collapsible section states
   const [expandedSections, setExpandedSections] = useState({
@@ -374,12 +378,12 @@ export default function DebugScreen() {
                   {recipes.length === 0 ? (
                     <P className="text-muted-foreground ml-2">No recipes in local database</P>
                   ) : (
-                    recipes.map((recipe: Recipe, i) => (
+                    recipes.map((recipe: DebugRecipe, i) => (
                       <View key={i} className="ml-2 mb-2">
                         <P className="font-semibold text-sm">{recipe.title}</P>
-                        {(recipe as any).details?.ingredients && (
+                        {recipe.details?.ingredients && (
                           <P className="text-xs text-muted-foreground ml-2">
-                            {(recipe as any).details.ingredients.length} ingredients
+                            {recipe.details.ingredients.length} ingredients
                           </P>
                         )}
                       </View>

@@ -42,11 +42,14 @@ export default function WeeklyCalendar({ onMealSlotPress, onMealSlotDrop }: Week
     // Single pass to group meal plans by date string (O(N))
     const mealPlansByDate = new Map<string, typeof mealPlans>();
 
+    const formatDateKey = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
     if (mealPlans) {
       for (const plan of mealPlans) {
         if (plan && plan.date) {
           const planDate = new Date(plan.date);
-          const dateString = `${planDate.getFullYear()}-${planDate.getMonth()}-${planDate.getDate()}`;
+          const dateString = formatDateKey(planDate);
           if (!mealPlansByDate.has(dateString)) {
             mealPlansByDate.set(dateString, []);
           }
@@ -60,7 +63,7 @@ export default function WeeklyCalendar({ onMealSlotPress, onMealSlotDrop }: Week
     for (let i = 0; i < 7; i++) {
       const date = new Date(weekStartDate);
       date.setDate(date.getDate() + i);
-      const dateString = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+      const dateString = formatDateKey(date);
 
       // O(1) lookup for meal plans for this day
       const dayMealPlans = mealPlansByDate.get(dateString) || [];
@@ -69,8 +72,9 @@ export default function WeeklyCalendar({ onMealSlotPress, onMealSlotDrop }: Week
       const meals: Partial<Record<MealSlot, (typeof dayMealPlans)[0]>> = {};
       if (dayMealPlans.length > 0) {
         for (const plan of dayMealPlans) {
-          if (!meals[plan.mealSlot as MealSlot]) {
-            meals[plan.mealSlot as MealSlot] = plan;
+          const slot = plan.mealSlot as MealSlot | null | undefined;
+          if (slot && !meals[slot]) {
+            meals[slot] = plan;
           }
         }
       }

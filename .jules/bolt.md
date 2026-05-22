@@ -13,10 +13,20 @@
 **Learning:** In highly repetitive data transformation functions (like `categorizeIngredient` used across grocery list generation), `Object.entries()` creates significant unnecessary overhead by allocating a new array of key-value pairs on every invocation.
 **Action:** Extract static configuration objects into module-level arrays and pre-filter them. Then, use standard `for` loops (e.g., `for (let i = 0; i < arr.length; i++)`) rather than iterators (`for...of`) inside the hot path to eliminate allocation and garbage collection penalties completely.
 
+## 2024-05-19 - Memory Filtering Bottleneck in WatermelonDB
+
+**Learning:** Fetching all records from a table using `findAll()` and then applying JavaScript `.filter()` in-memory is highly inefficient in WatermelonDB, as it unnecessarily serializes, deserializes, and allocates thousands of unused objects across the React Native bridge.
+**Action:** Always push filtering logic down to the native database layer using WatermelonDB query constraints (e.g., `Q.where("property", Q.lt(value))`) to only retrieve the specific models needed, significantly reducing memory footprint and processing latency.
+
 ## 2025-02-06 - Eliminate Closure Overhead in Nested Matching Loops
 
 **Learning:** When converting `Array.prototype.find()` or similar array methods to a standard `for` loop to eliminate closure overhead in deeply nested paths, remember that accessing array elements by index (e.g., `array[i]`) can type as possibly `undefined` in strict TypeScript environments.
 **Action:** Always include a truthiness check (e.g., `if (item && ...)`), before accessing element properties to prevent TS18048 errors during compilation checks.
+
+## 2025-02-06 - Date Instantiation Bottleneck in Calendar Loops
+
+**Learning:** Instantiating `new Date(dateString)` inside nested loops (like `Array.prototype.filter` or `.find` across an outer days loop) causes O(N*M) redundant object creations, which is computationally expensive for React Native date-grouped components.
+**Action:** When mapping temporal data to calendar UI structures, perform a single O(N) pass to initialize a lookup Map keyed by a simple formatted string (e.g., `YYYY-MM-DD`). Then use O(1) Map lookups in the outer rendering loop to fetch the day's events, significantly reducing time complexity and allocation pressure.
 
 ## 2025-02-12 - Eliminate Array.find and Regex operations per item in lists
 
@@ -27,8 +37,3 @@
 
 **Learning:** In `hooks/queries/useGroceryList.ts`, the loop allocating `pantryItem.synonyms?.map(...)` on every iteration of a doubly-nested loop mapping unmatched ingredients against pantry items causes massive array allocation penalties and GC pressure (e.g., thousands of times per generation).
 **Action:** Lift the array transformation out of the inner loop, or modify the matching utility (`isIngredientMatch`) to accept the raw array of objects so mapping is completely avoided.
-
-## 2025-02-06 - Date Instantiation Bottleneck in Calendar Loops
-
-**Learning:** Instantiating `new Date(dateString)` inside nested loops (like `Array.prototype.filter` or `.find` across an outer days loop) causes O(N*M) redundant object creations, which is computationally expensive for React Native date-grouped components.
-**Action:** When mapping temporal data to calendar UI structures, perform a single O(N) pass to initialize a lookup Map keyed by a simple formatted string (e.g., `YYYY-MM-DD`). Then use O(1) Map lookups in the outer rendering loop to fetch the day's events, significantly reducing time complexity and allocation pressure.
