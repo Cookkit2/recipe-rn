@@ -21,8 +21,21 @@ Community-driven ratings and reviews for recipes. Users can rate (1-5 stars), wr
 | One review per recipe | Yes | Unique constraint on (recipe_id, user_id) |
 | Tips | Separate section | Lightweight content type (max 300 chars), displayed below reviews |
 | Tips per recipe per user | Multiple allowed | Users may have different tips/modifications |
+| Feature toggle | Supabase `feature_flags` table | Remote kill switch for gradual rollout and emergency shutoff |
 
 ## Supabase Schema
+
+### `feature_flags`
+
+| Column | Type | Constraints | Notes |
+|---|---|---|---|
+| `key` | text | PK | e.g. `"ratings_and_reviews"` |
+| `enabled` | boolean | NOT NULL, default false | Toggle for this feature |
+| `updated_at` | timestamptz | NOT NULL, default now() | Track when flag was last changed |
+
+**Seed data:** Insert row with `key = 'ratings_and_reviews', enabled = false`. Flip to `true` when ready to launch.
+
+**RLS:** SELECT public (app reads it). INSERT/UPDATE restricted to service role only (no client writes).
 
 ### `recipe_review`
 
@@ -212,6 +225,25 @@ Recipe Detail Screen
 ```
 
 No WatermelonDB involvement. TanStack Query cache provides client-side caching.
+
+### Feature Flag Hook
+
+**New file: `hooks/queries/useFeatureFlags.ts`**
+
+- `useFeatureFlag(key: string)` — fetches from `feature_flags` table, returns `{ enabled, isLoading }`.
+- Cached by TanStack Query with `staleTime: 5 minutes` (flags change infrequently).
+- When `enabled` is false, all review/tip components render nothing. The recipe detail screen skips the rating summary, reviews list, and tips sections entirely.
+- Review API functions check the flag and return early with empty results when disabled, as a safety net against direct API calls.
+
+**Usage in components:**
+```tsx
+const { enabled: reviewsEnabled, isLoading: flagsLoading } = useFeatureFlag('ratings_and_reviews');
+
+// Conditionally render sections
+{reviewsEnabled && <RatingSummary ... />}
+{reviewsEnabled && <ReviewsList ... />}
+{reviewsEnabled && <TipsList ... />}
+```
 
 ## UI Components
 
