@@ -25,7 +25,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   private currentSession: AuthSession | null = null;
 
   // Allowed schemes and domains for OAuth redirects
-  private readonly ALLOWED_SCHEMES = ["cookkit", "recipe-app", "exp", "https"];
+  private readonly ALLOWED_SCHEMES = ["cookkit", "exp", "https"];
   private readonly ALLOWED_DOMAINS = ["cookkit.app", "auth.cookkit.app"];
 
   constructor() {

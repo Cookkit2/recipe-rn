@@ -2,7 +2,7 @@ import { Q, type Model } from "@nozbe/watermelondb";
 import { databaseFacade } from "~/data/db/DatabaseFacade";
 import { baseIngredientApi } from "~/data/supabase-api/BaseIngredientApi";
 import { database } from "~/data/db/database";
-import type { Stock } from "~/data/db/models";
+import type { Stock, StepsToStore } from "~/data/db/models";
 import type IngredientCategory from "~/data/db/models/IngredientCategory";
 import type IngredientSynonym from "~/data/db/models/IngredientSynonym";
 import type StockCategory from "~/data/db/models/StockCategory";
@@ -360,7 +360,7 @@ export const pantryApi = {
   ): Promise<PantryItem[]> {
     const createdItems: PantryItem[] = [];
     const stockCollection = database.collections.get("stock");
-    const stockRecordsToCreate: any[] = [];
+    const stockRecordsToCreate: Stock[] = [];
 
     // Prepare all stock items directly in memory
     for (const item of items) {
@@ -374,7 +374,7 @@ export const pantryApi = {
           if (item.background_color) (stock as Stock).backgroundColor = item.background_color;
           if (typeof item.image_url === "string") (stock as Stock).imageUrl = item.image_url;
         });
-        stockRecordsToCreate.push(preparedStock);
+        stockRecordsToCreate.push(preparedStock as Stock);
       } catch (error) {
         log.error(`Failed to prepare pantry item ${item.name}:`, error);
         // Continue with other items instead of failing completely
@@ -389,7 +389,7 @@ export const pantryApi = {
         });
 
         // After batch insert is successful, convert to PantryItem
-        const convertedBatch = await convertStockToPantryItemBatch(stockRecordsToCreate as Stock[]);
+        const convertedBatch = await convertStockToPantryItemBatch(stockRecordsToCreate);
         createdItems.push(...convertedBatch);
       } catch (batchError) {
         log.error("Failed to execute batch insert for pantry items:", batchError);
@@ -522,11 +522,11 @@ const convertStockToPantryItemBatch = async (stocks: Stock[]): Promise<PantryIte
   // Fetch all related entities in parallel
   const synonymCollection = database.collections.get<IngredientSynonym>("ingredient_synonym");
   const stockCategoryCollection = database.collections.get<StockCategory>("stock_category");
-  const stepsCollection = database.collections.get("steps_to_store"); // no typed model imported
+  const stepsCollection = database.collections.get<StepsToStore>("steps_to_store");
 
   let allSynonyms: IngredientSynonym[] = [];
   let allStockCategories: StockCategory[] = [];
-  let allSteps: any[] = [];
+  let allSteps: StepsToStore[] = [];
 
   try {
     const [synonymsResult, categoriesResult, stepsResult] = await Promise.all([
@@ -561,7 +561,7 @@ const convertStockToPantryItemBatch = async (stocks: Stock[]): Promise<PantryIte
 
     allSynonyms = synonymsResult as IngredientSynonym[];
     allStockCategories = categoriesResult as StockCategory[];
-    allSteps = stepsResult as any[];
+    allSteps = stepsResult as StepsToStore[];
   } catch (error) {
     log.error("Error fetching batch relations", error);
   }
@@ -571,10 +571,8 @@ const convertStockToPantryItemBatch = async (stocks: Stock[]): Promise<PantryIte
   const categoryIds = new Set<string>();
 
   allStockCategories.forEach((sc) => {
-    if ((sc as any).category_id || (sc as any).categoryId || (sc as any)._raw?.category_id) {
-      categoryIds.add(
-        (sc as any).category_id || (sc as any).categoryId || (sc as any)._raw?.category_id
-      );
+    if (sc.categoryId) {
+      categoryIds.add(sc.categoryId);
     }
   });
 
@@ -605,44 +603,28 @@ const convertStockToPantryItemBatch = async (stocks: Stock[]): Promise<PantryIte
   >();
 
   allSynonyms.forEach((s) => {
-    const list =
-      synonymsByStockId.get(
-        (s as any).stock_id || (s as any).stockId || (s as any)._raw?.stock_id
-      ) || [];
+    const list = synonymsByStockId.get(s.stockId) || [];
     list.push({ id: s.id, synonym: s.synonym });
-    synonymsByStockId.set(
-      (s as any).stock_id || (s as any).stockId || (s as any)._raw?.stock_id,
-      list
-    );
+    synonymsByStockId.set(s.stockId, list);
   });
 
   allStockCategories.forEach((sc) => {
-    const list =
-      categoriesByStockId.get(
-        (sc as any).stock_id || (sc as any).stockId || (sc as any)._raw?.stock_id
-      ) || [];
-    const ingredientCat = ingredientCategoryMap.get(
-      (sc as any).category_id || (sc as any).categoryId || (sc as any)._raw?.category_id
-    );
+    const list = categoriesByStockId.get(sc.stockId) || [];
+    const ingredientCat = ingredientCategoryMap.get(sc.categoryId);
     if (ingredientCat) {
       list.push({ id: ingredientCat.id, name: ingredientCat.name });
     }
-    categoriesByStockId.set(
-      (sc as any).stock_id || (sc as any).stockId || (sc as any)._raw?.stock_id,
-      list
-    );
+    categoriesByStockId.set(sc.stockId, list);
   });
 
   allSteps.forEach((s) => {
-    // WatermelonDB models have properties matching column names but mapped to camelCase by decorators
-    // For raw records it depends on the model. Assuming s is a Model instance:
-    const stockId = (s as any).stock_id || (s as any).stockId || s._raw.stock_id;
+    const stockId = s.stockId;
     const list = stepsByStockId.get(stockId) || [];
     list.push({
       id: s.id,
-      title: s.title || s._raw?.title,
-      description: s.description || s._raw?.description,
-      sequence: s.sequence || s._raw?.sequence || 0,
+      title: s.title,
+      description: s.description,
+      sequence: s.sequence,
     });
     stepsByStockId.set(stockId, list);
   });
@@ -653,7 +635,7 @@ const convertStockToPantryItemBatch = async (stocks: Stock[]): Promise<PantryIte
     return categories.length === 0;
   });
 
-  const missingCategoriesMap = new Map<string, any[]>();
+  const missingCategoriesMap = new Map<string, Array<{ id: string; name: string }>>();
   if (stocksMissingCategories.length > 0) {
     try {
       const namesToFetch = stocksMissingCategories.map((s) => s.name);

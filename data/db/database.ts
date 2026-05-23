@@ -86,6 +86,8 @@ export const collections = {
   wasteLogs: database.collections.get("waste_log"),
   consumptionLogs: database.collections.get("consumption_log"),
   tailoredRecipeMappings: database.collections.get("tailored_recipe_mapping"),
+  households: database.collections.get("household"),
+  householdMembers: database.collections.get("household_member"),
 };
 
 log.info("✅ Database collections initialized");

@@ -23,6 +23,6 @@ describe("APP_CONFIG", () => {
   });
 
   it("should have correct deep link scheme", () => {
-    expect(APP_CONFIG.DEEP_LINK_SCHEME).toBe("recipe-app");
+    expect(APP_CONFIG.DEEP_LINK_SCHEME).toBe("cookkit");
   });
 });

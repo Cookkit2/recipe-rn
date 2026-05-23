@@ -46,6 +46,46 @@ interface AuthStore {
   _setLoading: (loading: boolean) => void;
 }
 
+async function runWithStrategy(
+  get: () => AuthStore,
+  errorCode: string,
+  action: (strategy: AuthStrategy) => Promise<AuthResult>,
+  errorLabel: string
+): Promise<AuthResult> {
+  const { strategy } = get();
+  if (!strategy) {
+    const error = "No authentication strategy configured";
+    get()._setError(error);
+    return { success: false, error: { code: "NO_STRATEGY", message: error, retryable: false } };
+  }
+
+  get()._setLoading(true);
+  get()._setError(null);
+  get()._setAuthState("loading");
+
+  try {
+    const result = await action(strategy);
+
+    if (result.success && result.user) {
+      get()._setUser(result.user);
+      get()._setSession(result.session || null);
+      get()._setAuthState("authenticated");
+    } else {
+      get()._setAuthState("error");
+      get()._setError(result.error?.message || errorLabel);
+    }
+
+    return result;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    get()._setAuthState("error");
+    get()._setError(errorMessage);
+    return { success: false, error: { code: errorCode, message: errorMessage, retryable: true } };
+  } finally {
+    get()._setLoading(false);
+  }
+}
+
 export const useAuthStore = create<AuthStore>((set, get) => ({
   // Initial state
   user: null,
@@ -71,178 +111,42 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   // Email/password sign in
   signInWithEmail: async (credentials: SignInCredentials) => {
-    const { strategy } = get();
-    if (!strategy) {
-      const error = "No authentication strategy configured";
-      get()._setError(error);
-      return {
-        success: false,
-        error: { code: "NO_STRATEGY", message: error, retryable: false },
-      };
-    }
-
-    get()._setLoading(true);
-    get()._setError(null);
-    get()._setAuthState("loading");
-
-    try {
-      const result = await strategy.signInWithEmail(credentials);
-
-      if (result.success && result.user) {
-        get()._setUser(result.user);
-        get()._setSession(result.session || null);
-        get()._setAuthState("authenticated");
-      } else {
-        get()._setAuthState("error");
-        get()._setError(result.error?.message || "Sign in failed");
-      }
-
-      return result;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-      get()._setAuthState("error");
-      get()._setError(errorMessage);
-      return {
-        success: false,
-        error: { code: "SIGNIN_ERROR", message: errorMessage, retryable: true },
-      };
-    } finally {
-      get()._setLoading(false);
-    }
+    return runWithStrategy(
+      get,
+      "SIGNIN_ERROR",
+      (s) => s.signInWithEmail(credentials),
+      "Sign in failed"
+    );
   },
 
   // Social provider sign in
   signInWithProvider: async (config: SocialAuthConfig) => {
-    const { strategy } = get();
-    if (!strategy) {
-      const error = "No authentication strategy configured";
-      get()._setError(error);
-      return {
-        success: false,
-        error: { code: "NO_STRATEGY", message: error, retryable: false },
-      };
-    }
-
-    get()._setLoading(true);
-    get()._setError(null);
-    get()._setAuthState("loading");
-
-    try {
-      const result = await strategy.signInWithProvider(config);
-
-      if (result.success && result.user) {
-        get()._setUser(result.user);
-        get()._setSession(result.session || null);
-        get()._setAuthState("authenticated");
-      } else {
-        get()._setAuthState("error");
-        get()._setError(result.error?.message || "Social sign in failed");
-      }
-
-      return result;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-      get()._setAuthState("error");
-      get()._setError(errorMessage);
-      return {
-        success: false,
-        error: {
-          code: "SOCIAL_SIGNIN_ERROR",
-          message: errorMessage,
-          retryable: true,
-        },
-      };
-    } finally {
-      get()._setLoading(false);
-    }
+    return runWithStrategy(
+      get,
+      "SOCIAL_SIGNIN_ERROR",
+      (s) => s.signInWithProvider(config),
+      "Social sign in failed"
+    );
   },
 
   // Anonymous sign in
   signInAnonymously: async () => {
-    const { strategy } = get();
-    if (!strategy) {
-      const error = "No authentication strategy configured";
-      get()._setError(error);
-      return {
-        success: false,
-        error: { code: "NO_STRATEGY", message: error, retryable: false },
-      };
-    }
-
-    get()._setLoading(true);
-    get()._setError(null);
-    get()._setAuthState("loading");
-
-    try {
-      const result = await strategy.signInAnonymously();
-
-      if (result.success && result.user) {
-        get()._setUser(result.user);
-        get()._setSession(result.session || null);
-        get()._setAuthState("authenticated");
-      } else {
-        get()._setAuthState("error");
-        get()._setError(result.error?.message || "Anonymous sign in failed");
-      }
-
-      return result;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-      get()._setAuthState("error");
-      get()._setError(errorMessage);
-      return {
-        success: false,
-        error: {
-          code: "ANONYMOUS_SIGNIN_ERROR",
-          message: errorMessage,
-          retryable: true,
-        },
-      };
-    } finally {
-      get()._setLoading(false);
-    }
+    return runWithStrategy(
+      get,
+      "ANONYMOUS_SIGNIN_ERROR",
+      (s) => s.signInAnonymously(),
+      "Anonymous sign in failed"
+    );
   },
 
   // Email/password sign up
   signUpWithEmail: async (credentials: SignInCredentials) => {
-    const { strategy } = get();
-    if (!strategy) {
-      const error = "No authentication strategy configured";
-      get()._setError(error);
-      return {
-        success: false,
-        error: { code: "NO_STRATEGY", message: error, retryable: false },
-      };
-    }
-
-    get()._setLoading(true);
-    get()._setError(null);
-    get()._setAuthState("loading");
-
-    try {
-      const result = await strategy.signUpWithEmail(credentials);
-
-      if (result.success && result.user) {
-        get()._setUser(result.user);
-        get()._setSession(result.session || null);
-        get()._setAuthState("authenticated");
-      } else {
-        get()._setAuthState("error");
-        get()._setError(result.error?.message || "Sign up failed");
-      }
-
-      return result;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-      get()._setAuthState("error");
-      get()._setError(errorMessage);
-      return {
-        success: false,
-        error: { code: "SIGNUP_ERROR", message: errorMessage, retryable: true },
-      };
-    } finally {
-      get()._setLoading(false);
-    }
+    return runWithStrategy(
+      get,
+      "SIGNUP_ERROR",
+      (s) => s.signUpWithEmail(credentials),
+      "Sign up failed"
+    );
   },
 
   // Sign out
@@ -295,92 +199,22 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   // Refresh session
   refreshSession: async () => {
-    const { strategy } = get();
-    if (!strategy) {
-      const error = "No authentication strategy configured";
-      get()._setError(error);
-      return {
-        success: false,
-        error: { code: "NO_STRATEGY", message: error, retryable: false },
-      };
-    }
-
-    get()._setLoading(true);
-    get()._setError(null);
-
-    try {
-      const result = await strategy.refreshSession();
-
-      if (result.success && result.user) {
-        get()._setUser(result.user);
-        get()._setSession(result.session || null);
-        get()._setAuthState("authenticated");
-      } else {
-        get()._setAuthState("error");
-        get()._setError(result.error?.message || "Session refresh failed");
-      }
-
-      return result;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-      get()._setAuthState("error");
-      get()._setError(errorMessage);
-      return {
-        success: false,
-        error: {
-          code: "REFRESH_ERROR",
-          message: errorMessage,
-          retryable: true,
-        },
-      };
-    } finally {
-      get()._setLoading(false);
-    }
+    return runWithStrategy(
+      get,
+      "REFRESH_ERROR",
+      (s) => s.refreshSession(),
+      "Session refresh failed"
+    );
   },
 
   // Link anonymous account
   linkAnonymousAccount: async (credentials: LinkAccountCredentials) => {
-    const { strategy } = get();
-    if (!strategy) {
-      const error = "No authentication strategy configured";
-      get()._setError(error);
-      return {
-        success: false,
-        error: { code: "NO_STRATEGY", message: error, retryable: false },
-      };
-    }
-
-    get()._setLoading(true);
-    get()._setError(null);
-
-    try {
-      const result = await strategy.linkAnonymousAccount(credentials);
-
-      if (result.success && result.user) {
-        get()._setUser(result.user);
-        get()._setSession(result.session || null);
-        get()._setAuthState("authenticated");
-      } else {
-        get()._setAuthState("error");
-        get()._setError(result.error?.message || "Account linking failed");
-      }
-
-      return result;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-      get()._setAuthState("error");
-      get()._setError(errorMessage);
-      return {
-        success: false,
-        error: {
-          code: "LINK_ACCOUNT_ERROR",
-          message: errorMessage,
-          retryable: true,
-        },
-      };
-    } finally {
-      get()._setLoading(false);
-    }
+    return runWithStrategy(
+      get,
+      "LINK_ACCOUNT_ERROR",
+      (s) => s.linkAnonymousAccount(credentials),
+      "Account linking failed"
+    );
   },
 
   // Reset password

@@ -9,6 +9,7 @@ import {
   MessageSquareHeartIcon,
   SettingsIcon,
   TrophyIcon,
+  UsersIcon,
 } from "lucide-uniwind";
 import React, { useCallback } from "react";
 import { View, Platform, Linking, ScrollView } from "react-native";
@@ -166,6 +167,19 @@ export default function ProfileScreen() {
               onPress={() => router.push("/profile/notification")}
             /> */}
             <ListButton title="Contact Us" icon={MailIcon} onPress={handleContactUs} />
+          </CardContent>
+        </View>
+      </View>
+
+      <View className="mt-12">
+        <P className="text-foreground/60 font-urbanist-semibold px-6 mb-2">Account</P>
+        <View className="mx-6 rounded-2xl bg-muted/50 overflow-hidden border-continuous">
+          <CardContent className="flex p-0 py-2">
+            <ListButton
+              title="Household"
+              icon={UsersIcon}
+              onPress={() => router.push("/profile/household" as any)}
+            />
           </CardContent>
         </View>
       </View>

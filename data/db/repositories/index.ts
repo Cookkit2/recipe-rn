@@ -15,6 +15,8 @@ import { UserChallengeRepository } from "./UserChallengeRepository";
 import { WasteLogRepository } from "./WasteLogRepository";
 import { RecipeVersionRepository } from "./RecipeVersionRepository";
 import { ConsumptionLogRepository } from "./ConsumptionLogRepository";
+import { HouseholdRepository } from "./HouseholdRepository";
+import { HouseholdMemberRepository } from "./HouseholdMemberRepository";
 
 // Export all repositories for easy importing
 export { BaseRepository } from "./BaseRepository";
@@ -33,6 +35,8 @@ export { ChallengeRepository } from "./ChallengeRepository";
 export { UserChallengeRepository } from "./UserChallengeRepository";
 export { WasteLogRepository } from "./WasteLogRepository";
 export { RecipeVersionRepository } from "./RecipeVersionRepository";
+export { HouseholdRepository } from "./HouseholdRepository";
+export { HouseholdMemberRepository } from "./HouseholdMemberRepository";
 
 // Export repository interfaces
 export type { PaginationOptions, SearchOptions } from "./BaseRepository";
@@ -64,6 +68,8 @@ export let userChallengeRepository: UserChallengeRepository | null = null;
 export let wasteLogRepository: WasteLogRepository | null = null;
 export let recipeVersionRepository: RecipeVersionRepository | null = null;
 export let consumptionLogRepository: ConsumptionLogRepository | null = null;
+export let householdRepository: HouseholdRepository | null = null;
+export let householdMemberRepository: HouseholdMemberRepository | null = null;
 
 // Initialize repositories - called by DatabaseFacade
 export function initializeRepositories() {
@@ -116,9 +122,17 @@ export function initializeRepositories() {
   if (!consumptionLogRepository) {
     consumptionLogRepository = new ConsumptionLogRepository();
   }
+  if (!householdRepository) {
+    householdRepository = new HouseholdRepository();
+  }
+  if (!householdMemberRepository) {
+    householdMemberRepository = new HouseholdMemberRepository();
+  }
 
   return {
     consumptionLogRepository,
+    householdRepository,
+    householdMemberRepository,
     recipeRepository,
     stockRepository,
     cookingHistoryRepository,

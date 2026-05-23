@@ -48,9 +48,9 @@ describe("initImageCache", () => {
 
     expect(Image.configureCache).toHaveBeenCalledTimes(1);
     expect(Image.configureCache).toHaveBeenCalledWith({
-      maxDiskSize: 200 * 1024 * 1024,
-      maxMemoryCost: 50 * 1024 * 1024,
-      maxMemoryCount: 100,
+      maxDiskSize: 500 * 1024 * 1024,
+      maxMemoryCost: 100 * 1024 * 1024,
+      maxMemoryCount: 200,
     });
     expect(log.info).toHaveBeenCalledWith("[image-cache] Cache configured (iOS)");
   });
@@ -71,7 +71,7 @@ describe("initImageCache", () => {
     expect(Image.configureCache).toHaveBeenCalledTimes(1);
     expect(Image.configureCache).toHaveBeenCalledWith({
       maxDiskSize: 100 * 1024 * 1024, // Custom override
-      maxMemoryCost: 50 * 1024 * 1024, // Default fallback
+      maxMemoryCost: 100 * 1024 * 1024, // Default fallback
       maxMemoryCount: 50, // Custom override
     });
   });
@@ -100,7 +100,7 @@ describe("initImageCache", () => {
 
     expect(Image.configureCache).not.toHaveBeenCalled();
     expect(log.info).toHaveBeenCalledWith(
-      "[image-cache] configureCache is iOS-only; skipping on android"
+      "[image-cache] iOS-only configureCache skipped on android; native cache (Glide/Browser) handles this"
     );
   });
 

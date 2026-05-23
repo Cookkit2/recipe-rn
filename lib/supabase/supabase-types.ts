@@ -297,49 +297,55 @@ export type Database = {
       };
       stock: {
         Row: {
-          base_ingredient_id: string | null;
-          category: string | null;
-          created_at: string | null;
-          expiry_date: string | null;
           id: string;
-          image_url: string | null;
           name: string;
+          base_ingredient_id: string | null;
           quantity: number | null;
-          scale: number | null;
           unit: string | null;
-          updated_at: string | null;
+          expiry_date: string | null;
+          category: string | null;
+          image_url: string | null;
           x: number | null;
           y: number | null;
+          scale: number | null;
+          household_id: string | null;
+          added_by_user_id: string | null;
+          created_at: string | null;
+          updated_at: string | null;
         };
         Insert: {
-          base_ingredient_id?: string | null;
-          category?: string | null;
-          created_at?: string | null;
-          expiry_date?: string | null;
           id?: string;
-          image_url?: string | null;
           name: string;
+          base_ingredient_id?: string | null;
           quantity?: number | null;
-          scale?: number | null;
           unit?: string | null;
-          updated_at?: string | null;
+          expiry_date?: string | null;
+          category?: string | null;
+          image_url?: string | null;
           x?: number | null;
           y?: number | null;
+          scale?: number | null;
+          household_id?: string | null;
+          added_by_user_id?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
         };
         Update: {
-          base_ingredient_id?: string | null;
-          category?: string | null;
-          created_at?: string | null;
-          expiry_date?: string | null;
           id?: string;
-          image_url?: string | null;
           name?: string;
+          base_ingredient_id?: string | null;
           quantity?: number | null;
-          scale?: number | null;
           unit?: string | null;
-          updated_at?: string | null;
+          expiry_date?: string | null;
+          category?: string | null;
+          image_url?: string | null;
           x?: number | null;
           y?: number | null;
+          scale?: number | null;
+          household_id?: string | null;
+          added_by_user_id?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
         };
         Relationships: [
           {
@@ -583,6 +589,78 @@ export type Database = {
           },
           {
             foreignKeyName: "tip_helpful_vote_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      households: {
+        Row: {
+          id: string;
+          name: string;
+          invite_code: string;
+          invite_expires_at: string;
+          max_members: number;
+          created_by: string;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          invite_code: string;
+          invite_expires_at: string;
+          max_members?: number;
+          created_by: string;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          invite_code?: string;
+          invite_expires_at?: string;
+          max_members?: number;
+          created_by?: string;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
+      household_members: {
+        Row: {
+          id: string;
+          household_id: string;
+          user_id: string;
+          display_name: string | null;
+          joined_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          household_id: string;
+          user_id: string;
+          display_name?: string | null;
+          joined_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          household_id?: string;
+          user_id?: string;
+          display_name?: string | null;
+          joined_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "household_members_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "household_members_user_id_fkey";
             columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "users";

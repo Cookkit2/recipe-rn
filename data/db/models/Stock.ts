@@ -18,6 +18,9 @@ export interface StockData {
   x?: number;
   y?: number;
   scale?: number;
+  householdId?: string;
+  addedByUserId?: string;
+  supabaseId?: string;
 }
 
 export default class Stock extends Model {
@@ -40,6 +43,9 @@ export default class Stock extends Model {
   @field("x") x?: number;
   @field("y") y?: number;
   @field("scale") scale?: number;
+  @field("household_id") householdId?: string;
+  @field("added_by_user_id") addedByUserId?: string;
+  @field("supabase_id") supabaseId?: string;
 
   @children("ingredient_synonym") synonyms!: Query<IngredientSynonym>;
   @children("stock_category") stockCategories!: Query<StockCategory>;
@@ -86,6 +92,9 @@ export default class Stock extends Model {
       if (data.x !== undefined) stock.x = data.x;
       if (data.y !== undefined) stock.y = data.y;
       if (data.scale !== undefined) stock.scale = data.scale;
+      if (data.householdId !== undefined) stock.householdId = data.householdId;
+      if (data.addedByUserId !== undefined) stock.addedByUserId = data.addedByUserId;
+      if (data.supabaseId !== undefined) stock.supabaseId = data.supabaseId;
     });
   }
 }

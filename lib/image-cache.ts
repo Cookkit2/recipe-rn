@@ -3,9 +3,9 @@ import { Image } from "expo-image";
 import type { ImageCacheConfig } from "expo-image";
 import { log } from "~/utils/logger";
 
-const DEFAULT_MAX_DISK_SIZE = 200 * 1024 * 1024; // 200 MB
-const DEFAULT_MAX_MEMORY_COST = 50 * 1024 * 1024; // 50 MB
-const DEFAULT_MAX_MEMORY_COUNT = 100;
+const DEFAULT_MAX_DISK_SIZE = 500 * 1024 * 1024; // 500 MB
+const DEFAULT_MAX_MEMORY_COST = 100 * 1024 * 1024; // 100 MB
+const DEFAULT_MAX_MEMORY_COUNT = 200;
 
 let initialized = false;
 
@@ -20,7 +20,11 @@ export function initImageCache(config?: Partial<ImageCacheConfig>): void {
 
   if (Platform.OS !== "ios") {
     if (__DEV__) {
-      log.info("[image-cache] configureCache is iOS-only; skipping on " + Platform.OS);
+      log.info(
+        "[image-cache] iOS-only configureCache skipped on " +
+          Platform.OS +
+          "; native cache (Glide/Browser) handles this"
+      );
     }
     return;
   }
