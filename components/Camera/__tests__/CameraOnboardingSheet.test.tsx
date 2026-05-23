@@ -26,7 +26,7 @@ jest.mock("~/components/ui/button", () => {
 import CameraOnboardingSheet from "../CameraOnboardingSheet";
 
 // Mock dependencies
-jest.mock("@gorhom/bottom-sheet", () => {
+jest.mock("@expo/ui/community/bottom-sheet", () => {
   const React = require("react");
   const { View } = require("react-native");
 
