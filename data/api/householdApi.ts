@@ -7,6 +7,7 @@ import { isValidSubscription } from "~/utils/subscription-utils";
 import { database } from "~/data/db/database";
 import type Household from "~/data/db/models/Household";
 import type HouseholdMember from "~/data/db/models/HouseholdMember";
+import type Stock from "~/data/db/models/Stock";
 import { log } from "~/utils/logger";
 
 /**
@@ -23,17 +24,17 @@ export const householdApiFunctions = {
 
     const memberCollection = database.collections.get("household_member");
     const members = await memberCollection.query().fetch();
-    const myMembership = members.find((m: any) => m.userId === user.id);
+    const myMembership = members.find((m) => (m as HouseholdMember).userId === user.id) as
+      | HouseholdMember
+      | undefined;
 
     if (!myMembership) return null;
 
     const householdCollection = database.collections.get("household");
     try {
-      const household = (await householdCollection.find(
-        (myMembership as any).householdId
-      )) as Household;
-      if ((household as any).supabaseId) {
-        householdRealtimeService.subscribe((household as any).supabaseId as string);
+      const household = (await householdCollection.find(myMembership.householdId)) as Household;
+      if (household.supabaseId) {
+        householdRealtimeService.subscribe(household.supabaseId);
       }
       return household;
     } catch {
@@ -99,23 +100,25 @@ export const householdApiFunctions = {
     const memberCollection = database.collections.get("household_member");
 
     const localHousehold = await database.write(async () => {
-      const hh = await (householdCollection as any).create((record: any) => {
-        record.supabaseId = supabaseHousehold.id;
-        record.name = name;
-        record.inviteCode = inviteCode;
-        record.inviteExpiresAt = new Date(supabaseHousehold.invite_expires_at).getTime();
-        record.maxMembers = maxMembers;
-        record.createdByUserId = user.id;
+      const hh = await householdCollection.create((record) => {
+        const hh = record as Household;
+        hh.supabaseId = supabaseHousehold.id;
+        hh.name = name;
+        hh.inviteCode = inviteCode;
+        hh.inviteExpiresAt = new Date(supabaseHousehold.invite_expires_at).getTime();
+        hh.maxMembers = maxMembers;
+        hh.createdByUserId = user.id;
       });
 
-      await (memberCollection as any).create((record: any) => {
-        record.supabaseId = supabaseHousehold.id;
-        record.householdId = hh.id;
-        record.userId = user.id;
-        record.joinedAt = Date.now();
+      await memberCollection.create((record) => {
+        const member = record as HouseholdMember;
+        member.supabaseId = supabaseHousehold.id;
+        member.householdId = hh.id;
+        member.userId = user.id;
+        member.joinedAt = new Date();
       });
 
-      return hh;
+      return hh as Household;
     });
 
     // Seed household: assign all existing user stock items to this household
@@ -124,10 +127,11 @@ export const householdApiFunctions = {
 
     if (allStock.length > 0) {
       await database.write(async () => {
-        const batchOps = allStock.map((stock: any) =>
-          stock.prepareUpdate((record: any) => {
-            record.householdId = supabaseHousehold.id;
-            record.addedByUserId = user.id;
+        const batchOps = allStock.map((stock) =>
+          stock.prepareUpdate((record) => {
+            const s = record as Stock;
+            s.householdId = supabaseHousehold.id;
+            s.addedByUserId = user.id;
           })
         );
         await database.batch(batchOps);
@@ -182,20 +186,22 @@ export const householdApiFunctions = {
     const memberCollection = database.collections.get("household_member");
 
     await database.write(async () => {
-      const hh = await (householdCollection as any).create((record: any) => {
-        record.supabaseId = household.id;
-        record.name = household.name;
-        record.inviteCode = household.invite_code;
-        record.inviteExpiresAt = new Date(household.invite_expires_at).getTime();
-        record.maxMembers = household.max_members;
-        record.createdByUserId = household.created_by;
+      const hh = await householdCollection.create((record) => {
+        const h = record as Household;
+        h.supabaseId = household.id;
+        h.name = household.name;
+        h.inviteCode = household.invite_code;
+        h.inviteExpiresAt = new Date(household.invite_expires_at).getTime();
+        h.maxMembers = household.max_members;
+        h.createdByUserId = household.created_by;
       });
 
-      await (memberCollection as any).create((record: any) => {
-        record.supabaseId = household.id;
-        record.householdId = hh.id;
-        record.userId = user.id;
-        record.joinedAt = Date.now();
+      await memberCollection.create((record) => {
+        const member = record as HouseholdMember;
+        member.supabaseId = household.id;
+        member.householdId = hh.id;
+        member.userId = user.id;
+        member.joinedAt = new Date();
       });
     });
 
@@ -221,7 +227,7 @@ export const householdApiFunctions = {
     // Remove shared stock from local DB
     const stockCollection = database.collections.get("stock");
     const sharedStock = await stockCollection.query().fetch();
-    const householdStock = sharedStock.filter((s: any) => s.householdId === householdId);
+    const householdStock = sharedStock.filter((s) => (s as Stock).householdId === householdId);
 
     await database.write(async () => {
       const batchOps: import("@nozbe/watermelondb").Model[] = [];
@@ -229,14 +235,14 @@ export const householdApiFunctions = {
       // Remove household member record
       const memberCollection = database.collections.get("household_member");
       const myMembership = (await memberCollection.query().fetch()).find(
-        (m: any) => m.userId === user.id
+        (m) => (m as HouseholdMember).userId === user.id
       );
       if (myMembership) {
         batchOps.push(myMembership.prepareDestroyPermanently());
       }
 
       // Remove shared stock items from local DB (they stay in Supabase for other members)
-      const stockOps = householdStock.map((stock: any) => stock.prepareDestroyPermanently());
+      const stockOps = householdStock.map((stock) => stock.prepareDestroyPermanently());
       batchOps.push(...stockOps);
 
       // Remove household record
@@ -279,12 +285,12 @@ export const householdApiFunctions = {
 
       // Clear household_id on all shared stock
       const sharedStock = (await stockCollection.query().fetch()).filter(
-        (s: any) => s.householdId === householdSupabaseId
+        (s) => (s as Stock).householdId === householdSupabaseId
       );
       for (const stock of sharedStock) {
         batchOps.push(
-          stock.prepareUpdate((record: any) => {
-            record.householdId = null;
+          stock.prepareUpdate((record) => {
+            (record as Stock).householdId = undefined;
           })
         );
       }
@@ -325,9 +331,9 @@ export const householdApiFunctions = {
     const householdCollection = database.collections.get("household");
     await database.write(async () => {
       const hh = await householdCollection.find(householdId);
-      await hh.update((record: any) => {
-        record.inviteCode = newCode;
-        record.inviteExpiresAt = new Date(expiresAt).getTime();
+      await hh.update((record) => {
+        (record as Household).inviteCode = newCode;
+        (record as Household).inviteExpiresAt = new Date(expiresAt).getTime();
       });
     });
 
@@ -350,11 +356,11 @@ export const householdApiFunctions = {
     // Remove local member record
     const memberCollection = database.collections.get("household_member");
     const members = await memberCollection.query().fetch();
-    const targetMember = members.find((m: any) => m.userId === memberUserId);
+    const targetMember = members.find((m) => (m as HouseholdMember).userId === memberUserId);
 
     if (targetMember) {
       await database.write(async () => {
-        await (targetMember as any).destroyPermanently();
+        await targetMember.destroyPermanently();
       });
     }
   },
@@ -369,8 +375,8 @@ export const householdApiFunctions = {
     const householdCollection = database.collections.get("household");
     await database.write(async () => {
       const hh = await householdCollection.find(householdId);
-      await (hh as any).update((record: any) => {
-        record.name = newName;
+      await hh.update((record) => {
+        (record as Household).name = newName;
       });
     });
   },
