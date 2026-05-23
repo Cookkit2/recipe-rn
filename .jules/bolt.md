@@ -37,3 +37,8 @@
 
 **Learning:** In `hooks/queries/useGroceryList.ts`, the loop allocating `pantryItem.synonyms?.map(...)` on every iteration of a doubly-nested loop mapping unmatched ingredients against pantry items causes massive array allocation penalties and GC pressure (e.g., thousands of times per generation).
 **Action:** Lift the array transformation out of the inner loop, or modify the matching utility (`isIngredientMatch`) to accept the raw array of objects so mapping is completely avoided.
+
+## 2025-02-13 - Eliminate Unnecessary O(N) Re-renders with useMemo
+
+**Learning:** When creating custom hooks that return derived state based on arrays (like `usePantryItemsByType`), using `filter` without `useMemo` returns a newly allocated array reference on every render. This completely breaks referential equality checks in downstream components (e.g., those using `memo` or `FlatList`), causing a cascade of redundant rendering cycles even when the underlying data has not changed.
+**Action:** Wrap array transformations within custom hooks in `useMemo`, passing only the necessary source array and filter criteria as dependencies. This guarantees stable references and prevents O(N) computational and rendering overhead.

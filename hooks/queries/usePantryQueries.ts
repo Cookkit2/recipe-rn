@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { pantryQueryKeys } from "./pantryQueryKeys";
 import { recipeQueryKeys } from "./recipeQueryKeys";
 import type { ItemType, PantryItem } from "~/types/PantryItem";
@@ -56,15 +57,18 @@ export function usePantryItems() {
 export function usePantryItemsByType(type: ItemType) {
   const { data: allItems, ...rest } = usePantryItems();
 
-  if (type === "all")
-    return {
-      ...rest,
-      data: allItems ?? [],
-    };
+  // Optimization: Memoize the filtered array to prevent O(N) filtering on every render
+  // and to maintain referential equality, which prevents unnecessary re-renders
+  // of downstream components like IngredientLists and FlatList items.
+  // Expected impact: Eliminates redundant array allocations per hook call.
+  const filteredData = useMemo(() => {
+    if (type === "all") return allItems ?? [];
+    return allItems?.filter((item) => item.type === type) ?? [];
+  }, [allItems, type]);
 
   return {
     ...rest,
-    data: allItems?.filter((item) => item.type === type) ?? [],
+    data: filteredData,
   };
 }
 
