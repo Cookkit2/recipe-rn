@@ -4,6 +4,7 @@ import { P } from "~/components/ui/typography";
 import type { DayMealPlan, MealSlot } from "~/types/MealPlan";
 import { MEAL_SLOTS } from "~/types/MealPlan";
 import MealSlotComponent from "./MealSlot";
+import DailyNutritionBar from "./DailyNutritionBar";
 
 interface DayColumnProps {
   /**
@@ -78,6 +79,19 @@ export default function DayColumn({
           />
         ))}
       </View>
+
+      {/* Daily Nutrition Summary */}
+      <DailyNutritionBar
+        recipes={Object.values(dayMealPlan.meals)
+          .filter((m): m is NonNullable<typeof m> => m != null && m.recipe != null)
+          .map((m) => ({
+            calories: m.recipe!.calories,
+            protein: m.recipe!.protein,
+            carbs: m.recipe!.carbs,
+            fat: m.recipe!.fat,
+            fiber: m.recipe!.fiber,
+          }))}
+      />
     </View>
   );
 }

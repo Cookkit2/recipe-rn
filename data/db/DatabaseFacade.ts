@@ -116,6 +116,8 @@ export interface DatabaseStats {
   recipes: number;
   stockItems: number;
   cookingHistory: number;
+  ingredients?: number;
+  categories?: number;
   totalRecords: number;
 }
 

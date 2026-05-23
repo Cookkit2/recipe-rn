@@ -3,7 +3,16 @@ import { View, TextInput, Platform } from "react-native";
 import GridButtons from "~/components/Shared/GridButtons";
 import { Card, CardContent } from "~/components/ui/card";
 import { H4, P } from "~/components/ui/typography";
-import { MilkIcon, EggIcon, NutIcon, FishIcon, ShrimpIcon, WheatIcon } from "lucide-uniwind";
+import {
+  MilkIcon,
+  EggIcon,
+  NutIcon,
+  FishIcon,
+  ShrimpIcon,
+  WheatIcon,
+  BeanIcon,
+  CircleDotIcon,
+} from "lucide-uniwind";
 import { toggleFromArray } from "~/utils/array-helper";
 import type { GroupButton } from "~/components/Shared/SegmentedButtons";
 import { PREF_ALLERGENS_KEY, PREF_OTHER_ALLERGENS_KEY } from "~/constants/storage-keys";
@@ -11,7 +20,16 @@ import { useQueryClient } from "@tanstack/react-query";
 import { recipeQueryKeys } from "~/hooks/queries/recipeQueryKeys";
 import useLocalStorageState from "~/hooks/useLocalStorageState";
 
-export type Allergen = "milk" | "eggs" | "nuts" | "fish" | "shellfish" | "wheat";
+export type Allergen =
+  | "milk"
+  | "eggs"
+  | "nuts"
+  | "fish"
+  | "shellfish"
+  | "wheat"
+  | "soy"
+  | "peanuts"
+  | "sesame";
 
 const ALLERGEN_OPTIONS: GroupButton<Allergen>[] = [
   { label: "Milk (dairy)", icon: <MilkIcon />, value: "milk" },
@@ -20,6 +38,9 @@ const ALLERGEN_OPTIONS: GroupButton<Allergen>[] = [
   { label: "Fish", icon: <FishIcon />, value: "fish" },
   { label: "Shellfish", icon: <ShrimpIcon />, value: "shellfish" },
   { label: "Wheat", icon: <WheatIcon />, value: "wheat" },
+  { label: "Soy", icon: <BeanIcon />, value: "soy" },
+  { label: "Peanuts", icon: <NutIcon />, value: "peanuts" },
+  { label: "Sesame", icon: <CircleDotIcon />, value: "sesame" },
 ];
 
 export default function AllergySection() {

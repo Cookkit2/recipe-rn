@@ -7,6 +7,7 @@ import {
   databaseFacade,
   type AvailableRecipesResult,
   type RecipeWithDetails,
+  type DatabaseStats,
 } from "~/data/db/DatabaseFacade";
 import type Recipe from "~/data/db/models/Recipe";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -15,7 +16,7 @@ import { ArrowLeftIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-uniwind";
 import { useRefreshPantryItems } from "~/hooks/queries/usePantryQueries";
 import { storage } from "~/data";
 import { recipeApi } from "~/data/api/recipeApi";
-import { mealPlanApi } from "~/data/api/mealPlanApi";
+import { mealPlanApi, type MealPlanItemWithRecipe } from "~/data/api/mealPlanApi";
 import {
   ONBOARDING_COMPLETED_KEY,
   PREFERENCE_COMPLETED_KEY,
@@ -33,11 +34,11 @@ export default function DebugScreen() {
   const { top } = useSafeAreaInsets();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<DatabaseStats | null>(null);
 
   // Get context refresh functions
   const { refresh } = useRefreshPantryItems();
-  const [mealPlanData, setMealPlanData] = useState<any[]>([]);
+  const [mealPlanData, setMealPlanData] = useState<MealPlanItemWithRecipe[]>([]);
 
   // Database inspection states (from debug-db)
   const [inspectionLoading, setInspectionLoading] = useState(false);
@@ -405,7 +406,7 @@ export default function DebugScreen() {
                       <P className="ml-2 mt-2">
                         🔶 Partial: {recommendations.partiallyCanMake.length} recipes
                       </P>
-                      {recommendations.partiallyCanMake.slice(0, 3).map((item, i: number) => (
+                      {recommendations.partiallyCanMake.slice(0, 3).map((item: any, i: number) => (
                         <P key={i} className="ml-6 text-sm">
                           • {item.recipe.title} ({item.completionPercentage}%)
                         </P>

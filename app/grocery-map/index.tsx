@@ -1,7 +1,7 @@
 import React, { useRef, useState, useCallback, useMemo } from "react";
 import { View, StyleSheet, ActivityIndicator, Text } from "react-native";
 import { Stack } from "expo-router";
-import BottomSheet from "@gorhom/bottom-sheet";
+import BottomSheet, { type BottomSheetMethods } from "@expo/ui/community/bottom-sheet";
 import { MapLayer } from "~/components/GroceryMap/MapLayer";
 import { MiniStoreList } from "~/components/GroceryMap/MiniStoreList";
 import { StoreInfoCard, type StoreInfo } from "~/components/GroceryMap/StoreInfoCard";
@@ -32,7 +32,7 @@ export default function GroceryMapPage() {
 
   const storesWithDistance = useDistanceCalculation(location, stores);
 
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const bottomSheetRef = useRef<BottomSheetMethods>(null);
 
   const handleStoreSelect = useCallback((storeId: string) => {
     setSelectedStore(storeId);

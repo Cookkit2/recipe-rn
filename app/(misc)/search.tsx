@@ -1,6 +1,9 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { View, Keyboard, Pressable, TouchableOpacity, FlatList, StyleSheet } from "react-native";
-import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import BottomSheet, {
+  BottomSheetScrollView,
+  type BottomSheetMethods,
+} from "@expo/ui/community/bottom-sheet";
 import { Portal } from "@rn-primitives/portal";
 import { cn } from "~/lib/utils";
 import { Stack, useFocusEffect, useRouter } from "expo-router";
@@ -15,6 +18,7 @@ import { IngredientResults } from "~/components/Search/IngredientResults";
 import { RecipeResults } from "~/components/Search/RecipeResults";
 import useColors from "~/hooks/useColor";
 import * as Haptics from "expo-haptics";
+import { useFeatureFlag } from "~/hooks/queries/useFeatureFlags";
 
 const TIME_OPTIONS = [
   { label: "15m", maxTotalTime: 15 },
@@ -36,7 +40,7 @@ export default function SearchScreen() {
   const colors = useColors();
   const router = useRouter();
   const searchBarRef = useRef<SearchBarCommands>(null);
-  const filterSheetRef = useRef<BottomSheet>(null);
+  const filterSheetRef = useRef<BottomSheetMethods>(null);
   const filterSnapPoints = useMemo(() => ["55%"], []);
 
   const [input, setInput] = useState("");
@@ -49,13 +53,20 @@ export default function SearchScreen() {
   } | null>(null);
   const [selectedDifficulty, setSelectedDifficulty] = useState<number | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [minRating, setMinRating] = useState<number | null>(null);
 
   const hasFilters =
-    selectedTime !== null || selectedDifficulty !== null || selectedTags.length > 0;
+    selectedTime !== null ||
+    selectedDifficulty !== null ||
+    selectedTags.length > 0 ||
+    minRating !== null;
   const trimmedInput = input.trim();
   const hasQuery = trimmedInput.length > 0 || hasFilters;
   const activeFilterCount =
-    (selectedTime ? 1 : 0) + (selectedDifficulty ? 1 : 0) + selectedTags.length;
+    (selectedTime ? 1 : 0) +
+    (selectedDifficulty ? 1 : 0) +
+    selectedTags.length +
+    (minRating ? 1 : 0);
 
   const activeFilters = useMemo(() => {
     const filters: RecipeFilters = {};
@@ -63,11 +74,13 @@ export default function SearchScreen() {
     if (selectedTime?.minTotalTime) filters.minTotalTime = selectedTime.minTotalTime;
     if (selectedDifficulty) filters.difficulty = selectedDifficulty;
     if (selectedTags.length > 0) filters.tags = selectedTags;
+    if (minRating) filters.minRating = minRating;
     return Object.keys(filters).length > 0 ? filters : undefined;
-  }, [selectedTime, selectedDifficulty, selectedTags]);
+  }, [selectedTime, selectedDifficulty, selectedTags, minRating]);
 
   const { data: allRecipes = [], isPending: isRecipesCatalogPending } = useRecipes();
   const { data: pantryItems = [], isPending: isPantryPending } = usePantryItems();
+  const { enabled: reviewsEnabled } = useFeatureFlag("ratings_and_reviews");
 
   const recipeResults = useMemo(
     () => filterRecipesForSearch(allRecipes, trimmedInput, activeFilters),
@@ -111,6 +124,7 @@ export default function SearchScreen() {
     setSelectedTime(null);
     setSelectedDifficulty(null);
     setSelectedTags([]);
+    setMinRating(null);
   };
 
   const hasResults = (recipeResults && recipeResults.length > 0) || ingredientResults.length > 0;
@@ -253,6 +267,21 @@ export default function SearchScreen() {
                 ))}
               </View>
             </View>
+
+            {reviewsEnabled && (
+              <View className="gap-3">
+                <Text className="text-xs text-muted-foreground font-urbanist-semibold uppercase tracking-wider">
+                  Rating
+                </Text>
+                <View className="flex-row flex-wrap gap-2">
+                  {renderFilterChip({
+                    label: "4+ Stars",
+                    isActive: minRating === 4,
+                    onPress: () => setMinRating(minRating === 4 ? null : 4),
+                  })}
+                </View>
+              </View>
+            )}
           </View>
 
           <TouchableOpacity

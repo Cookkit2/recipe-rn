@@ -17,7 +17,29 @@ import { useMemo } from "react";
 export function useRecipes() {
   return useQuery({
     queryKey: recipeQueryKeys.recipes(),
-    queryFn: recipeApi.fetchAllRecipes,
+    queryFn: async () => {
+      const recipes = await recipeApi.fetchAllRecipes();
+      // Fetch cooking history to compute avg ratings for all recipes
+      const cookingHistory = await databaseFacade.getCookingHistory(500);
+      const ratingsByRecipe = new Map<string, number[]>();
+      for (const record of cookingHistory) {
+        if (record.rating !== undefined && record.rating >= 1 && record.rating <= 5) {
+          const existing = ratingsByRecipe.get(record.recipeId) || [];
+          existing.push(record.rating);
+          ratingsByRecipe.set(record.recipeId, existing);
+        }
+      }
+      const ratingsMap = new Map<string, number | null>();
+      for (const [recipeId, ratings] of ratingsByRecipe) {
+        const avgRating = ratings.reduce((sum, r) => sum + r, 0) / ratings.length;
+        ratingsMap.set(recipeId, avgRating);
+      }
+      // Attach avgRating to recipes
+      return recipes.map((recipe) => ({
+        ...recipe,
+        avgRating: ratingsMap.get(recipe.id) ?? null,
+      }));
+    },
     staleTime: 5 * 60 * 1000, // 5 minutes - recipes don't change as frequently
   });
 }
@@ -64,6 +86,7 @@ export interface RecipeFilters {
   minTotalTime?: number;
   maxTotalTime?: number;
   difficulty?: number;
+  minRating?: number;
 }
 
 function recipeFiltersApply(filters?: RecipeFilters): boolean {
@@ -74,6 +97,7 @@ function recipeFiltersApply(filters?: RecipeFilters): boolean {
   if (filters.minTotalTime !== undefined) return true;
   if (filters.maxPrepTime !== undefined) return true;
   if (filters.maxCookTime !== undefined) return true;
+  if (filters.minRating !== undefined) return true;
   return false;
 }
 

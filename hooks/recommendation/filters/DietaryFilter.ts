@@ -21,6 +21,9 @@ const ALLERGEN_KEYWORDS: Record<Allergen, string[]> = {
   fish: ["fish", "salmon", "tuna", "cod", "anchovy", "sardine"],
   shellfish: ["shellfish", "shrimp", "crab", "lobster", "prawn", "scallop", "oyster", "mussel"],
   wheat: ["wheat", "flour", "gluten", "bread", "pasta", "noodle", "soy sauce"],
+  soy: ["soy", "soybean", "tofu", "tempeh", "edamame", "miso"],
+  peanuts: ["peanut", "peanut butter"],
+  sesame: ["sesame", "tahini", "sesame oil"],
 };
 
 /**
@@ -117,21 +120,30 @@ export class DietaryFilter implements RecipeFilterStrategy {
 
     // Check allergens
     if (this.checkAllergens && this.cachedAllAllergens.length > 0) {
-      // Check recipe ingredients for allergens
-      for (const ingredient of recipe.ingredients) {
-        const ingredientName = ingredient.name.toLowerCase();
-
-        // Check against standard allergens using keyword mappings
-        for (const allergen of this.cachedStandardAllergens) {
-          if (this.containsStandardAllergen(ingredientName, allergen)) {
+      // Fast path: use stored allergens if available
+      if (recipe.allergens && recipe.allergens.length > 0) {
+        for (const allergen of this.cachedAllAllergens) {
+          if (recipe.allergens.includes(allergen)) {
             return false;
           }
         }
+      } else {
+        // Fall back to ingredient scanning
+        for (const ingredient of recipe.ingredients) {
+          const ingredientName = ingredient.name.toLowerCase();
 
-        // Check against custom allergens using smart ingredient matching
-        for (const allergen of this.cachedCustomAllergens) {
-          if (isIngredientMatch(ingredientName, allergen.toLowerCase())) {
-            return false;
+          // Check against standard allergens using keyword mappings
+          for (const allergen of this.cachedStandardAllergens) {
+            if (this.containsStandardAllergen(ingredientName, allergen)) {
+              return false;
+            }
+          }
+
+          // Check against custom allergens using smart ingredient matching
+          for (const allergen of this.cachedCustomAllergens) {
+            if (isIngredientMatch(ingredientName, allergen.toLowerCase())) {
+              return false;
+            }
           }
         }
       }

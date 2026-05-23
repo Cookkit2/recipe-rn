@@ -4,7 +4,7 @@ import React from "react";
 import { Card, CardContent } from "~/components/ui/card";
 import { H4, P, Small } from "~/components/ui/typography";
 import { useVoiceCookingSettings } from "~/hooks/useVoiceCooking";
-import Slider from "@react-native-community/slider";
+import { Slider } from "@expo/ui/community/slider";
 import useColors from "~/hooks/useColor";
 
 export default function VoiceSettingsScreen() {
@@ -83,7 +83,7 @@ export default function VoiceSettingsScreen() {
                 maximumValue={1.5}
                 step={0.1}
                 value={settings.speechRate}
-                onSlidingComplete={(value) => updateSettings({ speechRate: value })}
+                onValueChange={(value) => updateSettings({ speechRate: value })}
                 minimumTrackTintColor={colors.primary}
                 maximumTrackTintColor={colors.muted}
               />

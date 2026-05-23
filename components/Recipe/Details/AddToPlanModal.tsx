@@ -11,7 +11,7 @@ import {
 import { Stack, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { format } from "date-fns";
-import DateTimePicker, { type DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import DateTimePicker, { type DateTimePickerEvent } from "@expo/ui/community/datetime-picker";
 import { useAddToMealPlan } from "~/hooks/queries/useMealPlanQueries";
 import { useRecipe } from "~/hooks/queries/useRecipeQueries";
 import { type MealSlot } from "~/types/MealPlan";

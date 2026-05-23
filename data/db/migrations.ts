@@ -175,5 +175,21 @@ export default schemaMigrations({
         // No additional migration steps needed
       ],
     },
+    {
+      toVersion: 5,
+      steps: [
+        addColumns({
+          table: "recipe",
+          columns: [
+            { name: "protein", type: "number", isOptional: true },
+            { name: "carbs", type: "number", isOptional: true },
+            { name: "fat", type: "number", isOptional: true },
+            { name: "fiber", type: "number", isOptional: true },
+            { name: "allergens", type: "string", isOptional: true },
+            { name: "nutrition_source", type: "string", isOptional: true },
+          ],
+        }),
+      ],
+    },
   ],
 });

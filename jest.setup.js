@@ -6,6 +6,14 @@ global.__DEV__ = true;
 global.IS_REACT_ACT_ENVIRONMENT = true;
 global.IS_REACT_NATIVE_TEST_ENVIRONMENT = true;
 
+// RN 0.83 internals (DebuggingOverlayRegistry, AppContainer-dev) reference
+// `window.__REACT_DEVTOOLS_GLOBAL_HOOK__`. Node's test env has no `window`,
+// so provide one that inherits all globals (including setTimeout) so
+// @testing-library/react-native's timer detection still works.
+if (typeof globalThis.window === "undefined") {
+  globalThis.window = Object.create(globalThis);
+}
+
 // Provide minimal native module stubs so `require('react-native')` works in test mocks
 // without the old react-native/jest/setup.js (removed in RN 0.85)
 jest.mock("react-native/Libraries/BatchedBridge/NativeModules", () => {
@@ -111,7 +119,15 @@ jest.mock("react-native-reanimated", () => {
     withSequence,
     useDerivedValue: (fn) => ({ value: typeof fn === "function" ? fn() : fn }),
     runOnJS: (fn) => fn,
-    Easing: { linear: (t) => t },
+    Easing: {
+      linear: (t) => t,
+      bezier: () => () => {},
+      out: (e) => e,
+      exp: () => () => {},
+      in: (e) => e,
+      inOut: (e) => e,
+    },
+    ReduceMotion: { System: "system" },
   };
 });
 
@@ -151,3 +167,23 @@ jest.mock(
   "react-native/Libraries/Components/ActivityIndicator/ActivityIndicator",
   () => "ActivityIndicator"
 );
+
+// RN 0.83 DebuggingOverlayRegistry references `window` (React DevTools hook)
+// which doesn't exist in the Node test environment. Stub it out.
+jest.mock("react-native/Libraries/Debugging/DebuggingOverlayRegistry", () => ({
+  subscribe: () => ({ remove: () => {} }),
+  getInspectorDataForViewAtPoint: () => {},
+}));
+
+// RN 0.83 Linking module uses nullthrows on native LinkingManager which isn't available in tests.
+jest.mock("react-native/Libraries/Linking/Linking", () => ({
+  __esModule: true,
+  default: {
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    openURL: jest.fn(() => Promise.resolve()),
+    canOpenURL: jest.fn(() => Promise.resolve(true)),
+    getInitialURL: jest.fn(() => Promise.resolve(null)),
+    sendIntent: jest.fn(() => Promise.resolve()),
+  },
+}));

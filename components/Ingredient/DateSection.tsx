@@ -4,7 +4,7 @@ import { Card, CardContent } from "~/components/ui/card";
 import { format } from "date-fns";
 import { H4, P } from "~/components/ui/typography";
 import { useIngredientDetailStore } from "~/store/IngredientDetailContext";
-import DateTimePicker, { type DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import DateTimePicker, { type DateTimePickerEvent } from "@expo/ui/community/datetime-picker";
 
 export default function DateSection() {
   const { pantryItem, updatePantryItem } = useIngredientDetailStore();

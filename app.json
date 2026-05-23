@@ -7,10 +7,6 @@
     "icon": "./assets/icon.png",
     "scheme": "cookkit",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain"
-    },
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "icon": "./assets/icon.png",
@@ -123,7 +119,7 @@
         "expo-build-properties",
         {
           "ios": {
-            "deploymentTarget": "15.1"
+            "deploymentTarget": "16.4"
           }
         }
       ],

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { View, Pressable, ActivityIndicator, FlatList } from "react-native";
 import { H3, P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
@@ -31,24 +31,24 @@ export default function MealPlanPage() {
   const [isTemplateSheetOpen, setIsTemplateSheetOpen] = useState(false);
 
   // Week navigation
-  const goToPreviousWeek = useCallback(() => {
+  const goToPreviousWeek = () => {
     const newDate = new Date(selectedWeek);
     newDate.setDate(newDate.getDate() - 7);
     changeSelectedWeek(newDate);
-  }, [selectedWeek, changeSelectedWeek]);
+  };
 
-  const goToNextWeek = useCallback(() => {
+  const goToNextWeek = () => {
     const newDate = new Date(selectedWeek);
     newDate.setDate(newDate.getDate() + 7);
     changeSelectedWeek(newDate);
-  }, [selectedWeek, changeSelectedWeek]);
+  };
 
-  const goToToday = useCallback(() => {
+  const goToToday = () => {
     changeSelectedWeek(new Date());
-  }, [changeSelectedWeek]);
+  };
 
   // Format week range for display
-  const formatWeekRange = React.useMemo(() => {
+  const formatWeekRange = () => {
     const startDate = new Date(selectedWeek);
     const endDate = new Date(selectedWeek);
     endDate.setDate(endDate.getDate() + 6);
@@ -72,25 +72,22 @@ export default function MealPlanPage() {
     }
 
     return `${start} - ${end}`;
-  }, [selectedWeek]);
+  };
 
   // Check if current week is this week
-  const isCurrentWeek = React.useMemo(() => {
+  const isCurrentWeek = () => {
     const now = new Date();
     const weekStart = new Date(selectedWeek);
     const weekEnd = new Date(selectedWeek);
     weekEnd.setDate(weekEnd.getDate() + 6);
 
     return now >= weekStart && now <= weekEnd;
-  }, [selectedWeek]);
+  };
 
   // Handle meal slot press to open recipe selection
-  const handleMealSlotPress = useCallback(
-    (date: Date, mealSlot: MealSlot) => {
-      updateRecipeSheetOpen(true);
-    },
-    [updateRecipeSheetOpen]
-  );
+  const handleMealSlotPress = (date: Date, mealSlot: MealSlot) => {
+    updateRecipeSheetOpen(true);
+  };
 
   // Handle recipe drop on meal slot (from drag-and-drop)
   const handleMealSlotDrop = useCallback(
@@ -137,39 +134,35 @@ export default function MealPlanPage() {
     log.info("Template applied, calendar will refresh");
   }, []);
 
-  // Memoize header options to prevent unnecessary re-renders
-  const headerOptions = React.useMemo(
-    () => ({
-      headerShown: true,
-      headerTransparent: true,
-      headerTitle: "",
-      headerRight: () => (
-        <View className="flex-row items-center gap-2">
-          <Pressable
-            onPress={() => setIsTemplateSheetOpen(true)}
-            className="px-2 py-2"
-            accessibilityRole="button"
-            accessibilityLabel="Meal plan templates"
-          >
-            <BookTemplateIcon className="text-foreground" strokeWidth={2} size={22} />
-          </Pressable>
-          <Pressable
-            onPress={() => updateRecipeSheetOpen(true)}
-            className="px-4 py-2"
-            accessibilityRole="button"
-            accessibilityLabel="Add recipe"
-          >
-            <PlusIcon className="text-foreground" strokeWidth={2.618} />
-          </Pressable>
-        </View>
-      ),
-    }),
-    [updateRecipeSheetOpen]
-  );
-
   return (
     <View className="flex-1 bg-background">
-      <Stack.Screen options={headerOptions} />
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          headerTransparent: true,
+          headerTitle: "",
+          headerRight: () => (
+            <View className="flex-row items-center gap-2">
+              <Pressable
+                onPress={() => setIsTemplateSheetOpen(true)}
+                className="px-2 py-2"
+                accessibilityRole="button"
+                accessibilityLabel="Meal plan templates"
+              >
+                <BookTemplateIcon className="text-foreground" strokeWidth={2} size={22} />
+              </Pressable>
+              <Pressable
+                onPress={() => updateRecipeSheetOpen(true)}
+                className="px-4 py-2"
+                accessibilityRole="button"
+                accessibilityLabel="Add recipe"
+              >
+                <PlusIcon className="text-foreground" strokeWidth={2.618} />
+              </Pressable>
+            </View>
+          ),
+        }}
+      />
 
       {/* Week Navigation Header */}
       <View className="bg-background/95 backdrop-blur-sm border-b border-border/20 px-4 py-3">
@@ -185,7 +178,7 @@ export default function MealPlanPage() {
 
           <View className="flex-1 items-center">
             <P className="text-muted-foreground text-xs font-urbanist-semibold uppercase tracking-wide">
-              {formatWeekRange}
+              {formatWeekRange()}
             </P>
           </View>
 
@@ -199,7 +192,7 @@ export default function MealPlanPage() {
           </Pressable>
         </View>
 
-        {!isCurrentWeek && (
+        {!isCurrentWeek() && (
           <View className="items-center mt-2">
             <Button variant="ghost" size="sm" onPress={goToToday} className="h-7 px-3 rounded-full">
               <CalendarIcon size={14} strokeWidth={2} className="text-foreground mr-1" />

@@ -8,6 +8,7 @@ import { recipeApi, type SupabaseRecipeWithDetails } from "~/data/supabase-api/R
 import type { Tables } from "~/lib/supabase/supabase-types";
 import { log } from "~/utils/logger";
 import { sanitizeSearchTerm } from "~/utils/input-sanitization";
+import type { NutritionSource, DietaryTag } from "~/types/Nutrition";
 
 export interface RecipeSearchOptions extends SearchOptions {
   tags?: string[];
@@ -18,6 +19,7 @@ export interface RecipeSearchOptions extends SearchOptions {
   difficulty?: number;
   minServings?: number;
   maxServings?: number;
+  dietaryTags?: DietaryTag[];
 }
 
 export interface CreateRecipeWithDetailsData {
@@ -106,14 +108,45 @@ export class RecipeRepository extends BaseRepository<Recipe> {
       query = query.extend(Q.take(options.limit));
     }
 
-    const results = await query.fetch();
+    let results = await query.fetch();
 
     if (options.minTotalTime !== undefined || options.maxTotalTime !== undefined) {
-      return results.filter((r) => {
+      results = results.filter((r) => {
         const totalTime = r.prepMinutes + r.cookMinutes;
         if (options.minTotalTime !== undefined && totalTime < options.minTotalTime) return false;
         if (options.maxTotalTime !== undefined && totalTime > options.maxTotalTime) return false;
         return true;
+      });
+    }
+
+    // Apply dietary tag filters (post-query, since WatermelonDB doesn't support computed column filters)
+    if (options.dietaryTags && options.dietaryTags.length > 0) {
+      results = results.filter((recipe) => {
+        const nutrition = {
+          calories: recipe.calories ?? 0,
+          protein: recipe.protein ?? 0,
+          carbs: recipe.carbs ?? 0,
+          fat: recipe.fat ?? 0,
+          fiber: recipe.fiber ?? 0,
+        };
+        const allergens = recipe.allergens ?? [];
+
+        return options.dietaryTags!.every((tag) => {
+          switch (tag) {
+            case "keto":
+              return nutrition.carbs < 10 && (nutrition.fat * 9) / (nutrition.calories || 1) > 0.7;
+            case "low-carb":
+              return nutrition.carbs < 20;
+            case "high-protein":
+              return nutrition.protein > 25;
+            case "gluten-free":
+              return !allergens.includes("wheat");
+            case "dairy-free":
+              return !allergens.includes("milk");
+            default:
+              return true;
+          }
+        });
       });
     }
 
@@ -721,6 +754,12 @@ export class RecipeRepository extends BaseRepository<Recipe> {
       servings: supabaseRecipe.servings || 1,
       sourceUrl: supabaseRecipe.source_url || undefined,
       calories: supabaseRecipe.calories || undefined,
+      protein: supabaseRecipe.protein || undefined,
+      carbs: supabaseRecipe.carbs || undefined,
+      fat: supabaseRecipe.fat || undefined,
+      fiber: supabaseRecipe.fiber || undefined,
+      allergens: supabaseRecipe.allergens || undefined,
+      nutritionSource: (supabaseRecipe.nutrition_source as NutritionSource) || undefined,
       tags: supabaseRecipe.tags || [],
     };
   }
