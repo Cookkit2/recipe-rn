@@ -21,6 +21,9 @@ const ALLERGEN_KEYWORDS: Record<Allergen, string[]> = {
   fish: ["fish", "salmon", "tuna", "cod", "anchovy", "sardine"],
   shellfish: ["shellfish", "shrimp", "crab", "lobster", "prawn", "scallop", "oyster", "mussel"],
   wheat: ["wheat", "flour", "gluten", "bread", "pasta", "noodle", "soy sauce"],
+  soy: ["soy", "soybean", "tofu", "tempeh", "edamame", "miso"],
+  peanuts: ["peanut", "peanut butter"],
+  sesame: ["sesame", "tahini", "sesame oil"],
 };
 
 /**

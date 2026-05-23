@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from "@nozbe/watermelondb";
 
 export default appSchema({
-  version: 4,
+  version: 5,
   tables: [
     // ========================================
     // RECIPE CACHE (3 tables)
@@ -21,6 +21,12 @@ export default appSchema({
         { name: "servings", type: "number" },
         { name: "source_url", type: "string", isOptional: true },
         { name: "calories", type: "number", isOptional: true },
+        { name: "protein", type: "number", isOptional: true },
+        { name: "carbs", type: "number", isOptional: true },
+        { name: "fat", type: "number", isOptional: true },
+        { name: "fiber", type: "number", isOptional: true },
+        { name: "allergens", type: "string", isOptional: true },
+        { name: "nutrition_source", type: "string", isOptional: true },
         { name: "tags", type: "string", isOptional: true }, // JSON string array
         { name: "synced_at", type: "number", isIndexed: true }, // Indexed for sync operations
         { name: "is_favorite", type: "boolean", isIndexed: true }, // Indexed for favorites list
