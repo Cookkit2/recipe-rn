@@ -226,5 +226,14 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 7,
+      steps: [
+        addColumns({
+          table: "stock",
+          columns: [{ name: "supabase_id", type: "string", isOptional: true }],
+        }),
+      ],
+    },
   ],
 });

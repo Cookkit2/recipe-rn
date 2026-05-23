@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from "@nozbe/watermelondb";
 
 export default appSchema({
-  version: 6,
+  version: 7,
   tables: [
     // ========================================
     // RECIPE CACHE (3 tables)
@@ -125,6 +125,7 @@ export default appSchema({
         { name: "scale", type: "number", isOptional: true },
         { name: "household_id", type: "string", isOptional: true, isIndexed: true },
         { name: "added_by_user_id", type: "string", isOptional: true },
+        { name: "supabase_id", type: "string", isOptional: true, isIndexed: true },
         { name: "created_at", type: "number" },
         { name: "updated_at", type: "number" },
       ],
