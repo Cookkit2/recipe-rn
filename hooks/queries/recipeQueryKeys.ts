@@ -55,4 +55,7 @@ export const recipeQueryKeys = {
 
   // Favorite recipes
   favorites: () => [...recipeQueryKeys.all, "favorites"] as const,
+
+  // Nutrition data for a specific recipe
+  nutrition: (recipeId: string) => [...recipeQueryKeys.all, "nutrition", recipeId] as const,
 } as const;
