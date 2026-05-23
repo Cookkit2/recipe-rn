@@ -6,6 +6,7 @@ import type RecipeStep from "./RecipeStep";
 import type RecipeIngredient from "./RecipeIngredient";
 import type CookingHistory from "./CookingHistory";
 import type ConsumptionLog from "./ConsumptionLog";
+import type { NutritionSource } from "~/types/Nutrition";
 
 export enum RecipeType {
   STANDARD = "standard",
@@ -23,6 +24,12 @@ export interface RecipeData {
   servings: number;
   sourceUrl?: string;
   calories?: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+  fiber?: number;
+  allergens?: string[];
+  nutritionSource?: NutritionSource;
   tags?: string[];
   isFavorite?: boolean;
   type?: RecipeType;
@@ -46,6 +53,12 @@ export default class Recipe extends Model {
   @field("servings") servings!: number;
   @field("source_url") sourceUrl?: string;
   @field("calories") calories?: number;
+  @field("protein") protein!: number | undefined;
+  @field("carbs") carbs!: number | undefined;
+  @field("fat") fat!: number | undefined;
+  @field("fiber") fiber!: number | undefined;
+  @field("allergens") _allergens?: string; // JSON string
+  @field("nutrition_source") nutritionSource!: NutritionSource | undefined;
   @field("tags") _tags?: string; // JSON string
   @field("synced_at") syncedAt!: number; // NEW: Track last sync from cloud
   @field("is_favorite") isFavorite!: boolean; // NEW: User can favorite recipes
@@ -66,6 +79,22 @@ export default class Recipe extends Model {
 
   set tags(value: string[]) {
     this._tags = JSON.stringify(value);
+  }
+
+  // Computed property for allergens
+  get allergens(): string[] {
+    return safeJsonParse<string[]>(this._allergens, []);
+  }
+
+  set allergens(value: string[]) {
+    this._allergens = JSON.stringify(value);
+  }
+
+  // Check if recipe has nutrition data
+  get hasNutrition(): boolean {
+    return (
+      this.calories != null && (this.protein != null || this.carbs != null || this.fat != null)
+    );
   }
 
   // Computed property for total time
@@ -101,6 +130,12 @@ export default class Recipe extends Model {
       if (data.servings !== undefined) recipe.servings = data.servings;
       if (data.sourceUrl !== undefined) recipe.sourceUrl = data.sourceUrl;
       if (data.calories !== undefined) recipe.calories = data.calories;
+      if (data.protein !== undefined) recipe.protein = data.protein;
+      if (data.carbs !== undefined) recipe.carbs = data.carbs;
+      if (data.fat !== undefined) recipe.fat = data.fat;
+      if (data.fiber !== undefined) recipe.fiber = data.fiber;
+      if (data.allergens !== undefined) recipe.allergens = data.allergens;
+      if (data.nutritionSource !== undefined) recipe.nutritionSource = data.nutritionSource;
       if (data.tags !== undefined) recipe.tags = data.tags;
       if (data.isFavorite !== undefined) recipe.isFavorite = data.isFavorite;
       if (data.type !== undefined) recipe.type = data.type;

@@ -1,3 +1,5 @@
+import type { NutritionSource } from "~/types/Nutrition";
+
 export interface RecipeIngredient {
   name: string;
   relatedIngredientId: string;
@@ -32,6 +34,12 @@ export interface Recipe {
   instructions: RecipeStep[];
   sourceUrl?: string;
   calories?: number; // Added from previous recipe list example
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+  fiber?: number;
+  allergens?: string[];
+  nutritionSource?: NutritionSource;
   tags?: string[];
   isFavorite?: boolean;
   avgRating?: number | null; // Average rating from reviews (1-5)

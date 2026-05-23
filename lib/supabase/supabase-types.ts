@@ -169,6 +169,12 @@ export type Database = {
         Row: {
           avg_rating: number | null;
           calories: number | null;
+          protein: number | null;
+          carbs: number | null;
+          fat: number | null;
+          fiber: number | null;
+          allergens: string[] | null;
+          nutrition_source: string | null;
           cook_minutes: number | null;
           description: string | null;
           difficulty_stars: number | null;
@@ -184,6 +190,12 @@ export type Database = {
         Insert: {
           avg_rating?: number | null;
           calories?: number | null;
+          protein?: number | null;
+          carbs?: number | null;
+          fat?: number | null;
+          fiber?: number | null;
+          allergens?: string[] | null;
+          nutrition_source?: string | null;
           cook_minutes?: number | null;
           description?: string | null;
           difficulty_stars?: number | null;
@@ -199,6 +211,12 @@ export type Database = {
         Update: {
           avg_rating?: number | null;
           calories?: number | null;
+          protein?: number | null;
+          carbs?: number | null;
+          fat?: number | null;
+          fiber?: number | null;
+          allergens?: string[] | null;
+          nutrition_source?: string | null;
           cook_minutes?: number | null;
           description?: string | null;
           difficulty_stars?: number | null;

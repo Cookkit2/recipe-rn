@@ -8,6 +8,7 @@ import { recipeApi, type SupabaseRecipeWithDetails } from "~/data/supabase-api/R
 import type { Tables } from "~/lib/supabase/supabase-types";
 import { log } from "~/utils/logger";
 import { sanitizeSearchTerm } from "~/utils/input-sanitization";
+import type { NutritionSource } from "~/types/Nutrition";
 
 export interface RecipeSearchOptions extends SearchOptions {
   tags?: string[];
@@ -721,6 +722,12 @@ export class RecipeRepository extends BaseRepository<Recipe> {
       servings: supabaseRecipe.servings || 1,
       sourceUrl: supabaseRecipe.source_url || undefined,
       calories: supabaseRecipe.calories || undefined,
+      protein: supabaseRecipe.protein || undefined,
+      carbs: supabaseRecipe.carbs || undefined,
+      fat: supabaseRecipe.fat || undefined,
+      fiber: supabaseRecipe.fiber || undefined,
+      allergens: supabaseRecipe.allergens || undefined,
+      nutritionSource: (supabaseRecipe.nutrition_source as NutritionSource) || undefined,
       tags: supabaseRecipe.tags || [],
     };
   }
