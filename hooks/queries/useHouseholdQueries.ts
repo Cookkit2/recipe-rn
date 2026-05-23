@@ -215,3 +215,39 @@ export function useSyncSharedStock() {
       householdApiFunctions.syncSharedStock(householdSupabaseId),
   });
 }
+
+export function useRemoveMember() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (memberUserId: string) => householdApiFunctions.removeMember(memberUserId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: householdQueryKeys.all });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+}
+
+export function useUpdateHouseholdName() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      householdId,
+      householdSupabaseId,
+      name,
+    }: {
+      householdId: string;
+      householdSupabaseId: string;
+      name: string;
+    }) => householdApiFunctions.updateHouseholdName(householdId, householdSupabaseId, name),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: householdQueryKeys.all });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+}
