@@ -29,7 +29,13 @@ export const householdApiFunctions = {
 
     const householdCollection = database.collections.get("household");
     try {
-      return (await householdCollection.find((myMembership as any).householdId)) as Household;
+      const household = (await householdCollection.find(
+        (myMembership as any).householdId
+      )) as Household;
+      if ((household as any).supabaseId) {
+        householdRealtimeService.subscribe((household as any).supabaseId as string);
+      }
+      return household;
     } catch {
       return null;
     }
@@ -130,6 +136,7 @@ export const householdApiFunctions = {
 
     // Sync to backfill supabaseId on seeded stock items
     await householdSyncService.syncHousehold(supabaseHousehold.id);
+    householdRealtimeService.subscribe(supabaseHousehold.id);
 
     return localHousehold;
   },
@@ -194,6 +201,7 @@ export const householdApiFunctions = {
 
     // Sync shared stock down to local DB
     await householdSyncService.syncHousehold(household.id);
+    householdRealtimeService.subscribe(household.id);
   },
 
   /**
@@ -205,6 +213,8 @@ export const householdApiFunctions = {
   leaveHousehold: async (householdId: string): Promise<void> => {
     const user = useAuthStore.getState().user;
     if (!user) throw new Error("Not authenticated");
+
+    householdRealtimeService.unsubscribe();
 
     await householdApi.removeMember(user.id);
 
@@ -251,6 +261,8 @@ export const householdApiFunctions = {
   dissolveHousehold: async (householdId: string, householdSupabaseId: string): Promise<void> => {
     const user = useAuthStore.getState().user;
     if (!user) throw new Error("Not authenticated");
+
+    householdRealtimeService.unsubscribe();
 
     // Reassign shared stock back to creator (set household_id null)
     await householdApi.clearHouseholdOnStock(householdSupabaseId, user.id);
