@@ -1,16 +1,27 @@
 import { database } from "~/data/db/database";
 import { householdApi } from "~/data/supabase-api/HouseholdApi";
 import { log } from "~/utils/logger";
+import { StorageFactory } from "~/data/storage/storage-factory";
 
 const LAST_SYNC_KEY = "household_last_sync_timestamp";
 
 export class HouseholdSyncService {
   private getLastSyncTimestamp(): number {
-    return Number(localStorage.getItem(LAST_SYNC_KEY) ?? "0");
+    try {
+      const storage = StorageFactory.getInstance();
+      return Number(storage.getString("household_last_sync_timestamp") ?? "0");
+    } catch {
+      return 0;
+    }
   }
 
   private setLastSyncTimestamp(ts: number): void {
-    localStorage.setItem(LAST_SYNC_KEY, String(ts));
+    try {
+      const storage = StorageFactory.getInstance();
+      storage.setString("household_last_sync_timestamp", String(ts));
+    } catch {
+      // Storage not initialized yet
+    }
   }
 
   async syncHousehold(householdSupabaseId: string): Promise<void> {
@@ -74,13 +85,12 @@ export class HouseholdSyncService {
 
       for (const remoteItem of remoteItems) {
         const allItems = await stockCollection.query().fetch();
-        const existing = allItems.find(
-          (i: any) => i.supabaseId === remoteItem.id || i.id === remoteItem.id
-        );
+        const existing = allItems.find((i: any) => i.supabaseId === remoteItem.id);
 
         if (existing) {
           batchOps.push(
             existing.prepareUpdate((record: any) => {
+              record.supabaseId = remoteItem.id;
               record.name = remoteItem.name;
               record.quantity = remoteItem.quantity ?? 0;
               record.unit = remoteItem.unit ?? "";
