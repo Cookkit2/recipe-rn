@@ -3,6 +3,7 @@ import {
   BellIcon,
   CalendarIcon,
   ChartBarIcon,
+  FlameIcon,
   InfoIcon,
   MailIcon,
   MessageSquareHeartIcon,
@@ -138,6 +139,11 @@ export default function ProfileScreen() {
               title="Preferences"
               icon={SettingsIcon}
               onPress={() => router.push("/profile/preferences")}
+            />
+            <ListButton
+              title="Nutrition Report"
+              icon={FlameIcon}
+              onPress={() => router.push("/profile/nutrition-report")}
             />
             {/* <ListButton
               title="Analytics"

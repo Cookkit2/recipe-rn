@@ -127,6 +127,10 @@ export function AnimatedStack() {
         options={{ ...commonHeaderOptions, headerTitle: "Analytics" }}
       />
       <Stack.Screen
+        name="profile/nutrition-report"
+        options={{ ...commonHeaderOptions, headerTitle: "Nutrition Report" }}
+      />
+      <Stack.Screen
         name="profile/achievements"
         options={{ ...commonHeaderOptions, headerTitle: "Achievements" }}
       />
