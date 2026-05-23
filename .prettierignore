@@ -21,3 +21,7 @@ bun.lockb
 .agents
 .claude
 .cursor
+.auto-claude
+
+# Claude Code settings
+.claude_settings.json
