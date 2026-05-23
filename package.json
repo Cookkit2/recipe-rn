@@ -28,6 +28,7 @@
     "@legendapp/list": "^2.0.19",
     "@lucide/lab": "^0.1.2",
     "@nozbe/watermelondb": "^0.28.0",
+    "@react-native-clipboard/clipboard": "^1.16.3",
     "@rn-primitives/accordion": "^1.2.0",
     "@rn-primitives/alert-dialog": "^1.4.0",
     "@rn-primitives/aspect-ratio": "^1.2.0",
