@@ -5,6 +5,8 @@
  * Evaluates achievement criteria and manages user progress toward achievements.
  */
 
+import type Achievement from "../db/models/Achievement";
+import type UserAchievement from "../db/models/UserAchievement";
 import { AchievementRepository } from "../db/repositories/AchievementRepository";
 import { UserAchievementRepository } from "../db/repositories/UserAchievementRepository";
 import { CookingHistoryRepository } from "../db/repositories/CookingHistoryRepository";
@@ -241,15 +243,14 @@ export class AchievementService {
   /**
    * Get progress for a specific achievement
    */
-  async getProgress(achievementId: string): Promise<AchievementProgress | null> {
+  /**
+   * Helper to format achievement progress given pre-fetched data
+   */
+  private async formatAchievementProgress(
+    achievement: Achievement,
+    userAchievement: UserAchievement | null | undefined
+  ): Promise<AchievementProgress | null> {
     try {
-      const achievement = await this.achievementRepo.findById(achievementId);
-
-      if (!achievement) {
-        return null;
-      }
-
-      const userAchievement = await this.userAchievementRepo.getByAchievementId(achievementId);
       const requirement = achievement.parsedRequirement as AchievementRequirement;
       const target = requirement.target;
 
@@ -304,6 +305,25 @@ export class AchievementService {
         nextMilestone,
       };
     } catch (error) {
+      log.error(`Error formatting progress for achievement ${achievement?.id}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Get progress for a specific achievement
+   */
+  async getProgress(achievementId: string): Promise<AchievementProgress | null> {
+    try {
+      const achievement = await this.achievementRepo.findById(achievementId);
+
+      if (!achievement) {
+        return null;
+      }
+
+      const userAchievement = await this.userAchievementRepo.getByAchievementId(achievementId);
+      return await this.formatAchievementProgress(achievement, userAchievement);
+    } catch (error) {
       log.error(`Error getting progress for achievement ${achievementId}:`, error);
       return null;
     }
@@ -315,7 +335,18 @@ export class AchievementService {
   async getProgressByCategory(category: string): Promise<AchievementProgress[]> {
     try {
       const achievements = await this.achievementRepo.getAchievementsByCategory(category);
-      const progressPromises = achievements.map((a) => this.getProgress(a.id));
+      if (achievements.length === 0) return [];
+
+      const achievementIds = achievements.map((a) => a.id);
+      const userAchievements = await this.userAchievementRepo.getByAchievementIds(achievementIds);
+
+      const userAchievementMap = new Map();
+      userAchievements.forEach((ua) => userAchievementMap.set(ua.achievementId, ua));
+
+      const progressPromises = achievements.map((a) =>
+        this.formatAchievementProgress(a, userAchievementMap.get(a.id))
+      );
+
       const results = await Promise.all(progressPromises);
       return results.filter((p): p is AchievementProgress => p !== null);
     } catch (error) {
@@ -330,7 +361,18 @@ export class AchievementService {
   async getAllProgress(): Promise<AchievementProgress[]> {
     try {
       const achievements = await this.achievementRepo.getVisibleAchievements();
-      const progressPromises = achievements.map((a) => this.getProgress(a.id));
+      if (achievements.length === 0) return [];
+
+      const achievementIds = achievements.map((a) => a.id);
+      const userAchievements = await this.userAchievementRepo.getByAchievementIds(achievementIds);
+
+      const userAchievementMap = new Map();
+      userAchievements.forEach((ua) => userAchievementMap.set(ua.achievementId, ua));
+
+      const progressPromises = achievements.map((a) =>
+        this.formatAchievementProgress(a, userAchievementMap.get(a.id))
+      );
+
       const results = await Promise.all(progressPromises);
       return results.filter((p): p is AchievementProgress => p !== null);
     } catch (error) {

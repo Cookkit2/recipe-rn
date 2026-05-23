@@ -85,25 +85,6 @@ function Indicator({
     };
   });
 
-  // if (Platform.OS === "web") {
-  //   const currentValue = animatedValue ? animatedValue.value : (value ?? 0);
-  //   return (
-  //     <>
-  //       <View
-  //         className={cn(
-  //           "h-full w-full flex-1 bg-primary web:transition-all",
-  //           className
-  //         )}
-  //         style={{ transform: `translateX(-${100 - currentValue}%)` }}
-  //       >
-  //         <ProgressPrimitive.Indicator
-  //           className={cn("h-full w-full", className)}
-  //         />
-  //       </View>
-  //     </>
-  //   );
-  // }
-
   return (
     <>
       <Animated.View

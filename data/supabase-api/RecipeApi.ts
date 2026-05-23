@@ -1,5 +1,6 @@
 import { supabase } from "~/lib/supabase/supabase-client";
 import type { Tables } from "~/lib/supabase/supabase-types";
+import { log } from "~/utils/logger";
 
 function guardSupabase() {
   if (!supabase) return false;
@@ -87,7 +88,7 @@ export const recipeApi = {
       .limit(limit);
 
     if (recipesError) {
-      console.error("[RecipeApi] Error fetching recipes:", recipesError);
+      log.error("[RecipeApi] Error fetching recipes:", recipesError);
       throw recipesError;
     }
 

@@ -34,7 +34,7 @@ const SYNONYM_MAP_ENTRIES = Object.entries({
 export const isIngredientMatch = (
   pantryItemName: string,
   recipeIngredientName: string,
-  pantryItemSynonyms: string[] = []
+  pantryItemSynonyms: (string | { synonym: string })[] = []
 ): boolean => {
   const pantryName = pantryItemName.toLowerCase().trim();
   const recipeName = recipeIngredientName.toLowerCase().trim();
@@ -46,12 +46,20 @@ export const isIngredientMatch = (
   if (pantryName === recipeName) return true;
 
   // Check provided synonyms (from database)
-  if (pantryItemSynonyms.length > 0) {
-    const isSynonymMatch = pantryItemSynonyms.some((synonym) => {
-      const syn = synonym.toLowerCase().trim();
-      return syn === recipeName || recipeName.includes(syn) || syn.includes(recipeName);
-    });
-    if (isSynonymMatch) return true;
+  if (pantryItemSynonyms && pantryItemSynonyms.length > 0) {
+    // ⚡ Bolt Optimization: Use standard for loop over iterators or array methods to avoid closure overhead
+    for (let i = 0; i < pantryItemSynonyms.length; i++) {
+      const item = pantryItemSynonyms[i];
+      if (item) {
+        const synonymStr = typeof item === "string" ? item : item.synonym;
+        if (synonymStr) {
+          const syn = synonymStr.toLowerCase().trim();
+          if (syn === recipeName || recipeName.includes(syn) || syn.includes(recipeName)) {
+            return true;
+          }
+        }
+      }
+    }
   }
 
   // Contains match (existing logic)

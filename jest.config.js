@@ -1,7 +1,9 @@
+const path = require("path");
+
 module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
-  setupFiles: ["<rootDir>/node_modules/react-native/jest/setup.js"],
+  rootDir: path.resolve(__dirname),
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
   testMatch: ["**/__tests__/**/*.test.(js|jsx|ts|tsx)"],
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json"],
@@ -14,16 +16,21 @@ module.exports = {
           esModuleInterop: true,
           allowSyntheticDefaultImports: true,
           skipLibCheck: true,
+          rootDir: "<rootDir>",
         },
       },
     ],
     "^.+\\.(js|jsx)$": ["babel-jest", { presets: ["babel-preset-expo"] }],
   },
   transformIgnorePatterns: [
-    "node_modules/(?!(react-native|@react-native|@nozbe|@expo|expo|expo-modules-core|expo-constants|expo-auth-session|expo-linking|react-navigation|react-native-reanimated|react-native-worklets|@rn-primitives|llama\\.rn|expo-file-system|@testing-library)/)",
+    "node_modules/(?!(react-native|@react-native|@nozbe|@expo|expo|expo-modules-core|expo-constants|expo-secure-store|expo-crypto|expo-auth-session|expo-linking|react-navigation|react-native-reanimated|react-native-worklets|@rn-primitives|llama\\.rn|expo-file-system|expo-maps|lucide-react-native|@testing-library)/)",
   ],
   moduleNameMapper: {
     "^expo-constants$": "<rootDir>/__mocks__/expo-constants.ts",
+    "^expo-secure-store$": "<rootDir>/__mocks__/expo-secure-store.ts",
+    "^expo-crypto$": "<rootDir>/__mocks__/expo-crypto.ts",
+    "^expo-maps$": "<rootDir>/__mocks__/expo-maps.tsx",
+    "^lucide-react-native$": "<rootDir>/__mocks__/lucide-react-native.tsx",
     "^~/(.*)$": "<rootDir>/$1",
     "^@sentry/react-native$": "<rootDir>/__mocks__/@sentry/react-native.ts",
   },
@@ -38,11 +45,18 @@ module.exports = {
     "!data/db/database.ts",
     "!data/db/migrations/**",
   ],
+  // Prevent worktree __mocks__ and node_modules from being indexed by the
+  // haste map.  Without this, Jest discovers duplicate manual mocks in
+  // .claude/worktrees/*/  and .auto-claude/worktrees/*/  which can resolve
+  // to unconfigured copies of react-native.
+  modulePathIgnorePatterns: ["/.claude/worktrees/", "/.auto-claude/worktrees/"],
   // Legacy src/ auth tests target an unused pre-router auth stack with incompatible native mocks.
   // Keep them out of default PR CI until the legacy stack is deleted or migrated.
   testPathIgnorePatterns: [
     "/node_modules/",
     "/.expo/",
+    "/.claude/worktrees/",
+    "/.auto-claude/worktrees/",
     "/src/store/__tests__/",
     "/src/screens/auth/__tests__/",
     "/src/contexts/__tests__/",

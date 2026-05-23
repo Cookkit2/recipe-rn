@@ -10,6 +10,7 @@
 
 import { initLlama, releaseAllLlama } from "llama.rn";
 import { File, Paths } from "expo-file-system";
+import { log } from "~/utils/logger";
 
 // ============================================================================
 // TYPES
@@ -45,6 +46,12 @@ export interface CompletionResult {
     predicted_ms: number;
     load_ms: number;
   };
+}
+
+export interface ToolResponse {
+  success: boolean;
+  error?: string;
+  [key: string]: any;
 }
 
 export interface ModelConfig {
@@ -379,7 +386,7 @@ export function parseFunctionCalls(
       calls.push({ name, arguments: args });
       break; // Only take the first valid call to prevent hallucination
     } else {
-      console.warn(`[FunctionGemma] Parsed unknown tool name: "${name}", skipping`);
+      log.warn(`[FunctionGemma] Parsed unknown tool name: "${name}", skipping`);
     }
   }
 
@@ -391,16 +398,16 @@ export function parseFunctionCalls(
 // ============================================================================
 
 export interface ToolExecutor {
-  addItem(params: any): Promise<any>;
-  removeItem(params: any): Promise<any>;
-  getInventory(params?: any): Promise<any>;
-  getExpiringItems(params?: any): Promise<any>;
-  setExpiryAlert(params: any): Promise<any>;
-  addToGroceryList(params: any): Promise<any>;
-  getGroceryList(params?: any): Promise<any>;
-  findRecipes(params: any): Promise<any>;
-  suggestMeals(params: any): Promise<any>;
-  scanBarcode(params: any): Promise<any>;
+  addItem(params: any): Promise<ToolResponse>;
+  removeItem(params: any): Promise<ToolResponse>;
+  getInventory(params?: any): Promise<ToolResponse>;
+  getExpiringItems(params?: any): Promise<ToolResponse>;
+  setExpiryAlert(params: any): Promise<ToolResponse>;
+  addToGroceryList(params: any): Promise<ToolResponse>;
+  getGroceryList(params?: any): Promise<ToolResponse>;
+  findRecipes(params: any): Promise<ToolResponse>;
+  suggestMeals(params: any): Promise<ToolResponse>;
+  scanBarcode(params: any): Promise<ToolResponse>;
 }
 
 // ============================================================================
@@ -448,18 +455,18 @@ export class FunctionGemmaService {
       // Check if model exists
       const modelFile = new File(this.modelPath);
       if (!modelFile.exists) {
-        console.error("[FunctionGemma] Model file not found:", this.modelPath);
+        log.error("[FunctionGemma] Model file not found:", this.modelPath);
         return false;
       }
 
       // Release any existing context
       if (this.context) {
-        console.log("[FunctionGemma] initialize: releasing existing context");
+        log.info("[FunctionGemma] initialize: releasing existing context");
         await releaseAllLlama();
       }
 
       // Initialize Function Gemma context
-      console.log("[FunctionGemma] initialize: calling initLlama...");
+      log.info("[FunctionGemma] initialize: calling initLlama...");
       const initStart = Date.now();
       const ctx = await initLlama({
         model: this.modelPath,
@@ -469,20 +476,20 @@ export class FunctionGemmaService {
       });
 
       if (!ctx) {
-        console.error("[FunctionGemma] initLlama returned null/undefined");
+        log.error("[FunctionGemma] initLlama returned null/undefined");
         this.isInitialized = false;
         return false;
       }
 
       this.context = ctx;
-      console.log("[FunctionGemma] Model initialized successfully", {
+      log.info("[FunctionGemma] Model initialized successfully", {
         elapsedMs: Date.now() - initStart,
         hasToolExecutor: !!this.toolExecutor,
       });
       this.isInitialized = true;
       return true;
     } catch (error) {
-      console.error("[FunctionGemma] Failed to initialize:", error);
+      log.error("[FunctionGemma] Failed to initialize:", error);
       this.isInitialized = false;
       return false;
     }
@@ -526,7 +533,7 @@ export class FunctionGemmaService {
       },
     ];
 
-    console.log(
+    log.info(
       "[FunctionGemma] Starting first completion with",
       messages.length,
       "messages and",
@@ -548,7 +555,7 @@ export class FunctionGemmaService {
       stop: ["<end_function_call>", "<end_of_turn>"],
     });
 
-    console.log("[FunctionGemma] First completion returned:", {
+    log.info("[FunctionGemma] First completion returned:", {
       textLength: result.text?.length ?? 0,
       textPreview: result.text?.slice(0, 300),
       hasToolCalls: !!result.tool_calls,
@@ -604,7 +611,7 @@ export class FunctionGemmaService {
           })),
         ];
 
-        console.log("[FunctionGemma] Starting final completion with tool results...");
+        log.info("[FunctionGemma] Starting final completion with tool results...");
         const finalStart = Date.now();
 
         const finalResult: CompletionResult = await this.context.completion({
@@ -614,7 +621,7 @@ export class FunctionGemmaService {
           stop: ["<end_of_turn>", "<start_function_call>"],
         });
 
-        console.log("[FunctionGemma] Final completion returned:", {
+        log.info("[FunctionGemma] Final completion returned:", {
           textLength: finalResult.text?.length ?? 0,
           textPreview: finalResult.text?.slice(0, 300),
           timings: finalResult.timings,
@@ -623,7 +630,7 @@ export class FunctionGemmaService {
 
         finalText = finalResult.text;
       } catch (secondCompletionError) {
-        console.warn(
+        log.warn(
           "[FunctionGemma] Second completion failed, using formatted tool result:",
           secondCompletionError
         );
@@ -637,7 +644,7 @@ export class FunctionGemmaService {
       };
     }
 
-    console.log("[FunctionGemma] No tool calls found, returning text response");
+    log.info("[FunctionGemma] No tool calls found, returning text response");
     return {
       text: result.text,
     };
@@ -652,7 +659,7 @@ export class FunctionGemmaService {
     const results: Array<{ id: string; result: any }> = [];
 
     if (!this.toolExecutor) {
-      console.warn("[FunctionGemma] No tool executor set, returning mock results");
+      log.warn("[FunctionGemma] No tool executor set, returning mock results");
       for (const toolCall of toolCalls) {
         results.push({
           id: toolCall.id,
@@ -664,7 +671,7 @@ export class FunctionGemmaService {
 
     for (const toolCall of toolCalls) {
       const { name, arguments: args } = toolCall.function;
-      console.log(`[FunctionGemma] Executing tool: ${name}`, { id: toolCall.id, args });
+      log.info(`[FunctionGemma] Executing tool: ${name}`, { id: toolCall.id, args });
 
       try {
         let result;
@@ -703,7 +710,7 @@ export class FunctionGemmaService {
             result = await this.toolExecutor.scanBarcode(args);
             break;
           default:
-            console.warn(`[FunctionGemma] Unknown function: ${name}`);
+            log.warn(`[FunctionGemma] Unknown function: ${name}`);
             result = { error: `Unknown function: ${name}` };
         }
 
@@ -712,7 +719,7 @@ export class FunctionGemmaService {
           result,
         });
       } catch (error) {
-        console.error(`[FunctionGemma] Tool ${name} threw error:`, error);
+        log.error(`[FunctionGemma] Tool ${name} threw error:`, error);
         results.push({
           id: toolCall.id,
           result: { error: String(error) },
@@ -787,11 +794,11 @@ export async function downloadModelIfNeeded(
 
   // Check if model already exists
   if (destFile.exists) {
-    console.log("[FunctionGemma] Model already exists");
+    log.info("[FunctionGemma] Model already exists");
     return destFile.uri;
   }
 
-  console.log("[FunctionGemma] Downloading model...");
+  log.info("[FunctionGemma] Downloading model...");
 
   try {
     // Download using the new File API
@@ -802,11 +809,11 @@ export async function downloadModelIfNeeded(
       downloadedFile.move(destFile);
     }
 
-    console.log("[FunctionGemma] Model downloaded successfully");
+    log.info("[FunctionGemma] Model downloaded successfully");
     onProgress?.(100);
     return destFile.uri;
   } catch (error) {
-    console.error("[FunctionGemma] Download failed:", error);
+    log.error("[FunctionGemma] Download failed:", error);
     return null;
   }
 }

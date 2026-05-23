@@ -46,6 +46,8 @@ function RecipeItemCard({ recipe, completionPercentage, matchCategory }: RecipeI
     <Animated.View key={recipe.id} className="p-3 flex-1" style={[animatedStyle]}>
       <Link href={`/recipes/${recipe.id}`} asChild>
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`View recipe for ${recipe.title}`}
           onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
           onPressIn={onPressIn}
           onPressOut={onPressOut}

@@ -1,7 +1,7 @@
 import { View, FlatList, ActivityIndicator, Pressable, Alert } from "react-native";
 import { H3, P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
-import { TrashIcon, CheckCircleIcon, XIcon, Edit2Icon } from "lucide-uniwind";
+import { TrashIcon, CheckCircleIcon, XIcon, Edit2Icon, ShoppingCartIcon } from "lucide-uniwind";
 import { useGroceryList } from "~/hooks/queries/useGroceryList";
 import {
   useClearGroceryChecks,
@@ -10,7 +10,7 @@ import {
 } from "~/hooks/queries/useMealPlanQueries";
 import GroceryListItem from "~/components/GroceryList/GroceryListItem";
 import GroceryListHeader from "~/components/GroceryList/GroceryListHeader";
-import { Stack } from "expo-router";
+import { Stack, Link } from "expo-router";
 import { toast } from "sonner-native";
 import { useState } from "react";
 
@@ -107,7 +107,18 @@ export default function GroceryListPage() {
   if (isEmpty) {
     return (
       <View className="flex-1 items-center justify-center bg-background px-6">
-        <P className="text-muted-foreground text-center">You haven't added any items yet.</P>
+        <View className="w-24 h-24 rounded-full bg-muted items-center justify-center mb-6">
+          <ShoppingCartIcon className="text-muted-foreground" size={48} strokeWidth={1.5} />
+        </View>
+        <H3 className="font-bowlby-one text-center mb-2">Your list is empty</H3>
+        <P className="text-muted-foreground text-center max-w-xs mb-8">
+          Add recipes to your meal plan, and the ingredients you need will appear here.
+        </P>
+        <Link href="/meal-plan" asChild>
+          <Button variant="default" className="bg-foreground">
+            <P className="font-urbanist-semibold text-background">Plan Meals</P>
+          </Button>
+        </Link>
       </View>
     );
   }

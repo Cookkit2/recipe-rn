@@ -1,6 +1,4 @@
-import { Stack, useRouter } from "expo-router";
-import React from "react";
-import { Redirect } from "expo-router";
+import { Stack, useRouter, Redirect } from "expo-router";
 import { storage } from "~/data";
 import { ONBOARDING_COMPLETED_KEY } from "~/constants/storage-keys";
 import PantryWrapper from "~/components/Pantry/PantryWrapper";

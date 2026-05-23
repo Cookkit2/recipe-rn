@@ -71,7 +71,7 @@ export class NoAuthYouTubeService implements IYouTubeService {
    * Fetch video metadata using noembed.com (oEmbed proxy)
    */
   async getVideoInfo(videoId: string): Promise<YouTubeVideoInfo> {
-    const url = `${this.NOEMBED_URL}?url=https://www.youtube.com/watch?v=${videoId}`;
+    const url = `${this.NOEMBED_URL}?url=https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`;
 
     try {
       const response = await fetch(url);
@@ -403,7 +403,7 @@ export class NoAuthYouTubeService implements IYouTubeService {
    */
   private async fetchTranscriptViaProxy(videoId: string): Promise<YouTubeTranscript | null> {
     // Use a public transcript API
-    const apiUrl = `https://yt.lemnoslife.com/noKey/captions?videoId=${videoId}&lang=en`;
+    const apiUrl = `https://yt.lemnoslife.com/noKey/captions?videoId=${encodeURIComponent(videoId)}&lang=en`;
 
     try {
       log.debug(`Transcript: Trying proxy API for ${videoId}`);
@@ -478,7 +478,7 @@ export class NoAuthYouTubeService implements IYouTubeService {
    * Direct YouTube page scraping method (original approach)
    */
   private async fetchTranscriptDirect(videoId: string): Promise<YouTubeTranscript | null> {
-    const pageUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    const pageUrl = `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`;
 
     try {
       const pageResponse = await fetch(pageUrl, {

@@ -215,7 +215,13 @@ export function LogWasteDialog({
 
       <DialogFooter>
         <View className="flex-row gap-2 w-full">
-          <Button variant="outline" className="flex-1" onPress={() => setOpen(false)}>
+          <Button
+            variant="outline"
+            className="flex-1"
+            onPress={() => setOpen(false)}
+            accessibilityLabel="Cancel"
+            accessibilityHint="Close this dialog without saving"
+          >
             <P className="text-foreground">Cancel</P>
           </Button>
           <Button className="flex-1" onPress={handleSubmit} disabled={recordWaste.isPending}>
