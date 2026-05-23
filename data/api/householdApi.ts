@@ -1,5 +1,6 @@
 import { householdApi } from "~/data/supabase-api/HouseholdApi";
 import { householdSyncService } from "~/data/services/HouseholdSyncService";
+import { householdRealtimeService } from "~/data/services/HouseholdRealtimeService";
 import { useAuthStore } from "~/auth/AuthStore";
 import { generateInviteCode } from "~/utils/invite-code";
 import { isValidSubscription } from "~/utils/subscription-utils";
@@ -126,6 +127,9 @@ export const householdApiFunctions = {
         await database.batch(batchOps);
       });
     }
+
+    // Sync to backfill supabaseId on seeded stock items
+    await householdSyncService.syncHousehold(supabaseHousehold.id);
 
     return localHousehold;
   },
@@ -323,5 +327,39 @@ export const householdApiFunctions = {
    */
   syncSharedStock: async (householdSupabaseId: string): Promise<void> => {
     await householdSyncService.syncHousehold(householdSupabaseId);
+  },
+
+  removeMember: async (memberUserId: string): Promise<void> => {
+    const user = useAuthStore.getState().user;
+    if (!user) throw new Error("Not authenticated");
+
+    await householdApi.removeMember(memberUserId);
+
+    // Remove local member record
+    const memberCollection = database.collections.get("household_member");
+    const members = await memberCollection.query().fetch();
+    const targetMember = members.find((m: any) => m.userId === memberUserId);
+
+    if (targetMember) {
+      await database.write(async () => {
+        await (targetMember as any).destroyPermanently();
+      });
+    }
+  },
+
+  updateHouseholdName: async (
+    householdId: string,
+    householdSupabaseId: string,
+    newName: string
+  ): Promise<void> => {
+    await householdApi.updateHousehold(householdSupabaseId, { name: newName });
+
+    const householdCollection = database.collections.get("household");
+    await database.write(async () => {
+      const hh = await householdCollection.find(householdId);
+      await (hh as any).update((record: any) => {
+        record.name = newName;
+      });
+    });
   },
 };

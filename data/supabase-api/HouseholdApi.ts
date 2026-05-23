@@ -99,6 +99,21 @@ export const householdApi = {
     if (error) throw error;
   },
 
+  updateHousehold: async (
+    householdId: string,
+    updates: { name?: string }
+  ): Promise<Tables<"households">> => {
+    if (!guardSupabase()) throw new Error("Supabase not available");
+    const { data, error } = await supabase!
+      .from("households")
+      .update(updates)
+      .eq("id", householdId)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
   dissolveHousehold: async (householdId: string): Promise<void> => {
     if (!guardSupabase()) return;
     const { error } = await supabase!.from("households").delete().eq("id", householdId);
