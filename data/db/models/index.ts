@@ -18,6 +18,8 @@ export { default as UserAchievement } from "./UserAchievement";
 export { default as Challenge } from "./Challenge";
 export { default as UserChallenge } from "./UserChallenge";
 export { default as WasteLog } from "./WasteLog";
+export { default as Household } from "./Household";
+export { default as HouseholdMember } from "./HouseholdMember";
 
 // Export data interfaces
 export type { RecipeData, RecipeType } from "./Recipe";
@@ -39,6 +41,8 @@ export type { UserAchievementData } from "./UserAchievement";
 export type { ChallengeData } from "./Challenge";
 export type { UserChallengeData } from "./UserChallenge";
 export type { WasteLogData } from "./WasteLog";
+export type { HouseholdData } from "./Household";
+export type { HouseholdMemberData } from "./HouseholdMember";
 
 // Model class array for database initialization
 import Recipe from "./Recipe";
@@ -61,6 +65,8 @@ import Challenge from "./Challenge";
 import UserChallenge from "./UserChallenge";
 import WasteLog from "./WasteLog";
 import ConsumptionLog from "./ConsumptionLog";
+import Household from "./Household";
+import HouseholdMember from "./HouseholdMember";
 
 export const modelClasses = [
   Recipe,
@@ -83,4 +89,6 @@ export const modelClasses = [
   UserChallenge,
   WasteLog,
   ConsumptionLog,
+  Household,
+  HouseholdMember,
 ];
