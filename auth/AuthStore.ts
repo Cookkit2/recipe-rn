@@ -199,92 +199,22 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   // Refresh session
   refreshSession: async () => {
-    const { strategy } = get();
-    if (!strategy) {
-      const error = "No authentication strategy configured";
-      get()._setError(error);
-      return {
-        success: false,
-        error: { code: "NO_STRATEGY", message: error, retryable: false },
-      };
-    }
-
-    get()._setLoading(true);
-    get()._setError(null);
-
-    try {
-      const result = await strategy.refreshSession();
-
-      if (result.success && result.user) {
-        get()._setUser(result.user);
-        get()._setSession(result.session || null);
-        get()._setAuthState("authenticated");
-      } else {
-        get()._setAuthState("error");
-        get()._setError(result.error?.message || "Session refresh failed");
-      }
-
-      return result;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-      get()._setAuthState("error");
-      get()._setError(errorMessage);
-      return {
-        success: false,
-        error: {
-          code: "REFRESH_ERROR",
-          message: errorMessage,
-          retryable: true,
-        },
-      };
-    } finally {
-      get()._setLoading(false);
-    }
+    return runWithStrategy(
+      get,
+      "REFRESH_ERROR",
+      (s) => s.refreshSession(),
+      "Session refresh failed"
+    );
   },
 
   // Link anonymous account
   linkAnonymousAccount: async (credentials: LinkAccountCredentials) => {
-    const { strategy } = get();
-    if (!strategy) {
-      const error = "No authentication strategy configured";
-      get()._setError(error);
-      return {
-        success: false,
-        error: { code: "NO_STRATEGY", message: error, retryable: false },
-      };
-    }
-
-    get()._setLoading(true);
-    get()._setError(null);
-
-    try {
-      const result = await strategy.linkAnonymousAccount(credentials);
-
-      if (result.success && result.user) {
-        get()._setUser(result.user);
-        get()._setSession(result.session || null);
-        get()._setAuthState("authenticated");
-      } else {
-        get()._setAuthState("error");
-        get()._setError(result.error?.message || "Account linking failed");
-      }
-
-      return result;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-      get()._setAuthState("error");
-      get()._setError(errorMessage);
-      return {
-        success: false,
-        error: {
-          code: "LINK_ACCOUNT_ERROR",
-          message: errorMessage,
-          retryable: true,
-        },
-      };
-    } finally {
-      get()._setLoading(false);
-    }
+    return runWithStrategy(
+      get,
+      "LINK_ACCOUNT_ERROR",
+      (s) => s.linkAnonymousAccount(credentials),
+      "Account linking failed"
+    );
   },
 
   // Reset password
