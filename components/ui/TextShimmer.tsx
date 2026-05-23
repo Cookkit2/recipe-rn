@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { View, type ViewProps } from "react-native";
-import MaskedView from "@react-native-masked-view/masked-view";
+import MaskedView from "@expo/ui/community/masked-view";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   Easing,

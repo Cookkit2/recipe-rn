@@ -4,7 +4,7 @@ import { H2, P, Small } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
 import { useRecipeSteps } from "~/store/RecipeStepsContext";
 import { Image } from "expo-image";
-import MaskedView from "@react-native-masked-view/masked-view";
+import MaskedView from "@expo/ui/community/masked-view";
 import ShapeContainer from "~/components/Shared/Shapes/ShapeContainer";
 import { formatDuration } from "~/utils/time-formatter";
 import { cn } from "~/lib/utils";
