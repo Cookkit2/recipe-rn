@@ -2,12 +2,7 @@ import React, { createContext, useCallback, useContext, useRef, useState } from 
 import type { ItemType, PantryItem } from "~/types/PantryItem";
 import { useWindowDimensions } from "react-native";
 import { baseIngredientApi } from "~/data/supabase-api/BaseIngredientApi";
-import { classifyStaticImage } from "~/hooks/model/classifyModel";
-import { loadImageIntoSkia } from "~/hooks/model/processImage";
-import {
-  segmentStaticImage,
-  trimTransparentBordersAndResizeImage,
-} from "~/hooks/model/segmentModel";
+
 import { File, Paths } from "expo-file-system";
 import { titleCase } from "~/utils/text-formatter";
 import * as Crypto from "expo-crypto";
@@ -92,6 +87,17 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
       const pipelineStart = performance.now();
 
       try {
+        // Lazy-load skia-dependent modules (734KB deferred until camera use)
+        const [
+          { loadImageIntoSkia },
+          { segmentStaticImage, trimTransparentBordersAndResizeImage },
+          { classifyStaticImage },
+        ] = await Promise.all([
+          import("~/hooks/model/processImage"),
+          import("~/hooks/model/segmentModel"),
+          import("~/hooks/model/classifyModel"),
+        ]);
+
         const skImage = await loadImageIntoSkia(imagePath);
 
         if (!skImage) {
