@@ -31,6 +31,11 @@ function createSupabaseClient(): SupabaseClient<Database> | null {
         "X-Client-Info": "recipe-app-react-native",
       },
     },
+    realtime: {
+      params: {
+        eventsPerSecond: 2,
+      },
+    },
   });
 }
 
