@@ -191,5 +191,40 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 6,
+      steps: [
+        addColumns({
+          table: "stock",
+          columns: [
+            { name: "household_id", type: "string", isOptional: true },
+            { name: "added_by_user_id", type: "string", isOptional: true },
+          ],
+        }),
+        createTable({
+          name: "household",
+          columns: [
+            { name: "supabase_id", type: "string", isIndexed: true },
+            { name: "name", type: "string" },
+            { name: "invite_code", type: "string" },
+            { name: "invite_expires_at", type: "number" },
+            { name: "max_members", type: "number" },
+            { name: "created_by_user_id", type: "string" },
+            { name: "created_at", type: "number" },
+            { name: "updated_at", type: "number" },
+          ],
+        }),
+        createTable({
+          name: "household_member",
+          columns: [
+            { name: "supabase_id", type: "string", isIndexed: true },
+            { name: "household_id", type: "string", isIndexed: true },
+            { name: "user_id", type: "string" },
+            { name: "display_name", type: "string", isOptional: true },
+            { name: "joined_at", type: "number" },
+          ],
+        }),
+      ],
+    },
   ],
 });

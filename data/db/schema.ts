@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from "@nozbe/watermelondb";
 
 export default appSchema({
-  version: 5,
+  version: 6,
   tables: [
     // ========================================
     // RECIPE CACHE (3 tables)
@@ -123,6 +123,8 @@ export default appSchema({
         { name: "x", type: "number", isOptional: true },
         { name: "y", type: "number", isOptional: true },
         { name: "scale", type: "number", isOptional: true },
+        { name: "household_id", type: "string", isOptional: true, isIndexed: true },
+        { name: "added_by_user_id", type: "string", isOptional: true },
         { name: "created_at", type: "number" },
         { name: "updated_at", type: "number" },
       ],
@@ -338,6 +340,38 @@ export default appSchema({
         { name: "claimed_at", type: "number", isOptional: true }, // Timestamp when rewards claimed
         { name: "created_at", type: "number" },
         { name: "updated_at", type: "number" },
+      ],
+    }),
+
+    // ========================================
+    // HOUSEHOLD SHARING (2 tables)
+    // Support for shared pantries and multi-user households
+    // ========================================
+
+    // Household table
+    tableSchema({
+      name: "household",
+      columns: [
+        { name: "supabase_id", type: "string", isIndexed: true },
+        { name: "name", type: "string" },
+        { name: "invite_code", type: "string" },
+        { name: "invite_expires_at", type: "number" },
+        { name: "max_members", type: "number" },
+        { name: "created_by_user_id", type: "string" },
+        { name: "created_at", type: "number" },
+        { name: "updated_at", type: "number" },
+      ],
+    }),
+
+    // Household Member table
+    tableSchema({
+      name: "household_member",
+      columns: [
+        { name: "supabase_id", type: "string", isIndexed: true },
+        { name: "household_id", type: "string", isIndexed: true },
+        { name: "user_id", type: "string" },
+        { name: "display_name", type: "string", isOptional: true },
+        { name: "joined_at", type: "number" },
       ],
     }),
   ],
