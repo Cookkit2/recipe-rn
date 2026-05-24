@@ -86,6 +86,8 @@ export default function RecipeCategoryButtonGroup() {
               variant="outline"
               className="rounded-2xl border-continuous flex-row items-center gap-2 border-white/20 bg-transparent"
               onPress={handleChooseForMe}
+              accessibilityRole="button"
+              accessibilityLabel="Choose a random recipe"
             >
               <DicesIcon color={lightColors.background} size={18} strokeWidth={3} />
               <P
@@ -102,6 +104,8 @@ export default function RecipeCategoryButtonGroup() {
             variant="outline"
             className="rounded-2xl border-continuous flex-row items-center gap-2 border-white/20 bg-transparent"
             onPress={() => setIsImportDialogOpen(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Import recipe from URL"
           >
             <GlobeIcon color={lightColors.background} size={18} strokeWidth={3} />
             <P
@@ -146,6 +150,9 @@ const SegmentedButton = React.memo(function SegmentedButton({
         updateRecipeTag(tag);
         startTransition(() => snapToExpanded());
       }}
+      accessibilityRole="button"
+      accessibilityLabel={`Filter by ${label}`}
+      accessibilityState={{ selected: selectedRecipeTags.includes(tag) }}
     >
       {React.cloneElement(icon, {
         style: {
