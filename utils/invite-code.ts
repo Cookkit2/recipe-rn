@@ -1,12 +1,12 @@
-const CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+import * as Crypto from "expo-crypto";
+
 const CODE_LENGTH = 8;
 
 export function generateInviteCode(): string {
-  let code = "";
-  for (let i = 0; i < CODE_LENGTH; i++) {
-    code += CHARSET[Math.floor(Math.random() * CHARSET.length)];
-  }
-  return code;
+  return Crypto.randomUUID()
+    .replace(/-/g, "")
+    .substring(0, CODE_LENGTH)
+    .toUpperCase();
 }
 
 export function isValidInviteCodeFormat(code: string): boolean {
