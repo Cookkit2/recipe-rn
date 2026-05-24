@@ -11,7 +11,7 @@ describe("invite-code", () => {
     it("generates unique codes on successive calls", () => {
       let id = 1;
       require("expo-crypto").randomUUID.mockImplementation(() => {
-        const idStr = String(id++).padStart(8, '0');
+        const idStr = String(id++).padStart(8, "0");
         return `${idStr}-mock-uuid`;
       });
       const codes = new Set(Array.from({ length: 100 }, () => generateInviteCode()));
