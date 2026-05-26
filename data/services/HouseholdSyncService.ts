@@ -40,10 +40,9 @@ export class HouseholdSyncService {
     const stockCollection = database.collections.get("stock");
 
     // Direct database query to fetch only relevant items
-    const sharedItems = await stockCollection.query(
-      Q.where("household_id", householdSupabaseId),
-      Q.where("updated_at", Q.gt(lastSync))
-    ).fetch();
+    const sharedItems = await stockCollection
+      .query(Q.where("household_id", householdSupabaseId), Q.where("updated_at", Q.gt(lastSync)))
+      .fetch();
 
     if (sharedItems.length === 0) return;
 
@@ -78,9 +77,9 @@ export class HouseholdSyncService {
     const stockCollection = database.collections.get("stock");
 
     const remoteIds = remoteItems.map((item) => item.id);
-    const existingItems = await stockCollection.query(
-      Q.where("supabase_id", Q.oneOf(remoteIds))
-    ).fetch();
+    const existingItems = await stockCollection
+      .query(Q.where("supabase_id", Q.oneOf(remoteIds)))
+      .fetch();
 
     const existingMap = new Map();
     for (const item of existingItems) {

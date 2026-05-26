@@ -90,10 +90,9 @@ export class HouseholdRealtimeService {
     try {
       const stockCollection = database.collections.get("stock");
 
-      const existingItems = await stockCollection.query(
-        Q.where("supabase_id", record.id),
-        Q.take(1)
-      ).fetch();
+      const existingItems = await stockCollection
+        .query(Q.where("supabase_id", record.id), Q.take(1))
+        .fetch();
       const existing = existingItems[0];
       if (existing) return;
 
@@ -135,10 +134,9 @@ export class HouseholdRealtimeService {
   }): Promise<void> {
     try {
       const stockCollection = database.collections.get("stock");
-      const existingItems = await stockCollection.query(
-        Q.where("supabase_id", record.id),
-        Q.take(1)
-      ).fetch();
+      const existingItems = await stockCollection
+        .query(Q.where("supabase_id", record.id), Q.take(1))
+        .fetch();
       const existing = existingItems[0];
 
       if (!existing) {
@@ -180,10 +178,9 @@ export class HouseholdRealtimeService {
   private async handleDelete(record: { id: string }): Promise<void> {
     try {
       const stockCollection = database.collections.get("stock");
-      const existingItems = await stockCollection.query(
-        Q.where("supabase_id", record.id),
-        Q.take(1)
-      ).fetch();
+      const existingItems = await stockCollection
+        .query(Q.where("supabase_id", record.id), Q.take(1))
+        .fetch();
       const existing = existingItems[0];
 
       if (!existing) return;
