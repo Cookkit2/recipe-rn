@@ -37,3 +37,8 @@
 
 **Learning:** In `hooks/queries/useGroceryList.ts`, the loop allocating `pantryItem.synonyms?.map(...)` on every iteration of a doubly-nested loop mapping unmatched ingredients against pantry items causes massive array allocation penalties and GC pressure (e.g., thousands of times per generation).
 **Action:** Lift the array transformation out of the inner loop, or modify the matching utility (`isIngredientMatch`) to accept the raw array of objects so mapping is completely avoided.
+
+## 2024-05-20 - Eliminate N+1 and In-Memory Filtering in Sync Services
+
+**Learning:** In `HouseholdSyncService` and `HouseholdRealtimeService`, using `.query().fetch()` to fetch all records and then calling `.filter()` or `.find()` in JS, especially inside loops, leads to severe N+1 memory allocation, redundant bridge crossing, and extreme GC pressure. Filtering by dates or syncing by comparing arrays shouldn't pull everything.
+**Action:** Use native WatermelonDB queries like `Q.where("updated_at", Q.gt(lastSync))` to filter DB-side. When matching remote items to local items in a loop, fetch only the required IDs using `Q.where("supabase_id", Q.oneOf(remoteIds))` outside the loop, build a Map, and perform O(1) lookups inside the `database.write` batch block.

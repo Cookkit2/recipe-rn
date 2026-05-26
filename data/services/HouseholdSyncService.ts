@@ -2,6 +2,7 @@ import { database } from "~/data/db/database";
 import { householdApi } from "~/data/supabase-api/HouseholdApi";
 import { log } from "~/utils/logger";
 import { StorageFactory } from "~/data/storage/storage-factory";
+import { Q } from "@nozbe/watermelondb";
 
 const LAST_SYNC_KEY = "household_last_sync_timestamp";
 
@@ -38,15 +39,11 @@ export class HouseholdSyncService {
     const lastSync = this.getLastSyncTimestamp();
     const stockCollection = database.collections.get("stock");
 
-    // Fetch all stock items and filter in JS for household_id matching and updated_at > lastSync
-    const allItems = await stockCollection.query().fetch();
-
-    const sharedItems = allItems.filter(
-      (item: any) =>
-        item.householdId === householdSupabaseId &&
-        item.updatedAt &&
-        new Date(item.updatedAt).getTime() > lastSync
-    );
+    // Direct database query to fetch only relevant items
+    const sharedItems = await stockCollection.query(
+      Q.where("household_id", householdSupabaseId),
+      Q.where("updated_at", Q.gt(lastSync))
+    ).fetch();
 
     if (sharedItems.length === 0) return;
 
@@ -80,12 +77,21 @@ export class HouseholdSyncService {
 
     const stockCollection = database.collections.get("stock");
 
+    const remoteIds = remoteItems.map((item) => item.id);
+    const existingItems = await stockCollection.query(
+      Q.where("supabase_id", Q.oneOf(remoteIds))
+    ).fetch();
+
+    const existingMap = new Map();
+    for (const item of existingItems) {
+      existingMap.set((item as any).supabaseId, item);
+    }
+
     await database.write(async () => {
       const batchOps: import("@nozbe/watermelondb").Model[] = [];
 
       for (const remoteItem of remoteItems) {
-        const allItems = await stockCollection.query().fetch();
-        const existing = allItems.find((i: any) => i.supabaseId === remoteItem.id);
+        const existing = existingMap.get(remoteItem.id);
 
         if (existing) {
           batchOps.push(
