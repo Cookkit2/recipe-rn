@@ -34,7 +34,13 @@ export default function NotificationScreen() {
             title="Enable Notifications"
             description="Allow Cookkit to send notifications."
           >
-            <Switch value={settings.enabled} onValueChange={toggleEnabled} />
+            <Switch
+              value={settings.enabled}
+              onValueChange={toggleEnabled}
+              accessibilityLabel="Enable Notifications"
+              accessibilityRole="switch"
+              accessibilityState={{ checked: settings.enabled }}
+            />
           </SettingRow>
 
           {permissionDenied && (
@@ -59,6 +65,9 @@ export default function NotificationScreen() {
               value={settings.ingredientExpiry}
               onValueChange={toggleIngredientExpiry}
               disabled={masterDisabled}
+              accessibilityLabel="Ingredient expiry alerts"
+              accessibilityRole="switch"
+              accessibilityState={{ checked: settings.ingredientExpiry }}
             />
           </SettingRow>
 
@@ -72,6 +81,9 @@ export default function NotificationScreen() {
               value={settings.achievements}
               onValueChange={toggleAchievements}
               disabled={masterDisabled}
+              accessibilityLabel="Achievements and level-ups alerts"
+              accessibilityRole="switch"
+              accessibilityState={{ checked: settings.achievements }}
             />
           </SettingRow>
 
@@ -85,6 +97,9 @@ export default function NotificationScreen() {
               value={settings.challenges}
               onValueChange={toggleChallenges}
               disabled={masterDisabled}
+              accessibilityLabel="Challenges and streaks alerts"
+              accessibilityRole="switch"
+              accessibilityState={{ checked: settings.challenges }}
             />
           </SettingRow>
         </CardContent>

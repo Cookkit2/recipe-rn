@@ -17,6 +17,7 @@ function Switch({
         props.disabled && "opacity-50",
         className
       )}
+      accessibilityRole="switch"
       {...props}
     >
       <SwitchPrimitives.Thumb

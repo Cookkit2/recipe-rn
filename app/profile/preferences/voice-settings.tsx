@@ -52,6 +52,9 @@ export default function VoiceSettingsScreen() {
               trackColor={{ false: colors.muted, true: colors.primary }}
               value={settings.enabled}
               onValueChange={toggleEnabled}
+              accessibilityLabel="Enable Voice"
+              accessibilityRole="switch"
+              accessibilityState={{ checked: settings.enabled }}
             />
           </SettingRow>
 
@@ -66,6 +69,9 @@ export default function VoiceSettingsScreen() {
                 trackColor={{ false: colors.muted, true: colors.primary }}
                 value={settings.autoReadSteps}
                 onValueChange={toggleAutoRead}
+                accessibilityLabel="Auto-Read Steps"
+                accessibilityRole="switch"
+                accessibilityState={{ checked: settings.autoReadSteps }}
               />
             </SettingRow>
           )}
