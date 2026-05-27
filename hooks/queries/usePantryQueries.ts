@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { pantryQueryKeys } from "./pantryQueryKeys";
 import { recipeQueryKeys } from "./recipeQueryKeys";
@@ -56,15 +57,14 @@ export function usePantryItems() {
 export function usePantryItemsByType(type: ItemType) {
   const { data: allItems, ...rest } = usePantryItems();
 
-  if (type === "all")
-    return {
-      ...rest,
-      data: allItems ?? [],
-    };
+  const filteredData = useMemo(() => {
+    if (type === "all") return allItems ?? [];
+    return allItems?.filter((item) => item.type === type) ?? [];
+  }, [allItems, type]);
 
   return {
     ...rest,
-    data: allItems?.filter((item) => item.type === type) ?? [],
+    data: filteredData,
   };
 }
 
