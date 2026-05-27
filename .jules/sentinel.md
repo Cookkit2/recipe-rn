@@ -43,3 +43,11 @@
 **Learning:** Hardcoded emails in frontend code (like React Native apps) can be easily extracted by reverse-engineering the compiled bundle or by scraping source repositories. This exposes developers to spam, phishing, and potential social engineering attacks, while also coupling application logic to a specific individual.
 
 **Prevention:** Always extract support or contact email addresses into environment variables or server-fetched configurations. Use generic aliases (e.g., support@domain.com) instead of personal developer emails. Ensure fallback logic uses non-personal generic addresses if the environment variable is missing.
+
+## 2024-05-27 - Supabase `.or()` String Concatenation Injection Risk
+
+**Vulnerability:** Constructing string queries for Supabase's `.or()` method using `join(",")` (e.g., `synonym.ilike."${n}"`) creates an injection risk in PostgREST, especially if manual escaping is bypassed or flawed.
+
+**Learning:** PostgREST `.or()` parameters require stringent syntax that is difficult to safely escape manually. Since `.in()` does not support case-insensitive matching (`ilike`), developers often fall back to building raw OR strings, increasing attack surfaces.
+
+**Prevention:** To perform case-insensitive multiple-value queries safely, avoid string concatenation entirely. Instead, use an array of individual parameterized `.ilike()` queries executed concurrently using `Promise.all()`.
