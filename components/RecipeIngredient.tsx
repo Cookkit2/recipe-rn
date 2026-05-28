@@ -24,6 +24,7 @@ export function RecipeIngredient({ ingredient, isInPantry, isLast }: RecipeIngre
       accessibilityRole="checkbox"
       accessibilityState={{ checked: isChecked }}
       accessibilityLabel={`Toggle ingredient ${ingredient.name}`}
+      accessibilityHint="Toggles the ingredient checkmark"
       className={`flex-row items-center py-3 ${!isLast ? "border-b border-border/40" : ""}`}
     >
       <View className="mr-3 w-6 h-6 rounded border border-border items-center justify-center bg-background">
