@@ -155,11 +155,7 @@ export function RecipeStepsProvider({
 
       recipe.ingredients.forEach((recipeIngredient) => {
         const matchingPantryItem = pantryItems.find((pantryItem) =>
-          isIngredientMatch(
-            pantryItem.name,
-            recipeIngredient.name,
-            pantryItem.synonyms?.map((s) => s.synonym)
-          )
+          isIngredientMatch(pantryItem.name, recipeIngredient.name, pantryItem.synonyms)
         );
         if (matchingPantryItem) {
           matches.push({ pantryItem: matchingPantryItem, recipeIngredient });
