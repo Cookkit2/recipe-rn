@@ -148,9 +148,11 @@
     "zustand": "^5.0.14"
   },
   "resolutions": {
+    "tmp": "^0.2.7",
     "fast-uri": "^3.1.2"
   },
   "overrides": {
+    "tmp": "^0.2.7",
     "fast-uri": "^3.1.2",
     "hermes-compiler": "250829098.0.4",
     "@babel/runtime": ">=7.26.10",
