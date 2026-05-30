@@ -37,3 +37,7 @@
 
 **Learning:** In `hooks/queries/useGroceryList.ts`, the loop allocating `pantryItem.synonyms?.map(...)` on every iteration of a doubly-nested loop mapping unmatched ingredients against pantry items causes massive array allocation penalties and GC pressure (e.g., thousands of times per generation).
 **Action:** Lift the array transformation out of the inner loop, or modify the matching utility (`isIngredientMatch`) to accept the raw array of objects so mapping is completely avoided.
+## 2025-02-12 - Eliminate FlatList for small static grids
+
+**Learning:** Using `FlatList` with `scrollEnabled={false}` for small static grids of items (like `<GridButtons>`) creates unnecessary virtualized list overhead (calculating item layouts, windowing, and viewability) and negatively impacts performance compared to simple mapping, especially when nested inside other ScrollViews. Furthermore, it creates O(N) array search inside every item if checking `value.includes(item.value)`.
+**Action:** Replace small, non-scrolling `FlatList` implementations with simple `<View className="flex-row flex-wrap">` containing statically mapped children. Additionally, optimize array lookups per child by converting the value array to an O(1) `Set` via `useMemo` in the parent component.
