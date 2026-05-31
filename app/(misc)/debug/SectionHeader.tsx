@@ -15,6 +15,9 @@ export function SectionHeader({ title, icon, expanded, onToggle }: SectionHeader
     <Pressable
       onPress={onToggle}
       className="flex-row items-center justify-between bg-card p-4 rounded-lg mb-2"
+      accessibilityRole="button"
+      accessibilityLabel={expanded ? `Collapse ${title}` : `Expand ${title}`}
+      accessibilityState={{ expanded }}
     >
       <H3>
         {icon} {title}
