@@ -11,6 +11,10 @@ import OutlinedImage from "~/components/ui/outlined-image";
 import RotationCard from "~/components/Shared/RotationCard";
 import { SEED_INDEX_MULTIPLIER, SEED_TOTAL_MULTIPLIER } from "~/constants/seeds";
 
+// ⚡ Bolt Optimization: Pre-compute Map for O(1) ingredient lookups instead of O(N) Array.find()
+// Impact: Reduces lookup complexity from O(N) to O(1) per related ingredient rendered
+const dummyPantryItemsMap = new Map(dummyPantryItems.map((item) => [item.id, item]));
+
 const StepContent: React.FC<{ step: RecipeStep; totalSteps: number }> = ({ step, totalSteps }) => {
   const colors = useColors();
 
@@ -87,7 +91,8 @@ const StepContent: React.FC<{ step: RecipeStep; totalSteps: number }> = ({ step,
 export default StepContent;
 
 const RelatedIngredients = ({ id, index }: { id: string; index: number }) => {
-  const currentIngredient = dummyPantryItems.find((item) => item.id === id);
+  // ⚡ Bolt Optimization: O(1) lookup
+  const currentIngredient = dummyPantryItemsMap.get(id);
 
   if (!currentIngredient) return null;
 
