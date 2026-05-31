@@ -43,3 +43,8 @@
 **Learning:** Hardcoded emails in frontend code (like React Native apps) can be easily extracted by reverse-engineering the compiled bundle or by scraping source repositories. This exposes developers to spam, phishing, and potential social engineering attacks, while also coupling application logic to a specific individual.
 
 **Prevention:** Always extract support or contact email addresses into environment variables or server-fetched configurations. Use generic aliases (e.g., support@domain.com) instead of personal developer emails. Ensure fallback logic uses non-personal generic addresses if the environment variable is missing.
+
+## 2026-05-31 - Secure Random Generation for Tokens
+**Vulnerability:** Weak random generation using Math.random() for invite codes, which creates predictable patterns.
+**Learning:** Invite codes and security tokens need unpredictable, cryptographically secure randomness to prevent enumeration or brute-forcing.
+**Prevention:** Use expo-crypto (getRandomBytes) instead of Math.random() for generating secure identifiers or tokens.
