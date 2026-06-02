@@ -10,6 +10,7 @@ import { useNearbyStores } from "~/hooks/queries/useStoreQueries";
 import { useDistanceCalculation } from "~/hooks/useDistanceCalculation";
 import { toast } from "sonner-native";
 import { openDirections } from "~/services/geolocation";
+import { checkStoreOpenStatus } from "~/utils/store-hours";
 
 // Default location (Kuala Lumpur, Malaysia)
 const DEFAULT_LATITUDE = 3.1577;
@@ -107,6 +108,7 @@ export default function GroceryMapPage() {
         longitude: store.longitude ?? DEFAULT_LONGITUDE,
         totalPriceCents: 0, // TODO: Calculate from grocery list
         distance: store.distance,
+        opening_hours: store.opening_hours,
       })),
     [storesWithDistance]
   );
@@ -119,11 +121,15 @@ export default function GroceryMapPage() {
         address: store.address ?? "Unknown address",
         distance: store.distance,
         totalPriceCents: 0, // TODO: Calculate from grocery list
+        opening_hours: store.opening_hours,
       })),
     [storesWithDistance]
   );
 
   const selectedStoreData = storesWithDistance.find((s) => s.id === selectedStore);
+  const openStatus = selectedStoreData
+    ? checkStoreOpenStatus(selectedStoreData.opening_hours)
+    : { isOpen: false, closingTime: undefined };
 
   return (
     <>
@@ -149,8 +155,8 @@ export default function GroceryMapPage() {
                 address: selectedStoreData.address ?? "Unknown address",
                 distance: selectedStoreData.distance,
                 totalPriceCents: 0, // TODO: Calculate from grocery list
-                isOpen: false, // TODO: Calculate from opening hours
-                closingTime: undefined, // TODO: Calculate from opening hours
+                isOpen: openStatus.isOpen,
+                closingTime: openStatus.closingTime,
                 latitude: selectedStoreData.latitude ?? DEFAULT_LATITUDE,
                 longitude: selectedStoreData.longitude ?? DEFAULT_LONGITUDE,
               }}
@@ -161,7 +167,8 @@ export default function GroceryMapPage() {
                   address: selectedStoreData.address ?? "",
                   distance: selectedStoreData.distance,
                   totalPriceCents: 0, // TODO: Calculate from grocery list
-                  isOpen: false, // TODO: Calculate from opening hours
+                  isOpen: openStatus.isOpen,
+                  closingTime: openStatus.closingTime,
                   latitude: selectedStoreData.latitude ?? DEFAULT_LATITUDE,
                   longitude: selectedStoreData.longitude ?? DEFAULT_LONGITUDE,
                 })
