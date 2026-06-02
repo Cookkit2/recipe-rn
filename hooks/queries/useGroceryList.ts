@@ -486,22 +486,10 @@ function buildPantryIndex(pantryItems: any[] | null | undefined): Map<string, an
   return index;
 }
 
-// ⚡ Bolt Optimization: Module-level cache to memoize slow-path evaluations across re-renders.
-// Includes serialized synonyms to ensure correctness if a pantry item's synonyms change.
-const isMatchCache = new Map<string, boolean>();
-
-function getMatchCacheKey(
-  pantryName: string,
-  ingredientName: string,
-  synonyms: any[] | undefined
-): string {
-  let synStr = "";
-  if (synonyms && synonyms.length > 0) {
-    // Handle both string and object forms quickly
-    synStr = synonyms.map((s) => (typeof s === "string" ? s : s.synonym)).join(",");
-  }
-  return `${pantryName}|${ingredientName}|${synStr}`;
-}
+// ⚡ Bolt Optimization: Use WeakMap to cache isIngredientMatch results without string allocation overhead.
+// Keyed by the pantryItem object reference, pointing to a Map of ingredientName -> isMatch.
+// Automatically handles cache invalidation when pantryItem objects are updated from the DB.
+const matchCache = new WeakMap<any, Map<string, boolean>>();
 
 /**
  * Step 2: Calculates needed quantities by subtracting pantry stock.
@@ -535,15 +523,16 @@ export function calculateNeededQuantities(
       } else {
         // Slow path: Fallback to scanning all pantry items for substring/complex matches
         for (const pantryItem of pantryItems) {
-          const cacheKey = getMatchCacheKey(pantryItem.name, ingredient.name, pantryItem.synonyms);
-          let isMatch = isMatchCache.get(cacheKey);
+          let itemCache = matchCache.get(pantryItem);
+          if (!itemCache) {
+            itemCache = new Map<string, boolean>();
+            matchCache.set(pantryItem, itemCache);
+          }
 
+          let isMatch = itemCache.get(ingredient.name);
           if (isMatch === undefined) {
             isMatch = isIngredientMatch(pantryItem.name, ingredient.name, pantryItem.synonyms);
-            if (isMatchCache.size > 5000) {
-              isMatchCache.clear(); // Safe clear to prevent memory leaks
-            }
-            isMatchCache.set(cacheKey, isMatch);
+            itemCache.set(ingredient.name, isMatch);
           }
 
           if (isMatch) {
