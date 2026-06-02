@@ -89,10 +89,10 @@ function sanitizeArg(arg: unknown): unknown {
   if (arg instanceof Error) {
     // We must redact the message if it has sensitive data
     if (containsSensitiveData(arg.message)) {
-       const redactedErr = new Error("[REDACTED]");
-       redactedErr.stack = arg.stack;
-       redactedErr.name = arg.name;
-       return redactedErr;
+      const redactedErr = new Error("[REDACTED]");
+      redactedErr.stack = arg.stack;
+      redactedErr.name = arg.name;
+      return redactedErr;
     }
 
     // Also check if any custom properties on the error contain sensitive data
