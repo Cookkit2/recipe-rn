@@ -54,6 +54,7 @@ function containsSensitiveDataInObject(obj: unknown): boolean {
 
   // Check keys for sensitive patterns
   for (const key in obj as object) {
+    if (!Object.prototype.hasOwnProperty.call(obj, key)) continue;
     if (containsSensitiveData(key)) {
       return true;
     }
