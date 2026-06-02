@@ -39,7 +39,10 @@ function containsSensitiveData(str: string): boolean {
  * Check if an object or array contains sensitive data
  */
 function containsSensitiveDataInObject(obj: unknown): boolean {
-  if (obj instanceof Error) return false;
+  if (obj instanceof Error) {
+    if (containsSensitiveData(obj.message)) return true;
+    // continue to check custom properties
+  }
   if (!obj || typeof obj !== "object") {
     return false;
   }
@@ -55,7 +58,7 @@ function containsSensitiveDataInObject(obj: unknown): boolean {
       return true;
     }
     // Check values recursively
-    if (containsSensitiveDataInObject((obj as any)[key])) {
+    if (containsSensitiveDataInObject((obj as Record<string, unknown>)[key])) {
       return true;
     }
   }
@@ -72,9 +75,6 @@ function filterSensitiveData(args: unknown[]): unknown[] {
 }
 
 function sanitizeArg(arg: unknown): unknown {
-  if (arg instanceof Error) {
-    return arg;
-  }
   if (typeof arg === "string") {
     if (containsSensitiveData(arg)) {
       return "[REDACTED]";
@@ -84,6 +84,26 @@ function sanitizeArg(arg: unknown): unknown {
 
   if (Array.isArray(arg)) {
     return arg.map((item) => sanitizeArg(item));
+  }
+
+  if (arg instanceof Error) {
+    // We must redact the message if it has sensitive data
+    if (containsSensitiveData(arg.message)) {
+       const redactedErr = new Error("[REDACTED]");
+       redactedErr.stack = arg.stack;
+       redactedErr.name = arg.name;
+       return redactedErr;
+    }
+
+    // Also check if any custom properties on the error contain sensitive data
+    if (containsSensitiveDataInObject(arg)) {
+      const redactedErr = new Error("[REDACTED]");
+      redactedErr.stack = arg.stack;
+      redactedErr.name = arg.name;
+      return redactedErr;
+    }
+
+    return arg;
   }
 
   if (typeof arg === "object" && arg !== null) {
