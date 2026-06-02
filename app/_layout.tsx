@@ -43,8 +43,9 @@ Sentry.init({
   // Adds more context data to events (IP address, cookies, user, etc.)
   // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
   sendDefaultPii:
-    (process.env.EXPO_PUBLIC_SENTRY_SEND_PII ||
-      Constants.expoConfig?.extra?.EXPO_PUBLIC_SENTRY_SEND_PII) === "true",
+    process.env.EXPO_PUBLIC_SENTRY_SEND_PII === "true" ||
+    (process.env.EXPO_PUBLIC_SENTRY_SEND_PII === undefined &&
+      Constants.expoConfig?.extra?.EXPO_PUBLIC_SENTRY_SEND_PII === "true"),
 
   // Enable Logs
   enableLogs: true,
