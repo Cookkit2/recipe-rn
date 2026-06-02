@@ -8,6 +8,7 @@
 import { ChallengeRepository } from "../db/repositories/ChallengeRepository";
 import { UserChallengeRepository } from "../db/repositories/UserChallengeRepository";
 import type { ChallengeProgress, ChallengeRequirement } from "~/types/achievements";
+import type Challenge from "../db/models/Challenge";
 import { log } from "~/utils/logger";
 import { scheduleChallengeComplete } from "~/lib/notifications/achievement-notifications";
 
@@ -357,7 +358,7 @@ export class ChallengeService {
   /**
    * Get progress for multiple challenges in a batch to avoid N+1 queries
    */
-  async getProgressBatch(challenges: any[]): Promise<ChallengeProgress[]> {
+  async getProgressBatch(challenges: Challenge[]): Promise<ChallengeProgress[]> {
     if (challenges.length === 0) return [];
 
     try {
