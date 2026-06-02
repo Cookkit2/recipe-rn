@@ -60,12 +60,12 @@ export function useLocation(refreshInterval: number | null = null): LocationStat
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to get location";
-      setState({
+      setState((prev) => ({
         location: null,
         error: errorMessage,
         loading: false,
-        permissionGranted: state.permissionGranted,
-      });
+        permissionGranted: prev.permissionGranted,
+      }));
     }
   };
 
