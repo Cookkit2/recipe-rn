@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { haversineDistance } from "~/utils/distance-calculation";
+import type { OpeningHour } from "~/lib/supabase/supabase-types";
 
 export interface Location {
   latitude: number;
@@ -13,6 +14,7 @@ export interface StoreWithDistance {
   latitude: number | null;
   longitude: number | null;
   distance: number;
+  opening_hours?: OpeningHour[] | null;
 }
 
 export function useDistanceCalculation(
@@ -23,6 +25,7 @@ export function useDistanceCalculation(
     address: string | null;
     latitude: number | null;
     longitude: number | null;
+    opening_hours?: OpeningHour[] | null;
   }>
 ): StoreWithDistance[] {
   return useMemo(() => {
@@ -58,6 +61,7 @@ export function useClosestStore(
     address: string | null;
     latitude: number | null;
     longitude: number | null;
+    opening_hours?: OpeningHour[] | null;
   }>
 ): StoreWithDistance | null {
   const storesWithDistance = useDistanceCalculation(userLocation, stores);
