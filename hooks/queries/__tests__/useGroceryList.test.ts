@@ -26,7 +26,7 @@ describe("calculateNeededQuantities", () => {
 
     const groceryItems = calculateNeededQuantities(
       ingredientMap,
-      [{ name: "Tomato", quantity: 2, unit: "piece", synonyms: [] }],
+      [{ name: "Tomato", quantity: 2, unit: "piece", synonyms: [] } as any],
       { tomato: { isChecked: false, isDeleted: true } }
     );
 
