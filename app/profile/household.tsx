@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { View, Alert, TextInput } from "react-native";
-import Clipboard from "@react-native-clipboard/clipboard";
+import { View, Alert, TextInput, Share } from "react-native";
 import { useRouter } from "expo-router";
 import {
   useCurrentHousehold,
@@ -58,9 +57,14 @@ export default function HouseholdSettingsScreen() {
     return `${Math.floor(minutes / 60)}h ago`;
   };
 
-  const handleShareLink = () => {
-    Clipboard.setString(inviteLink);
-    toast.success("Invite link copied to clipboard!");
+  const handleShareLink = async () => {
+    try {
+      await Share.share({
+        message: inviteLink,
+      });
+    } catch (error) {
+      toast.error("Failed to share invite link.");
+    }
   };
 
   const handleRegenerate = () => {

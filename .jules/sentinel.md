@@ -43,3 +43,11 @@
 **Learning:** Hardcoded emails in frontend code (like React Native apps) can be easily extracted by reverse-engineering the compiled bundle or by scraping source repositories. This exposes developers to spam, phishing, and potential social engineering attacks, while also coupling application logic to a specific individual.
 
 **Prevention:** Always extract support or contact email addresses into environment variables or server-fetched configurations. Use generic aliases (e.g., support@domain.com) instead of personal developer emails. Ensure fallback logic uses non-personal generic addresses if the environment variable is missing.
+
+## 2026-06-02 - Exposure of Sensitive Data via Clipboard
+
+**Vulnerability:** Using Clipboard to store sensitive invite links.
+
+**Learning:** The system clipboard is accessible to other background applications, exposing sensitive data to unintended recipients or malicious apps.
+
+**Prevention:** Avoid writing sensitive data directly to the clipboard. Use native Share APIs which require explicit user interaction to select the destination app.
