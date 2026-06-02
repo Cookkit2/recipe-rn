@@ -2,6 +2,7 @@ import { supabase } from "~/lib/supabase/supabase-client";
 import { database } from "~/data/db/database";
 import { useAuthStore } from "~/auth/AuthStore";
 import { log } from "~/utils/logger";
+import { Q } from "@nozbe/watermelondb";
 
 type RealtimeChannel = import("@supabase/supabase-js").RealtimeChannel;
 
@@ -89,8 +90,10 @@ export class HouseholdRealtimeService {
     try {
       const stockCollection = database.collections.get("stock");
 
-      const allItems = await stockCollection.query().fetch();
-      const existing = allItems.find((i: any) => i.supabaseId === record.id);
+      // ⚡ Bolt Optimization: Use DB-level filtering instead of JS array iteration
+      // Impact: Reduces time complexity from O(N) to O(1) by filtering at database level
+      const existingArr = await stockCollection.query(Q.where("supabase_id", record.id)).fetch();
+      const existing = existingArr[0];
       if (existing) return;
 
       await database.write(async () => {
@@ -131,8 +134,10 @@ export class HouseholdRealtimeService {
   }): Promise<void> {
     try {
       const stockCollection = database.collections.get("stock");
-      const allItems = await stockCollection.query().fetch();
-      const existing = allItems.find((i: any) => i.supabaseId === record.id);
+      // ⚡ Bolt Optimization: Use DB-level filtering instead of JS array iteration
+      // Impact: Reduces time complexity from O(N) to O(1) by filtering at database level
+      const existingArr = await stockCollection.query(Q.where("supabase_id", record.id)).fetch();
+      const existing = existingArr[0];
 
       if (!existing) {
         await this.handleInsert(record);
@@ -173,8 +178,10 @@ export class HouseholdRealtimeService {
   private async handleDelete(record: { id: string }): Promise<void> {
     try {
       const stockCollection = database.collections.get("stock");
-      const allItems = await stockCollection.query().fetch();
-      const existing = allItems.find((i: any) => i.supabaseId === record.id);
+      // ⚡ Bolt Optimization: Use DB-level filtering instead of JS array iteration
+      // Impact: Reduces time complexity from O(N) to O(1) by filtering at database level
+      const existingArr = await stockCollection.query(Q.where("supabase_id", record.id)).fetch();
+      const existing = existingArr[0];
 
       if (!existing) return;
 
