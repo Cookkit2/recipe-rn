@@ -66,8 +66,30 @@ describe("logger", () => {
       const err = new Error("test err");
       log.error("test message", err);
       expect(rnLogger.error).toHaveBeenCalledWith("test message", err);
-      // Object.entries(new Error()) is [], so `parseLogAttributes` returns {} for the Error object since it is treated as an empty object
-      expect(Sentry.logger.error).toHaveBeenCalledWith("test message", {});
+
+      const expectedErrObj = {
+        name: "Error",
+        message: "test err",
+        stack: expect.any(String),
+      };
+
+      // parseLogAttributes converts properties to string if they are non-primitive, but stack/message/name are strings
+      expect(Sentry.logger.error).toHaveBeenCalledWith("test message", {
+        name: "Error",
+        message: "test err",
+        stack: expect.any(String),
+      });
+    });
+
+    it("sanitizes Error objects correctly", () => {
+      const err = new Error("secret password inside error message");
+      log.error("test auth fail", err);
+
+      expect(Sentry.logger.error).toHaveBeenCalledWith("test auth fail", {
+        name: "Error",
+        message: "[REDACTED]",
+        stack: "[REDACTED]",
+      });
     });
 
     it("fatal calls rnLogger.error and Sentry.logger.fatal", () => {

@@ -48,6 +48,11 @@ function containsSensitiveDataInObject(obj: any): boolean {
     return obj.some((item) => containsSensitiveDataInObject(item));
   }
 
+  if (obj instanceof Error) {
+    if (typeof obj.message === "string" && containsSensitiveData(obj.message)) return true;
+    if (typeof obj.stack === "string" && containsSensitiveData(obj.stack)) return true;
+  }
+
   // Check keys for sensitive patterns
   for (const key in obj) {
     if (containsSensitiveData(key)) {
@@ -80,6 +85,20 @@ function sanitizeArg(arg: any): any {
 
   if (Array.isArray(arg)) {
     return arg.map((item) => sanitizeArg(item));
+  }
+
+  if (arg instanceof Error) {
+    const formattedErr: Record<string, unknown> = {
+      name: arg.name,
+      message: sanitizeArg(arg.message),
+    };
+    if (arg.stack) {
+      formattedErr.stack = sanitizeArg(arg.stack);
+    }
+    for (const key of Object.keys(arg)) {
+      formattedErr[key] = sanitizeArg((arg as unknown as Record<string, unknown>)[key]);
+    }
+    return formattedErr;
   }
 
   if (typeof arg === "object" && arg !== null) {
