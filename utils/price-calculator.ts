@@ -3,7 +3,7 @@ export function centsToDollars(cents: number): number {
 }
 
 export function dollarsToCents(dollars: number): number {
-  return Math.round(dollars * 100);
+  return Math.round(Number(dollars + "e2"));
 }
 
 export function formatCurrency(cents: number, currency = "MYR"): string {
