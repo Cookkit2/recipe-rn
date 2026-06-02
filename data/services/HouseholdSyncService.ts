@@ -83,9 +83,20 @@ export class HouseholdSyncService {
     await database.write(async () => {
       const batchOps: import("@nozbe/watermelondb").Model[] = [];
 
+      // ⚡ Bolt Optimization: Pre-fetch all items and index by supabaseId for O(1) lookups
+      // Impact: Reduces DB fetch complexity inside loop from O(N*M) to O(N+M)
+      const allItems = await stockCollection.query().fetch();
+      const existingMap = new Map<string, any>();
+
+      for (const item of allItems) {
+        const record = item as any;
+        if (record.supabaseId) {
+          existingMap.set(record.supabaseId, record);
+        }
+      }
+
       for (const remoteItem of remoteItems) {
-        const allItems = await stockCollection.query().fetch();
-        const existing = allItems.find((i: any) => i.supabaseId === remoteItem.id);
+        const existing = existingMap.get(remoteItem.id);
 
         if (existing) {
           batchOps.push(
