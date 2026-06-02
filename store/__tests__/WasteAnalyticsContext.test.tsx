@@ -3,9 +3,9 @@ import { renderHook, act } from '@testing-library/react-native';
 import {
   WasteAnalyticsProvider,
   useWasteAnalyticsStore,
-  TimePeriod,
-  WasteReasonFilter,
-  MetricType,
+  type TimePeriod,
+  type WasteReasonFilter,
+  type MetricType,
 } from '../WasteAnalyticsContext';
 
 describe('WasteAnalyticsContext', () => {
