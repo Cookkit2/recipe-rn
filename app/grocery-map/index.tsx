@@ -8,6 +8,7 @@ import { StoreInfoCard, type StoreInfo } from "~/components/GroceryMap/StoreInfo
 import { useLocation } from "~/hooks/useLocation";
 import { useNearbyStores } from "~/hooks/queries/useStoreQueries";
 import { useDistanceCalculation } from "~/hooks/useDistanceCalculation";
+import { getStoreOpenStatus } from "~/utils/store-hours";
 import { toast } from "sonner-native";
 import { openDirections } from "~/services/geolocation";
 
@@ -124,6 +125,9 @@ export default function GroceryMapPage() {
   );
 
   const selectedStoreData = storesWithDistance.find((s) => s.id === selectedStore);
+  const storeOpenStatus = selectedStoreData
+    ? getStoreOpenStatus(selectedStoreData.opening_hours)
+    : { isOpen: false, closingTime: undefined };
 
   return (
     <>
@@ -149,8 +153,8 @@ export default function GroceryMapPage() {
                 address: selectedStoreData.address ?? "Unknown address",
                 distance: selectedStoreData.distance,
                 totalPriceCents: 0, // TODO: Calculate from grocery list
-                isOpen: false, // TODO: Calculate from opening hours
-                closingTime: undefined, // TODO: Calculate from opening hours
+                isOpen: storeOpenStatus.isOpen,
+                closingTime: storeOpenStatus.closingTime,
                 latitude: selectedStoreData.latitude ?? DEFAULT_LATITUDE,
                 longitude: selectedStoreData.longitude ?? DEFAULT_LONGITUDE,
               }}
@@ -161,7 +165,8 @@ export default function GroceryMapPage() {
                   address: selectedStoreData.address ?? "",
                   distance: selectedStoreData.distance,
                   totalPriceCents: 0, // TODO: Calculate from grocery list
-                  isOpen: false, // TODO: Calculate from opening hours
+                  isOpen: storeOpenStatus.isOpen,
+                  closingTime: storeOpenStatus.closingTime,
                   latitude: selectedStoreData.latitude ?? DEFAULT_LATITUDE,
                   longitude: selectedStoreData.longitude ?? DEFAULT_LONGITUDE,
                 })

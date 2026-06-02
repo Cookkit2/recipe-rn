@@ -6,25 +6,18 @@ export interface Location {
   longitude: number;
 }
 
-export interface StoreWithDistance {
-  id: string;
-  name: string;
-  address: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  distance: number;
-}
+export type StoreWithDistance<T> = T & { distance: number };
 
-export function useDistanceCalculation(
-  userLocation: Location | null,
-  stores: Array<{
+export function useDistanceCalculation<
+  T extends {
     id: string;
     name: string;
     address: string | null;
     latitude: number | null;
     longitude: number | null;
-  }>
-): StoreWithDistance[] {
+    opening_hours?: any[] | null;
+  },
+>(userLocation: Location | null, stores: T[]): StoreWithDistance<T>[] {
   return useMemo(() => {
     if (!userLocation) {
       return stores.map((store) => ({
@@ -50,16 +43,16 @@ export function useDistanceCalculation(
   }, [userLocation, stores]);
 }
 
-export function useClosestStore(
-  userLocation: Location | null,
-  stores: Array<{
+export function useClosestStore<
+  T extends {
     id: string;
     name: string;
     address: string | null;
     latitude: number | null;
     longitude: number | null;
-  }>
-): StoreWithDistance | null {
+    opening_hours?: any[] | null;
+  },
+>(userLocation: Location | null, stores: T[]): StoreWithDistance<T> | null {
   const storesWithDistance = useDistanceCalculation(userLocation, stores);
   return storesWithDistance.length > 0 ? storesWithDistance[0]! : null;
 }
