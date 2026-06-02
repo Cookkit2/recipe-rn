@@ -101,9 +101,7 @@ describe("mealPlanApi.getMealPlansForDateRange performance", () => {
       }
     );
 
-    const start = performance.now();
     const result = await mealPlanApi.getMealPlansForDateRange(new Date(), new Date());
-    const end = performance.now();
 
     expect(result).toHaveLength(itemCount);
   });
