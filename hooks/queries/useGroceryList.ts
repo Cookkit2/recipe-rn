@@ -486,6 +486,23 @@ function buildPantryIndex(pantryItems: any[] | null | undefined): Map<string, an
   return index;
 }
 
+// ⚡ Bolt Optimization: Module-level cache to memoize slow-path evaluations across re-renders.
+// Includes serialized synonyms to ensure correctness if a pantry item's synonyms change.
+const isMatchCache = new Map<string, boolean>();
+
+function getMatchCacheKey(
+  pantryName: string,
+  ingredientName: string,
+  synonyms: any[] | undefined
+): string {
+  let synStr = "";
+  if (synonyms && synonyms.length > 0) {
+    // Handle both string and object forms quickly
+    synStr = synonyms.map((s) => (typeof s === "string" ? s : s.synonym)).join(",");
+  }
+  return `${pantryName}|${ingredientName}|${synStr}`;
+}
+
 /**
  * Step 2: Calculates needed quantities by subtracting pantry stock.
  */
@@ -518,7 +535,16 @@ export function calculateNeededQuantities(
       } else {
         // Slow path: Fallback to scanning all pantry items for substring/complex matches
         for (const pantryItem of pantryItems) {
-          const isMatch = isIngredientMatch(pantryItem.name, ingredient.name, pantryItem.synonyms);
+          const cacheKey = getMatchCacheKey(pantryItem.name, ingredient.name, pantryItem.synonyms);
+          let isMatch = isMatchCache.get(cacheKey);
+
+          if (isMatch === undefined) {
+            isMatch = isIngredientMatch(pantryItem.name, ingredient.name, pantryItem.synonyms);
+            if (isMatchCache.size > 5000) {
+              isMatchCache.clear(); // Safe clear to prevent memory leaks
+            }
+            isMatchCache.set(cacheKey, isMatch);
+          }
 
           if (isMatch) {
             matchingPantryItems.push({
