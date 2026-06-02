@@ -1,6 +1,7 @@
 import { Q } from "@nozbe/watermelondb";
 import Stock, { type StockData } from "../models/Stock";
 import { BaseRepository, type SearchOptions } from "./BaseRepository";
+import IngredientCategory from "../models/IngredientCategory";
 
 export interface StockSearchOptions extends SearchOptions {
   storageType?: string;
@@ -257,7 +258,7 @@ export class StockRepository extends BaseRepository<Stock> {
   // Get stock with categories
   async getStockWithCategories(stockId: string): Promise<{
     stock: Stock;
-    categories: any[];
+    categories: IngredientCategory[];
   } | null> {
     const stock = await this.findById(stockId);
     if (!stock) return null;
@@ -271,7 +272,7 @@ export class StockRepository extends BaseRepository<Stock> {
     const categories =
       categoryIds.length > 0
         ? await this.collection.database
-            .get("ingredient_category")
+            .get<IngredientCategory>("ingredient_category")
             .query(Q.where("id", Q.oneOf(categoryIds)))
             .fetch()
         : [];
