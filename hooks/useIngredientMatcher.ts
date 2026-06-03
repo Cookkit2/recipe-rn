@@ -140,8 +140,7 @@ export function useIngredientMatcher(
       // Fallback to checking all pantry items with isIngredientMatch for edge cases
       // This is slower but only runs when direct lookup fails
       for (const pantryItem of pantryItems) {
-        const synonyms = pantryItem.synonyms?.map((s) => s.synonym) ?? [];
-        if (isIngredientMatch(pantryItem.name, ingredient.name, synonyms)) {
+        if (isIngredientMatch(pantryItem.name, ingredient.name, pantryItem.synonyms)) {
           return pantryItem;
         }
       }
