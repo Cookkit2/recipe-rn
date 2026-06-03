@@ -135,7 +135,7 @@
     "@types/jwt-encode": "^1.0.3",
     "@types/react": "~19.2.15",
     "babel-jest": "30.3.0",
-    "detox": "20.51.3",
+    "detox": "^20.51.3",
     "fast-uri": "3.1.2",
     "husky": "^9.1.7",
     "jest-expo": "~56.0.4",
@@ -150,6 +150,7 @@
     "fast-uri": "^3.1.2"
   },
   "overrides": {
+    "tmp": "^0.2.6",
     "fast-uri": "^3.1.2",
     "hermes-compiler": "250829098.0.4",
     "@babel/runtime": ">=7.26.10",
