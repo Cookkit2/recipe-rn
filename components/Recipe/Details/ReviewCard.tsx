@@ -61,7 +61,11 @@ export default function ReviewCard({
 
       {review.title && <P className="font-urbanist-semibold mb-1">{review.title}</P>}
 
-      <Pressable onPress={toggleExpand} disabled={!review.body}>
+      <Pressable
+        onPress={toggleExpand}
+        disabled={!review.body}
+        accessibilityState={{ disabled: !review.body }}
+      >
         <P
           className="text-foreground/80 font-urbanist-regular"
           numberOfLines={expanded ? undefined : MAX_COLLAPSED_LINES}

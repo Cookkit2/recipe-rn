@@ -77,7 +77,12 @@ export default function ReviewsList({
       ))}
 
       {hasMore && (
-        <Pressable onPress={onLoadMore} className="py-4 items-center" disabled={isFetchingNextPage}>
+        <Pressable
+          onPress={onLoadMore}
+          className="py-4 items-center"
+          disabled={isFetchingNextPage}
+          accessibilityState={{ disabled: isFetchingNextPage }}
+        >
           {isFetchingNextPage ? (
             <ActivityIndicator size="small" />
           ) : (

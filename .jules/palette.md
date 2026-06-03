@@ -12,3 +12,6 @@
 ## 2024-05-20 - Grocery List Empty State missing clear guidance
 **Learning:** Found that the empty state for the Grocery List lacked a call-to-action button, causing a dead end for users who might not know how to add items (which are added by planning meals).
 **Action:** When working on empty states, always ensure there is clear guidance and an actionable CTA (like "Plan Meals") to help users discover features and continue their journey.
+## 2026-06-03 - [Added accessibilityState to Pressable Components]
+**Learning:** In React Native, the `disabled` prop on `Pressable` components does not automatically relay the disabled state to screen readers natively. This results in poor accessibility for visually impaired users relying on screen readers.
+**Action:** Always explicitly set `accessibilityState={{ disabled: condition }}` alongside the `disabled` prop to ensure accurate accessibility announcements across platforms.
