@@ -43,3 +43,9 @@
 **Learning:** Hardcoded emails in frontend code (like React Native apps) can be easily extracted by reverse-engineering the compiled bundle or by scraping source repositories. This exposes developers to spam, phishing, and potential social engineering attacks, while also coupling application logic to a specific individual.
 
 **Prevention:** Always extract support or contact email addresses into environment variables or server-fetched configurations. Use generic aliases (e.g., support@domain.com) instead of personal developer emails. Ensure fallback logic uses non-personal generic addresses if the environment variable is missing.
+
+## 2024-05-27 - Weak Random Number Generation in Invite Codes
+
+**Vulnerability:** The `generateInviteCode()` function relied on `Math.random()`, which is a pseudo-random number generator (PRNG) that is cryptographically weak and predictable. An attacker could potentially predict generated invite codes for households, leading to unauthorized access.
+**Learning:** `Math.random()` should never be used for generating sensitive tokens, invite codes, passwords, or session IDs. Additionally, when mapping a random byte (0-255) to a character set whose length does not evenly divide 256 (e.g., 36 characters), a simple modulo operation introduces modulo bias, making some characters appear more frequently than others.
+**Prevention:** Use a cryptographically secure pseudo-random number generator (CSPRNG) like `expo-crypto`'s `getRandomBytes()`. To prevent modulo bias, implement rejection sampling (discarding byte values that fall into the biased remainder).
