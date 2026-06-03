@@ -101,20 +101,26 @@ export class ChallengeRepository extends BaseRepository<Challenge> {
 
   // Get currently active challenges
   async getActiveChallenges(): Promise<Challenge[]> {
-    const allChallenges = await this.collection.query().fetch();
-    return allChallenges.filter((c) => c.isActive);
+    const now = Date.now();
+    // ⚡ Bolt Optimization: Use WatermelonDB query filters to avoid fetching all challenges into JS memory
+    // and filtering in JS. Prevents N+1 memory allocations and excessive bridge crossings.
+    return await this.collection
+      .query(Q.and(Q.where("start_date", Q.lte(now)), Q.where("end_date", Q.gte(now))))
+      .fetch();
   }
 
   // Get expired challenges
   async getExpiredChallenges(): Promise<Challenge[]> {
-    const allChallenges = await this.collection.query().fetch();
-    return allChallenges.filter((c) => c.isExpired);
+    const now = Date.now();
+    // ⚡ Bolt Optimization: Use DB-level filtering instead of fetching all records to JS.
+    return await this.collection.query(Q.where("end_date", Q.lt(now))).fetch();
   }
 
   // Get upcoming challenges
   async getUpcomingChallenges(): Promise<Challenge[]> {
-    const allChallenges = await this.collection.query().fetch();
-    return allChallenges.filter((c) => c.isUpcoming);
+    const now = Date.now();
+    // ⚡ Bolt Optimization: Use DB-level filtering instead of fetching all records to JS.
+    return await this.collection.query(Q.where("start_date", Q.gt(now))).fetch();
   }
 
   // Get daily challenges
@@ -129,14 +135,32 @@ export class ChallengeRepository extends BaseRepository<Challenge> {
 
   // Get active daily challenges
   async getActiveDailyChallenges(): Promise<Challenge[]> {
-    const allDaily = await this.getDailyChallenges();
-    return allDaily.filter((c) => c.isActive);
+    const now = Date.now();
+    // ⚡ Bolt Optimization: Push filtering to the SQLite layer to minimize data sent over the JS bridge.
+    return await this.collection
+      .query(
+        Q.and(
+          Q.where("type", "daily"),
+          Q.where("start_date", Q.lte(now)),
+          Q.where("end_date", Q.gte(now))
+        )
+      )
+      .fetch();
   }
 
   // Get active weekly challenges
   async getActiveWeeklyChallenges(): Promise<Challenge[]> {
-    const allWeekly = await this.getWeeklyChallenges();
-    return allWeekly.filter((c) => c.isActive);
+    const now = Date.now();
+    // ⚡ Bolt Optimization: Push filtering to the SQLite layer to minimize data sent over the JS bridge.
+    return await this.collection
+      .query(
+        Q.and(
+          Q.where("type", "weekly"),
+          Q.where("start_date", Q.lte(now)),
+          Q.where("end_date", Q.gte(now))
+        )
+      )
+      .fetch();
   }
 
   // Update challenge
@@ -180,11 +204,19 @@ export class ChallengeRepository extends BaseRepository<Challenge> {
 
   // Get challenges expiring soon (within 24 hours)
   async getChallengesExpiringSoon(): Promise<Challenge[]> {
-    const allChallenges = await this.collection.query().fetch();
-    const twentyFourHoursFromNow = Date.now() + 24 * 60 * 60 * 1000;
+    const now = Date.now();
+    const twentyFourHoursFromNow = now + 24 * 60 * 60 * 1000;
 
-    return allChallenges.filter((c) => {
-      return c.isActive && c.endDate <= twentyFourHoursFromNow;
-    });
+    // ⚡ Bolt Optimization: Use database query logic to filter challenges rather than
+    // fetching everything and iterating in JS. Reduces memory overhead and bridge crossings.
+    return await this.collection
+      .query(
+        Q.and(
+          Q.where("start_date", Q.lte(now)),
+          Q.where("end_date", Q.gte(now)),
+          Q.where("end_date", Q.lte(twentyFourHoursFromNow))
+        )
+      )
+      .fetch();
   }
 }

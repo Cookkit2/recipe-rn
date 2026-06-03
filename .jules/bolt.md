@@ -37,3 +37,6 @@
 
 **Learning:** In `hooks/queries/useGroceryList.ts`, the loop allocating `pantryItem.synonyms?.map(...)` on every iteration of a doubly-nested loop mapping unmatched ingredients against pantry items causes massive array allocation penalties and GC pressure (e.g., thousands of times per generation).
 **Action:** Lift the array transformation out of the inner loop, or modify the matching utility (`isIngredientMatch`) to accept the raw array of objects so mapping is completely avoided.
+## 2024-06-03 - N+1 Memory Allocation in WatermelonDB Collections
+**Learning:** Calling `.query().fetch()` without arguments on large collections (like challenges) fetches all raw SQLite rows across the JS/Native bridge, hydrating them into full `Model` instances just to perform standard JS `.filter()`. This is a massive hidden memory and CPU bottleneck in React Native.
+**Action:** Always push query constraints directly to WatermelonDB's SQLite layer using `Q.where`, `Q.and`, `Q.lte`, and `Q.gte` instead of JS-level `.filter()` to minimize object allocations and bridge payload size.
