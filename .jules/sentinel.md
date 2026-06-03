@@ -43,3 +43,11 @@
 **Learning:** Hardcoded emails in frontend code (like React Native apps) can be easily extracted by reverse-engineering the compiled bundle or by scraping source repositories. This exposes developers to spam, phishing, and potential social engineering attacks, while also coupling application logic to a specific individual.
 
 **Prevention:** Always extract support or contact email addresses into environment variables or server-fetched configurations. Use generic aliases (e.g., support@domain.com) instead of personal developer emails. Ensure fallback logic uses non-personal generic addresses if the environment variable is missing.
+
+## 2025-05-24 - Cryptographically Secure Random Number Generation
+
+**Vulnerability:** Weak Pseudo-Random Number Generation (`Math.random()`) used for generating secure elements like invite codes or IDs.
+
+**Learning:** `Math.random()` does not provide cryptographically secure random numbers, making its outputs somewhat predictable. When mapping random bytes to a character set, simply taking modulo (`%`) of the byte value by the character set length introduces modulo bias, where some characters appear slightly more frequently than others if the length of the character set doesn't divide evenly into 256.
+
+**Prevention:** Always use a cryptographically secure random number generator, such as `Crypto.getRandomBytes` from `expo-crypto` in React Native environments. When selecting characters from an arbitrary-sized set using random bytes, implement rejection sampling (discarding byte values that fall into the incomplete final chunk, e.g., values `>= 252` for a 36-character set) to ensure a perfectly uniform distribution and prevent modulo bias.

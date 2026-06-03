@@ -1,10 +1,20 @@
+import * as Crypto from "expo-crypto";
+
 const CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const CODE_LENGTH = 8;
 
 export function generateInviteCode(): string {
   let code = "";
-  for (let i = 0; i < CODE_LENGTH; i++) {
-    code += CHARSET[Math.floor(Math.random() * CHARSET.length)];
+  const maxValidByte = 256 - (256 % CHARSET.length); // 252 for length 36
+
+  while (code.length < CODE_LENGTH) {
+    const randomBytes = Crypto.getRandomBytes(1);
+    const byteValue = randomBytes[0]!;
+
+    // Rejection sampling to prevent modulo bias
+    if (byteValue < maxValidByte) {
+      code += CHARSET[byteValue % CHARSET.length];
+    }
   }
   return code;
 }
