@@ -12,3 +12,6 @@
 ## 2024-05-20 - Grocery List Empty State missing clear guidance
 **Learning:** Found that the empty state for the Grocery List lacked a call-to-action button, causing a dead end for users who might not know how to add items (which are added by planning meals).
 **Action:** When working on empty states, always ensure there is clear guidance and an actionable CTA (like "Plan Meals") to help users discover features and continue their journey.
+## 2024-05-24 - Missing Accessibility Attributes on Content Toggles
+**Learning:** Found that custom `Pressable` components used to toggle the visibility of large text blocks (like the review body in `ReviewCard`) or view full photos often lack explicit `accessibilityRole="button"`, `accessibilityLabel`, and `accessibilityState`. Without these, screen readers announce them as generic clickable elements without context, and don't convey when they are disabled (e.g., when the text is empty).
+**Action:** When working on interactive content blocks (like "Read more" toggles or image viewers), ensure the wrapping `Pressable` has the correct `accessibilityRole="button"`, a descriptive `accessibilityLabel` (e.g., "Toggle review visibility"), and explicitly passes its disabled state via `accessibilityState={{ disabled: !content }}` to properly announce to screen readers.

@@ -61,7 +61,13 @@ export default function ReviewCard({
 
       {review.title && <P className="font-urbanist-semibold mb-1">{review.title}</P>}
 
-      <Pressable onPress={toggleExpand} disabled={!review.body}>
+      <Pressable
+        onPress={toggleExpand}
+        disabled={!review.body}
+        accessibilityRole="button"
+        accessibilityLabel="Toggle review visibility"
+        accessibilityState={{ disabled: !review.body }}
+      >
         <P
           className="text-foreground/80 font-urbanist-regular"
           numberOfLines={expanded ? undefined : MAX_COLLAPSED_LINES}
@@ -76,7 +82,12 @@ export default function ReviewCard({
       {review.photos.length > 0 && (
         <View className="flex-row gap-2 mt-3">
           {review.photos.map((photo) => (
-            <Pressable key={photo.id} onPress={() => onPhotoPress(photo.photoUrl)}>
+            <Pressable
+              key={photo.id}
+              onPress={() => onPhotoPress(photo.photoUrl)}
+              accessibilityRole="button"
+              accessibilityLabel="View full photo"
+            >
               <Image
                 source={{ uri: photo.photoUrl }}
                 className="w-20 h-20 rounded-lg"
@@ -96,10 +107,20 @@ export default function ReviewCard({
 
         {isOwnReview && (
           <View className="flex-row gap-3">
-            <Pressable onPress={() => onEdit(review)} hitSlop={8}>
+            <Pressable
+              onPress={() => onEdit(review)}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Edit review"
+            >
               <Small className="text-primary">Edit</Small>
             </Pressable>
-            <Pressable onPress={() => onDelete(review.id)} hitSlop={8}>
+            <Pressable
+              onPress={() => onDelete(review.id)}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Delete review"
+            >
               <Small className="text-destructive">Delete</Small>
             </Pressable>
           </View>
