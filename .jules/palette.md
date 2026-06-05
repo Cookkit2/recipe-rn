@@ -12,3 +12,6 @@
 ## 2024-05-20 - Grocery List Empty State missing clear guidance
 **Learning:** Found that the empty state for the Grocery List lacked a call-to-action button, causing a dead end for users who might not know how to add items (which are added by planning meals).
 **Action:** When working on empty states, always ensure there is clear guidance and an actionable CTA (like "Plan Meals") to help users discover features and continue their journey.
+## 2025-02-27 - Grouping Recipe Meta Properties in React Native
+**Learning:** In React Native, the `importantForAccessibility="no-hide-descendants"` prop on a `<View>` is destructive on Android because it prevents TalkBack from reading the view and hides all its children. This makes grouped elements inaccessible.
+**Action:** Always group related text information (like time or difficulty stars) by simply setting `accessible={true}` and `accessibilityLabel` on the parent `<View>`. This safely aggregates the content into a single selectable accessible element across both iOS and Android without hiding the contents.
