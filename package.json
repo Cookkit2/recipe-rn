@@ -154,7 +154,8 @@
     "hermes-compiler": "250829098.0.4",
     "@babel/runtime": ">=7.26.10",
     "jest-environment-node": "30.4.1",
-    "jest-mock": "30.4.1"
+    "jest-mock": "30.4.1",
+    "tmp": "^0.2.7"
   },
   "private": true,
   "reanimated": {
