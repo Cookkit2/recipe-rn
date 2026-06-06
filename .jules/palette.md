@@ -12,3 +12,7 @@
 ## 2024-05-20 - Grocery List Empty State missing clear guidance
 **Learning:** Found that the empty state for the Grocery List lacked a call-to-action button, causing a dead end for users who might not know how to add items (which are added by planning meals).
 **Action:** When working on empty states, always ensure there is clear guidance and an actionable CTA (like "Plan Meals") to help users discover features and continue their journey.
+
+## 2024-05-24 - Accessibility Role for Expand/Collapse Action
+**Learning:** Found that the `Pressable` wrapping the review body text, which acts as an expand/collapse toggle, lacked an explicit `accessibilityRole="button"` and accurate `accessibilityState`.
+**Action:** When a Pressable behaves like an accordion toggle, ensure it has `accessibilityRole="button"`, an accurate `accessibilityLabel` (e.g., "Expand review" or "Collapse review"), and an accurate `accessibilityState={{ expanded: isExpanded }}` to properly inform screen readers.
