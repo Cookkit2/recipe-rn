@@ -12,6 +12,7 @@ import { log } from "~/utils/logger";
 import { GeminiAPI, DEFAULT_GEMINI_MODEL } from "~/utils/gemini-api";
 import { fetchWithTimeout } from "~/utils/fetch-with-timeout";
 import { isValidRecipe } from "./validation-utils";
+import { getRecipeResponseSchema } from "./shared/recipe-gemini-utils";
 
 const WEBSITE_FETCH_TIMEOUT_MS = 20_000;
 
@@ -499,57 +500,7 @@ Return the cleaned recipe as valid JSON with the exact same structure as the inp
         ],
         generationConfig: {
           responseMimeType: "application/json",
-          responseSchema: {
-            type: "object",
-            properties: {
-              title: { type: "string" },
-              description: { type: "string" },
-              prepMinutes: { type: "integer" },
-              cookMinutes: { type: "integer" },
-              servings: { type: "integer" },
-              difficultyStars: { type: "integer" },
-              calories: { type: "integer" },
-              tags: {
-                type: "array",
-                items: { type: "string" },
-              },
-              ingredients: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    name: { type: "string" },
-                    quantity: { type: "number" },
-                    unit: { type: "string" },
-                  },
-                  required: ["name", "quantity", "unit"],
-                },
-              },
-              steps: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    step: { type: "integer" },
-                    title: { type: "string" },
-                    description: { type: "string" },
-                  },
-                  required: ["step", "title", "description"],
-                },
-              },
-            },
-            required: [
-              "title",
-              "description",
-              "prepMinutes",
-              "cookMinutes",
-              "servings",
-              "difficultyStars",
-              "ingredients",
-              "steps",
-              "tags",
-            ],
-          },
+          responseSchema: getRecipeResponseSchema(),
           temperature: 0.2,
         },
       });

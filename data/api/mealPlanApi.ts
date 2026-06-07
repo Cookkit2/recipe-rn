@@ -1,15 +1,23 @@
-import { database } from "~/data/db/database";
 import { databaseFacade } from "~/data/db/DatabaseFacade";
-import type MealPlan from "~/data/db/models/MealPlan";
-import type GroceryItemCheck from "~/data/db/models/GroceryItemCheck";
-import type Recipe from "~/data/db/models/Recipe";
 import { MealPlanRepository } from "~/data/db/repositories/MealPlanRepository";
 import { GroceryItemCheckRepository } from "~/data/db/repositories/GroceryItemCheckRepository";
 import { log } from "~/utils/logger";
-import { pantryApi } from "~/data/api/pantryApi";
 import { withErrorHandling, withErrorLogging, logAndWrapResult } from "~/utils/api-error-handler";
 import type { AppResult } from "~/utils/result";
 import type { AppError } from "~/types/AppError";
+
+// Re-export types from helpers for backward compatibility
+export type { MealPlanItemWithRecipe, GroceryItem } from "./mealPlanApi-helpers";
+
+import {
+  buildRecipeDataFromDetails,
+  buildUnknownRecipeData,
+  buildMealPlanItem,
+  enrichMealPlanItemsBatch,
+  fetchRecipeDataForItem,
+  fetchRecipeDataForItemViaFacade,
+  type MealPlanItemWithRecipe,
+} from "./mealPlanApi-helpers";
 
 // Lazy initialization of repositories to avoid timing issues
 let _mealPlanRepository: MealPlanRepository | null = null;
@@ -29,37 +37,177 @@ function getGroceryItemCheckRepository(): GroceryItemCheckRepository {
   return _groceryItemCheckRepository;
 }
 
-export interface MealPlanItemWithRecipe {
-  id: string;
-  recipeId: string;
-  servings: number;
-  date: Date;
-  mealSlot: string;
-  templateId?: string;
-  createdAt: Date;
-  recipe: {
-    id: string;
-    title: string;
-    imageUrl: string;
-    servings: number;
-    ingredients: Array<{
-      name: string;
-      quantity: number;
-      unit: string;
-    }>;
-  } | null;
+// ---------------------------------------------------------------------------
+// Core logic functions (shared between throw-based and Result-based variants)
+// ---------------------------------------------------------------------------
+
+async function isRecipeInPlanCore(recipeId: string): Promise<boolean> {
+  const mealPlanRepo = getMealPlanRepository();
+  return await mealPlanRepo.isRecipeInPlan(recipeId);
 }
 
-export interface GroceryItem {
-  name: string;
-  totalQuantity: number;
-  unit: string;
-  neededQuantity: number;
-  fromRecipes: string[];
-  category: "produce" | "dairy" | "meat" | "pantry" | "other";
-  isChecked: boolean;
-  isCovered: boolean;
+async function removeFromPlanCore(recipeId: string): Promise<boolean> {
+  log.info("🗑️ Removing recipe from meal plan:", recipeId);
+  const mealPlanRepo = getMealPlanRepository();
+  const success = await mealPlanRepo.removeFromPlan(recipeId);
+  log.info("✅ Removed from meal plan:", success);
+  return success;
 }
+
+async function updateServingsCore(recipeId: string, servings: number): Promise<boolean> {
+  const mealPlanRepo = getMealPlanRepository();
+  const updated = await mealPlanRepo.updateServings(recipeId, servings);
+  return updated !== null;
+}
+
+async function clearAllPlannedRecipesCore(): Promise<void> {
+  const mealPlanRepo = getMealPlanRepository();
+  await mealPlanRepo.clearAllPlannedRecipes();
+  log.info("✅ Cleared all planned recipes");
+}
+
+async function getPlannedRecipeCountCore(): Promise<number> {
+  const mealPlanRepo = getMealPlanRepository();
+  return await mealPlanRepo.getPlannedRecipeCount();
+}
+
+async function getGroceryAttributesCore(): Promise<
+  Map<string, { isChecked: boolean; isDeleted: boolean }>
+> {
+  const groceryCheckRepo = getGroceryItemCheckRepository();
+  return await groceryCheckRepo.getCheckAttributesMap();
+}
+
+async function getGroceryCheckStatesCore(): Promise<Map<string, boolean>> {
+  const groceryCheckRepo = getGroceryItemCheckRepository();
+  return await groceryCheckRepo.getCheckStatesMap();
+}
+
+async function toggleGroceryItemCheckCore(ingredientName: string): Promise<boolean> {
+  const groceryCheckRepo = getGroceryItemCheckRepository();
+  return await groceryCheckRepo.toggleChecked(ingredientName);
+}
+
+async function setGroceryItemDeletedCore(
+  ingredientName: string,
+  isDeleted: boolean
+): Promise<void> {
+  const groceryCheckRepo = getGroceryItemCheckRepository();
+  await groceryCheckRepo.setDeleted(ingredientName, isDeleted);
+  log.info(`✅ Set deleted state for ${ingredientName} to ${isDeleted}`);
+}
+
+async function setGroceryItemsDeletedBatchCore(
+  items: { name: string; isDeleted: boolean }[]
+): Promise<void> {
+  const groceryCheckRepo = getGroceryItemCheckRepository();
+  await groceryCheckRepo.setDeletedBatch(items);
+  log.info(`✅ Set deleted state for ${items.length} items`);
+}
+
+async function setGroceryItemCheckedCore(
+  ingredientName: string,
+  isChecked: boolean
+): Promise<void> {
+  const groceryCheckRepo = getGroceryItemCheckRepository();
+  await groceryCheckRepo.setChecked(ingredientName, isChecked);
+}
+
+async function uncheckAllGroceryItemsCore(): Promise<void> {
+  const groceryCheckRepo = getGroceryItemCheckRepository();
+  await groceryCheckRepo.uncheckAll();
+  log.info("✅ Unchecked all grocery items");
+}
+
+async function clearGroceryChecksCore(): Promise<void> {
+  const groceryCheckRepo = getGroceryItemCheckRepository();
+  await groceryCheckRepo.clearAll();
+  log.info("✅ Cleared all grocery checks");
+}
+
+// ---------------------------------------------------------------------------
+// Shared add-to-plan core
+// ---------------------------------------------------------------------------
+
+async function addToPlanCore(
+  recipeId: string,
+  servings: number,
+  date?: Date,
+  mealSlot?: string
+): Promise<MealPlanItemWithRecipe | null> {
+  log.info("📅 Adding recipe to meal plan:", recipeId, "servings:", servings);
+
+  const mealPlanRepo = getMealPlanRepository();
+
+  // Check if already in plan
+  const existing = await mealPlanRepo.getByRecipeId(recipeId);
+
+  if (existing) {
+    log.info("Recipe already in plan, updating servings");
+    await mealPlanRepo.updateServings(recipeId, servings);
+  } else {
+    const mealPlanItem = await mealPlanRepo.addToPlan({
+      recipeId,
+      servings,
+      date,
+      mealSlot,
+    });
+    log.info("✅ Added to meal plan:", mealPlanItem.id);
+  }
+
+  return null; // caller must fetch the result via the appropriate method
+}
+
+/**
+ * Handles the grocery-item un-deletion after a recipe is added to the plan.
+ */
+async function restoreGroceryItemsForRecipe(
+  result: MealPlanItemWithRecipe | null,
+  setDeletedBatch: (items: { name: string; isDeleted: boolean }[]) => Promise<void>
+): Promise<void> {
+  if (result?.recipe?.ingredients.length) {
+    await setDeletedBatch(
+      result.recipe.ingredients.map((ingredient) => ({
+        name: ingredient.name,
+        isDeleted: false,
+      }))
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Shared single-item enrichment (throw-based variant)
+// ---------------------------------------------------------------------------
+
+async function getMealPlanItemByRecipeIdCore(
+  recipeId: string
+): Promise<MealPlanItemWithRecipe | null> {
+  const mealPlanRepo = getMealPlanRepository();
+  const item = await mealPlanRepo.getByRecipeId(recipeId);
+  if (!item) return null;
+
+  const recipeData = await fetchRecipeDataForItem(item);
+  return buildMealPlanItem(item, recipeData);
+}
+
+// ---------------------------------------------------------------------------
+// Shared single-item enrichment (Result-based variant)
+// ---------------------------------------------------------------------------
+
+async function getMealPlanItemByRecipeIdResultCore(
+  recipeId: string
+): Promise<MealPlanItemWithRecipe | null> {
+  const mealPlanRepo = getMealPlanRepository();
+  const item = await mealPlanRepo.getByRecipeId(recipeId);
+  if (!item) return null;
+
+  const recipeData = await fetchRecipeDataForItemViaFacade(item);
+  return buildMealPlanItem(item, recipeData);
+}
+
+// ---------------------------------------------------------------------------
+// API object
+// ---------------------------------------------------------------------------
 
 /**
  * Pure API functions for meal plan operations
@@ -77,65 +225,10 @@ export const mealPlanApi = {
         const mealPlanItems = await mealPlanRepo.getAllMealPlanItems();
         log.info(`Found ${mealPlanItems.length} raw meal plan items`);
 
-        const itemsWithRecipes: MealPlanItemWithRecipe[] = [];
+        const result = await enrichMealPlanItemsBatch(mealPlanItems);
 
-        // Batch fetch all recipe details to avoid N+1 query problem
-        const recipeIds = Array.from(new Set(mealPlanItems.map((item) => item.recipeId)));
-        const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
-
-        for (const item of mealPlanItems) {
-          try {
-            log.info(`Fetching recipe for item ${item.id} with recipeId ${item.recipeId}`);
-            const recipeDetails = recipeDetailsMap.get(item.recipeId) || null;
-
-            let recipeData: MealPlanItemWithRecipe["recipe"];
-            if (recipeDetails && recipeDetails.recipe) {
-              const { recipe, ingredients } = recipeDetails;
-              log.info(`Found recipe ${recipe.id}: ${recipe.title}`);
-              recipeData = {
-                id: recipe.id,
-                title: recipe.title,
-                imageUrl: recipe.imageUrl || "",
-                servings: recipe.servings,
-                ingredients: ingredients.map((ing) => ({
-                  name: ing.name,
-                  quantity: ing.quantity,
-                  unit: ing.unit,
-                })),
-              };
-            } else {
-              log.warn(`Recipe missing for meal plan item ${item.id} (recipeId: ${item.recipeId})`);
-              recipeData = {
-                id: item.recipeId,
-                title: "Unknown Recipe",
-                imageUrl: "",
-                servings: 0,
-                ingredients: [],
-              };
-            }
-
-            const date =
-              item.date instanceof Date ? item.date : new Date((item as any).date ?? Date.now());
-            const mealSlot = item.mealSlot ?? "dinner";
-
-            itemsWithRecipes.push({
-              id: item.id,
-              recipeId: item.recipeId,
-              servings: item.servings,
-              date,
-              mealSlot,
-              templateId: item.templateId,
-              createdAt: item.createdAt,
-              recipe: recipeData,
-            });
-          } catch (error) {
-            log.error("Error fetching recipe for meal plan item:", item.id, error);
-            // Continue with other items
-          }
-        }
-
-        log.info("✅ Fetched meal plan items:", itemsWithRecipes.length);
-        return itemsWithRecipes;
+        log.info("✅ Fetched meal plan items:", result.length);
+        return result;
       },
       "Error fetching meal plan items",
       []
@@ -153,63 +246,10 @@ export const mealPlanApi = {
       const mealPlanItems = await mealPlanRepo.getAllMealPlanItems();
       log.info(`Found ${mealPlanItems.length} raw meal plan items`);
 
-      const itemsWithRecipes: MealPlanItemWithRecipe[] = [];
+      const result = await enrichMealPlanItemsBatch(mealPlanItems);
 
-      // Batch fetch all recipe details to avoid N+1 query problem
-      const recipeIds = Array.from(new Set(mealPlanItems.map((item) => item.recipeId)));
-      const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
-
-      for (const item of mealPlanItems) {
-        try {
-          log.info(`Fetching recipe for item ${item.id} with recipeId ${item.recipeId}`);
-          const recipeDetails = recipeDetailsMap.get(item.recipeId) || null;
-
-          let recipeData: MealPlanItemWithRecipe["recipe"];
-          if (recipeDetails && recipeDetails.recipe) {
-            const { recipe, ingredients } = recipeDetails;
-            log.info(`Found recipe ${recipe.id}: ${recipe.title}`);
-            recipeData = {
-              id: recipe.id,
-              title: recipe.title,
-              imageUrl: recipe.imageUrl || "",
-              servings: recipe.servings,
-              ingredients: ingredients.map((ing) => ({
-                name: ing.name,
-                quantity: ing.quantity,
-                unit: ing.unit,
-              })),
-            };
-          } else {
-            recipeData = {
-              id: item.recipeId,
-              title: "Unknown Recipe",
-              imageUrl: "",
-              servings: 0,
-              ingredients: [],
-            };
-          }
-
-          const date =
-            item.date instanceof Date ? item.date : new Date((item as any).date ?? Date.now());
-          const mealSlot = item.mealSlot ?? "dinner";
-
-          itemsWithRecipes.push({
-            id: item.id,
-            recipeId: item.recipeId,
-            servings: item.servings,
-            date,
-            mealSlot,
-            templateId: item.templateId,
-            createdAt: item.createdAt,
-            recipe: recipeData,
-          });
-        } catch (error) {
-          log.error("Error fetching recipe for meal plan item:", item.id, error);
-        }
-      }
-
-      log.info("✅ Fetched meal plan items:", itemsWithRecipes.length);
-      return itemsWithRecipes;
+      log.info("✅ Fetched meal plan items:", result.length);
+      return result;
     }, "Error fetching meal plan items");
   },
 
@@ -227,39 +267,12 @@ export const mealPlanApi = {
     mealSlot?: string
   ): Promise<MealPlanItemWithRecipe | null> {
     return withErrorLogging(async () => {
-      log.info("📅 Adding recipe to meal plan:", recipeId, "servings:", servings);
+      await addToPlanCore(recipeId, servings, date, mealSlot);
 
-      const mealPlanRepo = getMealPlanRepository();
-
-      // Check if already in plan
-      const existing = await mealPlanRepo.getByRecipeId(recipeId);
-
-      // Perform write operation using database.write for the meal plan part
-      if (existing) {
-        log.info("Recipe already in plan, updating servings");
-        await mealPlanRepo.updateServings(recipeId, servings);
-      } else {
-        const mealPlanItem = await mealPlanRepo.addToPlan({
-          recipeId,
-          servings,
-          date,
-          mealSlot,
-        });
-        log.info("✅ Added to meal plan:", mealPlanItem.id);
-      }
-
-      // 2. Fetch recipe data (Read)
       const result = await this.getMealPlanItemByRecipeId(recipeId);
-
-      if (result?.recipe?.ingredients.length) {
-        await this.setGroceryItemsDeletedBatch(
-          result.recipe.ingredients.map((ingredient) => ({
-            name: ingredient.name,
-            isDeleted: false,
-          }))
-        );
-      }
-
+      await restoreGroceryItemsForRecipe(result, (items) =>
+        this.setGroceryItemsDeletedBatch(items)
+      );
       return result;
     }, "Error adding to meal plan");
   },
@@ -272,34 +285,12 @@ export const mealPlanApi = {
     servings: number
   ): Promise<AppResult<MealPlanItemWithRecipe | null, AppError>> {
     return logAndWrapResult(async () => {
-      log.info("📅 Adding recipe to meal plan:", recipeId, "servings:", servings);
-
-      const mealPlanRepo = getMealPlanRepository();
-
-      const existing = await mealPlanRepo.getByRecipeId(recipeId);
-
-      if (existing) {
-        log.info("Recipe already in plan, updating servings");
-        await mealPlanRepo.updateServings(recipeId, servings);
-      } else {
-        const mealPlanItem = await mealPlanRepo.addToPlan({
-          recipeId,
-          servings,
-        });
-        log.info("✅ Added to meal plan:", mealPlanItem.id);
-      }
+      await addToPlanCore(recipeId, servings);
 
       const result = await this.getMealPlanItemByRecipeId(recipeId);
-
-      if (result?.recipe?.ingredients.length) {
-        await this.setGroceryItemsDeletedBatch(
-          result.recipe.ingredients.map((ingredient) => ({
-            name: ingredient.name,
-            isDeleted: false,
-          }))
-        );
-      }
-
+      await restoreGroceryItemsForRecipe(result, (items) =>
+        this.setGroceryItemsDeletedBatch(items)
+      );
       return result;
     }, "Error adding to meal plan");
   },
@@ -309,72 +300,7 @@ export const mealPlanApi = {
    */
   async getMealPlanItemByRecipeId(recipeId: string): Promise<MealPlanItemWithRecipe | null> {
     return withErrorHandling(
-      async () => {
-        const mealPlanRepo = getMealPlanRepository();
-        const item = await mealPlanRepo.getByRecipeId(recipeId);
-        if (!item) return null;
-
-        // Guard relation: item.recipe can be undefined if the model lost its prototype (e.g. bridge)
-        let recipe: Recipe | null | undefined = null;
-        if (
-          item.recipe != null &&
-          typeof (item.recipe as { fetch?: () => Promise<Recipe | undefined> }).fetch === "function"
-        ) {
-          recipe = await (item.recipe as { fetch: () => Promise<Recipe | undefined> }).fetch();
-        }
-
-        let recipeData = null;
-        if (recipe) {
-          const ingredients =
-            recipe.ingredients != null && typeof recipe.ingredients.fetch === "function"
-              ? await recipe.ingredients.fetch()
-              : [];
-          recipeData = {
-            id: recipe.id,
-            title: recipe.title,
-            imageUrl: recipe.imageUrl || "",
-            servings: recipe.servings,
-            ingredients: ingredients.map(
-              (ing: { name: string; quantity: number; unit: string }) => ({
-                name: ing.name,
-                quantity: ing.quantity,
-                unit: ing.unit,
-              })
-            ),
-          };
-        } else {
-          const recipeDetails = await databaseFacade.getRecipeWithDetails(item.recipeId);
-          if (recipeDetails) {
-            const { recipe: detailedRecipe, ingredients } = recipeDetails;
-            recipeData = {
-              id: detailedRecipe.id,
-              title: detailedRecipe.title,
-              imageUrl: detailedRecipe.imageUrl || "",
-              servings: detailedRecipe.servings,
-              ingredients: ingredients.map((ing) => ({
-                name: ing.name,
-                quantity: ing.quantity,
-                unit: ing.unit,
-              })),
-            };
-          }
-        }
-
-        const date =
-          item.date instanceof Date ? item.date : new Date((item as any).date ?? Date.now());
-        const mealSlot = item.mealSlot ?? "dinner";
-
-        return {
-          id: item.id,
-          recipeId: item.recipeId,
-          servings: item.servings,
-          date,
-          mealSlot,
-          templateId: item.templateId,
-          createdAt: item.createdAt,
-          recipe: recipeData,
-        };
-      },
+      () => getMealPlanItemByRecipeIdCore(recipeId),
       "Error getting meal plan item",
       null
     );
@@ -386,78 +312,10 @@ export const mealPlanApi = {
   async getMealPlanItemByRecipeIdResult(
     recipeId: string
   ): Promise<AppResult<MealPlanItemWithRecipe | null, AppError>> {
-    return logAndWrapResult(async () => {
-      const mealPlanRepo = getMealPlanRepository();
-      const item = await mealPlanRepo.getByRecipeId(recipeId);
-      if (!item) return null;
-
-      let recipeData = null;
-      if (
-        item.recipe != null &&
-        typeof (item.recipe as { fetch?: () => Promise<Recipe | undefined> }).fetch === "function"
-      ) {
-        const recipe = await (item.recipe as { fetch: () => Promise<Recipe | undefined> }).fetch();
-        if (recipe) {
-          const recipeDetails = await databaseFacade.getRecipeWithDetails(recipe.id);
-          if (recipeDetails) {
-            recipeData = {
-              id: recipe.id,
-              title: recipe.title,
-              imageUrl: recipe.imageUrl || "",
-              servings: recipe.servings,
-              ingredients: recipeDetails.ingredients.map(
-                (ing: { name: string; quantity: number; unit: string }) => ({
-                  name: ing.name,
-                  quantity: ing.quantity,
-                  unit: ing.unit,
-                })
-              ),
-            };
-          } else {
-            log.warn(`Recipe details failed to load for meal plan item ${item.id}`);
-            recipeData = {
-              id: recipe.id,
-              title: recipe.title,
-              imageUrl: recipe.imageUrl || "",
-              servings: recipe.servings,
-              ingredients: [],
-            };
-          }
-        }
-      }
-      if (!recipeData) {
-        const recipeDetails = await databaseFacade.getRecipeWithDetails(item.recipeId);
-        if (recipeDetails) {
-          const { recipe, ingredients } = recipeDetails;
-          recipeData = {
-            id: recipe.id,
-            title: recipe.title,
-            imageUrl: recipe.imageUrl || "",
-            servings: recipe.servings,
-            ingredients: ingredients.map((ing) => ({
-              name: ing.name,
-              quantity: ing.quantity,
-              unit: ing.unit,
-            })),
-          };
-        }
-      }
-
-      const date =
-        item.date instanceof Date ? item.date : new Date((item as any).date ?? Date.now());
-      const mealSlot = item.mealSlot ?? "dinner";
-
-      return {
-        id: item.id,
-        recipeId: item.recipeId,
-        servings: item.servings,
-        date,
-        mealSlot,
-        templateId: item.templateId,
-        createdAt: item.createdAt,
-        recipe: recipeData,
-      };
-    }, "Error getting meal plan item");
+    return logAndWrapResult(
+      () => getMealPlanItemByRecipeIdResultCore(recipeId),
+      "Error getting meal plan item"
+    );
   },
 
   /**
@@ -465,10 +323,7 @@ export const mealPlanApi = {
    */
   async isRecipeInPlan(recipeId: string): Promise<boolean> {
     return withErrorHandling(
-      async () => {
-        const mealPlanRepo = getMealPlanRepository();
-        return await mealPlanRepo.isRecipeInPlan(recipeId);
-      },
+      () => isRecipeInPlanCore(recipeId),
       "Error checking if recipe is in plan",
       false
     );
@@ -478,38 +333,24 @@ export const mealPlanApi = {
    * Result-based variant of isRecipeInPlan.
    */
   async isRecipeInPlanResult(recipeId: string): Promise<AppResult<boolean, AppError>> {
-    return logAndWrapResult(async () => {
-      const mealPlanRepo = getMealPlanRepository();
-      return await mealPlanRepo.isRecipeInPlan(recipeId);
-    }, "Error checking if recipe is in plan");
+    return logAndWrapResult(
+      () => isRecipeInPlanCore(recipeId),
+      "Error checking if recipe is in plan"
+    );
   },
 
   /**
    * Remove a recipe from the meal plan
    */
   async removeFromPlan(recipeId: string): Promise<boolean> {
-    return withErrorLogging(async () => {
-      log.info("🗑️ Removing recipe from meal plan:", recipeId);
-
-      const mealPlanRepo = getMealPlanRepository();
-      const success = await mealPlanRepo.removeFromPlan(recipeId);
-      log.info("✅ Removed from meal plan:", success);
-      return success;
-    }, "Error removing from meal plan");
+    return withErrorLogging(() => removeFromPlanCore(recipeId), "Error removing from meal plan");
   },
 
   /**
    * Result-based variant of removeFromPlan.
    */
   async removeFromPlanResult(recipeId: string): Promise<AppResult<boolean, AppError>> {
-    return logAndWrapResult(async () => {
-      log.info("🗑️ Removing recipe from meal plan:", recipeId);
-
-      const mealPlanRepo = getMealPlanRepository();
-      const success = await mealPlanRepo.removeFromPlan(recipeId);
-      log.info("✅ Removed from meal plan:", success);
-      return success;
-    }, "Error removing from meal plan");
+    return logAndWrapResult(() => removeFromPlanCore(recipeId), "Error removing from meal plan");
   },
 
   /**
@@ -517,11 +358,7 @@ export const mealPlanApi = {
    */
   async updateServings(recipeId: string, servings: number): Promise<boolean> {
     return withErrorHandling(
-      async () => {
-        const mealPlanRepo = getMealPlanRepository();
-        const updated = await mealPlanRepo.updateServings(recipeId, servings);
-        return updated !== null;
-      },
+      () => updateServingsCore(recipeId, servings),
       "Error updating servings",
       false
     );
@@ -534,11 +371,10 @@ export const mealPlanApi = {
     recipeId: string,
     servings: number
   ): Promise<AppResult<boolean, AppError>> {
-    return logAndWrapResult(async () => {
-      const mealPlanRepo = getMealPlanRepository();
-      const updated = await mealPlanRepo.updateServings(recipeId, servings);
-      return updated !== null;
-    }, "Error updating servings");
+    return logAndWrapResult(
+      () => updateServingsCore(recipeId, servings),
+      "Error updating servings"
+    );
   },
 
   /**
@@ -546,11 +382,7 @@ export const mealPlanApi = {
    */
   async clearAllPlannedRecipes(): Promise<void> {
     return withErrorHandling(
-      async () => {
-        const mealPlanRepo = getMealPlanRepository();
-        await mealPlanRepo.clearAllPlannedRecipes();
-        log.info("✅ Cleared all planned recipes");
-      },
+      () => clearAllPlannedRecipesCore(),
       "Error clearing planned recipes",
       undefined
     );
@@ -560,11 +392,7 @@ export const mealPlanApi = {
    * Result-based variant of clearAllPlannedRecipes.
    */
   async clearAllPlannedRecipesResult(): Promise<AppResult<void, AppError>> {
-    return logAndWrapResult(async () => {
-      const mealPlanRepo = getMealPlanRepository();
-      await mealPlanRepo.clearAllPlannedRecipes();
-      log.info("✅ Cleared all planned recipes");
-    }, "Error clearing planned recipes");
+    return logAndWrapResult(() => clearAllPlannedRecipesCore(), "Error clearing planned recipes");
   },
 
   /**
@@ -572,10 +400,7 @@ export const mealPlanApi = {
    */
   async getPlannedRecipeCount(): Promise<number> {
     return withErrorHandling(
-      async () => {
-        const mealPlanRepo = getMealPlanRepository();
-        return await mealPlanRepo.getPlannedRecipeCount();
-      },
+      () => getPlannedRecipeCountCore(),
       "Error getting planned recipe count",
       0
     );
@@ -585,10 +410,10 @@ export const mealPlanApi = {
    * Result-based variant of getPlannedRecipeCount.
    */
   async getPlannedRecipeCountResult(): Promise<AppResult<number, AppError>> {
-    return logAndWrapResult(async () => {
-      const mealPlanRepo = getMealPlanRepository();
-      return await mealPlanRepo.getPlannedRecipeCount();
-    }, "Error getting planned recipe count");
+    return logAndWrapResult(
+      () => getPlannedRecipeCountCore(),
+      "Error getting planned recipe count"
+    );
   },
 
   // ========================================
@@ -609,57 +434,10 @@ export const mealPlanApi = {
       const mealPlanItems = await mealPlanRepo.getByDateRange(startDate, endDate);
       log.info(`Found ${mealPlanItems.length} meal plans in date range`);
 
-      const itemsWithRecipes: MealPlanItemWithRecipe[] = [];
+      const result = await enrichMealPlanItemsBatch(mealPlanItems, { skipMissing: true });
 
-      // Extract unique recipe IDs to batch fetch
-      const recipeIds = Array.from(new Set(mealPlanItems.map((item) => item.recipeId)));
-
-      // Batch fetch all recipe details to avoid N+1 query problem
-      const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
-
-      for (const item of mealPlanItems) {
-        try {
-          const recipeDetails = recipeDetailsMap.get(item.recipeId);
-          if (!recipeDetails) {
-            log.warn(`Recipe not found for meal plan item ${item.id}`);
-            continue;
-          }
-
-          const { recipe, ingredients } = recipeDetails;
-
-          const recipeData = {
-            id: recipe.id,
-            title: recipe.title,
-            imageUrl: recipe.imageUrl || "",
-            servings: recipe.servings,
-            ingredients: ingredients.map((ing: any) => ({
-              name: ing.name,
-              quantity: ing.quantity,
-              unit: ing.unit,
-            })),
-          };
-
-          const date =
-            item.date instanceof Date ? item.date : new Date((item as any).date ?? Date.now());
-          const mealSlot = item.mealSlot ?? "dinner";
-
-          itemsWithRecipes.push({
-            id: item.id,
-            recipeId: item.recipeId,
-            servings: item.servings,
-            date,
-            mealSlot,
-            templateId: item.templateId,
-            createdAt: item.createdAt,
-            recipe: recipeData,
-          });
-        } catch (error) {
-          log.error("Error fetching recipe for meal plan item:", item.id, error);
-        }
-      }
-
-      log.info("✅ Fetched meal plans for date range:", itemsWithRecipes.length);
-      return itemsWithRecipes;
+      log.info("✅ Fetched meal plans for date range:", result.length);
+      return result;
     } catch (error) {
       log.error("❌ Error fetching meal plans for date range:", error);
       return [];
@@ -691,44 +469,13 @@ export const mealPlanApi = {
       let recipeData: MealPlanItemWithRecipe["recipe"] | null = null;
 
       if (recipeDetails) {
-        recipeData = {
-          id: recipeDetails.recipe.id,
-          title: recipeDetails.recipe.title,
-          imageUrl: recipeDetails.recipe.imageUrl || "",
-          servings: recipeDetails.recipe.servings,
-          ingredients: recipeDetails.ingredients.map((ing: any) => ({
-            name: ing.name,
-            quantity: ing.quantity,
-            unit: ing.unit,
-          })),
-        };
+        recipeData = buildRecipeDataFromDetails(recipeDetails);
       }
       if (!recipeData) {
-        recipeData = {
-          id: updated.recipeId,
-          title: "Unknown Recipe",
-          imageUrl: "",
-          servings: 0,
-          ingredients: [],
-        };
+        recipeData = buildUnknownRecipeData(updated.recipeId);
       }
 
-      const resultDate =
-        updated.date instanceof Date
-          ? updated.date
-          : new Date((updated as unknown as { date?: number }).date ?? Date.now());
-      const resultMealSlot = updated.mealSlot ?? "dinner";
-
-      return {
-        id: updated.id,
-        recipeId: updated.recipeId,
-        servings: updated.servings,
-        date: resultDate as any,
-        mealSlot: resultMealSlot as any,
-        templateId: updated.templateId,
-        createdAt: updated.createdAt,
-        recipe: recipeData,
-      };
+      return buildMealPlanItem(updated, recipeData);
     } catch (error) {
       log.error("❌ Error assigning meal plan to date slot:", error);
       throw error;
@@ -770,10 +517,7 @@ export const mealPlanApi = {
     Map<string, { isChecked: boolean; isDeleted: boolean }>
   > {
     return withErrorHandling(
-      async () => {
-        const groceryCheckRepo = getGroceryItemCheckRepository();
-        return await groceryCheckRepo.getCheckAttributesMap();
-      },
+      () => getGroceryAttributesCore(),
       "Error getting grocery attributes",
       new Map()
     );
@@ -785,10 +529,7 @@ export const mealPlanApi = {
   async getGroceryItemAttributesResult(): Promise<
     AppResult<Map<string, { isChecked: boolean; isDeleted: boolean }>, AppError>
   > {
-    return logAndWrapResult(async () => {
-      const groceryCheckRepo = getGroceryItemCheckRepository();
-      return await groceryCheckRepo.getCheckAttributesMap();
-    }, "Error getting grocery attributes");
+    return logAndWrapResult(() => getGroceryAttributesCore(), "Error getting grocery attributes");
   },
 
   /**
@@ -797,10 +538,7 @@ export const mealPlanApi = {
    */
   async getGroceryCheckStates(): Promise<Map<string, boolean>> {
     return withErrorHandling(
-      async () => {
-        const groceryCheckRepo = getGroceryItemCheckRepository();
-        return await groceryCheckRepo.getCheckStatesMap();
-      },
+      () => getGroceryCheckStatesCore(),
       "Error getting grocery check states",
       new Map()
     );
@@ -810,10 +548,10 @@ export const mealPlanApi = {
    * Result-based variant of getGroceryCheckStates.
    */
   async getGroceryCheckStatesResult(): Promise<AppResult<Map<string, boolean>, AppError>> {
-    return logAndWrapResult(async () => {
-      const groceryCheckRepo = getGroceryItemCheckRepository();
-      return await groceryCheckRepo.getCheckStatesMap();
-    }, "Error getting grocery check states");
+    return logAndWrapResult(
+      () => getGroceryCheckStatesCore(),
+      "Error getting grocery check states"
+    );
   },
 
   /**
@@ -821,10 +559,7 @@ export const mealPlanApi = {
    */
   async toggleGroceryItemCheck(ingredientName: string): Promise<boolean> {
     return withErrorHandling(
-      async () => {
-        const groceryCheckRepo = getGroceryItemCheckRepository();
-        return await groceryCheckRepo.toggleChecked(ingredientName);
-      },
+      () => toggleGroceryItemCheckCore(ingredientName),
       "Error toggling grocery item check",
       false
     );
@@ -836,10 +571,10 @@ export const mealPlanApi = {
   async toggleGroceryItemCheckResult(
     ingredientName: string
   ): Promise<AppResult<boolean, AppError>> {
-    return logAndWrapResult(async () => {
-      const groceryCheckRepo = getGroceryItemCheckRepository();
-      return await groceryCheckRepo.toggleChecked(ingredientName);
-    }, "Error toggling grocery item check");
+    return logAndWrapResult(
+      () => toggleGroceryItemCheckCore(ingredientName),
+      "Error toggling grocery item check"
+    );
   },
 
   /**
@@ -847,11 +582,7 @@ export const mealPlanApi = {
    */
   async setGroceryItemDeleted(ingredientName: string, isDeleted: boolean): Promise<void> {
     return withErrorHandling(
-      async () => {
-        const groceryCheckRepo = getGroceryItemCheckRepository();
-        await groceryCheckRepo.setDeleted(ingredientName, isDeleted);
-        log.info(`✅ Set deleted state for ${ingredientName} to ${isDeleted}`);
-      },
+      () => setGroceryItemDeletedCore(ingredientName, isDeleted),
       "Error setting grocery item deleted",
       undefined
     );
@@ -864,11 +595,10 @@ export const mealPlanApi = {
     ingredientName: string,
     isDeleted: boolean
   ): Promise<AppResult<void, AppError>> {
-    return logAndWrapResult(async () => {
-      const groceryCheckRepo = getGroceryItemCheckRepository();
-      await groceryCheckRepo.setDeleted(ingredientName, isDeleted);
-      log.info(`✅ Set deleted state for ${ingredientName} to ${isDeleted}`);
-    }, "Error setting grocery item deleted");
+    return logAndWrapResult(
+      () => setGroceryItemDeletedCore(ingredientName, isDeleted),
+      "Error setting grocery item deleted"
+    );
   },
 
   /**
@@ -876,11 +606,7 @@ export const mealPlanApi = {
    */
   async setGroceryItemsDeletedBatch(items: { name: string; isDeleted: boolean }[]): Promise<void> {
     return withErrorHandling(
-      async () => {
-        const groceryCheckRepo = getGroceryItemCheckRepository();
-        await groceryCheckRepo.setDeletedBatch(items);
-        log.info(`✅ Set deleted state for ${items.length} items`);
-      },
+      () => setGroceryItemsDeletedBatchCore(items),
       "Error setting grocery items deleted batch",
       undefined
     );
@@ -892,11 +618,10 @@ export const mealPlanApi = {
   async setGroceryItemsDeletedBatchResult(
     items: { name: string; isDeleted: boolean }[]
   ): Promise<AppResult<void, AppError>> {
-    return logAndWrapResult(async () => {
-      const groceryCheckRepo = getGroceryItemCheckRepository();
-      await groceryCheckRepo.setDeletedBatch(items);
-      log.info(`✅ Set deleted state for ${items.length} items`);
-    }, "Error setting grocery items deleted batch");
+    return logAndWrapResult(
+      () => setGroceryItemsDeletedBatchCore(items),
+      "Error setting grocery items deleted batch"
+    );
   },
 
   /**
@@ -904,10 +629,7 @@ export const mealPlanApi = {
    */
   async setGroceryItemChecked(ingredientName: string, isChecked: boolean): Promise<void> {
     return withErrorHandling(
-      async () => {
-        const groceryCheckRepo = getGroceryItemCheckRepository();
-        await groceryCheckRepo.setChecked(ingredientName, isChecked);
-      },
+      () => setGroceryItemCheckedCore(ingredientName, isChecked),
       "Error setting grocery item checked",
       undefined
     );
@@ -920,10 +642,10 @@ export const mealPlanApi = {
     ingredientName: string,
     isChecked: boolean
   ): Promise<AppResult<void, AppError>> {
-    return logAndWrapResult(async () => {
-      const groceryCheckRepo = getGroceryItemCheckRepository();
-      await groceryCheckRepo.setChecked(ingredientName, isChecked);
-    }, "Error setting grocery item checked");
+    return logAndWrapResult(
+      () => setGroceryItemCheckedCore(ingredientName, isChecked),
+      "Error setting grocery item checked"
+    );
   },
 
   /**
@@ -931,11 +653,7 @@ export const mealPlanApi = {
    */
   async uncheckAllGroceryItems(): Promise<void> {
     return withErrorHandling(
-      async () => {
-        const groceryCheckRepo = getGroceryItemCheckRepository();
-        await groceryCheckRepo.uncheckAll();
-        log.info("✅ Unchecked all grocery items");
-      },
+      () => uncheckAllGroceryItemsCore(),
       "Error unchecking all grocery items",
       undefined
     );
@@ -945,11 +663,10 @@ export const mealPlanApi = {
    * Result-based variant of uncheckAllGroceryItems.
    */
   async uncheckAllGroceryItemsResult(): Promise<AppResult<void, AppError>> {
-    return logAndWrapResult(async () => {
-      const groceryCheckRepo = getGroceryItemCheckRepository();
-      await groceryCheckRepo.uncheckAll();
-      log.info("✅ Unchecked all grocery items");
-    }, "Error unchecking all grocery items");
+    return logAndWrapResult(
+      () => uncheckAllGroceryItemsCore(),
+      "Error unchecking all grocery items"
+    );
   },
 
   /**
@@ -957,11 +674,7 @@ export const mealPlanApi = {
    */
   async clearGroceryChecks(): Promise<void> {
     return withErrorHandling(
-      async () => {
-        const groceryCheckRepo = getGroceryItemCheckRepository();
-        await groceryCheckRepo.clearAll();
-        log.info("✅ Cleared all grocery checks");
-      },
+      () => clearGroceryChecksCore(),
       "Error clearing grocery checks",
       undefined
     );
@@ -971,10 +684,6 @@ export const mealPlanApi = {
    * Result-based variant of clearGroceryChecks.
    */
   async clearGroceryChecksResult(): Promise<AppResult<void, AppError>> {
-    return logAndWrapResult(async () => {
-      const groceryCheckRepo = getGroceryItemCheckRepository();
-      await groceryCheckRepo.clearAll();
-      log.info("✅ Cleared all grocery checks");
-    }, "Error clearing grocery checks");
+    return logAndWrapResult(() => clearGroceryChecksCore(), "Error clearing grocery checks");
   },
 };

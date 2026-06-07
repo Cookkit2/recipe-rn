@@ -8,8 +8,15 @@
 import { GeminiAPI, DEFAULT_GEMINI_MODEL } from "~/utils/gemini-api";
 import { log } from "~/utils/logger";
 import type { YouTubeVideoInfo, YouTubeTranscript } from "./types";
-import type { RecipeAnalysisResult, GeneratedRecipe } from "~/types/ScrappedRecipe";
+import type { RecipeAnalysisResult } from "~/types/ScrappedRecipe";
 import type { WebsiteContent } from "~/lib/recipe-scrapper/WebsiteRecipeService";
+import {
+  normalizeIngredients,
+  normalizeSteps,
+  buildTextRecipeRequestBody,
+  getRecipeGenerationConfig,
+  getAnalysisResponseSchema,
+} from "../shared/recipe-gemini-utils";
 
 export class RecipeAnalyzer {
   private gemini: GeminiAPI;
@@ -44,7 +51,7 @@ export class RecipeAnalyzer {
           ],
           generationConfig: {
             responseMimeType: "application/json",
-            responseSchema: this.getRecipeSchema(),
+            responseSchema: getAnalysisResponseSchema(),
             temperature: 0.3,
           },
         });
@@ -71,7 +78,7 @@ export class RecipeAnalyzer {
           ],
           generationConfig: {
             responseMimeType: "application/json",
-            responseSchema: this.getRecipeSchema(),
+            responseSchema: getAnalysisResponseSchema(),
             temperature: 0.3,
           },
         });
@@ -104,18 +111,7 @@ export class RecipeAnalyzer {
       log.debug("RecipeAnalyzer: Analyzing website content for recipe");
 
       const prompt = this.buildWebsiteAnalysisPrompt(websiteContent);
-      const requestBody = JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: prompt }],
-          },
-        ],
-        generationConfig: {
-          responseMimeType: "application/json",
-          responseSchema: this.getRecipeSchema(),
-          temperature: 0.3,
-        },
-      });
+      const requestBody = buildTextRecipeRequestBody(prompt, 0.3);
 
       const response = await this.gemini.generateContent(DEFAULT_GEMINI_MODEL, requestBody);
       const result = this.parseResponse(response, sourceUrl);
@@ -279,72 +275,6 @@ Return a valid JSON response matching the schema provided.
   }
 
   /**
-   * JSON Schema for Gemini response
-   */
-  private getRecipeSchema() {
-    return {
-      type: "object",
-      properties: {
-        isCookingVideo: { type: "boolean" },
-        confidence: { type: "number" },
-        errorMessage: { type: "string" },
-        recipe: {
-          type: "object",
-          properties: {
-            title: { type: "string" },
-            description: { type: "string" },
-            prepMinutes: { type: "integer" },
-            cookMinutes: { type: "integer" },
-            servings: { type: "integer" },
-            difficultyStars: { type: "integer" },
-            calories: { type: "integer" },
-            tags: {
-              type: "array",
-              items: { type: "string" },
-            },
-            ingredients: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  name: { type: "string" },
-                  quantity: { type: "number" },
-                  unit: { type: "string" },
-                  notes: { type: "string" },
-                },
-                required: ["name", "quantity", "unit"],
-              },
-            },
-            steps: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  step: { type: "integer" },
-                  title: { type: "string" },
-                  description: { type: "string" },
-                },
-                required: ["step", "title", "description"],
-              },
-            },
-          },
-          required: [
-            "title",
-            "description",
-            "prepMinutes",
-            "cookMinutes",
-            "servings",
-            "difficultyStars",
-            "ingredients",
-            "steps",
-          ],
-        },
-      },
-      required: ["isCookingVideo", "confidence"],
-    };
-  }
-
-  /**
    * Parse Gemini response into RecipeAnalysisResult
    */
   private parseResponse(response: string, sourceUrl?: string): RecipeAnalysisResult {
@@ -371,8 +301,8 @@ Return a valid JSON response matching the schema provided.
           cookMinutes: parsed.recipe.cookMinutes || 30,
           servings: parsed.recipe.servings || 4,
           difficultyStars: Math.min(5, Math.max(1, parsed.recipe.difficultyStars || 3)),
-          ingredients: this.normalizeIngredients(parsed.recipe.ingredients),
-          steps: this.normalizeSteps(parsed.recipe.steps),
+          ingredients: normalizeIngredients(parsed.recipe.ingredients),
+          steps: normalizeSteps(parsed.recipe.steps),
           tags: parsed.recipe.tags || [],
           sourceUrl: sourceUrl || "",
           calories: parsed.recipe.calories,
@@ -389,38 +319,5 @@ Return a valid JSON response matching the schema provided.
         errorMessage: "Failed to parse AI response",
       };
     }
-  }
-
-  /**
-   * Normalize ingredient data to ensure consistency
-   */
-  private normalizeIngredients(
-    ingredients: GeneratedRecipe["ingredients"] | undefined
-  ): GeneratedRecipe["ingredients"] {
-    if (!ingredients || !Array.isArray(ingredients)) {
-      return [];
-    }
-
-    return ingredients.map((ing) => ({
-      name: (ing.name || "Unknown ingredient").trim().toLowerCase(),
-      quantity: ing.quantity ?? 1,
-      unit: (ing.unit || "piece").trim().toLowerCase(),
-      notes: ing.notes?.trim(),
-    }));
-  }
-
-  /**
-   * Normalize step data and ensure proper ordering
-   */
-  private normalizeSteps(steps: GeneratedRecipe["steps"] | undefined): GeneratedRecipe["steps"] {
-    if (!steps || !Array.isArray(steps)) {
-      return [];
-    }
-
-    return steps.map((step, index) => ({
-      step: step.step || index + 1,
-      title: (step.title || `Step ${index + 1}`).trim(),
-      description: (step.description || "").trim(),
-    }));
   }
 }

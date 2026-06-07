@@ -485,6 +485,102 @@ function buildPantryIndex(pantryItems: any[] | null | undefined): Map<string, an
 }
 
 /**
+ * Find all pantry items that match a given ingredient.
+ * Uses O(1) index lookup first, then falls back to full scan.
+ */
+function findMatchingPantryStock(
+  ingredient: AggregatedIngredient,
+  pantryItems: any[] | null | undefined,
+  pantryIndex: Map<string, any[]>
+): Array<{ quantity: number; unit: string }> {
+  if (!pantryItems) return [];
+
+  const ingredientNormalized = ingredient.name.toLowerCase().trim();
+  const directMatches = pantryIndex.get(ingredientNormalized);
+
+  if (directMatches && directMatches.length > 0) {
+    return directMatches.map((pantryItem: any) => ({
+      quantity: pantryItem.quantity,
+      unit: pantryItem.unit,
+    }));
+  }
+
+  // Slow path: scan all pantry items for substring/complex matches
+  const matches: Array<{ quantity: number; unit: string }> = [];
+  for (const pantryItem of pantryItems) {
+    if (isIngredientMatch(pantryItem.name, ingredient.name, pantryItem.synonyms)) {
+      matches.push({ quantity: pantryItem.quantity, unit: pantryItem.unit });
+    }
+  }
+  return matches;
+}
+
+/**
+ * Compute how much pantry stock is available in the recipe's unit, handling unit conversion.
+ */
+function computePantryCoverage(
+  ingredient: AggregatedIngredient,
+  matchingPantryItems: Array<{ quantity: number; unit: string }>
+): { pantryQuantityInRecipeUnit: number; totalPantryQuantity: number } {
+  if (matchingPantryItems.length === 0) {
+    return { pantryQuantityInRecipeUnit: 0, totalPantryQuantity: 0 };
+  }
+
+  const simpleSum = matchingPantryItems.reduce((sum, item) => sum + item.quantity, 0);
+  const aggregatedQuantity = aggregateQuantities(matchingPantryItems);
+
+  if (aggregatedQuantity === null) {
+    // Units are incompatible — use first match as fallback
+    const firstMatch = matchingPantryItems[0];
+    const qty = firstMatch ? firstMatch.quantity : 0;
+    return { pantryQuantityInRecipeUnit: qty, totalPantryQuantity: qty };
+  }
+
+  const recipeBaseUnit = getUnitDimension(ingredient.unit);
+  if (!recipeBaseUnit) {
+    return { pantryQuantityInRecipeUnit: simpleSum, totalPantryQuantity: simpleSum };
+  }
+
+  const recipeInBase = convertToBaseUnit(ingredient.totalQuantity, ingredient.unit);
+  if (recipeInBase === null || recipeInBase <= 0) {
+    return { pantryQuantityInRecipeUnit: simpleSum, totalPantryQuantity: simpleSum };
+  }
+
+  const coverageRatio = Math.min(1, aggregatedQuantity / recipeInBase);
+  const pantryQuantityInRecipeUnit = ingredient.totalQuantity * coverageRatio;
+  return { pantryQuantityInRecipeUnit, totalPantryQuantity: pantryQuantityInRecipeUnit };
+}
+
+/**
+ * Build a GroceryItem from an aggregated ingredient plus its pantry coverage.
+ */
+function buildGroceryItem(
+  normalizedName: string,
+  ingredient: AggregatedIngredient,
+  pantryCoverage: { pantryQuantityInRecipeUnit: number; totalPantryQuantity: number },
+  attributes: { isChecked: boolean; isDeleted: boolean }
+): GroceryItem {
+  const neededQuantity = Math.max(
+    0,
+    ingredient.totalQuantity - pantryCoverage.pantryQuantityInRecipeUnit
+  );
+  const isCovered = neededQuantity <= 0;
+
+  return {
+    name: ingredient.name,
+    normalizedName,
+    totalQuantity: ingredient.totalQuantity,
+    unit: ingredient.unit,
+    neededQuantity,
+    pantryQuantity: pantryCoverage.totalPantryQuantity,
+    fromRecipes: ingredient.fromRecipes,
+    category: categorizeIngredient(ingredient.name),
+    isChecked: attributes.isChecked,
+    isCovered,
+  };
+}
+
+/**
  * Step 2: Calculates needed quantities by subtracting pantry stock.
  */
 function calculateNeededQuantities(
@@ -498,97 +594,16 @@ function calculateNeededQuantities(
   const pantryIndex = buildPantryIndex(pantryItems);
 
   for (const [normalizedName, ingredient] of ingredientMap) {
-    // Collect ALL matching pantry items (not just the first one)
-    const matchingPantryItems: Array<{ quantity: number; unit: string }> = [];
-
-    if (pantryItems) {
-      const ingredientNormalized = ingredient.name.toLowerCase().trim();
-      const directMatches = pantryIndex.get(ingredientNormalized);
-
-      // Exact name or synonym match via O(1) index lookup
-      if (directMatches && directMatches.length > 0) {
-        for (const pantryItem of directMatches) {
-          matchingPantryItems.push({
-            quantity: pantryItem.quantity,
-            unit: pantryItem.unit,
-          });
-        }
-      } else {
-        // Slow path: Fallback to scanning all pantry items for substring/complex matches
-        for (const pantryItem of pantryItems) {
-          const isMatch = isIngredientMatch(pantryItem.name, ingredient.name, pantryItem.synonyms);
-
-          if (isMatch) {
-            matchingPantryItems.push({
-              quantity: pantryItem.quantity,
-              unit: pantryItem.unit,
-            });
-            // Don't break - aggregate all matching items
-          }
-        }
-      }
-    }
-
-    // Calculate pantry quantity with unit conversion
-    let pantryQuantityInRecipeUnit = 0;
-    let totalPantryQuantity = 0; // Raw quantity for display
-
-    if (matchingPantryItems.length > 0) {
-      // Try to aggregate quantities using base unit conversion
-      const aggregatedQuantity = aggregateQuantities(matchingPantryItems);
-
-      if (aggregatedQuantity !== null) {
-        // Units are compatible - convert aggregated base unit to recipe unit
-        const recipeBaseUnit = getUnitDimension(ingredient.unit);
-        if (recipeBaseUnit) {
-          // For weight (g base) and volume (ml base), convert from base to recipe unit
-          const recipeInBase = convertToBaseUnit(ingredient.totalQuantity, ingredient.unit);
-          if (recipeInBase !== null && recipeInBase > 0) {
-            // Calculate how much of the recipe requirement is covered
-            const coverageRatio = Math.min(1, aggregatedQuantity / recipeInBase);
-            pantryQuantityInRecipeUnit = ingredient.totalQuantity * coverageRatio;
-            totalPantryQuantity = pantryQuantityInRecipeUnit;
-          } else {
-            // Unknown units, fall back to simple sum
-            totalPantryQuantity = matchingPantryItems.reduce((sum, item) => sum + item.quantity, 0);
-            pantryQuantityInRecipeUnit = totalPantryQuantity;
-          }
-        } else {
-          // Unknown recipe dimension, fall back to simple sum
-          totalPantryQuantity = matchingPantryItems.reduce((sum, item) => sum + item.quantity, 0);
-          pantryQuantityInRecipeUnit = totalPantryQuantity;
-        }
-      } else {
-        // Units are incompatible - use simple sum of first match as fallback
-        const firstMatch = matchingPantryItems[0];
-        if (firstMatch) {
-          totalPantryQuantity = firstMatch.quantity;
-          pantryQuantityInRecipeUnit = totalPantryQuantity;
-        }
-      }
-    }
-
-    const neededQuantity = Math.max(0, ingredient.totalQuantity - pantryQuantityInRecipeUnit);
-    const isCovered = neededQuantity <= 0;
-
     const attributes = attributesMap?.[normalizedName] || { isChecked: false, isDeleted: false };
 
     if (attributes.isDeleted) {
       continue;
     }
 
-    groceryItems.push({
-      name: ingredient.name,
-      normalizedName,
-      totalQuantity: ingredient.totalQuantity,
-      unit: ingredient.unit,
-      neededQuantity,
-      pantryQuantity: totalPantryQuantity,
-      fromRecipes: ingredient.fromRecipes,
-      category: categorizeIngredient(ingredient.name),
-      isChecked: attributes.isChecked,
-      isCovered,
-    });
+    const matchingPantryItems = findMatchingPantryStock(ingredient, pantryItems, pantryIndex);
+    const pantryCoverage = computePantryCoverage(ingredient, matchingPantryItems);
+
+    groceryItems.push(buildGroceryItem(normalizedName, ingredient, pantryCoverage, attributes));
   }
 
   return groceryItems;

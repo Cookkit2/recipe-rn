@@ -1,10 +1,9 @@
 import React, { useMemo, type JSX } from "react";
-import { Pressable, View, type LayoutChangeEvent } from "react-native";
+import { View, type LayoutChangeEvent } from "react-native";
 import Animated from "react-native-reanimated";
-import useButtonAnimation from "~/hooks/animation/useButtonAnimations";
 import useSelectionRing from "~/hooks/animation/useSelectionRing";
-import { P } from "~/components/ui/typography";
 import { cn } from "~/lib/utils";
+import { SharedGroupButton } from "./SharedGroupButton";
 
 const COLUMN_CLASS_MAP = {
   1: "basis-full",
@@ -59,67 +58,16 @@ export default function SegmentedButtons<T>({
 
       <View className={"flex-row flex-wrap items-stretch gap-y-3"}>
         {buttons.map((item, index) => (
-          <GroupButton
+          <SharedGroupButton
             key={index}
             item={item}
             className={getSegmentedButtonWidthClassName(buttons.length, columns)}
-            onLayout={onItemLayout(index)}
+            onLayout={onItemLayout(index) as (e: LayoutChangeEvent) => void}
             selected={value === item.value}
             onPress={() => onValueChange(item.value)}
           />
         ))}
       </View>
     </View>
-  );
-}
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
-function GroupButton<T>({
-  className,
-  item,
-  onLayout,
-  selected,
-  onPress,
-}: {
-  className?: string;
-  item: GroupButton<T>;
-  onLayout?: (e: LayoutChangeEvent) => void;
-  selected?: boolean;
-  onPress?: () => void;
-}) {
-  const { animatedStyle, roundedStyle, onPressIn, onPressOut } = useButtonAnimation(true);
-
-  return (
-    <AnimatedPressable
-      onLayout={onLayout}
-      onPressIn={onPressIn}
-      onPressOut={onPressOut}
-      className={cn(
-        "w-full rounded-2xl border-continuous p-2 py-4 items-center justify-center gap-2",
-        className
-      )}
-      style={[animatedStyle, roundedStyle]}
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={item.label}
-      accessibilityState={{ selected: !!selected }}
-    >
-      {React.cloneElement(item.icon, {
-        className: cn(
-          item.icon.props?.className,
-          selected ? "text-foreground" : "text-muted-foreground"
-        ),
-      })}
-      <P
-        className={cn(
-          selected
-            ? "font-urbanist-medium text-foreground"
-            : "font-urbanist-regular text-muted-foreground"
-        )}
-      >
-        {item.label}
-      </P>
-    </AnimatedPressable>
   );
 }

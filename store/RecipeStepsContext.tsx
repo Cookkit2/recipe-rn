@@ -46,6 +46,197 @@ interface RecipeStepsContextType {
 
 const RecipeStepsContext = createContext<RecipeStepsContextType | null>(null);
 
+/**
+ * Record consumption of expiring stock items for the given recipe ingredients.
+ * Accepts WatermelonDB model instances or plain RecipeIngredient objects.
+ */
+async function recordIngredientConsumption(
+  baseRecipeId: string,
+  ingredients: Array<{ name: string; quantity: number }>
+): Promise<void> {
+  const now = Date.now();
+
+  for (const ingredient of ingredients) {
+    const matchingStocks = await database.getStockByIngredient(ingredient.name);
+
+    if (matchingStocks.length > 0) {
+      const exactMatch = matchingStocks[0];
+      if (exactMatch && exactMatch.quantity > 0) {
+        const stockModel = await database.getStockById(exactMatch.id);
+        if (stockModel && stockModel.expiryDate) {
+          if (now <= stockModel.expiryDate.getTime()) {
+            await database.recordConsumption(
+              stockModel.id,
+              Math.min(ingredient.quantity, exactMatch.quantity),
+              {
+                recipeId: baseRecipeId,
+                consumedDate: now,
+                isBeforeExpiry: true,
+              }
+            );
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Record the cooking event and ingredient consumption in the database, then check achievements.
+ */
+async function recordCookingAndConsumption(
+  baseRecipeId: string,
+  servings: number,
+  rating?: number,
+  notes?: string
+): Promise<void> {
+  try {
+    await database.recordCooking(baseRecipeId, {
+      rating,
+      notes: notes || `Cooked ${servings} serving${servings !== 1 ? "s" : ""}`,
+      servingsMade: servings,
+    });
+
+    try {
+      const recipe = await database.getRecipeById(baseRecipeId);
+      if (recipe) {
+        const ingredients = await recipe.ingredients.fetch();
+        await recordIngredientConsumption(baseRecipeId, ingredients);
+      }
+    } catch (error) {
+      log.error("Failed to record ingredient consumption:", error);
+    }
+
+    await achievementService.checkAchievements();
+  } catch {
+    // Continue even if recording fails
+  }
+}
+
+/**
+ * Find pantry items that match recipe ingredients.
+ */
+function findMatchingPantryItems(
+  recipeIngredients: RecipeIngredient[],
+  pantryItems: PantryItem[]
+): Array<{ pantryItem: PantryItem; recipeIngredient: RecipeIngredient }> {
+  const matches: Array<{
+    pantryItem: PantryItem;
+    recipeIngredient: RecipeIngredient;
+  }> = [];
+
+  recipeIngredients.forEach((recipeIngredient) => {
+    const matchingPantryItem = pantryItems.find((pantryItem) =>
+      isIngredientMatch(
+        pantryItem.name,
+        recipeIngredient.name,
+        pantryItem.synonyms?.map((s) => s.synonym)
+      )
+    );
+    if (matchingPantryItem) {
+      matches.push({ pantryItem: matchingPantryItem, recipeIngredient });
+    }
+  });
+
+  return matches;
+}
+
+/**
+ * Calculate how much to reduce from a pantry item based on the recipe ingredient quantity.
+ */
+function calculatePantryReduction(
+  pantryItem: PantryItem,
+  recipeIngredient: RecipeIngredient,
+  servings: number
+): number {
+  let reductionInPantryUnits: number;
+
+  if (areDimensionsCompatible(pantryItem.unit, recipeIngredient.unit)) {
+    const recipeInBase = convertToBaseUnit(recipeIngredient.quantity, recipeIngredient.unit);
+    const pantryInBase = convertToBaseUnit(pantryItem.quantity, pantryItem.unit);
+
+    if (pantryInBase > 0) {
+      reductionInPantryUnits = (recipeInBase / pantryInBase) * pantryItem.quantity;
+    } else {
+      reductionInPantryUnits = 0;
+    }
+  } else {
+    const normalizedPantryUnit = pantryItem.unit.toLowerCase().trim();
+    const normalizedRecipeUnit = recipeIngredient.unit.toLowerCase().trim();
+
+    if (normalizedPantryUnit === normalizedRecipeUnit) {
+      reductionInPantryUnits = recipeIngredient.quantity;
+    } else {
+      reductionInPantryUnits = 1;
+    }
+  }
+
+  return reductionInPantryUnits * servings;
+}
+
+/**
+ * Check if a pantry item was used before its expiry date.
+ */
+function isUsedBeforeExpiry(pantryItem: PantryItem): boolean {
+  if (!pantryItem.expiry_date) return false;
+  const expiryDate = new Date(pantryItem.expiry_date);
+  const now = new Date();
+  expiryDate.setHours(0, 0, 0, 0);
+  now.setHours(0, 0, 0, 0);
+  return expiryDate >= now;
+}
+
+/**
+ * Deduct matched ingredients from pantry, update achievement metrics, and return count of
+ * ingredients used before expiry.
+ */
+async function deductPantryIngredients(
+  matches: Array<{ pantryItem: PantryItem; recipeIngredient: RecipeIngredient }>,
+  servings: number,
+  updateMutation: ReturnType<typeof useUpdatePantryItem>,
+  deleteMutation: ReturnType<typeof useDeletePantryItem>
+): Promise<number> {
+  let ingredientsUsedBeforeExpiryCount = 0;
+
+  const updatePromises = matches.map(async ({ pantryItem, recipeIngredient }) => {
+    if (isUsedBeforeExpiry(pantryItem)) {
+      ingredientsUsedBeforeExpiryCount++;
+    }
+
+    const totalReductionAmount = calculatePantryReduction(pantryItem, recipeIngredient, servings);
+    const newQuantity = roundToReasonablePrecision(
+      Math.max(0, pantryItem.quantity - totalReductionAmount)
+    );
+
+    if (newQuantity <= 0) {
+      return deleteMutation.mutateAsync(pantryItem.id);
+    } else {
+      return updateMutation.mutateAsync({
+        id: pantryItem.id,
+        updates: { quantity: newQuantity },
+      });
+    }
+  });
+
+  await Promise.all(updatePromises);
+  return ingredientsUsedBeforeExpiryCount;
+}
+
+/**
+ * Invalidate cooking-related queries so UI refreshes.
+ */
+function invalidateCookingQueries(baseRecipeId: string): void {
+  queryClient.invalidateQueries({
+    queryKey: recipeQueryKeys.recommendations(),
+  });
+  queryClient.invalidateQueries({
+    queryKey: cookingHistoryQueryKeys.all,
+  });
+  queryClient.invalidateQueries({
+    queryKey: cookingHistoryQueryKeys.recipeCookCount(baseRecipeId),
+  });
+}
+
 export function RecipeStepsProvider({
   recipe,
   baseRecipeId,
@@ -91,80 +282,10 @@ export function RecipeStepsProvider({
   const handleRecipeCompletion = useCallback(
     async (servings: number, rating?: number, notes?: string) => {
       // Record the cooking in the database
-      try {
-        await database.recordCooking(baseRecipeId, {
-          rating,
-          notes: notes || `Cooked ${servings} serving${servings !== 1 ? "s" : ""}`,
-          servingsMade: servings,
-        });
-
-        // Try to record consumption of ingredients
-        try {
-          // Get ingredients for this recipe
-          const recipe = await database.getRecipeById(baseRecipeId);
-          if (recipe) {
-            const ingredients = await recipe.ingredients.fetch();
-            const ingredientNames = ingredients.map((i) => i.name);
-
-            const now = Date.now();
-
-            for (const ingredient of ingredients) {
-              // Find matching stock for this specific ingredient using the facade
-              const matchingStocks = await database.getStockByIngredient(ingredient.name);
-
-              if (matchingStocks.length > 0) {
-                const exactMatch = matchingStocks[0];
-                if (exactMatch && exactMatch.quantity > 0) {
-                  // If the stock has an expiry date, record consumption
-                  // Get full stock model to check expiry
-                  const stockModel = await database.getStockById(exactMatch.id);
-                  if (stockModel && stockModel.expiryDate) {
-                    // Only track if it hasn't expired yet
-                    if (now <= stockModel.expiryDate.getTime()) {
-                      await database.recordConsumption(
-                        stockModel.id,
-                        Math.min(ingredient.quantity, exactMatch.quantity),
-                        {
-                          recipeId: baseRecipeId,
-                          consumedDate: now,
-                          isBeforeExpiry: true,
-                        }
-                      );
-                    }
-                  }
-                }
-              }
-            }
-          }
-        } catch (error) {
-          log.error("Failed to record ingredient consumption:", error);
-        }
-
-        // Check for achievements after recording cooking
-        // This will trigger achievement checks and unlock any newly achieved milestones
-        await achievementService.checkAchievements();
-      } catch {
-        // Continue even if recording fails
-      }
+      await recordCookingAndConsumption(baseRecipeId, servings, rating, notes);
 
       // Find matching pantry items
-      const matches: Array<{
-        pantryItem: PantryItem;
-        recipeIngredient: RecipeIngredient;
-      }> = [];
-
-      recipe.ingredients.forEach((recipeIngredient) => {
-        const matchingPantryItem = pantryItems.find((pantryItem) =>
-          isIngredientMatch(
-            pantryItem.name,
-            recipeIngredient.name,
-            pantryItem.synonyms?.map((s) => s.synonym)
-          )
-        );
-        if (matchingPantryItem) {
-          matches.push({ pantryItem: matchingPantryItem, recipeIngredient });
-        }
-      });
+      const matches = findMatchingPantryItems(recipe.ingredients, pantryItems);
 
       // If no matches found, just navigate away
       if (matches.length === 0) {
@@ -174,72 +295,12 @@ export function RecipeStepsProvider({
 
       // Automatically deduct ingredients without showing alerts
       try {
-        let ingredientsUsedBeforeExpiryCount = 0;
-
-        const updatePromises = matches.map(async ({ pantryItem, recipeIngredient }) => {
-          let reductionInPantryUnits: number;
-
-          // Check if ingredient is used before expiry
-          if (pantryItem.expiry_date) {
-            const expiryDate = new Date(pantryItem.expiry_date);
-            const now = new Date();
-            // Reset times to compare just the dates
-            expiryDate.setHours(0, 0, 0, 0);
-            now.setHours(0, 0, 0, 0);
-
-            if (expiryDate >= now) {
-              ingredientsUsedBeforeExpiryCount++;
-            }
-          }
-
-          // Check if dimensions are compatible (both weight, both volume, etc.)
-          if (areDimensionsCompatible(pantryItem.unit, recipeIngredient.unit)) {
-            // Convert both to base units for accurate comparison
-            const recipeInBase = convertToBaseUnit(
-              recipeIngredient.quantity,
-              recipeIngredient.unit
-            );
-            const pantryInBase = convertToBaseUnit(pantryItem.quantity, pantryItem.unit);
-
-            if (pantryInBase > 0) {
-              // Calculate reduction as a proportion of pantry quantity
-              // E.g., if recipe needs 50ml and pantry has 1L (1000ml), reduce by 50/1000 * 1 = 0.05L
-              reductionInPantryUnits = (recipeInBase / pantryInBase) * pantryItem.quantity;
-            } else {
-              reductionInPantryUnits = 0;
-            }
-          } else {
-            // Incompatible dimensions or unknown units
-            // If both units normalize to the same string, assume they're compatible
-            const normalizedPantryUnit = pantryItem.unit.toLowerCase().trim();
-            const normalizedRecipeUnit = recipeIngredient.unit.toLowerCase().trim();
-
-            if (normalizedPantryUnit === normalizedRecipeUnit) {
-              // Same unit (case-insensitive), deduct recipe quantity
-              reductionInPantryUnits = recipeIngredient.quantity;
-            } else {
-              // Different unknown units, fall back to deducting 1 unit
-              reductionInPantryUnits = 1;
-            }
-          }
-
-          // Multiply by servings to get total reduction amount
-          const totalReductionAmount = reductionInPantryUnits * servings;
-          const newQuantity = roundToReasonablePrecision(
-            Math.max(0, pantryItem.quantity - totalReductionAmount)
-          );
-
-          if (newQuantity <= 0) {
-            return deletePantryItemMutation.mutateAsync(pantryItem.id);
-          } else {
-            return updatePantryItemMutation.mutateAsync({
-              id: pantryItem.id,
-              updates: { quantity: newQuantity },
-            });
-          }
-        });
-
-        await Promise.all(updatePromises);
+        const ingredientsUsedBeforeExpiryCount = await deductPantryIngredients(
+          matches,
+          servings,
+          updatePantryItemMutation,
+          deletePantryItemMutation
+        );
 
         // Update the achievements tracker if any unexpired ingredients were used
         if (ingredientsUsedBeforeExpiryCount > 0) {
@@ -249,22 +310,13 @@ export function RecipeStepsProvider({
             (currentCount + ingredientsUsedBeforeExpiryCount).toString()
           );
 
-          // Trigger achievement check again to pick up the new metric
           await achievementService.checkAchievements();
         }
       } catch {
         // Silent error handling - errors are handled gracefully
       }
 
-      queryClient.invalidateQueries({
-        queryKey: recipeQueryKeys.recommendations(),
-      });
-      queryClient.invalidateQueries({
-        queryKey: cookingHistoryQueryKeys.all,
-      });
-      queryClient.invalidateQueries({
-        queryKey: cookingHistoryQueryKeys.recipeCookCount(baseRecipeId),
-      });
+      invalidateCookingQueries(baseRecipeId);
 
       // Navigate away after processing
       router.dismissTo("/");

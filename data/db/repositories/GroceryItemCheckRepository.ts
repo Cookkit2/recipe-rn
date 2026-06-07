@@ -20,6 +20,35 @@ export class GroceryItemCheckRepository extends BaseRepository<GroceryItemCheck>
     return records.length > 0 && records[0] ? records[0] : null;
   }
 
+  /**
+   * Upsert a record: find existing by ingredient name, apply update if found,
+   * or create a new record with the given initialiser if not.
+   *
+   * Eliminates the duplicated find-then-update-or-create pattern in
+   * setChecked, setDeleted, and getOrCreate.
+   */
+  private async upsertRecord(
+    ingredientName: string,
+    updateFn: (record: GroceryItemCheck) => void,
+    createFn: (record: GroceryItemCheck, normalizedName: string) => void
+  ): Promise<GroceryItemCheck> {
+    const normalizedName = ingredientName.toLowerCase().trim();
+
+    const existing = await this.findByIngredientName(ingredientName);
+    if (existing) {
+      await database.write(async () => {
+        await existing.update(updateFn);
+      });
+      return existing;
+    }
+
+    return await database.write(async () => {
+      return await this.collection.create((record) => {
+        createFn(record, normalizedName);
+      });
+    });
+  }
+
   // Get or create a check record for an ingredient
   async getOrCreate(ingredientName: string): Promise<GroceryItemCheck> {
     const normalizedName = ingredientName.toLowerCase().trim();
@@ -48,26 +77,16 @@ export class GroceryItemCheckRepository extends BaseRepository<GroceryItemCheck>
 
   // Set checked state for an ingredient
   async setChecked(ingredientName: string, isChecked: boolean): Promise<GroceryItemCheck> {
-    const normalizedName = ingredientName.toLowerCase().trim();
-
-    const existing = await this.findByIngredientName(ingredientName);
-    if (existing) {
-      const record = existing;
-      await database.write(async () => {
-        await record.update((r) => {
-          r.isChecked = isChecked;
-        });
-      });
-      return record;
-    }
-
-    // Create new record if doesn't exist
-    return await database.write(async () => {
-      return await this.collection.create((record) => {
+    return this.upsertRecord(
+      ingredientName,
+      (r) => {
+        r.isChecked = isChecked;
+      },
+      (record, normalizedName) => {
         record.ingredientName = normalizedName;
         record.isChecked = isChecked;
-      });
-    });
+      }
+    );
   }
 
   // Toggle checked state for an ingredient
@@ -136,27 +155,17 @@ export class GroceryItemCheckRepository extends BaseRepository<GroceryItemCheck>
 
   // Set deleted state for an ingredient
   async setDeleted(ingredientName: string, isDeleted: boolean): Promise<GroceryItemCheck> {
-    const normalizedName = ingredientName.toLowerCase().trim();
-
-    const existing = await this.findByIngredientName(ingredientName);
-    if (existing) {
-      const record = existing;
-      await database.write(async () => {
-        await record.update((r) => {
-          r.isDeleted = isDeleted;
-        });
-      });
-      return record;
-    }
-
-    // Create new record if doesn't exist (e.g. deleting an item that wasn't checked before)
-    return await database.write(async () => {
-      return await this.collection.create((record) => {
+    return this.upsertRecord(
+      ingredientName,
+      (r) => {
+        r.isDeleted = isDeleted;
+      },
+      (record, normalizedName) => {
         record.ingredientName = normalizedName;
         record.isChecked = false;
         record.isDeleted = isDeleted;
-      });
-    });
+      }
+    );
   }
 
   // Set deleted state for multiple ingredients in one batch

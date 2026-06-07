@@ -179,19 +179,7 @@ export class ChallengeService {
       if (userChallenge.status === "completed" && previousStatus !== "completed") {
         log.info(`✅ Challenge completed: ${challenge.title}`);
 
-        // Schedule notification for the completed challenge
-        try {
-          await scheduleChallengeComplete({
-            challengeId: challenge.id,
-            title: challenge.title,
-            description: challenge.description,
-            xp: challenge.xpValue,
-            reward: challenge.parsedReward?.bonus,
-          });
-        } catch (notifError) {
-          // Non-critical error - don't fail the completion if notification fails
-          log.warn(`Failed to schedule challenge notification: ${notifError}`);
-        }
+        await this.notifyIfNewCompletion(challenge, previousStatus);
       }
 
       return true;
@@ -240,21 +228,7 @@ export class ChallengeService {
       await this.userChallengeRepo.completeChallenge(challengeId);
       log.info(`🏆 Challenge completed: ${challenge.title}`);
 
-      // Only schedule notification if this is a new completion
-      if (previousStatus !== "completed") {
-        try {
-          await scheduleChallengeComplete({
-            challengeId: challenge.id,
-            title: challenge.title,
-            description: challenge.description,
-            xp: challenge.xpValue,
-            reward: challenge.parsedReward?.bonus,
-          });
-        } catch (notifError) {
-          // Non-critical error - don't fail the completion if notification fails
-          log.warn(`Failed to schedule challenge notification: ${notifError}`);
-        }
-      }
+      await this.notifyIfNewCompletion(challenge, previousStatus);
 
       return true;
     } catch (error) {
@@ -300,54 +274,7 @@ export class ChallengeService {
       }
 
       const userChallenge = await this.userChallengeRepo.getByChallengeId(challengeId);
-      const requirement = challenge.parsedRequirement;
-      const target = requirement.target;
-
-      // If no user challenge exists, progress is 0
-      const progress = userChallenge?.progress ?? 0;
-      const progressPercentage = Math.min(100, (progress / target) * 100);
-
-      const isAvailable = !userChallenge || userChallenge.isAvailable;
-      const isActive = userChallenge?.isActive ?? false;
-      const isCompleted = userChallenge?.isCompleted ?? false;
-      const isExpired = challenge.isExpired || userChallenge?.isExpired || false;
-
-      let timeRemaining: number | undefined;
-      if (!isExpired && !isCompleted) {
-        timeRemaining = challenge.timeRemaining;
-      }
-
-      return {
-        challenge: {
-          id: challenge.id,
-          type: challenge.type as any,
-          title: challenge.title,
-          description: challenge.description,
-          requirement,
-          reward: challenge.parsedReward,
-          startDate: challenge.startDateDate,
-          endDate: challenge.endDateDate,
-          xp: challenge.xpValue,
-        },
-        userChallenge: userChallenge
-          ? {
-              id: userChallenge.id,
-              challengeId: userChallenge.challengeId,
-              status: userChallenge.status as any,
-              progress: userChallenge.progress,
-              startedAt: userChallenge.startedAtDate,
-              completedAt: userChallenge.completedAtDate,
-              claimedAt: userChallenge.claimedAtDate,
-            }
-          : undefined,
-        progress,
-        progressPercentage,
-        isActive,
-        isCompleted,
-        isExpired,
-        isAvailable,
-        timeRemaining,
-      };
+      return this.mapChallengeToProgress(challenge, userChallenge);
     } catch (error) {
       log.error(`Error getting progress for challenge ${challengeId}:`, error);
       return null;
@@ -371,53 +298,7 @@ export class ChallengeService {
 
       return challenges.map((challenge) => {
         const userChallenge = userChallengeMap.get(challenge.id);
-        const requirement = challenge.parsedRequirement;
-        const target = requirement.target;
-
-        const progress = userChallenge?.progress ?? 0;
-        const progressPercentage = Math.min(100, (progress / target) * 100);
-
-        const isAvailable = !userChallenge || userChallenge.isAvailable;
-        const isActive = userChallenge?.isActive ?? false;
-        const isCompleted = userChallenge?.isCompleted ?? false;
-        const isExpired = challenge.isExpired || userChallenge?.isExpired || false;
-
-        let timeRemaining: number | undefined;
-        if (!isExpired && !isCompleted) {
-          timeRemaining = challenge.timeRemaining;
-        }
-
-        return {
-          challenge: {
-            id: challenge.id,
-            type: challenge.type as any,
-            title: challenge.title,
-            description: challenge.description,
-            requirement,
-            reward: challenge.parsedReward,
-            startDate: challenge.startDateDate,
-            endDate: challenge.endDateDate,
-            xp: challenge.xpValue,
-          },
-          userChallenge: userChallenge
-            ? {
-                id: userChallenge.id,
-                challengeId: userChallenge.challengeId,
-                status: userChallenge.status as any,
-                progress: userChallenge.progress,
-                startedAt: userChallenge.startedAtDate,
-                completedAt: userChallenge.completedAtDate,
-                claimedAt: userChallenge.claimedAtDate,
-              }
-            : undefined,
-          progress,
-          progressPercentage,
-          isActive,
-          isCompleted,
-          isExpired,
-          isAvailable,
-          timeRemaining,
-        };
+        return this.mapChallengeToProgress(challenge, userChallenge);
       });
     } catch (error) {
       log.error(`Error getting batch progress for challenges:`, error);
@@ -518,6 +399,84 @@ export class ChallengeService {
         const _: never = requirement.type;
         return false;
       }
+    }
+  }
+
+  /**
+   * Map a challenge + optional userChallenge to a ChallengeProgress object.
+   * Extracted from the duplicated logic previously in getProgress and getProgressBatch.
+   */
+  private mapChallengeToProgress(challenge: any, userChallenge: any): ChallengeProgress {
+    const requirement = challenge.parsedRequirement;
+    const target = requirement.target;
+
+    const progress = userChallenge?.progress ?? 0;
+    const progressPercentage = Math.min(100, (progress / target) * 100);
+
+    const isAvailable = !userChallenge || userChallenge.isAvailable;
+    const isActive = userChallenge?.isActive ?? false;
+    const isCompleted = userChallenge?.isCompleted ?? false;
+    const isExpired = challenge.isExpired || userChallenge?.isExpired || false;
+
+    let timeRemaining: number | undefined;
+    if (!isExpired && !isCompleted) {
+      timeRemaining = challenge.timeRemaining;
+    }
+
+    return {
+      challenge: {
+        id: challenge.id,
+        type: challenge.type as any,
+        title: challenge.title,
+        description: challenge.description,
+        requirement,
+        reward: challenge.parsedReward,
+        startDate: challenge.startDateDate,
+        endDate: challenge.endDateDate,
+        xp: challenge.xpValue,
+      },
+      userChallenge: userChallenge
+        ? {
+            id: userChallenge.id,
+            challengeId: userChallenge.challengeId,
+            status: userChallenge.status as any,
+            progress: userChallenge.progress,
+            startedAt: userChallenge.startedAtDate,
+            completedAt: userChallenge.completedAtDate,
+            claimedAt: userChallenge.claimedAtDate,
+          }
+        : undefined,
+      progress,
+      progressPercentage,
+      isActive,
+      isCompleted,
+      isExpired,
+      isAvailable,
+      timeRemaining,
+    };
+  }
+
+  /**
+   * Schedule a completion notification if the challenge was not previously completed.
+   * Extracted from the duplicated notification scheduling in updateProgress and completeChallenge.
+   */
+  private async notifyIfNewCompletion(
+    challenge: any,
+    previousStatus: string | undefined
+  ): Promise<void> {
+    if (previousStatus === "completed") return;
+
+    try {
+      await scheduleChallengeComplete({
+        challengeId: challenge.id,
+        title: challenge.title,
+        description: challenge.description,
+        xp: challenge.xpValue,
+        reward: challenge.parsedReward?.bonus,
+      });
+    } catch (notifError) {
+      // Non-critical error - don't fail the completion if notification fails
+      log.warn(`Failed to schedule challenge notification: ${notifError}`);
     }
   }
 

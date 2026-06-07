@@ -31,54 +31,44 @@ const SYNONYM_MAP_ENTRIES = Object.entries({
   cheese: ["cheddar cheese", "mozzarella cheese", "parmesan cheese"],
 });
 
-export const isIngredientMatch = (
-  pantryItemName: string,
-  recipeIngredientName: string,
-  pantryItemSynonyms: (string | { synonym: string })[] = []
-): boolean => {
-  const pantryName = pantryItemName.toLowerCase().trim();
-  const recipeName = recipeIngredientName.toLowerCase().trim();
-
-  // Direct match
-  if (!pantryName || !recipeName) return pantryName === recipeName;
-
-  // Direct match
+/** Check if two normalized names match directly or by substring containment. */
+function matchesByNameOrSubstring(pantryName: string, recipeName: string): boolean {
   if (pantryName === recipeName) return true;
+  return pantryName.includes(recipeName) || recipeName.includes(pantryName);
+}
 
-  // Check provided synonyms (from database)
-  if (pantryItemSynonyms && pantryItemSynonyms.length > 0) {
-    // ⚡ Bolt Optimization: Use standard for loop over iterators or array methods to avoid closure overhead
-    for (let i = 0; i < pantryItemSynonyms.length; i++) {
-      const item = pantryItemSynonyms[i];
-      if (item) {
-        const synonymStr = typeof item === "string" ? item : item.synonym;
-        if (synonymStr) {
-          const syn = synonymStr.toLowerCase().trim();
-          if (syn === recipeName || recipeName.includes(syn) || syn.includes(recipeName)) {
-            return true;
-          }
+/** Check if any provided synonym matches the recipe ingredient name. */
+function matchesByProvidedSynonyms(
+  recipeName: string,
+  pantryItemSynonyms: (string | { synonym: string })[]
+): boolean {
+  for (let i = 0; i < pantryItemSynonyms.length; i++) {
+    const item = pantryItemSynonyms[i];
+    if (item) {
+      const synonymStr = typeof item === "string" ? item : item.synonym;
+      if (synonymStr) {
+        const syn = synonymStr.toLowerCase().trim();
+        if (syn === recipeName || recipeName.includes(syn) || syn.includes(recipeName)) {
+          return true;
         }
       }
     }
   }
+  return false;
+}
 
-  // Contains match (existing logic)
-  if (pantryName.includes(recipeName) || recipeName.includes(pantryName)) return true;
+/** Extract significant keywords by removing common modifiers and short words. */
+function extractKeyWords(name: string): string[] {
+  return name
+    .replace(STOP_WORDS_REGEX, "")
+    .split(/[\s,\-()]+/)
+    .filter((word) => word.length > 2)
+    .map((word) => word.trim());
+}
 
-  // Extract key words and remove common modifiers
-  const extractKeyWords = (name: string): string[] => {
-    return name
-      .replace(STOP_WORDS_REGEX, "")
-      .split(/[\s,\-()]+/)
-      .filter((word) => word.length > 2) // Filter out short words
-      .map((word) => word.trim());
-  };
-
-  const pantryWords = extractKeyWords(pantryName);
-  const recipeWords = extractKeyWords(recipeName);
-
-  // Check if any significant words match
-  const hasCommonKeyWord = pantryWords.some((pantryWord) =>
+/** Check if any significant keywords overlap between pantry and recipe names. */
+function matchesByKeyWords(pantryWords: string[], recipeWords: string[]): boolean {
+  return pantryWords.some((pantryWord) =>
     recipeWords.some(
       (recipeWord) =>
         pantryWord === recipeWord ||
@@ -86,11 +76,15 @@ export const isIngredientMatch = (
         recipeWord.includes(pantryWord)
     )
   );
+}
 
-  // Optimization: return early before checking synonyms if we already matched
-  if (hasCommonKeyWord) return true;
-
-  // Check synonyms
+/** Check built-in synonym map for a cross-match between pantry and recipe names. */
+function matchesBySynonymMap(
+  pantryName: string,
+  recipeName: string,
+  pantryWords: string[],
+  recipeWords: string[]
+): boolean {
   for (const [baseWord, synonyms] of SYNONYM_MAP_ENTRIES) {
     const pantryContainsBase = pantryWords.some((word) => word.includes(baseWord));
     const pantryContainsSynonym = synonyms.some((synonym) => pantryName.includes(synonym));
@@ -105,6 +99,36 @@ export const isIngredientMatch = (
       }
     }
   }
+  return false;
+}
+
+export const isIngredientMatch = (
+  pantryItemName: string,
+  recipeIngredientName: string,
+  pantryItemSynonyms: (string | { synonym: string })[] = []
+): boolean => {
+  const pantryName = pantryItemName.toLowerCase().trim();
+  const recipeName = recipeIngredientName.toLowerCase().trim();
+
+  // Empty-name guard
+  if (!pantryName || !recipeName) return pantryName === recipeName;
+
+  // Stage 1: Direct name or substring match
+  if (matchesByNameOrSubstring(pantryName, recipeName)) return true;
+
+  // Stage 2: Provided synonyms (from database)
+  if (pantryItemSynonyms && pantryItemSynonyms.length > 0) {
+    if (matchesByProvidedSynonyms(recipeName, pantryItemSynonyms)) return true;
+  }
+
+  // Stage 3: Keyword extraction and matching
+  const pantryWords = extractKeyWords(pantryName);
+  const recipeWords = extractKeyWords(recipeName);
+
+  if (matchesByKeyWords(pantryWords, recipeWords)) return true;
+
+  // Stage 4: Built-in synonym map
+  if (matchesBySynonymMap(pantryName, recipeName, pantryWords, recipeWords)) return true;
 
   return false;
 };

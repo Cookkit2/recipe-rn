@@ -473,6 +473,26 @@
     {
       "file": "components/auth/SocialAuthButton.tsx",
       "exports": ["SocialAuthButton"]
+    },
+    {
+      "file": "components/Shared/ChartPrimitives.tsx",
+      "exports": ["SCREEN_WIDTH", "legendDotStyles"]
+    },
+    {
+      "file": "auth/authHelpers.ts",
+      "exports": ["executeAuthOperation"]
+    },
+    {
+      "file": "lib/recipe-scrapper/shared/recipe-gemini-utils.ts",
+      "exports": ["getRecipeGenerationConfig"]
+    },
+    {
+      "file": "components/Shared/SharedGroupButton.tsx",
+      "exports": ["SharedGroupButtonProps"]
+    },
+    {
+      "file": "data/api/mealPlanApi-helpers.ts",
+      "exports": ["GroceryItem"]
     }
   ],
   "usedClassMembers": [
