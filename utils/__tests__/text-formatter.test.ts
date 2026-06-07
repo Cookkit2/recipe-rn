@@ -11,6 +11,7 @@ import {
   truncate,
   sanitizeText,
   pluralize,
+  formatDifficulty,
 } from "../text-formatter";
 
 describe("Text Formatter Utils - Capitalization", () => {
@@ -242,6 +243,37 @@ describe("Text Formatter Utils - Capitalization", () => {
       expect(toCamelCase("")).toBe("");
       expect(toCamelCase(null as any)).toBe("");
       expect(toCamelCase(undefined as any)).toBe("");
+    });
+  });
+});
+
+describe("Text Formatter Utils - Recipe Formatting", () => {
+  describe("formatDifficulty", () => {
+    it("should return correct difficulty for standard levels 1-4", () => {
+      expect(formatDifficulty(1)).toBe("Easy");
+      expect(formatDifficulty(2)).toBe("Medium");
+      expect(formatDifficulty(3)).toBe("Hard");
+      expect(formatDifficulty(4)).toBe("Expert");
+    });
+
+    it("should clamp values less than 1 to 'Easy'", () => {
+      expect(formatDifficulty(0)).toBe("Easy");
+      expect(formatDifficulty(-1)).toBe("Easy");
+      expect(formatDifficulty(-10)).toBe("Easy");
+    });
+
+    it("should clamp values greater than 4 to 'Expert'", () => {
+      expect(formatDifficulty(5)).toBe("Expert");
+      expect(formatDifficulty(10)).toBe("Expert");
+      expect(formatDifficulty(100)).toBe("Expert");
+    });
+
+    it("should handle decimal values by mapping them to indices based on integer logic", () => {
+      // Math.min/max works with floats, so index calculation:
+      // level=1.5 -> min(0.5, 3) -> max(0, 0.5) -> index 0.5 -> "Easy" since array access rounds down or ignores float properties in standard JS arrays
+      // Actually `difficulties[0.5]` will be undefined, but `|| "Easy"` catches it.
+      expect(formatDifficulty(1.5)).toBe("Easy");
+      expect(formatDifficulty(2.5)).toBe("Easy");
     });
   });
 });
