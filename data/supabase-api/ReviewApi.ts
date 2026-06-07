@@ -169,12 +169,25 @@ export const reviewApi = {
       return { reviews: [], hasMore: false };
     }
 
+    // Batch fetch user display names
+    const userIds = Array.from(new Set((data ?? []).map((r) => r.user_id)));
+    const userMap: Record<string, string | null> = {};
+    if (userIds.length > 0) {
+      const { data: userData } = await supabase!
+        .from("users")
+        .select("id, username")
+        .in("id", userIds);
+      userData?.forEach((u) => {
+        userMap[u.id] = u.username;
+      });
+    }
+
     const reviews = (data ?? []).map((row) => {
       const photos = (row.review_photo ?? []) as ReviewPhotoRow[];
       return mapReviewRow(
         row as unknown as ReviewRow,
         photos,
-        getInitial(null), // TODO: fetch from user metadata in batch
+        getInitial(userMap[row.user_id] ?? null),
         colorFromUserId(row.user_id)
       );
     });
@@ -366,6 +379,19 @@ export const reviewApi = {
       return [];
     }
 
+    // Batch fetch user display names
+    const userIds = Array.from(new Set((data ?? []).map((r) => r.user_id)));
+    const userMap: Record<string, string | null> = {};
+    if (userIds.length > 0) {
+      const { data: userData } = await supabase!
+        .from("users")
+        .select("id, username")
+        .in("id", userIds);
+      userData?.forEach((u) => {
+        userMap[u.id] = u.username;
+      });
+    }
+
     return (data ?? []).map((row) => ({
       id: row.id,
       recipeId: row.recipe_id,
@@ -374,7 +400,7 @@ export const reviewApi = {
       helpfulCount: row.helpful_count,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
-      authorInitial: getInitial(null),
+      authorInitial: getInitial(userMap[row.user_id] ?? null),
       authorColor: colorFromUserId(row.user_id),
     }));
   },

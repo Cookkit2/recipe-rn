@@ -37,3 +37,6 @@
 
 **Learning:** In `hooks/queries/useGroceryList.ts`, the loop allocating `pantryItem.synonyms?.map(...)` on every iteration of a doubly-nested loop mapping unmatched ingredients against pantry items causes massive array allocation penalties and GC pressure (e.g., thousands of times per generation).
 **Action:** Lift the array transformation out of the inner loop, or modify the matching utility (`isIngredientMatch`) to accept the raw array of objects so mapping is completely avoided.
+## 2024-06-08 - Batch fetching user metadata in Supabase
+**Learning:** When generating initials from user metadata in a list view, querying for individual metadata inside a loop or relying on hardcoded nulls can either cause N+1 query issues or lose data context.
+**Action:** Extract unique `user_id`s from the result list and do a single batch `.in()` query against the `users` table to fetch `username`s, then map the data.
