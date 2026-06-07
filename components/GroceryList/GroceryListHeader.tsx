@@ -1,7 +1,6 @@
-import { View, Image, ScrollView, Pressable } from "react-native";
-import { H3, H4, P } from "~/components/ui/typography";
+import { ScrollView } from "react-native";
+import { H3, P } from "~/components/ui/typography";
 import { useMealPlanItems } from "~/hooks/queries/useMealPlanQueries";
-import { useRouter } from "expo-router";
 import { Separator } from "~/components/ui/separator";
 import RecipeChip from "./RecipeChip";
 
