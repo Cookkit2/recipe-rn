@@ -11,6 +11,7 @@ import {
   truncate,
   sanitizeText,
   pluralize,
+  formatServings,
 } from "../text-formatter";
 
 describe("Text Formatter Utils - Capitalization", () => {
@@ -408,6 +409,27 @@ describe("Text Formatter Utils - Sanitization", () => {
       expect(sanitizeText("")).toBe("");
       expect(sanitizeText(null as any)).toBe("");
       expect(sanitizeText(undefined as any)).toBe("");
+    });
+  });
+});
+
+describe("Text Formatter Utils - formatServings", () => {
+  describe("formatServings", () => {
+    it("should format a single serving correctly", () => {
+      expect(formatServings(1)).toBe("1 serving");
+    });
+
+    it("should format multiple servings correctly", () => {
+      expect(formatServings(2)).toBe("2 servings");
+      expect(formatServings(10)).toBe("10 servings");
+    });
+
+    it("should format zero servings correctly", () => {
+      expect(formatServings(0)).toBe("0 servings");
+    });
+
+    it("should format negative servings correctly", () => {
+      expect(formatServings(-1)).toBe("-1 servings");
     });
   });
 });
