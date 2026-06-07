@@ -8,16 +8,25 @@ export class GroceryItemCheckRepository extends BaseRepository<GroceryItemCheck>
     super("grocery_item_check");
   }
 
+  /**
+   * Find an existing record by ingredient name.
+   * Shared lookup used by getOrCreate, isChecked, setChecked, toggleChecked, setDeleted.
+   */
+  private async findByIngredientName(ingredientName: string): Promise<GroceryItemCheck | null> {
+    const normalizedName = ingredientName.toLowerCase().trim();
+    const records = await this.collection
+      .query(Q.where("ingredient_name", normalizedName), Q.take(1))
+      .fetch();
+    return records.length > 0 && records[0] ? records[0] : null;
+  }
+
   // Get or create a check record for an ingredient
   async getOrCreate(ingredientName: string): Promise<GroceryItemCheck> {
     const normalizedName = ingredientName.toLowerCase().trim();
 
-    const existing = await this.collection
-      .query(Q.where("ingredient_name", normalizedName), Q.take(1))
-      .fetch();
-
-    if (existing.length > 0 && existing[0]) {
-      return existing[0];
+    const existing = await this.findByIngredientName(ingredientName);
+    if (existing) {
+      return existing;
     }
 
     return await database.write(async () => {
@@ -30,10 +39,8 @@ export class GroceryItemCheckRepository extends BaseRepository<GroceryItemCheck>
 
   // Check if an ingredient is checked
   async isChecked(ingredientName: string): Promise<boolean> {
-    const normalizedName = ingredientName.toLowerCase().trim();
-
     const records = await this.collection
-      .query(Q.where("ingredient_name", normalizedName), Q.take(1))
+      .query(Q.where("ingredient_name", ingredientName.toLowerCase().trim()), Q.take(1))
       .fetch();
 
     return records.length > 0 && records[0] ? records[0].isChecked : false;
@@ -43,12 +50,9 @@ export class GroceryItemCheckRepository extends BaseRepository<GroceryItemCheck>
   async setChecked(ingredientName: string, isChecked: boolean): Promise<GroceryItemCheck> {
     const normalizedName = ingredientName.toLowerCase().trim();
 
-    const existing = await this.collection
-      .query(Q.where("ingredient_name", normalizedName), Q.take(1))
-      .fetch();
-
-    if (existing.length > 0 && existing[0]) {
-      const record = existing[0];
+    const existing = await this.findByIngredientName(ingredientName);
+    if (existing) {
+      const record = existing;
       await database.write(async () => {
         await record.update((r) => {
           r.isChecked = isChecked;
@@ -75,12 +79,10 @@ export class GroceryItemCheckRepository extends BaseRepository<GroceryItemCheck>
     // that causes a deadlock. Use record.update() or prepareUpdate+batch instead.
     let newState = false;
     await database.write(async () => {
-      const existing = await this.collection
-        .query(Q.where("ingredient_name", normalizedName), Q.take(1))
-        .fetch();
+      const existing = await this.findByIngredientName(ingredientName);
 
-      if (existing.length > 0 && existing[0]) {
-        const record = existing[0];
+      if (existing) {
+        const record = existing;
         newState = !record.isChecked;
         await database.batch(
           record.prepareUpdate((r) => {
@@ -136,12 +138,9 @@ export class GroceryItemCheckRepository extends BaseRepository<GroceryItemCheck>
   async setDeleted(ingredientName: string, isDeleted: boolean): Promise<GroceryItemCheck> {
     const normalizedName = ingredientName.toLowerCase().trim();
 
-    const existing = await this.collection
-      .query(Q.where("ingredient_name", normalizedName), Q.take(1))
-      .fetch();
-
-    if (existing.length > 0 && existing[0]) {
-      const record = existing[0];
+    const existing = await this.findByIngredientName(ingredientName);
+    if (existing) {
+      const record = existing;
       await database.write(async () => {
         await record.update((r) => {
           r.isDeleted = isDeleted;
