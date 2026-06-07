@@ -222,7 +222,9 @@ describe("presentPaywallIfNeeded", () => {
     (Purchases.getCustomerInfo as jest.Mock).mockResolvedValue(mockCustomerInfo);
 
     const RevenueCatUI = require("react-native-purchases-ui");
-    RevenueCatUI.presentPaywallIfNeeded.mockResolvedValue(RevenueCatUI.PAYWALL_RESULT.NOT_PRESENTED);
+    RevenueCatUI.presentPaywallIfNeeded.mockResolvedValue(
+      RevenueCatUI.PAYWALL_RESULT.NOT_PRESENTED
+    );
 
     const { presentPaywallIfNeeded } = require("../subscription-utils");
     const { setStatusBarStyle } = require("expo-status-bar");
@@ -230,7 +232,9 @@ describe("presentPaywallIfNeeded", () => {
     await presentPaywallIfNeeded();
 
     expect(setStatusBarStyle).toHaveBeenNthCalledWith(1, "light", true);
-    expect(RevenueCatUI.presentPaywallIfNeeded).toHaveBeenCalledWith({ requiredEntitlementIdentifier: "Pro" });
+    expect(RevenueCatUI.presentPaywallIfNeeded).toHaveBeenCalledWith({
+      requiredEntitlementIdentifier: "Pro",
+    });
     expect(setStatusBarStyle).toHaveBeenNthCalledWith(2, "auto", true);
   });
 
@@ -263,7 +267,9 @@ describe("presentPaywallIfNeeded", () => {
     (Purchases.getCustomerInfo as jest.Mock).mockResolvedValue(mockCustomerInfo);
 
     const RevenueCatUI = require("react-native-purchases-ui");
-    RevenueCatUI.presentPaywallIfNeeded.mockResolvedValue(RevenueCatUI.PAYWALL_RESULT.NOT_PRESENTED);
+    RevenueCatUI.presentPaywallIfNeeded.mockResolvedValue(
+      RevenueCatUI.PAYWALL_RESULT.NOT_PRESENTED
+    );
 
     const { presentPaywallIfNeeded } = require("../subscription-utils");
     const { invalidateSubscriptionEntitlementsQuery } = require("~/lib/subscription-query-sync");
