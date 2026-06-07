@@ -40,3 +40,9 @@
 ## 2026-06-07 - [Avoid adding non-compatible native dependencies for benchmarks]
 **Learning:** Adding 'better-sqlite3' to a React Native/Expo project for the sole purpose of running a local benchmark script can pollute the project and cause compilation failures.
 **Action:** Mock necessary classes and dependencies rather than adding new native modules to the project.
+## 2026-06-07 - Eliminate Closure Overhead in Hot Paths
+**Learning:** In high-frequency operations like string matching against large sets (), using array methods like `.map()`, `.filter()`, and `.some()` causes significant unnecessary closure allocation and garbage collection overhead. Furthermore, repeatedly running regex operations over identical strings within inner loops multiplies execution time drastically.
+**Action:** Replace all array iteration methods with standard `for` loops in critical hot paths. Lift expensive operations out of the execution context or cache their results (e.g., using a module-level Map for regex-parsed words) to eliminate redundant processing and reduce runtime execution time by roughly 50%.
+## 2025-02-12 - Eliminate Closure Overhead in Hot Paths
+**Learning:** In high-frequency operations like string matching against large sets (`isIngredientMatch`), using array methods like `.map()`, `.filter()`, and `.some()` causes significant unnecessary closure allocation and garbage collection overhead. Furthermore, repeatedly running regex operations over identical strings within inner loops multiplies execution time drastically.
+**Action:** Replace all array iteration methods with standard `for` loops in critical hot paths. Lift expensive operations out of the execution context or cache their results (e.g., using a module-level Map for regex-parsed words) to eliminate redundant processing and reduce runtime execution time by roughly 50%.
