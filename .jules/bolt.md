@@ -37,3 +37,9 @@
 
 **Learning:** In `hooks/queries/useGroceryList.ts`, the loop allocating `pantryItem.synonyms?.map(...)` on every iteration of a doubly-nested loop mapping unmatched ingredients against pantry items causes massive array allocation penalties and GC pressure (e.g., thousands of times per generation).
 **Action:** Lift the array transformation out of the inner loop, or modify the matching utility (`isIngredientMatch`) to accept the raw array of objects so mapping is completely avoided.
+## 2026-06-07 - Parallelize Supabase Storage Uploads & Bulk Inserts
+**Learning:** Sequential  and  operations via Supabase result in N+1 network/DB queries which can be very slow for large arrays.
+**Action:** Use `Promise.all()` mapping over arrays to upload blobs in parallel, and map results to an array of objects to pass to a single `supabase.from('table').insert(resultsArray)` call to minimize DB operations.
+## 2024-06-07 - Parallelize Supabase Storage Uploads & Bulk Inserts
+**Learning:** Sequential `.upload()` and `.insert()` operations via Supabase result in N+1 network/DB queries which can be very slow for large arrays.
+**Action:** Use `Promise.all()` mapping over arrays to upload blobs in parallel, and map results to an array of objects to pass to a single `supabase.from('table').insert(resultsArray)` call to minimize DB operations.
