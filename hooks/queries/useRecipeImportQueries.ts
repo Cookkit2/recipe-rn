@@ -13,9 +13,9 @@ import {
   getImportProgress as getProgress,
   getImportStatusMessage as getStatusMessage,
 } from "~/data/api/recipeImportApi";
-import { recipeQueryKeys } from "./recipeQueryKeys";
 import { analyzeUrl, type UrlAnalysisResult } from "~/utils/url-utils";
 import type { YouTubeImportResult } from "~/types/ScrappedRecipe";
+import { invalidateRecipeLists } from "./queryInvalidationUtils";
 
 // Re-export for convenience
 export { getProgress as getImportProgress, getStatusMessage as getImportStatusMessage };
@@ -68,16 +68,7 @@ export function useImportRecipe() {
 
     onSuccess: (result) => {
       if (result.success && result.recipe) {
-        // Invalidate recipe queries to include new recipe
-        queryClient.invalidateQueries({
-          queryKey: recipeQueryKeys.recipes(),
-        });
-        queryClient.invalidateQueries({
-          queryKey: recipeQueryKeys.available(),
-        });
-        queryClient.invalidateQueries({
-          queryKey: recipeQueryKeys.recommendations(),
-        });
+        invalidateRecipeLists(queryClient);
       }
     },
 

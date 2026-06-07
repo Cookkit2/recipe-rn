@@ -29,7 +29,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - ExpoAsset (56.0.13):
+  - ExpoAsset (56.0.16):
     - ExpoModulesCore
   - ExpoBlur (56.0.3):
     - ExpoModulesCore
@@ -2562,7 +2562,7 @@ DEPENDENCIES:
   - EXApplication (from `../node_modules/expo-application/ios`)
   - EXConstants (from `../node_modules/expo-constants/ios`)
   - Expo (from `../node_modules/expo`)
-  - ExpoAsset (from `../node_modules/expo/node_modules/expo-asset/ios`)
+  - ExpoAsset (from `../node_modules/expo-asset/ios`)
   - ExpoBlur (from `../node_modules/expo-blur/ios`)
   - ExpoCrypto (from `../node_modules/expo-crypto/ios`)
   - "ExpoDomWebView (from `../node_modules/@expo/dom-webview/ios`)"
@@ -2716,7 +2716,7 @@ EXTERNAL SOURCES:
   Expo:
     :path: "../node_modules/expo"
   ExpoAsset:
-    :path: "../node_modules/expo/node_modules/expo-asset/ios"
+    :path: "../node_modules/expo-asset/ios"
   ExpoBlur:
     :path: "../node_modules/expo-blur/ios"
   ExpoCrypto:
@@ -2971,7 +2971,7 @@ SPEC CHECKSUMS:
   EXApplication: 8e64f7ce47f6c8b86daa2c72da0a4bae427de022
   EXConstants: fdc4ab546cff5ddf92631486a872e14938f25ddd
   Expo: 5e4d255b21b3b4b082656f466a09a616d3992c06
-  ExpoAsset: 3668488167c418ba66d5984a6b9175ae4c783abd
+  ExpoAsset: 805da30db5a149baab402ba1a17f4df5f3a91f1b
   ExpoBlur: 0b3935b04e5dd1ca037053f980950512f1c662b4
   ExpoCrypto: e05749ed40e3b4bec24966de31388a3620432513
   ExpoDomWebView: 1d046ffae836cdb4221a46bc72a93df7b994ab8e

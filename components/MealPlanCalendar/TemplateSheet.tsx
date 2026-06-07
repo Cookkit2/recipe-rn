@@ -2,7 +2,6 @@ import React, { useCallback, useState } from "react";
 import { View, Alert, Share, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import * as Haptics from "expo-haptics";
 import SheetModalWrapper from "~/components/Shared/SheetModalWrapper";
 import { useMealPlanCalendar } from "~/store/MealPlanCalendarContext";
 import {
@@ -23,6 +22,7 @@ import { recipeApi } from "~/data/api/recipeApi";
 import type { MealPlanTemplateData } from "~/data/api/mealPlanTemplateApi";
 import type { MealPlanItemWithRecipe } from "~/data/api/mealPlanApi";
 import { safeJsonParse } from "~/utils/json-parsing";
+import { useSelectionHaptic } from "~/hooks/useSelectionHaptic";
 
 /**
  * Shareable meal plan data structure for JSON export/import
@@ -257,11 +257,7 @@ const TemplateSheetMemo = function TemplateSheet({
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
 
-  const handleHapticFeedback = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch((error) => {
-      log.warn("Haptics not available:", error);
-    });
-  }, []);
+  const handleHapticFeedback = useSelectionHaptic();
 
   const handleSaveAsTemplate = useCallback(async () => {
     if (!templateName.trim()) {

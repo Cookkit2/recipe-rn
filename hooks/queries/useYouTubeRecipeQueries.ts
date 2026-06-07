@@ -14,6 +14,7 @@ import type {
   YouTubeImportResult,
   YouTubeValidationResult,
 } from "~/types/ScrappedRecipe";
+import { invalidateRecipeLists } from "./queryInvalidationUtils";
 
 /**
  * Query keys for YouTube-related queries
@@ -194,16 +195,7 @@ export function useImportYouTubeRecipe() {
 
     onSuccess: (result) => {
       if (result.success && result.recipe) {
-        // Invalidate recipe queries to include new recipe
-        queryClient.invalidateQueries({
-          queryKey: recipeQueryKeys.recipes(),
-        });
-        queryClient.invalidateQueries({
-          queryKey: recipeQueryKeys.available(),
-        });
-        queryClient.invalidateQueries({
-          queryKey: recipeQueryKeys.recommendations(),
-        });
+        invalidateRecipeLists(queryClient);
       }
     },
 

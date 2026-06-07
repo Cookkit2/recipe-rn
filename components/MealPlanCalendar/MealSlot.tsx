@@ -7,7 +7,6 @@ import Animated, {
   withSpring,
   runOnJS,
 } from "react-native-reanimated";
-import * as Haptics from "expo-haptics";
 import { P } from "~/components/ui/typography";
 import type {
   CalendarMealPlan,
@@ -16,6 +15,7 @@ import type {
 } from "~/types/MealPlan";
 import { useMealPlanCalendar } from "~/store/MealPlanCalendarContext";
 import { log } from "~/utils/logger";
+import { useSelectionHaptic } from "~/hooks/useSelectionHaptic";
 
 // Debounce time for drop actions to prevent rapid-fire drops
 const DROP_DEBOUNCE_MS = 300;
@@ -61,11 +61,7 @@ export default function MealSlot({ date, mealSlot, mealPlan, onPress, onDrop }: 
   const lastDropTimeRef = useRef<number>(0);
   const isProcessingDropRef = useRef(false);
 
-  const handleHapticFeedback = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch((error) => {
-      log.warn("Haptics not available:", error);
-    });
-  }, []);
+  const handleHapticFeedback = useSelectionHaptic();
 
   const handlePress = useCallback(() => {
     // Don't handle press if a drag is active
