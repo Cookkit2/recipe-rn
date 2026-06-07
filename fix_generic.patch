@@ -1,0 +1,36 @@
+<<<<<<< SEARCH
+export interface StoreWithDistance {
+  id: string;
+  name: string;
+  address: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  distance: number;
+}
+
+export function useDistanceCalculation(
+  userLocation: Location | null,
+  stores: Array<{
+    id: string;
+    name: string;
+    address: string | null;
+    latitude: number | null;
+    longitude: number | null;
+  }>
+): StoreWithDistance[] {
+=======
+export type StoreWithDistance<T> = T & {
+  distance: number;
+};
+
+export function useDistanceCalculation<
+  T extends {
+    id: string;
+    latitude: number | null;
+    longitude: number | null;
+  }
+>(
+  userLocation: Location | null,
+  stores: T[]
+): StoreWithDistance<T>[] {
+>>>>>>> REPLACE

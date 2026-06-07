@@ -1,6 +1,51 @@
+import type { OpeningHour } from "~/lib/supabase/supabase-types";
+
 /**
  * Display formatting utilities for store information.
  */
+
+/**
+ * Calculate the current open status and closing time for a store.
+ *
+ * @param openingHours - Array of opening hours for the store
+ * @param date - Optional date to check against (defaults to now)
+ * @returns Object containing isOpen boolean and optional closingTime string
+ */
+export function getStoreOpenStatus(
+  openingHours: OpeningHour[] | null | undefined,
+  date: Date = new Date()
+): { isOpen: boolean; closingTime?: string } {
+  if (!openingHours || openingHours.length === 0) {
+    return { isOpen: false, closingTime: undefined };
+  }
+
+  const currentDay = date.getDay(); // 0-6 (Sun-Sat)
+  const currentMinutes = date.getHours() * 60 + date.getMinutes();
+
+  const todayHours = openingHours.find((h) => h.day === currentDay);
+  if (!todayHours) {
+    return { isOpen: false, closingTime: undefined };
+  }
+
+  const parseTime = (timeStr: string) => {
+    const [hours, minutes] = timeStr.split(":").map(Number);
+    return (hours ?? 0) * 60 + (minutes ?? 0);
+  };
+
+  const openMinutes = parseTime(todayHours.open);
+  let closeMinutes = parseTime(todayHours.close);
+
+  if (closeMinutes < openMinutes) {
+    closeMinutes += 24 * 60;
+  }
+
+  const isCurrentlyOpen = currentMinutes >= openMinutes && currentMinutes < closeMinutes;
+
+  return {
+    isOpen: isCurrentlyOpen,
+    closingTime: isCurrentlyOpen ? todayHours.close : undefined,
+  };
+}
 
 /**
  * Format distance in kilometers to a human-readable string.

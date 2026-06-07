@@ -10,6 +10,7 @@ import { useNearbyStores } from "~/hooks/queries/useStoreQueries";
 import { useDistanceCalculation } from "~/hooks/useDistanceCalculation";
 import { toast } from "sonner-native";
 import { openDirections } from "~/services/geolocation";
+import { getStoreOpenStatus } from "~/utils/store-display";
 
 // Default location (Kuala Lumpur, Malaysia)
 const DEFAULT_LATITUDE = 3.1577;
@@ -143,30 +144,36 @@ export default function GroceryMapPage() {
           onChange={handleSheetChange}
         >
           {selectedStoreData ? (
-            <StoreInfoCard
-              store={{
-                name: selectedStoreData.name,
-                address: selectedStoreData.address ?? "Unknown address",
-                distance: selectedStoreData.distance,
-                totalPriceCents: 0, // TODO: Calculate from grocery list
-                isOpen: false, // TODO: Calculate from opening hours
-                closingTime: undefined, // TODO: Calculate from opening hours
-                latitude: selectedStoreData.latitude ?? DEFAULT_LATITUDE,
-                longitude: selectedStoreData.longitude ?? DEFAULT_LONGITUDE,
-              }}
-              onPressViewPrices={() => handleViewPrices(selectedStoreData.id)}
-              onPressNavigate={() =>
-                handleNavigate({
-                  name: selectedStoreData.name,
-                  address: selectedStoreData.address ?? "",
-                  distance: selectedStoreData.distance,
-                  totalPriceCents: 0, // TODO: Calculate from grocery list
-                  isOpen: false, // TODO: Calculate from opening hours
-                  latitude: selectedStoreData.latitude ?? DEFAULT_LATITUDE,
-                  longitude: selectedStoreData.longitude ?? DEFAULT_LONGITUDE,
-                })
-              }
-            />
+            (() => {
+              const openStatus = getStoreOpenStatus(selectedStoreData.opening_hours);
+              return (
+                <StoreInfoCard
+                  store={{
+                    name: selectedStoreData.name,
+                    address: selectedStoreData.address ?? "Unknown address",
+                    distance: selectedStoreData.distance,
+                    totalPriceCents: 0, // TODO: Calculate from grocery list
+                    isOpen: openStatus.isOpen,
+                    closingTime: openStatus.closingTime,
+                    latitude: selectedStoreData.latitude ?? DEFAULT_LATITUDE,
+                    longitude: selectedStoreData.longitude ?? DEFAULT_LONGITUDE,
+                  }}
+                  onPressViewPrices={() => handleViewPrices(selectedStoreData.id)}
+                  onPressNavigate={() =>
+                    handleNavigate({
+                      name: selectedStoreData.name,
+                      address: selectedStoreData.address ?? "",
+                      distance: selectedStoreData.distance,
+                      totalPriceCents: 0, // TODO: Calculate from grocery list
+                      isOpen: openStatus.isOpen,
+                      closingTime: openStatus.closingTime,
+                      latitude: selectedStoreData.latitude ?? DEFAULT_LATITUDE,
+                      longitude: selectedStoreData.longitude ?? DEFAULT_LONGITUDE,
+                    })
+                  }
+                />
+              );
+            })()
           ) : (
             <MiniStoreList stores={miniListStores} onStorePress={handleStoreSelect} />
           )}

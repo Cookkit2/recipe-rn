@@ -1,4 +1,49 @@
-import { formatDistance, formatOpenStatus } from "../store-display";
+import { formatDistance, formatOpenStatus, getStoreOpenStatus } from "../store-display";
+
+describe("getStoreOpenStatus", () => {
+  const mockDate = new Date("2023-10-18T12:00:00Z"); // Wednesday (day 3), 12:00 PM UTC
+
+  it("returns closed if no opening hours provided", () => {
+    expect(getStoreOpenStatus(null, mockDate)).toEqual({ isOpen: false, closingTime: undefined });
+    expect(getStoreOpenStatus([], mockDate)).toEqual({ isOpen: false, closingTime: undefined });
+    expect(getStoreOpenStatus(undefined, mockDate)).toEqual({
+      isOpen: false,
+      closingTime: undefined,
+    });
+  });
+
+  it("returns closed if no hours match current day", () => {
+    const hours = [{ day: 4, open: "08:00", close: "20:00" }];
+    expect(getStoreOpenStatus(hours, mockDate)).toEqual({ isOpen: false, closingTime: undefined });
+  });
+
+  it("returns open and closing time when currently open", () => {
+    const hours = [{ day: 3, open: "08:00", close: "20:00" }];
+    expect(getStoreOpenStatus(hours, mockDate)).toEqual({ isOpen: true, closingTime: "20:00" });
+  });
+
+  it("returns closed when before opening time", () => {
+    const hours = [{ day: 3, open: "14:00", close: "20:00" }];
+    expect(getStoreOpenStatus(hours, mockDate)).toEqual({ isOpen: false, closingTime: undefined });
+  });
+
+  it("returns closed when after closing time", () => {
+    const hours = [{ day: 3, open: "08:00", close: "11:00" }];
+    expect(getStoreOpenStatus(hours, mockDate)).toEqual({ isOpen: false, closingTime: undefined });
+  });
+
+  it("handles overnight hours correctly when open", () => {
+    // Open from 8am to 2am next day. Current time is 12pm.
+    const hours = [{ day: 3, open: "08:00", close: "02:00" }];
+    expect(getStoreOpenStatus(hours, mockDate)).toEqual({ isOpen: true, closingTime: "02:00" });
+  });
+
+  it("handles overnight hours correctly when closed", () => {
+    // Open from 2pm to 2am next day. Current time is 12pm.
+    const hours = [{ day: 3, open: "14:00", close: "02:00" }];
+    expect(getStoreOpenStatus(hours, mockDate)).toEqual({ isOpen: false, closingTime: undefined });
+  });
+});
 
 describe("formatDistance", () => {
   it("formats distances under 1km in meters", () => {
