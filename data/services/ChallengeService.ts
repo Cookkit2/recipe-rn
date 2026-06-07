@@ -584,4 +584,4 @@ export class ChallengeService {
 }
 
 // Singleton instance
-export const challengeService = new ChallengeService();
+const challengeService = new ChallengeService();

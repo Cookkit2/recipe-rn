@@ -9,7 +9,7 @@
  * @param newServings - The new number of servings
  * @returns The scaled quantity with reasonable precision (max 2 decimals)
  */
-export const scaleIngredientQuantity = (
+const scaleIngredientQuantity = (
   quantity: number,
   originalServings: number,
   newServings: number
@@ -140,7 +140,7 @@ const COMMON_FRACTIONS = [
  * @param quantity - The quantity to adjust
  * @returns The quantity as a decimal, or adjusted to nearest common fraction if very close
  */
-export const adjustToCommonFraction = (quantity: number): number => {
+const adjustToCommonFraction = (quantity: number): number => {
   if (quantity % 1 === 0) return quantity;
 
   const whole = Math.floor(quantity);

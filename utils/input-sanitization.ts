@@ -22,7 +22,7 @@ export interface SanitizationOptions {
  * @param options - Sanitization options
  * @returns Sanitized string safe for database operations
  */
-export function sanitizeForDatabase(input: string, options: SanitizationOptions = {}): string {
+function sanitizeForDatabase(input: string, options: SanitizationOptions = {}): string {
   if (!input || typeof input !== "string") {
     return "";
   }
@@ -89,7 +89,7 @@ export function sanitizeSearchTerm(searchTerm: string, options: SanitizationOpti
  * @param email - The email to validate and sanitize
  * @returns Sanitized email or empty string if invalid
  */
-export function sanitizeEmail(email: string): string {
+function sanitizeEmail(email: string): string {
   if (!email || typeof email !== "string") {
     return "";
   }
@@ -119,7 +119,7 @@ export function sanitizeEmail(email: string): string {
  * @param options - Min and max values
  * @returns Sanitized number or null if invalid
  */
-export function sanitizeNumber(
+function sanitizeNumber(
   input: string | number,
   options: { min?: number; max?: number } = {}
 ): number | null {
@@ -159,7 +159,7 @@ export function sanitizeNumber(
  * @param filename - The filename to sanitize
  * @returns Sanitized filename safe for file operations
  */
-export function sanitizeFilename(filename: string): string {
+function sanitizeFilename(filename: string): string {
   if (!filename || typeof filename !== "string") {
     return "";
   }
@@ -203,7 +203,7 @@ export function sanitizeFilename(filename: string): string {
  * @param url - The URL to sanitize
  * @returns Sanitized URL or empty string if invalid
  */
-export function sanitizeUrl(url: string): string {
+function sanitizeUrl(url: string): string {
   if (!url || typeof url !== "string") {
     return "";
   }
@@ -235,7 +235,7 @@ export function sanitizeUrl(url: string): string {
  * @param options - Sanitization options
  * @returns Sanitized object
  */
-export function sanitizeObject<T extends Record<string, unknown>>(
+function sanitizeObject<T extends Record<string, unknown>>(
   obj: T,
   options: SanitizationOptions = {}
 ): T {

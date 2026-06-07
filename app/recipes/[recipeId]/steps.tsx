@@ -11,7 +11,7 @@ import { useRecipe } from "~/hooks/queries/useRecipeQueries";
 import { setStatusBarStyle } from "expo-status-bar";
 import type { Recipe } from "~/types/Recipe";
 import { databaseFacade } from "~/data/db/DatabaseFacade";
-import { AddTimerDialog } from "~/components/Timer/AddTimerDialog";
+import AddTimerDialog from "~/components/Timer/AddTimerDialog";
 
 export type StepPageData = {
   type: "ingredients" | "step" | "congratulations";

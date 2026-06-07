@@ -7,17 +7,17 @@ export interface Coordinates {
   longitude: number;
 }
 
-export async function requestLocationPermission(): Promise<boolean> {
+async function requestLocationPermission(): Promise<boolean> {
   const { status } = await Location.requestForegroundPermissionsAsync();
   return status === "granted";
 }
 
-export async function checkLocationPermission(): Promise<boolean> {
+async function checkLocationPermission(): Promise<boolean> {
   const { status } = await Location.getForegroundPermissionsAsync();
   return status === "granted";
 }
 
-export async function openLocationSettings(): Promise<void> {
+async function openLocationSettings(): Promise<void> {
   if (Platform.OS === "ios") {
     await Linking.openURL("app-settings:");
   } else {
@@ -25,7 +25,7 @@ export async function openLocationSettings(): Promise<void> {
   }
 }
 
-export async function getCurrentLocation(timeoutMs = 10000): Promise<Coordinates> {
+async function getCurrentLocation(timeoutMs = 10000): Promise<Coordinates> {
   const location = await Promise.race([
     Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.Balanced,

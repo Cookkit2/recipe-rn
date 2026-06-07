@@ -1,0 +1,12 @@
+appId: app.cookkit.cookkit
+name: "App Launch - Pantry"
+tags:
+  - P0
+  - smoke
+---
+- launchApp
+# With IS_E2E=true, MockAuthStrategy auto-signs in, skips onboarding
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000

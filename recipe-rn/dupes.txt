@@ -1,0 +1,90 @@
+
+● Duplicates (179 clone groups)
+
+    317 lines  2 instances  dup:f9c6797b
+    app/(auth)/sign-in.tsx:1-228
+    app/(auth)/sign-up.tsx:1-317
+
+    125 lines  2 instances  dup:8de4f959
+    lib/recipe-scrapper/SocialRecipeService.ts:202-326
+    lib/recipe-scrapper/youtube/RecipeAnalyzer.ts:278-383
+
+     63 lines  2 instances  dup:88b1dd93
+    utils/achievement-share.ts:276-388
+    utils/achievement-share.ts:408-436
+
+     55 lines  3 instances  dup:7d4b389d
+    data/api/mealPlanApi.ts:77-131
+    data/api/mealPlanApi.ts:153-206
+    data/api/mealPlanApi.ts:609-656
+
+     49 lines  2 instances  dup:c3fbb502
+    data/services/ChallengeService.ts:302-350
+    data/services/ChallengeService.ts:373-420
+
+     47 lines  2 instances  dup:8de6d3f2
+    hooks/queries/useMealPlanQueries.ts:552-598
+    hooks/queries/useMealPlanTemplateQueries.ts:191-228
+
+     47 lines  2 instances  dup:d8cc9c95
+    lib/recipe-scrapper/SocialRecipeService.ts:321-367
+    lib/recipe-scrapper/youtube/RecipeAnalyzer.ts:378-424
+
+     44 lines  2 instances  dup:cfc95002
+    data/api/mealPlanApi.ts:72-115
+    data/api/mealPlanApi.ts:149-190
+
+     44 lines  2 instances  dup:946892b8
+    data/api/pantryApi.ts:106-149
+    data/api/pantryApi.ts:158-199
+
+     42 lines  2 instances  dup:14e0bd10
+    components/MealPlanCalendar/MealSlot.tsx:62-77
+    components/MealPlanCalendar/TemplateSheet.tsx:258-299
+
+  ... and 169 more clone groups
+  Identical code blocks detected via suffix-array analysis — https://docs.fallow.tools/explanations/duplication#clone-groups
+
+● Clone families (31 with multiple groups)
+
+  2 groups, 21 lines across __tests__/components/Shared/SlidingNumber.test.tsx
+    → Extract shared function (12 lines) from SlidingNumber.test.tsx, SlidingNumber.test.tsx
+    → Extract shared function (9 lines) from SlidingNumber.test.tsx, SlidingNumber.test.tsx, SlidingNumber.test.tsx
+
+  4 groups, 406 lines across app/(auth)/sign-in.tsx, app/(auth)/sign-up.tsx
+    → Extract 4 shared clone groups (406 lines) from sign-in.tsx, sign-up.tsx into app/(auth)
+
+  4 groups, 51 lines across auth/SupabaseAuthStrategy.ts
+    → Extract 4 shared clone groups (51 lines) from SupabaseAuthStrategy.ts into auth
+
+  2 groups, 25 lines across components/Analytics/WasteChart.tsx, components/Nutrition/NutritionChart.tsx
+    → Extract shared function (16 lines) from WasteChart.tsx, NutritionChart.tsx
+    → Extract shared function (9 lines) from WasteChart.tsx, NutritionChart.tsx
+
+  2 groups, 37 lines across components/Ingredient/IngredientAppBar.tsx, components/Recipe/Details/TopBar.tsx
+    → Extract shared function (25 lines) from IngredientAppBar.tsx, TopBar.tsx
+    → Extract shared function (12 lines) from IngredientAppBar.tsx, TopBar.tsx
+
+  8 groups, 142 lines across components/MealPlanCalendar/MealPlanDragItem.tsx, components/MealPlanCalendar/RecipeDraggable.tsx
+    → Extract 8 shared clone groups (142 lines) from MealPlanDragItem.tsx, RecipeDraggable.tsx into components/MealPlanCalendar
+
+  2 groups, 22 lines across components/Shared/__tests__/SlidingNumber.test.tsx
+    → Extract shared function (12 lines) from SlidingNumber.test.tsx, SlidingNumber.test.tsx
+    → Extract shared function (10 lines) from SlidingNumber.test.tsx, SlidingNumber.test.tsx, SlidingNumber.test.tsx, SlidingNumber.test.tsx
+
+  2 groups, 23 lines across data/api/__tests__/pantryApi-addPantryItemsWithMetadata-perf.test.ts
+    → Extract shared function (10 lines) from pantryApi-addPantryItemsWithMetadata-perf.test.ts, pantryApi-addPantryItemsWithMetadata-perf.test.ts
+    → Extract shared function (13 lines) from pantryApi-addPantryItemsWithMetadata-perf.test.ts, pantryApi-addPantryItemsWithMetadata-perf.test.ts
+
+  2 groups, 54 lines across data/api/__tests__/pantryApi-addPantryItemsWithMetadata-perf.test.ts, data/api/__tests__/pantryApi-addPantryItemsWithMetadata.test.ts
+    → Extract 2 shared clone groups (54 lines) from pantryApi-addPantryItemsWithMetadata-perf.test.ts, pantryApi-addPantryItemsWithMetadata.test.ts into data/api/__tests__
+
+  2 groups, 25 lines across data/api/__tests__/recipe-conversion.test.ts
+    → Extract shared function (12 lines) from recipe-conversion.test.ts, recipe-conversion.test.ts
+    → Extract shared function (13 lines) from recipe-conversion.test.ts, recipe-conversion.test.ts
+
+  ... and 21 more families
+
+  Groups of related clones across the same files — https://docs.fallow.tools/explanations/duplication#clone-families
+
+✗ 5,779 lines (6.8%) duplicated across 120 files (0.08s)

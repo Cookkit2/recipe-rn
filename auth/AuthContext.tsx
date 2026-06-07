@@ -143,7 +143,7 @@ export function useAuth(): AuthContextValue {
  * Hook for components that only need auth state (no actions)
  * Useful for optimizing re-renders
  */
-export function useAuthState() {
+function useAuthState() {
   const auth = useAuth();
   return {
     user: auth.user,
@@ -162,7 +162,7 @@ export function useAuthState() {
  * Hook for components that only need auth actions
  * Useful for optimizing re-renders
  */
-export function useAuthActions() {
+function useAuthActions() {
   const auth = useAuth();
   return {
     signInWithEmail: auth.signInWithEmail,
@@ -188,7 +188,7 @@ interface ProtectedRouteProps {
   requireNonAnonymous?: boolean;
 }
 
-export function ProtectedRoute({
+function ProtectedRoute({
   children,
   fallback = null,
   requireNonAnonymous = false,
@@ -219,7 +219,7 @@ interface GuestOnlyRouteProps {
   fallback?: ReactNode;
 }
 
-export function GuestOnlyRoute({ children, fallback = null }: GuestOnlyRouteProps) {
+function GuestOnlyRoute({ children, fallback = null }: GuestOnlyRouteProps) {
   const { isAuthenticated, isInitialized } = useAuthState();
 
   if (!isInitialized) {

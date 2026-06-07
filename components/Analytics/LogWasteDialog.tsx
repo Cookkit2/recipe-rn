@@ -36,7 +36,7 @@ interface LogWasteDialogProps {
   onSuccess?: () => void;
 }
 
-export function LogWasteDialog({
+function LogWasteDialog({
   stockId: initialStockId = "",
   stockName: initialStockName = "",
   stockQuantity: initialStockQuantity = 0,

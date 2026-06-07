@@ -66,7 +66,7 @@ function isTimerCompleted(timer: Timer): boolean {
 /**
  * Format seconds to MM:SS or HH:MM:SS
  */
-export function formatTimerDuration(seconds: number): string {
+function formatTimerDuration(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = seconds % 60;
@@ -80,7 +80,7 @@ export function formatTimerDuration(seconds: number): string {
 /**
  * Format seconds to human-readable text (e.g., "10 minutes" or "1 hour 30 minutes")
  */
-export function formatTimerDurationText(seconds: number): string {
+function formatTimerDurationText(seconds: number): string {
   const minutes = Math.ceil(seconds / 60);
 
   if (minutes < 60) {

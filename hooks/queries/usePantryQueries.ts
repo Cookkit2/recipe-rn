@@ -80,7 +80,7 @@ export function usePantryItemsByType(type: ItemType) {
  * - **Performance:** each run calls `fetchAllPantryItems` (full hydration). For typeahead UIs,
  *   prefer `usePantryItems()` plus client-side `filterPantryItemsByName` from `~/utils/filterPantryItemsByName`.
  */
-export function useSearchPantryItems(query: string) {
+function useSearchPantryItems(query: string) {
   return useQuery({
     queryKey: pantryQueryKeys.search(query),
     queryFn: () => pantryApi.searchPantryItems(query),
@@ -98,7 +98,7 @@ export function useSearchPantryItems(query: string) {
  * @remarks
  * staleTime: 5 minutes - expiry status changes infrequently
  */
-export function useExpiringItems(days: number = 3) {
+function useExpiringItems(days: number = 3) {
   return useQuery({
     queryKey: pantryQueryKeys.expiring(days),
     queryFn: () => pantryApi.getExpiringItems(days),
@@ -111,7 +111,7 @@ export function useExpiringItems(days: number = 3) {
  *
  * @returns React Query mutation for adding a pantry item
  */
-export function useAddPantryItem() {
+function useAddPantryItem() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -125,7 +125,7 @@ export function useAddPantryItem() {
  *
  * @returns React Query mutation for adding an array of pantry items
  */
-export function useAddPantryItems() {
+function useAddPantryItems() {
   const queryClient = useQueryClient();
 
   return useMutation({

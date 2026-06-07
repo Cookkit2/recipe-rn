@@ -61,7 +61,7 @@ export {
 } from "./ranking";
 
 // Sorting strategies
-export { AlphabeticalStrategy, type AlphabeticalStrategyOptions } from "./ranking";
+export { type AlphabeticalStrategyOptions } from "./ranking";
 
 // Factory functions
 export {

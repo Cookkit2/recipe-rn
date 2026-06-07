@@ -62,7 +62,7 @@ interface RecipeInstruction {
  * Parse ISO 8601 duration to minutes
  * e.g., "PT30M" -> 30, "PT1H30M" -> 90
  */
-export function parseIsoDuration(duration: string | undefined): number | undefined {
+function parseIsoDuration(duration: string | undefined): number | undefined {
   if (!duration) return undefined;
 
   const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);

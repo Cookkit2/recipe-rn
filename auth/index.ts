@@ -8,11 +8,9 @@ export { MockAuthStrategy } from "./MockAuthStrategy";
 export { SupabaseAuthStrategy } from "./SupabaseAuthStrategy";
 
 // Storage and client
-export { AuthStorageManager, createSupabaseStorageAdapter } from "./StorageIntegration";
 
 // Re-export commonly used items for convenience
-export { useAuth, useAuthState, useAuthActions } from "./AuthContext";
-export { useAuthStore, useAuthSelectors } from "./AuthStore";
+export { useAuth } from "./AuthContext";
 export type { AuthStrategy } from "./AuthStrategy";
 export type {
   User,

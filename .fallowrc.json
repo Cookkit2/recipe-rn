@@ -1,0 +1,41 @@
+{
+  "$schema": "https://fallow.dev/config.schema.json",
+  "ignoreExports": [
+    {
+      "file": "components/RecipeStep.tsx",
+      "exports": ["*"]
+    },
+    {
+      "file": "data/db/models/index.ts",
+      "exports": ["*"]
+    },
+    {
+      "file": "types/Recipe.ts",
+      "exports": ["*"]
+    },
+    {
+      "file": "utils/voice-answer-generator.ts",
+      "exports": ["*"]
+    },
+    {
+      "file": "utils/voice-command-parser.ts",
+      "exports": ["*"]
+    },
+    {
+      "file": "lib/recipe-scrapper/youtube/types.ts",
+      "exports": ["*"]
+    },
+    {
+      "file": "types/ScrappedRecipe.ts",
+      "exports": ["*"]
+    },
+    {
+      "file": "hooks/queries/useCalendarMealPlans.ts",
+      "exports": ["*"]
+    },
+    {
+      "file": "hooks/queries/useMealPlanQueries.ts",
+      "exports": ["*"]
+    }
+  ]
+}

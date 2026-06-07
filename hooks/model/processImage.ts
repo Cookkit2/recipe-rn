@@ -43,7 +43,7 @@ export const loadImageIntoSkia = async (imageUri: string) => {
  * const inputTensor = preprocessImage(image, 224);
  * // inputTensor is now Float32Array[224*224*3] ready for model inference
  */
-export const preprocessImage = (image: SkImage, imageSize: number) => {
+const preprocessImage = (image: SkImage, imageSize: number) => {
   "worklet";
   // Create offscreen surface at target size and draw scaled image
   const surface = Skia.Surface.MakeOffscreen(imageSize, imageSize);

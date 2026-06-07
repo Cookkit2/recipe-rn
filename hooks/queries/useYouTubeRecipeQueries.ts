@@ -18,7 +18,7 @@ import type {
 /**
  * Query keys for YouTube-related queries
  */
-export const youtubeQueryKeys = {
+const youtubeQueryKeys = {
   all: ["youtube"] as const,
   validate: (url: string) => [...youtubeQueryKeys.all, "validate", url] as const,
   import: () => [...youtubeQueryKeys.all, "import"] as const,
@@ -51,7 +51,7 @@ export const youtubeQueryKeys = {
  * )}
  * ```
  */
-export function useValidateYouTubeUrl(url: string) {
+function useValidateYouTubeUrl(url: string) {
   return useQuery({
     queryKey: youtubeQueryKeys.validate(url),
     queryFn: () => recipeImportApi.validateCookingVideo(url),
@@ -92,7 +92,7 @@ export function useValidateYouTubeUrl(url: string) {
  * </Button>
  * ```
  */
-export function useLazyValidateYouTubeUrl() {
+function useLazyValidateYouTubeUrl() {
   const queryClient = useQueryClient();
   const [isValidating, setIsValidating] = useState(false);
   const [result, setResult] = useState<YouTubeValidationResult | null>(null);
@@ -248,7 +248,7 @@ export function useImportYouTubeRecipe() {
  * ))}
  * ```
  */
-export function useYouTubeRecipeShoppingList(recipeId: string | undefined) {
+function useYouTubeRecipeShoppingList(recipeId: string | undefined) {
   return useQuery({
     queryKey: recipeQueryKeys.shoppingList(recipeId ?? ""),
     queryFn: () => recipeImportApi.getShoppingListForRecipe(recipeId!),

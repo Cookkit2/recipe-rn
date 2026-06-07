@@ -171,5 +171,5 @@ const Button = React.forwardRef<React.ComponentRef<typeof Pressable>, ButtonProp
 
 const noop = () => {};
 
-export { Button, buttonTextVariants, buttonVariants };
+export { Button };
 export type { ButtonProps };

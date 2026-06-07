@@ -22,7 +22,7 @@ export function useMealPlanTemplates() {
 /**
  * Hook to fetch a single template by ID
  */
-export function useMealPlanTemplate(templateId: string) {
+function useMealPlanTemplate(templateId: string) {
   return useQuery({
     queryKey: mealPlanTemplateQueryKeys.byId(templateId),
     queryFn: () => mealPlanTemplateApi.getTemplateById(templateId),
@@ -34,7 +34,7 @@ export function useMealPlanTemplate(templateId: string) {
 /**
  * Hook to search templates by name or description
  */
-export function useSearchTemplates(searchTerm: string) {
+function useSearchTemplates(searchTerm: string) {
   return useQuery({
     queryKey: mealPlanTemplateQueryKeys.search(searchTerm),
     queryFn: () => mealPlanTemplateApi.searchTemplates(searchTerm),
@@ -46,7 +46,7 @@ export function useSearchTemplates(searchTerm: string) {
 /**
  * Mutation hook to create a new meal plan template
  */
-export function useCreateTemplate() {
+function useCreateTemplate() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -71,7 +71,7 @@ export function useCreateTemplate() {
 /**
  * Mutation hook to update a meal plan template
  */
-export function useUpdateTemplate() {
+function useUpdateTemplate() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -230,7 +230,7 @@ export function useSaveWeekAsTemplate() {
 /**
  * Hook to manually refresh meal plan templates
  */
-export function useRefreshMealPlanTemplates() {
+function useRefreshMealPlanTemplates() {
   const queryClient = useQueryClient();
 
   const refresh = () => {

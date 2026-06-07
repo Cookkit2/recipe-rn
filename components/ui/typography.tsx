@@ -144,4 +144,4 @@ function Muted({ className, asChild = false, ...props }: TypographyProps) {
   );
 }
 
-export { BlockQuote, Code, H1, H2, H3, H4, Large, Lead, Muted, P, Small };
+export { H1, H2, H3, H4, Muted, P, Small };

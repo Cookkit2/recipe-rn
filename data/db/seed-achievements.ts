@@ -59,7 +59,7 @@ function createReward(type: string, value: string, description?: string): string
 /**
  * Initial achievement definitions to seed
  */
-export const initialAchievements = [
+const initialAchievements = [
   // ========================================
   // STREAK ACHIEVEMENTS
   // ========================================

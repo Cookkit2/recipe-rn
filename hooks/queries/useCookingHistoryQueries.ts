@@ -26,7 +26,7 @@ export const cookingHistoryQueryKeys = {
  * const { data: history, isLoading } = useCookingHistory(20);
  * ```
  */
-export function useCookingHistory(limit?: number) {
+function useCookingHistory(limit?: number) {
   return useQuery({
     queryKey: cookingHistoryQueryKeys.history(limit),
     queryFn: () => databaseFacade.getCookingHistory(limit),
@@ -70,7 +70,7 @@ export function useRecentlyCookedRecipes(limit: number = 10) {
  * const { data: favorites, isLoading } = useMostCookedRecipes(10);
  * ```
  */
-export function useMostCookedRecipes(limit: number = 10) {
+function useMostCookedRecipes(limit: number = 10) {
   return useQuery({
     queryKey: cookingHistoryQueryKeys.mostCooked(limit),
     queryFn: () => databaseFacade.getMostCookedRecipes(limit),
@@ -93,7 +93,7 @@ export function useMostCookedRecipes(limit: number = 10) {
  * // count: 5 (cooked 5 times)
  * ```
  */
-export function useRecipeCookCount(recipeId: string) {
+function useRecipeCookCount(recipeId: string) {
   return useQuery({
     queryKey: cookingHistoryQueryKeys.recipeCookCount(recipeId),
     queryFn: () => databaseFacade.getRecipeCookCount(recipeId),
@@ -162,7 +162,7 @@ export function useRecordCooking() {
  * });
  * ```
  */
-export function useUpdateCookingRecord() {
+function useUpdateCookingRecord() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -196,7 +196,7 @@ export function useUpdateCookingRecord() {
  * deleteRecord("cooking-record-123");
  * ```
  */
-export function useDeleteCookingRecord() {
+function useDeleteCookingRecord() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -229,7 +229,7 @@ export function useDeleteCookingRecord() {
  * <Button onPress={refresh}>Refresh History</Button>
  * ```
  */
-export function useRefreshCookingHistory() {
+function useRefreshCookingHistory() {
   const queryClient = useQueryClient();
 
   const refresh = () => {

@@ -187,7 +187,7 @@ export interface TailoredRecipeWithDetails {
  * IMPORTANT: Only methods exposed here should be used throughout the app.
  * Direct repository access is private and should not be used externally.
  */
-export class DatabaseFacade {
+class DatabaseFacade {
   // Private repository instances - not to be accessed directly
   private recipes: RecipeRepository;
   private stocks: StockRepository;

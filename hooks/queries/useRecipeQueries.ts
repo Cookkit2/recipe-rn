@@ -104,7 +104,7 @@ function recipeFiltersApply(filters?: RecipeFilters): boolean {
 /**
  * Hook to search recipes
  */
-export function useSearchRecipes(searchTerm: string, filters?: RecipeFilters) {
+function useSearchRecipes(searchTerm: string, filters?: RecipeFilters) {
   return useQuery({
     queryKey: recipeQueryKeys.search(searchTerm, filters),
     queryFn: () => recipeApi.searchRecipes(searchTerm, filters),
@@ -116,7 +116,7 @@ export function useSearchRecipes(searchTerm: string, filters?: RecipeFilters) {
 /**
  * Hook to get available recipes based on pantry items
  */
-export function useAvailableRecipes() {
+function useAvailableRecipes() {
   return useQuery({
     queryKey: recipeQueryKeys.available(),
     queryFn: recipeApi.getAvailableRecipes,
@@ -133,7 +133,7 @@ export function useAvailableRecipes() {
  *
  * Cache: 1 minute stale time, 5 minutes garbage collection.
  */
-export function useRecipeAvailability() {
+function useRecipeAvailability() {
   return useQuery({
     queryKey: recipeQueryKeys.available(),
     queryFn: () => databaseFacade.getAvailableRecipes(),
@@ -347,7 +347,7 @@ export function useExpiringRecipes(options?: {
 /**
  * Hook to get shopping list for a recipe
  */
-export function useShoppingList(recipeId: string) {
+function useShoppingList(recipeId: string) {
   return useQuery({
     queryKey: recipeQueryKeys.shoppingList(recipeId),
     queryFn: () => recipeApi.getShoppingListForRecipe(recipeId),
@@ -359,7 +359,7 @@ export function useShoppingList(recipeId: string) {
 /**
  * Mutation hook to add a new recipe
  */
-export function useAddRecipe() {
+function useAddRecipe() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -388,7 +388,7 @@ export function useAddRecipe() {
 /**
  * Mutation hook to update an existing recipe
  */
-export function useUpdateRecipe() {
+function useUpdateRecipe() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -424,7 +424,7 @@ export function useUpdateRecipe() {
 /**
  * Mutation hook to delete a recipe
  */
-export function useDeleteRecipe() {
+function useDeleteRecipe() {
   const queryClient = useQueryClient();
 
   return useMutation({

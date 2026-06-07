@@ -73,7 +73,7 @@ export const database = new Database({
 log.info("✅ WatermelonDB database created successfully");
 
 // Helper function to get collections
-export const collections = {
+const collections = {
   recipes: database.collections.get("recipe"),
   recipeSteps: database.collections.get("recipe_step"),
   recipeIngredients: database.collections.get("recipe_ingredient"),

@@ -42,7 +42,7 @@ const TSP_IN_ML = 4.92892; // 1 US teaspoon in ml
 const PINT_IN_ML = 473.176; // 1 US pint in ml
 
 // Registry of supported units
-export const UNIT_MAP: Record<string, UnitDef> = {
+const UNIT_MAP: Record<string, UnitDef> = {
   // Weight
   g: {
     system: "metric",

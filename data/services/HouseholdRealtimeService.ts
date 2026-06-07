@@ -5,7 +5,7 @@ import { log } from "~/utils/logger";
 
 type RealtimeChannel = import("@supabase/supabase-js").RealtimeChannel;
 
-export class HouseholdRealtimeService {
+class HouseholdRealtimeService {
   private channel: RealtimeChannel | null = null;
   private householdSupabaseId: string | null = null;
 

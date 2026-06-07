@@ -32,7 +32,7 @@ export function aggregateNutrition(
   };
 }
 
-export function sumNutrition(summaries: NutritionSummary[]): NutritionSummary {
+function sumNutrition(summaries: NutritionSummary[]): NutritionSummary {
   if (summaries.length === 0) return { ...EMPTY_SUMMARY };
 
   return {

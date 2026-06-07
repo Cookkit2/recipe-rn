@@ -217,7 +217,7 @@ export async function withErrorLogging<T>(fn: () => Promise<T>, errorMessage: st
  * }
  * ```
  */
-export async function withStructuredError<T>(
+async function withStructuredError<T>(
   fn: () => Promise<T>,
   errorMessagePrefix: string
 ): Promise<StructuredResult<T>> {
@@ -327,7 +327,7 @@ export async function withWarningHandling<T>(
  * }
  * ```
  */
-export async function withArrayErrorHandling<TInput, TOutput>(
+async function withArrayErrorHandling<TInput, TOutput>(
   items: TInput[],
   processorFn: (item: TInput) => Promise<TOutput>,
   errorMessagePrefix: string
@@ -374,7 +374,7 @@ export async function withArrayErrorHandling<TInput, TOutput>(
  * }
  * ```
  */
-export function createErrorHandler(defaultConfig: { context?: string }) {
+function createErrorHandler(defaultConfig: { context?: string }) {
   // Build context prefix for log messages if context is provided
   const contextPrefix = defaultConfig.context ? `${defaultConfig.context}: ` : "";
 

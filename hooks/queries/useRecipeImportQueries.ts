@@ -131,7 +131,7 @@ export function useImportRecipe() {
  * {isValid && isYouTube && <Text>YouTube URL detected!</Text>}
  * ```
  */
-export function useAnalyzeUrl() {
+function useAnalyzeUrl() {
   const [analysis, setAnalysis] = useState<UrlAnalysisResult | null>(null);
 
   const analyze = useCallback((url: string) => {
@@ -181,7 +181,7 @@ export function useAnalyzeUrl() {
  * return <Text>Importing from {type}...</Text>;
  * ```
  */
-export function validateRecipeUrl(url: string): {
+function validateRecipeUrl(url: string): {
   isValid: boolean;
   error?: string;
   type?: "youtube" | "website";

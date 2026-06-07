@@ -1,5 +1,5 @@
 // Main database exports
-export { default as database, collections } from "./database";
+export { default as database } from "./database";
 export { default as schema } from "./schema";
 export { default as migrations } from "./migrations";
 
@@ -14,7 +14,7 @@ export type {
 } from "./models";
 
 // Database facade - ONLY public API
-export { DatabaseFacade, databaseFacade } from "./DatabaseFacade";
+export { databaseFacade } from "./DatabaseFacade";
 
 // Export types from DatabaseFacade for convenience
 export type {

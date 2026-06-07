@@ -8,7 +8,7 @@ import { safeJsonParse } from "~/utils/json-parsing";
  * In-memory fallback storage used when persistent storage throws an error.
  * Provides graceful degradation when storage operations fail.
  */
-export const inMemoryData = new Map<string, unknown>();
+const inMemoryData = new Map<string, unknown>();
 
 /**
  * Configuration options for useLocalStorageState hook

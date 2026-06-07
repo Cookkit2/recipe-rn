@@ -20,7 +20,7 @@ export const isValidSubscription = async () => {
   }
 };
 
-export async function presentPaywall(): Promise<boolean> {
+async function presentPaywall(): Promise<boolean> {
   // Present paywall for current offering:
   const paywallResult: PAYWALL_RESULT = await RevenueCatUI.presentPaywall();
 

@@ -65,7 +65,7 @@ export function useIsRecipeInPlan(recipeId: string) {
  * @remarks
  * staleTime: 30 seconds
  */
-export function usePlannedRecipeCount() {
+function usePlannedRecipeCount() {
   return useQuery({
     queryKey: mealPlanQueryKeys.count(),
     queryFn: mealPlanApi.getPlannedRecipeCount,
@@ -100,7 +100,7 @@ export function useGroceryItemAttributes() {
  * Hook to get grocery item check states
  * @deprecated Use useGroceryItemAttributes instead
  */
-export function useGroceryCheckStates() {
+function useGroceryCheckStates() {
   return useQuery({
     queryKey: mealPlanQueryKeys.groceryChecks(),
     queryFn: async () => {
@@ -262,7 +262,7 @@ export function useRemoveFromMealPlan() {
  * - Invalidates items list to update the grocery list quantities
  * - Does NOT invalidate isInPlan queries as the recipe is still in the plan
  */
-export function useUpdateMealPlanServings() {
+function useUpdateMealPlanServings() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -512,7 +512,7 @@ export function useClearGroceryChecks() {
 /**
  * Mutation hook to assign a meal plan to a specific date and meal slot
  */
-export function useAssignToDateSlot() {
+function useAssignToDateSlot() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -541,7 +541,7 @@ export function useAssignToDateSlot() {
 /**
  * Mutation hook to remove a meal plan from a specific date and meal slot
  */
-export function useRemoveFromDateSlot() {
+function useRemoveFromDateSlot() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -575,7 +575,7 @@ export function useRemoveFromDateSlot() {
  *
  * Useful after making changes outside of the mutation hooks.
  */
-export function useRefreshMealPlan() {
+function useRefreshMealPlan() {
   const queryClient = useQueryClient();
 
   const refresh = () => {

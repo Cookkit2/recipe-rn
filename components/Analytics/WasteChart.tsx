@@ -33,7 +33,7 @@ interface ChartDataPoint {
   label: string;
 }
 
-export function WasteChart({
+function WasteChart({
   data,
   metric = "quantity",
   title = "Waste Trends",

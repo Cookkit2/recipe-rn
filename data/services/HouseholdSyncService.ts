@@ -5,7 +5,7 @@ import { StorageFactory } from "~/data/storage/storage-factory";
 
 const LAST_SYNC_KEY = "household_last_sync_timestamp";
 
-export class HouseholdSyncService {
+class HouseholdSyncService {
   private getLastSyncTimestamp(): number {
     try {
       const storage = StorageFactory.getInstance();

@@ -1,0 +1,720 @@
+
+● Health score: 36 F
+  Deductions: unused deps -20.9 · hotspots -10.0 · unit size -10.0 · maintainability -7.5 · dead files -5.2 · dead exports -5.2 · duplication -1.8 · circular deps -1.6 · coupling -1.4
+
+■ Metrics: 86,440 LOC · dead files 26.2% · dead exports 25.8% · avg cyclomatic 2.0 · p90 cyclomatic 4 · maintainability 84.9 (moderate) · 2 churn hotspots (since 6 months) · 2 circular deps · 26 unused deps · duplication 6.8%
+
+  Function size: 76% low · 12% medium · 8% high · 5% very high  (1-15 / 16-30 / 31-60 / >60 LOC)
+
+● Large functions (10 shown, 290 total)
+  app/recipes/[recipeId]/index.tsx
+    :130 RecipeDetailsContent  501 lines
+  utils/__tests__/quantity-comparison.test.ts
+    :12 <arrow>  423 lines
+  components/MealPlanCalendar/TemplateSheet.tsx
+    :234 TemplateSheet  380 lines
+  store/RecipeStepsContext.tsx
+    :49 RecipeStepsProvider  379 lines
+  data/services/__tests__/StreakService.test.ts
+    :22 <arrow>  376 lines
+  utils/__tests__/api-error-handler.test.ts
+    :24 <arrow>  370 lines
+  app/(misc)/search.tsx
+    :38 SearchScreen  344 lines
+  data/api/__tests__/recipe-conversion.test.ts
+    :17 <arrow>  333 lines
+  components/Recipe/Edit/RecipeEditForm.tsx
+    :27 RecipeEditForm  332 lines
+  utils/__tests__/notification-settings.test.ts
+    :30 <arrow>  315 lines
+  Functions exceeding 60 lines of code (very high risk): https://docs.fallow.tools/explanations/health#unit-size
+  use --top 290 to see all
+
+● File health scores (564 files) · sorted by triage concern
+
+   76.7    utils/filterRecipesForSearch.ts                 risk
+             63 LOC    2 fan-in    2 fan-out    0% dead  0.63 density  >999 risk
+
+   89.6    lib/recipe-scrapper/youtube/NoAuthYouTubeService.ts  risk
+            821 LOC    3 fan-in    2 fan-out    0% dead  0.20 density  >999 risk
+
+   79.2    data/db/DatabaseFacade.ts                       risk
+           1539 LOC   20 fan-in   12 fan-out   33% dead  0.13 density  870.0 risk
+
+   81.6    components/Shared/Shapes/ShapeContainer.tsx     risk
+            137 LOC    8 fan-in   23 fan-out    0% dead  0.19 density  702.0 risk
+
+   82.5    data/db/repositories/RecipeRepository.ts        risk
+            970 LOC    5 fan-in   12 fan-out    0% dead  0.24 density  702.0 risk
+
+   84.6    components/Recipe/Step/StepBottomBar.tsx        risk
+            189 LOC    1 fan-in   13 fan-out    0% dead  0.16 density  702.0 risk
+
+   74.3    hooks/model/yolo-function.tsx                   risk
+            244 LOC    0 fan-in    0 fan-out  100% dead  0.19 density  600.0 risk
+
+   85.8    data/db/repositories/ChallengeRepository.ts     risk
+            191 LOC    2 fan-in    3 fan-out    0% dead  0.29 density  600.0 risk
+
+   70.5    hooks/model/segmentModel.tsx                    risk
+            617 LOC    1 fan-in    2 fan-out  100% dead  0.17 density  552.0 risk
+
+   78.8    lib/recipe-scrapper/WebsiteRecipeService.ts     risk
+            588 LOC    2 fan-in    4 fan-out   50% dead  0.16 density  552.0 risk
+
+  ... and 554 more files (--format json for full list)
+
+  Sorted by triage concern: the larger of low-MI concern and CRAP risk. The risk / structure tag marks which one placed each file. MI reflects complexity, coupling, and dead code; risk reflects untested complexity (CRAP) and can diverge from MI. Risk: low <15, moderate 15-30, high >=30. CRAP from Istanbul coverage data (1413/6097 functions matched). https://docs.fallow.tools/explanations/health#file-health-scores
+
+● Hotspots (202 files, since 6 months)
+
+   64.9 ▼  data/db/repositories/RecipeRepository.ts
+          48 commits   1241 churn  0.24 density   5 fan-in  ▼ cooling
+
+   56.1 ▲  data/api/pantryApi.ts
+          50 commits   1726 churn  0.21 density   5 fan-in  ▲ accelerating
+
+   45.7 ▼  app/recipes/[recipeId]/edit.tsx
+          34 commits    701 churn  0.24 density   0 fan-in  ▼ cooling
+
+   32.1 ▼  hooks/useRecipeEdit.ts
+          33 commits    882 churn  0.18 density   1 fan-in  ▼ cooling
+
+   30.9 ▼  data/services/AchievementService.ts
+          35 commits    792 churn  0.16 density   6 fan-in  ▼ cooling
+
+   25.2 ▼  data/db/repositories/UserChallengeRepository.ts
+          21 commits    662 churn  0.22 density   3 fan-in  ▼ cooling
+
+   20.0 ▲  jest.setup.js
+           7 commits    193 churn  0.37 density   0 fan-in  ▲ accelerating
+
+   19.2 ▲  data/db/DatabaseFacade.ts
+          26 commits   1605 churn  0.13 density  20 fan-in  ▲ accelerating
+
+   18.0 ▼  utils/__tests__/text-formatter.test.ts [test]
+          17 commits    606 churn  0.20 density   0 fan-in  ▼ cooling
+
+   17.1 ▼  data/api/__tests__/pantryApi-addPantryItemsWithMetadata-perf.test.ts [test]
+          19 commits    960 churn  0.17 density   0 fan-in  ▼ cooling
+
+   15.9 ─  app/_layout.tsx
+          18 commits   1559 churn  0.15 density   0 fan-in  ─ stable
+
+   15.0 ▼  data/api/__tests__/pantryApi-addPantryItemsWithMetadata.test.ts [test]
+          15 commits    255 churn  0.18 density   0 fan-in  ▼ cooling
+
+   13.8 ▼  data/db/repositories/WasteLogRepository.ts
+          12 commits    602 churn  0.19 density   4 fan-in  ▼ cooling
+
+   13.1 ▼  data/db/models/Stock.ts
+           9 commits     57 churn  0.24 density   9 fan-in  ▼ cooling
+
+   12.8 ▲  data/db/repositories/IngredientSynonymRepository.ts
+          12 commits    298 churn  0.19 density   1 fan-in  ▲ accelerating
+
+   12.6 ▼  data/api/__tests__/pantryApi-batch.test.ts [test]
+          15 commits    292 churn  0.16 density   0 fan-in  ▼ cooling
+
+   12.4 ▼  lib/recipe-scrapper/youtube/AuthYouTubeService.ts
+          13 commits    260 churn  0.16 density   2 fan-in  ▼ cooling
+
+   11.8 ▼  data/db/repositories/TailoredRecipeMappingRepository.ts
+          13 commits    873 churn  0.16 density   2 fan-in  ▼ cooling
+
+   11.2 ─  store/CreateIngredientContext.tsx
+          12 commits   1111 churn  0.17 density   8 fan-in  ─ stable
+
+   10.5 ▼  utils/__tests__/input-sanitization.test.ts [test]
+          13 commits    459 churn  0.15 density   0 fan-in  ▼ cooling
+
+   10.1 ▼  data/api/mealPlanApi.ts
+          12 commits   1542 churn  0.15 density   8 fan-in  ▼ cooling
+
+   10.1 ▼  utils/logger.ts
+           8 commits    384 churn  0.23 density  85 fan-in  ▼ cooling
+
+    9.8 ▲  data/api/recipeApi.ts
+          11 commits   1300 churn  0.16 density   6 fan-in  ▲ accelerating
+
+    9.8 ▼  data/db/repositories/StockCategoryRepository.ts
+           9 commits    324 churn  0.19 density   1 fan-in  ▼ cooling
+
+    9.7 ▲  utils/ingredient-matching.ts
+           6 commits    136 churn  0.29 density   7 fan-in  ▲ accelerating
+
+    9.2 ▲  components/MealPlanCalendar/WeeklyCalendar.tsx
+          10 commits    383 churn  0.12 density   1 fan-in  ▲ accelerating
+
+    8.9 ─  hooks/recommendation/filters/DietaryFilter.ts
+           6 commits    324 churn  0.22 density   1 fan-in  ─ stable
+
+    8.9 ▼  data/db/models/Recipe.ts
+           7 commits     75 churn  0.22 density  18 fan-in  ▼ cooling
+
+    8.8 ▲  hooks/queries/useRecipeQueries.ts
+           6 commits    362 churn  0.21 density  14 fan-in  ▲ accelerating
+
+    8.7 ▼  components/ui/modal.tsx
+          18 commits     75 churn  0.09 density   5 fan-in  ▼ cooling
+
+    8.6 ▲  hooks/model/segmentModel.tsx
+           9 commits    492 churn  0.17 density   1 fan-in  ▲ accelerating
+
+    8.5 ▼  data/storage/storage-facade.ts
+           5 commits    354 churn  0.30 density   1 fan-in  ▼ cooling
+
+    8.3 ▼  data/db/repositories/BaseRepository.ts
+           6 commits     83 churn  0.23 density  20 fan-in  ▼ cooling
+
+    8.2 ▼  data/db/repositories/ChallengeRepository.ts
+           5 commits    258 churn  0.29 density   2 fan-in  ▼ cooling
+
+    8.2 ▼  data/db/repositories/UserAchievementRepository.ts
+           7 commits    379 churn  0.21 density   2 fan-in  ▼ cooling
+
+    7.9 ▼  lib/function-gemma/CookkitToolExecutor.ts
+           7 commits    575 churn  0.18 density   1 fan-in  ▼ cooling
+
+    7.6 ▲  app/(misc)/search.tsx
+           5 commits    470 churn  0.18 density   0 fan-in  ▲ accelerating
+
+    7.3 ▼  data/db/repositories/RecipeVersionRepository.ts
+           6 commits    245 churn  0.21 density   2 fan-in  ▼ cooling
+
+    7.2 ─  auth/SupabaseAuthStrategy.ts
+           6 commits    225 churn  0.19 density   2 fan-in  ─ stable
+
+    7.2 ▲  data/db/models/Challenge.ts
+           6 commits    164 churn  0.23 density   4 fan-in  ▲ accelerating
+
+    7.1 ▲  utils/gemini-api.ts
+          11 commits    306 churn  0.12 density   8 fan-in  ▲ accelerating
+
+    7.0 ▼  lib/function-gemma/FunctionGemmaService.ts
+          10 commits   1276 churn  0.11 density   4 fan-in  ▼ cooling
+
+    7.0 ▲  app/recipes/[recipeId]/index.tsx
+           8 commits   1154 churn  0.16 density   0 fan-in  ▲ accelerating
+
+    7.0 ▼  utils/__tests__/recipe-scaling.test.ts [test]
+           7 commits    557 churn  0.18 density   0 fan-in  ▼ cooling
+
+    7.0 ─  lib/android-navigation-bar.ts
+           4 commits     19 churn  0.25 density   2 fan-in  ─ stable
+
+    6.9 ▼  data/db/repositories/StockRepository.ts
+           5 commits    243 churn  0.21 density   3 fan-in  ▼ cooling
+
+    6.9 ▼  data/supabase-api/RecipeApi.ts
+           6 commits    186 churn  0.21 density   2 fan-in  ▼ cooling
+
+    6.7 ▼  data/api/recipe-conversion.ts
+           5 commits    129 churn  0.22 density   3 fan-in  ▼ cooling
+
+    6.6 ▲  hooks/queries/useGroceryList.ts
+           8 commits   1298 churn  0.12 density   5 fan-in  ▲ accelerating
+
+    6.6 ▼  utils/json-parsing.ts
+           4 commits     79 churn  0.31 density   6 fan-in  ▼ cooling
+
+    6.4 ─  data/supabase-api/BaseIngredientApi.ts
+           4 commits    217 churn  0.26 density   4 fan-in  ─ stable
+
+    6.3 ▼  hooks/queries/recipeQueryKeys.ts
+           5 commits     38 churn  0.21 density  12 fan-in  ▼ cooling
+
+    6.1 ▼  data/services/ChallengeService.ts
+           6 commits    695 churn  0.18 density   3 fan-in  ▼ cooling
+
+    6.0 ─  hooks/model/allModel.tsx
+           7 commits     51 churn  0.16 density   3 fan-in  ─ stable
+
+    5.9 ▼  app/grocery-map/index.tsx
+           4 commits    355 churn  0.17 density   0 fan-in  ▼ cooling
+
+    5.7 ▲  components/Pantry/PantryWrapper.tsx
+           6 commits    384 churn  0.14 density   1 fan-in  ▲ accelerating
+
+    5.7 ▼  data/db/repositories/MealPlanRepository.ts
+           4 commits    236 churn  0.24 density   4 fan-in  ▼ cooling
+
+    5.7 ▼  app/ingredient/(create)/create.tsx
+          13 commits    855 churn  0.10 density   0 fan-in  ▼ cooling
+
+    5.5 ▲  data/db/models/Achievement.ts
+           5 commits    104 churn  0.21 density   4 fan-in  ▲ accelerating
+
+    5.3 ▲  utils/achievement-share.ts
+           6 commits    558 churn  0.17 density   0 fan-in  ▲ accelerating
+
+    5.3 ▼  auth/AuthStore.ts
+           5 commits    365 churn  0.17 density   5 fan-in  ▼ cooling
+
+    5.3 ▲  data/api/householdApi.ts
+           4 commits    481 churn  0.15 density   1 fan-in  ▲ accelerating
+
+    5.3 ─  components/Recipe/Step/CongratulationsContent.tsx
+           5 commits    233 churn  0.15 density   2 fan-in  ─ stable
+
+    5.3 ▲  lib/notifications/expiry-notifications/__tests__/expiry-notifications.test.ts [test]
+           6 commits     77 churn  0.17 density   0 fan-in  ▲ accelerating
+
+    5.2 ─  hooks/useLocalStorageState.ts
+           9 commits    292 churn  0.14 density   7 fan-in  ─ stable
+
+    5.2 ▲  app/(misc)/debug.tsx
+           5 commits   1493 churn  0.12 density   0 fan-in  ▲ accelerating
+
+    5.1 ▲  auth/__tests__/StorageIntegration.test.ts [test]
+           7 commits    190 churn  0.14 density   0 fan-in  ▲ accelerating
+
+    5.0 ─  app/(auth)/sign-up.tsx
+           4 commits     87 churn  0.19 density   0 fan-in  ─ stable
+
+    5.0 ▲  data/db/repositories/IngredientCategoryRepository.ts
+           4 commits     67 churn  0.23 density   2 fan-in  ▲ accelerating
+
+    4.8 ▼  lib/recipe-scrapper/youtube/NoAuthYouTubeService.ts
+           4 commits   1076 churn  0.20 density   3 fan-in  ▼ cooling
+
+    4.8 ─  hooks/model/classifyModel.tsx
+           5 commits    361 churn  0.18 density   1 fan-in  ─ stable
+
+    4.7 ▼  components/MealPlanCalendar/TemplateSheet.tsx
+           6 commits   1315 churn  0.13 density   1 fan-in  ▼ cooling
+
+    4.7 ▼  components/auth/AuthInput.tsx
+           5 commits     22 churn  0.16 density   1 fan-in  ▼ cooling
+
+    4.7 ▲  components/Confirmation/HorizontalIngredientItemCard.tsx
+           9 commits    498 churn  0.11 density   1 fan-in  ▲ accelerating
+
+    4.7 ▲  components/Preferences/ThemeSection.tsx
+          15 commits     88 churn  0.06 density   1 fan-in  ▲ accelerating
+
+    4.6 ▲  components/Camera/CameraActionRow.tsx
+           7 commits    331 churn  0.11 density   1 fan-in  ▲ accelerating
+
+    4.6 ▼  components/Camera/__tests__/CameraOnboardingSheet.test.tsx [test]
+           3 commits    177 churn  0.18 density   0 fan-in  ▼ cooling
+
+    4.4 ▲  data/storage/storage-config.ts
+           6 commits    163 churn  0.10 density   1 fan-in  ▲ accelerating
+
+    4.4 ▲  data/api/__tests__/recipeImportApi-routing.test.ts [test]
+           5 commits    224 churn  0.17 density   0 fan-in  ▲ accelerating
+
+    4.4 ─  utils/__tests__/json-parsing.test.ts [test]
+           4 commits    324 churn  0.18 density   0 fan-in  ─ stable
+
+    4.3 ▲  store/RecipeStepsContext.tsx
+           7 commits    384 churn  0.11 density   7 fan-in  ▲ accelerating
+
+    4.3 ─  hooks/useImageColors.ts
+           6 commits    102 churn  0.16 density   0 fan-in  ─ stable
+
+    4.3 ▲  auth/StorageIntegration.ts
+           5 commits    200 churn  0.18 density   3 fan-in  ▲ accelerating
+
+    4.2 ─  app/(auth)/sign-in.tsx
+           4 commits     76 churn  0.16 density   0 fan-in  ─ stable
+
+    4.0 ▼  utils/url-utils.ts
+           5 commits    260 churn  0.14 density   3 fan-in  ▼ cooling
+
+    3.8 ▼  components/Analytics/LogWasteDialog.tsx
+           5 commits    301 churn  0.12 density   1 fan-in  ▼ cooling
+
+    3.8 ─  app/profile/index.tsx
+           8 commits    201 churn  0.08 density   0 fan-in  ─ stable
+
+    3.8 ─  app/index.tsx
+           5 commits     75 churn  0.11 density   0 fan-in  ─ stable
+
+    3.8 ─  utils/__tests__/gemini-api.test.ts [test]
+           5 commits    387 churn  0.11 density   0 fan-in  ─ stable
+
+    3.8 ─  components/GroceryMap/MapLayer.tsx
+           4 commits    167 churn  0.11 density   3 fan-in  ─ stable
+
+    3.7 ▼  components/Recipe/Details/RecipeNutrition.tsx
+           3 commits    123 churn  0.19 density   0 fan-in  ▼ cooling
+
+    3.7 ▼  components/Pantry/RecipeItemCard.tsx
+           5 commits    174 churn  0.12 density   4 fan-in  ▼ cooling
+
+    3.7 ▼  data/services/StreakService.ts
+           5 commits    363 churn  0.13 density   5 fan-in  ▼ cooling
+
+    3.7 ▼  utils/text-formatter.ts
+           3 commits     42 churn  0.23 density   8 fan-in  ▼ cooling
+
+    3.7 ▲  components/Pantry/RecipeLists.tsx
+           3 commits    397 churn  0.18 density   1 fan-in  ▲ accelerating
+
+    3.6 ▲  components/GroceryList/GroceryListItem.tsx
+           3 commits    164 churn  0.18 density   2 fan-in  ▲ accelerating
+
+    3.6 ▲  components/Timer/TimerList.tsx
+           3 commits    184 churn  0.16 density   1 fan-in  ▲ accelerating
+
+    3.6 ▼  app/grocery-list/index.tsx
+           5 commits    259 churn  0.11 density   0 fan-in  ▼ cooling
+
+    3.6 ─  lib/recipe-scrapper/youtube/YouTubeServiceFactory.ts
+           4 commits    103 churn  0.17 density   2 fan-in  ─ stable
+
+    3.6 ▼  lib/function-gemma/__tests__/FunctionGemmaService.test.ts [test]
+           5 commits    421 churn  0.11 density   0 fan-in  ▼ cooling
+
+    3.6 ▼  components/Shared/__tests__/SlidingNumber.test.tsx [test]
+           3 commits    229 churn  0.14 density   0 fan-in  ▼ cooling
+
+    3.5 ─  hooks/queries/usePantryQueries.ts
+           4 commits    387 churn  0.14 density  15 fan-in  ─ stable
+
+    3.4 ▼  components/Recipe/Details/AddToPlanHeaderButton.tsx
+           3 commits     47 churn  0.20 density   1 fan-in  ▼ cooling
+
+    3.4 ▼  app/ingredient/(create)/confirmation.tsx
+           8 commits    254 churn  0.10 density   0 fan-in  ▼ cooling
+
+    3.4 ▼  utils/recipe-scaling.ts
+           3 commits    262 churn  0.21 density   2 fan-in  ▼ cooling
+
+    3.3 ▼  components/Shared/Shapes/ShapeContainer.tsx
+           3 commits     71 churn  0.19 density   8 fan-in  ▼ cooling
+
+    3.3 ▼  hooks/model/yolo-function.tsx
+           3 commits     94 churn  0.19 density   0 fan-in  ▼ cooling
+
+    3.3 ▼  components/Camera/CameraOnboardingSheet.tsx
+           9 commits    333 churn  0.09 density   2 fan-in  ▼ cooling
+
+    3.3 ▲  utils/__tests__/quantity-comparison.test.ts [test]
+           3 commits    446 churn  0.21 density   0 fan-in  ▲ accelerating
+
+    3.3 ▲  components/Recipe/Step/IngredientContent.tsx
+           7 commits    147 churn  0.07 density   1 fan-in  ▲ accelerating
+
+    3.2 ▼  data/db/repositories/index.ts
+           4 commits    103 churn  0.13 density   2 fan-in  ▼ cooling
+
+    3.2 ▲  data/storage/storage-factory.ts
+           4 commits    156 churn  0.17 density   3 fan-in  ▲ accelerating
+
+    3.2 ▲  components/Recipe/RecipeCategoryButtonGroup.tsx
+           6 commits    169 churn  0.08 density   0 fan-in  ▲ accelerating
+
+    3.2 ▲  data/api/__tests__/mealPlanApi.test.ts [test]
+           3 commits    122 churn  0.20 density   0 fan-in  ▲ accelerating
+
+    3.2 ▼  utils/__tests__/ingredient-matching.test.ts [test]
+           3 commits     83 churn  0.19 density   0 fan-in  ▼ cooling
+
+    3.1 ▼  components/Profile/AchievementBadge.tsx
+           3 commits    168 churn  0.17 density   1 fan-in  ▼ cooling
+
+    3.1 ▼  components/Ingredient/DateSection.tsx
+           5 commits     87 churn  0.12 density   1 fan-in  ▼ cooling
+
+    3.1 ▼  utils/input-sanitization.ts
+           3 commits    114 churn  0.18 density   4 fan-in  ▼ cooling
+
+    3.0 ▲  hooks/useSpeechRecognition.ts
+           3 commits    548 churn  0.19 density   2 fan-in  ▲ accelerating
+
+    3.0 ▼  app/meal-plan/index.tsx
+           5 commits    427 churn  0.10 density   0 fan-in  ▼ cooling
+
+    3.0 ▲  components/Camera/IngredientHeaderRow.tsx
+           6 commits    120 churn  0.11 density   1 fan-in  ▲ accelerating
+
+    2.9 ▼  lib/recipe-scrapper/WebsiteRecipeService.ts
+           3 commits    593 churn  0.16 density   2 fan-in  ▼ cooling
+
+    2.9 ▼  components/Recipe/Details/BottomActionBar.tsx
+           4 commits    208 churn  0.12 density   1 fan-in  ▼ cooling
+
+    2.9 ─  components/Shared/SlidingNumber.tsx
+           4 commits    279 churn  0.15 density   5 fan-in  ─ stable
+
+    2.9 ▼  app/recipes/favorites.tsx
+           3 commits    142 churn  0.17 density   0 fan-in  ▼ cooling
+
+    2.9 ▼  utils/voice-cooking.ts
+           3 commits    411 churn  0.16 density   8 fan-in  ▼ cooling
+
+    2.9 ▲  lib/recipe-scrapper/__tests__/validation-utils.test.ts [test]
+           5 commits     84 churn  0.11 density   0 fan-in  ▲ accelerating
+
+    2.8 ▲  utils/timer-service.ts
+           3 commits    686 churn  0.18 density   4 fan-in  ▲ accelerating
+
+    2.8 ▲  data/api/__tests__/recipeApi-availableRecipesBatch.test.ts [test]
+           6 commits    102 churn  0.09 density   0 fan-in  ▲ accelerating
+
+    2.7 ▲  lib/function-gemma/useFunctionGemma.ts
+           4 commits    291 churn  0.12 density   1 fan-in  ▲ accelerating
+
+    2.7 ▲  components/VoiceCooking/MicButton.tsx
+           3 commits    150 churn  0.16 density   2 fan-in  ▲ accelerating
+
+    2.7 ▲  components/MealPlanCalendar/ExpiringIngredientsBadge.tsx
+           3 commits    235 churn  0.17 density   0 fan-in  ▲ accelerating
+
+    2.7 ▲  components/Profile/SubscriptionCard.tsx
+           3 commits     41 churn  0.17 density   1 fan-in  ▲ accelerating
+
+    2.7 ▼  utils/__tests__/api-error-handler.test.ts [test]
+           3 commits    673 churn  0.15 density   0 fan-in  ▼ cooling
+
+    2.6 ▲  components/Profile/EditProfileModal.tsx
+           4 commits     28 churn  0.14 density   1 fan-in  ▲ accelerating
+
+    2.6 ▼  lib/notifications/expiry-notifications/expiry-notifications.ts
+           3 commits    186 churn  0.15 density   2 fan-in  ▼ cooling
+
+    2.6 ▼  utils/api-error-handler.ts
+           5 commits    491 churn  0.09 density   5 fan-in  ▼ cooling
+
+    2.6 ▼  __mocks__/expo-maps.tsx
+           3 commits     57 churn  0.10 density   0 fan-in  ▼ cooling
+
+    2.5 ─  data/api/mealPlanTemplateApi.ts
+           4 commits    471 churn  0.11 density   2 fan-in  ─ stable
+
+    2.5 ▲  utils/subscription-utils.ts
+           3 commits     93 churn  0.16 density   6 fan-in  ▲ accelerating
+
+    2.5 ─  data/db/database.ts
+           4 commits     30 churn  0.11 density  31 fan-in  ─ stable
+
+    2.5 ▼  data/db/repositories/__tests__/UserChallengeRepository.test.ts [test]
+           3 commits     99 churn  0.16 density   0 fan-in  ▼ cooling
+
+    2.4 ─  components/Recipe/Details/AddToPlanModal.tsx
+           4 commits    287 churn  0.09 density   1 fan-in  ─ stable
+
+    2.4 ─  components/Ingredient/IngredientQuantity.tsx
+           4 commits     41 churn  0.14 density   2 fan-in  ─ stable
+
+    2.4 ─  components/Pantry/IngredientLists.tsx
+           4 commits    159 churn  0.13 density   1 fan-in  ─ stable
+
+    2.4 ▼  components/Preferences/AllergySection.tsx
+           5 commits    168 churn  0.08 density   3 fan-in  ▼ cooling
+
+    2.3 ▼  lib/recipe-scrapper/youtube/RecipeAnalyzer.ts
+           3 commits    450 churn  0.13 density   2 fan-in  ▼ cooling
+
+    2.3 ▼  components/Shared/SheetModalWrapper.tsx
+           4 commits    314 churn  0.16 density   2 fan-in  ▼ cooling
+
+    2.3 ▼  scripts/verify-achievement-system.ts
+           4 commits    433 churn  0.10 density   0 fan-in  ▼ cooling
+
+    2.3 ▼  components/Recipe/Edit/VersionHistorySheet.tsx
+           3 commits    234 churn  0.12 density   1 fan-in  ▼ cooling
+
+    2.3 ▼  app/profile/achievements.tsx
+           3 commits    234 churn  0.13 density   0 fan-in  ▼ cooling
+
+    2.3 ▼  components/Recipe/Edit/EditIngredientItem.tsx
+           5 commits    149 churn  0.08 density   1 fan-in  ▼ cooling
+
+    2.2 ▲  components/Ingredient/IngredientThumbnail.tsx
+           4 commits     79 churn  0.11 density   1 fan-in  ▲ accelerating
+
+    2.1 ▲  hooks/model/processImage.ts
+           4 commits    367 churn  0.09 density   1 fan-in  ▲ accelerating
+
+    2.1 ▼  components/Timer/AddTimerDialog.tsx
+           3 commits    301 churn  0.12 density   1 fan-in  ▼ cooling
+
+    2.1 ▼  app/(auth)/forgot-password.tsx
+           4 commits     77 churn  0.09 density   0 fan-in  ▼ cooling
+
+    2.1 ▲  components/Shared/Header.tsx
+           3 commits     40 churn  0.16 density   0 fan-in  ▲ accelerating
+
+    2.0 ▼  hooks/queries/useMealPlanQueries.ts
+           3 commits    608 churn  0.11 density   9 fan-in  ▼ cooling
+
+    1.9 ▲  components/MealPlanCalendar/RecipeDraggable.tsx
+           3 commits    343 churn  0.12 density   1 fan-in  ▲ accelerating
+
+    1.9 ▼  lib/supabase/supabase-client.ts
+           3 commits     55 churn  0.10 density   8 fan-in  ▼ cooling
+
+    1.9 ▲  app/onboarding/tutorial.tsx
+           3 commits     68 churn  0.14 density   0 fan-in  ▲ accelerating
+
+    1.8 ▲  hooks/model/useModelPreloader.ts
+           3 commits    150 churn  0.13 density   0 fan-in  ▲ accelerating
+
+    1.8 ▲  data/db/seed.ts
+           4 commits     75 churn  0.09 density   1 fan-in  ▲ accelerating
+
+    1.8 ▼  components/Shared/SegmentedButtons.tsx
+           3 commits     30 churn  0.10 density   7 fan-in  ▼ cooling
+
+    1.8 ▼  components/Ingredient/IngredientDiscardButton.tsx
+           3 commits    171 churn  0.11 density   1 fan-in  ▼ cooling
+
+    1.7 ▲  components/Profile/UploadPictureIcon.tsx
+           3 commits     17 churn  0.11 density   1 fan-in  ▲ accelerating
+
+    1.7 ─  components/ui/button.tsx
+           4 commits     27 churn  0.07 density  63 fan-in  ─ stable
+
+    1.7 ▼  components/Recipe/Step/StepTimer.tsx
+           3 commits     84 churn  0.10 density   0 fan-in  ▼ cooling
+
+    1.7 ▼  components/Recipe/Step/StepHeaderBar.tsx
+           3 commits     59 churn  0.10 density   1 fan-in  ▼ cooling
+
+    1.7 ▲  components/Recipe/Details/RecipeServing.tsx
+           4 commits     10 churn  0.09 density   1 fan-in  ▲ accelerating
+
+    1.6 ▼  components/Shared/GridButtons.tsx
+           3 commits      8 churn  0.09 density   3 fan-in  ▼ cooling
+
+    1.6 ▼  hooks/useRecipeVersioning.ts
+           3 commits    271 churn  0.10 density   2 fan-in  ▼ cooling
+
+    1.6 ▲  components/Shared/RotationCard.tsx
+           3 commits    138 churn  0.12 density   5 fan-in  ▲ accelerating
+
+    1.5 ▼  components/Timer/TimerItem.tsx
+           3 commits    201 churn  0.09 density   1 fan-in  ▼ cooling
+
+    1.5 ▲  data/db/init.ts
+           3 commits     66 churn  0.11 density   0 fan-in  ▲ accelerating
+
+    1.5 ▲  components/ui/dialog.tsx
+           3 commits     50 churn  0.07 density   4 fan-in  ▲ accelerating
+
+    1.5 ▲  auth/MockAuthStrategy.ts
+           3 commits     35 churn  0.11 density   1 fan-in  ▲ accelerating
+
+    1.5 ▼  components/MealPlanCalendar/DayColumn.tsx
+           3 commits    103 churn  0.08 density   1 fan-in  ▼ cooling
+
+    1.5 ▼  components/Shared/__tests__/EditableTitle.test.tsx [test]
+           3 commits    174 churn  0.06 density   0 fan-in  ▼ cooling
+
+    1.4 ▼  components/Analytics/AchievementConfetti.tsx
+           3 commits    267 churn  0.09 density   1 fan-in  ▼ cooling
+
+    1.4 ▼  components/Onboarding/Marque.tsx
+           3 commits    198 churn  0.12 density   1 fan-in  ▼ cooling
+
+    1.4 ▼  utils/__tests__/fetch-with-timeout.test.ts [test]
+           3 commits    200 churn  0.08 density   0 fan-in  ▼ cooling
+
+    1.3 ▼  components/GroceryMap/__tests__/StoreInfoCard.test.tsx [test]
+           3 commits    102 churn  0.05 density   0 fan-in  ▼ cooling
+
+    1.3 ▲  utils/youtube-utils.ts
+           3 commits    257 churn  0.09 density   5 fan-in  ▲ accelerating
+
+    1.3 ─  components/Recipe/Edit/EditStepItem.tsx
+           4 commits    154 churn  0.06 density   1 fan-in  ─ stable
+
+    1.2 ▼  app/onboarding/index.tsx
+           3 commits     71 churn  0.11 density   0 fan-in  ▼ cooling
+
+    1.2 ▼  components/Preferences/DietarySection.tsx
+           3 commits     37 churn  0.08 density   2 fan-in  ▼ cooling
+
+    1.2 ▲  app/preferences/index.tsx
+           5 commits    151 churn  0.05 density   0 fan-in  ▲ accelerating
+
+    1.0 ▲  components/auth/SocialAuthButton.tsx
+           3 commits     10 churn  0.06 density   1 fan-in  ▲ accelerating
+
+    1.0 ▼  app/profile/preferences/voice-settings.tsx
+           3 commits    142 churn  0.05 density   0 fan-in  ▼ cooling
+
+    1.0 ▼  components/GroceryMap/__tests__/MapLayer.test.tsx [test]
+           3 commits     84 churn  0.04 density   0 fan-in  ▼ cooling
+
+    1.0 ▼  components/Preferences/UnitSection.tsx
+           3 commits     28 churn  0.06 density   2 fan-in  ▼ cooling
+
+    1.0 ▼  components/ui/TextShimmer.tsx
+           3 commits     14 churn  0.05 density   5 fan-in  ▼ cooling
+
+    1.0 ▼  components/GroceryMap/MiniStoreList.tsx
+           3 commits     98 churn  0.04 density   3 fan-in  ▼ cooling
+
+    0.9 ▼  app/profile/preferences/index.tsx
+           3 commits     42 churn  0.08 density   0 fan-in  ▼ cooling
+
+    0.8 ▲  components/Camera/ImagePointPickerOverlay.tsx
+           3 commits    199 churn  0.04 density   1 fan-in  ▲ accelerating
+
+    0.6 ▼  types/achievements.ts
+           5 commits    377 churn  0.02 density  17 fan-in  ▼ cooling
+
+    0.6 ▲  components/Pantry/PantryHeader.tsx
+           3 commits     30 churn  0.04 density   0 fan-in  ▲ accelerating
+
+    0.5 ▼  components/GroceryMap/StoreMarker.tsx
+           3 commits    119 churn  0.02 density   2 fan-in  ▼ cooling
+
+    0.5 ▲  components/Shared/PoweredByAI.tsx
+           3 commits     40 churn  0.04 density   2 fan-in  ▲ accelerating
+
+    0.3 ▼  components/GroceryMap/StoreInfoCard.tsx
+           4 commits    162 churn  0.01 density   3 fan-in  ▼ cooling
+
+    0.2 ▲  data/dummy/dummy-data.ts
+           4 commits   1366 churn  0.01 density   5 fan-in  ▲ accelerating
+
+  332 files excluded (< 3 commits)
+
+  Files with high churn and high complexity — https://docs.fallow.tools/explanations/health#hotspot-metrics
+
+● Refactoring targets (56)
+  6 low effort · 38 medium · 12 high
+    score = quick-win ROI (higher = better) · pri = absolute priority
+
+   27.0  pri:27.0    hooks/recommendation/ranking/index.ts
+         dead code · effort:low · confidence:high  Remove 10 unused exports to reduce surface area (71% dead)
+
+   25.9  pri:25.9    data/db/init.ts
+         dead code · effort:low · confidence:high  Remove 3 unused exports to reduce surface area (100% dead)
+
+   24.0  pri:24.0    components/ui/hover-card.tsx
+         dead code · effort:low · confidence:high  Remove 3 unused exports to reduce surface area (100% dead)
+
+   23.4  pri:23.4    components/ui/tooltip.tsx
+         dead code · effort:low · confidence:high  Remove 3 unused exports to reduce surface area (100% dead)
+
+   22.9  pri:22.9    components/ui/avatar.tsx
+         dead code · effort:low · confidence:high  Remove 3 unused exports to reduce surface area (100% dead)
+
+   22.6  pri:22.6    hooks/supabase-queries/useBaseIngredients.ts
+         dead code · effort:low · confidence:high  Remove 3 unused exports to reduce surface area (100% dead)
+
+   22.0  pri:44.0    __mocks__/expo-crypto.ts
+         dead code · effort:medium · confidence:high  Remove 4 unused exports to reduce surface area (100% dead)
+
+   20.4  pri:40.7    __mocks__/@sentry/react-native.ts
+         dead code · effort:medium · confidence:high  Remove 4 unused exports to reduce surface area (100% dead)
+
+   18.6  pri:37.1    __mocks__/expo-secure-store.ts
+         dead code · effort:medium · confidence:high  Remove 6 unused exports to reduce surface area (100% dead)
+
+   16.3  pri:32.5    data/db/repositories/index.ts
+         dead code · effort:medium · confidence:high  Remove 26 unused exports to reduce surface area (70% dead)
+
+  ... and 46 more targets (--format json for full list)
+
+  Prioritized refactoring recommendations based on complexity, churn, and coupling signals — https://docs.fallow.tools/explanations/health#refactoring-targets
+
+✗ 469 above threshold · 6097 analyzed · maintainability 84.9 (moderate) (0.18s)
+  Maintainability scale: good ≥85, moderate ≥65, low <65 (0–100)

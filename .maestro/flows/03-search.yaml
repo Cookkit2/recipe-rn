@@ -1,0 +1,17 @@
+appId: app.cookkit.cookkit
+name: "Search"
+tags:
+  - P0
+  - search
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+- tapOn:
+    id: "home-search-button"
+- extendedWaitUntil:
+    visible:
+      id: "search-screen"
+    timeout: 5000

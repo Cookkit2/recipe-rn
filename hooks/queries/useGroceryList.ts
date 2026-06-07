@@ -393,9 +393,7 @@ interface AggregatedIngredient {
 /**
  * Step 1: Aggregates ingredients from planned recipes.
  */
-export function aggregateRecipeIngredients(
-  mealPlanItems: any[]
-): Map<string, AggregatedIngredient> {
+function aggregateRecipeIngredients(mealPlanItems: any[]): Map<string, AggregatedIngredient> {
   const ingredientMap = new Map<string, AggregatedIngredient>();
 
   for (const mealPlanItem of mealPlanItems) {
@@ -489,7 +487,7 @@ function buildPantryIndex(pantryItems: any[] | null | undefined): Map<string, an
 /**
  * Step 2: Calculates needed quantities by subtracting pantry stock.
  */
-export function calculateNeededQuantities(
+function calculateNeededQuantities(
   ingredientMap: Map<string, AggregatedIngredient>,
   pantryItems: any[] | null | undefined,
   attributesMap: Record<string, { isChecked: boolean; isDeleted: boolean }> | null | undefined
@@ -599,7 +597,7 @@ export function calculateNeededQuantities(
 /**
  * Step 3: Groups grocery items into organized sections.
  */
-export function groupGroceryItemsIntoSections(groceryList: GroceryItem[]): GroceryListSection[] {
+function groupGroceryItemsIntoSections(groceryList: GroceryItem[]): GroceryListSection[] {
   const categoryMap = new Map<GroceryCategory, GroceryItem[]>();
   const purchasedItems: GroceryItem[] = [];
 
@@ -670,7 +668,7 @@ export function groupGroceryItemsIntoSections(groceryList: GroceryItem[]): Groce
 /**
  * Step 4: Computes statistics for the grocery list.
  */
-export function computeGroceryStats(groceryList: GroceryItem[]) {
+function computeGroceryStats(groceryList: GroceryItem[]) {
   const totalItems = groceryList.length;
   const neededItems = groceryList.filter((item) => !item.isCovered).length;
   const checkedItems = groceryList.filter((item) => item.isChecked).length;
@@ -746,7 +744,7 @@ export function useGroceryList(startDate?: Date, endDate?: Date) {
  * Useful for displaying a badge count on UI elements.
  * Returns the number of items that are not fully covered by pantry stock.
  */
-export function useGroceryItemCount() {
+function useGroceryItemCount() {
   const { stats, isLoading } = useGroceryList();
 
   return {

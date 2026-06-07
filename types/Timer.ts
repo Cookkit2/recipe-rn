@@ -1,4 +1,4 @@
-export const TIMER_STATUSES = ["idle", "running", "paused", "completed"] as const;
+const TIMER_STATUSES = ["idle", "running", "paused", "completed"] as const;
 export type TimerStatus = (typeof TIMER_STATUSES)[number];
 
 export type Timer = {

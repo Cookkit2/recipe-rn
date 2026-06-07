@@ -69,7 +69,7 @@ interface ModelListResponse {
 /**
  * Calculate estimated cost from token usage
  */
-export const calculateTokenCost = (usage: {
+const calculateTokenCost = (usage: {
   promptTokenCount: number;
   candidatesTokenCount: number;
 }): TokenUsage => {
@@ -204,5 +204,4 @@ export const generateGeminiContent = async (body: string): Promise<string> => {
 };
 
 // Export pricing info for reference
-export { PRICING };
 export type { TokenUsage };

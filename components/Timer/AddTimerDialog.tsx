@@ -32,7 +32,12 @@ interface AddTimerDialogProps {
   stepNumber?: number;
 }
 
-export function AddTimerDialog({ open, onOpenChange, recipeId, stepNumber }: AddTimerDialogProps) {
+export default function AddTimerDialog({
+  open,
+  onOpenChange,
+  recipeId,
+  stepNumber,
+}: AddTimerDialogProps) {
   const { createTimer } = useTimer();
   const [timerName, setTimerName] = useState("");
   const [hours, setHours] = useState("");
@@ -240,4 +245,4 @@ export function AddTimerDialog({ open, onOpenChange, recipeId, stepNumber }: Add
   );
 }
 
-export default AddTimerDialog;
+AddTimerDialog;
