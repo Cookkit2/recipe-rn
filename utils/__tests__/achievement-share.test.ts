@@ -21,24 +21,25 @@ const createMockAchievement = (
   xp: number,
   isUnlocked = true
 ): AchievementProgress => ({
-  id: `progress_${id}`,
-  achievementId: id,
+  progress: isUnlocked ? 10 : 5,
+  progressPercentage: isUnlocked ? 100 : 50,
   isUnlocked,
-  currentValue: isUnlocked ? 10 : 5,
-  unlockedAt: isUnlocked ? new Date().toISOString() : undefined,
-  notified: false,
+  isLocked: !isUnlocked,
+  isInProgress: !isUnlocked,
   achievement: {
     id,
+    type: 'milestone',
+    category: 'recipes',
     title,
     description: `Description for ${title}`,
-    category: 'cooking',
     icon,
-    targetValue: 10,
+    requirement: {
+      type: 'count',
+      target: 10,
+    },
     xp,
-    tier: 'bronze',
-    isHidden: false,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    sortOrder: 1,
+    hidden: false,
   },
 });
 
