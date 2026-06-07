@@ -1,4 +1,5 @@
 import { database } from "~/data/db/database";
+import { Q } from "@nozbe/watermelondb";
 import { householdApi } from "~/data/supabase-api/HouseholdApi";
 import { log } from "~/utils/logger";
 import { StorageFactory } from "~/data/storage/storage-factory";
@@ -38,15 +39,11 @@ export class HouseholdSyncService {
     const lastSync = this.getLastSyncTimestamp();
     const stockCollection = database.collections.get("stock");
 
-    // Fetch all stock items and filter in JS for household_id matching and updated_at > lastSync
-    const allItems = await stockCollection.query().fetch();
-
-    const sharedItems = allItems.filter(
-      (item: any) =>
-        item.householdId === householdSupabaseId &&
-        item.updatedAt &&
-        new Date(item.updatedAt).getTime() > lastSync
-    );
+    // ⚡ Bolt Optimization: Use native DB query instead of JS filter to avoid fetching entire collection into memory
+    // Impact: Prevents massive memory allocation overhead and JS/Native bridge crossings when stock collection is large
+    const sharedItems = await stockCollection
+      .query(Q.where("household_id", householdSupabaseId), Q.where("updated_at", Q.gt(lastSync)))
+      .fetch();
 
     if (sharedItems.length === 0) return;
 
@@ -83,9 +80,21 @@ export class HouseholdSyncService {
     await database.write(async () => {
       const batchOps: import("@nozbe/watermelondb").Model[] = [];
 
+      // ⚡ Bolt Optimization: Pre-compute Map of existing stock items before loop
+      // Impact: Reduces lookup complexity from O(N*M) to O(N+M) and removes O(M) redundant DB queries
+      const allItems = await stockCollection
+        .query(Q.where("household_id", householdSupabaseId))
+        .fetch();
+
+      const existingMap = new Map();
+      for (const item of allItems) {
+        if ((item as any).supabaseId) {
+          existingMap.set((item as any).supabaseId, item);
+        }
+      }
+
       for (const remoteItem of remoteItems) {
-        const allItems = await stockCollection.query().fetch();
-        const existing = allItems.find((i: any) => i.supabaseId === remoteItem.id);
+        const existing = existingMap.get(remoteItem.id);
 
         if (existing) {
           batchOps.push(
