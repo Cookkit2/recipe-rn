@@ -17,6 +17,7 @@ export const isValidSubscription = async () => {
     return entitlements;
   } catch (e) {
     log.error("Error getting customer info:", e);
+    return false;
   }
 };
 

@@ -18,7 +18,11 @@ export default function SubscriptionCard() {
   });
 
   const currentDate = new Date();
-  const expiredDate = new Date(currentEntitlements?.expirationDateMillis ?? 0);
+  const expiredDate = new Date(
+    (currentEntitlements && currentEntitlements !== false
+      ? currentEntitlements.expirationDateMillis
+      : 0) ?? 0
+  );
 
   const expiredInDays = Math.ceil(
     (expiredDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)
@@ -36,7 +40,7 @@ export default function SubscriptionCard() {
               </View>
             )}
           </View>
-          {currentEntitlements ? (
+          {currentEntitlements && currentEntitlements !== false ? (
             <P className="text-sm text-foreground/80 font-urbanist-medium">
               Your {currentEntitlements.periodType === "TRIAL" ? "trial" : "subscription"} ends in{" "}
               {expiredInDays} {expiredInDays === 1 ? "day" : "days"}.
