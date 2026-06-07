@@ -37,3 +37,6 @@
 
 **Learning:** In `hooks/queries/useGroceryList.ts`, the loop allocating `pantryItem.synonyms?.map(...)` on every iteration of a doubly-nested loop mapping unmatched ingredients against pantry items causes massive array allocation penalties and GC pressure (e.g., thousands of times per generation).
 **Action:** Lift the array transformation out of the inner loop, or modify the matching utility (`isIngredientMatch`) to accept the raw array of objects so mapping is completely avoided.
+## 2026-06-07 - [Avoid adding non-compatible native dependencies for benchmarks]
+**Learning:** Adding 'better-sqlite3' to a React Native/Expo project for the sole purpose of running a local benchmark script can pollute the project and cause compilation failures.
+**Action:** Mock necessary classes and dependencies rather than adding new native modules to the project.
