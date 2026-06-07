@@ -11,7 +11,46 @@ import {
   truncate,
   sanitizeText,
   pluralize,
+  formatQuantity,
 } from "../text-formatter";
+
+describe("Text Formatter Utils - Number Formatting", () => {
+  describe("formatQuantity", () => {
+    it("should return '0' for quantity 0", () => {
+      expect(formatQuantity(0)).toBe("0");
+    });
+
+    it("should return the whole number for integers", () => {
+      expect(formatQuantity(1)).toBe("1");
+      expect(formatQuantity(42)).toBe("42");
+    });
+
+    it("should format specific decimals to fractions", () => {
+      expect(formatQuantity(0.125)).toBe("⅛");
+      expect(formatQuantity(0.25)).toBe("¼");
+      expect(formatQuantity(0.33)).toBe("⅓");
+      expect(formatQuantity(0.333)).toBe("⅓");
+      expect(formatQuantity(0.5)).toBe("½");
+      expect(formatQuantity(0.66)).toBe("⅔");
+      expect(formatQuantity(0.667)).toBe("⅔");
+      expect(formatQuantity(0.75)).toBe("¾");
+      expect(formatQuantity(0.875)).toBe("⅞");
+    });
+
+    it("should handle mixed numbers with fractions", () => {
+      expect(formatQuantity(1.5)).toBe("1 ½");
+      expect(formatQuantity(2.25)).toBe("2 ¼");
+      expect(formatQuantity(10.75)).toBe("10 ¾");
+      expect(formatQuantity(3.333)).toBe("3 ⅓");
+    });
+
+    it("should return decimal string for fractions not in map", () => {
+      expect(formatQuantity(0.1)).toBe("0.1");
+      expect(formatQuantity(1.4)).toBe("1.4");
+      expect(formatQuantity(3.141)).toBe("3.141");
+    });
+  });
+});
 
 describe("Text Formatter Utils - Capitalization", () => {
   describe("capitalize", () => {
