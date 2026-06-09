@@ -40,3 +40,8 @@
 ## 2026-06-07 - [Avoid adding non-compatible native dependencies for benchmarks]
 **Learning:** Adding 'better-sqlite3' to a React Native/Expo project for the sole purpose of running a local benchmark script can pollute the project and cause compilation failures.
 **Action:** Mock necessary classes and dependencies rather than adding new native modules to the project.
+
+## 2024-05-19 - Memory Filtering Bottleneck in WatermelonDB ChallengeRepository
+
+**Learning:** When fetching active, expired, or upcoming challenges, fetching all records from the table using `.query().fetch()` and then applying JavaScript `.filter()` in-memory is highly inefficient in WatermelonDB, as it unnecessarily serializes, deserializes, and allocates thousands of unused objects across the React Native bridge.
+**Action:** Always push filtering logic down to the native database layer using WatermelonDB query constraints (e.g., `Q.where("start_date", Q.lte(now))`) to only retrieve the specific models needed, significantly reducing memory footprint and processing latency.
