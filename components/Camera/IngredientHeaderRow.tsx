@@ -69,7 +69,11 @@ export default function IngredientHeaderRow() {
           .stiffness(150)
           .overshootClamping(0)}
         renderItem={({ item }) => (
-          <Pressable onPress={onConfirm} accessibilityRole="button" accessibilityLabel="Select ingredient">
+          <Pressable
+            onPress={onConfirm}
+            accessibilityRole="button"
+            accessibilityLabel="Select ingredient"
+          >
             <IngredientThumbnail key={item.id} item={item} />
           </Pressable>
         )}
