@@ -48,3 +48,7 @@
 **Vulnerability:** Found `Math.random()` being used to select characters from a predefined charset to generate invite codes.
 **Learning:** `Math.random()` is not cryptographically secure and predictable, which could allow attackers to guess or predict invite codes and potentially bypass access controls.
 **Prevention:** Always use a cryptographically secure pseudo-random number generator (CSPRNG) like `expo-crypto`'s `getRandomBytes` when generating security-sensitive random values like invite codes, tokens, or passwords. Ensure you also handle modulo bias when mapping random bytes to a character set.
+## 2026-06-09 - Prevent URL Parameter Injection with API Keys
+**Vulnerability:** Interpolating unencoded environment variables like `API_KEY` directly into URL strings (e.g., `const url = \`${BASE_URL}?key=${API_KEY}\`;`) could lead to parameter injection or malformed requests if the variable contains unexpected characters (like `&` or `=`).
+**Learning:** While API keys are generally assumed to be URL-safe alphanumeric strings, defensively encoding them guarantees structural integrity and prevents theoretical SSRF or query pollution vectors.
+**Prevention:** When constructing URL query strings via template literals, always defensively encode all interpolated variables—including environment-loaded API keys and standard identifiers—using `encodeURIComponent()`.

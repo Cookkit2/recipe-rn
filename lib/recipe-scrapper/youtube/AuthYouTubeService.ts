@@ -47,7 +47,7 @@ export class AuthYouTubeService implements IYouTubeService {
       );
     }
 
-    const url = `${this.BASE_URL}/videos?part=snippet,contentDetails&id=${encodeURIComponent(videoId)}&key=${API_KEY}`;
+    const url = `${this.BASE_URL}/videos?part=snippet,contentDetails&id=${encodeURIComponent(videoId)}&key=${encodeURIComponent(API_KEY)}`;
 
     try {
       const response = await fetch(url);
