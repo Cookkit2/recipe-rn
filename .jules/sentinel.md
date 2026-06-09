@@ -48,3 +48,10 @@
 **Vulnerability:** Found `Math.random()` being used to select characters from a predefined charset to generate invite codes.
 **Learning:** `Math.random()` is not cryptographically secure and predictable, which could allow attackers to guess or predict invite codes and potentially bypass access controls.
 **Prevention:** Always use a cryptographically secure pseudo-random number generator (CSPRNG) like `expo-crypto`'s `getRandomBytes` when generating security-sensitive random values like invite codes, tokens, or passwords. Ensure you also handle modulo bias when mapping random bytes to a character set.
+## 2025-06-09 - Prevent Parameter Injection in YouTube API Requests
+
+**Vulnerability:** URL components interpolated directly into template literals without encoding allowed for potential parameter injection vulnerabilities.
+
+**Learning:** Even when reading from application configuration (like an API key), if the interpolated value contains special characters like `&` or `=`, it could be processed by the backend as additional unintended query parameters (parameter pollution).
+
+**Prevention:** When constructing URLs for external API requests via `fetch`, all string interpolations that form URL query parameters (even trusted configuration like API keys) must be properly encoded using `encodeURIComponent()` to ensure robust protection against parameter injection.
