@@ -50,10 +50,10 @@ function containsSensitiveDataInObject(obj: any): boolean {
 
   if (obj instanceof Error) {
     return containsSensitiveDataInObject({
+      ...obj,
       name: obj.name,
       message: obj.message,
       stack: obj.stack,
-      ...obj,
     });
   }
 
@@ -95,10 +95,10 @@ function sanitizeArg(arg: any): any {
     let processObj = arg;
     if (arg instanceof Error) {
       processObj = {
+        ...arg,
         name: arg.name,
         message: arg.message,
         stack: arg.stack,
-        ...arg,
       };
     }
 
