@@ -229,10 +229,34 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
     if (!email) {
       return this.createErrorResult("VALIDATION_ERROR", "Email is required", false);
     }
-    if (!credentials.password || credentials.password.length < 8) {
+    if (!credentials.password || credentials.password.length < 12) {
       return this.createErrorResult(
         "VALIDATION_ERROR",
-        "Password must be at least 8 characters",
+        "Password must be at least 12 characters",
+        false
+      );
+    } else if (!/[A-Z]/.test(credentials.password)) {
+      return this.createErrorResult(
+        "VALIDATION_ERROR",
+        "Password must contain at least one uppercase letter",
+        false
+      );
+    } else if (!/[a-z]/.test(credentials.password)) {
+      return this.createErrorResult(
+        "VALIDATION_ERROR",
+        "Password must contain at least one lowercase letter",
+        false
+      );
+    } else if (!/\d/.test(credentials.password)) {
+      return this.createErrorResult(
+        "VALIDATION_ERROR",
+        "Password must contain at least one number",
+        false
+      );
+    } else if (!/[^A-Za-z0-9]/.test(credentials.password)) {
+      return this.createErrorResult(
+        "VALIDATION_ERROR",
+        "Password must contain at least one special character",
         false
       );
     }
