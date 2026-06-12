@@ -34,7 +34,13 @@ const CookedRecipeCard = ({
 
   return (
     <Animated.View className="flex-column items-start p-3" style={[animatedStyle]}>
-      <Pressable onPress={handlePress} onPressIn={onPressIn} onPressOut={onPressOut}>
+      <Pressable
+        onPress={handlePress}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        accessibilityRole="button"
+        accessibilityLabel={`Cooked recipe: ${recipe.title}, cooked ${cookCount} times`}
+      >
         <Animated.View
           className="w-full relative flex items-center justify-center border-continuous aspect-square overflow-hidden"
           style={[roundedStyle]}
