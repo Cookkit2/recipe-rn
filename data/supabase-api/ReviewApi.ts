@@ -227,8 +227,9 @@ export const reviewApi = {
     if (error) throw error;
 
     // Upload photos
+    // ⚡ Bolt Performance Optimization: Use Promise.all to run photo uploads concurrently instead of sequentially
     const photoRows: ReviewPhotoRow[] = [];
-    for (const photo of input.photos) {
+    const photoPromises = input.photos.map(async (photo) => {
       const path = `${userId}/${data.id}/${photo.position}.jpg`;
       const { error: uploadError } = await supabase!.storage.from("review-photos").upload(path, {
         uri: photo.uri,
@@ -238,7 +239,7 @@ export const reviewApi = {
 
       if (uploadError) {
         log.error("[ReviewApi] Photo upload failed:", uploadError);
-        continue;
+        return null;
       }
 
       const { data: publicUrl } = supabase!.storage.from("review-photos").getPublicUrl(path);
@@ -253,7 +254,12 @@ export const reviewApi = {
         .select()
         .single();
 
-      if (photoData) photoRows.push(photoData as unknown as ReviewPhotoRow);
+      return photoData as unknown as ReviewPhotoRow;
+    });
+
+    const results = await Promise.all(photoPromises);
+    for (const photoData of results) {
+      if (photoData) photoRows.push(photoData);
     }
 
     return {

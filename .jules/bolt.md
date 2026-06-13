@@ -45,3 +45,6 @@
 
 **Learning:** When fetching active, expired, or upcoming challenges, fetching all records from the table using `.query().fetch()` and then applying JavaScript `.filter()` in-memory is highly inefficient in WatermelonDB, as it unnecessarily serializes, deserializes, and allocates thousands of unused objects across the React Native bridge.
 **Action:** Always push filtering logic down to the native database layer using WatermelonDB query constraints (e.g., `Q.where("start_date", Q.lte(now))`) to only retrieve the specific models needed, significantly reducing memory footprint and processing latency.
+## 2025-03-02 - Sequential Loop I/O Avoidance
+**Learning:** Performing multiple independent asynchronous network calls (like file uploads and DB inserts) inside a standard `for...of` loop sequentially results in compounded wait times and unnecessary latency.
+**Action:** Always map the loop array into an array of asynchronous closures and execute them concurrently using `Promise.all` when order doesn't dictate dependence.
