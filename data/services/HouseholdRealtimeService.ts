@@ -1,5 +1,6 @@
 import { supabase } from "~/lib/supabase/supabase-client";
 import { database } from "~/data/db/database";
+import { Q } from "@nozbe/watermelondb";
 import { useAuthStore } from "~/auth/AuthStore";
 import { log } from "~/utils/logger";
 
@@ -89,8 +90,12 @@ export class HouseholdRealtimeService {
     try {
       const stockCollection = database.collections.get("stock");
 
-      const allItems = await stockCollection.query().fetch();
-      const existing = allItems.find((i: any) => i.supabaseId === record.id);
+      // ⚡ Bolt Optimization: Use targeted query instead of fetching all items
+      // Impact: Prevents loading the entire stock collection into memory
+      const existingItems = await stockCollection
+        .query(Q.where("supabase_id", record.id), Q.take(1))
+        .fetch();
+      const existing = existingItems[0];
       if (existing) return;
 
       await database.write(async () => {
@@ -131,8 +136,13 @@ export class HouseholdRealtimeService {
   }): Promise<void> {
     try {
       const stockCollection = database.collections.get("stock");
-      const allItems = await stockCollection.query().fetch();
-      const existing = allItems.find((i: any) => i.supabaseId === record.id);
+
+      // ⚡ Bolt Optimization: Use targeted query instead of fetching all items
+      // Impact: Prevents loading the entire stock collection into memory
+      const existingItems = await stockCollection
+        .query(Q.where("supabase_id", record.id), Q.take(1))
+        .fetch();
+      const existing = existingItems[0];
 
       if (!existing) {
         await this.handleInsert(record);
@@ -173,8 +183,13 @@ export class HouseholdRealtimeService {
   private async handleDelete(record: { id: string }): Promise<void> {
     try {
       const stockCollection = database.collections.get("stock");
-      const allItems = await stockCollection.query().fetch();
-      const existing = allItems.find((i: any) => i.supabaseId === record.id);
+
+      // ⚡ Bolt Optimization: Use targeted query instead of fetching all items
+      // Impact: Prevents loading the entire stock collection into memory
+      const existingItems = await stockCollection
+        .query(Q.where("supabase_id", record.id), Q.take(1))
+        .fetch();
+      const existing = existingItems[0];
 
       if (!existing) return;
 
