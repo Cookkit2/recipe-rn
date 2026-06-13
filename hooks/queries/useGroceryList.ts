@@ -5,6 +5,7 @@ import {
   useCalendarMealPlans,
 } from "./useMealPlanQueries";
 import { usePantryItems } from "./usePantryQueries";
+import { type PantryItem } from "~/types/PantryItem";
 import { isIngredientMatch } from "~/utils/ingredient-matching";
 import {
   convertToBaseUnit,
@@ -451,8 +452,8 @@ export function aggregateRecipeIngredients(
 /**
  * Builds a pre-computed index mapping normalized names and synonyms to an array of matching pantry items.
  */
-function buildPantryIndex(pantryItems: any[] | null | undefined): Map<string, any[]> {
-  const index = new Map<string, any[]>();
+function buildPantryIndex(pantryItems: PantryItem[] | null | undefined): Map<string, PantryItem[]> {
+  const index = new Map<string, PantryItem[]>();
 
   if (!pantryItems) return index;
 
@@ -491,7 +492,7 @@ function buildPantryIndex(pantryItems: any[] | null | undefined): Map<string, an
  */
 export function calculateNeededQuantities(
   ingredientMap: Map<string, AggregatedIngredient>,
-  pantryItems: any[] | null | undefined,
+  pantryItems: PantryItem[] | null | undefined,
   attributesMap: Record<string, { isChecked: boolean; isDeleted: boolean }> | null | undefined
 ): GroceryItem[] {
   const groceryItems: GroceryItem[] = [];
