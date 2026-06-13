@@ -37,3 +37,7 @@
 
 **Learning:** In `hooks/queries/useGroceryList.ts`, the loop allocating `pantryItem.synonyms?.map(...)` on every iteration of a doubly-nested loop mapping unmatched ingredients against pantry items causes massive array allocation penalties and GC pressure (e.g., thousands of times per generation).
 **Action:** Lift the array transformation out of the inner loop, or modify the matching utility (`isIngredientMatch`) to accept the raw array of objects so mapping is completely avoided.
+
+## 2025-06-01 - Avoid Array Allocation for Mathematical Aggregations
+**Learning:** Calculating averages using a two-pass approach that first pushes items to an array per-entity (e.g. `Map<string, number[]>`) causes high allocation and GC overhead for large datasets.
+**Action:** Use a single-pass approach to maintain running `sum` and `count` variables per entity in a single mapping structure (e.g., `Map<string, { sum: number; count: number }>`) before calculating the final averages, significantly reducing intermediate array allocations.
