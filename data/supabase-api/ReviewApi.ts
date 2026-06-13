@@ -169,17 +169,35 @@ export const reviewApi = {
       return { reviews: [], hasMore: false };
     }
 
-    const reviews = (data ?? []).map((row) => {
+    const rows = data ?? [];
+
+    // Batch fetch user display names
+    const userIds = Array.from(new Set(rows.map((row) => row.user_id)));
+    let userLookup: Record<string, string | null> = {};
+    if (userIds.length > 0) {
+      const { data: userData } = await supabase!
+        .from("users")
+        .select("id, username")
+        .in("id", userIds);
+
+      if (userData) {
+        userData.forEach((u) => {
+          userLookup[u.id] = u.username;
+        });
+      }
+    }
+
+    const reviews = rows.map((row) => {
       const photos = (row.review_photo ?? []) as ReviewPhotoRow[];
       return mapReviewRow(
         row as unknown as ReviewRow,
         photos,
-        getInitial(null), // TODO: fetch from user metadata in batch
+        getInitial(userLookup[row.user_id]),
         colorFromUserId(row.user_id)
       );
     });
 
-    return { reviews, hasMore: data?.length === pageSize };
+    return { reviews, hasMore: rows.length === pageSize };
   },
 
   fetchUserReview: async (recipeId: string): Promise<ReviewWithAuthor | null> => {
@@ -366,7 +384,25 @@ export const reviewApi = {
       return [];
     }
 
-    return (data ?? []).map((row) => ({
+    const rows = data ?? [];
+
+    // Batch fetch user display names
+    const userIds = Array.from(new Set(rows.map((row) => row.user_id)));
+    let userLookup: Record<string, string | null> = {};
+    if (userIds.length > 0) {
+      const { data: userData } = await supabase!
+        .from("users")
+        .select("id, username")
+        .in("id", userIds);
+
+      if (userData) {
+        userData.forEach((u) => {
+          userLookup[u.id] = u.username;
+        });
+      }
+    }
+
+    return rows.map((row) => ({
       id: row.id,
       recipeId: row.recipe_id,
       userId: row.user_id,
@@ -374,7 +410,7 @@ export const reviewApi = {
       helpfulCount: row.helpful_count,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
-      authorInitial: getInitial(null),
+      authorInitial: getInitial(userLookup[row.user_id]),
       authorColor: colorFromUserId(row.user_id),
     }));
   },
