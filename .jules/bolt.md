@@ -45,3 +45,6 @@
 
 **Learning:** When fetching active, expired, or upcoming challenges, fetching all records from the table using `.query().fetch()` and then applying JavaScript `.filter()` in-memory is highly inefficient in WatermelonDB, as it unnecessarily serializes, deserializes, and allocates thousands of unused objects across the React Native bridge.
 **Action:** Always push filtering logic down to the native database layer using WatermelonDB query constraints (e.g., `Q.where("start_date", Q.lte(now))`) to only retrieve the specific models needed, significantly reducing memory footprint and processing latency.
+## 2024-06-13 - Concurrent Supabase Storage Uploads
+**Learning:** Sequential `for...of` loops containing `await supabase.storage.from(...).upload(...)` create a massive performance bottleneck, increasing total upload time linearly with the number of files (e.g. 1000ms for 10 files).
+**Action:** Replace sequential loops with `Promise.all(array.map(...))` to execute uploads concurrently. This reduces the total time bound to roughly the time of the single slowest upload (e.g. 100ms for 10 files, a 10x improvement). Ensure error handling within the `.map` returns safe default values (like `null`) to be filtered later, rather than failing the entire `Promise.all` batch.
