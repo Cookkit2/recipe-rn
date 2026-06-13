@@ -20,7 +20,6 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { H1, H4, P, Small } from "~/components/ui/typography";
-import { ShoppingCartIcon } from "lucide-uniwind";
 import { Separator } from "~/components/ui/separator";
 import TopBar from "~/components/Recipe/Details/TopBar";
 import RecipeServing from "~/components/Recipe/Details/RecipeServing";
