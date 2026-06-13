@@ -1,4 +1,5 @@
 import { database } from "~/data/db/database";
+import { Q } from "@nozbe/watermelondb";
 import { householdApi } from "~/data/supabase-api/HouseholdApi";
 import { log } from "~/utils/logger";
 import { StorageFactory } from "~/data/storage/storage-factory";
@@ -38,15 +39,10 @@ export class HouseholdSyncService {
     const lastSync = this.getLastSyncTimestamp();
     const stockCollection = database.collections.get("stock");
 
-    // Fetch all stock items and filter in JS for household_id matching and updated_at > lastSync
-    const allItems = await stockCollection.query().fetch();
-
-    const sharedItems = allItems.filter(
-      (item: any) =>
-        item.householdId === householdSupabaseId &&
-        item.updatedAt &&
-        new Date(item.updatedAt).getTime() > lastSync
-    );
+    // Fetch matching stock items directly from DB for household_id and updated_at > lastSync
+    const sharedItems = await stockCollection
+      .query(Q.where("household_id", householdSupabaseId), Q.where("updated_at", Q.gt(lastSync)))
+      .fetch();
 
     if (sharedItems.length === 0) return;
 
