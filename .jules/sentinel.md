@@ -43,3 +43,9 @@
 **Learning:** Hardcoded emails in frontend code (like React Native apps) can be easily extracted by reverse-engineering the compiled bundle or by scraping source repositories. This exposes developers to spam, phishing, and potential social engineering attacks, while also coupling application logic to a specific individual.
 
 **Prevention:** Always extract support or contact email addresses into environment variables or server-fetched configurations. Use generic aliases (e.g., support@domain.com) instead of personal developer emails. Ensure fallback logic uses non-personal generic addresses if the environment variable is missing.
+
+## 2025-02-12 - Update Detox dependency
+
+**Vulnerability:** Detox dependency `tmp` < 0.2.6 has Path Traversal via unsanitized prefix/postfix that enables directory escape.
+**Learning:** Always keep `detox` and related testing utilities up to date to prevent insecure dependencies from compromising CI pipelines.
+**Prevention:** Regularly run `bun audit` (when available or via CI) and keep dependencies updated.

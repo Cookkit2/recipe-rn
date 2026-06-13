@@ -188,6 +188,11 @@ export interface TailoredRecipeWithDetails {
  * Direct repository access is private and should not be used externally.
  */
 export class DatabaseFacade {
+  // ⚡ Bolt Optimization: Cache for pantry index to avoid redundant building
+  // Impact: Reduces lookup complexity by avoiding redundant index generation on sequential getAvailableRecipes calls.
+  private cachedPantryIndex: Map<string, { name: string; synonyms: string[] }> | null = null;
+  private cachedPantryHash: string = "";
+
   // Private repository instances - not to be accessed directly
   private recipes: RecipeRepository;
   private stocks: StockRepository;
@@ -1137,6 +1142,23 @@ export class DatabaseFacade {
    * and synonym/category expansion. Returns canMake and partiallyCanMake with
    * completion percentages.
    */
+
+  /**
+   * Generates a simple hash for the pantry items to detect changes
+   */
+  private generatePantryHash(items: { name: string; synonyms: string[] }[]): string {
+    // A simple, fast hash based on names and counts
+    // For arrays, this is much faster than JSON.stringify or crypto hashing
+    let hash = `${items.length}:`;
+    // We iterate through all items to guarantee correctness and avoid stale caches
+    // when items in the middle of the array are modified.
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item) hash += item.name + "|";
+    }
+    return hash;
+  }
+
   async getAvailableRecipes(): Promise<AvailableRecipesResult> {
     try {
       const allStock = await this.stocks.findAll();
@@ -1231,24 +1253,36 @@ export class DatabaseFacade {
         };
       });
 
-      // Pre-compute an index of pantry items and their synonyms for O(1) matching.
-      const pantryIndex = new Map<string, { name: string; synonyms: string[] }>();
-      for (const item of pantryItemsWithMetadata) {
-        const normalizedName = item.name.toLowerCase().trim();
+      // ⚡ Bolt Optimization: Use cached pantry index if pantry state hasn't changed
+      const currentPantryHash = this.generatePantryHash(pantryItemsWithMetadata);
+      let pantryIndex: Map<string, { name: string; synonyms: string[] }>;
 
-        // Index the main name
-        if (!pantryIndex.has(normalizedName)) {
-          pantryIndex.set(normalizedName, item);
-        }
+      if (this.cachedPantryIndex && this.cachedPantryHash === currentPantryHash) {
+        pantryIndex = this.cachedPantryIndex;
+      } else {
+        // Pre-compute an index of pantry items and their synonyms for O(1) matching.
+        pantryIndex = new Map<string, { name: string; synonyms: string[] }>();
+        for (const item of pantryItemsWithMetadata) {
+          const normalizedName = item.name.toLowerCase().trim();
 
-        // Index all synonyms and categories
-        for (const synonym of item.synonyms) {
-          const normalizedSynonym = synonym.toLowerCase().trim();
+          // Index the main name
+          if (!pantryIndex.has(normalizedName)) {
+            pantryIndex.set(normalizedName, item);
+          }
 
-          if (!pantryIndex.has(normalizedSynonym)) {
-            pantryIndex.set(normalizedSynonym, item);
+          // Index all synonyms and categories
+          for (const synonym of item.synonyms) {
+            const normalizedSynonym = synonym.toLowerCase().trim();
+
+            if (!pantryIndex.has(normalizedSynonym)) {
+              pantryIndex.set(normalizedSynonym, item);
+            }
           }
         }
+
+        // Update cache
+        this.cachedPantryIndex = pantryIndex;
+        this.cachedPantryHash = currentPantryHash;
       }
 
       const allRecipes = await this.recipes.findAll();

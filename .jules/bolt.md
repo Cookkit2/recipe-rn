@@ -37,3 +37,13 @@
 
 **Learning:** In `hooks/queries/useGroceryList.ts`, the loop allocating `pantryItem.synonyms?.map(...)` on every iteration of a doubly-nested loop mapping unmatched ingredients against pantry items causes massive array allocation penalties and GC pressure (e.g., thousands of times per generation).
 **Action:** Lift the array transformation out of the inner loop, or modify the matching utility (`isIngredientMatch`) to accept the raw array of objects so mapping is completely avoided.
+
+## 2025-02-12 - Eliminate Redundant Index Recreation in getAvailableRecipes
+
+**Learning:** Recreating a Map index of pantry items inside `getAvailableRecipes` creates O(N) redundant object allocations and iterations, slowing down performance especially when calling the function sequentially multiple times.
+**Action:** When working with DB facade reads and generating a complex state like a hash map, generate a simple data hash and cache the map. On sequential requests, return the cached map if the hash remains the same.
+
+## 2025-02-12 - Fixing Stale Cache from Hash Sampling
+
+**Learning:** When using length and array sampling (e.g. `items[0..20]` and `items[items.length-20..items.length]`) to quickly generate a state-hash for caching, modifications happening exclusively in the middle of the array will not change the hash and will return a stale cache.
+**Action:** When data correctness depends on every item potentially changing, you must generate the state hash by iterating through the entire array.
