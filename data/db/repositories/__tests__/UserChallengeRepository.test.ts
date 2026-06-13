@@ -94,4 +94,55 @@ describe("UserChallengeRepository", () => {
       console.log(`Execution time: ${endTime - startTime}ms`);
     });
   });
+
+  describe("expireChallenges", () => {
+    it("should throw error efficiently when an ID is not found", async () => {
+      // We will mock the repository's collection
+      // For batch fetch: missing one ID
+      // For individual find: simulated 2ms per query (N+1 scenario)
+      const mockTable = "user_challenges";
+
+      const foundIds = Array.from({ length: 99 }, (_, i) => `id${i}`);
+      const idsToQuery = [...foundIds, "missing-id"];
+
+      // Setup the mocks for this specific test
+      const mockCollection = {
+        table: mockTable,
+        query: jest.fn().mockReturnValue({
+          fetch: jest.fn().mockResolvedValue(
+            foundIds.map((id) => ({
+              id,
+              prepareUpdate: jest.fn(),
+            }))
+          ),
+        }),
+        find: jest.fn().mockImplementation(async (id) => {
+          return new Promise((resolve, reject) => {
+            setTimeout(() => {
+              if (id === "missing-id") {
+                reject(new Error(`Record ${mockTable}#${id} not found`));
+              } else {
+                resolve({
+                  id,
+                  prepareUpdate: jest.fn(),
+                });
+              }
+            }, 2); // 2ms per query simulates async SQLite wait
+          });
+        }),
+      };
+
+      (repository as any).collection = mockCollection;
+      (database.batch as jest.Mock) = jest.fn();
+
+      const startTime = performance.now();
+
+      await expect(repository.expireChallenges(idsToQuery)).rejects.toThrow(
+        `Record ${mockTable}#missing-id not found`
+      );
+
+      const endTime = performance.now();
+      console.log(`expireChallenges error fallback execution time: ${endTime - startTime}ms`);
+    });
+  });
 });

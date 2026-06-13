@@ -37,3 +37,6 @@
 
 **Learning:** In `hooks/queries/useGroceryList.ts`, the loop allocating `pantryItem.synonyms?.map(...)` on every iteration of a doubly-nested loop mapping unmatched ingredients against pantry items causes massive array allocation penalties and GC pressure (e.g., thousands of times per generation).
 **Action:** Lift the array transformation out of the inner loop, or modify the matching utility (`isIngredientMatch`) to accept the raw array of objects so mapping is completely avoided.
+## 2026-06-07 - [Avoid N+1 Sequential Database Fetch On Failure]
+**Learning:** Sequential DB read fallbacks just to throw an error trigger N+1 queries. We can locally compare the unique IDs in memory using a Set to find missing IDs to match DB driver errors without triggering the actual read.
+**Action:** Instead of calling `Promise.all()` with individual `.find(id)` queries, map found record IDs to a Set, find the missing ID, and construct the error locally. This keeps the fallback computationally bound instead of IO/Network bound.

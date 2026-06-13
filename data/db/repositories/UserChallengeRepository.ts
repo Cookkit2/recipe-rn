@@ -314,7 +314,12 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
     // If the fast batch fetch doesn't find all records, fall back to individual fetches
     // so WatermelonDB can throw its standard "Record ID not found" error.
     if (records.length !== uniqueIds.length) {
-      records = await Promise.all(userChallengeIds.map((id) => this.collection.find(id)));
+      // ⚡ Bolt Optimization: Pre-compute the found IDs into a Set for fast lookup
+      // Identify the missing ID locally to throw the exact error WatermelonDB expects
+      // without performing N+1 sequential fallback queries.
+      const foundIds = new Set(records.map((r) => r.id));
+      const missingId = uniqueIds.find((id) => !foundIds.has(id));
+      throw new Error(`Record ${this.collection.table}#${missingId} not found`);
     }
 
     await database.write(async () => {
