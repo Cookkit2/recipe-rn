@@ -52,3 +52,7 @@
 **Vulnerability:** Interpolating unencoded environment variables like `API_KEY` directly into URL strings (e.g., `const url = \`${BASE_URL}?key=${API_KEY}\`;`) could lead to parameter injection or malformed requests if the variable contains unexpected characters (like `&` or `=`).
 **Learning:** While API keys are generally assumed to be URL-safe alphanumeric strings, defensively encoding them guarantees structural integrity and prevents theoretical SSRF or query pollution vectors.
 **Prevention:** When constructing URL query strings via template literals, always defensively encode all interpolated variables—including environment-loaded API keys and standard identifiers—using `encodeURIComponent()`.
+## 2025-02-14 - Catastrophic Backtracking in Regex
+**Vulnerability:** A `/(.*?)/` regex inside a while loop with `exec()` was susceptible to catastrophic backtracking (ReDoS) with heavily customized or repetitive inputs inside the HighlightedText component.
+**Learning:** Even simple formatting parsers can become a ReDoS vector if using arbitrary repetition without bound constraints. Relying on Regex for simple string matching formatting can introduce unnecessary parsing risks.
+**Prevention:** For robust text formatting loops with simple delimiters like `**`, use linear string scanning functions such as `indexOf` combined with `slice`, which guarantees `O(N)` performance.
