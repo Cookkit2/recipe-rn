@@ -37,3 +37,8 @@
 
 **Learning:** In `hooks/queries/useGroceryList.ts`, the loop allocating `pantryItem.synonyms?.map(...)` on every iteration of a doubly-nested loop mapping unmatched ingredients against pantry items causes massive array allocation penalties and GC pressure (e.g., thousands of times per generation).
 **Action:** Lift the array transformation out of the inner loop, or modify the matching utility (`isIngredientMatch`) to accept the raw array of objects so mapping is completely avoided.
+
+## 2024-06-02 - N+1 Query in WatermelonDB Loop
+
+**Learning:** Fetching data via `await collection.query().fetch()` inside a `for` loop executing over incoming remote items results in a severe N+1 query pattern. The O(N*M) time complexity drastically slows down synchronization logic due to redundant DB queries and object instantiations across the JS bridge.
+**Action:** Lift the collection fetch out of the loop to perform a single query. Pre-process the fetched collection into a `Map` keyed by `supabaseId` (or the lookup identifier) to reduce inner loop lookups from O(N) array searches to O(1) hash map access.
