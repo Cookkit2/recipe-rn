@@ -28,7 +28,7 @@ function isValidUrl(url: string): boolean {
   if (!url || typeof url !== "string") return false;
   const trimmed = url.trim();
   if (!trimmed) return false;
-  return trimmed.startsWith("http://") || trimmed.startsWith("https://");
+  return trimmed.startsWith("https://");
 }
 
 function dedupe(urls: string[]): string[] {
