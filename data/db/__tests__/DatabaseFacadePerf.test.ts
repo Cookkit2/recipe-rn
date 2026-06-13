@@ -50,8 +50,6 @@ describe("DatabaseFacade Performance", () => {
     await facade.clearRecipes();
     const end = performance.now();
 
-    console.log(`clearRecipes took ${end - start} ms (using .destroyAllPermanently())`);
-
     // Check if fetch was called (which is the slow path)
     expect(end - start).toBeGreaterThanOrEqual(0);
     expect(mockQuery.destroyAllPermanently).toHaveBeenCalledTimes(4); // 4 collections
@@ -81,8 +79,6 @@ describe("DatabaseFacade Performance", () => {
     const start = performance.now();
     await facade.clearAllData();
     const end = performance.now();
-
-    console.log(`clearAllData took ${end - start} ms (using .destroyAllPermanently())`);
 
     expect(end - start).toBeGreaterThanOrEqual(0);
     expect(mockQuery.destroyAllPermanently).toHaveBeenCalledTimes(6); // 6 collections
