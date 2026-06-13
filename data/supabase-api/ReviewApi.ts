@@ -227,9 +227,9 @@ export const reviewApi = {
 
     if (error) throw error;
 
+    // ⚡ Bolt Performance Optimization: Replaced sequential await for photo uploads with Promise.all to enable concurrent uploading, reducing total upload latency.
     // Upload photos
-    const photoRows: ReviewPhotoRow[] = [];
-    for (const photo of input.photos) {
+    const uploadPromises = input.photos.map(async (photo) => {
       const path = `${userId}/${data.id}/${photo.position}.jpg`;
       const { error: uploadError } = await supabase!.storage.from("review-photos").upload(path, {
         uri: photo.uri,
@@ -239,7 +239,7 @@ export const reviewApi = {
 
       if (uploadError) {
         log.error("[ReviewApi] Photo upload failed:", uploadError);
-        continue;
+        return null;
       }
 
       const { data: publicUrl } = supabase!.storage.from("review-photos").getPublicUrl(path);
@@ -254,8 +254,11 @@ export const reviewApi = {
         .select()
         .single();
 
-      if (photoData) photoRows.push(photoData as unknown as ReviewPhotoRow);
-    }
+      return photoData ? (photoData as unknown as ReviewPhotoRow) : null;
+    });
+
+    const photoResults = await Promise.all(uploadPromises);
+    const photoRows: ReviewPhotoRow[] = photoResults.filter((p): p is ReviewPhotoRow => p !== null);
 
     return {
       id: data.id,
@@ -298,9 +301,10 @@ export const reviewApi = {
       // Delete existing photos
       await supabase!.from("review_photo").delete().eq("review_id", reviewId);
 
+      // ⚡ Bolt Performance Optimization: Replaced sequential await for photo uploads with Promise.all to enable concurrent uploading, reducing total upload latency.
       // Upload new photos
       const userId = await getCurrentUserId();
-      for (const photo of input.photos) {
+      const uploadPromises = input.photos.map(async (photo) => {
         const path = `${userId}/${reviewId}/${photo.position}.jpg`;
         await supabase!.storage.from("review-photos").upload(path, {
           uri: photo.uri,
@@ -313,7 +317,8 @@ export const reviewApi = {
           photo_url: publicUrl.publicUrl,
           position: photo.position,
         });
-      }
+      });
+      await Promise.all(uploadPromises);
     }
   },
 
