@@ -227,8 +227,10 @@ export const reviewApi = {
     if (error) throw error;
 
     // Upload photos
-    const photoRows: ReviewPhotoRow[] = [];
-    for (const photo of input.photos) {
+    // ⚡ Bolt Optimization: Use Promise.all with map for concurrent network requests
+    // Impact: Reduces overall network wait time from O(N) to O(1) in terms of latency,
+    // dramatically speeding up uploads when multiple photos are attached.
+    const photoUploadPromises = input.photos.map(async (photo) => {
       const path = `${userId}/${data.id}/${photo.position}.jpg`;
       const { error: uploadError } = await supabase!.storage.from("review-photos").upload(path, {
         uri: photo.uri,
@@ -238,7 +240,7 @@ export const reviewApi = {
 
       if (uploadError) {
         log.error("[ReviewApi] Photo upload failed:", uploadError);
-        continue;
+        return null;
       }
 
       const { data: publicUrl } = supabase!.storage.from("review-photos").getPublicUrl(path);
@@ -253,8 +255,11 @@ export const reviewApi = {
         .select()
         .single();
 
-      if (photoData) photoRows.push(photoData as unknown as ReviewPhotoRow);
-    }
+      return photoData ? (photoData as unknown as ReviewPhotoRow) : null;
+    });
+
+    const photoResults = await Promise.all(photoUploadPromises);
+    const photoRows: ReviewPhotoRow[] = photoResults.filter((p): p is ReviewPhotoRow => p !== null);
 
     return {
       id: data.id,
@@ -298,21 +303,26 @@ export const reviewApi = {
       await supabase!.from("review_photo").delete().eq("review_id", reviewId);
 
       // Upload new photos
+      // ⚡ Bolt Optimization: Use Promise.all with map for concurrent network requests
+      // Impact: Reduces overall network wait time from O(N) to O(1) in terms of latency,
+      // dramatically speeding up uploads when multiple photos are attached.
       const userId = await getCurrentUserId();
-      for (const photo of input.photos) {
-        const path = `${userId}/${reviewId}/${photo.position}.jpg`;
-        await supabase!.storage.from("review-photos").upload(path, {
-          uri: photo.uri,
-          type: "image/jpeg",
-          name: `${photo.position}.jpg`,
-        } as unknown as Blob);
-        const { data: publicUrl } = supabase!.storage.from("review-photos").getPublicUrl(path);
-        await supabase!.from("review_photo").insert({
-          review_id: reviewId,
-          photo_url: publicUrl.publicUrl,
-          position: photo.position,
-        });
-      }
+      await Promise.all(
+        input.photos.map(async (photo) => {
+          const path = `${userId}/${reviewId}/${photo.position}.jpg`;
+          await supabase!.storage.from("review-photos").upload(path, {
+            uri: photo.uri,
+            type: "image/jpeg",
+            name: `${photo.position}.jpg`,
+          } as unknown as Blob);
+          const { data: publicUrl } = supabase!.storage.from("review-photos").getPublicUrl(path);
+          await supabase!.from("review_photo").insert({
+            review_id: reviewId,
+            photo_url: publicUrl.publicUrl,
+            position: photo.position,
+          });
+        })
+      );
     }
   },
 
