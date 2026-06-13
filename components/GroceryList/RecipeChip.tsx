@@ -30,7 +30,13 @@ export default function RecipeChip({
 
   return (
     <Link asChild href={`/recipes/${recipe.id}`}>
-      <Pressable className="w-24" onPressIn={onPressIn} onPressOut={onPressOut}>
+      <Pressable
+        className="w-24"
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        accessibilityRole="button"
+        accessibilityLabel={`View recipe for ${recipe.title}`}
+      >
         <Animated.View
           className="w-24 h-24 overflow-hidden mb-2 shadow-sm bg-card border border-border/10 relative"
           style={[roundedStyle, animatedStyle]}
