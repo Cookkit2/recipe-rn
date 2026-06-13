@@ -60,8 +60,16 @@ export class StockRepository extends BaseRepository<Stock> {
 
   // Get expired items
   async getExpiredItems(): Promise<Stock[]> {
-    const items = await this.findAll();
-    return items.filter((item) => item.isExpired);
+    // ⚡ Bolt Performance Optimization: Push filtering to the native database layer
+    // instead of fetching all records into memory across the JS bridge
+    return await this.collection
+      .query(
+        Q.and(
+          Q.where("expiry_date", Q.notEq(null)),
+          Q.where("expiry_date", Q.lt(new Date().getTime()))
+        )
+      )
+      .fetch();
   }
 
   // Detect expired waste - finds items that are expired and returns them with metadata
@@ -72,11 +80,16 @@ export class StockRepository extends BaseRepository<Stock> {
       estimatedCost?: number;
     }>
   > {
-    const items = await this.findAll();
+    // ⚡ Bolt Performance Optimization: Push filtering to the native database layer
+    // instead of fetching all records into memory across the JS bridge
     const now = new Date();
+    const items = await this.collection
+      .query(
+        Q.and(Q.where("expiry_date", Q.notEq(null)), Q.where("expiry_date", Q.lt(now.getTime())))
+      )
+      .fetch();
 
     return items
-      .filter((item) => item.isExpired)
       .map((stock) => {
         let daysExpired = 0;
         if (stock.expiryDate) {
@@ -204,8 +217,9 @@ export class StockRepository extends BaseRepository<Stock> {
 
   // Get low stock items (quantity <= threshold)
   async getLowStockItems(threshold: number = 1): Promise<Stock[]> {
-    const items = await this.findAll();
-    return items.filter((item) => item.quantity <= threshold);
+    // ⚡ Bolt Performance Optimization: Push filtering to the native database layer
+    // instead of fetching all records into memory across the JS bridge
+    return await this.collection.query(Q.where("quantity", Q.lte(threshold))).fetch();
   }
 
   // Create stock with categories and synonyms
