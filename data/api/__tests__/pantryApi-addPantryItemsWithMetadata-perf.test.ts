@@ -153,15 +153,7 @@ describe("pantryApi.addPantryItemsWithMetadata Performance", () => {
         synonyms: [{ synonym: `Syn${i}` }],
       } as any);
     }
-
-    const start = Date.now();
     await pantryApi.addPantryItemsWithMetadata(items);
-    const end = Date.now();
-
-    console.log(`Add 50 items with metadata took: ${end - start}ms`);
-    console.log(
-      `DB Metrics: Creates: ${dbMetrics.creates}, Updates: ${dbMetrics.updates}, Batches: ${dbMetrics.batches}`
-    );
   }, 20000);
 });
 
@@ -193,14 +185,6 @@ describe("pantryApi.addPantryItemsWithMetadata Update Performance", () => {
     dbMetrics.creates = 0;
     dbMetrics.updates = 0;
     dbMetrics.batches = 0;
-
-    const start = Date.now();
     await pantryApi.addPantryItemsWithMetadata(items);
-    const end = Date.now();
-
-    console.log(`Update 50 items with metadata took: ${end - start}ms`);
-    console.log(
-      `DB Metrics: Creates: ${dbMetrics.creates}, Updates: ${dbMetrics.updates}, Batches: ${dbMetrics.batches}`
-    );
   }, 20000);
 });
