@@ -486,6 +486,11 @@ function buildPantryIndex(pantryItems: any[] | null | undefined): Map<string, an
   return index;
 }
 
+// ⚡ Bolt Optimization: Use WeakMap to cache isIngredientMatch results without string allocation overhead.
+// Keyed by the pantryItem object reference, pointing to a Map of ingredientName -> isMatch.
+// Automatically handles cache invalidation when pantryItem objects are updated from the DB.
+const matchCache = new WeakMap<any, Map<string, boolean>>();
+
 /**
  * Step 2: Calculates needed quantities by subtracting pantry stock.
  */
@@ -518,7 +523,17 @@ export function calculateNeededQuantities(
       } else {
         // Slow path: Fallback to scanning all pantry items for substring/complex matches
         for (const pantryItem of pantryItems) {
-          const isMatch = isIngredientMatch(pantryItem.name, ingredient.name, pantryItem.synonyms);
+          let itemCache = matchCache.get(pantryItem);
+          if (!itemCache) {
+            itemCache = new Map<string, boolean>();
+            matchCache.set(pantryItem, itemCache);
+          }
+
+          let isMatch = itemCache.get(ingredient.name);
+          if (isMatch === undefined) {
+            isMatch = isIngredientMatch(pantryItem.name, ingredient.name, pantryItem.synonyms);
+            itemCache.set(ingredient.name, isMatch);
+          }
 
           if (isMatch) {
             matchingPantryItems.push({
