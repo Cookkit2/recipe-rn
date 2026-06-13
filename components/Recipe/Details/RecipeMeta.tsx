@@ -20,7 +20,11 @@ export default function RecipeMeta({
   return (
     <View className="flex-column items-center justify-center gap-3 my-2">
       {totalMinutes > 0 && (
-        <View className="flex-row items-center gap-2">
+        <View
+          className="flex-row items-center gap-2"
+          accessible={true}
+          accessibilityLabel={`${readyByLabel.label}, Total time: ${totalMinutes} minutes`}
+        >
           <ClockIcon className="text-muted-foreground" size={16} strokeWidth={3} />
           <P className="font-urbanist-medium text-foreground">{readyByLabel.label}</P>
           <P className="font-urbanist-regular text-muted-foreground font-bold">•</P>
@@ -28,7 +32,11 @@ export default function RecipeMeta({
         </View>
       )}
       {difficultyStars > 0 && (
-        <View className="flex-row items-center gap-1">
+        <View
+          className="flex-row items-center gap-1"
+          accessible={true}
+          accessibilityLabel={`Difficulty: ${difficultyStars} out of 5 stars`}
+        >
           {Array.from({ length: difficultyStars }).map((_, i) => (
             <StarIcon
               key={i}
