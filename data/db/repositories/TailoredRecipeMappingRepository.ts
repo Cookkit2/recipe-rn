@@ -65,9 +65,14 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
       const recipeIds = mappings.map((m) => m.recipeId);
       const recipes = await recipeCollection.query(Q.where("id", Q.oneOf(recipeIds))).fetch();
 
+      // ⚡ Bolt Performance Optimization:
+      // By converting the array to a Map outside the loop, the inner lookup
+      // becomes O(1), improving iteration from O(N^2) to O(N).
+      const recipeMap = new Map(recipes.map((r) => [r.id, r]));
+
       for (const mapping of mappings) {
         try {
-          const recipe = recipes.find((r) => r.id === mapping.recipeId);
+          const recipe = recipeMap.get(mapping.recipeId);
 
           // Check if this recipe is a tailored version of the base recipe
           // We store baseRecipeId in the recipe's sourceUrl field for tailored recipes
