@@ -11,6 +11,7 @@ import {
   truncate,
   sanitizeText,
   pluralize,
+  formatCookingTime,
 } from "../text-formatter";
 
 describe("Text Formatter Utils - Capitalization", () => {
@@ -481,6 +482,42 @@ describe("Text Formatter Utils - Pluralization", () => {
       expect(pluralize("car", 5)).toBe("cars");
       expect(pluralize("book", 3)).toBe("books");
       expect(pluralize("tree", 4)).toBe("trees");
+    });
+  });
+});
+
+describe("Text Formatter Utils - formatCookingTime", () => {
+  describe("formatCookingTime", () => {
+    it("should handle times less than a minute", () => {
+      expect(formatCookingTime(0)).toBe("Less than a minute");
+      expect(formatCookingTime(0.5)).toBe("Less than a minute");
+    });
+
+    it("should handle times less than an hour", () => {
+      expect(formatCookingTime(1)).toBe("1 minute");
+      expect(formatCookingTime(45)).toBe("45 minutes");
+      expect(formatCookingTime(59)).toBe("59 minutes");
+    });
+
+    it("should handle exactly one hour", () => {
+      expect(formatCookingTime(60)).toBe("1 hour");
+    });
+
+    it("should handle one hour and some minutes", () => {
+      expect(formatCookingTime(61)).toBe("1 hour 1 minute");
+      expect(formatCookingTime(90)).toBe("1 hour 30 minutes");
+      expect(formatCookingTime(119)).toBe("1 hour 59 minutes");
+    });
+
+    it("should handle exactly multiple hours", () => {
+      expect(formatCookingTime(120)).toBe("2 hours");
+      expect(formatCookingTime(180)).toBe("3 hours");
+    });
+
+    it("should handle multiple hours and some minutes", () => {
+      expect(formatCookingTime(121)).toBe("2 hours 1 minute");
+      expect(formatCookingTime(125)).toBe("2 hours 5 minutes");
+      expect(formatCookingTime(150)).toBe("2 hours 30 minutes");
     });
   });
 });
