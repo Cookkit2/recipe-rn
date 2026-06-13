@@ -35,7 +35,6 @@ export function postprocessOutputsYolo(
   // Process each detection directly from the flat output array
   for (let i = 0; i < outputWidth; i++) {
     // Each detection is 84 values: [x, y, w, h, ...class scores]
-    // const base = i;
     // Extract bbox
     const xCenter = output?.[0 * outputWidth + i] ?? 0;
     const yCenter = output?.[1 * outputWidth + i] ?? 0;

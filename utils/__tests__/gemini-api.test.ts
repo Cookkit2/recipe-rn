@@ -132,11 +132,11 @@ describe("gemini-api", () => {
         expect(log.info).toHaveBeenCalledWith(expect.stringContaining("Candidates: 50"));
       });
 
-      it("should throw and log error with redacted API key when fetch fails", async () => {
+      it("should throw and safely log error without exposing API key when fetch fails", async () => {
         (globalThis.fetch as jest.Mock).mockResolvedValueOnce({
           ok: false,
           status: 400,
-          text: async () => `Bad request for API key ${API_KEY}`,
+          statusText: "Bad Request",
         });
 
         await expect(api.generateContent("DEFAULT_GEMINI_MODEL", "Hello")).rejects.toThrow(
@@ -144,9 +144,7 @@ describe("gemini-api", () => {
         );
 
         expect(log.error).toHaveBeenCalledWith(
-          expect.stringContaining(
-            "Gemini API error: 400 - Bad request for API key [REDACTED_API_KEY]"
-          )
+          expect.stringContaining("Gemini API error: 400 Bad Request")
         );
         expect(log.error).not.toHaveBeenCalledWith(expect.stringContaining(API_KEY as string));
       });
@@ -231,11 +229,11 @@ describe("gemini-api", () => {
         expect(result).toEqual(mockResponse);
       });
 
-      it("should throw and log error with redacted API key when listModels fails", async () => {
+      it("should throw and safely log error without exposing API key when listModels fails", async () => {
         (globalThis.fetch as jest.Mock).mockResolvedValueOnce({
           ok: false,
           status: 403,
-          text: async () => `Forbidden: ${API_KEY} is invalid`,
+          statusText: "Forbidden",
         });
 
         await expect(api.listModels()).rejects.toThrow(
@@ -243,9 +241,7 @@ describe("gemini-api", () => {
         );
 
         expect(log.error).toHaveBeenCalledWith(
-          expect.stringContaining(
-            "Gemini API error: 403 - Forbidden: [REDACTED_API_KEY] is invalid"
-          )
+          expect.stringContaining("Gemini API error: 403 Forbidden")
         );
       });
     });
