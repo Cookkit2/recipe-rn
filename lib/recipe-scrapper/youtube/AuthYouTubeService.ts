@@ -47,10 +47,14 @@ export class AuthYouTubeService implements IYouTubeService {
       );
     }
 
-    const url = `${this.BASE_URL}/videos?part=snippet,contentDetails&id=${encodeURIComponent(videoId)}&key=${encodeURIComponent(API_KEY)}`;
+    const url = `${this.BASE_URL}/videos?part=snippet,contentDetails&id=${encodeURIComponent(videoId)}`;
 
     try {
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: {
+          "x-goog-api-key": API_KEY,
+        },
+      });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -63,9 +67,16 @@ export class AuthYouTubeService implements IYouTubeService {
         }
 
         const rawMessage = String(errorData.error?.message || `API error: HTTP ${response.status}`);
-        const sanitizedMessage = API_KEY
-          ? rawMessage.replaceAll(API_KEY, "[REDACTED_API_KEY]")
-          : rawMessage;
+
+        let sanitizedMessage = rawMessage;
+        if (API_KEY) {
+          sanitizedMessage = sanitizedMessage.replaceAll(API_KEY, "[REDACTED_API_KEY]");
+          // Also replace URL-encoded version just in case it somehow leaked
+          const encodedKey = encodeURIComponent(API_KEY);
+          if (encodedKey !== API_KEY) {
+            sanitizedMessage = sanitizedMessage.replaceAll(encodedKey, "[REDACTED_API_KEY]");
+          }
+        }
 
         throw new YouTubeServiceError(sanitizedMessage, "API_ERROR");
       }
@@ -94,9 +105,15 @@ export class AuthYouTubeService implements IYouTubeService {
       const rawMessage = String(
         `Network error: ${error instanceof Error ? error.message : "Unknown error"}`
       );
-      const sanitizedMessage = API_KEY
-        ? rawMessage.replaceAll(API_KEY, "[REDACTED_API_KEY]")
-        : rawMessage;
+
+      let sanitizedMessage = rawMessage;
+      if (API_KEY) {
+        sanitizedMessage = sanitizedMessage.replaceAll(API_KEY, "[REDACTED_API_KEY]");
+        const encodedKey = encodeURIComponent(API_KEY);
+        if (encodedKey !== API_KEY) {
+          sanitizedMessage = sanitizedMessage.replaceAll(encodedKey, "[REDACTED_API_KEY]");
+        }
+      }
 
       throw new YouTubeServiceError(sanitizedMessage, "NETWORK_ERROR");
     }
