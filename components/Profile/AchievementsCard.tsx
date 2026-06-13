@@ -65,7 +65,11 @@ export default function AchievementsCard() {
   };
 
   return (
-    <Pressable onPress={handlePress}>
+    <Pressable
+      onPress={handlePress}
+      accessibilityRole="button"
+      accessibilityLabel="View Achievements"
+    >
       <Card className="flex-1 mx-6 mt-6 rounded-3xl shadow-md shadow-foreground/10 border-none">
         <CardContent className="py-6 gap-4">
           {/* Header */}

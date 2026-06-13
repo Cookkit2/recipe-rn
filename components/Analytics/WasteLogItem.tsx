@@ -54,7 +54,13 @@ const WasteLogItem = ({ wasteLog, onPress }: WasteLogItemProps) => {
 
   const content = (
     <Animated.View className="flex-column items-start p-3" style={[animatedStyle]}>
-      <Pressable onPress={handlePress} onPressIn={onPressIn} onPressOut={onPressOut}>
+      <Pressable
+        onPress={handlePress}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        accessibilityRole="button"
+        accessibilityLabel={`Waste log item: ${wasteLog.stock?.name || "Unknown Item"}, ${formatQuantity()}, Reason: ${getReasonText() || "None"}`}
+      >
         <View className="flex-row items-center gap-3">
           {/* Icon or thumbnail */}
           {wasteLog.stock?.imageUrl ? (

@@ -42,6 +42,7 @@ export default function StarRating({
               key={starValue}
               onPress={() => onRatingChange?.(starValue)}
               hitSlop={4}
+              accessibilityRole="button"
               accessibilityLabel={`Rate ${starValue} stars`}
             >
               {star}
