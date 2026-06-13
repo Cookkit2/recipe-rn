@@ -83,9 +83,18 @@ export class HouseholdSyncService {
     await database.write(async () => {
       const batchOps: import("@nozbe/watermelondb").Model[] = [];
 
+      // ⚡ Bolt Performance Optimization: Fetch all items once outside the loop instead of N times inside.
+      // We also use a Map for O(1) lookups rather than O(N) array scans, reducing complexity from O(N^2) to O(N).
+      const allItems = await stockCollection.query().fetch();
+      const localItemsMap = new Map<string, any>();
+      for (const item of allItems) {
+        if ((item as any).supabaseId) {
+          localItemsMap.set((item as any).supabaseId, item);
+        }
+      }
+
       for (const remoteItem of remoteItems) {
-        const allItems = await stockCollection.query().fetch();
-        const existing = allItems.find((i: any) => i.supabaseId === remoteItem.id);
+        const existing = localItemsMap.get(remoteItem.id);
 
         if (existing) {
           batchOps.push(
