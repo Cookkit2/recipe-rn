@@ -64,7 +64,12 @@ export default function EditableTitle({
   return (
     <View className="relative">
       {!isEditing ? (
-        <Pressable onPress={beginEditing} role="button" disabled={!editable}>
+        <Pressable
+          onPress={beginEditing}
+          role="button"
+          disabled={!editable}
+          accessibilityState={{ disabled: !editable }}
+        >
           <Text
             numberOfLines={2}
             className={cn(
