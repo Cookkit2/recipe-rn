@@ -335,12 +335,7 @@ export class StockRepository extends BaseRepository<Stock> {
       )
     );
 
-    // Since isIngredientMatch does substring matching, it's safer to fetch all stocks
-    // if we really want to preserve 100% of the isIngredientMatch functionality.
-    // However, the original loop did:
-    // const stockItems = await this.stocks.findByNameOrSynonym(ingredient.name);
-    // which only did EXACT name or EXACT synonym matches in SQL.
-    // So the query above perfectly matches the original SQL functionality but batched!
+    // The query above perfectly matches the original SQL functionality but batched!
 
     const stocks = await stockQuery.fetch();
 

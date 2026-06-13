@@ -1,5 +1,6 @@
 import { supabase } from "~/lib/supabase/supabase-client";
 import { database } from "~/data/db/database";
+import { Q } from "@nozbe/watermelondb";
 import { useAuthStore } from "~/auth/AuthStore";
 import { log } from "~/utils/logger";
 
@@ -89,9 +90,11 @@ export class HouseholdRealtimeService {
     try {
       const stockCollection = database.collections.get("stock");
 
-      const allItems = await stockCollection.query().fetch();
-      const existing = allItems.find((i: any) => i.supabaseId === record.id);
-      if (existing) return;
+      // ⚡ Bolt Performance Optimization: Use targeted DB query instead of fetching all records
+      const existingRecords = await stockCollection
+        .query(Q.where("supabase_id", record.id))
+        .fetch();
+      if (existingRecords.length > 0) return;
 
       await database.write(async () => {
         await (stockCollection as any).create((r: any) => {
@@ -131,8 +134,12 @@ export class HouseholdRealtimeService {
   }): Promise<void> {
     try {
       const stockCollection = database.collections.get("stock");
-      const allItems = await stockCollection.query().fetch();
-      const existing = allItems.find((i: any) => i.supabaseId === record.id);
+
+      // ⚡ Bolt Performance Optimization: Use targeted DB query instead of fetching all records
+      const existingRecords = await stockCollection
+        .query(Q.where("supabase_id", record.id))
+        .fetch();
+      const existing = existingRecords[0];
 
       if (!existing) {
         await this.handleInsert(record);
@@ -173,8 +180,12 @@ export class HouseholdRealtimeService {
   private async handleDelete(record: { id: string }): Promise<void> {
     try {
       const stockCollection = database.collections.get("stock");
-      const allItems = await stockCollection.query().fetch();
-      const existing = allItems.find((i: any) => i.supabaseId === record.id);
+
+      // ⚡ Bolt Performance Optimization: Use targeted DB query instead of fetching all records
+      const existingRecords = await stockCollection
+        .query(Q.where("supabase_id", record.id))
+        .fetch();
+      const existing = existingRecords[0];
 
       if (!existing) return;
 

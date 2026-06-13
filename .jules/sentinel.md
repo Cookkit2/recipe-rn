@@ -52,3 +52,7 @@
 **Vulnerability:** Interpolating unencoded environment variables like `API_KEY` directly into URL strings (e.g., `const url = \`${BASE_URL}?key=${API_KEY}\`;`) could lead to parameter injection or malformed requests if the variable contains unexpected characters (like `&` or `=`).
 **Learning:** While API keys are generally assumed to be URL-safe alphanumeric strings, defensively encoding them guarantees structural integrity and prevents theoretical SSRF or query pollution vectors.
 **Prevention:** When constructing URL query strings via template literals, always defensively encode all interpolated variables—including environment-loaded API keys and standard identifiers—using `encodeURIComponent()`.
+## 2026-06-13 - Removed Gemini API String Replacement Redaction
+**Vulnerability:** The Gemini API Key could be leaked in error logs due to incomplete or error-prone string replacement on raw error text.
+**Learning:** Using string `replaceAll` for redaction on raw network payloads is unsafe. If the API returns the key in a different format (e.g., URL-encoded, or if the API key happens to be a substring of a larger logged variable), the replacement fails.
+**Prevention:** Prevent secrets from entering the error context entirely by parsing safe metadata (like `response.status`) and never logging raw, untrusted response payloads (`response.text()`).

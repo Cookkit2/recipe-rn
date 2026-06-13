@@ -158,7 +158,7 @@ export const reviewApi = {
 
     const { data, error } = await supabase!
       .from("recipe_review")
-      .select("*, review_photo(*)")
+      .select("*, review_photo(*), users(username)")
       .eq("recipe_id", recipeId)
       .order(orderCol, { ascending: orderAsc })
       .order("created_at", { ascending: false })
@@ -171,10 +171,11 @@ export const reviewApi = {
 
     const reviews = (data ?? []).map((row) => {
       const photos = (row.review_photo ?? []) as ReviewPhotoRow[];
+      const username = (row as any).users?.username ?? null;
       return mapReviewRow(
         row as unknown as ReviewRow,
         photos,
-        getInitial(null), // TODO: fetch from user metadata in batch
+        getInitial(username),
         colorFromUserId(row.user_id)
       );
     });
@@ -361,7 +362,7 @@ export const reviewApi = {
 
     const { data, error } = await supabase!
       .from("recipe_tip")
-      .select("*")
+      .select("*, users(username)")
       .eq("recipe_id", recipeId)
       .order("helpful_count", { ascending: false })
       .order("created_at", { ascending: false });
@@ -371,17 +372,20 @@ export const reviewApi = {
       return [];
     }
 
-    return (data ?? []).map((row) => ({
-      id: row.id,
-      recipeId: row.recipe_id,
-      userId: row.user_id,
-      body: row.body,
-      helpfulCount: row.helpful_count,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-      authorInitial: getInitial(null),
-      authorColor: colorFromUserId(row.user_id),
-    }));
+    return (data ?? []).map((row) => {
+      const username = (row as any).users?.username ?? null;
+      return {
+        id: row.id,
+        recipeId: row.recipe_id,
+        userId: row.user_id,
+        body: row.body,
+        helpfulCount: row.helpful_count,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        authorInitial: getInitial(username),
+        authorColor: colorFromUserId(row.user_id),
+      };
+    });
   },
 
   createTip: async (recipeId: string, input: CreateTipInput): Promise<Tip> => {
