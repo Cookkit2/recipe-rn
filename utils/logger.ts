@@ -38,7 +38,7 @@ function containsSensitiveData(str: string): boolean {
 /**
  * Check if an object or array contains sensitive data
  */
-function containsSensitiveDataInObject(obj: any): boolean {
+function containsSensitiveDataInObject(obj: unknown): boolean {
   if (!obj || typeof obj !== "object") {
     return false;
   }
@@ -48,13 +48,23 @@ function containsSensitiveDataInObject(obj: any): boolean {
     return obj.some((item) => containsSensitiveDataInObject(item));
   }
 
+  if (obj instanceof Error) {
+    return containsSensitiveDataInObject({
+      ...obj,
+      name: obj.name,
+      message: obj.message,
+      stack: obj.stack,
+    });
+  }
+
   // Check keys for sensitive patterns
-  for (const key in obj) {
+  for (const key in obj as object) {
+    if (!Object.prototype.hasOwnProperty.call(obj, key)) continue;
     if (containsSensitiveData(key)) {
       return true;
     }
     // Check values recursively
-    if (containsSensitiveDataInObject(obj[key])) {
+    if (containsSensitiveDataInObject((obj as Record<string, unknown>)[key])) {
       return true;
     }
   }
@@ -66,11 +76,11 @@ function containsSensitiveDataInObject(obj: any): boolean {
  * Filter sensitive data from log arguments
  * Returns sanitized arguments safe for logging to external services
  */
-function filterSensitiveData(args: any[]): any[] {
+function filterSensitiveData(args: unknown[]): unknown[] {
   return args.map((arg) => sanitizeArg(arg));
 }
 
-function sanitizeArg(arg: any): any {
+function sanitizeArg(arg: unknown): unknown {
   if (typeof arg === "string") {
     if (containsSensitiveData(arg)) {
       return "[REDACTED]";
@@ -83,12 +93,22 @@ function sanitizeArg(arg: any): any {
   }
 
   if (typeof arg === "object" && arg !== null) {
-    if (containsSensitiveDataInObject(arg)) {
+    let processObj = arg;
+    if (arg instanceof Error) {
+      processObj = {
+        ...arg,
+        name: arg.name,
+        message: arg.message,
+        stack: arg.stack,
+      };
+    }
+
+    if (containsSensitiveDataInObject(processObj)) {
       return "[REDACTED]";
     }
     const filtered: Record<string, unknown> = {};
-    for (const key of Object.keys(arg)) {
-      filtered[key] = sanitizeArg((arg as Record<string, unknown>)[key]);
+    for (const key of Object.keys(processObj)) {
+      filtered[key] = sanitizeArg((processObj as Record<string, unknown>)[key]);
     }
     return filtered;
   }
@@ -103,7 +123,7 @@ export const log = {
   /**
    * Trace level logging - detailed diagnostic information
    */
-  trace: (message: string, ...args: any[]) => {
+  trace: (message: string, ...args: unknown[]) => {
     rnLogger.debug(message, ...args);
     try {
       const filteredArgs = filterSensitiveData(args);
@@ -117,7 +137,7 @@ export const log = {
   /**
    * Debug level logging - diagnostic information useful for debugging
    */
-  debug: (message: string, ...args: any[]) => {
+  debug: (message: string, ...args: unknown[]) => {
     rnLogger.debug(message, ...args);
     try {
       const filteredArgs = filterSensitiveData(args);
@@ -131,7 +151,7 @@ export const log = {
   /**
    * Info level logging - informational messages
    */
-  info: (message: string, ...args: any[]) => {
+  info: (message: string, ...args: unknown[]) => {
     rnLogger.info(message, ...args);
     try {
       const filteredArgs = filterSensitiveData(args);
@@ -145,7 +165,7 @@ export const log = {
   /**
    * Warning level logging - potentially harmful situations
    */
-  warn: (message: string, ...args: any[]) => {
+  warn: (message: string, ...args: unknown[]) => {
     rnLogger.warn(message, ...args);
     try {
       const filteredArgs = filterSensitiveData(args);
@@ -159,7 +179,7 @@ export const log = {
   /**
    * Error level logging - error events
    */
-  error: (message: string, ...args: any[]) => {
+  error: (message: string, ...args: unknown[]) => {
     rnLogger.error(message, ...args);
     try {
       const filteredArgs = filterSensitiveData(args);
@@ -173,7 +193,7 @@ export const log = {
   /**
    * Fatal level logging - very severe error events
    */
-  fatal: (message: string, ...args: any[]) => {
+  fatal: (message: string, ...args: unknown[]) => {
     rnLogger.error(message, ...args); // react-native-logs doesn't have fatal, use error
     try {
       const filteredArgs = filterSensitiveData(args);
@@ -189,7 +209,7 @@ export const log = {
  * Helper function to parse log arguments into Sentry attributes
  * Converts various argument formats into a key-value object
  */
-function parseLogAttributes(args: any[]): LogAttributes {
+function parseLogAttributes(args: unknown[]): LogAttributes {
   if (args.length === 0) return {};
 
   const attributes: LogAttributes = {};
@@ -197,7 +217,7 @@ function parseLogAttributes(args: any[]): LogAttributes {
   args.forEach((arg, index) => {
     if (typeof arg === "object" && arg !== null && !Array.isArray(arg)) {
       // If it's already an object, merge its properties
-      Object.entries(arg).forEach(([key, value]) => {
+      Object.entries(arg as object).forEach(([key, value]) => {
         if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
           attributes[key] = value;
         } else if (value !== null && value !== undefined) {

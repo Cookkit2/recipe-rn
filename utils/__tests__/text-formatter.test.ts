@@ -10,7 +10,9 @@ import {
   normalizeWhitespace,
   truncate,
   sanitizeText,
+  createSlug,
   pluralize,
+  formatOrdinal,
 } from "../text-formatter";
 
 describe("Text Formatter Utils - Capitalization", () => {
@@ -410,6 +412,46 @@ describe("Text Formatter Utils - Sanitization", () => {
       expect(sanitizeText(undefined as any)).toBe("");
     });
   });
+
+  describe("createSlug", () => {
+    it("should convert a normal string with spaces to a slug", () => {
+      expect(createSlug("Hello World")).toBe("hello-world");
+      expect(createSlug("This Is A Test")).toBe("this-is-a-test");
+    });
+
+    it("should remove special characters", () => {
+      expect(createSlug("hello@world!")).toBe("hello-world");
+      expect(createSlug("test#string$")).toBe("test-string");
+    });
+
+    it("should handle strings containing numbers", () => {
+      expect(createSlug("Version 2.0")).toBe("version-2-0");
+      expect(createSlug("123 test 456")).toBe("123-test-456");
+    });
+
+    it("should replace multiple consecutive special characters/spaces with a single hyphen", () => {
+      expect(createSlug("hello   world")).toBe("hello-world");
+      expect(createSlug("hello---world")).toBe("hello-world");
+      expect(createSlug("hello_ _world")).toBe("hello-world");
+    });
+
+    it("should trim leading and trailing hyphens", () => {
+      expect(createSlug("  hello world  ")).toBe("hello-world");
+      expect(createSlug("-hello world-")).toBe("hello-world");
+      expect(createSlug("!hello world?")).toBe("hello-world");
+    });
+
+    it("should convert uppercase to lowercase", () => {
+      expect(createSlug("HELLO WORLD")).toBe("hello-world");
+      expect(createSlug("MIXED Case TEXT")).toBe("mixed-case-text");
+    });
+
+    it("should return empty string for empty or null input", () => {
+      expect(createSlug("")).toBe("");
+      expect(createSlug(null as any)).toBe("");
+      expect(createSlug(undefined as any)).toBe("");
+    });
+  });
 });
 
 describe("Text Formatter Utils - Pluralization", () => {
@@ -481,6 +523,46 @@ describe("Text Formatter Utils - Pluralization", () => {
       expect(pluralize("car", 5)).toBe("cars");
       expect(pluralize("book", 3)).toBe("books");
       expect(pluralize("tree", 4)).toBe("trees");
+    });
+  });
+
+  describe("formatOrdinal", () => {
+    it("should append 'st' for numbers ending in 1, except 11", () => {
+      expect(formatOrdinal(1)).toBe("1st");
+      expect(formatOrdinal(21)).toBe("21st");
+      expect(formatOrdinal(101)).toBe("101st");
+    });
+
+    it("should append 'nd' for numbers ending in 2, except 12", () => {
+      expect(formatOrdinal(2)).toBe("2nd");
+      expect(formatOrdinal(22)).toBe("22nd");
+      expect(formatOrdinal(102)).toBe("102nd");
+    });
+
+    it("should append 'rd' for numbers ending in 3, except 13", () => {
+      expect(formatOrdinal(3)).toBe("3rd");
+      expect(formatOrdinal(23)).toBe("23rd");
+      expect(formatOrdinal(103)).toBe("103rd");
+    });
+
+    it("should append 'th' for all other numbers", () => {
+      expect(formatOrdinal(4)).toBe("4th");
+      expect(formatOrdinal(9)).toBe("9th");
+      expect(formatOrdinal(24)).toBe("24th");
+      expect(formatOrdinal(100)).toBe("100th");
+    });
+
+    it("should append 'th' for 11, 12, and 13", () => {
+      expect(formatOrdinal(11)).toBe("11th");
+      expect(formatOrdinal(12)).toBe("12th");
+      expect(formatOrdinal(13)).toBe("13th");
+      expect(formatOrdinal(111)).toBe("111th");
+      expect(formatOrdinal(112)).toBe("112th");
+      expect(formatOrdinal(113)).toBe("113th");
+    });
+
+    it("should handle 0", () => {
+      expect(formatOrdinal(0)).toBe("0th");
     });
   });
 });

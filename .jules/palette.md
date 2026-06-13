@@ -12,3 +12,6 @@
 ## 2024-05-20 - Grocery List Empty State missing clear guidance
 **Learning:** Found that the empty state for the Grocery List lacked a call-to-action button, causing a dead end for users who might not know how to add items (which are added by planning meals).
 **Action:** When working on empty states, always ensure there is clear guidance and an actionable CTA (like "Plan Meals") to help users discover features and continue their journey.
+## 2024-06-07 - Accessibility for AnimatedPressable Action Buttons
+**Learning:** Found that custom `AnimatedPressable` components acting as large visual action cards (like "Cooked Recipes" and "Grocery Lists" on the profile page) were missing explicit `accessibilityRole="button"` and `accessibilityLabel` properties, making them opaque to screen readers despite being highly interactive.
+**Action:** When creating custom interactive cards or buttons using `Pressable` or `AnimatedPressable`, always explicitly assign `accessibilityRole="button"` and a descriptive `accessibilityLabel` so screen readers correctly identify their function.

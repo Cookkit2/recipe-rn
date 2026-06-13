@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import type { MealPlanItemWithRecipe } from "~/data/api/mealPlanApi";
 import {
   useMealPlanItems,
   useGroceryItemAttributes,
@@ -394,7 +395,7 @@ interface AggregatedIngredient {
  * Step 1: Aggregates ingredients from planned recipes.
  */
 export function aggregateRecipeIngredients(
-  mealPlanItems: any[]
+  mealPlanItems: MealPlanItemWithRecipe[]
 ): Map<string, AggregatedIngredient> {
   const ingredientMap = new Map<string, AggregatedIngredient>();
 

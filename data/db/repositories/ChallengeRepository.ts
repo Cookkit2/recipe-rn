@@ -101,20 +101,25 @@ export class ChallengeRepository extends BaseRepository<Challenge> {
 
   // Get currently active challenges
   async getActiveChallenges(): Promise<Challenge[]> {
-    const allChallenges = await this.collection.query().fetch();
-    return allChallenges.filter((c) => c.isActive);
+    const now = Date.now();
+    // ⚡ Bolt Performance Optimization:
+    // Pushed filtering logic down to the native database layer instead of fetching all records
+    // into memory. This eliminates a full table scan and significant JS/Native bridge overhead.
+    return await this.collection
+      .query(Q.where("start_date", Q.lte(now)), Q.where("end_date", Q.gte(now)))
+      .fetch();
   }
 
   // Get expired challenges
   async getExpiredChallenges(): Promise<Challenge[]> {
-    const allChallenges = await this.collection.query().fetch();
-    return allChallenges.filter((c) => c.isExpired);
+    // ⚡ Bolt Performance Optimization: Filter at DB layer instead of fetching all records
+    return await this.collection.query(Q.where("end_date", Q.lt(Date.now()))).fetch();
   }
 
   // Get upcoming challenges
   async getUpcomingChallenges(): Promise<Challenge[]> {
-    const allChallenges = await this.collection.query().fetch();
-    return allChallenges.filter((c) => c.isUpcoming);
+    // ⚡ Bolt Performance Optimization: Filter at DB layer instead of fetching all records
+    return await this.collection.query(Q.where("start_date", Q.gt(Date.now()))).fetch();
   }
 
   // Get daily challenges
@@ -180,11 +185,15 @@ export class ChallengeRepository extends BaseRepository<Challenge> {
 
   // Get challenges expiring soon (within 24 hours)
   async getChallengesExpiringSoon(): Promise<Challenge[]> {
-    const allChallenges = await this.collection.query().fetch();
-    const twentyFourHoursFromNow = Date.now() + 24 * 60 * 60 * 1000;
+    const now = Date.now();
+    const twentyFourHoursFromNow = now + 24 * 60 * 60 * 1000;
 
-    return allChallenges.filter((c) => {
-      return c.isActive && c.endDate <= twentyFourHoursFromNow;
-    });
+    // ⚡ Bolt Performance Optimization: Filter at DB layer instead of fetching all records
+    return await this.collection
+      .query(
+        Q.where("start_date", Q.lte(now)),
+        Q.where("end_date", Q.between(now, twentyFourHoursFromNow))
+      )
+      .fetch();
   }
 }
