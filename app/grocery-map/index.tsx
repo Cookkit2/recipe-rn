@@ -106,7 +106,7 @@ export default function GroceryMapPage() {
         name: store.name,
         latitude: store.latitude ?? DEFAULT_LATITUDE,
         longitude: store.longitude ?? DEFAULT_LONGITUDE,
-        totalPriceCents: 0, // TODO: Calculate from grocery list
+        totalPriceCents: 0, // Pending Phase 2: Price Integration
         distance: store.distance,
       })),
     [storesWithDistance]
@@ -119,7 +119,7 @@ export default function GroceryMapPage() {
         name: store.name,
         address: store.address ?? "Unknown address",
         distance: store.distance,
-        totalPriceCents: 0, // TODO: Calculate from grocery list
+        totalPriceCents: 0, // Pending Phase 2: Price Integration
       })),
     [storesWithDistance]
   );
@@ -154,7 +154,7 @@ export default function GroceryMapPage() {
                 name: selectedStoreData.name,
                 address: selectedStoreData.address ?? "Unknown address",
                 distance: selectedStoreData.distance,
-                totalPriceCents: 0, // TODO: Calculate from grocery list
+                totalPriceCents: 0, // Pending Phase 2: Price Integration
                 isOpen: storeStatus.isOpen,
                 closingTime: storeStatus.closingTime,
                 latitude: selectedStoreData.latitude ?? DEFAULT_LATITUDE,
@@ -166,7 +166,7 @@ export default function GroceryMapPage() {
                   name: selectedStoreData.name,
                   address: selectedStoreData.address ?? "",
                   distance: selectedStoreData.distance,
-                  totalPriceCents: 0, // TODO: Calculate from grocery list
+                  totalPriceCents: 0, // Pending Phase 2: Price Integration
                   isOpen: storeStatus.isOpen,
                   closingTime: storeStatus.closingTime,
                   latitude: selectedStoreData.latitude ?? DEFAULT_LATITUDE,

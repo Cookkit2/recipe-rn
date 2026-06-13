@@ -3,11 +3,6 @@ import { PREF_UNIT_SYSTEM_KEY } from "~/constants/storage-keys";
 import { storage } from "~/data";
 import { titleCase } from "~/utils/text-formatter";
 import { convertToUnitSystem } from "~/utils/unit-converter";
-// import { createGoogleGenerativeAI } from "@ai-sdk/google";
-
-// import { generateObject } from "ai";
-// import z from "zod/v4";
-// import Constants from "expo-constants";
 import { generateGeminiContent } from "~/utils/gemini-api";
 
 // Dynamic prompt builder that includes unit system preference

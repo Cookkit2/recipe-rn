@@ -45,6 +45,6 @@
 
 **Learning:** When fetching active, expired, or upcoming challenges, fetching all records from the table using `.query().fetch()` and then applying JavaScript `.filter()` in-memory is highly inefficient in WatermelonDB, as it unnecessarily serializes, deserializes, and allocates thousands of unused objects across the React Native bridge.
 **Action:** Always push filtering logic down to the native database layer using WatermelonDB query constraints (e.g., `Q.where("start_date", Q.lte(now))`) to only retrieve the specific models needed, significantly reducing memory footprint and processing latency.
-## 2024-06-11 - Optimize Nested Array Lookups using Map
-**Learning:** Using `Array.find()` inside a loop against another array produces an O(N^2) operation, causing a significant performance bottleneck when the data sets scale (e.g. searching through fetched database records like `recipe` entities matching mapped IDs).
-**Action:** Always convert the target array into a `Map` (keyed by the property being searched for, e.g., `id`) outside the loop to change the lookup from O(N) to O(1), improving overall loop iteration complexity to O(N).
+## 2024-05-18 - Avoid Client-Side `.find()` After Full DB Fetch
+**Learning:** In WatermelonDB services (like `HouseholdRealtimeService` or `HouseholdSyncService`), it is an anti-pattern to call `collection.query().fetch()` to load the entire table into memory and then use JavaScript's `array.find()` to locate a specific record by `supabaseId`. This causes a full table scan in SQLite and loads massive arrays into the JS thread.
+**Action:** Use targeted database queries directly via `Q.where("column_name", value)` to delegate filtering to the native SQLite layer, or build a `Map` if processing batches in loops to avoid N+1 queries.
