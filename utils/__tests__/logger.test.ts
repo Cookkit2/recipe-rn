@@ -66,8 +66,11 @@ describe("logger", () => {
       const err = new Error("test err");
       log.error("test message", err);
       expect(rnLogger.error).toHaveBeenCalledWith("test message", err);
-      // Object.entries(new Error()) is [], so `parseLogAttributes` returns {} for the Error object since it is treated as an empty object
-      expect(Sentry.logger.error).toHaveBeenCalledWith("test message", {});
+      expect(Sentry.logger.error).toHaveBeenCalledWith("test message", {
+        name: err.name,
+        message: err.message,
+        stack: expect.any(String),
+      });
     });
 
     it("fatal calls rnLogger.error and Sentry.logger.fatal", () => {
