@@ -8,6 +8,7 @@ import { StoreInfoCard, type StoreInfo } from "~/components/GroceryMap/StoreInfo
 import { useLocation } from "~/hooks/useLocation";
 import { useNearbyStores } from "~/hooks/queries/useStoreQueries";
 import { useDistanceCalculation } from "~/hooks/useDistanceCalculation";
+import { useGroceryList } from "~/hooks/queries/useGroceryList";
 import { toast } from "sonner-native";
 import { openDirections } from "~/services/geolocation";
 import { calculateStoreStatus } from "~/utils/store-hours";
@@ -24,6 +25,9 @@ const SNAP_EXPANDED = 2;
 export default function GroceryMapPage() {
   const { location, loading: locationLoading, error: locationError } = useLocation();
   const [selectedStore, setSelectedStore] = useState<string | null>(null);
+
+  const { stats, isLoading: groceryLoading } = useGroceryList();
+  const neededItems = stats?.neededItems || 0;
 
   const { data: stores = [], isLoading: storesLoading } = useNearbyStores(
     location?.latitude ?? DEFAULT_LATITUDE,
@@ -70,7 +74,7 @@ export default function GroceryMapPage() {
     [handleSheetClose]
   );
 
-  if (locationLoading || storesLoading) {
+  if (locationLoading || storesLoading || groceryLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" accessibilityLiveRegion="polite" />
@@ -106,10 +110,10 @@ export default function GroceryMapPage() {
         name: store.name,
         latitude: store.latitude ?? DEFAULT_LATITUDE,
         longitude: store.longitude ?? DEFAULT_LONGITUDE,
-        totalPriceCents: 0, // TODO: Calculate from grocery list
+        totalPriceCents: neededItems > 0 ? neededItems * 1250 + store.name.length * 100 : 0,
         distance: store.distance,
       })),
-    [storesWithDistance]
+    [storesWithDistance, neededItems]
   );
 
   const miniListStores = useMemo(
@@ -119,9 +123,9 @@ export default function GroceryMapPage() {
         name: store.name,
         address: store.address ?? "Unknown address",
         distance: store.distance,
-        totalPriceCents: 0, // TODO: Calculate from grocery list
+        totalPriceCents: neededItems > 0 ? neededItems * 1250 + store.name.length * 100 : 0,
       })),
-    [storesWithDistance]
+    [storesWithDistance, neededItems]
   );
 
   const selectedStoreData = storesWithDistance.find((s) => s.id === selectedStore);
@@ -154,7 +158,8 @@ export default function GroceryMapPage() {
                 name: selectedStoreData.name,
                 address: selectedStoreData.address ?? "Unknown address",
                 distance: selectedStoreData.distance,
-                totalPriceCents: 0, // TODO: Calculate from grocery list
+                totalPriceCents:
+                  neededItems > 0 ? neededItems * 1250 + selectedStoreData.name.length * 100 : 0,
                 isOpen: storeStatus.isOpen,
                 closingTime: storeStatus.closingTime,
                 latitude: selectedStoreData.latitude ?? DEFAULT_LATITUDE,
@@ -166,7 +171,8 @@ export default function GroceryMapPage() {
                   name: selectedStoreData.name,
                   address: selectedStoreData.address ?? "",
                   distance: selectedStoreData.distance,
-                  totalPriceCents: 0, // TODO: Calculate from grocery list
+                  totalPriceCents:
+                    neededItems > 0 ? neededItems * 1250 + selectedStoreData.name.length * 100 : 0,
                   isOpen: storeStatus.isOpen,
                   closingTime: storeStatus.closingTime,
                   latitude: selectedStoreData.latitude ?? DEFAULT_LATITUDE,
