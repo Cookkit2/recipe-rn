@@ -39,7 +39,7 @@ const CookedRecipeCard = ({
         onPressIn={onPressIn}
         onPressOut={onPressOut}
         accessibilityRole="button"
-        accessibilityLabel={`View recipe for ${recipe.title}. Cooked ${cookCount} time${cookCount === 1 ? '' : 's'}. Last cooked ${formattedDate(lastCookedAt)}.`}
+        accessibilityLabel={`View recipe for ${recipe.title}. Cooked ${cookCount} time${cookCount === 1 ? "" : "s"}. Last cooked ${formattedDate(lastCookedAt)}.`}
       >
         <Animated.View
           className="w-full relative flex items-center justify-center border-continuous aspect-square overflow-hidden"
