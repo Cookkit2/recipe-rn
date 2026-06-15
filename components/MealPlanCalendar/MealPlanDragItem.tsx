@@ -191,6 +191,8 @@ export default function MealPlanDragItem({
                 onPress={handlePress}
                 className="bg-card rounded-xl overflow-hidden shadow-sm"
                 style={styles.container}
+                accessibilityRole="button"
+                accessibilityLabel={`Drag or view ${mealPlan.recipe?.title || 'recipe'}`}
               >
                 {/* Recipe Image */}
                 <View style={styles.imageContainer}>
@@ -249,6 +251,8 @@ export default function MealPlanDragItem({
               onPress={handlePress}
               className="bg-primary/10 rounded-lg p-2"
               style={styles.compactContainer}
+              accessibilityRole="button"
+              accessibilityLabel={`Drag or view ${mealPlan.recipe?.title || 'recipe'}`}
             >
               <View className="flex-row items-center gap-2">
                 {/* Drag Handle Indicator */}

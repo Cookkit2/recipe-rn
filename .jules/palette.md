@@ -18,3 +18,6 @@
 ## 2024-06-13 - Missing Accessibility Attributes on Visual Cards
 **Learning:** Found that custom `AnimatedPressable` and `Pressable` wrapper components acting as visual cards (like `RecipeChip` containing an image and text) were missing explicit `accessibilityRole="button"` and `accessibilityLabel` properties, making them unidentifiable to screen readers.
 **Action:** When creating visual, interactive cards or links using `Pressable`, explicitly add `accessibilityRole="button"` and build a descriptive `accessibilityLabel` (e.g., using the title prop) to ensure screen reader compatibility.
+## 2024-06-15 - Accessibility for gesture-driven list items
+**Learning:** Found that custom `Pressable` components used inside complex drag-and-drop gesture handlers (like `MealPlanDragItem`) lacked explicit `accessibilityRole="button"` and `accessibilityLabel` properties. This prevented screen readers from recognizing the items as interactive or reading their dynamic contents (like recipe titles).
+**Action:** When creating draggable or highly interactive items that wrap UI in a `<Pressable>` (even inside gesture detectors), always assign `accessibilityRole="button"` and a descriptive `accessibilityLabel` utilizing the underlying item's title or data to ensure screen reader users can interact with them properly.
