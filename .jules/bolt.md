@@ -48,3 +48,7 @@
 ## 2024-05-18 - Avoid Client-Side `.find()` After Full DB Fetch
 **Learning:** In WatermelonDB services (like `HouseholdRealtimeService` or `HouseholdSyncService`), it is an anti-pattern to call `collection.query().fetch()` to load the entire table into memory and then use JavaScript's `array.find()` to locate a specific record by `supabaseId`. This causes a full table scan in SQLite and loads massive arrays into the JS thread.
 **Action:** Use targeted database queries directly via `Q.where("column_name", value)` to delegate filtering to the native SQLite layer, or build a `Map` if processing batches in loops to avoid N+1 queries.
+## 2025-02-12 - Eliminate Array.filter and Array.find for DB Queries in Loops
+
+**Learning:** When fetching records in API files like `householdApi.ts`, fetching an entire collection via `.query().fetch()` and then filtering them using JavaScript `Array.prototype.find()` or `.filter()` by `userId` or `householdId` requires excessive serialization over the bridge, loads enormous arrays into JS memory, and bypasses native SQLite querying optimizations.
+**Action:** Always delegate filtering to the native SQLite layer using WatermelonDB query constraints `Q.where("column_name", value)` to retrieve only the specific records needed. Instead of accessing the array via index 0 (`members[0]`), fetch only specific components or records needed, avoiding N+1 querying.
