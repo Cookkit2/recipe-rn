@@ -57,8 +57,7 @@ export class AuthYouTubeService implements IYouTubeService {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-
+        // We do not read response.json() or error messages directly to prevent accidental secret leakage
         if (response.status === 403) {
           throw new YouTubeServiceError(
             "YouTube API quota exceeded or API key invalid",
@@ -66,19 +65,7 @@ export class AuthYouTubeService implements IYouTubeService {
           );
         }
 
-        const rawMessage = String(errorData.error?.message || `API error: HTTP ${response.status}`);
-
-        let sanitizedMessage = rawMessage;
-        if (API_KEY) {
-          sanitizedMessage = sanitizedMessage.replaceAll(API_KEY, "[REDACTED_API_KEY]");
-          // Also replace URL-encoded version just in case it somehow leaked
-          const encodedKey = encodeURIComponent(API_KEY);
-          if (encodedKey !== API_KEY) {
-            sanitizedMessage = sanitizedMessage.replaceAll(encodedKey, "[REDACTED_API_KEY]");
-          }
-        }
-
-        throw new YouTubeServiceError(sanitizedMessage, "API_ERROR");
+        throw new YouTubeServiceError(`API error: HTTP ${response.status}`, "API_ERROR");
       }
 
       const data = await response.json();
@@ -102,20 +89,7 @@ export class AuthYouTubeService implements IYouTubeService {
         throw error;
       }
 
-      const rawMessage = String(
-        `Network error: ${error instanceof Error ? error.message : "Unknown error"}`
-      );
-
-      let sanitizedMessage = rawMessage;
-      if (API_KEY) {
-        sanitizedMessage = sanitizedMessage.replaceAll(API_KEY, "[REDACTED_API_KEY]");
-        const encodedKey = encodeURIComponent(API_KEY);
-        if (encodedKey !== API_KEY) {
-          sanitizedMessage = sanitizedMessage.replaceAll(encodedKey, "[REDACTED_API_KEY]");
-        }
-      }
-
-      throw new YouTubeServiceError(sanitizedMessage, "NETWORK_ERROR");
+      throw new YouTubeServiceError("Network error: Failed to fetch video info", "NETWORK_ERROR");
     }
   }
 
