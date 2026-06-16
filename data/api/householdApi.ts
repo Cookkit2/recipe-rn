@@ -5,6 +5,7 @@ import { useAuthStore } from "~/auth/AuthStore";
 import { generateInviteCode } from "~/utils/invite-code";
 import { isValidSubscription } from "~/utils/subscription-utils";
 import { database } from "~/data/db/database";
+import { Q } from "@nozbe/watermelondb";
 import type Household from "~/data/db/models/Household";
 import type HouseholdMember from "~/data/db/models/HouseholdMember";
 import type Stock from "~/data/db/models/Stock";
@@ -23,10 +24,11 @@ export const householdApiFunctions = {
     if (!user) return null;
 
     const memberCollection = database.collections.get("household_member");
-    const members = await memberCollection.query().fetch();
-    const myMembership = members.find((m) => (m as HouseholdMember).userId === user.id) as
-      | HouseholdMember
-      | undefined;
+    // ⚡ Bolt Performance Optimization:
+    // Replaced full table scan + client-side array.find() with SQLite-level filtering using Q.where()
+    // This dramatically reduces JS thread memory overhead and prevents N^2 bottleneck as household size grows.
+    const members = await memberCollection.query(Q.where("user_id", user.id)).fetch();
+    const myMembership = members[0] as HouseholdMember | undefined;
 
     if (!myMembership) return null;
 
@@ -234,9 +236,9 @@ export const householdApiFunctions = {
 
       // Remove household member record
       const memberCollection = database.collections.get("household_member");
-      const myMembership = (await memberCollection.query().fetch()).find(
-        (m) => (m as HouseholdMember).userId === user.id
-      );
+      // ⚡ Bolt Performance Optimization: Use SQLite-level filtering via Q.where() instead of fetching all members
+      const members = await memberCollection.query(Q.where("user_id", user.id)).fetch();
+      const myMembership = members[0] as HouseholdMember | undefined;
       if (myMembership) {
         batchOps.push(myMembership.prepareDestroyPermanently());
       }
@@ -355,8 +357,9 @@ export const householdApiFunctions = {
 
     // Remove local member record
     const memberCollection = database.collections.get("household_member");
-    const members = await memberCollection.query().fetch();
-    const targetMember = members.find((m) => (m as HouseholdMember).userId === memberUserId);
+    // ⚡ Bolt Performance Optimization: Delegated client-side filtering to SQLite using Q.where()
+    const members = await memberCollection.query(Q.where("user_id", memberUserId)).fetch();
+    const targetMember = members[0] as HouseholdMember | undefined;
 
     if (targetMember) {
       await database.write(async () => {
