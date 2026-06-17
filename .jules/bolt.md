@@ -48,3 +48,7 @@
 ## 2024-05-18 - Avoid Client-Side `.find()` After Full DB Fetch
 **Learning:** In WatermelonDB services (like `HouseholdRealtimeService` or `HouseholdSyncService`), it is an anti-pattern to call `collection.query().fetch()` to load the entire table into memory and then use JavaScript's `array.find()` to locate a specific record by `supabaseId`. This causes a full table scan in SQLite and loads massive arrays into the JS thread.
 **Action:** Use targeted database queries directly via `Q.where("column_name", value)` to delegate filtering to the native SQLite layer, or build a `Map` if processing batches in loops to avoid N+1 queries.
+
+## 2026-06-17 - Optimize Array Reductions in Loops
+**Learning:** Repeated calls to `Array.prototype.reduce()` allocating closure functions inside loops or mapping over arrays dynamically can cause noticeable performance overhead, allocating unnecessary intermediate garbage and causing excessive GC cycles. This is particularly problematic in computationally intensive contexts like nutrition calculations where numbers are aggregated across multiple recipes and items.
+**Action:** When computing sums across lists (especially inside other render layers or data-heavy loops), replace multiple `Array.prototype.reduce()` calls with a single standard `for` loop that aggregates multiple scalar properties simultaneously. This eliminates closure allocations and dramatically reduces both memory allocations and total time complexity by traversing the array only once.
