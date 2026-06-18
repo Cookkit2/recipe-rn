@@ -48,3 +48,8 @@
 ## 2024-05-18 - Avoid Client-Side `.find()` After Full DB Fetch
 **Learning:** In WatermelonDB services (like `HouseholdRealtimeService` or `HouseholdSyncService`), it is an anti-pattern to call `collection.query().fetch()` to load the entire table into memory and then use JavaScript's `array.find()` to locate a specific record by `supabaseId`. This causes a full table scan in SQLite and loads massive arrays into the JS thread.
 **Action:** Use targeted database queries directly via `Q.where("column_name", value)` to delegate filtering to the native SQLite layer, or build a `Map` if processing batches in loops to avoid N+1 queries.
+
+## 2025-06-18 - Client-Side Memory Filtering Bottleneck in HouseholdApi
+
+**Learning:** When fetching members or stock associated with a specific household, executing `.query().fetch()` to load the entire database table into memory and subsequently applying `.find()` or `.filter()` client-side causes severe memory overhead and GC pressure. This forces all unrelated rows through the React Native bridge JS serialization layer.
+**Action:** Always delegate filtering to the native SQLite database layer using `Q.where` (e.g., `await collection.query(Q.where("household_id", householdId)).fetch()`) to only retrieve the exact models needed, greatly improving query latency and minimizing memory footprint.
