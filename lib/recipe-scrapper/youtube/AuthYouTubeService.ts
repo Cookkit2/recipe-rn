@@ -92,7 +92,10 @@ export class AuthYouTubeService implements IYouTubeService {
 
       // Return a generic network error message instead of preserving standard error instances
       // to prevent accidental secret leakage
-      throw new YouTubeServiceError("Network error: Failed to connect to YouTube API", "NETWORK_ERROR");
+      throw new YouTubeServiceError(
+        "Network error: Failed to connect to YouTube API",
+        "NETWORK_ERROR"
+      );
     }
   }
 
