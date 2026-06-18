@@ -225,7 +225,9 @@ export const householdApiFunctions = {
 
     // Remove shared stock from local DB
     const stockCollection = database.collections.get("stock");
-    const householdStock = await stockCollection.query(Q.where("household_id", householdId)).fetch();
+    const householdStock = await stockCollection
+      .query(Q.where("household_id", householdId))
+      .fetch();
 
     await database.write(async () => {
       const batchOps: import("@nozbe/watermelondb").Model[] = [];
@@ -281,7 +283,9 @@ export const householdApiFunctions = {
       const batchOps: import("@nozbe/watermelondb").Model[] = [];
 
       // Clear household_id on all shared stock
-      const sharedStock = await stockCollection.query(Q.where("household_id", householdSupabaseId)).fetch();
+      const sharedStock = await stockCollection
+        .query(Q.where("household_id", householdSupabaseId))
+        .fetch();
       for (const stock of sharedStock) {
         batchOps.push(
           stock.prepareUpdate((record) => {
