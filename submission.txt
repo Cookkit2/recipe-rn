@@ -1,5 +1,0 @@
-Title: ⚡ Bolt: Optimize sequential uploads to parallel in ReviewApi
-
-💡 What: Parallelize photo uploads and bulk-insert records using Promise.all in createReview and updateReview.
-🎯 Why: Replaces sequential network calls with concurrent uploads to resolve significant I/O-bound latency, while also reducing N+1 queries for database insertions.
-📊 Measured Improvement: Benchmarking shows concurrent processing of 5 uploads reduces latency by ~80% compared to sequential processing (from ~500ms down to ~101ms).
