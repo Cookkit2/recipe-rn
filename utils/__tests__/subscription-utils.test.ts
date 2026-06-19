@@ -84,6 +84,18 @@ describe("subscription-utils", () => {
       expect(result).toBeUndefined();
       expect(log.info).toHaveBeenCalledWith("Customer Info:", mockCustomerInfo);
     });
+
+    it("should return false when accessing entitlements throws an error (malformed customer info)", async () => {
+      // Mock malformed customer info missing 'entitlements'
+      const mockCustomerInfo = {};
+      (Purchases.getCustomerInfo as jest.Mock).mockResolvedValueOnce(mockCustomerInfo);
+
+      const result = await isValidSubscription();
+
+      expect(result).toBe(false);
+      expect(log.error).toHaveBeenCalled();
+      // Error message check is optional, but we know it gets logged
+    });
   });
 
   describe("presentPaywall", () => {
