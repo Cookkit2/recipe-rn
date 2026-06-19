@@ -18,3 +18,6 @@
 ## 2024-06-13 - Missing Accessibility Attributes on Visual Cards
 **Learning:** Found that custom `AnimatedPressable` and `Pressable` wrapper components acting as visual cards (like `RecipeChip` containing an image and text) were missing explicit `accessibilityRole="button"` and `accessibilityLabel` properties, making them unidentifiable to screen readers.
 **Action:** When creating visual, interactive cards or links using `Pressable`, explicitly add `accessibilityRole="button"` and build a descriptive `accessibilityLabel` (e.g., using the title prop) to ensure screen reader compatibility.
+## 2024-06-16 - Accessibility for Custom Carousels
+**Learning:** Found that custom visual carousels using `Pressable` inside `LegendList` (like `RecipeCarousel`) often lack explicit `accessibilityRole="button"` and `accessibilityLabel` properties, making them opaque to screen readers despite being highly interactive to select items.
+**Action:** When creating custom interactive carousels using `Pressable`, always explicitly assign `accessibilityRole="button"` and a descriptive `accessibilityLabel` (e.g., using the title prop) so screen readers correctly identify their function.
