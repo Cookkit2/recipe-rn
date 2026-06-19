@@ -1,6 +1,0 @@
-{
-  "branch_name": "jules-13818261200891180124-901732c3",
-  "commit_message": "🧪 [testing improvement] Add missing tests for supportsActivityType",
-  "title": "🧪 [testing improvement] Add missing tests for supportsActivityType",
-  "description": "🎯 **What:** The testing gap addressed\nThe `supportsActivityType` platform logic in `utils/achievement-share.ts` was lacking test coverage. This function utilizes `react-native` `Platform` module specifically branching on iOS and non-iOS OS strings, and performing an array match.\n\n📊 **Coverage:** What scenarios are now tested\nWe implemented a mock pattern inside `utils/__tests__/achievement-share.test.ts` that temporarily overwrites `Platform.OS` natively. This test checks non-iOS branches and correctly verifies arrays of both supported and unsupported `com.apple.UIKit.activity` types during iOS simulations.\n\n✨ **Result:** The improvement in test coverage\nThe test coverage allows future regressions when altering either supported platform activity strings or internal branch conditions to be captured."
-}
