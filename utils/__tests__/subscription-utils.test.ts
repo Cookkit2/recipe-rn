@@ -85,6 +85,17 @@ describe("subscription-utils", () => {
       expect(log.info).toHaveBeenCalledWith("Customer Info:", mockCustomerInfo);
     });
 
+    it("should return false when accessing entitlements throws an error (malformed customer info missing entitlements)", async () => {
+      // Mock malformed customer info missing 'entitlements'
+      const mockCustomerInfo = {};
+      (Purchases.getCustomerInfo as jest.Mock).mockResolvedValueOnce(mockCustomerInfo);
+
+      const result = await isValidSubscription();
+
+      expect(result).toBe(false);
+      expect(log.error).toHaveBeenCalled();
+    });
+
     it("should return false when customer info is malformed (missing active entitlements object)", async () => {
       const mockCustomerInfo = {
         entitlements: {}, // Missing 'active'
