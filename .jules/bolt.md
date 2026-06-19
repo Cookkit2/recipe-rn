@@ -48,6 +48,9 @@
 ## 2024-05-18 - Avoid Client-Side `.find()` After Full DB Fetch
 **Learning:** In WatermelonDB services (like `HouseholdRealtimeService` or `HouseholdSyncService`), it is an anti-pattern to call `collection.query().fetch()` to load the entire table into memory and then use JavaScript's `array.find()` to locate a specific record by `supabaseId`. This causes a full table scan in SQLite and loads massive arrays into the JS thread.
 **Action:** Use targeted database queries directly via `Q.where("column_name", value)` to delegate filtering to the native SQLite layer, or build a `Map` if processing batches in loops to avoid N+1 queries.
+## 2024-06-20 - Batch Database Queries Inside Loop Iteration Bottleneck
+**Learning:** Sequential WatermelonDB fetch queries within a loop (such as iterating over mappings to find associated steps and ingredients) significantly downgrade UI performance even if errors bypass the loop condition, blocking the JS thread for 50-100ms.
+**Action:** When finding multiple relational entities inside a loop, always extract the database query outside the loop, use `Q.where('id', Q.oneOf(ids))` to perform a single batched fetch, construct in-memory Maps keyed by foreign IDs, and iterate over the local maps for O(1) retrieval.
 ## 2026-06-19 - Optimize O(N^2) array lookup in tailored recipe mapping repository
 **Learning:** Converting an array to a Map outside a loop reduces inner lookups from O(N) to O(1), improving overall time complexity from O(N^2) to O(N). This is critical when iterating over large arrays inside database repository methods.
 **Action:** Use a Map to cache items before looping when multiple lookups are required.
