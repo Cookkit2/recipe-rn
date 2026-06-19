@@ -24,9 +24,8 @@ export const householdApiFunctions = {
     if (!user) return null;
 
     const memberCollection = database.collections.get("household_member");
-    const myMembership = (await memberCollection.query(Q.where("user_id", user.id)).fetch())[0] as
-      | HouseholdMember
-      | undefined;
+    const members = await memberCollection.query(Q.where("user_id", user.id)).fetch();
+    const myMembership = members[0] as HouseholdMember | undefined;
 
     if (!myMembership) return null;
 
@@ -226,18 +225,17 @@ export const householdApiFunctions = {
 
     // Remove shared stock from local DB
     const stockCollection = database.collections.get("stock");
-    const householdStock = (await stockCollection
+    const householdStock = await stockCollection
       .query(Q.where("household_id", householdId))
-      .fetch()) as Stock[];
+      .fetch();
 
     await database.write(async () => {
       const batchOps: import("@nozbe/watermelondb").Model[] = [];
 
       // Remove household member record
       const memberCollection = database.collections.get("household_member");
-      const myMembership = (
-        await memberCollection.query(Q.where("user_id", user.id)).fetch()
-      )[0] as HouseholdMember | undefined;
+      const memberships = await memberCollection.query(Q.where("user_id", user.id)).fetch();
+      const myMembership = memberships[0];
       if (myMembership) {
         batchOps.push(myMembership.prepareDestroyPermanently());
       }
@@ -285,9 +283,9 @@ export const householdApiFunctions = {
       const batchOps: import("@nozbe/watermelondb").Model[] = [];
 
       // Clear household_id on all shared stock
-      const sharedStock = (await stockCollection
+      const sharedStock = await stockCollection
         .query(Q.where("household_id", householdSupabaseId))
-        .fetch()) as Stock[];
+        .fetch();
       for (const stock of sharedStock) {
         batchOps.push(
           stock.prepareUpdate((record) => {
@@ -296,8 +294,8 @@ export const householdApiFunctions = {
         );
       }
 
-      // Remove all members
-      const members = (await memberCollection.query().fetch()) as HouseholdMember[];
+      // Remove all members for this household
+      const members = await memberCollection.query(Q.where("household_id", householdId)).fetch();
       for (const member of members) {
         batchOps.push(member.prepareDestroyPermanently());
       }
@@ -356,9 +354,8 @@ export const householdApiFunctions = {
 
     // Remove local member record
     const memberCollection = database.collections.get("household_member");
-    const targetMember = (
-      await memberCollection.query(Q.where("user_id", memberUserId)).fetch()
-    )[0] as HouseholdMember | undefined;
+    const members = await memberCollection.query(Q.where("user_id", memberUserId)).fetch();
+    const targetMember = members[0];
 
     if (targetMember) {
       await database.write(async () => {
