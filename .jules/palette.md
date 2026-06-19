@@ -18,3 +18,6 @@
 ## 2024-06-13 - Missing Accessibility Attributes on Visual Cards
 **Learning:** Found that custom `AnimatedPressable` and `Pressable` wrapper components acting as visual cards (like `RecipeChip` containing an image and text) were missing explicit `accessibilityRole="button"` and `accessibilityLabel` properties, making them unidentifiable to screen readers.
 **Action:** When creating visual, interactive cards or links using `Pressable`, explicitly add `accessibilityRole="button"` and build a descriptive `accessibilityLabel` (e.g., using the title prop) to ensure screen reader compatibility.
+## 2024-06-25 - Accessibility roles for tab buttons and actionable empty states
+**Learning:** Found custom tab buttons in \`AchievementsScreen\` using \`accessibilityRole="button"\` without labels, and an empty state missing a call-to-action to help users get started.
+**Action:** When building tab-like navigation elements, explicitly use \`accessibilityRole="tab"\` with a descriptive label and hint. Additionally, always ensure empty states have an actionable CTA (like "Discover Recipes") to guide user discovery.
