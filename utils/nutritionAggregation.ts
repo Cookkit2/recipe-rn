@@ -23,23 +23,47 @@ export function aggregateNutrition(
 ): NutritionSummary {
   if (recipes.length === 0) return { ...EMPTY_SUMMARY };
 
-  return {
-    calories: recipes.reduce((sum, r) => sum + (r.calories ?? 0) * servingsMultiplier, 0),
-    protein: recipes.reduce((sum, r) => sum + (r.protein ?? 0) * servingsMultiplier, 0),
-    carbs: recipes.reduce((sum, r) => sum + (r.carbs ?? 0) * servingsMultiplier, 0),
-    fat: recipes.reduce((sum, r) => sum + (r.fat ?? 0) * servingsMultiplier, 0),
-    fiber: recipes.reduce((sum, r) => sum + (r.fiber ?? 0) * servingsMultiplier, 0),
-  };
+  // ⚡ Bolt Performance Optimization: Replace multiple O(N) array.reduce calls with a single O(N) loop
+  let calories = 0,
+    protein = 0,
+    carbs = 0,
+    fat = 0,
+    fiber = 0;
+
+  for (let i = 0; i < recipes.length; i++) {
+    const r = recipes[i];
+    if (r) {
+      calories += (r.calories ?? 0) * servingsMultiplier;
+      protein += (r.protein ?? 0) * servingsMultiplier;
+      carbs += (r.carbs ?? 0) * servingsMultiplier;
+      fat += (r.fat ?? 0) * servingsMultiplier;
+      fiber += (r.fiber ?? 0) * servingsMultiplier;
+    }
+  }
+
+  return { calories, protein, carbs, fat, fiber };
 }
 
 export function sumNutrition(summaries: NutritionSummary[]): NutritionSummary {
   if (summaries.length === 0) return { ...EMPTY_SUMMARY };
 
-  return {
-    calories: summaries.reduce((sum, s) => sum + s.calories, 0),
-    protein: summaries.reduce((sum, s) => sum + s.protein, 0),
-    carbs: summaries.reduce((sum, s) => sum + s.carbs, 0),
-    fat: summaries.reduce((sum, s) => sum + s.fat, 0),
-    fiber: summaries.reduce((sum, s) => sum + s.fiber, 0),
-  };
+  // ⚡ Bolt Performance Optimization: Replace multiple O(N) array.reduce calls with a single O(N) loop
+  let calories = 0,
+    protein = 0,
+    carbs = 0,
+    fat = 0,
+    fiber = 0;
+
+  for (let i = 0; i < summaries.length; i++) {
+    const s = summaries[i];
+    if (s) {
+      calories += s.calories;
+      protein += s.protein;
+      carbs += s.carbs;
+      fat += s.fat;
+      fiber += s.fiber;
+    }
+  }
+
+  return { calories, protein, carbs, fat, fiber };
 }
