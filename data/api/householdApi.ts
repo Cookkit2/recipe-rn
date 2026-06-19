@@ -24,7 +24,6 @@ export const householdApiFunctions = {
     if (!user) return null;
 
     const memberCollection = database.collections.get("household_member");
-    // ⚡ Bolt Performance Optimization: Use targeted DB query instead of fetching all records and filtering in memory
     const members = await memberCollection.query(Q.where("user_id", user.id)).fetch();
     const myMembership = members[0] as HouseholdMember | undefined;
 
@@ -229,7 +228,6 @@ export const householdApiFunctions = {
 
     // Remove shared stock from local DB
     const stockCollection = database.collections.get("stock");
-    // ⚡ Bolt Performance Optimization: Use targeted DB query instead of fetching all records and filtering in memory
     const householdStock = await stockCollection
       .query(Q.where("household_id", householdId))
       .fetch();
@@ -239,9 +237,8 @@ export const householdApiFunctions = {
 
       // Remove household member record
       const memberCollection = database.collections.get("household_member");
-      // ⚡ Bolt Performance Optimization: Use targeted DB query instead of fetching all records and filtering in memory
-      const members = await memberCollection.query(Q.where("user_id", user.id)).fetch();
-      const myMembership = members[0];
+      const memberships = await memberCollection.query(Q.where("user_id", user.id)).fetch();
+      const myMembership = memberships[0];
       if (myMembership) {
         batchOps.push(myMembership.prepareDestroyPermanently());
       }
@@ -289,7 +286,6 @@ export const householdApiFunctions = {
       const batchOps: import("@nozbe/watermelondb").Model[] = [];
 
       // Clear household_id on all shared stock
-      // ⚡ Bolt Performance Optimization: Use targeted DB query instead of fetching all records and filtering in memory
       const sharedStock = await stockCollection
         .query(Q.where("household_id", householdSupabaseId))
         .fetch();
@@ -301,8 +297,7 @@ export const householdApiFunctions = {
         );
       }
 
-      // Remove all members
-      // ⚡ Bolt Performance Optimization: Use targeted DB query instead of fetching all records
+      // Remove all members for this household
       const members = await memberCollection.query(Q.where("household_id", householdId)).fetch();
       for (const member of members) {
         batchOps.push(member.prepareDestroyPermanently());
@@ -362,7 +357,6 @@ export const householdApiFunctions = {
 
     // Remove local member record
     const memberCollection = database.collections.get("household_member");
-    // ⚡ Bolt Performance Optimization: Use targeted DB query instead of fetching all records and filtering in memory
     const members = await memberCollection.query(Q.where("user_id", memberUserId)).fetch();
     const targetMember = members[0];
 
