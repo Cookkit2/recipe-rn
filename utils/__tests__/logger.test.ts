@@ -65,7 +65,11 @@ describe("logger", () => {
     it("error calls rnLogger.error and Sentry.logger.error", () => {
       const err = new Error("test err");
       log.error("test message", err);
-      expect(rnLogger.error).toHaveBeenCalledWith("test message", err);
+      expect(rnLogger.error).toHaveBeenCalledWith("test message", {
+        name: err.name,
+        message: err.message,
+        stack: expect.any(String),
+      });
       expect(Sentry.logger.error).toHaveBeenCalledWith("test message", {
         name: err.name,
         message: err.message,
