@@ -84,6 +84,34 @@ describe("subscription-utils", () => {
       expect(result).toBeUndefined();
       expect(log.info).toHaveBeenCalledWith("Customer Info:", mockCustomerInfo);
     });
+
+    it("should return false when customer info is malformed (missing active entitlements object)", async () => {
+      const mockCustomerInfo = {
+        entitlements: {}, // Missing 'active'
+      };
+      Purchases.getCustomerInfo.mockResolvedValueOnce(mockCustomerInfo);
+
+      const result = await isValidSubscription();
+
+      expect(result).toBe(false);
+      expect(log.error).toHaveBeenCalled();
+    });
+
+    it("should return undefined/falsy when customer has a different active subscription (e.g. Basic instead of Pro)", async () => {
+      const mockCustomerInfo = {
+        entitlements: {
+          active: {
+            Basic: true,
+          },
+        },
+      };
+      Purchases.getCustomerInfo.mockResolvedValueOnce(mockCustomerInfo);
+
+      const result = await isValidSubscription();
+
+      expect(result).toBeUndefined();
+      expect(log.info).toHaveBeenCalledWith("Customer Info:", mockCustomerInfo);
+    });
   });
 
   describe("presentPaywall", () => {
