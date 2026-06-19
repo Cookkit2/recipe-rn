@@ -89,7 +89,7 @@ describe("subscription-utils", () => {
       const mockCustomerInfo = {
         entitlements: {}, // Missing 'active'
       };
-      Purchases.getCustomerInfo.mockResolvedValueOnce(mockCustomerInfo);
+      (Purchases.getCustomerInfo as jest.Mock).mockResolvedValueOnce(mockCustomerInfo);
 
       const result = await isValidSubscription();
 
@@ -105,7 +105,7 @@ describe("subscription-utils", () => {
           },
         },
       };
-      Purchases.getCustomerInfo.mockResolvedValueOnce(mockCustomerInfo);
+      (Purchases.getCustomerInfo as jest.Mock).mockResolvedValueOnce(mockCustomerInfo);
 
       const result = await isValidSubscription();
 
