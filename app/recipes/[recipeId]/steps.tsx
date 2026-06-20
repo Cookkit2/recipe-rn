@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
+import { useKeepAwake } from "expo-keep-awake";
 import { RecipeStepsProvider } from "~/store/RecipeStepsContext";
 import type { RecipeIngredient, RecipeStep } from "~/types/Recipe";
 import StepBottomBar from "~/components/Recipe/Step/StepBottomBar";
@@ -29,6 +30,11 @@ export default function RecipeSteps() {
   const isTailored = tailored === "1";
   const [tailoredRecipe, setTailoredRecipe] = React.useState<Recipe | null>(null);
   const [isAddTimerDialogOpen, setIsAddTimerDialogOpen] = useState(false);
+
+  // Keep the display awake while the cook is actively on this screen.
+  // useKeepAwake activates on mount and releases on unmount, so the screen
+  // only stays awake on the cooking surface (not pantry/profile/etc).
+  useKeepAwake("cooking-screen");
 
   useEffect(() => {
     let isMounted = true;

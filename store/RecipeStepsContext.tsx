@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useCallback, useState, useRef } from "react";
+import React, { createContext, useContext, useCallback, useState, useRef, useMemo } from "react";
 import { useRouter } from "expo-router";
 import { useAnimatedReaction, useSharedValue, type SharedValue } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
@@ -8,7 +8,11 @@ import type { Recipe, RecipeIngredient } from "~/types/Recipe";
 import type { PantryItem } from "~/types/PantryItem";
 import type { StepPageData } from "~/app/recipes/[recipeId]/steps";
 import { storage, database } from "~/data";
-import { RECIPE_COOKED_KEY, INGREDIENTS_USED_BEFORE_EXPIRY_KEY } from "~/constants/storage-keys";
+import {
+  RECIPE_COOKED_KEY,
+  INGREDIENTS_USED_BEFORE_EXPIRY_KEY,
+  USED_INGREDIENTS_PREFIX,
+} from "~/constants/storage-keys";
 import { achievementService } from "~/data/services/AchievementService";
 import {
   usePantryItemsByType,
@@ -25,6 +29,7 @@ import { queryClient } from "./QueryProvider";
 import { recipeQueryKeys } from "~/hooks/queries/recipeQueryKeys";
 import { cookingHistoryQueryKeys } from "~/hooks/queries/useCookingHistoryQueries";
 import { log } from "~/utils/logger";
+import { toggleIngredientUsed, areAllIngredientsUsed } from "~/utils/ingredient-tickoff";
 
 interface RecipeStepsContextType {
   currentStep: number;
@@ -42,6 +47,10 @@ interface RecipeStepsContextType {
   saveRatingAndComplete: (rating: number | undefined, notes: string) => void;
   skipRatingAndComplete: () => void;
   isCompletingRecipe: boolean;
+  // Ingredient tick-off for the active cook session
+  usedIngredientIds: Set<string>;
+  toggleIngredient: (id: string) => void;
+  allIngredientsUsed: boolean;
 }
 
 const RecipeStepsContext = createContext<RecipeStepsContextType | null>(null);
@@ -78,6 +87,53 @@ export function RecipeStepsProvider({
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [isCompletingRecipe, setIsCompletingRecipe] = useState(false);
   const pendingServings = useRef<number>(0);
+
+  // Ingredient tick-off state for the active cook session.
+  // Persisted to MMKV per-recipe (keyed by baseRecipeId) so it survives step
+  // navigation within a single cook; resets on a fresh entry via the recipe's
+  // own key namespace. Values are JSON arrays of relatedIngredientId strings.
+  const usedIngredientsStorageKey = `${USED_INGREDIENTS_PREFIX}${baseRecipeId}`;
+  const [usedIngredientIds, setUsedIngredientIds] = useState<Set<string>>(() => {
+    try {
+      const stored = storage.get<string[]>(usedIngredientsStorageKey);
+      if (Array.isArray(stored)) {
+        return new Set(stored);
+      }
+    } catch {
+      // Ignore malformed/missing stored state — start fresh.
+    }
+    return new Set<string>();
+  });
+
+  const persistUsedIngredientIds = useCallback(
+    (next: Set<string>) => {
+      try {
+        storage.set(usedIngredientsStorageKey, Array.from(next));
+      } catch {
+        // Persistence is best-effort; do not crash the cook if MMKV fails.
+      }
+    },
+    [usedIngredientsStorageKey]
+  );
+
+  const toggleIngredient = useCallback(
+    (id: string) => {
+      setUsedIngredientIds((prev) => {
+        const next = toggleIngredientUsed(prev, id);
+        persistUsedIngredientIds(next);
+        return next;
+      });
+    },
+    [persistUsedIngredientIds]
+  );
+
+  // Count ingredient-related step pages to derive the "all ticked" condition.
+  // Ingredient ids on the recipe are stable via relatedIngredientId.
+  const ingredientIds = useMemo(
+    () => recipe.ingredients.map((ing) => ing.relatedIngredientId).filter(Boolean) as string[],
+    [recipe.ingredients]
+  );
+  const allIngredientsUsed = areAllIngredientsUsed(usedIngredientIds, ingredientIds);
 
   const animateLoopToIndex = useCallback((index: number) => {
     loopRef.current?.animateToIndex(index);
@@ -415,6 +471,9 @@ export function RecipeStepsProvider({
         saveRatingAndComplete,
         skipRatingAndComplete,
         isCompletingRecipe,
+        usedIngredientIds,
+        toggleIngredient,
+        allIngredientsUsed,
       }}
     >
       {children}

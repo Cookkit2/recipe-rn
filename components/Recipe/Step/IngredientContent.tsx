@@ -2,8 +2,11 @@ import React from "react";
 import { FlatList, View, StyleSheet, ScrollView, Pressable } from "react-native";
 import type { RecipeIngredient } from "~/types/Recipe";
 import { H2, P } from "~/components/ui/typography";
+import { Text } from "~/components/ui/text";
+import { Button } from "~/components/ui/button";
 import OutlinedImage from "~/components/ui/outlined-image";
 import { LinearGradient } from "expo-linear-gradient";
+import { CheckCircle2Icon, ArrowRightIcon } from "lucide-uniwind";
 import useColors from "~/hooks/useColor";
 import { titleCase } from "~/utils/text-formatter";
 import ShapeContainer from "~/components/Shared/Shapes/ShapeContainer";
@@ -14,6 +17,7 @@ import useOnPressScale from "~/hooks/animation/useOnPressScale";
 import Animated from "react-native-reanimated";
 import { useRecipeDetailStore } from "~/store/RecipeDetailContext";
 import { usePantryItemsByType } from "~/hooks/queries/usePantryQueries";
+import { useRecipeSteps } from "~/store/RecipeStepsContext";
 
 export const IngredientsContent: React.FC<{
   ingredients: RecipeIngredient[];
@@ -21,6 +25,9 @@ export const IngredientsContent: React.FC<{
 }> = ({ ingredients }) => {
   const colors = useColors();
   const { data: filteredPantryItems = [] } = usePantryItemsByType("all");
+  const { usedIngredientIds, toggleIngredient, allIngredientsUsed, goToNextStep } =
+    useRecipeSteps();
+  const { servings } = useRecipeDetailStore();
 
   // Optimization: Move O(N) pantry item matching to the parent component
   // using the O(1) indexed `useIngredientMatcher` rather than doing it
@@ -54,17 +61,32 @@ export const IngredientsContent: React.FC<{
           showsVerticalScrollIndicator={false}
           data={ingredients}
           scrollEnabled={false}
-          keyExtractor={(item) => item.name}
+          keyExtractor={(item) => item.relatedIngredientId}
           renderItem={({ item, index }) => (
             <IngredientItem
               key={item.relatedIngredientId}
               ingredient={item}
               index={index}
               matchedPantryItem={findMatch(item)}
+              isUsed={usedIngredientIds.has(item.relatedIngredientId)}
+              onToggle={() => toggleIngredient(item.relatedIngredientId)}
             />
           )}
           ItemSeparatorComponent={() => <View className="h-3" />}
         />
+        {allIngredientsUsed && (
+          <Button
+            size="lg"
+            onPress={() => goToNextStep(servings)}
+            className="mt-2 mb-6 bg-foreground/80"
+            containerClassName="w-full max-w-sm"
+            accessibilityLabel="Start cooking"
+            accessibilityHint="Advances to the first cooking step"
+          >
+            <Text>Start cooking</Text>
+            <ArrowRightIcon className="text-background ml-2" size={18} strokeWidth={2.5} />
+          </Button>
+        )}
       </ScrollView>
     </View>
   );
@@ -76,25 +98,48 @@ const IngredientItem: React.FC<{
   ingredient: RecipeIngredient;
   index: number;
   matchedPantryItem: PantryItem | null | undefined;
-}> = ({ ingredient, index, matchedPantryItem }) => {
+  isUsed: boolean;
+  onToggle: () => void;
+}> = ({ ingredient, index, matchedPantryItem, isUsed, onToggle }) => {
   const { servings } = useRecipeDetailStore();
   const colors = useColors();
   const router = useRouter();
   const { animatedStyle, handlePressIn, handlePressOut } = useOnPressScale();
 
   const previewImage = matchedPantryItem?.image_url;
+  const pantryItemId = matchedPantryItem?.id;
 
   return (
     <AnimatedPressable
-      onPress={() => router.push(`/ingredient/${matchedPantryItem?.id}`)}
+      // Tap toggles the ingredient's "used" state (cook-session tick-off);
+      // long-press still reaches the pantry-detail deep-link so that flow is
+      // not lost.
+      onPress={onToggle}
+      onLongPress={pantryItemId ? () => router.push(`/ingredient/${pantryItemId}`) : undefined}
+      delayLongPress={400}
       className="flex-1 mb-3 px-1"
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       style={animatedStyle}
+      accessibilityRole="button"
+      accessibilityState={{ selected: isUsed }}
+      accessibilityLabel={`${titleCase(ingredient.name)}. ${
+        isUsed ? "Marked as used" : "Tap to mark as used"
+      }${pantryItemId ? ". Long-press for pantry details." : ""}`}
     >
       {previewImage ? (
         <View className="relative items-center justify-center">
           <OutlinedImage source={previewImage} size={56} strokeWidth={2.618} />
+          {isUsed && (
+            <View pointerEvents="none" className="absolute inset-0 items-center justify-center">
+              <CheckCircle2Icon
+                size={56}
+                strokeWidth={2.5}
+                className="text-foreground"
+                fill={colors.background}
+              />
+            </View>
+          )}
         </View>
       ) : (
         <View className="w-16 h-16 items-center justify-center self-center">
@@ -102,20 +147,26 @@ const IngredientItem: React.FC<{
             index={index}
             width={64}
             height={64}
-            text="?"
+            text={isUsed ? "✓" : "?"}
             textClassname="text-3xl text-foreground/70 leading-[2]"
             color={colors.border}
           />
         </View>
       )}
       <P
-        className="text-foreground/80 text-sm font-urbanist-semibold text-center leading-tight mt-2"
+        className={`text-foreground/80 text-sm font-urbanist-semibold text-center leading-tight mt-2 ${
+          isUsed ? "line-through opacity-50" : ""
+        }`}
         numberOfLines={2}
       >
         {titleCase(ingredient.name)}
       </P>
 
-      <P className="text-foreground text-xs tracking-wider font-urbanist-bold text-center mt-0.5">
+      <P
+        className={`text-foreground text-xs tracking-wider font-urbanist-bold text-center mt-0.5 ${
+          isUsed ? "line-through opacity-50" : ""
+        }`}
+      >
         {ingredient.quantity * servings} {ingredient.unit}
       </P>
     </AnimatedPressable>
