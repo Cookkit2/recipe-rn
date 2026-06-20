@@ -64,7 +64,14 @@ export type FunnelEventType =
   | "day0_trial_cancelled"
   | "subscription_cancelled"
   | "subscription_refunded"
-  | "entitlement_changed";
+  | "entitlement_changed"
+  /**
+   * A/B experiment exposure — fired the first time a user is bucketed into a
+   * variant for a gating decision (see lib/experiments/useExperiment.ts). Lets
+   * #718 slice per-variant conversion for the #724/#725/#731 experiments.
+   * Carries `experimentKey` + `variant` in the event detail.
+   */
+  | "experiment_exposed";
 
 /**
  * Shared fields stamped on every funnel event. `installId` / `installAnchorTs`
