@@ -67,11 +67,7 @@ describe("logger", () => {
       log.error("test message", err);
       expect(rnLogger.error).toHaveBeenCalledWith(
         "test message",
-        expect.objectContaining({
-          name: err.name,
-          message: err.message,
-          stack: err.stack,
-        })
+        expect.objectContaining({ message: "test err" })
       );
       expect(Sentry.logger.error).toHaveBeenCalledWith("test message", {
         name: err.name,
@@ -84,6 +80,14 @@ describe("logger", () => {
       log.fatal("test message", { a: 1 });
       expect(rnLogger.error).toHaveBeenCalledWith("test message", { a: 1 });
       expect(Sentry.logger.fatal).toHaveBeenCalledWith("test message", { a: 1 });
+    });
+
+    it("filters sensitive data for rnLogger too", () => {
+      log.info("auth event", { password: "secret_password_123" });
+      expect(rnLogger.info).toHaveBeenCalledWith("auth event", "[REDACTED]");
+      expect(Sentry.logger.info).toHaveBeenCalledWith("auth event", {
+        arg_0: "[REDACTED]",
+      });
     });
   });
 

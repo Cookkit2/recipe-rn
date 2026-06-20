@@ -129,7 +129,6 @@ export const log = {
       const attributes = parseLogAttributes(filteredArgs);
       Sentry.logger.trace(message, attributes);
     } catch (error) {
-      rnLogger.debug(message, "[REDACTED - SANITIZATION ERROR]");
       // Silent fail - don't let Sentry errors break logging
     }
   },
@@ -144,7 +143,6 @@ export const log = {
       const attributes = parseLogAttributes(filteredArgs);
       Sentry.logger.debug(message, attributes);
     } catch (error) {
-      rnLogger.debug(message, "[REDACTED - SANITIZATION ERROR]");
       // Silent fail
     }
   },
@@ -159,7 +157,6 @@ export const log = {
       const attributes = parseLogAttributes(filteredArgs);
       Sentry.logger.info(message, attributes);
     } catch (error) {
-      rnLogger.info(message, "[REDACTED - SANITIZATION ERROR]");
       // Silent fail
     }
   },
@@ -174,7 +171,6 @@ export const log = {
       const attributes = parseLogAttributes(filteredArgs);
       Sentry.logger.warn(message, attributes);
     } catch (error) {
-      rnLogger.warn(message, "[REDACTED - SANITIZATION ERROR]");
       // Silent fail
     }
   },
@@ -189,7 +185,6 @@ export const log = {
       const attributes = parseLogAttributes(filteredArgs);
       Sentry.logger.error(message, attributes);
     } catch (error) {
-      rnLogger.error(message, "[REDACTED - SANITIZATION ERROR]");
       // Silent fail
     }
   },
@@ -204,7 +199,6 @@ export const log = {
       const attributes = parseLogAttributes(filteredArgs);
       Sentry.logger.fatal(message, attributes);
     } catch (error) {
-      rnLogger.error(message, "[REDACTED - SANITIZATION ERROR]");
       // Silent fail
     }
   },
