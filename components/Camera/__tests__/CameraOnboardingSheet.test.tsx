@@ -159,7 +159,7 @@ describe("CameraOnboardingSheet", () => {
     const gotItButton = getByText("Got It");
     fireEvent.press(gotItButton);
 
-    expect(Haptics.impactAsync).toHaveBeenCalledWith("light");
+    expect(Haptics.impactAsync).toHaveBeenCalledWith(Haptics.ImpactFeedbackStyle.Light);
     expect(mockPause).toHaveBeenCalled();
     expect(mockClose).toHaveBeenCalled();
     expect(mockSetIsOnboardingComplete).toHaveBeenCalledWith(true);
