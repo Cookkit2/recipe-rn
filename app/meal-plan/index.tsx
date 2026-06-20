@@ -8,6 +8,7 @@ import {
   PlusIcon,
   CalendarIcon,
   BookTemplateIcon,
+  SparklesIcon,
 } from "lucide-uniwind";
 import { Stack, useRouter } from "expo-router";
 import { useMealPlanCalendar } from "~/store/MealPlanCalendarContext";
@@ -15,6 +16,8 @@ import WeeklyCalendar from "~/components/MealPlanCalendar/WeeklyCalendar";
 import TemplateSheet from "~/components/MealPlanCalendar/TemplateSheet";
 import { useRecipes } from "~/hooks/queries/useRecipeQueries";
 import { useAddToMealPlan } from "~/hooks/queries/useMealPlanQueries";
+import { useMealPlanGeneration, DEFAULT_PLAN_SLOTS } from "~/hooks/queries/useMealPlanGeneration";
+import { useFeatureFlag } from "~/hooks/queries/useFeatureFlags";
 import type { MealSlot } from "~/types/MealPlan";
 import type { RecipeDragData } from "~/types/MealPlan";
 import RecipeDraggable from "~/components/MealPlanCalendar/RecipeDraggable";
@@ -29,6 +32,32 @@ export default function MealPlanPage() {
   const { data: recipes = [], isLoading: isLoadingRecipes } = useRecipes();
   const addToMealPlan = useAddToMealPlan();
   const [isTemplateSheetOpen, setIsTemplateSheetOpen] = useState(false);
+
+  // "Plan my week" auto-generation (#727, MVP). Dark-launched behind a feature
+  // flag so it can be rolled back without a release. Defaults to disabled while
+  // the flag is loading so the button never flickers on.
+  const { enabled: aiMealPlanEnabled, isLoading: isFlagLoading } = useFeatureFlag("ai_meal_plan");
+  const generateWeekPlan = useMealPlanGeneration();
+
+  const handlePlanMyWeek = useCallback(async () => {
+    try {
+      // Plan the currently-selected week (normalized to its start-of-day).
+      const weekStart = new Date(selectedWeek);
+      weekStart.setHours(0, 0, 0, 0);
+      const result = await generateWeekPlan.mutateAsync({
+        weekStart,
+        days: 7,
+        mealSlots: DEFAULT_PLAN_SLOTS,
+      });
+      toast.success(`Planned ${result.meals.length} meals for your week`);
+      log.info(`Plan my week: generated ${result.meals.length} meals`);
+    } catch (error) {
+      log.error("Plan my week failed:", error);
+      const message =
+        error instanceof Error ? error.message : "Could not generate a plan. Please try again.";
+      toast.error(message);
+    }
+  }, [generateWeekPlan, selectedWeek]);
 
   // Week navigation
   const goToPreviousWeek = () => {
@@ -143,6 +172,25 @@ export default function MealPlanPage() {
           headerTitle: "",
           headerRight: () => (
             <View className="flex-row items-center gap-2">
+              {/* "Plan my week" auto-generation (#727). Dark-launched behind the
+                  ai_meal_plan feature flag; rendered only once the flag resolves
+                  so the header never flickers. */}
+              {aiMealPlanEnabled && !isFlagLoading && (
+                <Pressable
+                  onPress={handlePlanMyWeek}
+                  disabled={generateWeekPlan.isPending}
+                  className="px-2 py-2"
+                  accessibilityRole="button"
+                  accessibilityLabel="Plan my week automatically"
+                  accessibilityHint="Generates a pantry-aware week plan from your recipes"
+                >
+                  {generateWeekPlan.isPending ? (
+                    <ActivityIndicator size="small" className="text-foreground" />
+                  ) : (
+                    <SparklesIcon className="text-foreground" strokeWidth={2} size={22} />
+                  )}
+                </Pressable>
+              )}
               <Pressable
                 onPress={() => setIsTemplateSheetOpen(true)}
                 className="px-2 py-2"
