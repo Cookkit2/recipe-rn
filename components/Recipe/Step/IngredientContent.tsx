@@ -91,6 +91,8 @@ const IngredientItem: React.FC<{
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       style={animatedStyle}
+      accessibilityRole="button"
+      accessibilityLabel={`View ${titleCase(ingredient.name)} details. Quantity: ${ingredient.quantity * servings} ${ingredient.unit}.`}
     >
       {previewImage ? (
         <View className="relative items-center justify-center">
