@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { View, useWindowDimensions } from "react-native";
 import { H4, P } from "~/components/ui/typography";
 import RecipeItemCard from "./RecipeItemCard";
@@ -9,6 +9,11 @@ import { XIcon, AlertCircleIcon, RefreshCwIcon } from "lucide-uniwind";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { Button } from "~/components/ui/button";
 import { LegendList } from "@legendapp/list";
+import {
+  emitExpiringNudgeShown,
+  emitExpiringNudgeEngaged,
+  emitExpiringNudgeDismissed,
+} from "~/lib/analytics/funnel-events";
 
 const DISMISS_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 const MAX_RECIPES_TO_SHOW = 4;
@@ -98,6 +103,19 @@ export default function ExpiringRecipesSection() {
 
   const expiringCount = expiringIngredientIds.size;
 
+  // Instrument the nudge lifecycle (#726/#718). `shown` fires once per period
+  // the section is actually visible to the user (not on every render, not while
+  // loading/erroring/dismissed). The ref guards against StrictMode double-fire.
+  const shownEmittedRef = useRef(false);
+  useEffect(() => {
+    if (shownEmittedRef.current) return;
+    if (isLoading || error || isDismissed || recipes.length === 0 || expiringCount === 0) {
+      return;
+    }
+    shownEmittedRef.current = true;
+    emitExpiringNudgeShown("in_app_section", expiringCount);
+  }, [isLoading, error, isDismissed, recipes.length, expiringCount]);
+
   // Check if section was dismissed and if dismiss period has expired
   useEffect(() => {
     const checkDismissedState = async () => {
@@ -140,12 +158,19 @@ export default function ExpiringRecipesSection() {
   const handleDismiss = useCallback(async () => {
     await storage.set(EXPIRING_RECIPES_DISMISSED_AT_KEY, Date.now(), true);
     setIsDismissed(true);
+    // Instrument the dismiss so opt-out rates are visible per surface (#726
+    // risk: push fatigue / opt-out spiral).
+    emitExpiringNudgeDismissed("in_app_section");
   }, []);
 
   // Memoized render item to prevent re-creation on each render
   const renderRecipeItem = useCallback(
     ({ item }: { item: RecipeWithCompletion }) => (
-      <RecipeItemCard recipe={item.recipe} completionPercentage={item.completionPercentage} />
+      <RecipeItemCard
+        recipe={item.recipe}
+        completionPercentage={item.completionPercentage}
+        onEngage={(recipeId) => emitExpiringNudgeEngaged("in_app_section", { recipeId })}
+      />
     ),
     []
   );

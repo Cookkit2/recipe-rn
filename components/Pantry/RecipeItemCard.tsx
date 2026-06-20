@@ -17,9 +17,16 @@ interface RecipeItemCardProps {
   recipe: Recipe;
   completionPercentage?: number;
   matchCategory?: RecipeMatchCategory;
+  /** Optional engagement callback fired on card press (e.g. for nudge analytics). */
+  onEngage?: (recipeId: string) => void;
 }
 
-function RecipeItemCard({ recipe, completionPercentage, matchCategory }: RecipeItemCardProps) {
+function RecipeItemCard({
+  recipe,
+  completionPercentage,
+  matchCategory,
+  onEngage,
+}: RecipeItemCardProps) {
   const { animatedStyle, roundedStyle, onPressIn, onPressOut } = useButtonAnimation(true, 24);
   const toggleFavorite = useToggleFavorite();
 
@@ -48,7 +55,10 @@ function RecipeItemCard({ recipe, completionPercentage, matchCategory }: RecipeI
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`View recipe for ${recipe.title}`}
-          onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            onEngage?.(recipe.id.toString());
+          }}
           onPressIn={onPressIn}
           onPressOut={onPressOut}
         >

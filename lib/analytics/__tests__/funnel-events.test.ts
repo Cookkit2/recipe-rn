@@ -7,6 +7,9 @@ import {
   diffCustomerInfo,
   emitFunnelEvent,
   emitPaywallPresented,
+  emitExpiringNudgeShown,
+  emitExpiringNudgeEngaged,
+  emitExpiringNudgeDismissed,
   isDay0Cancel,
   paywallResultToEvent,
   resetFunnelEventStateForTesting,
@@ -354,5 +357,53 @@ const _EXPECTED_EVENT_TYPES: FunnelEventType[] = [
   "subscription_cancelled",
   "subscription_refunded",
   "entitlement_changed",
+  "expiring_nudge_shown",
+  "expiring_nudge_engaged",
+  "expiring_nudge_dismissed",
 ];
 void _EXPECTED_EVENT_TYPES;
+
+describe("funnel-events: expiring-ingredient nudge lifecycle (#726)", () => {
+  beforeEach(() => {
+    addBreadcrumbSpy.mockClear();
+    captureMessageSpy.mockClear();
+  });
+
+  it("emitExpiringNudgeShown emits a breadcrumb with surface + expiringCount", () => {
+    emitExpiringNudgeShown("in_app_section", 3);
+    expect(addBreadcrumbSpy).toHaveBeenCalledTimes(1);
+    expect(addBreadcrumbSpy.mock.calls[0]![0].data).toMatchObject({
+      type: "expiring_nudge_shown",
+      surface: "in_app_section",
+      expiringCount: 3,
+    });
+  });
+
+  it("emitExpiringNudgeEngaged includes recipeId detail when provided", () => {
+    emitExpiringNudgeEngaged("reengagement_notification", { recipeId: "r-42" });
+    expect(addBreadcrumbSpy).toHaveBeenCalledTimes(1);
+    expect(addBreadcrumbSpy.mock.calls[0]![0].data).toMatchObject({
+      type: "expiring_nudge_engaged",
+      surface: "reengagement_notification",
+      recipeId: "r-42",
+    });
+  });
+
+  it("emitExpiringNudgeDismissed fires once per surface (no dedup — non-terminal)", () => {
+    emitExpiringNudgeDismissed("in_app_section");
+    emitExpiringNudgeDismissed("in_app_section");
+    // Non-terminal: every occurrence is a data point.
+    expect(addBreadcrumbSpy).toHaveBeenCalledTimes(2);
+    expect(addBreadcrumbSpy.mock.calls[1]![0].data).toMatchObject({
+      type: "expiring_nudge_dismissed",
+      surface: "in_app_section",
+    });
+  });
+
+  it("does not captureMessage for nudge events (breadcrumbs only, not terminal)", () => {
+    emitExpiringNudgeShown("in_app_section", 1);
+    emitExpiringNudgeEngaged("in_app_section");
+    emitExpiringNudgeDismissed("in_app_section");
+    expect(captureMessageSpy).not.toHaveBeenCalled();
+  });
+});

@@ -65,6 +65,13 @@ export type FunnelEventType =
   | "subscription_cancelled"
   | "subscription_refunded"
   | "entitlement_changed"
+  // Retention / re-engagement surface — expiring-ingredient nudge (issue #726).
+  // These close the loop between the in-app "Cook Now" section and the scheduled
+  // re-engagement notification, so engagement is measurable against the Day-0
+  // cohort (#718). All three are non-terminal breadcrumbs.
+  | "expiring_nudge_shown"
+  | "expiring_nudge_engaged"
+  | "expiring_nudge_dismissed"
   /**
    * A/B experiment exposure — fired the first time a user is bucketed into a
    * variant for a gating decision (see lib/experiments/useExperiment.ts). Lets
@@ -72,6 +79,12 @@ export type FunnelEventType =
    * Carries `experimentKey` + `variant` in the event detail.
    */
   | "experiment_exposed";
+
+/**
+ * Surface that surfaced an expiring-ingredient nudge. Lets us attribute
+ * engagement to the in-app section vs. the scheduled notification.
+ */
+export type ExpiringNudgeSurface = "in_app_section" | "reengagement_notification";
 
 /**
  * Shared fields stamped on every funnel event. `installId` / `installAnchorTs`
@@ -379,4 +392,50 @@ export function emitAppFirstOpen(): void {
 
 export function emitSessionStart(): void {
   emitFunnelEvent("session_start");
+}
+
+// ---------------------------------------------------------------------------
+// Expiring-ingredient re-engagement nudge (issue #726).
+//
+// Three lifecycle events close the engagement loop for the existing in-app
+// "Cook Now" section and the new scheduled re-engagement notification. All are
+// non-terminal breadcrumbs, so they are NOT in TERMINAL_EVENT_TYPES and need no
+// dedup — each shown/engaged/dismissed occurrence is its own data point.
+// ---------------------------------------------------------------------------
+
+/**
+ * Fire when an expiring-ingredient nudge becomes visible to the user.
+ *
+ * @param surface  in-app section vs. scheduled notification
+ * @param expiringCount number of pantry items driving the nudge
+ */
+export function emitExpiringNudgeShown(surface: ExpiringNudgeSurface, expiringCount: number): void {
+  emitFunnelEvent("expiring_nudge_shown", {
+    detail: { surface, expiringCount },
+  });
+}
+
+/**
+ * Fire when the user acts on an expiring-ingredient nudge — taps a recipe
+ * (in-app) or opens the notification deep link.
+ */
+export function emitExpiringNudgeEngaged(
+  surface: ExpiringNudgeSurface,
+  detail?: { recipeId?: string; recipeIds?: string[] }
+): void {
+  emitFunnelEvent("expiring_nudge_engaged", {
+    detail: { surface, ...detail },
+  });
+}
+
+/**
+ * Fire when the user dismisses an expiring-ingredient nudge (in-app X button,
+ * or the notification is cleared). Dismissals are the leading churn signal —
+ * instrument them so opt-out rates are visible per surface (#726 risk: push
+ * fatigue / opt-out spiral).
+ */
+export function emitExpiringNudgeDismissed(surface: ExpiringNudgeSurface): void {
+  emitFunnelEvent("expiring_nudge_dismissed", {
+    detail: { surface },
+  });
 }
