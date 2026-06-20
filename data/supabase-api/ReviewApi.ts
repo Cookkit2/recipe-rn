@@ -227,38 +227,47 @@ export const reviewApi = {
 
     if (error) throw error;
 
-    // ⚡ Bolt Performance Optimization: Replaced sequential await for photo uploads with Promise.all to enable concurrent uploading, reducing total upload latency.
-    // Upload photos
-    const uploadPromises = input.photos.map(async (photo) => {
-      const path = `${userId}/${data.id}/${photo.position}.jpg`;
-      const { error: uploadError } = await supabase!.storage.from("review-photos").upload(path, {
-        uri: photo.uri,
-        type: "image/jpeg",
-        name: `${photo.position}.jpg`,
-      } as unknown as Blob);
+    // ⚡ Bolt Performance Optimization: Parallelize photo uploads and bulk-insert records
+    // Impact: Reduces sequential network latencies and N+1 database queries
+    const photoRows: ReviewPhotoRow[] = [];
 
-      if (uploadError) {
-        log.error("[ReviewApi] Photo upload failed:", uploadError);
-        return null;
-      }
+    if (input.photos && input.photos.length > 0) {
+      const uploadPromises = input.photos.map(async (photo) => {
+        const path = `${userId}/${data.id}/${photo.position}.jpg`;
+        const { error: uploadError } = await supabase!.storage.from("review-photos").upload(path, {
+          uri: photo.uri,
+          type: "image/jpeg",
+          name: `${photo.position}.jpg`,
+        } as unknown as Blob);
 
-      const { data: publicUrl } = supabase!.storage.from("review-photos").getPublicUrl(path);
+        if (uploadError) {
+          log.error("[ReviewApi] Photo upload failed:", uploadError);
+          return null;
+        }
 
-      const { data: photoData } = await supabase!
-        .from("review_photo")
-        .insert({
+        const { data: publicUrl } = supabase!.storage.from("review-photos").getPublicUrl(path);
+
+        return {
           review_id: data.id,
           photo_url: publicUrl.publicUrl,
           position: photo.position,
-        })
-        .select()
-        .single();
+        };
+      });
 
-      return photoData ? (photoData as unknown as ReviewPhotoRow) : null;
-    });
+      const uploadResults = await Promise.all(uploadPromises);
+      const validPhotos = uploadResults.filter((p): p is NonNullable<typeof p> => p !== null);
 
-    const photoResults = await Promise.all(uploadPromises);
-    const photoRows: ReviewPhotoRow[] = photoResults.filter((p): p is ReviewPhotoRow => p !== null);
+      if (validPhotos.length > 0) {
+        const { data: insertedPhotos } = await supabase!
+          .from("review_photo")
+          .insert(validPhotos)
+          .select();
+
+        if (insertedPhotos) {
+          photoRows.push(...(insertedPhotos as unknown as ReviewPhotoRow[]));
+        }
+      }
+    }
 
     return {
       id: data.id,
@@ -302,23 +311,36 @@ export const reviewApi = {
       await supabase!.from("review_photo").delete().eq("review_id", reviewId);
 
       // ⚡ Bolt Performance Optimization: Replaced sequential await for photo uploads with Promise.all to enable concurrent uploading, reducing total upload latency.
-      // Upload new photos
+      // Additionally bulk insert the database records instead of running N+1 queries.
       const userId = await getCurrentUserId();
       const uploadPromises = input.photos.map(async (photo) => {
         const path = `${userId}/${reviewId}/${photo.position}.jpg`;
-        await supabase!.storage.from("review-photos").upload(path, {
+        const { error: uploadError } = await supabase!.storage.from("review-photos").upload(path, {
           uri: photo.uri,
           type: "image/jpeg",
           name: `${photo.position}.jpg`,
         } as unknown as Blob);
+
+        if (uploadError) {
+          log.error("[ReviewApi] Photo upload failed during update:", uploadError);
+          return null;
+        }
+
         const { data: publicUrl } = supabase!.storage.from("review-photos").getPublicUrl(path);
-        await supabase!.from("review_photo").insert({
+
+        return {
           review_id: reviewId,
           photo_url: publicUrl.publicUrl,
           position: photo.position,
-        });
+        };
       });
-      await Promise.all(uploadPromises);
+
+      const uploadResults = await Promise.all(uploadPromises);
+      const validPhotos = uploadResults.filter((p): p is NonNullable<typeof p> => p !== null);
+
+      if (validPhotos.length > 0) {
+        await supabase!.from("review_photo").insert(validPhotos);
+      }
     }
   },
 
