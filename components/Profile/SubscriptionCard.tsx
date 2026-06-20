@@ -1,28 +1,16 @@
 import React from "react";
 import { View } from "react-native";
-import { subscriptionQueryKeys } from "~/hooks/queries/subscriptionQueryKeys";
-import { isValidSubscription, presentPaywallIfNeeded } from "~/utils/subscription-utils";
+import { useEntitlement } from "~/hooks/queries/useEntitlement";
+import { presentPaywallIfNeeded } from "~/utils/subscription-utils";
 import { Card, CardContent } from "~/components/ui/card";
 import { H4, P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
 
 export default function SubscriptionCard() {
-  const { data: currentEntitlements } = useQuery({
-    queryKey: subscriptionQueryKeys.entitlements(),
-    queryFn: async () => {
-      const result = await isValidSubscription();
-      return result ?? null;
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+  const { entitlement: currentEntitlements, isLoading } = useEntitlement();
 
   const currentDate = new Date();
-  const expiredDate = new Date(
-    (currentEntitlements && currentEntitlements !== false
-      ? currentEntitlements.expirationDateMillis
-      : 0) ?? 0
-  );
+  const expiredDate = new Date(currentEntitlements?.expirationDateMillis ?? 0);
 
   const expiredInDays = Math.ceil(
     (expiredDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)
@@ -40,18 +28,20 @@ export default function SubscriptionCard() {
               </View>
             )}
           </View>
-          {currentEntitlements && currentEntitlements !== false ? (
+          {currentEntitlements ? (
             <P className="text-sm text-foreground/80 font-urbanist-medium">
               Your {currentEntitlements.periodType === "TRIAL" ? "trial" : "subscription"} ends in{" "}
               {expiredInDays} {expiredInDays === 1 ? "day" : "days"}.
             </P>
+          ) : isLoading ? (
+            <P className="text-sm text-foreground/80 font-urbanist-medium"> </P>
           ) : (
             <P className="text-sm text-foreground/80 font-urbanist-medium">
               Start your free trial.
             </P>
           )}
         </View>
-        {!currentEntitlements && (
+        {!currentEntitlements && !isLoading && (
           <Button
             variant="default"
             className="rounded-xl border-continuous"
