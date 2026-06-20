@@ -2,6 +2,7 @@ import { database } from "~/data/db/database";
 import { householdApi } from "~/data/supabase-api/HouseholdApi";
 import { log } from "~/utils/logger";
 import { StorageFactory } from "~/data/storage/storage-factory";
+import { shouldApplyRemoteUpdate } from "./householdSyncResolver";
 
 const LAST_SYNC_KEY = "household_last_sync_timestamp";
 
@@ -97,6 +98,22 @@ export class HouseholdSyncService {
         const existing = itemsMap.get(remoteItem.id);
 
         if (existing) {
+          // Last-writer-wins guard (audit defect #1, HIGH): do NOT overwrite a
+          // local row whose `updated_at` is at least as fresh as the remote one.
+          // Without this, an offline local edit followed by a full sync can be
+          // silently clobbered by a staler remote row. Mirrors the guard the
+          // realtime path already applies (HouseholdRealtimeService.handleUpdate).
+          const remoteUpdatedAtMs = remoteItem.updated_at
+            ? new Date(remoteItem.updated_at).getTime()
+            : 0;
+          const localUpdatedAtMs = (existing as any).updatedAt
+            ? new Date((existing as any).updatedAt).getTime()
+            : 0;
+
+          if (!shouldApplyRemoteUpdate(remoteUpdatedAtMs, localUpdatedAtMs)) {
+            continue; // preserve the fresher local edit
+          }
+
           batchOps.push(
             existing.prepareUpdate((record: any) => {
               record.supabaseId = remoteItem.id;

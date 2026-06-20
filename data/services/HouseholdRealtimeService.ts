@@ -3,6 +3,7 @@ import { database } from "~/data/db/database";
 import { Q } from "@nozbe/watermelondb";
 import { useAuthStore } from "~/auth/AuthStore";
 import { log } from "~/utils/logger";
+import { shouldApplyRemoteUpdate } from "./householdSyncResolver";
 
 type RealtimeChannel = import("@supabase/supabase-js").RealtimeChannel;
 
@@ -146,13 +147,13 @@ export class HouseholdRealtimeService {
         return;
       }
 
-      // Last-writer-wins: compare timestamps
+      // Last-writer-wins: compare timestamps via the shared resolver
       const remoteUpdatedAt = new Date(record.updated_at).getTime();
       const localUpdatedAt = (existing as any).updatedAt
         ? new Date((existing as any).updatedAt).getTime()
         : 0;
 
-      if (remoteUpdatedAt <= localUpdatedAt) {
+      if (!shouldApplyRemoteUpdate(remoteUpdatedAt, localUpdatedAt)) {
         return;
       }
 
@@ -189,11 +190,20 @@ export class HouseholdRealtimeService {
 
       if (!existing) return;
 
+      // Soft delete instead of destroyPermanently() (audit defect #2, HIGH):
+      // the `stock` table has no soft-delete columns, so destroyPermanently()
+      // is an irreversible wipe — a racing or accidental cross-device DELETE
+      // would permanently destroy the local row including any unsynced local
+      // edit, with no tombstone and no undo. markAsDeleted() hides the row
+      // from queries (so the pantry UI stops showing it, matching the intent
+      // of the realtime DELETE event) while keeping it recoverable in the DB.
+      // destroyPermanently() is reserved for local-only teardown (e.g.
+      // leaveHousehold) in data/api/householdApi.ts.
       await database.write(async () => {
-        await (existing as any).destroyPermanently();
+        await (existing as any).markAsDeleted();
       });
 
-      log.info(`HouseholdRealtime: deleted stock item ${record.id}`);
+      log.info(`HouseholdRealtime: soft-deleted stock item ${record.id}`);
     } catch (error) {
       log.error("HouseholdRealtime: failed to handle DELETE", error);
     }
