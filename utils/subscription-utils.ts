@@ -1,6 +1,12 @@
 import { setStatusBarStyle } from "expo-status-bar";
 import Purchases, { type PurchasesEntitlementInfo } from "react-native-purchases";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
+import {
+  emitFunnelEvent,
+  emitPaywallPresented,
+  paywallResultToEvent,
+  type FunnelTriggerSource,
+} from "~/lib/analytics/funnel-events";
 import { invalidateSubscriptionEntitlementsQuery } from "~/lib/subscription-query-sync";
 import { log } from "./logger";
 
@@ -67,7 +73,19 @@ export async function presentPaywall(): Promise<boolean> {
   }
 }
 
-export async function presentPaywallIfNeeded(): Promise<boolean> {
+export interface PresentPaywallOptions {
+  /**
+   * Where the paywall was triggered from. Threads through to the
+   * `paywall_presented` / `trial_started` funnel events (issue #718) so each
+   * gating surface can be analyzed independently. Defaults to `'unknown'`.
+   */
+  triggerSource?: FunnelTriggerSource;
+}
+
+export async function presentPaywallIfNeeded(
+  options: PresentPaywallOptions = {}
+): Promise<boolean> {
+  const triggerSource: FunnelTriggerSource = options.triggerSource ?? "unknown";
   try {
     // Get fresh customer info from RevenueCat
     const customerInfo = await Purchases.getCustomerInfo();
@@ -85,6 +103,7 @@ export async function presentPaywallIfNeeded(): Promise<boolean> {
 
     // No active subscription, show paywall
     log.info("No active subscription, presenting paywall");
+    emitPaywallPresented(triggerSource);
     setStatusBarStyle("light", true);
     let paywallResult: PAYWALL_RESULT;
     try {
@@ -93,6 +112,13 @@ export async function presentPaywallIfNeeded(): Promise<boolean> {
       });
     } finally {
       setStatusBarStyle("auto", true);
+    }
+
+    // Emit the funnel event corresponding to the paywall result. Single source
+    // of truth for trial_started / paid_converted / paywall_dismissed.
+    const mapped = paywallResultToEvent(paywallResult, triggerSource);
+    if (mapped) {
+      emitFunnelEvent(mapped.type, { triggerSource: mapped.triggerSource });
     }
 
     switch (paywallResult) {

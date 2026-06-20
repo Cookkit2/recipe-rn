@@ -45,7 +45,7 @@ export default function SubscriptionCard() {
           <Button
             variant="default"
             className="rounded-xl border-continuous"
-            onPress={() => presentPaywallIfNeeded()}
+            onPress={() => presentPaywallIfNeeded({ triggerSource: "profile_subscription_card" })}
           >
             <P className="font-urbanist-semibold text-primary-foreground">Subscribe</P>
           </Button>

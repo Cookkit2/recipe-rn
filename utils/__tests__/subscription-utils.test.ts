@@ -34,6 +34,13 @@ jest.mock("../logger");
 jest.mock("~/lib/subscription-query-sync", () => ({
   invalidateSubscriptionEntitlementsQuery: jest.fn(),
 }));
+// Mock the funnel-analytics path so this test (which exercises the paywall
+// switch) does not pull in the MMKV storage chain via lib/install-anchor.
+jest.mock("~/lib/analytics/funnel-events", () => ({
+  emitPaywallPresented: jest.fn(),
+  emitFunnelEvent: jest.fn(),
+  paywallResultToEvent: jest.fn((result) => ({ type: "trial_started", triggerSource: "unknown" })),
+}));
 jest.mock("expo-status-bar", () => ({
   setStatusBarStyle: jest.fn(),
 }));

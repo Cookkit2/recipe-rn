@@ -27,6 +27,13 @@ jest.mock("react-native-purchases-ui", () => ({
     RESTORED: "RESTORED",
   },
 }));
+// Mock the funnel-analytics path so utils/subscription-utils (imported via
+// useEntitlement) does not pull in the MMKV storage chain via lib/install-anchor.
+jest.mock("~/lib/analytics/funnel-events", () => ({
+  emitPaywallPresented: jest.fn(),
+  emitFunnelEvent: jest.fn(),
+  paywallResultToEvent: jest.fn(() => ({ type: "trial_started", triggerSource: "unknown" })),
+}));
 
 const mockedGetCustomerInfo = Purchases.getCustomerInfo as jest.Mock;
 
