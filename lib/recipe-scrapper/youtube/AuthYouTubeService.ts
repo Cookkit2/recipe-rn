@@ -66,11 +66,19 @@ export class AuthYouTubeService implements IYouTubeService {
           );
         }
 
-        // Do not log the rawMessage directly as it may contain the API_KEY or other secrets.
-        // We only log safe metadata to prevent secret leakage.
-        console.error(`YouTube API error: HTTP ${response.status}`);
+        const rawMessage = String(errorData.error?.message || `API error: HTTP ${response.status}`);
 
-        throw new YouTubeServiceError(`API error: HTTP ${response.status}`, "API_ERROR");
+        let sanitizedMessage = rawMessage;
+        if (API_KEY) {
+          sanitizedMessage = sanitizedMessage.replaceAll(API_KEY, "[REDACTED_API_KEY]");
+          // Also replace URL-encoded version just in case it somehow leaked
+          const encodedKey = encodeURIComponent(API_KEY);
+          if (encodedKey !== API_KEY) {
+            sanitizedMessage = sanitizedMessage.replaceAll(encodedKey, "[REDACTED_API_KEY]");
+          }
+        }
+
+        throw new YouTubeServiceError(sanitizedMessage, "API_ERROR");
       }
 
       const data = await response.json();
@@ -94,15 +102,20 @@ export class AuthYouTubeService implements IYouTubeService {
         throw error;
       }
 
-      // Only log the error name, not the full message, to avoid leaking secrets
-      console.error(
-        `YouTube API network error: ${error instanceof Error ? error.name : "Unknown error"}`
+      const rawMessage = String(
+        `Network error: ${error instanceof Error ? error.message : "Unknown error"}`
       );
 
-      throw new YouTubeServiceError(
-        "Network error occurred while fetching video info",
-        "NETWORK_ERROR"
-      );
+      let sanitizedMessage = rawMessage;
+      if (API_KEY) {
+        sanitizedMessage = sanitizedMessage.replaceAll(API_KEY, "[REDACTED_API_KEY]");
+        const encodedKey = encodeURIComponent(API_KEY);
+        if (encodedKey !== API_KEY) {
+          sanitizedMessage = sanitizedMessage.replaceAll(encodedKey, "[REDACTED_API_KEY]");
+        }
+      }
+
+      throw new YouTubeServiceError(sanitizedMessage, "NETWORK_ERROR");
     }
   }
 
