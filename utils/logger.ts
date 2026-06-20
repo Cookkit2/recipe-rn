@@ -123,10 +123,10 @@ export const log = {
    * Trace level logging - detailed diagnostic information
    */
   trace: (message: string, ...args: any[]) => {
-    const safeArgs = filterSensitiveData(args);
-    rnLogger.debug(message, ...safeArgs);
+    rnLogger.debug(message, ...args);
     try {
-      const attributes = parseLogAttributes(safeArgs);
+      const filteredArgs = filterSensitiveData(args);
+      const attributes = parseLogAttributes(filteredArgs);
       Sentry.logger.trace(message, attributes);
     } catch (error) {
       // Silent fail - don't let Sentry errors break logging
@@ -137,10 +137,10 @@ export const log = {
    * Debug level logging - diagnostic information useful for debugging
    */
   debug: (message: string, ...args: any[]) => {
-    const safeArgs = filterSensitiveData(args);
-    rnLogger.debug(message, ...safeArgs);
+    rnLogger.debug(message, ...args);
     try {
-      const attributes = parseLogAttributes(safeArgs);
+      const filteredArgs = filterSensitiveData(args);
+      const attributes = parseLogAttributes(filteredArgs);
       Sentry.logger.debug(message, attributes);
     } catch (error) {
       // Silent fail
@@ -151,10 +151,10 @@ export const log = {
    * Info level logging - informational messages
    */
   info: (message: string, ...args: any[]) => {
-    const safeArgs = filterSensitiveData(args);
-    rnLogger.info(message, ...safeArgs);
+    rnLogger.info(message, ...args);
     try {
-      const attributes = parseLogAttributes(safeArgs);
+      const filteredArgs = filterSensitiveData(args);
+      const attributes = parseLogAttributes(filteredArgs);
       Sentry.logger.info(message, attributes);
     } catch (error) {
       // Silent fail
@@ -165,10 +165,10 @@ export const log = {
    * Warning level logging - potentially harmful situations
    */
   warn: (message: string, ...args: any[]) => {
-    const safeArgs = filterSensitiveData(args);
-    rnLogger.warn(message, ...safeArgs);
+    rnLogger.warn(message, ...args);
     try {
-      const attributes = parseLogAttributes(safeArgs);
+      const filteredArgs = filterSensitiveData(args);
+      const attributes = parseLogAttributes(filteredArgs);
       Sentry.logger.warn(message, attributes);
     } catch (error) {
       // Silent fail
@@ -179,10 +179,10 @@ export const log = {
    * Error level logging - error events
    */
   error: (message: string, ...args: any[]) => {
-    const safeArgs = filterSensitiveData(args);
-    rnLogger.error(message, ...safeArgs);
+    rnLogger.error(message, ...args);
     try {
-      const attributes = parseLogAttributes(safeArgs);
+      const filteredArgs = filterSensitiveData(args);
+      const attributes = parseLogAttributes(filteredArgs);
       Sentry.logger.error(message, attributes);
     } catch (error) {
       // Silent fail
@@ -193,10 +193,10 @@ export const log = {
    * Fatal level logging - very severe error events
    */
   fatal: (message: string, ...args: any[]) => {
-    const safeArgs = filterSensitiveData(args);
-    rnLogger.error(message, ...safeArgs); // react-native-logs doesn't have fatal, use error
+    rnLogger.error(message, ...args); // react-native-logs doesn't have fatal, use error
     try {
-      const attributes = parseLogAttributes(safeArgs);
+      const filteredArgs = filterSensitiveData(args);
+      const attributes = parseLogAttributes(filteredArgs);
       Sentry.logger.fatal(message, attributes);
     } catch (error) {
       // Silent fail

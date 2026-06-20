@@ -56,11 +56,3 @@
 **Vulnerability:** The Gemini API Key could be leaked in error logs due to incomplete or error-prone string replacement on raw error text.
 **Learning:** Using string `replaceAll` for redaction on raw network payloads is unsafe. If the API returns the key in a different format (e.g., URL-encoded, or if the API key happens to be a substring of a larger logged variable), the replacement fails.
 **Prevention:** Prevent secrets from entering the error context entirely by parsing safe metadata (like `response.status`) and never logging raw, untrusted response payloads (`response.text()`).
-
-## 2026-06-25 - Local Logger Sensitive Data Leak
-
-**Vulnerability:** The application was actively sanitizing sensitive strings and object patterns (like API keys, tokens, and passwords) before dispatching them to Sentry, but simultaneously logging the raw, unfiltered data to the local React Native logger (`rnLogger`).
-
-**Learning:** It is a common misstep to assume that "local" logs are safe. In reality, local logs (like those captured by `react-native-logs`, logcat, or the Expo debug console) can be inadvertently exposed through debugging sessions, crash reports, or physical access to the device. Any custom data sanitization utility must be applied at the absolute highest level *before* any egress path, whether local or remote.
-
-**Prevention:** When building custom abstraction layers over third-party loggers, always process and sanitize arguments immediately at the function entry point before delegating to *any* downstream logging sink, local or remote.
