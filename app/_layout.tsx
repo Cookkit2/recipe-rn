@@ -12,7 +12,11 @@ import { QueryProvider } from "~/store/QueryProvider";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { storage } from "~/data";
 import { PREF_COLOR_SCHEME_KEY } from "~/constants/storage-keys";
-import Purchases, { LOG_LEVEL, type CustomerInfoUpdateListener } from "react-native-purchases";
+import Purchases, {
+  LOG_LEVEL,
+  type CustomerInfo,
+  type CustomerInfoUpdateListener,
+} from "react-native-purchases";
 import Constants from "expo-constants";
 import { StatusBar } from "expo-status-bar";
 import { isRunningInExpoGo } from "expo";
@@ -26,11 +30,26 @@ import { IS_E2E } from "~/utils/e2e-flags";
 import { invalidateSubscriptionEntitlementsQuery } from "~/lib/subscription-query-sync";
 import { AnimatedStack } from "~/components/AnimatedStack";
 import { NotificationProvider } from "~/lib/notifications";
+import { getInstallAnchor } from "~/lib/install-anchor";
+import {
+  diffCustomerInfo,
+  emitAppFirstOpen,
+  emitFunnelEvent,
+  emitSessionStart,
+} from "~/lib/analytics/funnel-events";
 const usePlatformSpecificSetup = Platform.select({
   web: useSetWebBackgroundClassName,
   android: useSetAndroidNavigationBar,
   default: noop,
 });
+
+/**
+ * Previous CustomerInfo snapshot, used by the customerInfoUpdateListener to
+ * diff entitlement transitions (cancel / refund / activation) for funnel
+ * analytics (issue #718). Module-scoped because the listener is registered
+ * once on idle init and must remember state across its callbacks.
+ */
+let prevCustomerInfo: CustomerInfo | null = null;
 
 const navigationIntegration = Sentry.reactNavigationIntegration({
   enableTimeToInitialDisplay: !isRunningInExpoGo(),
@@ -82,6 +101,20 @@ export default Sentry.wrap(function RootLayout() {
       navigationIntegration.registerNavigationContainer(ref);
     }
 
+    // Materialize the Day-0 install anchor (issue #718). Lazily persists an
+    // anonymous installId + installAnchorTs on first launch; no-op after that.
+    // E2E runs keep the analytics path but it safely no-ops through the sinks.
+    getInstallAnchor();
+
+    // Day-0 funnel signals: first-open fires only on the install that creates
+    // the anchor (the E2E/Detox build re-uses a stored anchor so it does not
+    // re-emit). session_start fires every cold launch.
+    const anchor = getInstallAnchor();
+    if (Date.now() - anchor.installAnchorTs < 5_000) {
+      emitAppFirstOpen();
+    }
+    emitSessionStart();
+
     // Restore persisted theme from MMKV on mount
     const storedTheme = storage.get<"light" | "dark" | "system">(PREF_COLOR_SCHEME_KEY);
     if (storedTheme && ["light", "dark", "system"].includes(storedTheme)) {
@@ -112,7 +145,23 @@ export default Sentry.wrap(function RootLayout() {
         return;
       }
 
-      customerInfoListener = () => {
+      customerInfoListener = (customerInfo: CustomerInfo) => {
+        // Diff against the previously seen CustomerInfo to derive funnel
+        // transitions (entitlement_changed / paid_converted / cancel /
+        // refund / Day-0 cancel) per issue #718. Each emit() is wrapped in
+        // try/catch internally so analytics cannot break this listener.
+        try {
+          const anchor = getInstallAnchor();
+          for (const evt of diffCustomerInfo(prevCustomerInfo, customerInfo, anchor)) {
+            emitFunnelEvent(
+              evt.type,
+              evt.triggerSource ? { triggerSource: evt.triggerSource } : {}
+            );
+          }
+        } catch {
+          /* analytics must never break the entitlement cache invalidation */
+        }
+        prevCustomerInfo = customerInfo;
         invalidateSubscriptionEntitlementsQuery();
       };
       Purchases.addCustomerInfoUpdateListener(customerInfoListener);

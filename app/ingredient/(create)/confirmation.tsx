@@ -39,7 +39,7 @@ export default function ConfirmationPage() {
   const onSaveAllIngredients = useCallback(async () => {
     try {
       setIsSavingIngredients(true);
-      await presentPaywallIfNeeded();
+      await presentPaywallIfNeeded({ triggerSource: "ingredient_confirmation" });
       const savedItems = await addPantryItemsWithMetadata.mutateAsync(completedItems);
 
       // Schedule expiry notifications for saved items (using DB-assigned IDs)
