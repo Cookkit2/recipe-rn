@@ -35,6 +35,15 @@ export default function PantryPage() {
             router.push("/ingredient/create");
           }}
         />
+        <Stack.Toolbar.Button
+          accessibilityLabel="Speak your fridge"
+          icon="mic"
+          separateBackground
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            router.push("/ingredient/(create)/voice");
+          }}
+        />
 
         <Stack.Toolbar.Button
           accessibilityLabel="Profile"
