@@ -48,12 +48,3 @@
 ## 2024-05-18 - Avoid Client-Side `.find()` After Full DB Fetch
 **Learning:** In WatermelonDB services (like `HouseholdRealtimeService` or `HouseholdSyncService`), it is an anti-pattern to call `collection.query().fetch()` to load the entire table into memory and then use JavaScript's `array.find()` to locate a specific record by `supabaseId`. This causes a full table scan in SQLite and loads massive arrays into the JS thread.
 **Action:** Use targeted database queries directly via `Q.where("column_name", value)` to delegate filtering to the native SQLite layer, or build a `Map` if processing batches in loops to avoid N+1 queries.
-## 2024-06-25 - Consolidate Multiple Array.reduce Loops
-**Learning:** When computing multiple aggregations over the same array (e.g., calculating several nutritional totals), using multiple sequential `Array.prototype.reduce()` creates O(k*N) complexity and allocates unnecessary closures for each loop iteration.
-**Action:** Consolidate multiple `.reduce()` calls into a single standard `for` loop to reduce time complexity to O(N) and minimize closure allocation overhead.
-## 2024-06-25 - Replace reduce with for loop in Database Facade operations
-**Learning:** When executing multiple reductions over array data mapped from database records (like summing  for different  sets), using  inside the data access repositories generates excessive closure allocations. This is exceptionally punishing for JavaScript thread operations on React Native.
-**Action:** Replace  calls in repository summary calculations with basic  loops to eliminate closure allocation and callback execution overhead.
-## 2024-06-25 - Replace reduce with for loop in Database Facade operations
-**Learning:** When executing multiple reductions over array data mapped from database records (like summing `progress` for different `challenge` sets), using `.reduce()` inside the data access repositories generates excessive closure allocations. This is exceptionally punishing for JavaScript thread operations on React Native.
-**Action:** Replace `Array.prototype.reduce()` calls in repository summary calculations with basic `for` loops to eliminate closure allocation and callback execution overhead.
