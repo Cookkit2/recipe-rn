@@ -46,10 +46,7 @@ export const householdApiFunctions = {
    */
   fetchMembers: async (householdId: string): Promise<HouseholdMember[]> => {
     const collection = database.collections.get("household_member");
-    // ⚡ Bolt Performance Optimization: Use targeted DB query instead of fetching all records
-    return (await collection
-      .query(Q.where("household_id", householdId))
-      .fetch()) as HouseholdMember[];
+    return (await collection.query().fetch()) as HouseholdMember[];
   },
 
   /**
