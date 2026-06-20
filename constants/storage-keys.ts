@@ -51,3 +51,8 @@ export const SOCIAL_SHARES_COUNT_KEY = "social:shares_count";
 
 // ACHIEVEMENTS
 export const INGREDIENTS_USED_BEFORE_EXPIRY_KEY = "ingredients:used_before_expiry";
+
+// COOKING SCREEN — per-recipe ingredient tick-off state for the active cook
+// session. Keyed by recipeId so each cook tracks its own ingredients; values
+// are JSON arrays of relatedIngredientId strings. Local/MMKV-only by design.
+export const USED_INGREDIENTS_PREFIX = "cooking:used_ingredients:";
