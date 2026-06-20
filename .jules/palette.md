@@ -18,12 +18,3 @@
 ## 2024-06-13 - Missing Accessibility Attributes on Visual Cards
 **Learning:** Found that custom `AnimatedPressable` and `Pressable` wrapper components acting as visual cards (like `RecipeChip` containing an image and text) were missing explicit `accessibilityRole="button"` and `accessibilityLabel` properties, making them unidentifiable to screen readers.
 **Action:** When creating visual, interactive cards or links using `Pressable`, explicitly add `accessibilityRole="button"` and build a descriptive `accessibilityLabel` (e.g., using the title prop) to ensure screen reader compatibility.
-## 2024-06-14 - Accessibility for Cooked Recipe Profile Cards
-**Learning:** Found that the `Pressable` wrapping `CookedRecipeCard` components lacked `accessibilityRole="button"` and `accessibilityLabel`, making it difficult for screen reader users to identify the card's purpose (viewing a recipe) and its dynamic contents (cook count, last cooked date).
-**Action:** Always ensure that interactive elements wrapping complex data (like recipe history cards) explicitly set `accessibilityRole="button"` and provide a comprehensive `accessibilityLabel` that synthesizes the visual information (e.g., "View recipe for [Title]. Cooked [X] times. Last cooked [Date].").
-## 2024-06-15 - Accessibility for gesture-driven list items
-**Learning:** Found that custom `Pressable` components used inside complex drag-and-drop gesture handlers (like `MealPlanDragItem`) lacked explicit `accessibilityRole="button"` and `accessibilityLabel` properties. This prevented screen readers from recognizing the items as interactive or reading their dynamic contents (like recipe titles).
-**Action:** When creating draggable or highly interactive items that wrap UI in a `<Pressable>` (even inside gesture detectors), always assign `accessibilityRole="button"` and a descriptive `accessibilityLabel` utilizing the underlying item's title or data to ensure screen reader users can interact with them properly.
-## 2024-06-16 - Accessibility for Custom Carousels
-**Learning:** Found that custom visual carousels using `Pressable` inside `LegendList` (like `RecipeCarousel`) often lack explicit `accessibilityRole="button"` and `accessibilityLabel` properties, making them opaque to screen readers despite being highly interactive to select items.
-**Action:** When creating custom interactive carousels using `Pressable`, always explicitly assign `accessibilityRole="button"` and a descriptive `accessibilityLabel` (e.g., using the title prop) so screen readers correctly identify their function.

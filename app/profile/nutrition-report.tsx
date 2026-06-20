@@ -61,21 +61,10 @@ export default function NutritionReportScreen() {
     const daysWithData = currentWeekData.filter((d) => d.calories > 0);
     if (daysWithData.length === 0) return null;
 
-    // ⚡ Bolt Performance Optimization: Replace multiple O(N) array.reduce calls with a single O(N) loop
-    let totalCalories = 0,
-      totalProtein = 0,
-      totalCarbs = 0,
-      totalFat = 0;
-
-    for (let i = 0; i < daysWithData.length; i++) {
-      const d = daysWithData[i];
-      if (d) {
-        totalCalories += d.calories;
-        totalProtein += d.protein;
-        totalCarbs += d.carbs;
-        totalFat += d.fat;
-      }
-    }
+    const totalCalories = daysWithData.reduce((sum, d) => sum + d.calories, 0);
+    const totalProtein = daysWithData.reduce((sum, d) => sum + d.protein, 0);
+    const totalCarbs = daysWithData.reduce((sum, d) => sum + d.carbs, 0);
+    const totalFat = daysWithData.reduce((sum, d) => sum + d.fat, 0);
 
     const avgCalories = Math.round(totalCalories / daysWithData.length);
     const avgProtein = Math.round(totalProtein / daysWithData.length);
@@ -93,18 +82,10 @@ export default function NutritionReportScreen() {
     if (previousWeekData && previousWeekData.length > 0) {
       const prevDaysWithData = previousWeekData.filter((d) => d.calories > 0);
       if (prevDaysWithData.length > 0) {
-        // ⚡ Bolt Performance Optimization: Replace multiple O(N) array.reduce calls with a single O(N) loop
-        let prevTotalCalories = 0;
-        let prevTotalCarbs = 0;
-        for (let i = 0; i < prevDaysWithData.length; i++) {
-          const d = prevDaysWithData[i];
-          if (d) {
-            prevTotalCalories += d.calories;
-            prevTotalCarbs += d.carbs;
-          }
-        }
-        const prevAvgCalories = prevTotalCalories / prevDaysWithData.length;
-        const prevAvgCarbs = prevTotalCarbs / prevDaysWithData.length;
+        const prevAvgCalories =
+          prevDaysWithData.reduce((sum, d) => sum + d.calories, 0) / prevDaysWithData.length;
+        const prevAvgCarbs =
+          prevDaysWithData.reduce((sum, d) => sum + d.carbs, 0) / prevDaysWithData.length;
 
         if (prevAvgCalories > 0) {
           caloriesChange = ((avgCalories - prevAvgCalories) / prevAvgCalories) * 100;
