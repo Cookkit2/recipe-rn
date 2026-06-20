@@ -123,7 +123,9 @@ const IngredientItem: React.FC<{
       style={animatedStyle}
       accessibilityRole="button"
       accessibilityState={{ selected: isUsed }}
-      accessibilityLabel={`${titleCase(ingredient.name)}. ${
+      accessibilityLabel={`${titleCase(ingredient.name)}. Quantity: ${
+        ingredient.quantity * servings
+      } ${ingredient.unit}. ${
         isUsed ? "Marked as used" : "Tap to mark as used"
       }${pantryItemId ? ". Long-press for pantry details." : ""}`}
     >
