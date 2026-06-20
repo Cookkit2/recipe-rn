@@ -1,6 +1,6 @@
 # Cookkit — Improvement Roadmap & GitHub Issue Breakdown
 
-**Generated:** 2026-06-20 · **Status:** v2 — 23 issues live on GitHub (**#717–#739**) under Now / Next / Later / Deferred milestones. This doc is the source of truth; iterate before committing code.
+**Generated:** 2026-06-20 · **Status:** v2.1 — 25 open issues (#717–#747; #738 research ✅ closed) under Now / Next / Later / Deferred milestones. Segment deep-dive added (`docs/research-segment-deepdive.md`). This doc is the source of truth.
 
 ---
 
@@ -70,7 +70,7 @@ This roadmap (**v2 — solo/indie build, revenue & conversion focus**) sequences
 ## Gap analysis by dimension
 
 ### 🎯 Monetization & Growth — the largest levers (best-cited)
-Gating is fragmented and the funnel is unmeasured. RevenueCat data points to hard paywalls (5×) [#F5], long trials (+70%) [#F6], cheap-annual default (36% vs 6.7% Y1) [#F8], and an AI-churn risk to engineer against [#F9]. **Start by centralizing entitlement (P0-1) and instrumenting the Day-0 funnel (P0-2)**, then run the paywall/trial experiments.
+Gating is fragmented and the funnel is unmeasured. RevenueCat data points to hard paywalls (5×) [#F5], long trials (+70%) [#F6], cheap-annual default (36% vs 6.7% Y1) [#F8], and an AI-churn risk to engineer against [#F9]. **Start by centralizing entitlement (P0-1) and instrumenting the Day-0 funnel (P0-2)**, then run the paywall/trial experiments. **Strategic wrinkle from segment research [#738 ✅]:** the recipe-manager leaders (Paprika/Mela/Pestle) are deliberately pay-once and market "no subscription" as a moat — Cookkit must counter-position its subscription (justify via AI features they lack) and/or add a Lifetime tier (**#745**).
 
 ### 🤖 AI & Smart Features
 Import, tailored-recipe, and a 9-strategy recommender are real — but **nothing auto-generates a meal plan (P2-1)**, **photo-recognition is the unhardened bottleneck (P2-2)**, **voice input is cooking-only (P1-2 reuses it for pantry)**, and **on-device AI is an empty scaffold (P4-1)**.
@@ -103,11 +103,12 @@ The WatermelonDB+Supabase hybrid is the pragmatic choice [#F11]; offline-first i
 | [#717](https://github.com/Cookkit2/recipe-rn/issues/717) | P0-1 | M | Centralize entitlement (`useEntitlement`/`isPro`) — clean gating for #725/#726 |
 | [#725](https://github.com/Cookkit2/recipe-rn/issues/725) | P1-6 | M | A/B harder-paywall variant (after #720) — [F5] 5× conversion, mind refunds |
 | [#726](https://github.com/Cookkit2/recipe-rn/issues/726) | P1-7 | L | AI-churn defense — [F9] AI earns +41% but churns 30% faster |
-| [#738](https://github.com/Cookkit2/recipe-rn/issues/738) | P4-3 | S | Research deep-dive: recipe-manager / meal-planner segment (fills the evidence gap) |
+| [✅ #738](https://github.com/Cookkit2/recipe-rn/issues/738) | P4-3 | S | ~~Research: recipe-manager / meal-planner segment~~ **DONE** → filed #745/#746/#747 (see `docs/research-segment-deepdive.md`) |
 | [#739](https://github.com/Cookkit2/recipe-rn/issues/739) | P2-1a | S | Spike: validate auto meal-plan wiring before committing to #727 |
+| [#745](https://github.com/Cookkit2/recipe-rn/issues/745) | P1-8 | S | **NEW:** Evaluate Lifetime tier + counter-positioning vs pay-once competitors (segment research) |
 
 ### 📥 LATER (backlog)
-[#719](https://github.com/Cookkit2/recipe-rn/issues/719) sync audit · [#727](https://github.com/Cookkit2/recipe-rn/issues/727) auto meal-plan (gated by spike #739) · [#728](https://github.com/Cookkit2/recipe-rn/issues/728) recognition hardening · [#729](https://github.com/Cookkit2/recipe-rn/issues/729) cooking UX · [#730](https://github.com/Cookkit2/recipe-rn/issues/730) import accuracy · [#731](https://github.com/Cookkit2/recipe-rn/issues/731) nav IA · [#732](https://github.com/Cookkit2/recipe-rn/issues/732) accessibility · [#733](https://github.com/Cookkit2/recipe-rn/issues/733) cold-start/TTI · [#734](https://github.com/Cookkit2/recipe-rn/issues/734) image cache + offline · [#735](https://github.com/Cookkit2/recipe-rn/issues/735) household sync
+[#719](https://github.com/Cookkit2/recipe-rn/issues/719) sync audit · [#727](https://github.com/Cookkit2/recipe-rn/issues/727) auto meal-plan (gated by spike #739) · [#728](https://github.com/Cookkit2/recipe-rn/issues/728) recognition hardening · [#729](https://github.com/Cookkit2/recipe-rn/issues/729) cooking UX · [#730](https://github.com/Cookkit2/recipe-rn/issues/730) import accuracy · [#731](https://github.com/Cookkit2/recipe-rn/issues/731) nav IA · [#732](https://github.com/Cookkit2/recipe-rn/issues/732) accessibility · [#733](https://github.com/Cookkit2/recipe-rn/issues/733) cold-start/TTI · [#734](https://github.com/Cookkit2/recipe-rn/issues/734) image cache + offline · [#735](https://github.com/Cookkit2/recipe-rn/issues/735) household sync · [#746](https://github.com/Cookkit2/recipe-rn/issues/746) macro-target meal planning (NEW) · [#747](https://github.com/Cookkit2/recipe-rn/issues/747) TikTok/IG import (NEW)
 
 ### 🗄️ DEFERRED (not committed)
 [#736](https://github.com/Cookkit2/recipe-rn/issues/736) on-device AI (`function-gemma`) · [#737](https://github.com/Cookkit2/recipe-rn/issues/737) social/sharing
