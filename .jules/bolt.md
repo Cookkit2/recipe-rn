@@ -48,3 +48,16 @@
 ## 2024-05-18 - Avoid Client-Side `.find()` After Full DB Fetch
 **Learning:** In WatermelonDB services (like `HouseholdRealtimeService` or `HouseholdSyncService`), it is an anti-pattern to call `collection.query().fetch()` to load the entire table into memory and then use JavaScript's `array.find()` to locate a specific record by `supabaseId`. This causes a full table scan in SQLite and loads massive arrays into the JS thread.
 **Action:** Use targeted database queries directly via `Q.where("column_name", value)` to delegate filtering to the native SQLite layer, or build a `Map` if processing batches in loops to avoid N+1 queries.
+## 2024-06-20 - Batch Database Queries Inside Loop Iteration Bottleneck
+**Learning:** Sequential WatermelonDB fetch queries within a loop (such as iterating over mappings to find associated steps and ingredients) significantly downgrade UI performance even if errors bypass the loop condition, blocking the JS thread for 50-100ms.
+**Action:** When finding multiple relational entities inside a loop, always extract the database query outside the loop, use `Q.where('id', Q.oneOf(ids))` to perform a single batched fetch, construct in-memory Maps keyed by foreign IDs, and iterate over the local maps for O(1) retrieval.
+## 2026-06-19 - Optimize O(N^2) array lookup in tailored recipe mapping repository
+**Learning:** Converting an array to a Map outside a loop reduces inner lookups from O(N) to O(1), improving overall time complexity from O(N^2) to O(N). This is critical when iterating over large arrays inside database repository methods.
+**Action:** Use a Map to cache items before looping when multiple lookups are required.
+
+## 2026-06-17 - Optimize Array Reductions in Loops
+**Learning:** Repeated calls to `Array.prototype.reduce()` allocating closure functions inside loops or mapping over arrays dynamically can cause noticeable performance overhead, allocating unnecessary intermediate garbage and causing excessive GC cycles. This is particularly problematic in computationally intensive contexts like nutrition calculations where numbers are aggregated across multiple recipes and items.
+**Action:** When computing sums across lists (especially inside other render layers or data-heavy loops), replace multiple `Array.prototype.reduce()` calls with a single standard `for` loop that aggregates multiple scalar properties simultaneously. This eliminates closure allocations and dramatically reduces both memory allocations and total time complexity by traversing the array only once.
+## 2026-06-14 - Optimize Sequential Upload Latency
+**Learning:** Performing network uploads inside a `for...of` loop with `await` introduces significant latency due to sequential processing of I/O operations.
+**Action:** When performing independent network uploads in a loop, always use `input.map(async () => ...)` to generate promises, and resolve them concurrently with `await Promise.all(...)`. Combining this with bulk inserting database records afterwards prevents N+1 queries.

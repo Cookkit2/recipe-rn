@@ -66,7 +66,12 @@ export default function RecipeCarousel({
       onViewableItemsChanged={onViewableItemsChanged.current}
       viewabilityConfig={viewabilityConfig}
       renderItem={({ item, index }) => (
-        <Pressable onPress={() => onPressItem?.(item, index)} style={{ width: ITEM_WIDTH }}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={item.title}
+          onPress={() => onPressItem?.(item, index)}
+          style={{ width: ITEM_WIDTH }}
+        >
           <Image
             source={{ uri: item.imageUrl }}
             style={styles.image}

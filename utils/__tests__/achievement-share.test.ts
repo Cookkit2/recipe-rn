@@ -1,4 +1,5 @@
-import { generateAchievementShareContent, generateStreakShareContent } from "../achievement-share";
+import { Platform } from "react-native";
+import { generateAchievementShareContent, generateStreakShareContent, supportsActivityType } from "../achievement-share";
 import type { AchievementProgress } from "~/types/achievements";
 
 // Mock store URL
@@ -154,6 +155,46 @@ describe("Achievement Share Utilities", () => {
       const result = generateStreakShareContent(1);
       expect(result.message).toContain("🔥 My cooking streak: 1 day!");
       expect(result.message).not.toContain("1 days!");
+    });
+  });
+
+  describe("supportsActivityType", () => {
+    let originalPlatformOS: typeof Platform.OS;
+
+    beforeEach(() => {
+      originalPlatformOS = Platform.OS;
+    });
+
+    afterEach(() => {
+      Platform.OS = originalPlatformOS;
+    });
+
+    it("should return true for all activity types when OS is not iOS", () => {
+      Platform.OS = "android";
+      expect(supportsActivityType("com.apple.UIKit.activity.PostToTwitter")).toBe(true);
+      expect(supportsActivityType("some.random.activity")).toBe(true);
+
+      Platform.OS = "web";
+      expect(supportsActivityType("com.apple.UIKit.activity.Message")).toBe(true);
+    });
+
+    it("should return true for supported iOS activity types when OS is iOS", () => {
+      Platform.OS = "ios";
+      expect(supportsActivityType("com.apple.UIKit.activity.PostToTwitter")).toBe(true);
+      expect(supportsActivityType("com.apple.UIKit.activity.PostToFacebook")).toBe(true);
+      expect(supportsActivityType("com.apple.UIKit.activity.PostToWeibo")).toBe(true);
+      expect(supportsActivityType("com.apple.UIKit.activity.Message")).toBe(true);
+      expect(supportsActivityType("com.apple.UIKit.activity.Mail")).toBe(true);
+      expect(supportsActivityType("com.apple.UIKit.activity.CopyToPasteboard")).toBe(true);
+      expect(supportsActivityType("com.apple.UIKit.activity.AssignToContact")).toBe(true);
+    });
+
+    it("should return false for unsupported iOS activity types when OS is iOS", () => {
+      Platform.OS = "ios";
+      expect(supportsActivityType("com.apple.UIKit.activity.Print")).toBe(false);
+      expect(supportsActivityType("com.apple.UIKit.activity.SaveToCameraRoll")).toBe(false);
+      expect(supportsActivityType("com.apple.UIKit.activity.AirDrop")).toBe(false);
+      expect(supportsActivityType("random.unsupported.activity")).toBe(false);
     });
   });
 });
