@@ -61,11 +61,6 @@
 ## 2026-06-14 - Optimize Sequential Upload Latency
 **Learning:** Performing network uploads inside a `for...of` loop with `await` introduces significant latency due to sequential processing of I/O operations.
 **Action:** When performing independent network uploads in a loop, always use `input.map(async () => ...)` to generate promises, and resolve them concurrently with `await Promise.all(...)`. Combining this with bulk inserting database records afterwards prevents N+1 queries.
-## 2025-02-12 - Eliminate Array.filter and Array.find for DB Queries in Loops
-
-**Learning:** When fetching records in API files like `householdApi.ts`, fetching an entire collection via `.query().fetch()` and then filtering them using JavaScript `Array.prototype.find()` or `.filter()` by `userId` or `householdId` requires excessive serialization over the bridge, loads enormous arrays into JS memory, and bypasses native SQLite querying optimizations.
-**Action:** Always delegate filtering to the native SQLite layer using WatermelonDB query constraints `Q.where("column_name", value)` to retrieve only the specific records needed. Instead of accessing the array via index 0 (`members[0]`), fetch only specific components or records needed, avoiding N+1 querying.
-
 ## 2025-02-12 - Re-evaluating optimizations and dealing with overlaps
 
 **Learning:** When addressing bottlenecks, occasionally those optimizations may already be partially or fully addressed by parallel feature/refactoring PRs (e.g., `#699`).
