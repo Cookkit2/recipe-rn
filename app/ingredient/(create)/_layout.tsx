@@ -16,6 +16,13 @@ export default function CreateIngredientLayout() {
           }}
         />
         <Stack.Screen
+          name="voice"
+          options={{
+            presentation: "card",
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
           name="confirmation"
           options={{
             presentation: "card",

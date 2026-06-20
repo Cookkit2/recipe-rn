@@ -38,6 +38,11 @@ interface CreateIngredientContextType {
   removeItem: (id: string) => void;
   retryItem: (id: string) => void;
   clearFailedItems: () => void;
+  // Voice-dictation batch entry (#721): merge parsed voice candidates into the
+  // processing list. Camera-origin items are preserved; voice items skip the
+  // Skia pipeline and arrive with status undefined so confirmation.tsx treats
+  // them as eligible for save (same as a finished camera item).
+  pushVoiceCandidates: (candidates: CreatePantryItem[]) => void;
 }
 
 const CreateIngredientContext = createContext<CreateIngredientContextType | null>(null);
@@ -349,6 +354,39 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
     setProcessPantryItems((prev) => prev.filter((item) => item.id !== id));
   }, []);
 
+  // Merge voice-dictated candidates into the processing list. Existing
+  // camera-origin items are preserved untouched. Duplicates (same normalized
+  // name) merge by summing quantities when units match; otherwise the new
+  // candidate is appended so the user can resolve it in the confirmation sheet.
+  const pushVoiceCandidates = useCallback((candidates: CreatePantryItem[]) => {
+    if (candidates.length === 0) return;
+
+    setProcessPantryItems((prev) => {
+      const next = [...prev];
+
+      for (const candidate of candidates) {
+        const key = candidate.name.toLowerCase();
+        const existingIdx = next.findIndex(
+          (item) => item.name.toLowerCase() === key && item.unit === candidate.unit
+        );
+
+        if (existingIdx >= 0) {
+          const existing = next[existingIdx];
+          if (existing) {
+            next[existingIdx] = {
+              ...existing,
+              quantity: existing.quantity + candidate.quantity,
+            };
+          }
+        } else {
+          next.push(candidate);
+        }
+      }
+
+      return next;
+    });
+  }, []);
+
   return (
     <CreateIngredientContext.Provider
       value={{
@@ -361,6 +399,7 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
         removeItem,
         retryItem,
         clearFailedItems,
+        pushVoiceCandidates,
       }}
     >
       {children}
