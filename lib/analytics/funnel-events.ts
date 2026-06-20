@@ -71,7 +71,14 @@ export type FunnelEventType =
   // cohort (#718). All three are non-terminal breadcrumbs.
   | "expiring_nudge_shown"
   | "expiring_nudge_engaged"
-  | "expiring_nudge_dismissed";
+  | "expiring_nudge_dismissed"
+  /**
+   * A/B experiment exposure — fired the first time a user is bucketed into a
+   * variant for a gating decision (see lib/experiments/useExperiment.ts). Lets
+   * #718 slice per-variant conversion for the #724/#725/#731 experiments.
+   * Carries `experimentKey` + `variant` in the event detail.
+   */
+  | "experiment_exposed";
 
 /**
  * Surface that surfaced an expiring-ingredient nudge. Lets us attribute
