@@ -502,14 +502,16 @@ npm run test:coverage     # Tests with coverage
 
 ## 📚 Related Documentation
 
-| Document                               | Purpose                           |
-| -------------------------------------- | --------------------------------- |
-| `COOKKIT_APP_DOCUMENTATION.md`         | Full app design system & features |
-| `DATABASE_REFACTORING_PLAN.md`         | Database API simplification       |
-| `PANTRY_MIGRATION.md`                  | Migration to React Query          |
-| `RECIPE_MIGRATION.md`                  | Recipe context restructuring      |
-| `CATEGORY_SYNONYM_MIGRATION.md`        | Normalized categories/synonyms    |
-| `CAMERA_BACKGROUND_PROCESSING_PLAN.md` | Camera queue system               |
+| Document                               | Purpose                                            |
+| -------------------------------------- | -------------------------------------------------- |
+| `COOKKIT_APP_DOCUMENTATION.md`         | Full app design system & features                  |
+| `DATABASE_REFACTORING_PLAN.md`         | Database API simplification                        |
+| `PANTRY_MIGRATION.md`                  | Migration to React Query                           |
+| `RECIPE_MIGRATION.md`                  | Recipe context restructuring                       |
+| `CATEGORY_SYNONYM_MIGRATION.md`        | Normalized categories/synonyms                     |
+| `CAMERA_BACKGROUND_PROCESSING_PLAN.md` | Camera queue system                                |
+| `SYNC_STRATEGY_AUDIT.md`               | Household sync & conflict-resolution audit (#719)  |
+| `adr/004-sync-conflict-resolution.md`  | ADR: server-authoritative hybrid sync, LWW (not CRDT) |
 
 ---
 
@@ -552,6 +554,7 @@ const { user, signIn, signOut } = useAuth();
 See `CLAUDE.md` and the repo README for up-to-date setup and commands. Key areas:
 
 - **Data access**: Use `databaseFacade` and `storage` only; see `docs/REPOSITORY_PATTERN.md` and `docs/adr/`.
+- **Household sync**: Two paths (batch `HouseholdSyncService` + realtime `HouseholdRealtimeService`) over Supabase. Server-authoritative hybrid, last-writer-wins by `updated_at` — **not** CRDT. Before touching sync, read `docs/SYNC_STRATEGY_AUDIT.md` and `docs/adr/004-sync-conflict-resolution.md`; note `data/api/householdApi.ts` (lifecycle orchestrator) wraps `data/supabase-api/HouseholdApi.ts` (raw surface) — they are layered, not duplicates.
 - **Notifications**: Local notifications with handler registry; user settings in profile. See `docs/LOCAL_NOTIFICATIONS.md`.
 - **Testing**: Jest for unit/integration tests; run `npm test` and `npm run test:coverage`.
 
