@@ -1,5 +1,5 @@
 import { setStatusBarStyle } from "expo-status-bar";
-import Purchases from "react-native-purchases";
+import Purchases, { type PurchasesEntitlementInfo } from "react-native-purchases";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import { invalidateSubscriptionEntitlementsQuery } from "~/lib/subscription-query-sync";
 import { log } from "./logger";
@@ -7,14 +7,40 @@ import { log } from "./logger";
 // Must match RevenueCat dashboard entitlement identifier (see customerInfo.entitlements.active)
 const ENTITLEMENT_IDENTIFIER = "Pro";
 
+/**
+ * Read the active Pro entitlement from RevenueCat's cached CustomerInfo.
+ *
+ * This is the READ half of the entitlement story and the sole data source for
+ * `useEntitlement`'s queryFn. It returns the entitlement object (truthy) when an
+ * active Pro entitlement exists, or `null` when there is none / RevenueCat is not
+ * yet configured / the read throws. The paywall PRESENT action lives in
+ * `presentPaywallIfNeeded` below.
+ */
+export async function readEntitlement(): Promise<PurchasesEntitlementInfo | null> {
+  try {
+    const customerInfo = await Purchases.getCustomerInfo();
+    log.info("Customer Info:", customerInfo);
+    // Use the same entitlement identifier as configured in RevenueCat dashboard
+    return customerInfo.entitlements.active[ENTITLEMENT_IDENTIFIER] ?? null;
+  } catch (e) {
+    log.error("Error getting customer info:", e);
+    return null;
+  }
+}
+
+/**
+ * @deprecated Use `useEntitlement` (hooks/queries/useEntitlement.ts) for any React
+ * read of Pro state, or `readEntitlement` for an imperative one-off. Kept only for
+ * the paywall action path that has not yet migrated. Behavior is intentionally
+ * unchanged from before the refactor: returns the raw entitlement (truthy, or
+ * `undefined` when absent) on success, and `false` when the read throws.
+ */
 export const isValidSubscription = async () => {
   try {
     const customerInfo = await Purchases.getCustomerInfo();
     log.info("Customer Info:", customerInfo);
     // Use the same entitlement identifier as configured in RevenueCat dashboard
-    const entitlements = customerInfo.entitlements.active[ENTITLEMENT_IDENTIFIER];
-
-    return entitlements;
+    return customerInfo.entitlements.active[ENTITLEMENT_IDENTIFIER];
   } catch (e) {
     log.error("Error getting customer info:", e);
     return false;
