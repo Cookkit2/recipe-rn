@@ -15,16 +15,30 @@ import { useRouter } from "expo-router";
 import { storage } from "~/data";
 import { ONBOARDING_COMPLETED_KEY } from "~/constants/storage-keys";
 
-// Step data extracted for easier maintenance / localization
-const STEP_TITLES = ["Snap Groceries", "Manage Ingredients", "Cook Recipes"];
+// Step data extracted for easier maintenance / localization.
+//
+// The "Skip What You Have" step heroes Cookkit's pantry-aware grocery dedup:
+// the grocery list subtracts on-hand pantry stock (synonyms + unit conversion
+// + coverage) so you only buy what you're actually missing. Copy is drawn from
+// docs/aso-store-listing.md (the off-repo store-listing artifact for #722) and
+// must stay truthful to free-tier behavior — no Pro-only or on-device-AI claims.
+//
+// Defensibility mapping (keep this in sync if copy changes):
+//   dedup claim -> hooks/queries/useGroceryList.ts (isCovered / neededQuantity / pantryQuantity)
+//                  utils/unit-converter.ts + utils/quantity-comparison.ts
+//                  data/db/models/IngredientSynonym.ts (synonym matching)
+//   offline     -> data/db/ (WatermelonDB local store; Supabase is a sync layer)
+// Do NOT reference lib/function-gemma/ — it is an unimplemented scaffold.
+const STEP_TITLES = ["Snap Groceries", "Skip What You Have", "Manage Ingredients", "Cook Recipes"];
 
 const STEP_CONTENT = [
   "Take a photo of your grocery list and we'll keep your ingredients",
+  "Your grocery list, minus what you already have. Other apps add everything — Cookkit checks your pantry first.",
   "Keep track of your ingredients, their quantities and expiry dates",
   "Cook your loved recipes that match your ingredients",
 ];
 
-const BUTTON_LABELS = ["Continue", "Continue", "Let's Start"];
+const BUTTON_LABELS = ["Continue", "Continue", "Continue", "Let's Start"];
 
 export default function Tutorial() {
   const colors = useColors();
@@ -67,7 +81,7 @@ export default function Tutorial() {
       setTimeout(() => buttonLoopRef.current?.animateToNext(), 100);
       return prev + 1;
     });
-    if (currentStep === 3) {
+    if (currentStep === TOTAL_STEPS) {
       // Completed onboarding - persist flag and route to main app
       storage.set(ONBOARDING_COMPLETED_KEY, true);
       router.replace("/ingredient/create");
