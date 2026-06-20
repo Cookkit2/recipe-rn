@@ -1,5 +1,9 @@
 import { Platform } from "react-native";
-import { generateAchievementShareContent, generateStreakShareContent, supportsActivityType } from "../achievement-share";
+import {
+  generateAchievementShareContent,
+  generateStreakShareContent,
+  supportsActivityType,
+} from "../achievement-share";
 import type { AchievementProgress } from "~/types/achievements";
 
 // Mock store URL
