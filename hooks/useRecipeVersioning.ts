@@ -25,7 +25,7 @@ export interface RecipeVersionMetadata {
 /**
  * Hook to get all versions for a specific recipe
  */
-export function useRecipeVersions(recipeId: string) {
+function useRecipeVersions(recipeId: string) {
   return useQuery({
     queryKey: recipeQueryKeys.versions(recipeId),
     queryFn: async () => {
@@ -46,7 +46,7 @@ export function useRecipeVersions(recipeId: string) {
 /**
  * Hook to get the latest version for a specific recipe
  */
-export function useLatestRecipeVersion(recipeId: string) {
+function useLatestRecipeVersion(recipeId: string) {
   return useQuery({
     queryKey: recipeQueryKeys.latestVersion(recipeId),
     queryFn: async () => {

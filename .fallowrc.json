@@ -1,0 +1,698 @@
+{
+  "$schema": "https://fallow.dev/config.schema.json",
+  "ignoreExports": [
+    {
+      "file": "components/Analytics/AchievementConfetti.tsx",
+      "exports": ["default"]
+    },
+    {
+      "file": "components/Ingredient/IngredientDiscardButton.tsx",
+      "exports": ["default"]
+    },
+    {
+      "file": "components/Nutrition/NutritionChart.tsx",
+      "exports": ["default"]
+    },
+    {
+      "file": "components/Recipe/Details/IngredientList.tsx",
+      "exports": ["default"]
+    },
+    {
+      "file": "components/RecipeStep.tsx",
+      "exports": ["RecipeStep"]
+    },
+    {
+      "file": "components/Timer/AddTimerDialog.tsx",
+      "exports": ["default"]
+    },
+    {
+      "file": "components/ui/dialog.tsx",
+      "exports": ["DialogOverlay", "DialogPortal"]
+    },
+    {
+      "file": "constants/sheet-modal.ts",
+      "exports": ["SCALE_FACTOR"]
+    },
+    {
+      "file": "data/api/recipeImportApi.ts",
+      "exports": ["IMPORT_STATUS_MESSAGES", "RecipeImportResult"]
+    },
+    {
+      "file": "data/db/DatabaseFacade.ts",
+      "exports": [
+        "CreateStockData",
+        "DatabaseStats",
+        "RecordConsumptionData",
+        "TailoredRecipeWithDetails",
+        "UpdateStockData",
+        "default"
+      ]
+    },
+    {
+      "file": "data/db/database.ts",
+      "exports": ["default"]
+    },
+    {
+      "file": "data/db/index.ts",
+      "exports": [
+        "AvailableRecipesResult",
+        "CookingHistory",
+        "CreateRecipeData",
+        "CreateStockData",
+        "DatabaseStats",
+        "Recipe",
+        "RecipeIngredient",
+        "RecipeStep",
+        "RecipeWithDetails",
+        "RecordCookingData",
+        "ShoppingListResult",
+        "StepsToStore",
+        "Stock",
+        "UpdateStockData",
+        "database",
+        "default",
+        "migrations",
+        "schema"
+      ]
+    },
+    {
+      "file": "data/db/models/index.ts",
+      "exports": [
+        "AchievementModelData",
+        "ChallengeData",
+        "CookingHistoryData",
+        "GroceryItemCheck",
+        "GroceryItemCheckData",
+        "Household",
+        "HouseholdData",
+        "HouseholdMember",
+        "HouseholdMemberData",
+        "IngredientCategoryData",
+        "IngredientSynonymData",
+        "MealPlan",
+        "MealPlanData",
+        "MealPlanTemplate",
+        "MealPlanTemplateData",
+        "RecipeData",
+        "RecipeIngredientData",
+        "RecipeStepData",
+        "RecipeType",
+        "RecipeVersion",
+        "RecipeVersionData",
+        "StepsToStoreData",
+        "StockCategoryData",
+        "StockData",
+        "TailoredRecipeMapping",
+        "TailoredRecipeMappingData",
+        "UserAchievementData",
+        "UserChallengeData",
+        "WasteLogData"
+      ]
+    },
+    {
+      "file": "hooks/model/classifyModel.tsx",
+      "exports": ["classifyStaticImage"]
+    },
+    {
+      "file": "hooks/model/processImage.ts",
+      "exports": ["loadImageIntoSkia"]
+    },
+    {
+      "file": "hooks/model/segmentModel.tsx",
+      "exports": ["segmentStaticImage", "trimTransparentBordersAndResizeImage"]
+    },
+    {
+      "file": "hooks/queries/useRecipeImportQueries.ts",
+      "exports": ["RecipeImportStatus", "getImportProgress", "getImportStatusMessage"]
+    },
+    {
+      "file": "hooks/queries/useRecipeQueries.ts",
+      "exports": ["useRecipesPaginated"]
+    },
+    {
+      "file": "hooks/queries/useYouTubeRecipeQueries.ts",
+      "exports": ["IMPORT_STATUS_MESSAGES"]
+    },
+    {
+      "file": "hooks/recommendation/filters/AvailabilityFilter.ts",
+      "exports": ["AvailabilityFilter"]
+    },
+    {
+      "file": "hooks/recommendation/filters/index.ts",
+      "exports": [
+        "AvailabilityFilter",
+        "AvailabilityFilterOptions",
+        "CategoryFilterOptions",
+        "DietaryFilterOptions"
+      ]
+    },
+    {
+      "file": "hooks/recommendation/index.ts",
+      "exports": [
+        "AlphabeticalStrategyOptions",
+        "AvailabilityFilter",
+        "AvailabilityFilterOptions",
+        "CategoryFilterOptions",
+        "DietaryFilterOptions",
+        "DietaryStrategy",
+        "DifficultyStrategy",
+        "ExpiringIngredientsRankingStrategyOptions",
+        "FamiliarityStrategy",
+        "FamiliarityStrategyOptions",
+        "RandomVarietyStrategy",
+        "ReadinessStrategyOptions",
+        "RecencyPenaltyStrategy",
+        "RecencyPenaltyStrategyOptions",
+        "TimeStrategy",
+        "UserRatingStrategy",
+        "UserRatingStrategyOptions",
+        "createDefaultRankingStrategy",
+        "createQuickAndEasyRankingStrategy"
+      ]
+    },
+    {
+      "file": "hooks/recommendation/ranking/index.ts",
+      "exports": [
+        "AlphabeticalStrategy",
+        "AlphabeticalStrategyOptions",
+        "DietaryStrategy",
+        "DifficultyStrategy",
+        "ExpiringIngredientsRankingStrategyOptions",
+        "FamiliarityStrategy",
+        "FamiliarityStrategyOptions",
+        "RandomVarietyStrategy",
+        "ReadinessStrategyOptions",
+        "RecencyPenaltyStrategy",
+        "RecencyPenaltyStrategyOptions",
+        "TimeStrategy",
+        "UserRatingStrategy",
+        "UserRatingStrategyOptions",
+        "createDefaultRankingStrategy",
+        "createQuickAndEasyRankingStrategy"
+      ]
+    },
+    {
+      "file": "hooks/recommendation/ranking/strategies/AlphabeticalStrategy.ts",
+      "exports": ["AlphabeticalStrategy"]
+    },
+    {
+      "file": "hooks/recommendation/ranking/strategies/FamiliarityStrategy.ts",
+      "exports": ["FamiliarityStrategy"]
+    },
+    {
+      "file": "hooks/recommendation/ranking/strategies/UserRatingStrategy.ts",
+      "exports": ["UserRatingStrategy"]
+    },
+    {
+      "file": "lib/notifications/NotificationProvider.tsx",
+      "exports": ["useLastNotificationResponse", "useNotificationContext"]
+    },
+    {
+      "file": "lib/notifications/index.ts",
+      "exports": [
+        "DailyTrigger",
+        "DateTrigger",
+        "ExpiryItem",
+        "ForegroundNotificationBehavior",
+        "NotificationResponseHandler",
+        "NotificationTrigger",
+        "ScheduleNotificationOptions",
+        "ScheduledNotification",
+        "TimeIntervalTrigger",
+        "WeeklyTrigger",
+        "cancelAllNotifications",
+        "cancelNotification",
+        "dismissAllNotifications",
+        "dismissNotification",
+        "dispatchNotificationResponse",
+        "extractNotificationType",
+        "extractScreenPath",
+        "getBadgeCount",
+        "getRegisteredTypes",
+        "getScheduledNotifications",
+        "hasHandler",
+        "initializeNotifications",
+        "registerDefaultHandler",
+        "scheduleNotification",
+        "setBadgeCount",
+        "useLastNotificationResponse",
+        "useNotificationContext"
+      ]
+    },
+    {
+      "file": "lib/notifications/notification-handler.ts",
+      "exports": [
+        "extractNotificationType",
+        "extractScreenPath",
+        "getRegisteredTypes",
+        "hasHandler",
+        "registerDefaultHandler"
+      ]
+    },
+    {
+      "file": "lib/notifications/notification-service.ts",
+      "exports": [
+        "cancelAllNotifications",
+        "dismissAllNotifications",
+        "dismissNotification",
+        "getBadgeCount",
+        "getScheduledNotifications",
+        "setBadgeCount"
+      ]
+    },
+    {
+      "file": "types/RecipeMatching.ts",
+      "exports": [
+        "AvailableIngredientItem",
+        "RecipeWithMatchInfo",
+        "ShoppingListItem",
+        "getRecipeMatchCategory"
+      ]
+    },
+    {
+      "file": "utils/quantity-comparison.ts",
+      "exports": ["compareQuantities"]
+    },
+    {
+      "file": "auth/index.ts",
+      "exports": [
+        "AuthProviderType",
+        "AuthResult",
+        "AuthState",
+        "AuthStrategy",
+        "SignInCredentials",
+        "SocialAuthConfig",
+        "User"
+      ]
+    },
+    {
+      "file": "components/Analytics/WasteChart.tsx",
+      "exports": ["WasteChartProps"]
+    },
+    {
+      "file": "components/Preferences/AllergySection.tsx",
+      "exports": ["Allergen"]
+    },
+    {
+      "file": "components/Preferences/DietarySection.tsx",
+      "exports": ["Diet"]
+    },
+    {
+      "file": "components/Recipe/Details/BottomActionBar.tsx",
+      "exports": ["BottomActionBarProps"]
+    },
+    {
+      "file": "components/ui/TextLoop.tsx",
+      "exports": ["TextLoopProps"]
+    },
+    {
+      "file": "components/ui/button.tsx",
+      "exports": ["ButtonProps"]
+    },
+    {
+      "file": "data/api/mealPlanApi.ts",
+      "exports": ["GroceryItem"]
+    },
+    {
+      "file": "data/api/mealPlanTemplateApi.ts",
+      "exports": ["ApplyTemplateOptions"]
+    },
+    {
+      "file": "data/db/models/TailoredRecipeMapping.ts",
+      "exports": ["TailoredRecipeMappingData"]
+    },
+    {
+      "file": "data/db/repositories/index.ts",
+      "exports": [
+        "AchievementSearchOptions",
+        "ChallengeSearchOptions",
+        "CookingHistorySearchOptions",
+        "CreateRecipeWithDetailsData",
+        "CreateTailoredRecipeWithDetailsData",
+        "MealPlanSearchOptions",
+        "PaginationOptions",
+        "RecipeSearchOptions",
+        "SearchOptions",
+        "StockSearchOptions",
+        "UserAchievementSearchOptions",
+        "UserChallengeSearchOptions",
+        "WasteLogSearchOptions",
+        "WasteOverTimeData",
+        "WasteStats"
+      ]
+    },
+    {
+      "file": "data/storage/index.ts",
+      "exports": ["IStorage", "StorageType"]
+    },
+    {
+      "file": "data/storage/storage-types.ts",
+      "exports": ["IFullAsyncStorage", "ISyncStorage"]
+    },
+    {
+      "file": "hooks/queries/useGroceryList.ts",
+      "exports": ["GroceryListSection"]
+    },
+    {
+      "file": "hooks/useRecipeEdit.ts",
+      "exports": ["UseRecipeEditOptions"]
+    },
+    {
+      "file": "lib/recipe-scrapper/youtube/YouTubeServiceFactory.ts",
+      "exports": ["YouTubeServiceType"]
+    },
+    {
+      "file": "lib/supabase/supabase-types.ts",
+      "exports": [
+        "CompositeTypes",
+        "Enums",
+        "IngredientProductMatch",
+        "StorePrice",
+        "TablesInsert",
+        "TablesUpdate"
+      ]
+    },
+    {
+      "file": "store/MealPlanCalendarContext.tsx",
+      "exports": ["MealPlanDragState"]
+    },
+    {
+      "file": "store/WasteAnalyticsContext.tsx",
+      "exports": ["MetricType", "WasteReasonFilter"]
+    },
+    {
+      "file": "types/MealPlan.ts",
+      "exports": [
+        "CalendarViewState",
+        "DateRange",
+        "MealPlanGroceryItem",
+        "MealPlanTemplate",
+        "SharedMealPlan",
+        "WeeklyMealPlan"
+      ]
+    },
+    {
+      "file": "types/Nutrition.ts",
+      "exports": ["NutritionData"]
+    },
+    {
+      "file": "types/PantryItem.ts",
+      "exports": ["BaseIngredient", "PantryItemConfirmation"]
+    },
+    {
+      "file": "types/Recipe.ts",
+      "exports": [
+        "AvailableIngredientItem",
+        "IngredientMatchDetail",
+        "IngredientMatchStatus",
+        "RecipeMatchCategory",
+        "RecipeWithMatchInfo",
+        "ShoppingListItem",
+        "StepPageData"
+      ]
+    },
+    {
+      "file": "types/ScrappedRecipe.ts",
+      "exports": ["YouTubeImportState", "YouTubeTranscript"]
+    },
+    {
+      "file": "types/Timer.ts",
+      "exports": ["TimerNotification"]
+    },
+    {
+      "file": "types/achievements.ts",
+      "exports": ["AchievementCategoryDisplay", "AchievementShareData", "GamificationProfile"]
+    },
+    {
+      "file": "utils/api-error-handler.ts",
+      "exports": ["ErrorHandlerOptions", "StructuredResult"]
+    },
+    {
+      "file": "utils/gemini-api.ts",
+      "exports": ["TokenUsage"]
+    },
+    {
+      "file": "utils/price-calculator.ts",
+      "exports": ["PriceByCategory"]
+    },
+    {
+      "file": "utils/result.ts",
+      "exports": ["Err", "Ok"]
+    },
+    {
+      "file": "utils/unit-converter.ts",
+      "exports": ["UnitDef"]
+    },
+    {
+      "file": "utils/voice-answer-generator.ts",
+      "exports": ["TemperatureInfo", "VoiceAnswer"]
+    },
+    {
+      "file": "utils/voice-command-parser.ts",
+      "exports": ["ParsedVoiceCommand", "TemperatureInfo"]
+    },
+    {
+      "file": "lib/recipe-scrapper/youtube/types.ts",
+      "exports": ["*"]
+    },
+    {
+      "file": "hooks/queries/useMealPlanQueries.ts",
+      "exports": ["*"]
+    },
+    {
+      "file": "components/auth/index.ts",
+      "exports": [
+        "AuthScreenLayoutProps",
+        "validateEmail",
+        "AuthScreenContext",
+        "validatePassword",
+        "SocialAuthButton",
+        "AuthScreenLayout"
+      ]
+    },
+    {
+      "file": "components/auth/SocialAuthButton.tsx",
+      "exports": ["SocialAuthButton"]
+    },
+    {
+      "file": "components/Shared/ChartPrimitives.tsx",
+      "exports": ["SCREEN_WIDTH", "legendDotStyles"]
+    },
+    {
+      "file": "auth/authHelpers.ts",
+      "exports": ["executeAuthOperation"]
+    },
+    {
+      "file": "lib/recipe-scrapper/shared/recipe-gemini-utils.ts",
+      "exports": ["getRecipeGenerationConfig"]
+    },
+    {
+      "file": "components/Shared/SharedGroupButton.tsx",
+      "exports": ["SharedGroupButtonProps"]
+    },
+    {
+      "file": "data/api/mealPlanApi-helpers.ts",
+      "exports": ["GroceryItem"]
+    }
+  ],
+  "usedClassMembers": [
+    "addCategoriesToStock",
+    "addCategoryToStock",
+    "addMember",
+    "addStock",
+    "addSynonym",
+    "addSynonymsToStock",
+    "addTestUser",
+    "addToPlan",
+    "allergens",
+    "analyzeWebsiteForRecipe",
+    "associations",
+    "batchUpsert",
+    "checkAndUnlockAchievement",
+    "checkAndUpdateStatus",
+    "checkChallenges",
+    "claimRewards",
+    "claimedAtDate",
+    "clear",
+    "clearAll",
+    "clearAllPlannedRecipes",
+    "clearAllRecipes",
+    "clearStoredUsers",
+    "completeChallenge",
+    "consumeStock",
+    "contains",
+    "countByStatus",
+    "countVersionsForRecipe",
+    "createAchievement",
+    "createChallenge",
+    "createHousehold",
+    "createRecipeVersion",
+    "createStockWithMetadata",
+    "createTemplate",
+    "delete",
+    "deleteBatch",
+    "deleteChallenge",
+    "deleteCookingRecord",
+    "deleteTemplate",
+    "deleteVersion",
+    "deleteVersionsForRecipe",
+    "detectExpiredWaste",
+    "endDateDate",
+    "expireChallenge",
+    "expireOldChallenges",
+    "expiryDate",
+    "filter",
+    "filterCount",
+    "findByHouseholdId",
+    "findByInviteCode",
+    "findByStockId",
+    "findBySupabaseId",
+    "findExactMatch",
+    "findStockIdsByCategoryId",
+    "findStockIdsBySynonym",
+    "formattedCompletedAt",
+    "formattedConsumedDate",
+    "formattedCookedAt",
+    "formattedTimeRemaining",
+    "formattedUnlockedAt",
+    "getAchievementsByType",
+    "getActiveCount",
+    "getActiveDailyChallenges",
+    "getActiveWeeklyChallenges",
+    "getAllActiveProgress",
+    "getAllCategoryNames",
+    "getAllMealPlanItems",
+    "getAllStorageTypes",
+    "getAllTags",
+    "getAllTemplates",
+    "getAllUniqueSynonyms",
+    "getAllWithSynonyms",
+    "getAvailableChallenges",
+    "getAvailableXP",
+    "getAverageRating",
+    "getByDateAndMealSlot",
+    "getByDateRange",
+    "getByName",
+    "getByTypeAndCategory",
+    "getCategoryXPAvailable",
+    "getChallengesExpiringSoon",
+    "getCheckAttributesMap",
+    "getCheckStatesMap",
+    "getCheckedCount",
+    "getCompletedCount",
+    "getDailyXPAvailable",
+    "getDaysUntilStreakBreaks",
+    "getExpiredChallenges",
+    "getExpiredItems",
+    "getHiddenAchievements",
+    "getInfo",
+    "getLastCookedDate",
+    "getLowStockItems",
+    "getMemberCount",
+    "getNextVersionNumber",
+    "getOrCreate",
+    "getPlannedRecipeCount",
+    "getPopularRecipes",
+    "getProgress",
+    "getProgressByCategory",
+    "getProviderInfo",
+    "getQuickRecipes",
+    "getRecentlyCompleted",
+    "getStockByStorageType",
+    "getStockWithCategories",
+    "getStockWithSynonyms",
+    "getStoredUsers",
+    "getStreakInfo",
+    "getString",
+    "getTemplateCount",
+    "getTotalXPAvailable",
+    "getTotalXPEarned",
+    "getUnclaimedChallenges",
+    "getUnclaimedCount",
+    "getUpcomingChallenges",
+    "getUserAchievements",
+    "getUserActiveChallenges",
+    "getUserChallenges",
+    "getUserCompletedChallenges",
+    "getVersionsForRecipe",
+    "getVideoData",
+    "getWeeklyXPAvailable",
+    "hasCategory",
+    "hasFullMetadata",
+    "hasNotes",
+    "hasNutrition",
+    "hasPhoto",
+    "hasValidRating",
+    "incrementProgress",
+    "isActive",
+    "isAvailable",
+    "isChecked",
+    "isClaimed",
+    "isCompleted",
+    "isDaily",
+    "isExpired",
+    "isExpiringSoon",
+    "isInProgress",
+    "isIngredientInStock",
+    "isInviteExpired",
+    "isLocked",
+    "isRecipeInPlan",
+    "isStreakActive",
+    "isTailored",
+    "isUnlocked",
+    "isUpcoming",
+    "isWeekly",
+    "lastCheckedAtDate",
+    "linkAnonymousAccount",
+    "listModels",
+    "migrateStorage",
+    "needsSync",
+    "parsedRequirement",
+    "parsedReward",
+    "progressPercentage",
+    "recordAchievementShare",
+    "removeAllForStock",
+    "removeByUserId",
+    "removeCategoryFromStock",
+    "removeFromPlan",
+    "removeSynonym",
+    "replaceCategories",
+    "searchCategories",
+    "searchTemplates",
+    "searchVersions",
+    "setChecked",
+    "setDeleted",
+    "setDeletedBatch",
+    "setFavorite",
+    "setString",
+    "signInAnonymously",
+    "signInWithEmail",
+    "signInWithProvider",
+    "signUpWithEmail",
+    "size",
+    "startChallenge",
+    "startDateDate",
+    "startedAtDate",
+    "strategyCount",
+    "switchStorage",
+    "syncFromSupabase",
+    "syncedAtDate",
+    "table",
+    "toggleChecked",
+    "totalMinutes",
+    "uncheckAll",
+    "updateAchievement",
+    "updateChallenge",
+    "updateDateAndSlot",
+    "updateInviteCode",
+    "updateProgress",
+    "updateRecipeWithDetails",
+    "updateServings",
+    "updateTemplate",
+    "updateUserAchievement",
+    "updateUserChallenge",
+    "updateVersion",
+    "xpValue"
+  ],
+  "ignorePatterns": ["plugins/withIosDisableUserScriptSandbox.js"]
+}

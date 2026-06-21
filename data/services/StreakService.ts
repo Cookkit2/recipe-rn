@@ -322,4 +322,4 @@ export class StreakService {
 }
 
 // Singleton instance
-export const streakService = new StreakService();
+const streakService = new StreakService();

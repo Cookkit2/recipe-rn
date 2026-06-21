@@ -1,0 +1,17 @@
+appId: app.cookkit.cookkit
+name: "Profile Navigation"
+tags:
+  - P1
+  - profile
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+- tapOn:
+    id: "home-profile-button"
+- extendedWaitUntil:
+    visible:
+      id: "profile-screen"
+    timeout: 5000

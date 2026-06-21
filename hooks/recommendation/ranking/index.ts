@@ -1,3 +1,8 @@
+export { RandomVarietyStrategy } from "./strategies/RandomVarietyStrategy";
+export { DietaryStrategy } from "./strategies/DietaryStrategy";
+export { TimeStrategy } from "./strategies/TimeStrategy";
+export { DifficultyStrategy } from "./strategies/DifficultyStrategy";
+
 // Types and interfaces
 export type {
   RecipeRankingStrategy,
@@ -9,10 +14,6 @@ export type {
 export { CompositeRankingStrategy } from "./CompositeRankingStrategy";
 
 // Individual strategies
-export { DifficultyStrategy } from "./strategies/DifficultyStrategy";
-export { TimeStrategy } from "./strategies/TimeStrategy";
-export { DietaryStrategy } from "./strategies/DietaryStrategy";
-export { RandomVarietyStrategy } from "./strategies/RandomVarietyStrategy";
 
 // Cooking history-based strategies
 export {

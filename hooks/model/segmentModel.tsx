@@ -66,7 +66,7 @@ export const segmentStaticImage = async (
   }
 };
 
-export const fetchColors = async (url: string) => {
+const fetchColors = async (url: string) => {
   try {
     const color = await getColors(url, {
       cache: true,
@@ -121,7 +121,7 @@ const createThumbnailForColors = (image: SkImage, size: number = 32): string => 
  * where the 4th channel is a Gaussian guidance map centered at the touch point.
  * Shape: [1, imageSize, imageSize, 4] when consumed by TFLite (flat buffer length imageSize*imageSize*4).
  */
-export const preprocessMagicTouchInput = (
+const preprocessMagicTouchInput = (
   image: SkImage,
   touch?: { x: number; y: number },
   options?: { sigma?: number }
@@ -362,7 +362,7 @@ const applyMagicTouchMaskAndExport = (image: SkImage, mask: Float32Array) => {
 };
 
 // Util: trim fully transparent borders from a SkImage and return cropped image/base64
-export const trimTransparentBorders = (
+const trimTransparentBorders = (
   image: SkImage,
   padding: number = 0
 ): { finalImage: SkImage; base64: string } => {
@@ -464,7 +464,7 @@ export const trimTransparentBorders = (
 
 // Resize a SkImage to a target width (preserving aspect ratio and alpha)
 // Returns both the resized SkImage and PNG base64 data
-export const resizeImagePreserveAlpha = (
+const resizeImagePreserveAlpha = (
   image: SkImage,
   targetWidth: number
 ): { finalImage: SkImage; base64: string } => {

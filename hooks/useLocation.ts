@@ -81,7 +81,7 @@ export function useLocation(refreshInterval: number | null = null): LocationStat
   return state;
 }
 
-export function useLocationOnce(): LocationState {
+function useLocationOnce(): LocationState {
   const location = useLocation(null);
   return location;
 }

@@ -110,7 +110,7 @@ export const storageConfigs: Record<string, StorageConfig> = {
 /**
  * Get the appropriate storage config based on environment or feature flags
  */
-export function getStorageConfig(): StorageConfig {
+function getStorageConfig(): StorageConfig {
   // You can add logic here to choose the config based on:
   // - Environment (development, production)
   // - Feature flags
@@ -127,7 +127,7 @@ export function getStorageConfig(): StorageConfig {
 /**
  * Storage feature flags for different parts of your app
  */
-export const storageFeatures = {
+const storageFeatures = {
   // Use encrypted storage for sensitive user data
   useEncryptedForUserData: __DEV__,
 

@@ -1,6 +1,6 @@
 import type { ImageSourcePropType } from "react-native";
 
-export const ITEM_TYPES = ["all", "fridge", "cabinet", "freezer"] as const;
+const ITEM_TYPES = ["all", "fridge", "cabinet", "freezer"] as const;
 export type ItemType = (typeof ITEM_TYPES)[number];
 
 export type PantryItem = {

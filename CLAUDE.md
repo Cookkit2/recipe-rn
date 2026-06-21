@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Cookkit is an offline-first React Native app (Expo SDK 55, React 19, React Native 0.83) for pantry management and recipe discovery with voice-guided cooking. Uses WatermelonDB for local sync, Supabase for cloud backend, and TanStack Query for data orchestration.
+Cookkit is an offline-first React Native app (Expo SDK 56, React 19.2, React Native 0.85) for pantry management and recipe discovery with voice-guided cooking. Uses WatermelonDB for local sync, Supabase for cloud backend, and TanStack Query for data orchestration.
 
 ## Common Commands
 
@@ -19,6 +19,8 @@ bun run lint              # Prettier check + typecheck
 bun run lint:fix          # Prettier auto-format
 bun test                  # Jest tests
 bun run test:coverage     # Jest with coverage
+bun run clean             # Remove .expo cache and node_modules
+bun run e2e:ios           # Detox E2E: build + test (iOS sim debug) — see `e2e/`
 ```
 
 ## Architecture
@@ -31,15 +33,19 @@ UI Components → TanStack Query Hooks → Data Layer (Repositories) → Waterme
 
 ### Key Directories
 
-| Directory     | Purpose                                     | Key Files                                                   |
-| ------------- | ------------------------------------------- | ----------------------------------------------------------- |
-| `app/`        | Expo Router file-based routes & layouts     | `_layout.tsx`, `(auth)/`, `recipes/[recipeId]/`             |
-| `components/` | React UI components (primitives + features) | `ui/`, `Recipe/`, `Pantry/`, `auth/`                        |
-| `data/`       | Offline-first DB layer, repositories, APIs  | `db/DatabaseFacade.ts`, `db/repositories/`, `supabase-api/` |
-| `hooks/`      | TanStack Query hooks & custom React hooks   | `queries/useRecipeQueries.ts`, `queries/recipeQueryKeys.ts` |
-| `lib/`        | Native integrations & platform glue         | `function-gemma/`, `image-cache.ts`, `notifications/`       |
-| `store/`      | React Context providers                     | Auth, subscription contexts                                 |
-| `utils/`      | Pure helper functions & parsers             | `subscription-utils.ts`, voice cooking utilities            |
+| Directory     | Purpose                                        | Key Files                                                     |
+| ------------- | ---------------------------------------------- | ------------------------------------------------------------- |
+| `app/`        | Expo Router file-based routes & layouts        | `_layout.tsx`, `(auth)/`, `recipes/[recipeId]/`               |
+| `auth/`       | Auth module: context, store, strategies        | `AuthContext.tsx`, `AuthStore.ts`, `SupabaseAuthStrategy.ts`  |
+| `components/` | React UI components (primitives + features)    | `ui/`, `Recipe/`, `Pantry/`, `auth/` (auth screens)           |
+| `data/`       | Offline-first DB layer, repositories, APIs     | `db/DatabaseFacade.ts`, `db/repositories/`, `supabase-api/`   |
+| `hooks/`      | TanStack Query hooks & custom React hooks      | `queries/useRecipeQueries.ts`, `queries/recipeQueryKeys.ts`   |
+| `lib/`        | Native integrations & platform glue            | `function-gemma/`, `image-cache.ts`, `notifications/`         |
+| `store/`      | React Context providers (domain state) + Query | `QueryProvider.tsx`, `PantryContext.tsx`, `RecipeContext.tsx` |
+| `constants/`  | App constants (storage keys, sizes, units)     | `storage-keys.ts`, `sizes.ts`, `notifications.ts`             |
+| `types/`      | Shared domain types                            | `AuthTypes.ts`, `Recipe.ts`, `PantryItem.ts`, `MealPlan.ts`   |
+| `supabase/`   | Cloud DB SQL migrations                        | `migrations/`                                                 |
+| `utils/`      | Pure helper functions & parsers                | `subscription-utils.ts`, voice cooking utilities              |
 
 ### Important Patterns
 
@@ -91,3 +97,4 @@ UI Components → TanStack Query Hooks → Data Layer (Repositories) → Waterme
 - Strict mode enabled (`strict: true`)
 - Path alias `~/` → repo root
 - `verbatimModuleSyntax`, `noUncheckedIndexedAccess` enabled
+- `experimentalDecorators: true` (required by WatermelonDB model decorators)

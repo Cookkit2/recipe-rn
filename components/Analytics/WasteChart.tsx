@@ -1,14 +1,18 @@
 import * as React from "react";
-import { View, StyleSheet, Dimensions } from "react-native";
-import Svg, { Path, Line, Rect, Text as SvgText } from "react-native-svg";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { View } from "react-native";
+import Svg, { Path, Rect, Text as SvgText } from "react-native-svg";
 import { P } from "~/components/ui/typography";
-import { cn } from "~/lib/utils";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const CHART_WIDTH = SCREEN_WIDTH - 48; // Account for margins (mx-6 = 24px each side)
-const CHART_HEIGHT = 200;
-const PADDING = 40;
+import {
+  CHART_WIDTH,
+  CHART_HEIGHT,
+  CHART_PADDING,
+  ChartEmptyState,
+  ChartCard,
+  ChartLegend,
+  buildGridLines,
+  renderGridLines,
+  type LegendEntry,
+} from "~/components/Shared/ChartPrimitives";
 
 export type ChartMetric = "quantity" | "cost" | "count";
 
@@ -33,7 +37,19 @@ interface ChartDataPoint {
   label: string;
 }
 
-export function WasteChart({
+const METRIC_LABELS: Record<ChartMetric, string> = {
+  quantity: "Quantity",
+  cost: "Cost",
+  count: "Entries",
+};
+
+const METRIC_COLORS: Record<ChartMetric, string> = {
+  quantity: "#f59e0b", // amber-500
+  cost: "#ec4899", // pink-500
+  count: "#8b5cf6", // violet-500
+};
+
+function WasteChart({
   data,
   metric = "quantity",
   title = "Waste Trends",
@@ -43,17 +59,14 @@ export function WasteChart({
 }: WasteChartProps) {
   const formatDateLabel = (timestamp: number) => {
     const date = new Date(timestamp);
-    if (groupBy === "day") {
-      return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-    } else if (groupBy === "week") {
-      return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-    } else {
+    if (groupBy === "month") {
       return date.toLocaleDateString("en-US", { month: "short" });
     }
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
-  const formatValue = (value: number, metric: ChartMetric) => {
-    if (metric === "cost") {
+  const formatValue = (value: number, m: ChartMetric) => {
+    if (m === "cost") {
       return new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD",
@@ -64,31 +77,7 @@ export function WasteChart({
     return value.toString();
   };
 
-  const getMetricLabel = () => {
-    switch (metric) {
-      case "quantity":
-        return "Quantity";
-      case "cost":
-        return "Cost";
-      case "count":
-        return "Entries";
-      default:
-        return "Value";
-    }
-  };
-
-  const getChartColor = () => {
-    switch (metric) {
-      case "quantity":
-        return "#f59e0b"; // amber-500
-      case "cost":
-        return "#ec4899"; // pink-500
-      case "count":
-        return "#8b5cf6"; // violet-500
-      default:
-        return "#0ea5e9"; // sky-500
-    }
-  };
+  const chartColor = METRIC_COLORS[metric] ?? "#0ea5e9";
 
   // Transform data into chart coordinates
   const processData = (): {
@@ -104,13 +93,13 @@ export function WasteChart({
     const maxValue = Math.max(...values, 1);
     const minValue = Math.min(...values, 0);
 
-    const chartWidth = CHART_WIDTH - PADDING * 2;
-    const chartHeight = CHART_HEIGHT - PADDING * 2;
+    const innerWidth = CHART_WIDTH - CHART_PADDING * 2;
+    const innerHeight = CHART_HEIGHT - CHART_PADDING * 2;
 
     const points: ChartDataPoint[] = data.map((item, index) => {
-      const x = PADDING + (index / Math.max(data.length - 1, 1)) * chartWidth;
+      const x = CHART_PADDING + (index / Math.max(data.length - 1, 1)) * innerWidth;
       const normalizedValue = (item[metric] - minValue) / (maxValue - minValue || 1);
-      const y = PADDING + chartHeight - normalizedValue * chartHeight;
+      const y = CHART_PADDING + innerHeight - normalizedValue * innerHeight;
 
       return {
         x,
@@ -125,20 +114,13 @@ export function WasteChart({
 
   const { points, maxValue } = processData();
 
-  const renderEmptyState = () => (
-    <View className="items-center justify-center py-12">
-      <P className="text-muted-foreground text-center">No waste data available for this period</P>
-    </View>
-  );
-
   const renderChart = () => {
     if (points.length === 0) {
-      return renderEmptyState();
+      return <ChartEmptyState message="No waste data available for this period" />;
     }
 
-    const chartColor = getChartColor();
-    const chartWidth = CHART_WIDTH - PADDING * 2;
-    const chartHeight = CHART_HEIGHT - PADDING * 2;
+    const innerWidth = CHART_WIDTH - CHART_PADDING * 2;
+    const innerHeight = CHART_HEIGHT - CHART_PADDING * 2;
 
     // Create smooth curve path
     let pathD = "";
@@ -146,10 +128,10 @@ export function WasteChart({
 
     if (points.length === 1) {
       // Single point - draw a horizontal line with dot
-      const x = points[0]?.x ?? PADDING;
+      const x = points[0]?.x ?? CHART_PADDING;
       const y = points[0]?.y ?? CHART_HEIGHT / 2;
-      pathD = `M ${PADDING} ${y} L ${CHART_WIDTH - PADDING} ${y}`;
-      areaPathD = `M ${PADDING} ${y} L ${CHART_WIDTH - PADDING} ${y} L ${CHART_WIDTH - PADDING} ${CHART_HEIGHT - PADDING} L ${PADDING} ${CHART_HEIGHT - PADDING} Z`;
+      pathD = `M ${CHART_PADDING} ${y} L ${CHART_WIDTH - CHART_PADDING} ${y}`;
+      areaPathD = `M ${CHART_PADDING} ${y} L ${CHART_WIDTH - CHART_PADDING} ${y} L ${CHART_WIDTH - CHART_PADDING} ${CHART_HEIGHT - CHART_PADDING} L ${CHART_PADDING} ${CHART_HEIGHT - CHART_PADDING} Z`;
     } else {
       // Multiple points - draw smooth curve
       points.forEach((point, index) => {
@@ -170,41 +152,20 @@ export function WasteChart({
           // Close the area path
           const firstPoint = points[0];
           if (firstPoint) {
-            areaPathD += ` L ${point.x} ${CHART_HEIGHT - PADDING} L ${firstPoint.x} ${CHART_HEIGHT - PADDING} Z`;
+            areaPathD += ` L ${point.x} ${CHART_HEIGHT - CHART_PADDING} L ${firstPoint.x} ${CHART_HEIGHT - CHART_PADDING} Z`;
           }
         }
       });
     }
 
     // Y-axis grid lines and labels
-    const gridLines = [];
-    const numGridLines = 5;
-    for (let i = 0; i <= numGridLines; i++) {
-      const y = PADDING + (chartHeight / numGridLines) * i;
-      const value = maxValue - (maxValue / numGridLines) * i;
-      gridLines.push({ y, value });
-    }
+    const gridLines = buildGridLines(maxValue, 5, innerHeight, false);
 
     return (
       <View className="mt-2">
         <Svg width={CHART_WIDTH} height={CHART_HEIGHT}>
           {/* Grid lines */}
-          {gridLines.map((line, index) => (
-            <React.Fragment key={`grid-${index}`}>
-              <Line
-                x1={PADDING}
-                y1={line.y}
-                x2={CHART_WIDTH - PADDING}
-                y2={line.y}
-                stroke="#e5e7eb"
-                strokeWidth={1}
-                strokeDasharray="4 4"
-              />
-              <SvgText x={PADDING - 5} y={line.y + 4} fontSize={10} fill="#9ca3af" textAnchor="end">
-                {formatValue(Math.round(line.value), metric)}
-              </SvgText>
-            </React.Fragment>
-          ))}
+          {renderGridLines(gridLines, (v) => formatValue(Math.round(v), metric))}
 
           {/* Area fill under the line */}
           {points.length > 1 && <Path d={areaPathD} fill={chartColor} fillOpacity={0.1} />}
@@ -282,35 +243,16 @@ export function WasteChart({
         </Svg>
 
         {/* Legend */}
-        <View className="flex-row items-center justify-center mt-3 gap-2">
-          <View style={[styles.legendDot, { backgroundColor: chartColor }]} />
-          <P className="text-xs text-muted-foreground">{getMetricLabel()}</P>
-        </View>
+        <ChartLegend entries={[{ color: chartColor, label: METRIC_LABELS[metric] ?? "Value" }]} />
       </View>
     );
   };
 
   return (
-    <Card
-      className={cn("mx-6 mt-6 rounded-3xl shadow-md shadow-foreground/10 border-none", className)}
-    >
-      <CardHeader className="pb-2">
-        <CardTitle className="font-urbanist-bold">{title}</CardTitle>
-        {description && (
-          <P className="text-sm text-foreground/70 font-urbanist-medium mt-1">{description}</P>
-        )}
-      </CardHeader>
-      <CardContent>{renderChart()}</CardContent>
-    </Card>
+    <ChartCard title={title} description={description} className={className}>
+      {renderChart()}
+    </ChartCard>
   );
 }
-
-const styles = StyleSheet.create({
-  legendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-});
 
 export default WasteChart;

@@ -1,12 +1,7 @@
 PODS:
-  - EASClient (56.0.1):
-    - ExpoModulesCore
   - EXApplication (56.0.3):
     - ExpoModulesCore
   - EXConstants (56.0.14):
-    - ExpoModulesCore
-  - EXJSONUtils (56.0.0)
-  - EXManifests (56.0.4):
     - ExpoModulesCore
   - Expo (56.0.3):
     - ExpoModulesCore
@@ -34,7 +29,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - ExpoAsset (56.0.13):
+  - ExpoAsset (56.0.16):
     - ExpoModulesCore
   - ExpoBlur (56.0.3):
     - ExpoModulesCore
@@ -112,15 +107,9 @@ PODS:
     - ExpoModulesCore
   - ExpoSpeechRecognition (3.1.3):
     - ExpoModulesCore
-  - ExpoSplashScreen (56.0.9):
-    - ExpoModulesCore
-  - ExpoSQLite (56.0.4):
-    - ExpoModulesCore
   - ExpoStoreReview (56.0.3):
     - ExpoModulesCore
   - ExpoSymbols (56.0.5):
-    - ExpoModulesCore
-  - ExpoSystemUI (56.0.5):
     - ExpoModulesCore
   - ExpoUI (56.0.12):
     - ExpoModulesCore
@@ -129,37 +118,6 @@ PODS:
   - ExpoVideo (56.1.2):
     - ExpoModulesCore
   - ExpoWebBrowser (56.0.5):
-    - ExpoModulesCore
-  - EXStructuredHeaders (56.0.0)
-  - EXUpdates (56.0.15):
-    - EASClient
-    - EXManifests
-    - ExpoModulesCore
-    - EXStructuredHeaders
-    - EXUpdatesInterface
-    - hermes-engine
-    - RCTRequired
-    - RCTTypeSafety
-    - ReachabilitySwift
-    - React-Core
-    - React-Core-prebuilt
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - ReactNativeDependencies
-    - Yoga
-  - EXUpdatesInterface (56.0.2):
     - ExpoModulesCore
   - FBLazyVector (0.85.3)
   - hermes-engine (250829098.0.10):
@@ -185,30 +143,6 @@ PODS:
   - libwebp/sharpyuv (1.5.0)
   - libwebp/webp (1.5.0):
     - libwebp/sharpyuv
-  - llama-rn (0.11.5):
-    - hermes-engine
-    - RCTRequired
-    - RCTTypeSafety
-    - React
-    - React-callinvoker
-    - React-Core
-    - React-Core-prebuilt
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - ReactNativeDependencies
-    - Yoga
   - MMKVCore (2.4.0)
   - NitroImage (0.14.0):
     - hermes-engine
@@ -282,11 +216,11 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - PurchasesHybridCommon (18.6.0):
-    - RevenueCat (= 5.72.0)
-  - PurchasesHybridCommonUI (18.6.0):
-    - PurchasesHybridCommon (= 18.6.0)
-    - RevenueCatUI (= 5.72.0)
+  - PurchasesHybridCommon (18.7.0):
+    - RevenueCat (= 5.73.0)
+  - PurchasesHybridCommonUI (18.7.0):
+    - PurchasesHybridCommon (= 18.7.0)
+    - RevenueCatUI (= 5.73.0)
   - RCTDeprecation (0.85.3)
   - RCTRequired (0.85.3)
   - RCTSwiftUI (0.85.3)
@@ -296,7 +230,6 @@ PODS:
     - FBLazyVector (= 0.85.3)
     - RCTRequired (= 0.85.3)
     - React-Core (= 0.85.3)
-  - ReachabilitySwift (5.2.4)
   - React (0.85.3):
     - React-Core (= 0.85.3)
     - React-Core/DevSupport (= 0.85.3)
@@ -1853,51 +1786,6 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - react-native-slider (5.2.0):
-    - hermes-engine
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-Core-prebuilt
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-jsi
-    - react-native-slider/common (= 5.2.0)
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - ReactNativeDependencies
-    - Yoga
-  - react-native-slider/common (5.2.0):
-    - hermes-engine
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-Core-prebuilt
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - ReactNativeDependencies
-    - Yoga
   - React-NativeModulesApple (0.85.3):
     - hermes-engine
     - React-callinvoker
@@ -2283,10 +2171,10 @@ PODS:
     - React-utils (= 0.85.3)
     - ReactNativeDependencies
   - ReactNativeDependencies (0.85.3)
-  - RevenueCat (5.72.0)
-  - RevenueCatUI (5.72.0):
-    - RevenueCat (= 5.72.0)
-  - RNCMaskedView (0.3.2):
+  - RevenueCat (5.73.0)
+  - RevenueCatUI (5.73.0):
+    - RevenueCat (= 5.73.0)
+  - RNCClipboard (1.16.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2308,7 +2196,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNDateTimePicker (9.1.0):
+  - RNCMaskedView (0.3.2):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2352,11 +2240,11 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNPaywalls (10.1.1):
-    - PurchasesHybridCommonUI (= 18.6.0)
+  - RNPaywalls (10.1.2):
+    - PurchasesHybridCommonUI (= 18.7.0)
     - React-Core
-  - RNPurchases (10.1.1):
-    - PurchasesHybridCommon (= 18.6.0)
+  - RNPurchases (10.1.2):
+    - PurchasesHybridCommon (= 18.7.0)
     - React-Core
   - RNReanimated (4.3.1):
     - hermes-engine
@@ -2671,11 +2559,8 @@ PODS:
   - Yoga (0.0.0)
 
 DEPENDENCIES:
-  - EASClient (from `../node_modules/expo-eas-client/ios`)
   - EXApplication (from `../node_modules/expo-application/ios`)
   - EXConstants (from `../node_modules/expo-constants/ios`)
-  - EXJSONUtils (from `../node_modules/expo-json-utils/ios`)
-  - EXManifests (from `../node_modules/expo-manifests/ios`)
   - Expo (from `../node_modules/expo`)
   - ExpoAsset (from `../node_modules/expo-asset/ios`)
   - ExpoBlur (from `../node_modules/expo-blur/ios`)
@@ -2701,21 +2586,14 @@ DEPENDENCIES:
   - ExpoSecureStore (from `../node_modules/expo-secure-store/ios`)
   - ExpoSpeech (from `../node_modules/expo-speech/ios`)
   - ExpoSpeechRecognition (from `../node_modules/expo-speech-recognition/ios`)
-  - ExpoSplashScreen (from `../node_modules/expo-splash-screen/ios`)
-  - ExpoSQLite (from `../node_modules/expo-sqlite/ios`)
   - ExpoStoreReview (from `../node_modules/expo-store-review/ios`)
   - ExpoSymbols (from `../node_modules/expo-symbols/ios`)
-  - ExpoSystemUI (from `../node_modules/expo-system-ui/ios`)
   - "ExpoUI (from `../node_modules/@expo/ui/ios`)"
   - ExpoVideo (from `../node_modules/expo-video/ios`)
   - ExpoWebBrowser (from `../node_modules/expo-web-browser/ios`)
-  - EXStructuredHeaders (from `../node_modules/expo-structured-headers/ios`)
-  - EXUpdates (from `../node_modules/expo-updates/ios`)
-  - EXUpdatesInterface (from `../node_modules/expo-updates-interface/ios`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
   - ImageColors (from `../node_modules/react-native-image-colors/ios`)
-  - llama-rn (from `../node_modules/llama.rn`)
   - NitroImage (from `../node_modules/react-native-nitro-image`)
   - NitroMmkv (from `../node_modules/react-native-mmkv`)
   - NitroModules (from `../node_modules/react-native-nitro-modules`)
@@ -2762,7 +2640,6 @@ DEPENDENCIES:
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - react-native-screen-corner-radius (from `../node_modules/react-native-screen-corner-radius`)
   - "react-native-skia (from `../node_modules/@shopify/react-native-skia`)"
-  - "react-native-slider (from `../node_modules/@react-native-community/slider`)"
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
   - React-networking (from `../node_modules/react-native/ReactCommon/react/networking`)
   - React-oscompat (from `../node_modules/react-native/ReactCommon/oscompat`)
@@ -2797,8 +2674,8 @@ DEPENDENCIES:
   - ReactCodegen (from `build/generated/ios/ReactCodegen`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - ReactNativeDependencies (from `../node_modules/react-native/third-party-podspecs/ReactNativeDependencies.podspec`)
+  - "RNCClipboard (from `../node_modules/@react-native-clipboard/clipboard`)"
   - "RNCMaskedView (from `../node_modules/@react-native-masked-view/masked-view`)"
-  - "RNDateTimePicker (from `../node_modules/@react-native-community/datetimepicker`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNPaywalls (from `../node_modules/react-native-purchases-ui`)
   - RNPurchases (from `../node_modules/react-native-purchases`)
@@ -2820,7 +2697,6 @@ SPEC REPOS:
     - MMKVCore
     - PurchasesHybridCommon
     - PurchasesHybridCommonUI
-    - ReachabilitySwift
     - RevenueCat
     - RevenueCatUI
     - SDWebImage
@@ -2833,16 +2709,10 @@ SPEC REPOS:
     - TensorFlowLiteC
 
 EXTERNAL SOURCES:
-  EASClient:
-    :path: "../node_modules/expo-eas-client/ios"
   EXApplication:
     :path: "../node_modules/expo-application/ios"
   EXConstants:
     :path: "../node_modules/expo-constants/ios"
-  EXJSONUtils:
-    :path: "../node_modules/expo-json-utils/ios"
-  EXManifests:
-    :path: "../node_modules/expo-manifests/ios"
   Expo:
     :path: "../node_modules/expo"
   ExpoAsset:
@@ -2893,28 +2763,16 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-speech/ios"
   ExpoSpeechRecognition:
     :path: "../node_modules/expo-speech-recognition/ios"
-  ExpoSplashScreen:
-    :path: "../node_modules/expo-splash-screen/ios"
-  ExpoSQLite:
-    :path: "../node_modules/expo-sqlite/ios"
   ExpoStoreReview:
     :path: "../node_modules/expo-store-review/ios"
   ExpoSymbols:
     :path: "../node_modules/expo-symbols/ios"
-  ExpoSystemUI:
-    :path: "../node_modules/expo-system-ui/ios"
   ExpoUI:
     :path: "../node_modules/@expo/ui/ios"
   ExpoVideo:
     :path: "../node_modules/expo-video/ios"
   ExpoWebBrowser:
     :path: "../node_modules/expo-web-browser/ios"
-  EXStructuredHeaders:
-    :path: "../node_modules/expo-structured-headers/ios"
-  EXUpdates:
-    :path: "../node_modules/expo-updates/ios"
-  EXUpdatesInterface:
-    :path: "../node_modules/expo-updates-interface/ios"
   FBLazyVector:
     :path: "../node_modules/react-native/Libraries/FBLazyVector"
   hermes-engine:
@@ -2922,8 +2780,6 @@ EXTERNAL SOURCES:
     :tag: hermes-v250829098.0.10
   ImageColors:
     :path: "../node_modules/react-native-image-colors/ios"
-  llama-rn:
-    :path: "../node_modules/llama.rn"
   NitroImage:
     :path: "../node_modules/react-native-nitro-image"
   NitroMmkv:
@@ -3014,8 +2870,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-screen-corner-radius"
   react-native-skia:
     :path: "../node_modules/@shopify/react-native-skia"
-  react-native-slider:
-    :path: "../node_modules/@react-native-community/slider"
   React-NativeModulesApple:
     :path: "../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios"
   React-networking:
@@ -3084,10 +2938,10 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon"
   ReactNativeDependencies:
     :podspec: "../node_modules/react-native/third-party-podspecs/ReactNativeDependencies.podspec"
+  RNCClipboard:
+    :path: "../node_modules/@react-native-clipboard/clipboard"
   RNCMaskedView:
     :path: "../node_modules/@react-native-masked-view/masked-view"
-  RNDateTimePicker:
-    :path: "../node_modules/@react-native-community/datetimepicker"
   RNGestureHandler:
     :path: "../node_modules/react-native-gesture-handler"
   RNPaywalls:
@@ -3114,13 +2968,10 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
-  EASClient: d3ff3c64af95718295d547fdee020cb9ff8992e5
   EXApplication: 8e64f7ce47f6c8b86daa2c72da0a4bae427de022
   EXConstants: fdc4ab546cff5ddf92631486a872e14938f25ddd
-  EXJSONUtils: dba2755f4e24009eaf87a876b2d615ea06c16e42
-  EXManifests: 9548f57656823662ca8f2708d76b986abd417273
   Expo: 5e4d255b21b3b4b082656f466a09a616d3992c06
-  ExpoAsset: 3668488167c418ba66d5984a6b9175ae4c783abd
+  ExpoAsset: 805da30db5a149baab402ba1a17f4df5f3a91f1b
   ExpoBlur: 0b3935b04e5dd1ca037053f980950512f1c662b4
   ExpoCrypto: e05749ed40e3b4bec24966de31388a3620432513
   ExpoDomWebView: 1d046ffae836cdb4221a46bc72a93df7b994ab8e
@@ -3144,36 +2995,28 @@ SPEC CHECKSUMS:
   ExpoSecureStore: 20be7fe1601ed1726afaf04ea1321a2b6ac549fc
   ExpoSpeech: a680c2ad26d2e122559ecddbfaa51cba2c6ef63b
   ExpoSpeechRecognition: fd574043a94289bc4d3505b7135bdf0acb385c8f
-  ExpoSplashScreen: ef11dd04574848c78bd5185da4cd6642073797ee
-  ExpoSQLite: 60a026ba25c2dc5e977cc62228a25393acffdd9b
   ExpoStoreReview: ad5b4259e523037d3edcd627da215b07f4759c25
   ExpoSymbols: 773655e2ad7b6bd6672b9c177a57f60cbc70eed8
-  ExpoSystemUI: 5b9bfd2ccc7933ee41711b8cddabecd1eed697e2
   ExpoUI: fa983db55060aa668c7f549d0c4a78a2ed4fba4a
   ExpoVideo: 4ea056abff62b63262569e8cd7f8de43d095f9e4
   ExpoWebBrowser: 89750f6c426baa673e8399c8874987b6acfb89c2
-  EXStructuredHeaders: 9e89bcdd636ae2ecb59995cfba3230f5d7547c08
-  EXUpdates: ede7d8c6a80359d9ecbeeb45fb3d57e4ef8559ab
-  EXUpdatesInterface: 211042a76ef49beec0de793aa4439de3164c4fd4
   FBLazyVector: 24e62c765683b8d89006a88a2c8f5cf019f0074d
   hermes-engine: f0baf356c2d63094ae07436be4cc501323559393
   ImageColors: b992ed1cb35143de0371f28a0e5ae89469a8efd9
   libavif: 5f8e715bea24debec477006f21ef9e95432e254d
   libdav1d: 23581a4d8ec811ff171ed5e2e05cd27bad64c39f
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
-  llama-rn: 8ba9db306ff22f2a8077161cd16852920648be8b
   MMKVCore: 3d16ce9f7d411e135020915fde98a056859a1efa
   NitroImage: 16ed06fae11c332d5cde1011985040ce5601d1f2
   NitroMmkv: 1ff46eceb958298b1d7c013a6314432438b77a62
   NitroModules: ecbafa6d6e6297ff1c240b40ee027aea48ec4bf4
-  PurchasesHybridCommon: 89a3ddba365c20457a4712bc3d6377b0ea3c9b4f
-  PurchasesHybridCommonUI: 4aba51371b9d6c0e2859a2e514e47bf37c8fb9eb
+  PurchasesHybridCommon: 90419d67c688e485c84da8d1864f9663a198751a
+  PurchasesHybridCommonUI: 06b7bb9aa692304a7963cdb3da3ae3e4e62c8530
   RCTDeprecation: a4c521821fab57cbb125b36effe84d897d0dfa12
   RCTRequired: 9f3a7e5645d4bc3f551593de7550bb66ab6e42bc
   RCTSwiftUI: 239ed2eb9e73de5a6f518810630f0c95e01c8702
   RCTSwiftUIWrapper: 7b8a1ffba8994a8f955c563511bffb74b4681317
   RCTTypeSafety: 2a6403ba3492c04510e7c15bd635461646c43bb2
-  ReachabilitySwift: 32793e867593cfc1177f5d16491e3a197d2fccda
   React: e2dc35338068bbd299c66f043ae0d7f25de8499e
   React-callinvoker: 28b25d21b124c26cebaea713ba7d801b9351dc48
   React-Core: f90d375d3bab515ad00df30605ce1bf02e6db12f
@@ -3211,7 +3054,6 @@ SPEC CHECKSUMS:
   react-native-safe-area-context: a2325922b8594ddd27f98fb13437aec126be2502
   react-native-screen-corner-radius: f1af455eeb1a0e06ab20fe309c49d06f7ca2d750
   react-native-skia: 9b9e78b85db9a89108afe1424d970386c64dfe97
-  react-native-slider: 8824cf332b11bf5149f6576c8c8b32b4f93f82ac
   React-NativeModulesApple: cc6ec4767844d610e92cc358bd3ea34937438d56
   React-networking: a8ce15641ed7775d5b54a9d0d32defc367c2216e
   React-oscompat: 64a0c7ef5441855dc6e2a6afe8ba8f92aa05075e
@@ -3246,13 +3088,13 @@ SPEC CHECKSUMS:
   ReactCodegen: 9af5798e943781fd2318dab7b60f25337388047c
   ReactCommon: 3ec2a55999d296af90c24beb66c8a77dc660d3ef
   ReactNativeDependencies: 9c71290a7c4067686f2fa6347197f7a43a1c54a4
-  RevenueCat: 136390ad99039cdd692156af5e479293ae83b2a9
-  RevenueCatUI: 3fb3791bba4f7532b3b83dd2947824f8f702f6fa
+  RevenueCat: 3210d4f19cef963a1422f38e424fc599e2f0f7c6
+  RevenueCatUI: 9d4b42ef59ec37d61f5fbff36495148097a5a911
+  RNCClipboard: c1cdf3cdd72df606520114f42e61c6898a488dd8
   RNCMaskedView: 48989935d9665d97d87fa7e44f486b4d22cd5b9f
-  RNDateTimePicker: c33c46d089998652b576a58ac08108db8c9af6f1
   RNGestureHandler: acf7db8499c11193d9b4b6b1cc1439ff4f01a693
-  RNPaywalls: c60d39e4941623f78e93a440e87402ec1a27820e
-  RNPurchases: b5b781d0c2b67472f203e0aae59907a519d4369b
+  RNPaywalls: 3e06151fd4bbe92ed69af8342ca1ac6b7019cb04
+  RNPurchases: 1871eea64147bc0b59ec8e12b162ed7767b35b6e
   RNReanimated: dcf144ce67ea0cc52d52fc3933d27ea3dd8c01f0
   RNScreens: 927519467766b92bd26d272184a5cf30e63dad88
   RNSentry: 859c1702fe09e25c24747a5feedecab1d5138074

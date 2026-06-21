@@ -66,7 +66,7 @@ export function buildYouTubeWatchUrl(videoId: string): string {
  * Build a YouTube thumbnail URL from a video ID
  * Quality options: default, mqdefault, hqdefault, sddefault, maxresdefault
  */
-export function buildYouTubeThumbnailUrl(
+function buildYouTubeThumbnailUrl(
   videoId: string,
   quality: "default" | "mq" | "hq" | "sd" | "maxres" = "hq"
 ): string {
@@ -83,7 +83,7 @@ export function buildYouTubeThumbnailUrl(
 /**
  * Build a YouTube embed URL from a video ID
  */
-export function buildYouTubeEmbedUrl(videoId: string): string {
+function buildYouTubeEmbedUrl(videoId: string): string {
   return `https://www.youtube.com/embed/${videoId}`;
 }
 
@@ -150,7 +150,7 @@ export function quickCookingCheck(title: string): {
 /**
  * Normalize a YouTube URL to standard watch format
  */
-export function normalizeYouTubeUrl(url: string): string | null {
+function normalizeYouTubeUrl(url: string): string | null {
   const videoId = extractYouTubeVideoId(url);
   if (!videoId) return null;
   return buildYouTubeWatchUrl(videoId);

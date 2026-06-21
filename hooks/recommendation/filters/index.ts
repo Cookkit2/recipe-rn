@@ -1,3 +1,4 @@
+export { AvailabilityFilter } from "./AvailabilityFilter";
 // Types and interfaces
 export type { RecipeFilterStrategy, FilterContext } from "./RecipeFilterStrategy";
 
@@ -5,7 +6,7 @@ export type { RecipeFilterStrategy, FilterContext } from "./RecipeFilterStrategy
 export { CompositeFilterStrategy } from "./CompositeFilterStrategy";
 
 // Individual filters
-export { AvailabilityFilter, type AvailabilityFilterOptions } from "./AvailabilityFilter";
+export { type AvailabilityFilterOptions } from "./AvailabilityFilter";
 
 export { CategoryFilter, type CategoryFilterOptions } from "./CategoryFilter";
 

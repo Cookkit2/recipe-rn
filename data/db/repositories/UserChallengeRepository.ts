@@ -117,16 +117,13 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
       query = query.extend(Q.where("progress", Q.gte(options.minProgress)));
     }
 
-    // Apply sorting (most recently created first by default)
-    query = this.applySorting(query, options.sortBy || "created_at", options.sortOrder || "desc");
-
-    // Apply pagination
-    if (options.offset) {
-      query = query.extend(Q.skip(options.offset));
-    }
-    if (options.limit) {
-      query = query.extend(Q.take(options.limit));
-    }
+    // Apply sorting and pagination
+    query = this.applySortAndPaginate(
+      query,
+      options.sortBy || "created_at",
+      options.sortOrder || "desc",
+      options
+    );
 
     let records = await query.fetch();
 

@@ -1,0 +1,16 @@
+appId: app.cookkit.cookkit
+name: "Grocery List"
+tags:
+  - P1
+  - grocery
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+- openLink: cookkit://grocery-list
+- extendedWaitUntil:
+    visible:
+      id: "grocery-list-screen"
+    timeout: 5000

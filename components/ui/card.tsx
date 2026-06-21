@@ -79,4 +79,4 @@ function CardFooter({
   return <View className={cn("flex flex-row items-center p-6 pt-0", className)} {...props} />;
 }
 
-export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle };
+export { Card, CardContent, CardDescription, CardHeader, CardTitle };

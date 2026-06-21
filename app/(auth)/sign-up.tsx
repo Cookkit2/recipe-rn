@@ -1,11 +1,15 @@
 import React, { useState } from "react";
-import { View, Pressable, Alert, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
-import { Link, router } from "expo-router";
+import { View, Alert } from "react-native";
+import { router } from "expo-router";
 import { Text } from "~/components/ui/text";
 import { Button } from "~/components/ui/button";
-import { AuthContainer, AuthCard, AuthInput, SocialAuthButton } from "~/components/auth";
+import { AuthInput } from "~/components/auth";
 import { useAuth } from "~/auth";
 import { TEST_IDS } from "~/constants/test-ids";
+import AuthScreenLayout, {
+  validateEmail,
+  validatePassword,
+} from "~/components/auth/AuthScreenLayout";
 
 export default function SignUpScreen() {
   const [email, setEmail] = useState("");
@@ -15,17 +19,16 @@ export default function SignUpScreen() {
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [socialLoading, setSocialLoading] = useState<string | null>(null);
 
   const auth = useAuth();
 
-  const getPasswordStrength = (password: string) => {
+  const getPasswordStrength = (pwd: string) => {
     let strength = 0;
-    if (password.length >= 12) strength++;
-    if (/[a-z]/.test(password)) strength++;
-    if (/[A-Z]/.test(password)) strength++;
-    if (/[0-9]/.test(password)) strength++;
-    if (/[^A-Za-z0-9]/.test(password)) strength++;
+    if (pwd.length >= 12) strength++;
+    if (/[a-z]/.test(pwd)) strength++;
+    if (/[A-Z]/.test(pwd)) strength++;
+    if (/[0-9]/.test(pwd)) strength++;
+    if (/[^A-Za-z0-9]/.test(pwd)) strength++;
     return strength;
   };
 
@@ -66,54 +69,20 @@ export default function SignUpScreen() {
   };
 
   const validateForm = () => {
-    let isValid = true;
+    const eErr = validateEmail(email);
+    const pErr = validatePassword(password);
+    setEmailError(eErr);
+    setPasswordError(pErr);
 
-    // Reset errors
-    setEmailError("");
-    setPasswordError("");
-    setConfirmPasswordError("");
-
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email) {
-      setEmailError("Email is required");
-      isValid = false;
-    } else if (!emailRegex.test(email)) {
-      setEmailError("Please enter a valid email address");
-      isValid = false;
-    }
-
-    // Password validation - strong password requirements
-    if (!password) {
-      setPasswordError("Password is required");
-      isValid = false;
-    } else if (password.length < 12) {
-      setPasswordError("Password must be at least 12 characters");
-      isValid = false;
-    } else if (!/[A-Z]/.test(password)) {
-      setPasswordError("Password must contain at least one uppercase letter");
-      isValid = false;
-    } else if (!/[a-z]/.test(password)) {
-      setPasswordError("Password must contain at least one lowercase letter");
-      isValid = false;
-    } else if (!/\d/.test(password)) {
-      setPasswordError("Password must contain at least one number");
-      isValid = false;
-    } else if (!/[^A-Za-z0-9]/.test(password)) {
-      setPasswordError("Password must contain at least one special character");
-      isValid = false;
-    }
-
-    // Confirm password validation
+    let cpErr = "";
     if (!confirmPassword) {
-      setConfirmPasswordError("Please confirm your password");
-      isValid = false;
+      cpErr = "Please confirm your password";
     } else if (password !== confirmPassword) {
-      setConfirmPasswordError("Passwords do not match");
-      isValid = false;
+      cpErr = "Passwords do not match";
     }
+    setConfirmPasswordError(cpErr);
 
-    return isValid;
+    return !eErr && !pErr && !cpErr;
   };
 
   const handleSignUp = async () => {
@@ -146,172 +115,112 @@ export default function SignUpScreen() {
       } else {
         Alert.alert("Sign Up Failed", result.error?.message || "Please try again");
       }
-    } catch (error) {
+    } catch {
       Alert.alert("Error", "An unexpected error occurred");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSocialAuth = async (provider: "google" | "apple") => {
-    setSocialLoading(provider);
-    try {
-      const result = await auth.signInWithProvider({
-        provider,
-        scopes: provider === "google" ? ["email", "profile"] : undefined,
-      });
-
-      if (result.success) {
-        router.replace("/");
-      } else {
-        Alert.alert("Sign Up Failed", result.error?.message || `${provider} sign up failed`);
-      }
-    } catch (error) {
-      Alert.alert("Error", "An unexpected error occurred");
-    } finally {
-      setSocialLoading(null);
-    }
-  };
-
   const passwordStrength = getPasswordStrength(password);
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1"
+    <AuthScreenLayout
+      testID={TEST_IDS.auth.signUpScreen}
+      title="Create Account"
+      subtitle="Join us to start your cooking journey"
+      isLoading={isLoading}
+      socialAuthErrorTitle="Sign Up Failed"
+      footerPrompt="Already have an account?"
+      footerLinkText="Sign In"
+      footerLinkHref="/(auth)/sign-in"
     >
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        <AuthContainer testID={TEST_IDS.auth.signUpScreen}>
-          <AuthCard title="Create Account" subtitle="Join us to start your cooking journey">
-            <View className="space-y-4">
-              {/* Email Input */}
-              <AuthInput
-                testID={TEST_IDS.auth.emailInput}
-                label="Email"
-                value={email}
-                onChangeText={setEmail}
-                placeholder="Enter your email"
-                keyboardType="email-address"
-                autoComplete="email"
-                error={emailError}
-              />
+      {({ socialLoading }) => (
+        <>
+          {/* Email Input */}
+          <AuthInput
+            testID={TEST_IDS.auth.emailInput}
+            label="Email"
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Enter your email"
+            keyboardType="email-address"
+            autoComplete="email"
+            error={emailError}
+          />
 
-              {/* Password Input */}
-              <View>
-                <AuthInput
-                  testID={TEST_IDS.auth.passwordInput}
-                  label="Password"
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder="Create a password"
-                  secureTextEntry
-                  autoComplete="password-new"
-                  error={passwordError}
-                />
-                {password.length > 0 && (
-                  <View className="mt-2">
-                    <View className="flex-row justify-between items-center">
-                      <Text className="text-xs text-muted-foreground">Password strength:</Text>
-                      <Text
-                        className={`text-xs font-medium ${getPasswordStrengthColor(
-                          passwordStrength
-                        )}`}
-                      >
-                        {getPasswordStrengthText(passwordStrength)}
-                      </Text>
-                    </View>
-                    <View className="flex-row space-x-1 mt-1">
-                      {[1, 2, 3, 4, 5].map((level) => (
-                        <View
-                          key={level}
-                          className={`flex-1 h-1 rounded-full ${
-                            level <= passwordStrength
-                              ? level <= 2
-                                ? "bg-red-500"
-                                : level <= 3
-                                  ? "bg-yellow-500"
-                                  : "bg-green-500"
-                              : "bg-gray-200"
-                          }`}
-                        />
-                      ))}
-                    </View>
-                  </View>
-                )}
+          {/* Password Input + Strength Indicator */}
+          <View>
+            <AuthInput
+              testID={TEST_IDS.auth.passwordInput}
+              label="Password"
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Create a password"
+              secureTextEntry
+              autoComplete="password-new"
+              error={passwordError}
+            />
+            {password.length > 0 && (
+              <View className="mt-2">
+                <View className="flex-row justify-between items-center">
+                  <Text className="text-xs text-muted-foreground">Password strength:</Text>
+                  <Text
+                    className={`text-xs font-medium ${getPasswordStrengthColor(passwordStrength)}`}
+                  >
+                    {getPasswordStrengthText(passwordStrength)}
+                  </Text>
+                </View>
+                <View className="flex-row space-x-1 mt-1">
+                  {[1, 2, 3, 4, 5].map((level) => (
+                    <View
+                      key={level}
+                      className={`flex-1 h-1 rounded-full ${
+                        level <= passwordStrength
+                          ? level <= 2
+                            ? "bg-red-500"
+                            : level <= 3
+                              ? "bg-yellow-500"
+                              : "bg-green-500"
+                          : "bg-gray-200"
+                      }`}
+                    />
+                  ))}
+                </View>
               </View>
+            )}
+          </View>
 
-              {/* Confirm Password Input */}
-              <AuthInput
-                testID={TEST_IDS.auth.confirmPasswordInput}
-                label="Confirm Password"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                placeholder="Confirm your password"
-                secureTextEntry
-                autoComplete="password-new"
-                error={confirmPasswordError}
-              />
+          {/* Confirm Password Input */}
+          <AuthInput
+            testID={TEST_IDS.auth.confirmPasswordInput}
+            label="Confirm Password"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            placeholder="Confirm your password"
+            secureTextEntry
+            autoComplete="password-new"
+            error={confirmPasswordError}
+          />
 
-              {/* Sign Up Button */}
-              <Button
-                testID={TEST_IDS.auth.signUpButton}
-                onPress={handleSignUp}
-                disabled={isLoading || !!socialLoading}
-                className="w-full"
-              >
-                <Text>{isLoading ? "Creating Account..." : "Create Account"}</Text>
-              </Button>
+          {/* Sign Up Button */}
+          <Button
+            testID={TEST_IDS.auth.signUpButton}
+            onPress={handleSignUp}
+            disabled={isLoading || !!socialLoading}
+            className="w-full"
+          >
+            <Text>{isLoading ? "Creating Account..." : "Create Account"}</Text>
+          </Button>
 
-              {/* Terms Text */}
-              <Text className="text-xs text-muted-foreground text-center leading-4">
-                By creating an account, you agree to our{" "}
-                <Text className="text-primary">Terms of Service</Text> and{" "}
-                <Text className="text-primary">Privacy Policy</Text>
-              </Text>
-
-              {/* Divider */}
-              <View className="flex-row items-center space-x-4 my-2">
-                <View className="flex-1 h-px bg-border" />
-                <Text className="text-sm text-muted-foreground">or</Text>
-                <View className="flex-1 h-px bg-border" />
-              </View>
-
-              {/* Social Auth Buttons */}
-              <View className="space-y-3">
-                <SocialAuthButton
-                  provider="google"
-                  onPress={() => handleSocialAuth("google")}
-                  loading={socialLoading === "google"}
-                  disabled={isLoading || !!socialLoading}
-                />
-
-                {Platform.OS === "ios" && (
-                  <SocialAuthButton
-                    provider="apple"
-                    onPress={() => handleSocialAuth("apple")}
-                    loading={socialLoading === "apple"}
-                    disabled={isLoading || !!socialLoading}
-                  />
-                )}
-              </View>
-
-              {/* Sign In Link */}
-              <View className="flex-row justify-center items-center space-x-2 pt-4">
-                <Text className="text-sm text-muted-foreground">Already have an account?</Text>
-                <Link href="/(auth)/sign-in" asChild>
-                  <Pressable accessibilityRole="link">
-                    <Text className="text-sm text-primary font-medium">Sign In</Text>
-                  </Pressable>
-                </Link>
-              </View>
-            </View>
-          </AuthCard>
-        </AuthContainer>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          {/* Terms Text */}
+          <Text className="text-xs text-muted-foreground text-center leading-4">
+            By creating an account, you agree to our{" "}
+            <Text className="text-primary">Terms of Service</Text> and{" "}
+            <Text className="text-primary">Privacy Policy</Text>
+          </Text>
+        </>
+      )}
+    </AuthScreenLayout>
   );
 }

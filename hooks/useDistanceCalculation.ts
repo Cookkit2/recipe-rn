@@ -54,7 +54,7 @@ export function useDistanceCalculation(
   }, [userLocation, stores]);
 }
 
-export function useClosestStore(
+function useClosestStore(
   userLocation: Location | null,
   stores: Array<{
     id: string;

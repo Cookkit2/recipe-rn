@@ -167,4 +167,32 @@ export abstract class BaseRepository<T extends Model> {
     // 4. This is much simpler. The sortBy method takes the sort order as a string.
     return query.extend(Q.sortBy(sortBy, sortOrder));
   }
+
+  /**
+   * Applies offset/limit pagination to a query.
+   * Centralises the repeated `if (offset) query.extend(Q.skip(...))` / `if (limit) query.extend(Q.take(...))` pattern.
+   */
+  protected applyPagination(query: Query<T>, options: PaginationOptions = {}): Query<T> {
+    if (options.offset) {
+      query = query.extend(Q.skip(options.offset));
+    }
+    if (options.limit) {
+      query = query.extend(Q.take(options.limit));
+    }
+    return query;
+  }
+
+  /**
+   * Applies sorting + pagination in one call — the most common combined pattern.
+   */
+  protected applySortAndPaginate(
+    query: Query<T>,
+    sortBy?: string,
+    sortOrder: "asc" | "desc" = "asc",
+    pagination: PaginationOptions = {}
+  ): Query<T> {
+    query = this.applySorting(query, sortBy, sortOrder);
+    query = this.applyPagination(query, pagination);
+    return query;
+  }
 }

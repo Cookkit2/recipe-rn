@@ -52,6 +52,178 @@ import {
 import type { AppResult } from "~/utils/result";
 import type { AppError } from "~/types/AppError";
 
+// =============================================================================
+// Core functions — shared by throwing + Result variant pairs
+// =============================================================================
+
+const fetchAllRecipesCore = async (): Promise<Recipe[]> => {
+  if (!databaseFacade) {
+    throw new Error("DatabaseFacade is undefined - import failed");
+  }
+  const dbRecipes = await databaseFacade.getAllRecipes();
+  return convertDbRecipesToUISearchSummaries(dbRecipes);
+};
+
+const fetchRecipesPaginatedCore = async (
+  page: number,
+  pageSize: number
+): Promise<{
+  recipes: Recipe[];
+  hasMore: boolean;
+  nextPage: number | null;
+  totalCount: number;
+}> => {
+  if (!databaseFacade) {
+    throw new Error("DatabaseFacade is undefined - import failed");
+  }
+  const isHealthy = await databaseFacade.isHealthy();
+  if (!isHealthy) {
+    throw new Error("Database health check failed");
+  }
+
+  const offset = page * pageSize;
+  const dbRecipes = await databaseFacade.getRecipesPaginated(offset, pageSize);
+  const totalCount = await databaseFacade.getRecipesCount();
+
+  const recipeIds = dbRecipes.map((r) => r.id);
+  const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
+  const uiRecipes = convertDbRecipesToUIRecipesBatch(dbRecipes, recipeDetailsMap);
+
+  const hasMore = offset + dbRecipes.length < totalCount;
+  const nextPage = hasMore ? page + 1 : null;
+
+  return { recipes: uiRecipes, hasMore, nextPage, totalCount };
+};
+
+const getRecipeByIdCore = async (id: string): Promise<Recipe | null> => {
+  const dbRecipe = await databaseFacade.getRecipeById(id);
+  if (!dbRecipe) return null;
+  const recipe = await convertDbRecipeToUIRecipe(dbRecipe);
+  log.info("Found recipe in DB:", recipe.ingredients);
+  return recipe;
+};
+
+const searchRecipesCore = async (
+  searchTerm: string,
+  filters?: {
+    tags?: string[];
+    maxPrepTime?: number;
+    maxCookTime?: number;
+    minTotalTime?: number;
+    maxTotalTime?: number;
+    difficulty?: number;
+  }
+): Promise<Recipe[]> => {
+  const dbRecipes = await databaseFacade.searchRecipes(searchTerm, {
+    tags: filters?.tags,
+    maxPrepTime: filters?.maxPrepTime,
+    maxCookTime: filters?.maxCookTime,
+    minTotalTime: filters?.minTotalTime,
+    maxTotalTime: filters?.maxTotalTime,
+    difficulty: filters?.difficulty,
+  });
+  return convertDbRecipesToUISearchSummaries(dbRecipes);
+};
+
+const addRecipeCore = async (recipe: Omit<Recipe, "id">): Promise<Recipe> => {
+  await databaseFacade.createRecipe({
+    title: recipe.title,
+    description: recipe.description,
+    imageUrl: recipe.imageUrl,
+    prepMinutes: recipe.prepMinutes || 0,
+    cookMinutes: recipe.cookMinutes || 0,
+    difficultyStars: recipe.difficultyStars || 1,
+    servings: recipe.servings || 1,
+    sourceUrl: recipe.sourceUrl,
+    calories: recipe.calories,
+    tags: recipe.tags,
+    type: RecipeType.STANDARD,
+    steps: recipe.instructions.map((step) => ({
+      step: step.step,
+      title: step.title,
+      description: step.description,
+    })),
+    ingredients: recipe.ingredients.map((ing) => ({
+      baseIngredientId: ing.relatedIngredientId,
+      name: ing.name,
+      quantity: ing.quantity,
+      unit: ing.unit,
+      notes: ing.notes,
+    })),
+  });
+
+  const allRecipes = await fetchAllRecipesCore();
+  const newRecipe = allRecipes.find((r) => r.title === recipe.title);
+  if (!newRecipe) {
+    throw new Error("Failed to retrieve newly created recipe");
+  }
+  return newRecipe;
+};
+
+const updateRecipeCore = async (id: string, updates: Partial<Recipe>): Promise<Recipe> => {
+  const dbRecipe = await databaseFacade.getRecipeById(id);
+  if (!dbRecipe) {
+    throw new Error("Recipe not found");
+  }
+
+  await dbRecipe.updateRecipe({
+    title: updates.title,
+    description: updates.description,
+    imageUrl: updates.imageUrl,
+    prepMinutes: updates.prepMinutes,
+    cookMinutes: updates.cookMinutes,
+    difficultyStars: updates.difficultyStars,
+    servings: updates.servings,
+    sourceUrl: updates.sourceUrl,
+    calories: updates.calories,
+    tags: updates.tags,
+  });
+
+  const updatedRecipe = await getRecipeByIdCore(id);
+  if (!updatedRecipe) {
+    throw new Error("Failed to fetch updated recipe");
+  }
+  return updatedRecipe;
+};
+
+const deleteRecipeCore = async (id: string): Promise<void> => {
+  await databaseFacade.deleteRecipe(id);
+};
+
+const getAvailableRecipesCore = async (): Promise<{
+  canMake: Recipe[];
+  partiallyCanMake: Array<{ recipe: Recipe; completionPercentage: number }>;
+}> => {
+  const availability = await databaseFacade.getAvailableRecipes();
+
+  const canMakeIds = availability.canMake.map((r) => r.id);
+  const partiallyMakeIds = availability.partiallyCanMake.map((item) => item.recipe.id);
+  const allRecipeIds = [...canMakeIds, ...partiallyMakeIds];
+
+  const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(allRecipeIds);
+
+  const canMake = convertDbRecipesToUIRecipesBatch(availability.canMake, recipeDetailsMap);
+
+  const partiallyCanMake = availability.partiallyCanMake
+    .map((item) => {
+      const uiRecipes = convertDbRecipesToUIRecipesBatch([item.recipe], recipeDetailsMap);
+      if (uiRecipes.length === 0) {
+        return null;
+      }
+      return {
+        recipe: uiRecipes[0],
+        completionPercentage: item.completionPercentage,
+      };
+    })
+    .filter((item): item is { recipe: Recipe; completionPercentage: number } => item !== null);
+
+  return { canMake, partiallyCanMake };
+};
+
+// =============================================================================
+// API surface
+// =============================================================================
+
 /**
  * Pure API functions for recipe operations
  * These functions only handle database interactions and data transformation
@@ -62,28 +234,14 @@ export const recipeApi = {
    * Full detail for a recipe: `getRecipeById` / `useRecipe`.
    */
   async fetchAllRecipes(): Promise<Recipe[]> {
-    return withErrorLogging(async () => {
-      if (!databaseFacade) {
-        throw new Error("DatabaseFacade is undefined - import failed");
-      }
-
-      const dbRecipes = await databaseFacade.getAllRecipes();
-      return convertDbRecipesToUISearchSummaries(dbRecipes);
-    }, "Error fetching all recipes");
+    return withErrorLogging(fetchAllRecipesCore, "Error fetching all recipes");
   },
 
   /**
    * Result-based variant of fetchAllRecipes (does not throw).
    */
   async fetchAllRecipesResult(): Promise<AppResult<Recipe[], AppError>> {
-    return logAndWrapResult(async () => {
-      if (!databaseFacade) {
-        throw new Error("DatabaseFacade is undefined - import failed");
-      }
-
-      const dbRecipes = await databaseFacade.getAllRecipes();
-      return convertDbRecipesToUISearchSummaries(dbRecipes);
-    }, "Error fetching all recipes");
+    return logAndWrapResult(fetchAllRecipesCore, "Error fetching all recipes");
   },
 
   /**
@@ -101,40 +259,10 @@ export const recipeApi = {
     nextPage: number | null;
     totalCount: number;
   }> {
-    return withErrorLogging(async () => {
-      if (!databaseFacade) {
-        throw new Error("DatabaseFacade is undefined - import failed");
-      }
-
-      const isHealthy = await databaseFacade.isHealthy();
-      if (!isHealthy) {
-        throw new Error("Database health check failed");
-      }
-
-      // Get paginated recipes from database
-      const offset = page * pageSize;
-      const dbRecipes = await databaseFacade.getRecipesPaginated(offset, pageSize);
-
-      // Get total count for pagination metadata
-      const totalCount = await databaseFacade.getRecipesCount();
-
-      // Use batch query to get recipe details in one call
-      const recipeIds = dbRecipes.map((r) => r.id);
-      const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
-
-      // Use batch conversion to avoid N+1 queries
-      const uiRecipes = convertDbRecipesToUIRecipesBatch(dbRecipes, recipeDetailsMap);
-
-      const hasMore = offset + dbRecipes.length < totalCount;
-      const nextPage = hasMore ? page + 1 : null;
-
-      return {
-        recipes: uiRecipes,
-        hasMore,
-        nextPage,
-        totalCount,
-      };
-    }, "Error fetching paginated recipes");
+    return withErrorLogging(
+      () => fetchRecipesPaginatedCore(page, pageSize),
+      "Error fetching paginated recipes"
+    );
   },
 
   /**
@@ -154,70 +282,24 @@ export const recipeApi = {
       AppError
     >
   > {
-    return logAndWrapResult(async () => {
-      if (!databaseFacade) {
-        throw new Error("DatabaseFacade is undefined - import failed");
-      }
-
-      const isHealthy = await databaseFacade.isHealthy();
-      if (!isHealthy) {
-        throw new Error("Database health check failed");
-      }
-
-      const offset = page * pageSize;
-      const dbRecipes = await databaseFacade.getRecipesPaginated(offset, pageSize);
-      const totalCount = await databaseFacade.getRecipesCount();
-
-      const recipeIds = dbRecipes.map((r) => r.id);
-      const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
-      const uiRecipes = convertDbRecipesToUIRecipesBatch(dbRecipes, recipeDetailsMap);
-
-      const hasMore = offset + dbRecipes.length < totalCount;
-      const nextPage = hasMore ? page + 1 : null;
-
-      return {
-        recipes: uiRecipes,
-        hasMore,
-        nextPage,
-        totalCount,
-      };
-    }, "Error fetching paginated recipes");
+    return logAndWrapResult(
+      () => fetchRecipesPaginatedCore(page, pageSize),
+      "Error fetching paginated recipes"
+    );
   },
 
   /**
    * Get a single recipe by ID
    */
   async getRecipeById(id: string): Promise<Recipe | null> {
-    return withErrorHandling(
-      async () => {
-        const dbRecipe = await databaseFacade.getRecipeById(id);
-        if (!dbRecipe) return null;
-
-        const recipe = await convertDbRecipeToUIRecipe(dbRecipe);
-
-        log.info("Found recipe in DB:", recipe.ingredients);
-
-        return recipe;
-      },
-      "Error getting recipe by id",
-      null
-    );
+    return withErrorHandling(() => getRecipeByIdCore(id), "Error getting recipe by id", null);
   },
 
   /**
    * Result-based variant of getRecipeById.
    */
   async getRecipeByIdResult(id: string): Promise<AppResult<Recipe | null, AppError>> {
-    return logAndWrapResult(async () => {
-      const dbRecipe = await databaseFacade.getRecipeById(id);
-      if (!dbRecipe) return null;
-
-      const recipe = await convertDbRecipeToUIRecipe(dbRecipe);
-
-      log.info("Found recipe in DB:", recipe.ingredients);
-
-      return recipe;
-    }, "Error getting recipe by id");
+    return logAndWrapResult(() => getRecipeByIdCore(id), "Error getting recipe by id");
   },
 
   /**
@@ -235,18 +317,7 @@ export const recipeApi = {
     }
   ): Promise<Recipe[]> {
     return withErrorHandling(
-      async () => {
-        const dbRecipes = await databaseFacade.searchRecipes(searchTerm, {
-          tags: filters?.tags,
-          maxPrepTime: filters?.maxPrepTime,
-          maxCookTime: filters?.maxCookTime,
-          minTotalTime: filters?.minTotalTime,
-          maxTotalTime: filters?.maxTotalTime,
-          difficulty: filters?.difficulty,
-        });
-
-        return convertDbRecipesToUISearchSummaries(dbRecipes);
-      },
+      () => searchRecipesCore(searchTerm, filters),
       "Error searching recipes",
       []
     );
@@ -266,136 +337,31 @@ export const recipeApi = {
       difficulty?: number;
     }
   ): Promise<AppResult<Recipe[], AppError>> {
-    return logAndWrapResult(async () => {
-      const dbRecipes = await databaseFacade.searchRecipes(searchTerm, {
-        tags: filters?.tags,
-        maxPrepTime: filters?.maxPrepTime,
-        maxCookTime: filters?.maxCookTime,
-        minTotalTime: filters?.minTotalTime,
-        maxTotalTime: filters?.maxTotalTime,
-        difficulty: filters?.difficulty,
-      });
-
-      return convertDbRecipesToUISearchSummaries(dbRecipes);
-    }, "Error searching recipes");
+    return logAndWrapResult(
+      () => searchRecipesCore(searchTerm, filters),
+      "Error searching recipes"
+    );
   },
 
   /**
    * Add a new recipe
    */
   async addRecipe(recipe: Omit<Recipe, "id">): Promise<Recipe> {
-    return withErrorLogging(async () => {
-      await databaseFacade.createRecipe({
-        title: recipe.title,
-        description: recipe.description,
-        imageUrl: recipe.imageUrl,
-        prepMinutes: recipe.prepMinutes || 0,
-        cookMinutes: recipe.cookMinutes || 0,
-        difficultyStars: recipe.difficultyStars || 1,
-        servings: recipe.servings || 1,
-        sourceUrl: recipe.sourceUrl,
-        calories: recipe.calories,
-        tags: recipe.tags,
-        type: RecipeType.STANDARD,
-        steps: recipe.instructions.map((step) => ({
-          step: step.step,
-          title: step.title,
-          description: step.description,
-        })),
-        ingredients: recipe.ingredients.map((ing) => ({
-          baseIngredientId: ing.relatedIngredientId,
-          name: ing.name,
-          quantity: ing.quantity,
-          unit: ing.unit,
-          notes: ing.notes,
-        })),
-      });
-
-      // Return the updated recipes list to get the new recipe with ID
-      const allRecipes = await this.fetchAllRecipes();
-      const newRecipe = allRecipes.find((r) => r.title === recipe.title);
-
-      if (!newRecipe) {
-        throw new Error("Failed to retrieve newly created recipe");
-      }
-
-      return newRecipe;
-    }, "Error adding recipe");
+    return withErrorLogging(() => addRecipeCore(recipe), "Error adding recipe");
   },
 
   /**
    * Result-based variant of addRecipe.
    */
   async addRecipeResult(recipe: Omit<Recipe, "id">): Promise<AppResult<Recipe, AppError>> {
-    return logAndWrapResult(async () => {
-      await databaseFacade.createRecipe({
-        title: recipe.title,
-        description: recipe.description,
-        imageUrl: recipe.imageUrl,
-        prepMinutes: recipe.prepMinutes || 0,
-        cookMinutes: recipe.cookMinutes || 0,
-        difficultyStars: recipe.difficultyStars || 1,
-        servings: recipe.servings || 1,
-        sourceUrl: recipe.sourceUrl,
-        calories: recipe.calories,
-        tags: recipe.tags,
-        type: RecipeType.STANDARD,
-        steps: recipe.instructions.map((step) => ({
-          step: step.step,
-          title: step.title,
-          description: step.description,
-        })),
-        ingredients: recipe.ingredients.map((ing) => ({
-          baseIngredientId: ing.relatedIngredientId,
-          name: ing.name,
-          quantity: ing.quantity,
-          unit: ing.unit,
-          notes: ing.notes,
-        })),
-      });
-
-      const allRecipes = await this.fetchAllRecipes();
-      const newRecipe = allRecipes.find((r) => r.title === recipe.title);
-
-      if (!newRecipe) {
-        throw new Error("Failed to retrieve newly created recipe");
-      }
-
-      return newRecipe;
-    }, "Error adding recipe");
+    return logAndWrapResult(() => addRecipeCore(recipe), "Error adding recipe");
   },
 
   /**
    * Update an existing recipe
    */
   async updateRecipe(id: string, updates: Partial<Recipe>): Promise<Recipe> {
-    return withErrorLogging(async () => {
-      const dbRecipe = await databaseFacade.getRecipeById(id);
-      if (!dbRecipe) {
-        throw new Error("Recipe not found");
-      }
-
-      await dbRecipe.updateRecipe({
-        title: updates.title,
-        description: updates.description,
-        imageUrl: updates.imageUrl,
-        prepMinutes: updates.prepMinutes,
-        cookMinutes: updates.cookMinutes,
-        difficultyStars: updates.difficultyStars,
-        servings: updates.servings,
-        sourceUrl: updates.sourceUrl,
-        calories: updates.calories,
-        tags: updates.tags,
-      });
-
-      // Fetch the updated recipe
-      const updatedRecipe = await this.getRecipeById(id);
-      if (!updatedRecipe) {
-        throw new Error("Failed to fetch updated recipe");
-      }
-
-      return updatedRecipe;
-    }, "Error updating recipe");
+    return withErrorLogging(() => updateRecipeCore(id, updates), "Error updating recipe");
   },
 
   /**
@@ -405,32 +371,7 @@ export const recipeApi = {
     id: string,
     updates: Partial<Recipe>
   ): Promise<AppResult<Recipe, AppError>> {
-    return logAndWrapResult(async () => {
-      const dbRecipe = await databaseFacade.getRecipeById(id);
-      if (!dbRecipe) {
-        throw new Error("Recipe not found");
-      }
-
-      await dbRecipe.updateRecipe({
-        title: updates.title,
-        description: updates.description,
-        imageUrl: updates.imageUrl,
-        prepMinutes: updates.prepMinutes,
-        cookMinutes: updates.cookMinutes,
-        difficultyStars: updates.difficultyStars,
-        servings: updates.servings,
-        sourceUrl: updates.sourceUrl,
-        calories: updates.calories,
-        tags: updates.tags,
-      });
-
-      const updatedRecipe = await this.getRecipeById(id);
-      if (!updatedRecipe) {
-        throw new Error("Failed to fetch updated recipe");
-      }
-
-      return updatedRecipe;
-    }, "Error updating recipe");
+    return logAndWrapResult(() => updateRecipeCore(id, updates), "Error updating recipe");
   },
 
   /**
@@ -472,18 +413,14 @@ export const recipeApi = {
    * Delete a recipe
    */
   async deleteRecipe(id: string): Promise<void> {
-    return withErrorLogging(async () => {
-      await databaseFacade.deleteRecipe(id);
-    }, "Error deleting recipe");
+    return withErrorLogging(() => deleteRecipeCore(id), "Error deleting recipe");
   },
 
   /**
    * Result-based variant of deleteRecipe.
    */
   async deleteRecipeResult(id: string): Promise<AppResult<void, AppError>> {
-    return logAndWrapResult(async () => {
-      await databaseFacade.deleteRecipe(id);
-    }, "Error deleting recipe");
+    return logAndWrapResult(() => deleteRecipeCore(id), "Error deleting recipe");
   },
 
   /**
@@ -493,41 +430,7 @@ export const recipeApi = {
     canMake: Recipe[];
     partiallyCanMake: Array<{ recipe: Recipe; completionPercentage: number }>;
   }> {
-    return withSilentError(
-      async () => {
-        const availability = await databaseFacade.getAvailableRecipes();
-
-        // Collect all recipe IDs for batch query
-        const canMakeIds = availability.canMake.map((r) => r.id);
-        const partiallyMakeIds = availability.partiallyCanMake.map((item) => item.recipe.id);
-        const allRecipeIds = [...canMakeIds, ...partiallyMakeIds];
-
-        // Fetch all recipe details in a single batch call to avoid N+1 queries
-        const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(allRecipeIds);
-
-        // Convert canMake recipes using batch approach
-        const canMake = convertDbRecipesToUIRecipesBatch(availability.canMake, recipeDetailsMap);
-
-        // Convert partiallyCanMake recipes using batch approach
-        const partiallyCanMake = availability.partiallyCanMake
-          .map((item) => {
-            const uiRecipes = convertDbRecipesToUIRecipesBatch([item.recipe], recipeDetailsMap);
-            if (uiRecipes.length === 0) {
-              return null;
-            }
-            return {
-              recipe: uiRecipes[0],
-              completionPercentage: item.completionPercentage,
-            };
-          })
-          .filter(
-            (item): item is { recipe: Recipe; completionPercentage: number } => item !== null
-          );
-
-        return { canMake, partiallyCanMake };
-      },
-      { canMake: [], partiallyCanMake: [] }
-    );
+    return withSilentError(getAvailableRecipesCore, { canMake: [], partiallyCanMake: [] });
   },
 
   /**
@@ -542,36 +445,7 @@ export const recipeApi = {
       AppError
     >
   > {
-    return wrapResult(async () => {
-      const availability = await databaseFacade.getAvailableRecipes();
-
-      // Collect all recipe IDs for batch query
-      const canMakeIds = availability.canMake.map((r) => r.id);
-      const partiallyMakeIds = availability.partiallyCanMake.map((item) => item.recipe.id);
-      const allRecipeIds = [...canMakeIds, ...partiallyMakeIds];
-
-      // Fetch all recipe details in a single batch call to avoid N+1 queries
-      const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(allRecipeIds);
-
-      // Convert canMake recipes using batch approach
-      const canMake = convertDbRecipesToUIRecipesBatch(availability.canMake, recipeDetailsMap);
-
-      // Convert partiallyCanMake recipes using batch approach
-      const partiallyCanMake = availability.partiallyCanMake
-        .map((item) => {
-          const uiRecipes = convertDbRecipesToUIRecipesBatch([item.recipe], recipeDetailsMap);
-          if (uiRecipes.length === 0) {
-            return null;
-          }
-          return {
-            recipe: uiRecipes[0],
-            completionPercentage: item.completionPercentage,
-          };
-        })
-        .filter((item): item is { recipe: Recipe; completionPercentage: number } => item !== null);
-
-      return { canMake, partiallyCanMake };
-    });
+    return wrapResult(getAvailableRecipesCore);
   },
 
   /**
@@ -671,7 +545,6 @@ export const recipeApi = {
 
         if (categories && categories.length > 0) {
           const categoryFilter = new CategoryFilter({ categories });
-
           if (filterStrategy) {
             // Combine provided strategy with category filter
             filterStrategy = new CompositeFilterStrategy()

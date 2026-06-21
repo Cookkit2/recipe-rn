@@ -40,9 +40,9 @@ function createSupabaseClient(): SupabaseClient<Database> | null {
 }
 
 export const supabase: SupabaseClient<Database> | null = createSupabaseClient();
-export const supabaseAvailable = supabase !== null;
+const supabaseAvailable = supabase !== null;
 
-export const supabaseConfig =
+const supabaseConfig =
   SUPABASE_URL && SUPABASE_ANON_KEY
     ? { url: SUPABASE_URL, anonKey: SUPABASE_ANON_KEY }
     : { url: undefined, anonKey: undefined };

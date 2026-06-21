@@ -2,7 +2,7 @@
  * SocialRecipeService — Gemini extraction mapping for TikTok/Instagram.
  *
  * Per issue #747: social-video import reuses the existing Gemini extraction
- * pipeline. These tests mock global.fetch (so we never hit real TikTok/IG)
+ * pipeline. These tests mock globalThis.fetch (so we never hit real TikTok/IG)
  * and the GeminiAPI, then assert that:
  *   - a confident Gemini response is mapped into a GeneratedRecipe with the
  *     correct platform tags, and
@@ -60,7 +60,7 @@ import { SocialRecipeService } from "../SocialRecipeService";
 
 describe("SocialRecipeService.analyzeForRecipe", () => {
   let service: SocialRecipeService;
-  const originalFetch = global.fetch;
+  const originalFetch = globalThis.fetch;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -68,7 +68,7 @@ describe("SocialRecipeService.analyzeForRecipe", () => {
   });
 
   afterEach(() => {
-    global.fetch = originalFetch;
+    globalThis.fetch = originalFetch;
   });
 
   /** Build a minimal HTML page with og:* meta + optional JSON-LD. */
@@ -85,7 +85,7 @@ describe("SocialRecipeService.analyzeForRecipe", () => {
   }
 
   it("maps a confident Gemini response into a recipe with platform tags", async () => {
-    global.fetch = jest.fn(
+    globalThis.fetch = jest.fn(
       async () => new Response(pageHtml({ title: "Viral TikTok Pasta" }), { status: 200 })
     ) as unknown as typeof fetch;
 
@@ -114,7 +114,7 @@ describe("SocialRecipeService.analyzeForRecipe", () => {
   });
 
   it("adds the instagram tag for instagram posts", async () => {
-    global.fetch = jest.fn(
+    globalThis.fetch = jest.fn(
       async () => new Response(pageHtml({ title: "IG Post" }), { status: 200 })
     ) as unknown as typeof fetch;
 
@@ -133,7 +133,7 @@ describe("SocialRecipeService.analyzeForRecipe", () => {
     // to Gemini rather than throwing, so the caller always gets a result. The
     // graceful no-recipe fallback is then driven by Gemini's confidence (see the
     // low-confidence test below) and by recipeImportApi's error mapping.
-    global.fetch = jest.fn(async () => {
+    globalThis.fetch = jest.fn(async () => {
       throw new Error("network blocked");
     }) as unknown as typeof fetch;
 
@@ -151,7 +151,7 @@ describe("SocialRecipeService.analyzeForRecipe", () => {
   });
 
   it("returns a graceful fallback when Gemini detects no recipe", async () => {
-    global.fetch = jest.fn(
+    globalThis.fetch = jest.fn(
       async () => new Response(pageHtml({ title: "Dance video" }), { status: 200 })
     ) as unknown as typeof fetch;
     generateContentMock.mockResolvedValueOnce(
@@ -171,7 +171,7 @@ describe("SocialRecipeService.analyzeForRecipe", () => {
     // If Gemini fabricates a recipe with no real ingredients/steps, the
     // validation step should force confidence to 0 so the UI prompts manual
     // entry instead of saving a fake recipe.
-    global.fetch = jest.fn(
+    globalThis.fetch = jest.fn(
       async () => new Response(pageHtml({ title: "Ad" }), { status: 200 })
     ) as unknown as typeof fetch;
     generateContentMock.mockResolvedValueOnce(
@@ -208,7 +208,7 @@ describe("SocialRecipeService.analyzeForRecipe", () => {
       articleBody: "Full recipe: 2 cups flour, 1 tsp salt. Mix and bake.",
       name: "Bread recipe",
     });
-    global.fetch = jest.fn(
+    globalThis.fetch = jest.fn(
       async () =>
         new Response(pageHtml({ title: "og-title", description: "short og", jsonLd }), {
           status: 200,

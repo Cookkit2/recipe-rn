@@ -91,16 +91,13 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
       query = query.extend(Q.where("estimated_cost", Q.lte(options.maxCost)));
     }
 
-    // Apply sorting (most recent first by default)
-    query = this.applySorting(query, options.sortBy || "waste_date", options.sortOrder || "desc");
-
-    // Apply pagination
-    if (options.offset) {
-      query = query.extend(Q.skip(options.offset));
-    }
-    if (options.limit) {
-      query = query.extend(Q.take(options.limit));
-    }
+    // Apply sorting and pagination
+    query = this.applySortAndPaginate(
+      query,
+      options.sortBy || "waste_date",
+      options.sortOrder || "desc",
+      options
+    );
 
     let records = await query.fetch();
 
@@ -120,8 +117,11 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
     return records;
   }
 
-  // Get waste statistics for a specific time period
-  async getWasteStats(startDate?: number, endDate?: number): Promise<WasteStats> {
+  /**
+   * Build a base query with optional date range filters.
+   * Shared between getWasteStats, getWasteOverTime, and getTotalWasteCost.
+   */
+  private buildDateRangeQuery(startDate?: number, endDate?: number) {
     let query = this.collection.query();
 
     if (startDate !== undefined) {
@@ -131,7 +131,12 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
       query = query.extend(Q.where("waste_date", Q.lte(endDate)));
     }
 
-    const records = await query.fetch();
+    return query;
+  }
+
+  // Get waste statistics for a specific time period
+  async getWasteStats(startDate?: number, endDate?: number): Promise<WasteStats> {
+    const records = await this.buildDateRangeQuery(startDate, endDate).fetch();
 
     const totalWasteEntries = records.length;
     let totalQuantityWasted = 0;
@@ -278,14 +283,7 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
     endDate?: number,
     groupBy: "day" | "week" | "month" = "day"
   ): Promise<WasteOverTimeData[]> {
-    let query = this.collection.query();
-
-    if (startDate !== undefined) {
-      query = query.extend(Q.where("waste_date", Q.gte(startDate)));
-    }
-    if (endDate !== undefined) {
-      query = query.extend(Q.where("waste_date", Q.lte(endDate)));
-    }
+    let query = this.buildDateRangeQuery(startDate, endDate);
 
     query = query.extend(Q.sortBy("waste_date", Q.asc));
 
@@ -344,16 +342,7 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
 
   // Get total waste cost for a period
   async getTotalWasteCost(startDate?: number, endDate?: number): Promise<number> {
-    let query = this.collection.query();
-
-    if (startDate !== undefined) {
-      query = query.extend(Q.where("waste_date", Q.gte(startDate)));
-    }
-    if (endDate !== undefined) {
-      query = query.extend(Q.where("waste_date", Q.lte(endDate)));
-    }
-
-    const records = await query.fetch();
+    const records = await this.buildDateRangeQuery(startDate, endDate).fetch();
 
     return records.reduce((sum, r) => sum + (r.estimatedCost ?? 0), 0);
   }

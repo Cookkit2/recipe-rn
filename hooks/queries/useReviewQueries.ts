@@ -8,6 +8,7 @@ import type {
   CreateTipInput,
   UpdateTipInput,
 } from "~/types/Review";
+import { invalidateReviewCaches } from "./queryInvalidationUtils";
 
 const PAGE_SIZE = 10;
 
@@ -47,10 +48,7 @@ export function useCreateReview() {
     mutationFn: ({ recipeId, input }: { recipeId: string; input: CreateReviewInput }) =>
       reviewApi.createReview(recipeId, input),
     onSuccess: (_data, variables) => {
-      const { recipeId } = variables;
-      queryClient.invalidateQueries({ queryKey: reviewQueryKeys.list(recipeId, "newest", 0) });
-      queryClient.invalidateQueries({ queryKey: reviewQueryKeys.summary(recipeId) });
-      queryClient.invalidateQueries({ queryKey: reviewQueryKeys.userReview(recipeId) });
+      invalidateReviewCaches(queryClient, variables.recipeId);
     },
   });
 }
@@ -68,10 +66,7 @@ export function useUpdateReview() {
       recipeId: string;
     }) => reviewApi.updateReview(reviewId, input),
     onSuccess: (_data, variables) => {
-      const { recipeId } = variables;
-      queryClient.invalidateQueries({ queryKey: reviewQueryKeys.list(recipeId, "newest", 0) });
-      queryClient.invalidateQueries({ queryKey: reviewQueryKeys.summary(recipeId) });
-      queryClient.invalidateQueries({ queryKey: reviewQueryKeys.userReview(recipeId) });
+      invalidateReviewCaches(queryClient, variables.recipeId);
       queryClient.invalidateQueries({ queryKey: reviewQueryKeys.detail(variables.reviewId) });
     },
   });
@@ -83,10 +78,7 @@ export function useDeleteReview() {
     mutationFn: ({ reviewId, recipeId: parentRecipeId }: { reviewId: string; recipeId: string }) =>
       reviewApi.deleteReview(reviewId),
     onSuccess: (_data, variables) => {
-      const { recipeId } = variables;
-      queryClient.invalidateQueries({ queryKey: reviewQueryKeys.list(recipeId, "newest", 0) });
-      queryClient.invalidateQueries({ queryKey: reviewQueryKeys.summary(recipeId) });
-      queryClient.invalidateQueries({ queryKey: reviewQueryKeys.userReview(recipeId) });
+      invalidateReviewCaches(queryClient, variables.recipeId);
     },
   });
 }

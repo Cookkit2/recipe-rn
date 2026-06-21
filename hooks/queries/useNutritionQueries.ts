@@ -38,7 +38,7 @@ function toNutritionInput(
  * @param date - The date to compute nutrition for
  * @returns React Query result with a NutritionSummary
  */
-export function useDayNutrition(date: Date) {
+function useDayNutrition(date: Date) {
   const startOfDay = new Date(date);
   startOfDay.setHours(0, 0, 0, 0);
   const endOfDay = new Date(date);

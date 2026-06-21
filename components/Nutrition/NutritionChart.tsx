@@ -1,14 +1,16 @@
 import * as React from "react";
-import { View, StyleSheet, Dimensions } from "react-native";
+import { View } from "react-native";
 import Svg, { Line, Rect, Text as SvgText } from "react-native-svg";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
-import { P } from "~/components/ui/typography";
-import { cn } from "~/lib/utils";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const CHART_WIDTH = SCREEN_WIDTH - 48;
-const CHART_HEIGHT = 200;
-const PADDING = 40;
+import {
+  CHART_WIDTH,
+  CHART_HEIGHT,
+  CHART_PADDING,
+  ChartEmptyState,
+  ChartCard,
+  ChartLegend,
+  buildGridLines,
+  renderGridLines,
+} from "~/components/Shared/ChartPrimitives";
 
 const COLORS = {
   protein: "#3b82f6", // blue
@@ -33,75 +35,46 @@ function getDayAbbreviation(dateString: string): string {
 }
 
 export function NutritionChart({ data, className }: NutritionChartProps) {
-  const renderEmptyState = () => (
-    <View className="items-center justify-center py-12">
-      <P className="text-muted-foreground text-center">
-        No nutrition data available for this period
-      </P>
-    </View>
-  );
-
   const renderChart = () => {
     if (data.length === 0) {
-      return renderEmptyState();
+      return <ChartEmptyState message="No nutrition data available for this period" />;
     }
 
-    const chartWidth = CHART_WIDTH - PADDING * 2;
-    const chartHeight = CHART_HEIGHT - PADDING * 2;
+    const innerWidth = CHART_WIDTH - CHART_PADDING * 2;
+    const innerHeight = CHART_HEIGHT - CHART_PADDING * 2;
 
     const maxCalories = Math.max(...data.map((d) => d.calories), 1);
     const avgCalories = Math.round(data.reduce((sum, d) => sum + d.calories, 0) / data.length);
 
     const barCount = data.length;
-    const barGroupWidth = chartWidth / barCount;
+    const barGroupWidth = innerWidth / barCount;
     const barWidth = Math.min(barGroupWidth * 0.6, 32);
     const barGap = (barGroupWidth - barWidth) / 2;
 
     // Y-axis grid lines
-    const gridLines = [];
-    const numGridLines = 5;
-    for (let i = 0; i <= numGridLines; i++) {
-      const y = PADDING + (chartHeight / numGridLines) * i;
-      const value = Math.round(maxCalories - (maxCalories / numGridLines) * i);
-      gridLines.push({ y, value });
-    }
+    const gridLines = buildGridLines(maxCalories);
 
     // Average line Y position
-    const avgY = PADDING + chartHeight - (avgCalories / maxCalories) * chartHeight;
+    const avgY = CHART_PADDING + innerHeight - (avgCalories / maxCalories) * innerHeight;
 
     return (
       <View className="mt-2">
         <Svg width={CHART_WIDTH} height={CHART_HEIGHT}>
           {/* Grid lines */}
-          {gridLines.map((line, index) => (
-            <React.Fragment key={`grid-${index}`}>
-              <Line
-                x1={PADDING}
-                y1={line.y}
-                x2={CHART_WIDTH - PADDING}
-                y2={line.y}
-                stroke="#e5e7eb"
-                strokeWidth={1}
-                strokeDasharray="4 4"
-              />
-              <SvgText x={PADDING - 5} y={line.y + 4} fontSize={10} fill="#9ca3af" textAnchor="end">
-                {line.value}
-              </SvgText>
-            </React.Fragment>
-          ))}
+          {renderGridLines(gridLines)}
 
           {/* Average calorie line */}
           <Line
-            x1={PADDING}
+            x1={CHART_PADDING}
             y1={avgY}
-            x2={CHART_WIDTH - PADDING}
+            x2={CHART_WIDTH - CHART_PADDING}
             y2={avgY}
             stroke="#6b7280"
             strokeWidth={1}
             strokeDasharray="6 4"
           />
           <SvgText
-            x={CHART_WIDTH - PADDING + 2}
+            x={CHART_WIDTH - CHART_PADDING + 2}
             y={avgY - 2}
             fontSize={9}
             fill="#6b7280"
@@ -112,15 +85,15 @@ export function NutritionChart({ data, className }: NutritionChartProps) {
 
           {/* Stacked bars */}
           {data.map((item, index) => {
-            const barHeight = (item.calories / maxCalories) * chartHeight;
-            const x = PADDING + index * barGroupWidth + barGap;
+            const barHeight = (item.calories / maxCalories) * innerHeight;
+            const x = CHART_PADDING + index * barGroupWidth + barGap;
 
             const totalMacros = item.protein + item.carbs + item.fat || 1;
             const proteinHeight = (item.protein / totalMacros) * barHeight;
             const carbsHeight = (item.carbs / totalMacros) * barHeight;
             const fatHeight = (item.fat / totalMacros) * barHeight;
 
-            const bottomY = PADDING + chartHeight;
+            const bottomY = CHART_PADDING + innerHeight;
 
             // Protein (bottom)
             const proteinY = bottomY - proteinHeight;
@@ -148,7 +121,7 @@ export function NutritionChart({ data, className }: NutritionChartProps) {
           {data.length > 1 && (
             <>
               <SvgText
-                x={PADDING + 0 * barGroupWidth + barGap + barWidth / 2}
+                x={CHART_PADDING + 0 * barGroupWidth + barGap + barWidth / 2}
                 y={CHART_HEIGHT - 10}
                 fontSize={10}
                 fill="#6b7280"
@@ -162,7 +135,7 @@ export function NutritionChart({ data, className }: NutritionChartProps) {
                   const midItem = data[midIndex];
                   return midItem ? (
                     <SvgText
-                      x={PADDING + midIndex * barGroupWidth + barGap + barWidth / 2}
+                      x={CHART_PADDING + midIndex * barGroupWidth + barGap + barWidth / 2}
                       y={CHART_HEIGHT - 10}
                       fontSize={10}
                       fill="#6b7280"
@@ -177,7 +150,7 @@ export function NutritionChart({ data, className }: NutritionChartProps) {
                 const lastItem = data[lastIndex];
                 return lastItem ? (
                   <SvgText
-                    x={PADDING + lastIndex * barGroupWidth + barGap + barWidth / 2}
+                    x={CHART_PADDING + lastIndex * barGroupWidth + barGap + barWidth / 2}
                     y={CHART_HEIGHT - 10}
                     fontSize={10}
                     fill="#6b7280"
@@ -192,42 +165,22 @@ export function NutritionChart({ data, className }: NutritionChartProps) {
         </Svg>
 
         {/* Legend */}
-        <View className="flex-row items-center justify-center mt-3 gap-4">
-          <View className="flex-row items-center gap-1">
-            <View style={[styles.legendDot, { backgroundColor: COLORS.protein }]} />
-            <P className="text-xs text-muted-foreground">Protein</P>
-          </View>
-          <View className="flex-row items-center gap-1">
-            <View style={[styles.legendDot, { backgroundColor: COLORS.carbs }]} />
-            <P className="text-xs text-muted-foreground">Carbs</P>
-          </View>
-          <View className="flex-row items-center gap-1">
-            <View style={[styles.legendDot, { backgroundColor: COLORS.fat }]} />
-            <P className="text-xs text-muted-foreground">Fat</P>
-          </View>
-        </View>
+        <ChartLegend
+          entries={[
+            { color: COLORS.protein, label: "Protein" },
+            { color: COLORS.carbs, label: "Carbs" },
+            { color: COLORS.fat, label: "Fat" },
+          ]}
+        />
       </View>
     );
   };
 
   return (
-    <Card
-      className={cn("mx-6 mt-6 rounded-3xl shadow-md shadow-foreground/10 border-none", className)}
-    >
-      <CardHeader className="pb-2">
-        <CardTitle className="font-urbanist-bold">Weekly Nutrition</CardTitle>
-      </CardHeader>
-      <CardContent>{renderChart()}</CardContent>
-    </Card>
+    <ChartCard title="Weekly Nutrition" className={className}>
+      {renderChart()}
+    </ChartCard>
   );
 }
-
-const styles = StyleSheet.create({
-  legendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-});
 
 export default NutritionChart;

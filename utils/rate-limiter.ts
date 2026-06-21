@@ -13,7 +13,7 @@ interface RateLimitConfig {
   windowMs: number;
 }
 
-export class RateLimiter {
+class RateLimiter {
   private attempts: Map<string, RateLimitEntry> = new Map();
   private config: RateLimitConfig;
 
@@ -141,7 +141,7 @@ export const authRateLimiter = new RateLimiter({
   windowMs: 300000, // 5 minutes
 });
 
-export const apiRateLimiter = new RateLimiter({
+const apiRateLimiter = new RateLimiter({
   maxAttempts: 100,
   windowMs: 60000, // 1 minute
 });

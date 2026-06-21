@@ -164,7 +164,7 @@ async function syncRecipeSteps(
   }
 }
 
-export function useRecipeEdit(recipe: Recipe | null, options: UseRecipeEditOptions = {}) {
+function useRecipeEdit(recipe: Recipe | null, options: UseRecipeEditOptions = {}) {
   const [isEditing, setIsEditing] = useState(false);
   const [workingCopy, setWorkingCopy] = useState<EditableRecipe | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);

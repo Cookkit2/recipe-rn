@@ -19,24 +19,15 @@ import { HouseholdRepository } from "./HouseholdRepository";
 import { HouseholdMemberRepository } from "./HouseholdMemberRepository";
 
 // Export all repositories for easy importing
-export { BaseRepository } from "./BaseRepository";
 export { RecipeRepository } from "./RecipeRepository";
 export { StockRepository } from "./StockRepository";
 export { CookingHistoryRepository } from "./CookingHistoryRepository";
-export { IngredientCategoryRepository } from "./IngredientCategoryRepository";
-export { IngredientSynonymRepository } from "./IngredientSynonymRepository";
-export { StockCategoryRepository } from "./StockCategoryRepository";
-export { MealPlanRepository } from "./MealPlanRepository";
-export { GroceryItemCheckRepository } from "./GroceryItemCheckRepository";
 export { TailoredRecipeMappingRepository } from "./TailoredRecipeMappingRepository";
 export { AchievementRepository } from "./AchievementRepository";
 export { UserAchievementRepository } from "./UserAchievementRepository";
 export { ChallengeRepository } from "./ChallengeRepository";
 export { UserChallengeRepository } from "./UserChallengeRepository";
 export { WasteLogRepository } from "./WasteLogRepository";
-export { RecipeVersionRepository } from "./RecipeVersionRepository";
-export { HouseholdRepository } from "./HouseholdRepository";
-export { HouseholdMemberRepository } from "./HouseholdMemberRepository";
 
 // Export repository interfaces
 export type { PaginationOptions, SearchOptions } from "./BaseRepository";
@@ -52,24 +43,24 @@ export type { UserChallengeSearchOptions } from "./UserChallengeRepository";
 export type { WasteLogSearchOptions, WasteStats, WasteOverTimeData } from "./WasteLogRepository";
 
 // Simple repository instances - will be created when needed
-export let recipeRepository: RecipeRepository | null = null;
-export let stockRepository: StockRepository | null = null;
-export let cookingHistoryRepository: CookingHistoryRepository | null = null;
-export let ingredientCategoryRepository: IngredientCategoryRepository | null = null;
-export let ingredientSynonymRepository: IngredientSynonymRepository | null = null;
-export let stockCategoryRepository: StockCategoryRepository | null = null;
-export let mealPlanRepository: MealPlanRepository | null = null;
-export let groceryItemCheckRepository: GroceryItemCheckRepository | null = null;
-export let tailoredRecipeMappingRepository: TailoredRecipeMappingRepository | null = null;
-export let achievementRepository: AchievementRepository | null = null;
-export let userAchievementRepository: UserAchievementRepository | null = null;
-export let challengeRepository: ChallengeRepository | null = null;
-export let userChallengeRepository: UserChallengeRepository | null = null;
-export let wasteLogRepository: WasteLogRepository | null = null;
+let recipeRepository: RecipeRepository | null = null;
+let stockRepository: StockRepository | null = null;
+let cookingHistoryRepository: CookingHistoryRepository | null = null;
+let ingredientCategoryRepository: IngredientCategoryRepository | null = null;
+let ingredientSynonymRepository: IngredientSynonymRepository | null = null;
+let stockCategoryRepository: StockCategoryRepository | null = null;
+let mealPlanRepository: MealPlanRepository | null = null;
+let groceryItemCheckRepository: GroceryItemCheckRepository | null = null;
+let tailoredRecipeMappingRepository: TailoredRecipeMappingRepository | null = null;
+let achievementRepository: AchievementRepository | null = null;
+let userAchievementRepository: UserAchievementRepository | null = null;
+let challengeRepository: ChallengeRepository | null = null;
+let userChallengeRepository: UserChallengeRepository | null = null;
+let wasteLogRepository: WasteLogRepository | null = null;
 export let recipeVersionRepository: RecipeVersionRepository | null = null;
-export let consumptionLogRepository: ConsumptionLogRepository | null = null;
-export let householdRepository: HouseholdRepository | null = null;
-export let householdMemberRepository: HouseholdMemberRepository | null = null;
+let consumptionLogRepository: ConsumptionLogRepository | null = null;
+let householdRepository: HouseholdRepository | null = null;
+let householdMemberRepository: HouseholdMemberRepository | null = null;
 
 // Initialize repositories - called by DatabaseFacade
 export function initializeRepositories() {

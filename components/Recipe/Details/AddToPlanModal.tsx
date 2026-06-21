@@ -9,7 +9,6 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Stack, useRouter } from "expo-router";
-import * as Haptics from "expo-haptics";
 import { format } from "date-fns";
 import DateTimePicker, { type DateTimePickerEvent } from "@expo/ui/community/datetime-picker";
 import { useAddToMealPlan } from "~/hooks/queries/useMealPlanQueries";
@@ -34,6 +33,7 @@ import { SlidingNumber } from "~/components/Shared/SlidingNumber";
 import { Separator } from "~/components/ui/separator";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import TextShimmer from "~/components/ui/TextShimmer";
+import { useSelectionHaptic } from "~/hooks/useSelectionHaptic";
 
 interface AddToPlanModalProps {
   /**
@@ -66,11 +66,7 @@ export default function AddToPlanModal({ recipeId }: AddToPlanModalProps) {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [servings, setServings] = useState(recipe?.servings ?? 2);
 
-  const handleHapticFeedback = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch((error) => {
-      log.warn("Haptics not available:", error);
-    });
-  }, []);
+  const handleHapticFeedback = useSelectionHaptic();
 
   const handleDateChange = useCallback(
     (event: DateTimePickerEvent, selectedDate?: Date) => {

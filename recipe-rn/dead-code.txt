@@ -1,0 +1,315 @@
+  55 entry points detected (55 plugin)
+
+── Unused Code ─────────────────────────────────────
+
+● Unused files (163)
+  __mocks__/@sentry/react-native.ts
+  __mocks__/expo-constants.ts
+  __mocks__/expo-crypto.ts
+  __mocks__/expo-maps.tsx
+  __mocks__/expo-secure-store.ts
+  __mocks__/lucide-react-native.tsx
+  __tests__/components/Camera/CameraLayout.test.tsx
+  __tests__/components/Shared/SlidingNumber.test.tsx
+  auth/__tests__/StorageIntegration.test.ts
+  auth/__tests__/SupabaseAuthStrategy.test.ts
+  ... and 153 more — try --workspace <name> or --changed-since main to scope
+  Files not reachable from any entry point — https://docs.fallow.tools/explanations/dead-code#unused-files
+  To suppress: // fallow-ignore-next-line unused-files
+  76 in src, 87 in test directories
+
+● Unused exports (263)
+  data/db/repositories/index.ts (26)
+    :22 BaseRepository (re-export)
+    :26 IngredientCategoryRepository (re-export)
+    :27 IngredientSynonymRepository (re-export)
+    :28 StockCategoryRepository (re-export)
+    :29 MealPlanRepository (re-export)
+    ... and 21 more (--format json for full list)
+  lib/notifications/index.ts (16)
+    :6 initializeNotifications (re-export)
+    :8 cancelNotification (re-export)
+    :9 cancelAllNotifications (re-export)
+    :10 getScheduledNotifications (re-export)
+    :13 getBadgeCount (re-export)
+    ... and 11 more (--format json for full list)
+  hooks/recommendation/index.ts (11)
+    :20 AvailabilityFilter (re-export)
+    :39 DifficultyStrategy (re-export)
+    :40 TimeStrategy (re-export)
+    :41 DietaryStrategy (re-export)
+    :42 RandomVarietyStrategy (re-export)
+    ... and 6 more (--format json for full list)
+  hooks/recommendation/ranking/index.ts (10)
+    :12 DifficultyStrategy (re-export)
+    :13 TimeStrategy (re-export)
+    :14 DietaryStrategy (re-export)
+    :15 RandomVarietyStrategy (re-export)
+    :19 FamiliarityStrategy (re-export)
+    ... and 5 more (--format json for full list)
+  lib/notifications/achievement-notifications.ts (10)
+    :20 LEVEL_UP_NOTIFICATION_TYPE
+    :25 STREAK_MILESTONE_NOTIFICATION_TYPE
+    :148 scheduleMultipleAchievementUnlocks
+    :199 scheduleDailyChallengeAvailable
+    :229 scheduleWeeklyChallengeAvailable
+    ... and 5 more (--format json for full list)
+  hooks/queries/useWasteAnalyticsQueries.ts (8)
+    :32 useWasteHistoryByDateRange
+    :62 useMostWastedItems
+    :79 useTotalWasteCost
+    :90 useWasteByReason
+    :102 useStockWasteCount
+    ... and 3 more (--format json for full list)
+  types/achievements.ts (8)
+    :12 ACHIEVEMENT_TYPES
+    :16 ACHIEVEMENT_STATUSES
+    :20 CHALLENGE_TYPES
+    :24 CHALLENGE_STATUSES
+    :28 REWARD_TYPES
+    ... and 3 more (--format json for full list)
+  data/db/models/index.ts (7)
+    :5 RecipeVersion (re-export)
+    :12 MealPlan (re-export)
+    :13 MealPlanTemplate (re-export)
+    :14 GroceryItemCheck (re-export)
+    :15 TailoredRecipeMapping (re-export)
+    ... and 2 more (--format json for full list)
+  hooks/queries/useRecipeQueries.ts (7)
+    :107 useSearchRecipes
+    :119 useAvailableRecipes
+    :136 useRecipeAvailability
+    :350 useShoppingList
+    :362 useAddRecipe
+    ... and 2 more (--format json for full list)
+  utils/text-formatter.ts (7)
+    :127 createSlug
+    :190 formatCount
+    :197 formatOrdinal
+    :221 formatQuantity
+    :253 formatCookingTime
+    ... and 2 more (--format json for full list)
+  ... and 153 more in 69 files (--format json for full list)
+  Exported symbols with no known consumers — https://docs.fallow.tools/explanations/dead-code#unused-exports
+  To auto-fix: fallow fix --dry-run
+  To suppress: // fallow-ignore-next-line unused-exports
+  (31 more in files already reported as unused)
+
+● Unused type exports (140)
+  data/db/models/index.ts (22)
+    :25 RecipeData (re-export)
+    :25 RecipeType (re-export)
+    :26 RecipeStepData (re-export)
+    :27 RecipeIngredientData (re-export)
+    :28 RecipeVersionData (re-export)
+    ... and 17 more (--format json for full list)
+  data/db/repositories/index.ts (15)
+    :42 PaginationOptions (re-export)
+    :42 SearchOptions (re-export)
+    :43 CreateRecipeWithDetailsData (re-export)
+    :43 RecipeSearchOptions (re-export)
+    :44 StockSearchOptions (re-export)
+    ... and 10 more (--format json for full list)
+  data/db/index.ts (14)
+    :8 Recipe (re-export)
+    :9 RecipeStep (re-export)
+    :10 RecipeIngredient (re-export)
+    :11 Stock (re-export)
+    :12 CookingHistory (re-export)
+    ... and 9 more (--format json for full list)
+  lib/notifications/index.ts (10)
+    :64 NotificationTrigger (re-export)
+    :65 TimeIntervalTrigger (re-export)
+    :66 DateTrigger (re-export)
+    :67 DailyTrigger (re-export)
+    :68 WeeklyTrigger (re-export)
+    ... and 5 more (--format json for full list)
+  hooks/recommendation/index.ts (9)
+    :21 AvailabilityFilterOptions (re-export)
+    :23 CategoryFilterOptions (re-export)
+    :25 DietaryFilterOptions (re-export)
+    :48 FamiliarityStrategyOptions (re-export)
+    :50 RecencyPenaltyStrategyOptions (re-export)
+    ... and 4 more (--format json for full list)
+  auth/index.ts (7)
+    :16 AuthStrategy (re-export)
+    :18 User (re-export)
+    :19 AuthResult (re-export)
+    :20 SignInCredentials (re-export)
+    :21 SocialAuthConfig (re-export)
+    ... and 2 more (--format json for full list)
+  types/Recipe.ts (7)
+    :18 StepPageData
+    :50 IngredientMatchStatus (re-export)
+    :51 IngredientMatchDetail (re-export)
+    :52 RecipeMatchCategory (re-export)
+    :53 RecipeWithMatchInfo (re-export)
+    ... and 2 more (--format json for full list)
+  hooks/recommendation/ranking/index.ts (6)
+    :20 FamiliarityStrategyOptions (re-export)
+    :24 RecencyPenaltyStrategyOptions (re-export)
+    :28 UserRatingStrategyOptions (re-export)
+    :32 ReadinessStrategyOptions (re-export)
+    :35 ExpiringIngredientsRankingStrategyOptions (re-export)
+    ... and 1 more (--format json for full list)
+  lib/supabase/supabase-types.ts (6)
+    :718 TablesInsert
+    :743 TablesUpdate
+    :768 Enums
+    :785 CompositeTypes
+    :837 IngredientProductMatch
+    ... and 1 more (--format json for full list)
+  types/MealPlan.ts (6)
+    :45 DateRange
+    :53 MealPlanTemplate
+    :75 WeeklyMealPlan
+    :110 CalendarViewState
+    :119 MealPlanGroceryItem
+    ... and 1 more (--format json for full list)
+  ... and 38 more in 25 files (--format json for full list)
+  Type exports with no known consumers — https://docs.fallow.tools/explanations/dead-code#unused-types
+  To auto-fix: fallow fix --dry-run
+  To suppress: // fallow-ignore-next-line unused-types
+  (1 more in files already reported as unused)
+
+● Unused class members (294)
+  data/db/DatabaseFacade.ts (31)
+    :350 DatabaseFacade.getTailoredRecipeById
+    :447 DatabaseFacade.deleteTailoredRecipe
+    :461 DatabaseFacade.cleanupExpiredTailoredRecipes
+    :616 DatabaseFacade.updateStock
+    :631 DatabaseFacade.searchStock
+    ... and 26 more (--format json for full list)
+  data/storage/implementations/mmkv-storage-impl.ts (29)
+    :60 MMKVStorageImpl.delete
+    :61 MMKVStorageImpl.delete
+    :62 MMKVStorageImpl.delete
+    :63 MMKVStorageImpl.delete
+    :78 MMKVStorageImpl.clear
+    ... and 24 more (--format json for full list)
+  data/db/models/Challenge.ts (13)
+    :20 default.table
+    :21 default.associations
+    :40 default.startDateDate
+    :45 default.endDateDate
+    :50 default.parsedRequirement
+    ... and 8 more (--format json for full list)
+  data/db/repositories/StockRepository.ts (12)
+    :62 StockRepository.getExpiredItems
+    :68 StockRepository.detectExpiredWaste
+    :114 StockRepository.getStockByStorageType
+    :119 StockRepository.getAllStorageTypes
+    :177 StockRepository.consumeStock
+    ... and 7 more (--format json for full list)
+  data/db/repositories/GroceryItemCheckRepository.ts (11)
+    :12 GroceryItemCheckRepository.getOrCreate
+    :32 GroceryItemCheckRepository.isChecked
+    :43 GroceryItemCheckRepository.setChecked
+    :70 GroceryItemCheckRepository.toggleChecked
+    :109 GroceryItemCheckRepository.getCheckAttributesMap
+    ... and 6 more (--format json for full list)
+  data/db/models/UserChallenge.ts (10)
+    :16 default.table
+    :17 default.associations
+    :34 default.startedAtDate
+    :44 default.claimedAtDate
+    :49 default.isAvailable
+    ... and 5 more (--format json for full list)
+  data/db/repositories/MealPlanRepository.ts (10)
+    :16 MealPlanRepository.addToPlan
+    :38 MealPlanRepository.isRecipeInPlan
+    :52 MealPlanRepository.getAllMealPlanItems
+    :75 MealPlanRepository.updateServings
+    :87 MealPlanRepository.removeFromPlan
+    ... and 5 more (--format json for full list)
+  auth/MockAuthStrategy.ts (9)
+    :75 MockAuthStrategy.signInWithEmail
+    :102 MockAuthStrategy.signInWithProvider
+    :130 MockAuthStrategy.signInAnonymously
+    :150 MockAuthStrategy.signUpWithEmail
+    :208 MockAuthStrategy.linkAnonymousAccount
+    ... and 4 more (--format json for full list)
+  data/db/models/Recipe.ts (9)
+    :39 default.table
+    :40 default.associations
+    :85 default.allergens
+    :89 default.allergens
+    :94 default.hasNutrition
+    ... and 4 more (--format json for full list)
+  data/db/repositories/RecipeRepository.ts (9)
+    :184 RecipeRepository.setFavorite
+    :353 RecipeRepository.clearAllRecipes
+    :425 RecipeRepository.getAllTags
+    :437 RecipeRepository.getPopularRecipes
+    :446 RecipeRepository.getQuickRecipes
+    ... and 4 more (--format json for full list)
+  ... and 151 more in 43 files (--format json for full list)
+  Class methods or properties never referenced outside their class — https://docs.fallow.tools/explanations/dead-code#unused-class-members
+  To suppress: // fallow-ignore-next-line unused-class-members
+
+── Dependencies ─────────────────────────────────────
+
+● Unused dependencies (20)
+  @gorhom/bottom-sheet
+  @rn-primitives/accordion
+  @rn-primitives/alert-dialog
+  @rn-primitives/checkbox
+  @rn-primitives/collapsible
+  @rn-primitives/context-menu
+  @rn-primitives/popover
+  @rn-primitives/radio-group
+  @rn-primitives/select
+  @rn-primitives/tabs
+  ... and 10 more — try --workspace <name> or --changed-since main to scope
+  Listed in dependencies but never imported — https://docs.fallow.tools/explanations/dead-code#unused-dependencies
+  To suppress: // fallow-ignore-next-line unused-dependencies
+
+● Unused devDependencies (6)
+  @config-plugins/detox
+  babel-jest
+  fast-uri
+  jest-expo
+  prettier-plugin-tailwindcss
+  ts-jest
+  Listed in devDependencies but never imported or referenced — https://docs.fallow.tools/explanations/dead-code#unused-dependencies
+  To suppress: // fallow-ignore-next-line unused-dependencies
+
+● Unlisted dependencies (3)
+  @jest/globals
+  expo-asset
+  expo-file-system
+  Packages imported in code but missing from package.json — https://docs.fallow.tools/explanations/dead-code#unlisted-dependencies
+  To suppress: // fallow-ignore-next-line unlisted-dependencies
+
+── Structure ─────────────────────────────────────
+
+● Duplicate exports (5)
+  lib/recipe-scrapper/youtube/types.ts
+    ↔ types/ScrappedRecipe.ts (2 exports)
+    YouTubeTranscript, YouTubeVideoInfo
+
+  components/RecipeStep.tsx
+    ↔ data/db/models/index.ts (1 export)
+    RecipeStep
+
+  utils/voice-answer-generator.ts
+    ↔ voice-command-parser.ts (1 export)
+    TemperatureInfo
+
+  hooks/queries/useCalendarMealPlans.ts
+    ↔ useMealPlanQueries.ts (1 export)
+    useCalendarMealPlans
+
+  Same export name defined in multiple files; barrel re-exports may resolve ambiguously — https://docs.fallow.tools/explanations/dead-code#duplicate-exports
+  To suppress: // fallow-ignore-next-line duplicate-exports
+
+● Circular dependencies (2)
+  data/db/models/Achievement.ts
+    → UserAchievement.ts → Achievement.ts
+
+  data/db/models/Challenge.ts
+    → UserChallenge.ts → Challenge.ts
+
+  Import cycles that can cause initialization failures and prevent tree-shaking — https://docs.fallow.tools/explanations/dead-code#circular-dependencies
+
+✗ 163 files · 263 exports · 140 types · 20 unused dependencies · 6 dev/optional dependencies · 294 class members · 3 unlisted dependencies · 4 duplicate pairs · 2 circular dependencies (0.10s)

@@ -17,12 +17,12 @@ import type { AchievementNotificationData, ChallengeNotificationData } from "~/t
 /**
  * Level up notification type identifier
  */
-export const LEVEL_UP_NOTIFICATION_TYPE = "level_up" as const;
+const LEVEL_UP_NOTIFICATION_TYPE = "level_up" as const;
 
 /**
  * Streak milestone notification type identifier
  */
-export const STREAK_MILESTONE_NOTIFICATION_TYPE = "streak_milestone" as const;
+const STREAK_MILESTONE_NOTIFICATION_TYPE = "streak_milestone" as const;
 
 // ============================================
 // Notification Templates
@@ -145,7 +145,7 @@ export async function scheduleAchievementUnlock(
  * @param achievements - Array of achievement notification data
  * @returns Array of notification identifiers
  */
-export async function scheduleMultipleAchievementUnlocks(
+async function scheduleMultipleAchievementUnlocks(
   achievements: AchievementNotificationData[]
 ): Promise<string[]> {
   const promises = achievements.map((achievement) => scheduleAchievementUnlock(achievement));
@@ -196,7 +196,7 @@ export async function scheduleChallengeComplete(
  * @param challengeId - Challenge identifier
  * @returns Notification identifier
  */
-export async function scheduleDailyChallengeAvailable(
+async function scheduleDailyChallengeAvailable(
   challengeTitle: string,
   challengeId: string
 ): Promise<string> {
@@ -226,7 +226,7 @@ export async function scheduleDailyChallengeAvailable(
  * @param challengeId - Challenge identifier
  * @returns Notification identifier
  */
-export async function scheduleWeeklyChallengeAvailable(
+async function scheduleWeeklyChallengeAvailable(
   challengeTitle: string,
   challengeId: string
 ): Promise<string> {
@@ -261,11 +261,7 @@ export async function scheduleWeeklyChallengeAvailable(
  * @param id - Optional notification identifier
  * @returns Notification identifier
  */
-export async function scheduleLevelUp(
-  newLevel: number,
-  totalXP: number,
-  id?: string
-): Promise<string> {
+async function scheduleLevelUp(newLevel: number, totalXP: number, id?: string): Promise<string> {
   const notificationId = id ?? `level_up_${newLevel}`;
 
   const title = getLevelUpTitle();
@@ -299,7 +295,7 @@ export async function scheduleLevelUp(
  * @param id - Optional notification identifier
  * @returns Notification identifier
  */
-export async function scheduleStreakMilestone(streakDays: number, id?: string): Promise<string> {
+async function scheduleStreakMilestone(streakDays: number, id?: string): Promise<string> {
   const notificationId = id ?? `streak_milestone_${streakDays}`;
 
   const title = getStreakMilestoneTitle(streakDays);
@@ -333,7 +329,7 @@ export async function scheduleStreakMilestone(streakDays: number, id?: string): 
  * @param minute - Minute to send reminder (0-59)
  * @returns Notification identifier
  */
-export async function scheduleCookingStreakReminder(
+async function scheduleCookingStreakReminder(
   hour: number = 18,
   minute: number = 0
 ): Promise<string> {
@@ -363,7 +359,7 @@ export async function scheduleCookingStreakReminder(
  * @param hoursRemaining - Hours until challenge expires
  * @returns Notification identifier
  */
-export async function scheduleChallengeExpiryReminder(
+async function scheduleChallengeExpiryReminder(
   challengeId: string,
   challengeTitle: string,
   hoursRemaining: number
@@ -402,7 +398,7 @@ export async function scheduleChallengeExpiryReminder(
  * @param totalXP - Total XP earned from all achievements
  * @returns Notification identifier
  */
-export async function scheduleBatchAchievementSummary(
+async function scheduleBatchAchievementSummary(
   achievements: AchievementNotificationData[],
   totalXP: number
 ): Promise<string> {

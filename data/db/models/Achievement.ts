@@ -2,7 +2,7 @@ import { Model, Query } from "@nozbe/watermelondb";
 import { safeJsonParse } from "~/utils/json-parsing";
 import { field, date, children, writer } from "@nozbe/watermelondb/decorators";
 import type { Associations } from "@nozbe/watermelondb/Model";
-import UserAchievement from "./UserAchievement";
+import type UserAchievement from "./UserAchievement";
 import type { AchievementRequirement, AchievementReward } from "~/types/achievements";
 
 export interface AchievementModelData {

@@ -14,7 +14,7 @@ import { log } from "~/utils/logger";
  * Secure storage integration for authentication tokens
  * Uses the existing encrypted storage configuration
  */
-export class AuthStorageManager {
+class AuthStorageManager {
   private static instance: AuthStorageManager | null = null;
   private storage = StorageFactory.initialize(
     // Use encrypted storage for auth; assert presence since config defines it

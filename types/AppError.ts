@@ -35,19 +35,19 @@ export type UnknownError = {
 
 export type AppError = InfraError | ValidationError | NotFoundError | ConflictError | UnknownError;
 
-export function infraError(message: string, cause?: unknown): InfraError {
+function infraError(message: string, cause?: unknown): InfraError {
   return { kind: "infra", message, cause };
 }
 
-export function validationError(message: string, cause?: unknown): ValidationError {
+function validationError(message: string, cause?: unknown): ValidationError {
   return { kind: "validation", message, cause };
 }
 
-export function notFoundError(message: string, cause?: unknown): NotFoundError {
+function notFoundError(message: string, cause?: unknown): NotFoundError {
   return { kind: "not_found", message, cause };
 }
 
-export function conflictError(message: string, cause?: unknown): ConflictError {
+function conflictError(message: string, cause?: unknown): ConflictError {
   return { kind: "conflict", message, cause };
 }
 

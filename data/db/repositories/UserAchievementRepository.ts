@@ -100,20 +100,13 @@ export class UserAchievementRepository extends BaseRepository<UserAchievement> {
       query = query.extend(Q.where("progress", Q.gte(options.minProgress)));
     }
 
-    // Apply sorting (most recently checked first by default)
-    query = this.applySorting(
+    // Apply sorting and pagination
+    query = this.applySortAndPaginate(
       query,
       options.sortBy || "last_checked_at",
-      options.sortOrder || "desc"
+      options.sortOrder || "desc",
+      options
     );
-
-    // Apply pagination
-    if (options.offset) {
-      query = query.extend(Q.skip(options.offset));
-    }
-    if (options.limit) {
-      query = query.extend(Q.take(options.limit));
-    }
 
     return await query.fetch();
   }

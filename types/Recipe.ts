@@ -54,4 +54,3 @@ export type {
   ShoppingListItem,
   AvailableIngredientItem,
 } from "./RecipeMatching";
-export { RECIPE_MATCH_CATEGORY_LABELS, getRecipeMatchCategory } from "./RecipeMatching";

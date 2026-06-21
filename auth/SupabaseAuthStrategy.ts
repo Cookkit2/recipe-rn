@@ -15,6 +15,7 @@ import { APP_CONFIG } from "~/lib/constants";
 import { supabase } from "~/lib/supabase/supabase-client";
 import { log } from "~/utils/logger";
 import { authRateLimiter } from "~/utils/rate-limiter";
+import { supabaseUnavailableResult, checkRateLimit, normalizeRateLimitId } from "./authHelpers";
 
 /**
  * Supabase authentication strategy implementation
@@ -171,6 +172,27 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
     return this.createErrorResult(errorCode, friendlyMessage, retryable, error);
   }
 
+  /**
+   * Common pattern: map Supabase user+session, update instance state, reset rate limiter, return success.
+   */
+  private finalizeAuth(
+    supabaseUser: SupabaseUser,
+    session: Session,
+    rateLimitId?: string
+  ): AuthResult {
+    const user = this.mapSupabaseUserToUser(supabaseUser);
+    const authSession = this.mapSupabaseSessionToAuthSession(session);
+
+    this.currentUser = user;
+    this.currentSession = authSession;
+
+    if (rateLimitId) {
+      authRateLimiter.reset(rateLimitId);
+    }
+
+    return this.createSuccessResult(user, authSession);
+  }
+
   async getCurrentUser(): Promise<User | null> {
     if (!supabase) return null;
     try {
@@ -222,8 +244,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async signInWithEmail(credentials: SignInCredentials): Promise<AuthResult> {
-    if (!supabase)
-      return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
+    if (!supabase) return supabaseUnavailableResult();
 
     const email = credentials.email?.trim() ?? "";
     if (!email) {
@@ -263,15 +284,8 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
 
     // Rate limiting check
     const identifier = email.toLowerCase();
-    if (!authRateLimiter.canAttempt(identifier)) {
-      const resetTime = authRateLimiter.getResetTime(identifier);
-      const resetMinutes = Math.ceil(resetTime / 60000);
-      return this.createErrorResult(
-        "TOO_MANY_ATTEMPTS",
-        `Too many sign-in attempts. Please try again later.`,
-        false
-      );
-    }
+    const rateLimitResult = checkRateLimit(identifier, "sign-in");
+    if (rateLimitResult) return rateLimitResult;
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -284,16 +298,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
       }
 
       if (data.user && data.session) {
-        const user = this.mapSupabaseUserToUser(data.user);
-        const session = this.mapSupabaseSessionToAuthSession(data.session);
-
-        this.currentUser = user;
-        this.currentSession = session;
-
-        // Reset rate limit on successful login
-        authRateLimiter.reset(identifier);
-
-        return this.createSuccessResult(user, session);
+        return this.finalizeAuth(data.user, data.session, identifier);
       }
 
       return this.createErrorResult(
@@ -313,10 +318,9 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async signInWithProvider(config: SocialAuthConfig): Promise<AuthResult> {
-    if (!supabase)
-      return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
+    if (!supabase) return supabaseUnavailableResult();
     if (!supabase.auth) {
-      return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
+      return supabaseUnavailableResult();
     }
     try {
       const scheme = Linking.createURL("").split(":")[0] || "cookkit";
@@ -360,9 +364,9 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async signInAnonymously(): Promise<AuthResult> {
+    if (!supabase) return supabaseUnavailableResult();
+
     try {
-      if (!supabase)
-        return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
       const { data, error } = await supabase.auth.signInAnonymously();
 
       if (error) {
@@ -370,13 +374,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
       }
 
       if (data.user && data.session) {
-        const user = this.mapSupabaseUserToUser(data.user);
-        const session = this.mapSupabaseSessionToAuthSession(data.session);
-
-        this.currentUser = user;
-        this.currentSession = session;
-
-        return this.createSuccessResult(user, session);
+        return this.finalizeAuth(data.user, data.session);
       }
 
       return this.createErrorResult(
@@ -396,20 +394,12 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async signUpWithEmail(credentials: SignInCredentials): Promise<AuthResult> {
-    if (!supabase)
-      return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
+    if (!supabase) return supabaseUnavailableResult();
 
     // Rate limiting check
-    const identifier = credentials.email?.toLowerCase().trim() || "anonymous";
-    if (!authRateLimiter.canAttempt(identifier)) {
-      const resetTime = authRateLimiter.getResetTime(identifier);
-      const resetMinutes = Math.ceil(resetTime / 60000);
-      return this.createErrorResult(
-        "TOO_MANY_ATTEMPTS",
-        `Too many sign-up attempts. Please try again later.`,
-        false
-      );
-    }
+    const identifier = normalizeRateLimitId(credentials.email);
+    const rateLimitResult = checkRateLimit(identifier, "sign-up");
+    if (rateLimitResult) return rateLimitResult;
 
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -436,13 +426,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
         }
 
         if (data.session) {
-          const user = this.mapSupabaseUserToUser(data.user);
-          const session = this.mapSupabaseSessionToAuthSession(data.session);
-
-          this.currentUser = user;
-          this.currentSession = session;
-
-          return this.createSuccessResult(user, session);
+          return this.finalizeAuth(data.user, data.session, identifier);
         }
       }
 
@@ -463,8 +447,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async signOut(): Promise<AuthResult> {
-    if (!supabase)
-      return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
+    if (!supabase) return supabaseUnavailableResult();
     try {
       log.info("About to call supabase.auth.signOut()");
       const { error } = await supabase.auth.signOut();
@@ -473,9 +456,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
       if (error) {
         log.info("Supabase signOut returned error, clearing local state anyway");
         // Still clear local state even if remote sign out failed
-        this.currentUser = null;
-        this.currentSession = null;
-        this.notifyListeners(null);
+        this.clearLocalState();
 
         return this.createErrorResult(
           "SIGNOUT_ERROR",
@@ -486,19 +467,14 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
       }
 
       log.info("Supabase signOut successful, clearing local state");
-      // Clear local state
-      this.currentUser = null;
-      this.currentSession = null;
-      this.notifyListeners(null);
+      this.clearLocalState();
 
       return { success: true };
     } catch (error) {
       log.error("Error in signOut:", error);
 
       // Clear local state even on error
-      this.currentUser = null;
-      this.currentSession = null;
-      this.notifyListeners(null);
+      this.clearLocalState();
 
       return this.createErrorResult(
         "SIGNOUT_ERROR",
@@ -510,8 +486,8 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async refreshSession(): Promise<AuthResult> {
-    if (!supabase)
-      return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
+    if (!supabase) return supabaseUnavailableResult();
+
     try {
       const { data, error } = await supabase.auth.refreshSession();
 
@@ -520,13 +496,7 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
       }
 
       if (data.user && data.session) {
-        const user = this.mapSupabaseUserToUser(data.user);
-        const session = this.mapSupabaseSessionToAuthSession(data.session);
-
-        this.currentUser = user;
-        this.currentSession = session;
-
-        return this.createSuccessResult(user, session);
+        return this.finalizeAuth(data.user, data.session);
       }
 
       return this.createErrorResult(
@@ -546,8 +516,8 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async linkAnonymousAccount(credentials: LinkAccountCredentials): Promise<AuthResult> {
-    if (!supabase)
-      return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
+    if (!supabase) return supabaseUnavailableResult();
+
     try {
       if (!this.currentUser || !this.currentUser.isAnonymous) {
         return this.createErrorResult("NOT_ANONYMOUS", "Current user is not anonymous", false);
@@ -590,8 +560,8 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   }
 
   async resetPassword(email: string): Promise<AuthResult> {
-    if (!supabase)
-      return this.createErrorResult("SUPABASE_UNAVAILABLE", "Supabase is not configured", false);
+    if (!supabase) return supabaseUnavailableResult();
+
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${APP_CONFIG.DEEP_LINK_SCHEME}://${APP_CONFIG.DEEP_LINK_PATHS.RESET_PASSWORD}`,
@@ -640,5 +610,15 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
       version: "1.0.0",
       features: ["email", "social", "anonymous", "linking", "refresh", "oauth"],
     };
+  }
+
+  /**
+   * Clear local user/session state and notify listeners.
+   * Extracted from signOut where this pattern was triplicated.
+   */
+  private clearLocalState(): void {
+    this.currentUser = null;
+    this.currentSession = null;
+    this.notifyListeners(null);
   }
 }

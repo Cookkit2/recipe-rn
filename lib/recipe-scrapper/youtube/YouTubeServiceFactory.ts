@@ -13,7 +13,7 @@ export type YouTubeServiceType = "noauth" | "auth";
 /**
  * Create a YouTube service instance of the specified type
  */
-export function createYouTubeService(type: YouTubeServiceType = "noauth"): IYouTubeService {
+function createYouTubeService(type: YouTubeServiceType = "noauth"): IYouTubeService {
   switch (type) {
     case "noauth":
       return new NoAuthYouTubeService();
@@ -43,7 +43,7 @@ export function getDefaultYouTubeService(): IYouTubeService {
  */
 let defaultServiceInstance: IYouTubeService | null = null;
 
-export function getYouTubeServiceInstance(): IYouTubeService {
+function getYouTubeServiceInstance(): IYouTubeService {
   if (!defaultServiceInstance) {
     defaultServiceInstance = getDefaultYouTubeService();
   }
@@ -53,6 +53,6 @@ export function getYouTubeServiceInstance(): IYouTubeService {
 /**
  * Reset the singleton instance (useful for testing)
  */
-export function resetYouTubeServiceInstance(): void {
+function resetYouTubeServiceInstance(): void {
   defaultServiceInstance = null;
 }

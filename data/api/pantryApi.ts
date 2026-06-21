@@ -16,6 +16,101 @@ import {
 import type { AppResult } from "~/utils/result";
 import type { AppError } from "~/types/AppError";
 import { log } from "~/utils/logger";
+import { resolveBaseIngredientId, prepareStockData } from "./api-helpers";
+
+// ---------------------------------------------------------------------------
+// Core (shared) logic — called by both the throw-based and Result-based public
+// methods so the business logic is written only once per operation.
+// ---------------------------------------------------------------------------
+
+/** Fetch all pantry items – shared by fetchAllPantryItems & fetchAllPantryItemsResult. */
+async function fetchAllPantryItemsCore(): Promise<PantryItem[]> {
+  log.info("🔍 Fetching pantry items...");
+
+  const isHealthy = await databaseFacade.isHealthy();
+  log.info("Database healthy:", isHealthy);
+
+  const stockCount = await databaseFacade.getStockCount();
+  log.info("Stock count in database:", stockCount);
+
+  const stockItems = await databaseFacade.getAllStock();
+
+  if (stockItems.length === 0) {
+    log.warn("⚠️ No stock items found in database");
+    return [];
+  }
+
+  const batchSize = 100;
+  const pantryItemsConverted: PantryItem[] = [];
+
+  for (let i = 0; i < stockItems.length; i += batchSize) {
+    const batch = stockItems.slice(i, i + batchSize);
+    const converted = await convertStockToPantryItemBatch(batch);
+    pantryItemsConverted.push(...converted);
+  }
+
+  log.info("✅ Converted pantry items:", pantryItemsConverted.length);
+  return pantryItemsConverted;
+}
+
+/** Add a single pantry item – shared by addPantryItem & addPantryItemResult. */
+async function addPantryItemCore(
+  item: Omit<PantryItem, "id" | "created_at" | "updated_at">
+): Promise<PantryItem> {
+  log.info("🔍 Adding pantry item:", item);
+
+  const baseIngredientId = await resolveBaseIngredientId(item.name);
+  const stockData = prepareStockData(item, baseIngredientId);
+
+  log.info("📦 Creating stock item with data:", stockData);
+
+  const stockItem = await databaseFacade.createStock(stockData);
+
+  log.info("✅ Stock item created:", stockItem.id, stockItem.name);
+  log.info("📊 Stock item details:", {
+    id: stockItem.id,
+    name: stockItem.name,
+    quantity: stockItem.quantity,
+    backgroundColor: stockItem.backgroundColor,
+  });
+
+  const convertedItem = (await convertStockToPantryItemBatch([stockItem]))[0] as PantryItem;
+  log.info("✅ Converted pantry item:", convertedItem);
+
+  return convertedItem;
+}
+
+/** Update a pantry item – shared by updatePantryItem & updatePantryItemResult. */
+async function updatePantryItemCore(id: string, updates: Partial<PantryItem>): Promise<PantryItem> {
+  const stock = await databaseFacade.getStockById(id);
+
+  if (!stock) {
+    throw new Error("Stock item not found");
+  }
+
+  await stock.updateStock({
+    name: updates.name,
+    quantity: updates.quantity,
+    unit: updates.unit,
+    expiryDate: updates.expiry_date,
+    storageType: updates.type,
+    backgroundColor: updates.background_color,
+    imageUrl: typeof updates.image_url === "string" ? updates.image_url : undefined,
+  });
+
+  // Fetch the updated item
+  const updatedStock = await databaseFacade.getStockById(id);
+  if (!updatedStock) {
+    throw new Error("Failed to fetch updated stock item");
+  }
+
+  const batchResult = await convertStockToPantryItemBatch([updatedStock]);
+  return batchResult[0] as PantryItem;
+}
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
 
 /**
  * Pure API functions for pantry operations
@@ -26,75 +121,14 @@ export const pantryApi = {
    * Fetch all pantry items from database
    */
   async fetchAllPantryItems(): Promise<PantryItem[]> {
-    return withErrorHandling(
-      async () => {
-        log.info("🔍 Fetching pantry items...");
-
-        // Check database health first
-        const isHealthy = await databaseFacade.isHealthy();
-        log.info("Database healthy:", isHealthy);
-
-        // Get raw count from database
-        const stockCount = await databaseFacade.getStockCount();
-        log.info("Stock count in database:", stockCount);
-
-        const stockItems = await databaseFacade.getAllStock();
-
-        if (stockItems.length === 0) {
-          log.warn("⚠️ No stock items found in database");
-          return [];
-        }
-
-        // Convert items in smaller batches to prevent JSI overload
-        const batchSize = 100;
-        const pantryItemsConverted: PantryItem[] = [];
-
-        for (let i = 0; i < stockItems.length; i += batchSize) {
-          const batch = stockItems.slice(i, i + batchSize);
-          const converted = await convertStockToPantryItemBatch(batch);
-          pantryItemsConverted.push(...converted);
-        }
-
-        log.info("✅ Converted pantry items:", pantryItemsConverted.length);
-        return pantryItemsConverted;
-      },
-      "Error fetching pantry items",
-      []
-    );
+    return withErrorHandling(() => fetchAllPantryItemsCore(), "Error fetching pantry items", []);
   },
 
   /**
    * Result-based variant of fetchAllPantryItems.
    */
   async fetchAllPantryItemsResult(): Promise<AppResult<PantryItem[], AppError>> {
-    return logAndWrapResult(async () => {
-      log.info("🔍 Fetching pantry items...");
-
-      const isHealthy = await databaseFacade.isHealthy();
-      log.info("Database healthy:", isHealthy);
-
-      const stockCount = await databaseFacade.getStockCount();
-      log.info("Stock count in database:", stockCount);
-
-      const stockItems = await databaseFacade.getAllStock();
-
-      if (stockItems.length === 0) {
-        log.warn("⚠️ No stock items found in database");
-        return [];
-      }
-
-      const batchSize = 10;
-      const pantryItemsConverted: PantryItem[] = [];
-
-      for (let i = 0; i < stockItems.length; i += batchSize) {
-        const batch = stockItems.slice(i, i + batchSize);
-        const converted = await convertStockToPantryItemBatch(batch);
-        pantryItemsConverted.push(...converted);
-      }
-
-      log.info("✅ Converted pantry items:", pantryItemsConverted.length);
-      return pantryItemsConverted;
-    }, "Error fetching pantry items");
+    return logAndWrapResult(() => fetchAllPantryItemsCore(), "Error fetching pantry items");
   },
 
   /**
@@ -103,50 +137,7 @@ export const pantryApi = {
   async addPantryItem(
     item: Omit<PantryItem, "id" | "created_at" | "updated_at">
   ): Promise<PantryItem> {
-    return withErrorLogging(async () => {
-      log.info("🔍 Adding pantry item:", item);
-
-      let baseIngredientId = `temp_${item.name.toLowerCase().replace(/\s+/g, "_")}`;
-      try {
-        const cloudIngredient = await baseIngredientApi.getBaseIngredientByName(item.name);
-        if (cloudIngredient && cloudIngredient.id) {
-          baseIngredientId = cloudIngredient.id;
-        }
-      } catch (err) {
-        log.warn("Failed to fetch base_ingredient_id from cloud API, falling back to temp ID", err);
-      }
-
-      // Prepare stock data
-      const stockData = {
-        baseIngredientId,
-        name: item.name,
-        quantity: item.quantity,
-        unit: item.unit,
-        expiryDate: item.expiry_date,
-        type: item.type,
-        backgroundColor: item.background_color,
-        category: item.category,
-        imageUrl: typeof item.image_url === "string" ? item.image_url : undefined,
-      };
-
-      log.info("📦 Creating stock item with data:", stockData);
-
-      // Create stock item
-      const stockItem = await databaseFacade.createStock(stockData);
-
-      log.info("✅ Stock item created:", stockItem.id, stockItem.name);
-      log.info("📊 Stock item details:", {
-        id: stockItem.id,
-        name: stockItem.name,
-        quantity: stockItem.quantity,
-        backgroundColor: stockItem.backgroundColor,
-      });
-
-      const convertedItem = (await convertStockToPantryItemBatch([stockItem]))[0] as PantryItem;
-      log.info("✅ Converted pantry item:", convertedItem);
-
-      return convertedItem;
-    }, "Error adding pantry item");
+    return withErrorLogging(() => addPantryItemCore(item), "Error adding pantry item");
   },
 
   /**
@@ -155,48 +146,7 @@ export const pantryApi = {
   async addPantryItemResult(
     item: Omit<PantryItem, "id" | "created_at" | "updated_at">
   ): Promise<AppResult<PantryItem, AppError>> {
-    return logAndWrapResult(async () => {
-      log.info("🔍 Adding pantry item:", item);
-
-      let baseIngredientId = `temp_${item.name.toLowerCase().replace(/\s+/g, "_")}`;
-      try {
-        const cloudIngredient = await baseIngredientApi.getBaseIngredientByName(item.name);
-        if (cloudIngredient && cloudIngredient.id) {
-          baseIngredientId = cloudIngredient.id;
-        }
-      } catch (err) {
-        log.warn("Failed to fetch base_ingredient_id from cloud API, falling back to temp ID", err);
-      }
-
-      const stockData = {
-        baseIngredientId,
-        name: item.name,
-        quantity: item.quantity,
-        unit: item.unit,
-        expiryDate: item.expiry_date,
-        type: item.type,
-        backgroundColor: item.background_color,
-        category: item.category,
-        imageUrl: typeof item.image_url === "string" ? item.image_url : undefined,
-      };
-
-      log.info("📦 Creating stock item with data:", stockData);
-
-      const stockItem = await databaseFacade.createStock(stockData);
-
-      log.info("✅ Stock item created:", stockItem.id, stockItem.name);
-      log.info("📊 Stock item details:", {
-        id: stockItem.id,
-        name: stockItem.name,
-        quantity: stockItem.quantity,
-        backgroundColor: stockItem.backgroundColor,
-      });
-
-      const convertedItem = (await convertStockToPantryItemBatch([stockItem]))[0] as PantryItem;
-      log.info("✅ Converted pantry item:", convertedItem);
-
-      return convertedItem;
-    }, "Error adding pantry item");
+    return logAndWrapResult(() => addPantryItemCore(item), "Error adding pantry item");
   },
 
   /**
@@ -403,32 +353,7 @@ export const pantryApi = {
    * Update an existing pantry item
    */
   async updatePantryItem(id: string, updates: Partial<PantryItem>): Promise<PantryItem> {
-    return withErrorLogging(async () => {
-      const stock = await databaseFacade.getStockById(id);
-
-      if (!stock) {
-        throw new Error("Stock item not found");
-      }
-
-      await stock.updateStock({
-        name: updates.name,
-        quantity: updates.quantity,
-        unit: updates.unit,
-        expiryDate: updates.expiry_date,
-        storageType: updates.type,
-        backgroundColor: updates.background_color,
-        imageUrl: typeof updates.image_url === "string" ? updates.image_url : undefined,
-      });
-
-      // Fetch the updated item
-      const updatedStock = await databaseFacade.getStockById(id);
-      if (!updatedStock) {
-        throw new Error("Failed to fetch updated stock item");
-      }
-
-      const batchResult = await convertStockToPantryItemBatch([updatedStock]);
-      return batchResult[0] as PantryItem;
-    }, "Error updating pantry item");
+    return withErrorLogging(() => updatePantryItemCore(id, updates), "Error updating pantry item");
   },
 
   /**
@@ -438,31 +363,7 @@ export const pantryApi = {
     id: string,
     updates: Partial<PantryItem>
   ): Promise<AppResult<PantryItem, AppError>> {
-    return logAndWrapResult(async () => {
-      const stock = await databaseFacade.getStockById(id);
-
-      if (!stock) {
-        throw new Error("Stock item not found");
-      }
-
-      await stock.updateStock({
-        name: updates.name,
-        quantity: updates.quantity,
-        unit: updates.unit,
-        expiryDate: updates.expiry_date,
-        storageType: updates.type,
-        backgroundColor: updates.background_color,
-        imageUrl: typeof updates.image_url === "string" ? updates.image_url : undefined,
-      });
-
-      const updatedStock = await databaseFacade.getStockById(id);
-      if (!updatedStock) {
-        throw new Error("Failed to fetch updated stock item");
-      }
-
-      const batchResult = await convertStockToPantryItemBatch([updatedStock]);
-      return batchResult[0] as PantryItem;
-    }, "Error updating pantry item");
+    return logAndWrapResult(() => updatePantryItemCore(id, updates), "Error updating pantry item");
   },
 
   /**
@@ -512,6 +413,10 @@ export const pantryApi = {
     return await convertStockToPantryItemBatch(expiringStocks);
   },
 };
+
+// ---------------------------------------------------------------------------
+// Internal helpers
+// ---------------------------------------------------------------------------
 
 // Helper function to convert Stock + BaseIngredient to PantryItem in batches
 const convertStockToPantryItemBatch = async (stocks: Stock[]): Promise<PantryItem[]> => {
@@ -567,7 +472,6 @@ const convertStockToPantryItemBatch = async (stocks: Stock[]): Promise<PantryIte
   }
 
   // Resolve IngredientCategories if needed
-  const categoryPromises: Promise<IngredientCategory | null>[] = [];
   const categoryIds = new Set<string>();
 
   allStockCategories.forEach((sc) => {

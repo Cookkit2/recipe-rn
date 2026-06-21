@@ -1,0 +1,17 @@
+appId: app.cookkit.cookkit
+name: "Add Ingredient"
+tags:
+  - P0
+  - pantry
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+- tapOn:
+    id: "home-add-ingredient-button"
+# Should see the create ingredient screen
+- extendedWaitUntil:
+    visible: ".*[Nn]ame.*"
+    timeout: 5000

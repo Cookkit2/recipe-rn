@@ -157,5 +157,5 @@ export class StorageFactory {
 }
 
 // Convenience methods for common configurations
-export const createMMKVStorage = (options?: { id?: string; encryptionKey?: string }) =>
+const createMMKVStorage = (options?: { id?: string; encryptionKey?: string }) =>
   StorageFactory.initialize({ type: "mmkv", options });

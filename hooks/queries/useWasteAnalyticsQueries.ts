@@ -29,7 +29,7 @@ export function useWasteHistory(limit?: number) {
 /**
  * Hook to fetch waste logs for a specific date range
  */
-export function useWasteHistoryByDateRange(startDate: number, endDate: number) {
+function useWasteHistoryByDateRange(startDate: number, endDate: number) {
   return useQuery({
     queryKey: wasteAnalyticsQueryKeys.discardedItemsByDateRange(
       new Date(startDate).toISOString(),
@@ -59,7 +59,7 @@ export function useWasteOverTime(
 /**
  * Hook to fetch most wasted items
  */
-export function useMostWastedItems(limit: number = 10, startDate?: number, endDate?: number) {
+function useMostWastedItems(limit: number = 10, startDate?: number, endDate?: number) {
   return useQuery({
     queryKey: [
       ...wasteAnalyticsQueryKeys.discardedItems(),
@@ -76,7 +76,7 @@ export function useMostWastedItems(limit: number = 10, startDate?: number, endDa
 /**
  * Hook to fetch total waste cost for a period
  */
-export function useTotalWasteCost(startDate?: number, endDate?: number) {
+function useTotalWasteCost(startDate?: number, endDate?: number) {
   return useQuery({
     queryKey: [...wasteAnalyticsQueryKeys.moneySaved(), "total", startDate, endDate],
     queryFn: () => databaseFacade.getTotalWasteCost(startDate, endDate),
@@ -87,7 +87,7 @@ export function useTotalWasteCost(startDate?: number, endDate?: number) {
 /**
  * Hook to fetch waste logs filtered by reason
  */
-export function useWasteByReason(reason: string) {
+function useWasteByReason(reason: string) {
   return useQuery({
     queryKey: [...wasteAnalyticsQueryKeys.discardedItems(), "reason", reason],
     queryFn: () => databaseFacade.getWasteByReason(reason),
@@ -99,7 +99,7 @@ export function useWasteByReason(reason: string) {
 /**
  * Hook to get waste count for a specific stock item
  */
-export function useStockWasteCount(stockId: string) {
+function useStockWasteCount(stockId: string) {
   return useQuery({
     queryKey: [...wasteAnalyticsQueryKeys.discardedItems(), "count", stockId],
     queryFn: () => databaseFacade.getStockWasteCount(stockId),
@@ -111,7 +111,7 @@ export function useStockWasteCount(stockId: string) {
 /**
  * Hook to get total waste quantity for a specific stock item
  */
-export function useStockWasteQuantity(stockId: string) {
+function useStockWasteQuantity(stockId: string) {
   return useQuery({
     queryKey: [...wasteAnalyticsQueryKeys.discardedItems(), "quantity", stockId],
     queryFn: () => databaseFacade.getStockTotalWasteQuantity(stockId),
@@ -148,7 +148,7 @@ export function useRecordWaste() {
 /**
  * Mutation hook to delete waste logs by stock ID
  */
-export function useDeleteWasteLogs() {
+function useDeleteWasteLogs() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -165,7 +165,7 @@ export function useDeleteWasteLogs() {
 /**
  * Hook to manually refresh waste analytics data
  */
-export function useRefreshWasteAnalytics() {
+function useRefreshWasteAnalytics() {
   const queryClient = useQueryClient();
 
   const refresh = () => {

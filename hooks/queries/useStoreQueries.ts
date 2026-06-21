@@ -17,7 +17,7 @@ export function useNearbyStores(latitude: number, longitude: number, enabled = t
   });
 }
 
-export function useStore(storeId: string, enabled = true) {
+function useStore(storeId: string, enabled = true) {
   return useQuery({
     queryKey: storeQueryKeys.byId(storeId),
     queryFn: () => fetchStoreById(storeId),
@@ -26,7 +26,7 @@ export function useStore(storeId: string, enabled = true) {
   });
 }
 
-export function useStoreChains(enabled = true) {
+function useStoreChains(enabled = true) {
   return useQuery({
     queryKey: storeQueryKeys.chains,
     queryFn: fetchStoreChains,
@@ -35,7 +35,7 @@ export function useStoreChains(enabled = true) {
   });
 }
 
-export function useStoresByChain(chainId: string, enabled = true) {
+function useStoresByChain(chainId: string, enabled = true) {
   return useQuery({
     queryKey: storeQueryKeys.byChain(chainId),
     queryFn: () => fetchStoresByChain(chainId),

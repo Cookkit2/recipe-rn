@@ -55,7 +55,7 @@ export function useDeepLinkShare(): void {
       inFlight.current = true;
       void handleShareDeepLink(url, {
         getRecipeById: (id) => databaseFacade.getRecipeById(id),
-        navigate: (path) => router.push(path),
+        navigate: (path) => router.push(path as never),
         alertNotInLibrary,
         emitOpened: emitShareLinkOpened,
       }).finally(() => {

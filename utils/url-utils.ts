@@ -27,21 +27,21 @@ const INSTAGRAM_PATTERNS = [
 /**
  * Check if a URL is a valid TikTok video URL
  */
-export function isValidTikTokUrl(url: string): boolean {
+function isValidTikTokUrl(url: string): boolean {
   return TIKTOK_PATTERNS.some((pattern) => pattern.test(url));
 }
 
 /**
  * Check if a URL is a valid Instagram post/reel URL
  */
-export function isValidInstagramUrl(url: string): boolean {
+function isValidInstagramUrl(url: string): boolean {
   return INSTAGRAM_PATTERNS.some((pattern) => pattern.test(url));
 }
 
 /**
  * Extract TikTok video ID from URL (if available)
  */
-export function extractTikTokVideoId(url: string): string | null {
+function extractTikTokVideoId(url: string): string | null {
   const match = url.match(/tiktok\.com\/@[\w.-]+\/video\/(\d+)/i);
   return match?.[1] ?? null;
 }
@@ -49,7 +49,7 @@ export function extractTikTokVideoId(url: string): string | null {
 /**
  * Extract Instagram post/reel ID from URL
  */
-export function extractInstagramPostId(url: string): string | null {
+function extractInstagramPostId(url: string): string | null {
   const match = url.match(/instagram\.com\/(?:p|reel|reels)\/([\w-]+)/i);
   return match?.[1] ?? null;
 }
@@ -75,7 +75,7 @@ export interface UrlAnalysisResult {
 /**
  * Extract domain from a URL
  */
-export function extractDomain(url: string): string | undefined | null {
+function extractDomain(url: string): string | undefined | null {
   try {
     const urlObj = new URL(url);
     return urlObj.hostname.replace(/^www\./, "");
@@ -88,7 +88,7 @@ export function extractDomain(url: string): string | undefined | null {
 /**
  * Check if a URL is a valid HTTP/HTTPS URL
  */
-export function isValidHttpUrl(url: string): boolean {
+function isValidHttpUrl(url: string): boolean {
   try {
     const urlObj = new URL(url);
     return (
@@ -166,7 +166,7 @@ export function analyzeUrl(url: string): UrlAnalysisResult {
  * Check if URL is likely a recipe website based on domain
  * Known recipe sites get higher confidence
  */
-export const KNOWN_RECIPE_DOMAINS = [
+const KNOWN_RECIPE_DOMAINS = [
   "allrecipes.com",
   "foodnetwork.com",
   "epicurious.com",
@@ -206,7 +206,7 @@ export const KNOWN_RECIPE_DOMAINS = [
 /**
  * Check if a domain is a known recipe website
  */
-export function isKnownRecipeDomain(domain: string): boolean {
+function isKnownRecipeDomain(domain: string): boolean {
   const normalizedDomain = domain.toLowerCase().replace(/^www\./, "");
   return KNOWN_RECIPE_DOMAINS.some(
     (known) => normalizedDomain === known || normalizedDomain.endsWith("." + known)
@@ -216,7 +216,7 @@ export function isKnownRecipeDomain(domain: string): boolean {
 /**
  * Get a user-friendly name for the URL source
  */
-export function getUrlSourceName(urlAnalysis: UrlAnalysisResult): string {
+function getUrlSourceName(urlAnalysis: UrlAnalysisResult): string {
   switch (urlAnalysis.type) {
     case "youtube":
       return "YouTube";

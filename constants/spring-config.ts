@@ -14,7 +14,7 @@ export const SPRING_CONFIG_SPRINGY = {
 // Token names mirror the Material token IDs for easy mapping across platforms
 // Compose uses damping ratio, React Spring uses absolute damping.
 // Compose stiffness is in px/s², React Spring uses an arbitrary spring constant.
-export const SPRINGS = {
+const SPRINGS = {
   // Standard – Spatial
   "spring.spatial": { mass: 1, damping: 19, stiffness: 105 },
   "spring.fast.spatial": { mass: 1, damping: 25, stiffness: 150 },

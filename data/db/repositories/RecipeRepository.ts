@@ -97,16 +97,13 @@ export class RecipeRepository extends BaseRepository<Recipe> {
       query = query.extend(Q.where("servings", Q.lte(options.maxServings)));
     }
 
-    // Apply sorting
-    query = this.applySorting(query, options.sortBy || "created_at", options.sortOrder);
-
-    // Apply pagination
-    if (options.offset) {
-      query = query.extend(Q.skip(options.offset));
-    }
-    if (options.limit) {
-      query = query.extend(Q.take(options.limit));
-    }
+    // Apply sorting and pagination
+    query = this.applySortAndPaginate(
+      query,
+      options.sortBy || "created_at",
+      options.sortOrder,
+      options
+    );
 
     let results = await query.fetch();
 
@@ -157,16 +154,13 @@ export class RecipeRepository extends BaseRepository<Recipe> {
   async getFavoriteRecipes(options: SearchOptions = {}): Promise<Recipe[]> {
     let query = this.collection.query(Q.where("is_favorite", true));
 
-    // Apply sorting
-    query = this.applySorting(query, options.sortBy || "title", options.sortOrder || "asc");
-
-    // Apply pagination
-    if (options.offset) {
-      query = query.extend(Q.skip(options.offset));
-    }
-    if (options.limit) {
-      query = query.extend(Q.take(options.limit));
-    }
+    // Apply sorting and pagination
+    query = this.applySortAndPaginate(
+      query,
+      options.sortBy || "title",
+      options.sortOrder || "asc",
+      options
+    );
 
     return await query.fetch();
   }
@@ -410,13 +404,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
     );
 
     query = this.applySorting(query, options.sortBy || "created_at", options.sortOrder);
-
-    if (options.offset) {
-      query = query.extend(Q.skip(options.offset));
-    }
-    if (options.limit) {
-      query = query.extend(Q.take(options.limit));
-    }
+    query = this.applyPagination(query, options);
 
     return await query.fetch();
   }

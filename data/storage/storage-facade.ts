@@ -14,7 +14,7 @@ function hasMethod<K extends keyof IStorageCapabilities>(
  * Storage Facade - Intelligent unified API for all storage operations
  * Automatically detects storage capabilities and provides appropriate defaults
  */
-export class StorageFacade implements IStorage {
+class StorageFacade implements IStorage {
   private get storage(): IStorage {
     return StorageFactory.getInstance();
   }
