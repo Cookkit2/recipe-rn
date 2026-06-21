@@ -39,6 +39,7 @@ import {
   emitSessionStart,
 } from "~/lib/analytics/funnel-events";
 import { reportBudgetBreach } from "~/utils/perf-budget-check";
+import { useDeepLinkShare } from "~/hooks/useDeepLinkShare";
 
 /**
  * Approximate cold-start launch timestamp (issue #733). Captured at this
@@ -91,6 +92,10 @@ Sentry.init({
 
 export default Sentry.wrap(function RootLayout() {
   usePlatformSpecificSetup();
+
+  // Issue #737: ingest cookkit://recipe/<id> deep links on cold start +
+  // foreground. Resolves LOCAL recipes; server-snapshot import is DEFERRED.
+  useDeepLinkShare();
 
   const authStrategy = useMemo(
     () =>
