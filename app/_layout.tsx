@@ -184,13 +184,13 @@ export default Sentry.wrap(function RootLayout() {
             <AuthProvider strategy={authStrategy} autoInitialize={true}>
               <AIAssistantProvider>
                 <NotificationProvider>
-                <KeyboardProvider>
-                  <StatusBar style="auto" />
-                  <AnimatedStack />
-                  <Toaster visibleToasts={2} position="bottom-center" offset={80} />
-                  <PortalHost />
-                </KeyboardProvider>
-              </NotificationProvider>
+                  <KeyboardProvider>
+                    <StatusBar style="auto" />
+                    <AnimatedStack />
+                    <Toaster visibleToasts={2} position="bottom-center" offset={80} />
+                    <PortalHost />
+                  </KeyboardProvider>
+                </NotificationProvider>
               </AIAssistantProvider>
             </AuthProvider>
           </QueryProvider>
