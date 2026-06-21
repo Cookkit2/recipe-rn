@@ -73,6 +73,19 @@ export type FunnelEventType =
   | "expiring_nudge_engaged"
   | "expiring_nudge_dismissed"
   /**
+   * First-session "aha" moment (issue #720, dark-launched behind the
+   * `onboarding_aha` feature flag). These close the loop between pantry
+   * population and the first cook so the Day-0 lift ([F7]) is measurable:
+   *   aha_shown          — the "You can cook N recipes tonight" surface rendered
+   *   aha_recipe_opened  — the user tapped a cook-tonight recipe card
+   *   first_cook_started — the user entered the cooking screen from the aha CTA
+   * All three are non-terminal breadcrumbs (no dedup) so each occurrence is its
+   * own data point, matching the expiring-nudge pattern above.
+   */
+  | "aha_shown"
+  | "aha_recipe_opened"
+  | "first_cook_started"
+  /**
    * A/B experiment exposure — fired the first time a user is bucketed into a
    * variant for a gating decision (see lib/experiments/useExperiment.ts). Lets
    * #718 slice per-variant conversion for the #724/#725/#731 experiments.
@@ -437,5 +450,46 @@ export function emitExpiringNudgeEngaged(
 export function emitExpiringNudgeDismissed(surface: ExpiringNudgeSurface): void {
   emitFunnelEvent("expiring_nudge_dismissed", {
     detail: { surface },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// First-session "aha" moment (issue #720, dark-launched behind onboarding_aha).
+//
+// Three non-terminal breadcrumbs measuring the Day-0 aha funnel: pantry
+// populated -> cook-tonight surface shown -> recipe opened -> first cook
+// started. The whole point of #720 is that this lift is measurable per [F7].
+// ---------------------------------------------------------------------------
+
+/**
+ * Fire when the "You can cook N recipes tonight" aha surface becomes visible.
+ *
+ * @param cookableCount number of cook-tonight recipes surfaced (matchCategory
+ *   `can_make_now`). Carried in the event detail so funnel drop-off is visible
+ *   per cohort (empty vs. non-empty climax surface).
+ */
+export function emitAhaShown(cookableCount: number): void {
+  emitFunnelEvent("aha_shown", {
+    detail: { cookableCount },
+  });
+}
+
+/**
+ * Fire when the user taps a cook-tonight recipe card on the aha surface.
+ */
+export function emitAhaRecipeOpened(recipeId: string): void {
+  emitFunnelEvent("aha_recipe_opened", {
+    detail: { recipeId },
+  });
+}
+
+/**
+ * Fire when the user enters the cooking screen from the aha surface's primary
+ * CTA (the deep-link into /recipes/[recipeId]/steps). This is the conversion
+ * that places the next-cook paywall touchpoint on a user who has felt value.
+ */
+export function emitFirstCookStarted(recipeId: string): void {
+  emitFunnelEvent("first_cook_started", {
+    detail: { recipeId },
   });
 }
