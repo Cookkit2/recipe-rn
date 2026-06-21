@@ -23,7 +23,7 @@ import { isRunningInExpoGo } from "expo";
 import { Uniwind } from "uniwind";
 
 import * as Sentry from "@sentry/react-native";
-import { initImageCache } from "~/lib/image-cache";
+import { initImageCache, resolveImageCacheConfig } from "~/lib/image-cache";
 import { AuthProvider, MockAuthStrategy, SupabaseAuthStrategy } from "~/auth";
 import { TEST_IDS } from "~/constants/test-ids";
 import { IS_E2E } from "~/utils/e2e-flags";
@@ -96,7 +96,11 @@ export default Sentry.wrap(function RootLayout() {
   const ref = useNavigationContainerRef();
 
   useEffect(() => {
-    initImageCache();
+    // Device-tier-derived cache config (issue #734): low-end devices get a
+    // smaller, safer cache; the high tier preserves the historical 500MB/100MB/200
+    // defaults. The call stays in this mount effect (deferred off the critical
+    // startup path) so markInteractive / RevenueCat-init ordering is unchanged.
+    initImageCache(resolveImageCacheConfig());
 
     if (ref) {
       navigationIntegration.registerNavigationContainer(ref);
