@@ -16,11 +16,12 @@ import Purchases, { LOG_LEVEL, type CustomerInfoUpdateListener } from "react-nat
 import Constants from "expo-constants";
 import { StatusBar } from "expo-status-bar";
 import { isRunningInExpoGo } from "expo";
+import { ObserveRoot, useObserve } from "expo-observe";
 import { Uniwind } from "uniwind";
 
 import * as Sentry from "@sentry/react-native";
 import { initImageCache } from "~/lib/image-cache";
-import { AuthProvider, MockAuthStrategy, SupabaseAuthStrategy } from "~/auth";
+import { AuthProvider, MockAuthStrategy, SupabaseAuthStrategy, useAuth } from "~/auth";
 import { TEST_IDS } from "~/constants/test-ids";
 import { IS_E2E } from "~/utils/e2e-flags";
 import { invalidateSubscriptionEntitlementsQuery } from "~/lib/subscription-query-sync";
@@ -58,7 +59,7 @@ Sentry.init({
   // spotlight: __DEV__,
 });
 
-export default Sentry.wrap(function RootLayout() {
+function RootLayout() {
   usePlatformSpecificSetup();
 
   const authStrategy = useMemo(
@@ -132,6 +133,7 @@ export default Sentry.wrap(function RootLayout() {
         <SafeAreaProvider>
           <QueryProvider>
             <AuthProvider strategy={authStrategy} autoInitialize={true}>
+              <ObserveInteractiveMarker />
               <NotificationProvider>
                 <KeyboardProvider>
                   <StatusBar style="auto" />
@@ -146,7 +148,12 @@ export default Sentry.wrap(function RootLayout() {
       </View>
     </GestureHandlerRootView>
   );
-});
+}
+
+// ObserveRoot must wrap Sentry so the observe context spans the whole tree
+// (including the auth-gated marker below), while Sentry still catches errors
+// during the root render.
+export default ObserveRoot.wrap(Sentry.wrap(RootLayout));
 
 const useIsomorphicLayoutEffect =
   Platform.OS === "web" && typeof window === "undefined" ? React.useEffect : React.useLayoutEffect;
@@ -162,6 +169,25 @@ function useSetAndroidNavigationBar() {
   React.useLayoutEffect(() => {
     setAndroidNavigationBar("light");
   }, []);
+}
+
+/**
+ * Fires Observe's markInteractive() once auth bootstrapping resolves
+ * (auth.isInitialized === true), recording Time-to-Interactive. Safe to call
+ * repeatedly; only the first call records. Must live inside <AuthProvider>
+ * (to read auth state) and under ObserveRoot (to access the observe context).
+ */
+function ObserveInteractiveMarker() {
+  const { markInteractive } = useObserve();
+  const { isInitialized } = useAuth();
+
+  useEffect(() => {
+    if (isInitialized) {
+      markInteractive();
+    }
+  }, [isInitialized, markInteractive]);
+
+  return null;
 }
 
 function noop() {}
