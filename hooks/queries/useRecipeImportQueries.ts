@@ -14,7 +14,7 @@ import {
   getImportStatusMessage as getStatusMessage,
 } from "~/data/api/recipeImportApi";
 import { recipeQueryKeys } from "./recipeQueryKeys";
-import { analyzeUrl, type UrlAnalysisResult } from "~/utils/url-utils";
+import { analyzeUrl, type UrlAnalysisResult, type RecipeUrlType } from "~/utils/url-utils";
 import type { YouTubeImportResult } from "~/types/ScrappedRecipe";
 
 // Re-export for convenience
@@ -153,6 +153,8 @@ export function useAnalyzeUrl() {
     reset,
     analysis,
     isYouTube: analysis?.type === "youtube",
+    isTikTok: analysis?.type === "tiktok",
+    isInstagram: analysis?.type === "instagram",
     isWebsite: analysis?.type === "website",
     isValid: analysis?.isValid ?? false,
   };
@@ -184,7 +186,7 @@ export function useAnalyzeUrl() {
 export function validateRecipeUrl(url: string): {
   isValid: boolean;
   error?: string;
-  type?: "youtube" | "website";
+  type?: RecipeUrlType;
 } {
   if (!url.trim()) {
     return { isValid: false, error: "Please enter a URL" };
@@ -196,8 +198,13 @@ export function validateRecipeUrl(url: string): {
     return { isValid: false, error: "Please enter a valid URL" };
   }
 
-  // Only YouTube and generic websites are currently supported for import.
-  if (analysis.type !== "youtube" && analysis.type !== "website") {
+  // Supported import sources: YouTube, TikTok, Instagram, and recipe websites.
+  if (
+    analysis.type !== "youtube" &&
+    analysis.type !== "tiktok" &&
+    analysis.type !== "instagram" &&
+    analysis.type !== "website"
+  ) {
     return { isValid: false, error: "Unsupported URL type" };
   }
 

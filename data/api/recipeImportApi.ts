@@ -16,6 +16,7 @@ import {
 } from "~/utils/youtube-utils";
 
 import { RecipeAnalyzer } from "~/lib/recipe-scrapper/youtube/RecipeAnalyzer";
+import { socialRecipeService } from "~/lib/recipe-scrapper/SocialRecipeService";
 import { databaseFacade } from "~/data/db/DatabaseFacade";
 import type { CreateRecipeData, ShoppingListResult } from "~/data/db/DatabaseFacade";
 import { RecipeType } from "~/data/db/models/Recipe";
@@ -389,6 +390,11 @@ export const recipeImportApi = {
 
   /**
    * Import a recipe from TikTok or Instagram
+   *
+   * Social platforms often block direct scraping or serve login walls, so this
+   * flow fetches page metadata (og:title/og:description, JSON-LD), then asks
+   * Gemini to extract the recipe from that text. If the platform blocks us or no
+   * recipe is detected, we surface a clear error pointing the user to manual entry.
    */
   async importRecipeFromSocialMedia(
     url: string,
@@ -398,13 +404,93 @@ export const recipeImportApi = {
   ): Promise<YouTubeImportResult> {
     const platformName = platform === "tiktok" ? "TikTok" : "Instagram";
 
-    log.info(`${platformName} Import: Import requested for ${url} (DISABLED)`);
+    const result = await withImportErrorHandling(
+      async () => {
+        // Step 1: Fetch page metadata + analyze with Gemini in one call.
+        // SocialRecipeService handles the fetch internally and falls back to
+        // empty metadata if the platform blocks scraping.
+        onStatusChange?.("fetching-social");
+        log.info(`${platformName} Import: Fetching content...`, url);
 
-    // Social media import is currently disabled
-    return {
-      success: false,
-      error: `Importing from ${platformName} is currently unsupported.`,
-    };
+        const analysisResult = await socialRecipeService.analyzeForRecipe({
+          platform,
+          url,
+          postId,
+        });
+
+        // Step 2: Graceful fallback — platform blocked the fetch or the LLM
+        // couldn't confidently detect a recipe. Prompt manual entry rather than
+        // presenting a fabricated recipe.
+        if (!analysisResult.isCookingVideo) {
+          const confidencePercent = (analysisResult.confidence * 100).toFixed(0);
+          throw new Error(
+            `We couldn't extract a recipe from this ${platformName} post ` +
+              `(confidence: ${confidencePercent}%). The post may not be a recipe, ` +
+              `or ${platformName} may have blocked access. ` +
+              `Try a different link or enter the recipe manually.`
+          );
+        }
+
+        if (!analysisResult.recipe) {
+          throw new Error(
+            `No recipe could be extracted from this ${platformName} post. ` +
+              `Please try a different link or enter the recipe manually.`
+          );
+        }
+
+        log.info(`${platformName} Import: Recipe extracted:`, analysisResult.recipe.title);
+
+        // Step 3: Save recipe to database
+        onStatusChange?.("generating-recipe");
+        log.info(`${platformName} Import: Saving recipe to database...`);
+
+        const recipe = await this.saveRecipeToDatabase(analysisResult.recipe, url);
+
+        log.info(`${platformName} Import: Recipe saved with ID:`, recipe.id);
+
+        // Step 4: Compare with pantry and generate shopping list
+        onStatusChange?.("comparing-pantry");
+        log.info(`${platformName} Import: Comparing with pantry...`);
+
+        const shoppingList = await databaseFacade.getShoppingListForRecipe(recipe.id);
+
+        log.info(
+          `${platformName} Import: Shopping list generated -`,
+          shoppingList.missingIngredients.length,
+          "missing items"
+        );
+
+        // Complete!
+        onStatusChange?.("complete");
+        log.info(`${platformName} Import: Complete!`);
+
+        return {
+          success: true,
+          recipe: {
+            id: recipe.id,
+            title: recipe.title,
+            description: recipe.description,
+            imageUrl: recipe.imageUrl,
+            prepMinutes: recipe.prepMinutes ?? 0,
+            cookMinutes: recipe.cookMinutes ?? 0,
+            difficultyStars: recipe.difficultyStars ?? 3,
+            servings: recipe.servings ?? 4,
+            sourceUrl: recipe.sourceUrl,
+            calories: recipe.calories,
+            tags: recipe.tags,
+          },
+          shoppingList,
+        };
+      },
+      `${platformName} Import`,
+      onStatusChange
+    );
+
+    if (!result.success) {
+      return result;
+    }
+
+    return result.data;
   },
 
   /**
