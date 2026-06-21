@@ -152,4 +152,27 @@ describe("initImageCache", () => {
     freshInitImageCache();
     expect(log.info).not.toHaveBeenCalled();
   });
+
+  // --- Issue #733: initImageCache is now deferred behind requestIdleCallback ---
+  // Assert it is safe to call from a deferred (idle) context and remains
+  // idempotent there, mirroring the RevenueCat deferral pattern in _layout.tsx.
+  it("is safe to call from a deferred (requestIdleCallback-style) context", () => {
+    let freshInitImageCache: any;
+    jest.isolateModules(() => {
+      freshInitImageCache = require("../image-cache").initImageCache;
+    });
+
+    // Simulate the deferred-call shape used in app/_layout.tsx: the init runs
+    // later, after first paint. It must configure the cache exactly once and
+    // not throw when invoked out of the synchronous mount path.
+    const deferred = jest.fn(() => freshInitImageCache());
+    expect(() => deferred()).not.toThrow();
+    expect(deferred).toHaveBeenCalledTimes(1);
+    expect(Image.configureCache).toHaveBeenCalledTimes(1);
+
+    // A second deferred invocation is still a no-op (idempotency holds when
+    // called repeatedly from deferred contexts).
+    deferred();
+    expect(Image.configureCache).toHaveBeenCalledTimes(1);
+  });
 });
