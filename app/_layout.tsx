@@ -30,6 +30,7 @@ import { IS_E2E } from "~/utils/e2e-flags";
 import { invalidateSubscriptionEntitlementsQuery } from "~/lib/subscription-query-sync";
 import { AnimatedStack } from "~/components/AnimatedStack";
 import { NotificationProvider } from "~/lib/notifications";
+import { AIAssistantProvider } from "~/lib/function-gemma/AIAssistantContext";
 import { getInstallAnchor } from "~/lib/install-anchor";
 import {
   diffCustomerInfo,
@@ -181,7 +182,8 @@ export default Sentry.wrap(function RootLayout() {
         <SafeAreaProvider>
           <QueryProvider>
             <AuthProvider strategy={authStrategy} autoInitialize={true}>
-              <NotificationProvider>
+              <AIAssistantProvider>
+                <NotificationProvider>
                 <KeyboardProvider>
                   <StatusBar style="auto" />
                   <AnimatedStack />
@@ -189,6 +191,7 @@ export default Sentry.wrap(function RootLayout() {
                   <PortalHost />
                 </KeyboardProvider>
               </NotificationProvider>
+              </AIAssistantProvider>
             </AuthProvider>
           </QueryProvider>
         </SafeAreaProvider>
