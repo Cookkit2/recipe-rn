@@ -296,10 +296,18 @@ export const recipeImportApi = {
         const websiteContent = await websiteRecipeService.fetchWebsiteContent(url);
         log.info(
           "Website Import: Content fetched, hasStructuredData:",
-          websiteContent.hasStructuredData
+          websiteContent.hasStructuredData,
+          "source:",
+          websiteContent.structuredDataSource ?? "none"
         );
 
-        // Step 2: Parse/extract recipe
+        // Step 2: Parse/extract recipe via the layered fallback chain.
+        //   (1) JSON-LD structured data
+        //   (2) Microdata
+        //   (3) RDFa
+        //   (4) Gemini extraction from readable HTML (confidence-gated)
+        // Each structured-data branch routes through the same clean path so
+        // all results are validated by isValidRecipe inside cleanRecipeWithGemini.
         onStatusChange?.("parsing-content" as RecipeImportStatus);
 
         let generatedRecipe: GeneratedRecipe;
@@ -308,8 +316,10 @@ export const recipeImportApi = {
           websiteContent.hasStructuredData &&
           websiteContent.structuredData?.recipeIngredient?.length
         ) {
-          // Use structured data if available and has ingredients
-          log.info("Website Import: Using structured recipe data");
+          // Structured data (JSON-LD / microdata / RDFa) — today's fast, accurate path.
+          log.info(
+            `Website Import: Using structured recipe data (source: ${websiteContent.structuredDataSource ?? "json-ld"})`
+          );
           const rawRecipe = websiteRecipeService.convertStructuredDataToRecipe(
             websiteContent.structuredData,
             url
@@ -322,11 +332,40 @@ export const recipeImportApi = {
             rawRecipe
           )) as GeneratedRecipe;
         } else {
-          // No structured data available - throw error
-          throw new Error(
-            `This page does not contain structured recipe data that we can extract. ` +
-              `Try a different recipe website with clear recipe schema or ingredients list.`
+          // No structured data of any kind — fall back to AI extraction from
+          // the readable HTML. Previously this hard-threw; now it attempts a
+          // confidence-scored extraction so previously-unimportable pages can
+          // still import (issue #730).
+          onStatusChange?.("analyzing");
+          log.info("Website Import: No structured data; attempting AI extraction from HTML...");
+
+          const { recipe: aiRecipe, confidence } = await websiteRecipeService.extractRecipeFromHtml(
+            websiteContent,
+            url
           );
+
+          // Wire MIN_RECIPE_CONFIDENCE as a gate for the first time (it was
+          // previously defined but never used as a gate anywhere).
+          if (!aiRecipe || confidence < MIN_RECIPE_CONFIDENCE) {
+            const confidencePercent = (confidence * 100).toFixed(0);
+            // Surface a soft warning rather than silently accepting garbage,
+            // then throw the existing structured error so the caller shows a
+            // recoverable message (the result always opens in the edit screen).
+            log.warn(
+              `Website Import: AI extraction below confidence gate (${confidencePercent}% < ${MIN_RECIPE_CONFIDENCE * 100}%), source: ai-html`
+            );
+            throw new Error(
+              `We couldn't confidently extract a recipe from this page ` +
+                `(confidence: ${confidencePercent}%). The page may not contain ` +
+                `a recipe, or its format isn't supported yet. ` +
+                `Try a different link or enter the recipe manually.`
+            );
+          }
+
+          log.info(
+            `Website Import: Recipe extracted via AI fallback (source: ai-html, confidence: ${(confidence * 100).toFixed(0)}%)`
+          );
+          generatedRecipe = aiRecipe;
         }
 
         log.info("Website Import: Recipe extracted:", generatedRecipe.title);

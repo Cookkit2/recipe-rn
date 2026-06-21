@@ -38,6 +38,17 @@ import {
   emitFunnelEvent,
   emitSessionStart,
 } from "~/lib/analytics/funnel-events";
+import { reportBudgetBreach } from "~/utils/perf-budget-check";
+
+/**
+ * Approximate cold-start launch timestamp (issue #733). Captured at this
+ * module's evaluation, which is as close to JS bundle start as user code
+ * gets. Used only for the warn-level budget-check regression signal below;
+ * it is a coarse JS-thread approximation, NOT a true Time-to-Interactive
+ * measurement (which requires native instrumentation such as expo-observe's
+ * markInteractive — not yet present on this branch).
+ */
+const LAUNCH_TS = Date.now();
 const usePlatformSpecificSetup = Platform.select({
   web: useSetWebBackgroundClassName,
   android: useSetAndroidNavigationBar,
@@ -96,12 +107,8 @@ export default Sentry.wrap(function RootLayout() {
   const ref = useNavigationContainerRef();
 
   useEffect(() => {
-    // Device-tier-derived cache config (issue #734): low-end devices get a
-    // smaller, safer cache; the high tier preserves the historical 500MB/100MB/200
-    // defaults. The call stays in this mount effect (deferred off the critical
-    // startup path) so markInteractive / RevenueCat-init ordering is unchanged.
-    initImageCache(resolveImageCacheConfig());
-
+    // Register the navigation container with Sentry for automatic route
+    // tracking as early as possible (cheap, synchronous).
     if (ref) {
       navigationIntegration.registerNavigationContainer(ref);
     }
@@ -120,11 +127,62 @@ export default Sentry.wrap(function RootLayout() {
     }
     emitSessionStart();
 
-    // Restore persisted theme from MMKV on mount
+    // Restore persisted theme from MMKV on mount. Kept SYNCHRONOUS: it is a
+    // cheap MMKV read and running it after paint would cause a theme flash.
     const storedTheme = storage.get<"light" | "dark" | "system">(PREF_COLOR_SCHEME_KEY);
     if (storedTheme && ["light", "dark", "system"].includes(storedTheme)) {
       Uniwind.setTheme(storedTheme);
     }
+
+    // --- Issue #733: defer non-critical startup work off the launch path ---
+    // Ordering invariant: everything that first paint / true interactivity
+    // does NOT depend on is moved behind requestIdleCallback so the JS thread
+    // reaches interactive sooner. Mirrors the proven RevenueCat deferral
+    // pattern in the effect below.
+    //
+    //  1. initImageCache(): iOS-only configureCache for expo-image. Not needed
+    //     for first paint (images render with default cache limits until this
+    //     runs); idempotent and safe from a deferred context.
+    //  2. DB warm-up: the WatermelonDB singleton (data/db/database.ts) and the
+    //     DatabaseFacade singleton are now lazily constructed. Warming them on
+    //     idle AFTER first paint keeps their construction cost off the launch
+    //     critical path WITHOUT shifting it onto the first pantry query (the
+    //     home screen renders from WatermelonDB), per issue #733 Risks.
+    const deferredHandle = requestIdleCallback(() => {
+      // Device-tier-derived cache config (#734): low-end devices get a smaller,
+      // safer cache; high tier keeps the historical 500/100/200 MB defaults.
+      initImageCache(resolveImageCacheConfig());
+
+      // Warm the lazy DB singletons so the first pantry query doesn't pay the
+      // construction cost. Touching `database.collections` forces the memoized
+      // Proxy to construct the SQLiteAdapter + Database; the facade import is
+      // a no-op at runtime here but keeps the lazy facade module on the warm
+      // path too.
+      try {
+        // Dynamic import avoids pulling the heavy DB module into the launch
+        // import graph (the repo's established pattern for heavy native deps,
+        // see CLAUDE.md). The lazy singletons then construct on first access.
+        void import("~/data/db").then(({ database }) => {
+          // Dereference a collection to force lazy construction.
+          void database.collections;
+        });
+      } catch {
+        /* warm-up is best-effort; the first query will lazily construct */
+      }
+
+      // --- Regression signal (issue #733 AC#6) ---
+      // Warn-level budget check: compare the elapsed time since LAUNCH_TS to
+      // the cold-start TTI budget and emit a Sentry breadcrumb on breach.
+      // This is a coarse JS-thread approximation (idle fires after first
+      // paint + when the thread is free); a true TTI measurement requires
+      // native Observe instrumentation that is not yet on this branch.
+      const elapsedMs = Date.now() - LAUNCH_TS;
+      reportBudgetBreach("coldStartTti", elapsedMs);
+    });
+
+    return () => {
+      cancelIdleCallback(deferredHandle);
+    };
   }, [ref]);
 
   // Defer RevenueCat initialization until the JS thread is idle

@@ -37,6 +37,12 @@ export const CURRENT_RECIPE_ID_KEY = "current_recipe_id";
 // CAMERA ONBOARDING
 export const CAMERA_ONBOARDING_COMPLETED_KEY = "camera:onboarding_completed";
 
+// FIRST-SESSION "AHA" (issue #720, dark-launched behind `onboarding_aha` flag).
+// Set once the user has seen the "You can cook N recipes tonight" surface, so
+// we never re-show it. The guided flow itself is gated by the feature flag, NOT
+// this key — this only suppresses repeat impressions within the same install.
+export const AHA_SCREEN_SEEN_KEY = "aha:screen_seen";
+
 // VOICE COOKING
 export const VOICE_COOKING_SETTINGS_KEY = "voice:cooking_settings";
 
