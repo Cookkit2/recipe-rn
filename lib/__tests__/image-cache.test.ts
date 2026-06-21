@@ -20,6 +20,67 @@ jest.mock("~/utils/logger", () => ({
   },
 }));
 
+describe("resolveImageCacheTier", () => {
+  it("resolves to 'low' for devices with < 3 GB memory", () => {
+    const { resolveImageCacheTier } = require("../image-cache");
+    expect(resolveImageCacheTier({ totalMemoryBytes: 2 * 1024 * 1024 * 1024 })).toBe("low");
+  });
+
+  it("resolves to 'high' for devices with >= 6 GB memory", () => {
+    const { resolveImageCacheTier } = require("../image-cache");
+    expect(resolveImageCacheTier({ totalMemoryBytes: 8 * 1024 * 1024 * 1024 })).toBe("high");
+  });
+
+  it("resolves to 'mid' for median devices (3-6 GB)", () => {
+    const { resolveImageCacheTier } = require("../image-cache");
+    expect(resolveImageCacheTier({ totalMemoryBytes: 4 * 1024 * 1024 * 1024 })).toBe("mid");
+  });
+
+  it("falls back to 'mid' when no capability signal is available (default)", () => {
+    const { resolveImageCacheTier } = require("../image-cache");
+    expect(resolveImageCacheTier()).toBe("mid");
+    expect(resolveImageCacheTier({})).toBe("mid");
+  });
+
+  it("treats non-finite memory values as 'no signal' (safe fallback to mid)", () => {
+    const { resolveImageCacheTier } = require("../image-cache");
+    expect(resolveImageCacheTier({ totalMemoryBytes: NaN })).toBe("mid");
+    expect(resolveImageCacheTier({ totalMemoryBytes: Infinity })).toBe("mid");
+  });
+
+  it("low tier limits are strictly smaller than high tier limits", () => {
+    const { IMAGE_CACHE_TIER_LIMITS } = require("../image-cache");
+    const low = IMAGE_CACHE_TIER_LIMITS.low;
+    const high = IMAGE_CACHE_TIER_LIMITS.high;
+    expect(low.maxDiskSize).toBeLessThan(high.maxDiskSize);
+    expect(low.maxMemoryCost).toBeLessThan(high.maxMemoryCost);
+    expect(low.maxMemoryCount).toBeLessThan(high.maxMemoryCount);
+  });
+
+  it("high tier preserves the historical defaults (500MB / 100MB / 200)", () => {
+    const { IMAGE_CACHE_TIER_LIMITS } = require("../image-cache");
+    expect(IMAGE_CACHE_TIER_LIMITS.high).toEqual({
+      maxDiskSize: 500 * 1024 * 1024,
+      maxMemoryCost: 100 * 1024 * 1024,
+      maxMemoryCount: 200,
+    });
+  });
+});
+
+describe("resolveImageCacheConfig", () => {
+  it("returns the tier map entry for the resolved tier", () => {
+    const { resolveImageCacheConfig, IMAGE_CACHE_TIER_LIMITS } = require("../image-cache");
+    expect(resolveImageCacheConfig({ totalMemoryBytes: 2 * 1024 * 1024 * 1024 })).toEqual(
+      IMAGE_CACHE_TIER_LIMITS.low
+    );
+  });
+
+  it("defaults to the mid tier config when no signal is provided", () => {
+    const { resolveImageCacheConfig, IMAGE_CACHE_TIER_LIMITS } = require("../image-cache");
+    expect(resolveImageCacheConfig()).toEqual(IMAGE_CACHE_TIER_LIMITS.mid);
+  });
+});
+
 describe("initImageCache", () => {
   const originalDev = (globalThis as any).__DEV__;
 
@@ -28,75 +89,71 @@ describe("initImageCache", () => {
     (globalThis as any).__DEV__ = true;
     Platform.OS = "ios";
 
-    // Reset the module-level initialized state by isolating modules
-    jest.isolateModules(() => {
-      // Need to require the module fresh for each test so `initialized` starts false
-    });
+    // Reset the module-level `initialized` guard before each test so each
+    // assertion observes a fresh first-call. isolateModules alone does not
+    // reset the in-memory flag because the module is already cached.
+    const mod = require("../image-cache");
+    mod.__resetImageCacheForTests();
   });
 
   afterAll(() => {
     (globalThis as any).__DEV__ = originalDev;
   });
 
-  it("should configure cache with default values on iOS", () => {
-    let freshInitImageCache: any;
-    jest.isolateModules(() => {
-      freshInitImageCache = require("../image-cache").initImageCache;
-    });
-
-    freshInitImageCache();
+  it("configures cache with mid-tier defaults when no signal is available (default)", () => {
+    const { initImageCache } = require("../image-cache");
+    initImageCache();
 
     expect(Image.configureCache).toHaveBeenCalledTimes(1);
     expect(Image.configureCache).toHaveBeenCalledWith({
-      maxDiskSize: 500 * 1024 * 1024,
-      maxMemoryCost: 100 * 1024 * 1024,
-      maxMemoryCount: 200,
+      maxDiskSize: 250 * 1024 * 1024,
+      maxMemoryCost: 64 * 1024 * 1024,
+      maxMemoryCount: 140,
     });
     expect(log.info).toHaveBeenCalledWith("[image-cache] Cache configured (iOS)");
   });
 
-  it("should merge custom config with default values on iOS", () => {
-    let freshInitImageCache: any;
-    jest.isolateModules(() => {
-      freshInitImageCache = require("../image-cache").initImageCache;
-    });
+  it("applies low-tier limits when a low-memory capability signal resolves the tier", () => {
+    const { initImageCache, IMAGE_CACHE_TIER_LIMITS } = require("../image-cache");
+    // initImageCache() resolves the default (no-signal) tier internally; to
+    // exercise a non-default tier we pass explicit config derived from the
+    // tier map, mirroring how _layout.tsx would compose them.
+    initImageCache(IMAGE_CACHE_TIER_LIMITS.low);
 
-    const customConfig = {
+    expect(Image.configureCache).toHaveBeenCalledWith(
+      expect.objectContaining(IMAGE_CACHE_TIER_LIMITS.low)
+    );
+  });
+
+  it("merges custom config with the resolved-tier defaults", () => {
+    const { initImageCache } = require("../image-cache");
+    initImageCache({
       maxDiskSize: 100 * 1024 * 1024,
       maxMemoryCount: 50,
-    };
-
-    freshInitImageCache(customConfig);
+    });
 
     expect(Image.configureCache).toHaveBeenCalledTimes(1);
     expect(Image.configureCache).toHaveBeenCalledWith({
-      maxDiskSize: 100 * 1024 * 1024, // Custom override
-      maxMemoryCost: 100 * 1024 * 1024, // Default fallback
-      maxMemoryCount: 50, // Custom override
+      maxDiskSize: 100 * 1024 * 1024, // explicit override
+      maxMemoryCost: 64 * 1024 * 1024, // resolved-tier default (mid)
+      maxMemoryCount: 50, // explicit override
     });
   });
 
-  it("should be idempotent (only call configureCache once)", () => {
-    let freshInitImageCache: any;
-    jest.isolateModules(() => {
-      freshInitImageCache = require("../image-cache").initImageCache;
-    });
-
-    freshInitImageCache();
-    freshInitImageCache();
-    freshInitImageCache();
+  it("is idempotent (only calls configureCache once)", () => {
+    const { initImageCache } = require("../image-cache");
+    initImageCache();
+    initImageCache();
+    initImageCache();
 
     expect(Image.configureCache).toHaveBeenCalledTimes(1);
   });
 
-  it("should skip configuring cache on non-iOS platforms and log an info message in dev", () => {
+  it("skips configuring cache on non-iOS platforms and logs an info message in dev", () => {
     Platform.OS = "android";
-    let freshInitImageCache: any;
-    jest.isolateModules(() => {
-      freshInitImageCache = require("../image-cache").initImageCache;
-    });
+    const { initImageCache } = require("../image-cache");
 
-    freshInitImageCache();
+    initImageCache();
 
     expect(Image.configureCache).not.toHaveBeenCalled();
     expect(log.info).toHaveBeenCalledWith(
@@ -104,52 +161,39 @@ describe("initImageCache", () => {
     );
   });
 
-  it("should catch errors thrown by configureCache and log them in dev", () => {
-    let freshInitImageCache: any;
-    jest.isolateModules(() => {
-      freshInitImageCache = require("../image-cache").initImageCache;
-    });
-
+  it("catches errors thrown by configureCache and logs them in dev", () => {
+    const { initImageCache } = require("../image-cache");
     const testError = new Error("Cache configuration failed");
     (Image.configureCache as jest.Mock).mockImplementationOnce(() => {
       throw testError;
     });
 
-    expect(() => freshInitImageCache()).not.toThrow();
+    expect(() => initImageCache()).not.toThrow();
     expect(log.error).toHaveBeenCalledWith("[image-cache] configureCache failed:", testError);
   });
 
-  it("should not log info or errors when __DEV__ is false", () => {
+  it("does not log info or errors when __DEV__ is false", () => {
     (globalThis as any).__DEV__ = false;
-    let freshInitImageCache: any;
-    jest.isolateModules(() => {
-      freshInitImageCache = require("../image-cache").initImageCache;
-    });
+    const mod = require("../image-cache");
+    mod.__resetImageCacheForTests();
+    const { initImageCache } = mod;
 
-    // Test iOS success
-    freshInitImageCache();
+    // iOS success
+    initImageCache();
     expect(log.info).not.toHaveBeenCalled();
 
-    // Reset initialized flag by getting a fresh import again
-    jest.isolateModules(() => {
-      freshInitImageCache = require("../image-cache").initImageCache;
-    });
-
-    // Test iOS failure
+    // iOS failure
+    mod.__resetImageCacheForTests();
     (Image.configureCache as jest.Mock).mockImplementationOnce(() => {
       throw new Error("Test");
     });
-    freshInitImageCache();
+    initImageCache();
     expect(log.error).not.toHaveBeenCalled();
 
-    // Reset initialized flag
-    jest.isolateModules(() => {
-      freshInitImageCache = require("../image-cache").initImageCache;
-    });
-
-    // Test android skip
+    // android skip
+    mod.__resetImageCacheForTests();
     Platform.OS = "android";
-    freshInitImageCache();
+    initImageCache();
     expect(log.info).not.toHaveBeenCalled();
   });
 

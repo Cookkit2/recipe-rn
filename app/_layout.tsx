@@ -23,7 +23,7 @@ import { isRunningInExpoGo } from "expo";
 import { Uniwind } from "uniwind";
 
 import * as Sentry from "@sentry/react-native";
-import { initImageCache } from "~/lib/image-cache";
+import { initImageCache, resolveImageCacheConfig } from "~/lib/image-cache";
 import { AuthProvider, MockAuthStrategy, SupabaseAuthStrategy } from "~/auth";
 import { TEST_IDS } from "~/constants/test-ids";
 import { IS_E2E } from "~/utils/e2e-flags";
@@ -149,7 +149,9 @@ export default Sentry.wrap(function RootLayout() {
     //     critical path WITHOUT shifting it onto the first pantry query (the
     //     home screen renders from WatermelonDB), per issue #733 Risks.
     const deferredHandle = requestIdleCallback(() => {
-      initImageCache();
+      // Device-tier-derived cache config (#734): low-end devices get a smaller,
+      // safer cache; high tier keeps the historical 500/100/200 MB defaults.
+      initImageCache(resolveImageCacheConfig());
 
       // Warm the lazy DB singletons so the first pantry query doesn't pay the
       // construction cost. Touching `database.collections` forces the memoized
