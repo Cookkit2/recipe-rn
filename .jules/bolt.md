@@ -61,3 +61,7 @@
 ## 2026-06-14 - Optimize Sequential Upload Latency
 **Learning:** Performing network uploads inside a `for...of` loop with `await` introduces significant latency due to sequential processing of I/O operations.
 **Action:** When performing independent network uploads in a loop, always use `input.map(async () => ...)` to generate promises, and resolve them concurrently with `await Promise.all(...)`. Combining this with bulk inserting database records afterwards prevents N+1 queries.
+
+## 2024-06-21 - Push-down Filtering in SQLite Queries
+**Learning:** Fetching all records for a relation (e.g. `Q.where("recipe_id", recipeId)`) and then using `.filter((r) => r.property !== undefined)` in JavaScript forces WatermelonDB to instantiate objects across the JS bridge and allocates memory for records that are immediately discarded.
+**Action:** Always push filters down to the SQLite layer using query constraints like `Q.where("property", Q.notEq(null))` instead of doing client-side `.filter()` arrays, thereby saving bridge transit time and memory allocation overhead.
