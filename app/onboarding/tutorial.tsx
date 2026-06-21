@@ -28,7 +28,9 @@ import { ONBOARDING_COMPLETED_KEY } from "~/constants/storage-keys";
 //                  utils/unit-converter.ts + utils/quantity-comparison.ts
 //                  data/db/models/IngredientSynonym.ts (synonym matching)
 //   offline     -> data/db/ (WatermelonDB local store; Supabase is a sync layer)
-// Do NOT reference lib/function-gemma/ — it is an unimplemented scaffold.
+// lib/function-gemma/ is now a built on-device AI assistant (FRIDGIT_TOOLS,
+// function-calling), dark-launched behind the `on_device_ai` feature flag
+// (default off). This onboarding card intentionally does not depend on it.
 const STEP_TITLES = ["Snap Groceries", "Skip What You Have", "Manage Ingredients", "Cook Recipes"];
 
 const STEP_CONTENT = [

@@ -6,6 +6,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { FunctionGemmaService } from "./FunctionGemmaService";
 import type { CompletionResult, ToolCall } from "./FunctionGemmaService";
 import { CookkitToolExecutor as CookkitToolExecutor } from "./CookkitToolExecutor";
+import { useFeatureFlag } from "~/hooks/queries/useFeatureFlags";
 
 export type Message = {
   role: "user" | "assistant" | "system" | "tool";
@@ -21,6 +22,8 @@ export interface UseFunctionGemmaOptions {
 
 export interface UseFunctionGemmaReturn {
   // State
+  /** Whether on-device AI is enabled (remote `on_device_ai` flag). When false, no model loads. */
+  isEnabled: boolean;
   messages: Message[];
   input: string;
   isGenerating: boolean;
@@ -43,6 +46,11 @@ export interface UseFunctionGemmaReturn {
 export function useFunctionGemma(options: UseFunctionGemmaOptions = {}): UseFunctionGemmaReturn {
   const { autoDownload = true, autoInitialize = true } = options;
 
+  // On-device AI is dark-launched behind the `on_device_ai` feature flag
+  // (default off). The model is NEVER downloaded/initialized unless this is on,
+  // regardless of who consumes the hook — foolproof gating of the heavy native load.
+  const { enabled: isOnDeviceAiEnabled } = useFeatureFlag("on_device_ai");
+
   // State
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -61,9 +69,11 @@ export function useFunctionGemma(options: UseFunctionGemmaOptions = {}): UseFunc
     toolExecutorRef.current = new CookkitToolExecutor();
   }, []);
 
-  // Download and initialize model on mount
+  // Download and initialize model on mount — ONLY when the on_device_ai flag is on.
+  // Re-runs if the flag resolves on after mount; the isModelLoaded/isLoadingModel
+  // guards prevent double setup.
   useEffect(() => {
-    if (autoDownload && !isModelLoaded && !isLoadingModel) {
+    if (isOnDeviceAiEnabled && autoDownload && !isModelLoaded && !isLoadingModel) {
       setupModel();
     }
 
@@ -71,7 +81,7 @@ export function useFunctionGemma(options: UseFunctionGemmaOptions = {}): UseFunc
       // Cleanup on unmount
       serviceRef.current?.cleanup();
     };
-  }, []);
+  }, [isOnDeviceAiEnabled]);
 
   /**
    * Setup model: download if needed, then initialize
@@ -231,6 +241,7 @@ export function useFunctionGemma(options: UseFunctionGemmaOptions = {}): UseFunc
 
   return {
     // State
+    isEnabled: isOnDeviceAiEnabled,
     messages,
     input,
     isGenerating,
