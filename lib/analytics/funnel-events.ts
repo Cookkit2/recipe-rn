@@ -91,7 +91,23 @@ export type FunnelEventType =
    * #718 slice per-variant conversion for the #724/#725/#731 experiments.
    * Carries `experimentKey` + `variant` in the event detail.
    */
-  | "experiment_exposed";
+  | "experiment_exposed"
+  /**
+   * Recipe sharing funnel (issue #737, P4-2). Three non-terminal breadcrumbs
+   * measuring the share-to-acquisition loop, mirroring how #726/#720 added
+   * event triples. All are breadcrumbs (no dedup) so each occurrence is its
+   * own data point:
+   *   share_link_created — a cookkit://recipe/<id> link was generated for the
+   *     native share sheet (utils/recipe-share.ts). Fires even on dismissal.
+   *   share_exported    — the user completed a share action (sheet confirmed).
+   *   share_link_opened — the app received a cookkit://recipe/<id> deep link
+   *     (cold start or foreground) in app/_layout.tsx.
+   * The MVP resolves LOCAL recipes only; the server-snapshot fetch for
+   * unowned recipes is DEFERRED (see PR body). All three carry `recipeId`.
+   */
+  | "share_link_created"
+  | "share_exported"
+  | "share_link_opened";
 
 /**
  * Surface that surfaced an expiring-ingredient nudge. Lets us attribute
@@ -491,5 +507,24 @@ export function emitAhaRecipeOpened(recipeId: string): void {
 export function emitFirstCookStarted(recipeId: string): void {
   emitFunnelEvent("first_cook_started", {
     detail: { recipeId },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Recipe sharing (issue #737). Non-terminal breadcrumbs measuring the
+// share-to-acquisition loop. share_link_created / share_exported fire from
+// utils/recipe-share.ts; share_link_opened fires from the deep-link ingestion
+// hook in app/_layout.tsx.
+// ---------------------------------------------------------------------------
+
+/**
+ * Fire when the app opens a cookkit://recipe/<id> deep link (cold start or
+ * foreground). Carries whether the recipe resolved to a local copy, so the
+ * funnel can measure "opened but not in library" drop-off — the gap the
+ * DEFERRED server-snapshot fetch closes.
+ */
+export function emitShareLinkOpened(recipeId: string, resolvedLocally: boolean): void {
+  emitFunnelEvent("share_link_opened", {
+    detail: { recipeId, resolvedLocally },
   });
 }

@@ -8,6 +8,7 @@ import {
   ScrollView,
   Alert,
   RefreshControl,
+  Pressable,
 } from "react-native";
 import Animated, {
   Extrapolation,
@@ -19,8 +20,9 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { H1, H4, P } from "~/components/ui/typography";
-import { ShoppingCartIcon } from "lucide-uniwind";
+import { ShoppingCartIcon, Share2Icon } from "lucide-uniwind";
 import { Separator } from "~/components/ui/separator";
 import TopBar from "~/components/Recipe/Details/TopBar";
 import RecipeServing from "~/components/Recipe/Details/RecipeServing";
@@ -32,6 +34,7 @@ import MissingIngredients from "~/components/Recipe/Details/MissingIngredients";
 import BottomActionBar from "~/components/Recipe/Details/BottomActionBar";
 import { Image } from "expo-image";
 import { useRecipe } from "~/hooks/queries/useRecipeQueries";
+import { shareRecipe } from "~/utils/recipe-share";
 import { usePantryItemsByType } from "~/hooks/queries/usePantryQueries";
 import { useAddToMealPlan, useIsRecipeInPlan } from "~/hooks/queries/useMealPlanQueries";
 import { useRecipeDetailStore } from "~/store/RecipeDetailContext";
@@ -145,6 +148,7 @@ function RecipeDetailsContent({
     : ["#4B5563", "#6B7280", "#9CA3AF", "#374151", "#525966", "#78818F"];
 
   const { width: windowWidth } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const { data: filteredPantryItems = [] } = usePantryItemsByType("all");
   const { servings, updateServings } = useRecipeDetailStore();
   const [tailoredRecipe, setTailoredRecipe] = useState<Recipe | null>(null);
@@ -454,6 +458,16 @@ function RecipeDetailsContent({
 
   const displayedRecipe = activeRecipe ?? recipe;
 
+  // Issue #737: open the native share sheet with the recipe's plain-text
+  // export + a cookkit://recipe/<id> deep link. Freemium (no paywall), works
+  // offline. shareRecipe never throws; a dismissed/unavailable sheet is a
+  // no-op. Operates on the displayed (possibly tailored) recipe so the user
+  // shares exactly what they see. Defined after `displayedRecipe` so the
+  // dependency closes over the resolved value.
+  const handleShare = useCallback(() => {
+    void shareRecipe(displayedRecipe);
+  }, [displayedRecipe]);
+
   return (
     <View className="relative flex-1 bg-background">
       {/* Background Parallax Header */}
@@ -595,6 +609,23 @@ function RecipeDetailsContent({
       {/* Overlayed title bar - Rendered last to ensure z-index on top */}
       <TopBar scrollOffset={scrollOffset} title={displayedRecipe.title} />
 
+      {/* Share action (issue #737) — top-right affordance, freemium, offline. */}
+      <View
+        pointerEvents="box-none"
+        style={[styles.shareButtonWrap, { paddingTop: insets.top + 8 }]}
+      >
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Share recipe"
+          accessibilityHint="Opens the share sheet with this recipe and a Cookkit link"
+          onPress={handleShare}
+          hitSlop={12}
+          style={styles.shareButton}
+        >
+          <Share2Icon className="text-foreground" width={22} height={22} />
+        </Pressable>
+      </View>
+
       {/* Bottom action bar */}
       <BottomActionBar
         recipe={displayedRecipe}
@@ -634,6 +665,23 @@ const styles = StyleSheet.create({
     position: "absolute",
   },
   gradient: { width: "100%" },
+  // Share button overlay: absolute top-right, matches the TopBar's safe-area
+  // padding so it sits beside the title. pointerEvents on the wrapper lets
+  // taps fall through everywhere except the button itself.
+  shareButtonWrap: {
+    position: "absolute",
+    top: 0,
+    right: 12,
+    zIndex: 2,
+  },
+  shareButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.25)",
+  },
 });
 
 const formatTime = (date: Date): string => {
