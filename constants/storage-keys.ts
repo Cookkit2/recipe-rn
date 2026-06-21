@@ -23,6 +23,9 @@ export const PREF_OTHER_ALLERGENS_KEY = "pref:other_allergens";
 export const PREF_APPLIANCES_KEY = "pref:appliances";
 export const PREF_DIET_KEY = "pref:diet";
 export const PREF_UNIT_SYSTEM_KEY = "pref:unit_system";
+// Macro/calorie target for target-driven meal-plan generation (#746). JSON
+// MacroTarget ({ calories?, proteinG?, carbsG?, fatG? }). Local/MMKV-only.
+export const PREF_MACRO_TARGET_KEY = "pref:macro_target";
 export const PREF_COLOR_SCHEME_KEY = "color-scheme"; // preserved existing raw key for compatibility
 
 export const PROFILE_IMAGE_KEY = "profile:image";

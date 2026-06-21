@@ -24,6 +24,7 @@ import {
   type GenerateWeekPlanOptions,
 } from "~/lib/meal-plan/generateWeekPlan";
 import type { MealSlot } from "~/types/MealPlan";
+import type { MacroTarget, NutritionSummary } from "~/types/Nutrition";
 
 /** Inputs the UI passes to generate a week plan. */
 export interface GenerateWeekPlanInput {
@@ -37,11 +38,22 @@ export interface GenerateWeekPlanInput {
   targetServings?: number;
   /** Minimum pantry completion % to schedule a recipe (default 0). */
   minAvailability?: number;
+  /**
+   * Daily macro/calorie target to optimize toward (#746). When set, the planner
+   * greedily biases picks per day toward the target. Optional — omitted fields
+   * are not scored.
+   */
+  macroTarget?: MacroTarget;
 }
 
 /** Output of a successful generation. */
 export interface GenerateWeekPlanResult {
   meals: PlannedMeal[];
+  /**
+   * Projected macros summed across the whole plan (#746). The UI compares this
+   * against `macroTarget * days` to show projected-vs-target.
+   */
+  projectedMacros: NutritionSummary;
 }
 
 /**
@@ -93,6 +105,7 @@ export function useMealPlanGeneration() {
         mealSlots = DEFAULT_PLAN_SLOTS,
         targetServings,
         minAvailability = 0,
+        macroTarget,
       } = input;
 
       // 1) Fetch ranked candidates via the EXISTING recommendation pipeline.
@@ -116,7 +129,8 @@ export function useMealPlanGeneration() {
       }
 
       // 2) Run the pure planner: assign best-first with no-repeat-in-week,
-      // scaling servings to the household target.
+      // scaling servings to the household target. When a macro target is
+      // supplied (#746), the planner greedily biases per-day picks toward it.
       const plannerOptions: GenerateWeekPlanOptions = {
         candidates,
         weekStart,
@@ -126,8 +140,11 @@ export function useMealPlanGeneration() {
       if (targetServings !== undefined) {
         plannerOptions.targetServings = targetServings;
       }
+      if (macroTarget) {
+        plannerOptions.macroTarget = macroTarget;
+      }
 
-      const { meals } = assignMealsToSlots(plannerOptions);
+      const { meals, projectedMacros } = assignMealsToSlots(plannerOptions);
 
       if (meals.length === 0) {
         throw new Error("Could not build a plan from the available recipes.");
@@ -138,7 +155,7 @@ export function useMealPlanGeneration() {
 
       log.info(`Generated ${meals.length}-meal week plan`);
 
-      return { meals };
+      return { meals, projectedMacros };
     },
     onSuccess: (data) => {
       // Invalidate everything the calendar + grocery list + badges read from.
