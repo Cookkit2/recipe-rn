@@ -27,3 +27,6 @@
 ## 2024-06-16 - Accessibility for Custom Carousels
 **Learning:** Found that custom visual carousels using `Pressable` inside `LegendList` (like `RecipeCarousel`) often lack explicit `accessibilityRole="button"` and `accessibilityLabel` properties, making them opaque to screen readers despite being highly interactive to select items.
 **Action:** When creating custom interactive carousels using `Pressable`, always explicitly assign `accessibilityRole="button"` and a descriptive `accessibilityLabel` (e.g., using the title prop) so screen readers correctly identify their function.
+## 2024-06-22 - Accessibility Roles for Recipe Rating Modal
+**Learning:** Found that custom `Pressable` components representing rating stars (like in `RateRecipeModal.tsx`) lacked `accessibilityRole="button"`, making it harder for screen reader users to identify them as interactive elements to set ratings.
+**Action:** Always ensure that interactive elements intended to be tapped to set a value (like rating stars) have `accessibilityRole="button"`, a descriptive `accessibilityLabel`, and `accessibilityState` to properly convey their active/selected state.
