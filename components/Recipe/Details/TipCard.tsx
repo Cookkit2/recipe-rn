@@ -45,10 +45,20 @@ export default function TipCard({
         />
         {isOwnTip && (
           <View className="flex-row gap-3">
-            <Pressable onPress={() => onEdit(tip)} hitSlop={8}>
+            <Pressable
+              onPress={() => onEdit(tip)}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Edit tip"
+            >
               <Small className="text-primary">Edit</Small>
             </Pressable>
-            <Pressable onPress={() => onDelete(tip.id)} hitSlop={8}>
+            <Pressable
+              onPress={() => onDelete(tip.id)}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Delete tip"
+            >
               <Small className="text-destructive">Delete</Small>
             </Pressable>
           </View>
