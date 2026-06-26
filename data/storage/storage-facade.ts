@@ -393,10 +393,12 @@ class StorageFacade implements IStorage {
     }
 
     // Fallback - use async operations if available
+    // ⚡ Bolt Performance Optimization: Replace sequential execution with Promise.all to enable concurrent async fetching
     const result: Record<string, T | null> = {};
-    for (const key of keys) {
+    const fetchPromises = keys.map(async (key) => {
       result[key] = await this._getAsync<T>(key);
-    }
+    });
+    await Promise.all(fetchPromises);
     return result;
   }
 
@@ -417,9 +419,8 @@ class StorageFacade implements IStorage {
     }
 
     // Fallback - use async operations if available
-    for (const [key, value] of Object.entries(data)) {
-      await this._setAsync(key, value);
-    }
+    // ⚡ Bolt Performance Optimization: Replace sequential execution with Promise.all to enable concurrent async fetching
+    await Promise.all(Object.entries(data).map(([key, value]) => this._setAsync(key, value)));
   }
 
   private async _deleteBatchAsync(keys: string[]): Promise<void> {
@@ -437,9 +438,8 @@ class StorageFacade implements IStorage {
     }
 
     // Fallback - use async operations if available
-    for (const key of keys) {
-      await this._deleteAsync(key);
-    }
+    // ⚡ Bolt Performance Optimization: Replace sequential execution with Promise.all to enable concurrent async fetching
+    await Promise.all(keys.map((key) => this._deleteAsync(key)));
   }
 
   private async _getAllKeysAsync(): Promise<string[]> {
