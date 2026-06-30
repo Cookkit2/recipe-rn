@@ -61,3 +61,10 @@
 **Learning:** Local logs (even in development) can expose secrets if the device is compromised or logs are accessed by other apps/tools.
 **Prevention:** Always apply the filter to the arguments *before* passing them to any logging destination, including local loggers.
 ## 2025-06-18 - Generic Error Messages Prevent Secret Leakage\n**Vulnerability:** Downstream APIs error payloads (like YouTube Data API) were being caught and the raw messages embedded into new application errors, relying on complex manual string replacement (`replaceAll`) to try to sanitize API keys.\n**Learning:** Relying on manual string sanitization for untrusted error payloads is inherently dangerous. Unpredictable error structures or unexpected encoding variations could easily bypass the filter and leak secrets.\n**Prevention:** Never embed untrusted downstream network payloads into application error messages. Instead, use safe, generic, opaque error messages (e.g., `API error: HTTP 403`) to completely isolate internal state from the error context.
+## 2026-06-25 - Prevent Predictable Token Generation in Queues
+
+**Vulnerability:** Used `Math.random()` to generate unique string identifiers (`id: Date.now() + Math.random()...`) for `QueuedPush` elements in a background sync write queue.
+
+**Learning:** `Math.random()` is not a cryptographically secure pseudo-random number generator (CSPRNG). Relying on it for identifier generation is an anti-pattern. While queue IDs may not be as critical as invite codes, it violates the standard requirement to use a CSPRNG for all token/identifier generation, leaving open a vector for token collision or prediction if the queue mechanisms are extended.
+
+**Prevention:** Always use a CSPRNG like `expo-crypto`'s `getRandomBytes` or `randomUUID()` for unique token and ID generation.
