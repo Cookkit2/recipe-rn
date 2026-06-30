@@ -65,3 +65,7 @@
 ## 2024-06-21 - Push-down Filtering in SQLite Queries
 **Learning:** Fetching all records for a relation (e.g. `Q.where("recipe_id", recipeId)`) and then using `.filter((r) => r.property !== undefined)` in JavaScript forces WatermelonDB to instantiate objects across the JS bridge and allocates memory for records that are immediately discarded.
 **Action:** Always push filters down to the SQLite layer using query constraints like `Q.where("property", Q.notEq(null))` instead of doing client-side `.filter()` arrays, thereby saving bridge transit time and memory allocation overhead.
+
+## 2026-06-21 - Optimize Consecutive Array Filter Reductions
+**Learning:** Performing multiple `Array.prototype.filter(condition).length` calls over the same array creates O(M * N) iterations and redundantly allocates intermediate arrays solely for counting, causing excessive time complexity and garbage collection overhead in data-heavy hooks like grocery list processing.
+**Action:** Replace sequential `.filter().length` chains with a single standard `for` loop that evaluates all conditions simultaneously, reducing time complexity to O(N) and eliminating all intermediate array allocations.
