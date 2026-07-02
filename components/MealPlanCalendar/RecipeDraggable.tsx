@@ -242,8 +242,6 @@ export default function RecipeDraggable({
               onPress={handlePress}
               className="bg-card rounded-xl overflow-hidden shadow-sm"
               style={styles.container}
-              accessibilityRole="button"
-              accessibilityLabel={`Draggable recipe: ${recipe.title}`}
             >
               {/* Recipe Image */}
               <View style={styles.imageContainer}>
