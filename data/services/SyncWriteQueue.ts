@@ -1,3 +1,4 @@
+import * as Crypto from "expo-crypto";
 import { StorageFactory } from "~/data/storage/storage-factory";
 import { log } from "~/utils/logger";
 import { withRetryBackoff } from "~/utils/withRetryBackoff";
@@ -72,7 +73,7 @@ export class SyncWriteQueue {
     if (rows.length === 0) return;
     const queue = this.readQueue();
     queue.push({
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      id: `${Date.now()}-${Crypto.randomUUID()}`,
       householdId,
       rows,
       failures: 0,
