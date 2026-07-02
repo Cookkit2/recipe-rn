@@ -65,3 +65,7 @@
 ## 2024-06-21 - Push-down Filtering in SQLite Queries
 **Learning:** Fetching all records for a relation (e.g. `Q.where("recipe_id", recipeId)`) and then using `.filter((r) => r.property !== undefined)` in JavaScript forces WatermelonDB to instantiate objects across the JS bridge and allocates memory for records that are immediately discarded.
 **Action:** Always push filters down to the SQLite layer using query constraints like `Q.where("property", Q.notEq(null))` instead of doing client-side `.filter()` arrays, thereby saving bridge transit time and memory allocation overhead.
+
+## 2025-02-28 - Optimizing Batch I/O in Storage Facades
+**Learning:** Found sequential `await` loops inside fallback `_getBatchAsync`, `_setBatchAsync`, and `_deleteBatchAsync` methods in `data/storage/storage-facade.ts`. For batch operations over N items, this created O(N) sequential network or disk I/O latency instead of O(1) concurrent latency.
+**Action:** Always replace `for...of` loops containing `await` for independent batch I/O operations with `Promise.all(array.map(...))` to maximize concurrency and dramatically reduce overall operation time.
