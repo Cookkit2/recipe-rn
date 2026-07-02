@@ -24,6 +24,9 @@ export default function ListButton({
       size="lg"
       onPress={onPress}
       enableAnimation={false}
+      accessibilityRole={external ? "link" : "button"}
+      accessibilityLabel={title}
+      accessibilityHint={external ? `Opens ${title} in a browser` : `Navigates to ${title}`}
     >
       {icon && <Icon className="text-foreground" size={24} strokeWidth={2} />}
       <P className="text-lg font-urbanist-semibold">{title}</P>
