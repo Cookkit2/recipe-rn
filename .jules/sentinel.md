@@ -61,3 +61,11 @@
 **Learning:** Local logs (even in development) can expose secrets if the device is compromised or logs are accessed by other apps/tools.
 **Prevention:** Always apply the filter to the arguments *before* passing them to any logging destination, including local loggers.
 ## 2025-06-18 - Generic Error Messages Prevent Secret Leakage\n**Vulnerability:** Downstream APIs error payloads (like YouTube Data API) were being caught and the raw messages embedded into new application errors, relying on complex manual string replacement (`replaceAll`) to try to sanitize API keys.\n**Learning:** Relying on manual string sanitization for untrusted error payloads is inherently dangerous. Unpredictable error structures or unexpected encoding variations could easily bypass the filter and leak secrets.\n**Prevention:** Never embed untrusted downstream network payloads into application error messages. Instead, use safe, generic, opaque error messages (e.g., `API error: HTTP 403`) to completely isolate internal state from the error context.
+
+## 2026-06-25 - Prevent Insecure Randomness for Critical IDs
+
+**Vulnerability:** Weak PRNG `Math.random()` used for generating entity IDs.
+
+**Learning:** `Math.random()` is not cryptographically secure and can generate predictable strings, which is flagged in security audits and can lead to predictability issues in distributed systems.
+
+**Prevention:** Use cryptographically secure pseudo-random number generators (CSPRNG) like `Crypto.randomUUID()` from `expo-crypto` for generating all entity IDs and random tokens.
