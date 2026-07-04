@@ -205,8 +205,11 @@ export class StockRepository extends BaseRepository<Stock> {
 
   // Get low stock items (quantity <= threshold)
   async getLowStockItems(threshold: number = 1): Promise<Stock[]> {
-    const items = await this.findAll();
-    return items.filter((item) => item.quantity <= threshold);
+    // ⚡ Bolt Performance Optimization:
+    // Pushed filtering down to SQLite using Q.lte instead of fetching all items
+    // and filtering in-memory. This prevents full table scans and reduces memory
+    // overhead from instantiating unnecessary WatermelonDB models across the bridge.
+    return await this.collection.query(Q.where("quantity", Q.lte(threshold))).fetch();
   }
 
   // Create stock with categories and synonyms
