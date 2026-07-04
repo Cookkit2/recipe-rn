@@ -30,3 +30,10 @@
 ## 2024-06-22 - Accessibility Roles for Recipe Rating Modal
 **Learning:** Found that custom `Pressable` components representing rating stars (like in `RateRecipeModal.tsx`) lacked `accessibilityRole="button"`, making it harder for screen reader users to identify them as interactive elements to set ratings.
 **Action:** Always ensure that interactive elements intended to be tapped to set a value (like rating stars) have `accessibilityRole="button"`, a descriptive `accessibilityLabel`, and `accessibilityState` to properly convey their active/selected state.
+## 2026-06-29 - Accessibility Attributes on Draggable Recipes
+**Learning:** Found that the `Pressable` wrapping the recipe image inside `RecipeDraggable` lacked `accessibilityRole` and `accessibilityLabel`, which caused screen readers to not announce the element's purpose or the dynamic recipe title during drag-and-drop interactions in the meal plan calendar.
+**Action:** When wrapping dynamic items in a `Pressable` component, even within a gesture detector context, always provide a clear `accessibilityRole=button` and a dynamic `accessibilityLabel` that incorporates the item's title or content.
+
+## 2024-07-03 - Accessibility for Search Result Rows
+**Learning:** Found that providing a hardcoded default `accessibilityLabel` (e.g. "Search result") on a `Pressable` component completely overrides the default screen reader behavior, which naturally aggregates and reads the text of its children. This breaks accessibility by hiding the actual item content.
+**Action:** When adding optional `accessibilityLabel` props to generic wrapper components like list rows, never use a generic hardcoded default. Leave it undefined so that React Native can naturally aggregate the child text when a specific label is not provided.
