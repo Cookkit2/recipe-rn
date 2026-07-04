@@ -1,7 +1,6 @@
 import { StorageFactory } from "~/data/storage/storage-factory";
 import { log } from "~/utils/logger";
 import { withRetryBackoff } from "~/utils/withRetryBackoff";
-import * as Crypto from "expo-crypto";
 
 /**
  * Persisted write queue for the household sync push path.
@@ -73,7 +72,7 @@ export class SyncWriteQueue {
     if (rows.length === 0) return;
     const queue = this.readQueue();
     queue.push({
-      id: `${Date.now()}-${Crypto.randomUUID().slice(0, 8)}`,
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       householdId,
       rows,
       failures: 0,
