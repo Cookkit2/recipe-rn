@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { householdQueryKeys } from "./householdQueryKeys";
-import { householdApiFunctions } from "~/data/api/householdApi";
+import * as householdApiFunctions from "~/data/api/householdApi";
 import { useHouseholdStore } from "~/store/HouseholdStore";
 import { toast } from "sonner-native";
 

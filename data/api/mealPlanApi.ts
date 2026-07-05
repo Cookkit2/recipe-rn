@@ -212,7 +212,7 @@ async function getMealPlanItemByRecipeIdResultCore(
 /**
  * Pure API functions for meal plan operations
  */
-export const mealPlanApi = {
+const coreMealPlanApi = {
   /**
    * Get all meal plan items with their associated recipes
    */
@@ -269,9 +269,9 @@ export const mealPlanApi = {
     return withErrorLogging(async () => {
       await addToPlanCore(recipeId, servings, date, mealSlot);
 
-      const result = await this.getMealPlanItemByRecipeId(recipeId);
+      const result = await coreMealPlanApi.getMealPlanItemByRecipeId(recipeId);
       await restoreGroceryItemsForRecipe(result, (items) =>
-        this.setGroceryItemsDeletedBatch(items)
+        groceryMealPlanApi.setGroceryItemsDeletedBatch(items)
       );
       return result;
     }, "Error adding to meal plan");
@@ -287,9 +287,9 @@ export const mealPlanApi = {
     return logAndWrapResult(async () => {
       await addToPlanCore(recipeId, servings);
 
-      const result = await this.getMealPlanItemByRecipeId(recipeId);
+      const result = await coreMealPlanApi.getMealPlanItemByRecipeId(recipeId);
       await restoreGroceryItemsForRecipe(result, (items) =>
-        this.setGroceryItemsDeletedBatch(items)
+        groceryMealPlanApi.setGroceryItemsDeletedBatch(items)
       );
       return result;
     }, "Error adding to meal plan");
@@ -415,7 +415,9 @@ export const mealPlanApi = {
       "Error getting planned recipe count"
     );
   },
+};
 
+const calendarMealPlanApi = {
   // ========================================
   // CALENDAR METHODS
   // ========================================
@@ -505,7 +507,9 @@ export const mealPlanApi = {
       throw error;
     }
   },
+};
 
+const groceryMealPlanApi = {
   // ========================================
   // GROCERY ITEM CHECK METHODS
   // ========================================
@@ -686,4 +690,10 @@ export const mealPlanApi = {
   async clearGroceryChecksResult(): Promise<AppResult<void, AppError>> {
     return logAndWrapResult(() => clearGroceryChecksCore(), "Error clearing grocery checks");
   },
+};
+
+export const mealPlanApi = {
+  ...coreMealPlanApi,
+  ...calendarMealPlanApi,
+  ...groceryMealPlanApi,
 };

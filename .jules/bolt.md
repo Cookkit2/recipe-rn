@@ -69,3 +69,6 @@
 ## 2025-02-28 - Optimizing Batch I/O in Storage Facades
 **Learning:** Found sequential `await` loops inside fallback `_getBatchAsync`, `_setBatchAsync`, and `_deleteBatchAsync` methods in `data/storage/storage-facade.ts`. For batch operations over N items, this created O(N) sequential network or disk I/O latency instead of O(1) concurrent latency.
 **Action:** Always replace `for...of` loops containing `await` for independent batch I/O operations with `Promise.all(array.map(...))` to maximize concurrency and dramatically reduce overall operation time.
+## 2026-07-05 - Extracted custom hooks for Code Health
+**Learning:** Extracting component state mapping (e.g. step page array generation) and complex data fetching (e.g. useTailoredRecipe) into custom hooks significantly reduces the length of React components and isolates responsibilities.
+**Action:** When a component mixes data mapping and state management, move the logic to custom hooks.

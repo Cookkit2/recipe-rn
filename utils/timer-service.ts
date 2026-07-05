@@ -571,9 +571,7 @@ class TimerService {
    */
   async cancelAllTimers(): Promise<void> {
     const timerIds = Array.from(this.timers.keys());
-    for (const timerId of timerIds) {
-      await this.cancelTimer(timerId);
-    }
+    await Promise.all(timerIds.map((timerId) => this.cancelTimer(timerId)));
     log.info("All timers cancelled");
   }
 

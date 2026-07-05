@@ -11,7 +11,7 @@ import {
   TrophyIcon,
   UsersIcon,
 } from "lucide-uniwind";
-import React, { useCallback } from "react";
+import React from "react";
 import { View, Platform, Linking, ScrollView } from "react-native";
 import * as StoreReview from "expo-store-review";
 import Constants from "expo-constants";
@@ -35,85 +35,85 @@ const email =
   Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPPORT_EMAIL ||
   "support@cookkit.app";
 
-export default function ProfileScreen() {
-  const router = useRouter();
+const handleContactUs = async () => {
+  try {
+    const rcId = await Purchases.getAppUserID();
 
-  const handleContactUs = useCallback(async () => {
-    try {
-      const rcId = await Purchases.getAppUserID();
+    const lines = [
+      `Hi ${appName} Team,`,
+      "",
+      "I'm having some issues with the app.",
+      "",
+      "[Describe your issue here]",
+      "",
+      "",
+      "— More Info —",
+      `App Name: ${appName}`,
+      `Version: ${appVersion}`,
+      `System: ${osName} ${osVersion}`,
+      rcId ? `RC ID: ${rcId}` : undefined,
+      // If you track a CloudKit or custom user id, replace this placeholder
+      "CK UserID: N/A",
+      "",
+      "Sent from my device",
+    ].filter(Boolean) as string[];
 
-      const lines = [
-        `Hi ${appName} Team,`,
-        "",
-        "I'm having some issues with the app.",
-        "",
-        "[Describe your issue here]",
-        "",
-        "",
-        "— More Info —",
-        `App Name: ${appName}`,
-        `Version: ${appVersion}`,
-        `System: ${osName} ${osVersion}`,
-        rcId ? `RC ID: ${rcId}` : undefined,
-        // If you track a CloudKit or custom user id, replace this placeholder
-        "CK UserID: N/A",
-        "",
-        "Sent from my device",
-      ].filter(Boolean) as string[];
+    // Try with full mailto URL first
+    const fullUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
+      lines.join("\n")
+    )}`;
 
-      // Try with full mailto URL first
-      const fullUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
-        lines.join("\n")
-      )}`;
+    // Check if we can open mailto URLs
+    const canOpenMailto = await Linking.canOpenURL("mailto:");
 
-      // Check if we can open mailto URLs
-      const canOpenMailto = await Linking.canOpenURL("mailto:");
-
-      if (canOpenMailto) {
-        // Try the full URL first
+    if (canOpenMailto) {
+      // Try the full URL first
+      try {
+        await Linking.openURL(fullUrl);
+        return;
+      } catch {
+        // Fallback to simple mailto
         try {
-          await Linking.openURL(fullUrl);
+          await Linking.openURL(`mailto:${email}`);
           return;
         } catch {
-          // Fallback to simple mailto
-          try {
-            await Linking.openURL(`mailto:${email}`);
-            return;
-          } catch {
-            // Silent fail, will show toast below
-          }
+          // Silent fail, will show toast below
         }
       }
-
-      // If mailto doesn't work, show a toast with the email address
-      toast.error(`Please email us at: ${email}`, {
-        duration: 5000,
-      });
-    } catch {
-      toast.error(`Please email us at: ${email}`);
     }
-  }, []);
 
-  const handleOpenLink = async (url: string) => {
-    try {
-      await WebBrowser.openBrowserAsync(url);
-    } catch {
-      toast.error(`Failed to open the link`);
-    }
-  };
+    // If mailto doesn't work, show a toast with the email address
+    toast.error(`Please email us at: ${email}`, {
+      duration: 5000,
+    });
+  } catch {
+    toast.error(`Please email us at: ${email}`);
+  }
+};
 
-  const handleOpenRating = async () => {
-    // Directly open the App Store / Play Store listing (configured via app.json)
-    try {
-      const url = StoreReview.storeUrl();
-      if (url) {
-        await Linking.openURL(url);
-        return;
-      }
-    } catch {
-      toast.error(`Failed to open the rating`);
+const handleOpenLink = async (url: string) => {
+  try {
+    await WebBrowser.openBrowserAsync(url);
+  } catch {
+    toast.error(`Failed to open the link`);
+  }
+};
+
+const handleOpenRating = async () => {
+  // Directly open the App Store / Play Store listing (configured via app.json)
+  try {
+    const url = StoreReview.storeUrl();
+    if (url) {
+      await Linking.openURL(url);
+      return;
     }
-  };
+  } catch {
+    toast.error(`Failed to open the rating`);
+  }
+};
+
+export default function ProfileScreen() {
+  const router = useRouter();
 
   return (
     <ScrollView

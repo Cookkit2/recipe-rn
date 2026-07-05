@@ -49,7 +49,12 @@ interface MealSlotProps {
  * Displays an individual meal slot in the calendar.
  * Shows planned recipe or empty state with drop zone visual for drag-and-drop.
  */
-export default function MealSlot({ date, mealSlot, mealPlan, onPress, onDrop }: MealSlotProps) {
+function useMealSlotDrop({
+  date,
+  mealSlot,
+  mealPlan,
+  onDrop,
+}: Pick<MealSlotProps, "date" | "mealSlot" | "mealPlan" | "onDrop">) {
   const { dragState, updateDragState } = useMealPlanCalendar();
 
   // Animation values
@@ -62,15 +67,6 @@ export default function MealSlot({ date, mealSlot, mealPlan, onPress, onDrop }: 
   const isProcessingDropRef = useRef(false);
 
   const handleHapticFeedback = useSelectionHaptic();
-
-  const handlePress = useCallback(() => {
-    // Don't handle press if a drag is active
-    if (dragState.isDragging) {
-      return;
-    }
-    handleHapticFeedback();
-    onPress?.(date, mealSlot);
-  }, [date, mealSlot, onPress, handleHapticFeedback, dragState.isDragging]);
 
   const isValidDrop = useCallback((): boolean => {
     // Check if a drag is active
@@ -168,6 +164,67 @@ export default function MealSlot({ date, mealSlot, mealPlan, onPress, onDrop }: 
       isHovered.value && dragState.isDragging ? "rgba(var(--primary), 0.1)" : "transparent",
   }));
 
+  return {
+    isDragging: dragState.isDragging,
+    dropZoneGesture,
+    animatedStyle,
+    containerAnimatedStyle,
+  };
+}
+
+function PlannedMealContent({
+  mealSlot,
+  mealPlan,
+}: {
+  mealSlot: MealSlotType;
+  mealPlan: CalendarMealPlan;
+}) {
+  return (
+    <View className="bg-primary/10 rounded-lg p-2">
+      <P className="text-xs font-urbanist-medium text-muted-foreground capitalize">{mealSlot}</P>
+      <P className="text-sm font-urbanist-semibold text-foreground mt-1" numberOfLines={2}>
+        {mealPlan.recipe?.title || "Recipe"}
+      </P>
+      {mealPlan.servings > 1 && (
+        <P className="text-xs text-muted-foreground mt-1">{mealPlan.servings} servings</P>
+      )}
+    </View>
+  );
+}
+
+function EmptyMealContent({ mealSlot }: { mealSlot: MealSlotType }) {
+  return (
+    <View className="h-full items-center justify-center">
+      <P className="text-xs text-muted-foreground/40 capitalize text-center">{mealSlot}</P>
+    </View>
+  );
+}
+
+/**
+ * MealSlot Component
+ *
+ * Displays an individual meal slot in the calendar.
+ * Shows planned recipe or empty state with drop zone visual for drag-and-drop.
+ */
+export default function MealSlot({ date, mealSlot, mealPlan, onPress, onDrop }: MealSlotProps) {
+  const { isDragging, dropZoneGesture, animatedStyle, containerAnimatedStyle } = useMealSlotDrop({
+    date,
+    mealSlot,
+    mealPlan,
+    onDrop,
+  });
+
+  const handleHapticFeedback = useSelectionHaptic();
+
+  const handlePress = useCallback(() => {
+    // Don't handle press if a drag is active
+    if (isDragging) {
+      return;
+    }
+    handleHapticFeedback();
+    onPress?.(date, mealSlot);
+  }, [date, mealSlot, onPress, handleHapticFeedback, isDragging]);
+
   return (
     <GestureDetector gesture={dropZoneGesture}>
       <Animated.View style={[containerAnimatedStyle]}>
@@ -177,26 +234,9 @@ export default function MealSlot({ date, mealSlot, mealPlan, onPress, onDrop }: 
         >
           <Animated.View style={[animatedStyle]}>
             {mealPlan ? (
-              <View className="bg-primary/10 rounded-lg p-2">
-                <P className="text-xs font-urbanist-medium text-muted-foreground capitalize">
-                  {mealSlot}
-                </P>
-                <P
-                  className="text-sm font-urbanist-semibold text-foreground mt-1"
-                  numberOfLines={2}
-                >
-                  {mealPlan.recipe?.title || "Recipe"}
-                </P>
-                {mealPlan.servings > 1 && (
-                  <P className="text-xs text-muted-foreground mt-1">{mealPlan.servings} servings</P>
-                )}
-              </View>
+              <PlannedMealContent mealSlot={mealSlot} mealPlan={mealPlan} />
             ) : (
-              <View className="h-full items-center justify-center">
-                <P className="text-xs text-muted-foreground/40 capitalize text-center">
-                  {mealSlot}
-                </P>
-              </View>
+              <EmptyMealContent mealSlot={mealSlot} />
             )}
           </Animated.View>
         </Pressable>

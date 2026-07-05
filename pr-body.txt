@@ -1,4 +1,5 @@
-💡 What: Replaced 14 separate `Array.prototype.reduce()` calls spanning `utils/nutritionAggregation.ts` and `app/profile/nutrition-report.tsx` with consolidated, single-pass `for` loops.
-🎯 Why: Nutrition calculation is computationally intensive, particularly when analyzing history spanning hundreds of aggregated ingredients or weekly logs. The original implementation called `.reduce()` up to five times across identical data structures, allocating intermediate closures and enforcing O(5N) time complexity where O(N) was possible. This reduces garbage collection overhead and significantly improves computation speed.
-📊 Impact: Reduces time complexity from O(k*N) to O(N) and drastically reduces closure allocations on the hot path for nutrition computations.
-🔬 Measurement: Verify changes pass `bun run test` and observe performance metrics in test outputs for aggregations.
+🎯 **What:** The `cn` utility function in `lib/utils.ts` lacked dedicated unit tests. We added tests to verify its core functionality of merging classes using `clsx` and resolving Tailwind conflicts with `twMerge`.
+
+📊 **Coverage:** Tests now cover basic string merging, conditional classes, arrays of classes, handling of falsy values (undefined, null, false), Tailwind CSS conflict resolution (e.g., specific margins overriding general ones), and combined `clsx` and `twMerge` features.
+
+✨ **Result:** Improved test coverage for a highly utilized utility function, ensuring UI styling behaves predictably under various input scenarios and preventing future regressions.

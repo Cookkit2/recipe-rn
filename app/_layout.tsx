@@ -111,6 +111,53 @@ export default Sentry.wrap(function RootLayout() {
   // Register the navigation container with Sentry for automatic route tracking
   const ref = useNavigationContainerRef();
 
+  useCoreStartupTasks(ref);
+
+  useRevenueCatSetup();
+
+  return (
+    <GestureHandlerRootView className="flex-1 bg-background">
+      <View testID={TEST_IDS.appRoot} collapsable={false} style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <QueryProvider>
+            <AuthProvider strategy={authStrategy} autoInitialize={true}>
+              <AIAssistantProvider>
+                <NotificationProvider>
+                  <KeyboardProvider>
+                    <StatusBar style="auto" />
+                    <AnimatedStack />
+                    <Toaster visibleToasts={2} position="bottom-center" offset={80} />
+                    <PortalHost />
+                  </KeyboardProvider>
+                </NotificationProvider>
+              </AIAssistantProvider>
+            </AuthProvider>
+          </QueryProvider>
+        </SafeAreaProvider>
+      </View>
+    </GestureHandlerRootView>
+  );
+});
+
+const useIsomorphicLayoutEffect =
+  Platform.OS === "web" && typeof window === "undefined" ? React.useEffect : React.useLayoutEffect;
+
+function useSetWebBackgroundClassName() {
+  useIsomorphicLayoutEffect(() => {
+    // Adds the background color to the html element to prevent white background on overscroll.
+    document.documentElement.classList.add("bg-background");
+  }, []);
+}
+
+function useSetAndroidNavigationBar() {
+  React.useLayoutEffect(() => {
+    setAndroidNavigationBar("light");
+  }, []);
+}
+
+function noop() {}
+
+function useCoreStartupTasks(ref: any) {
   useEffect(() => {
     // Register the navigation container with Sentry for automatic route
     // tracking as early as possible (cheap, synchronous).
@@ -189,7 +236,9 @@ export default Sentry.wrap(function RootLayout() {
       cancelIdleCallback(deferredHandle);
     };
   }, [ref]);
+}
 
+function useRevenueCatSetup() {
   // Defer RevenueCat initialization until the JS thread is idle
   useEffect(() => {
     let customerInfoListener: CustomerInfoUpdateListener | undefined;
@@ -242,45 +291,4 @@ export default Sentry.wrap(function RootLayout() {
       }
     };
   }, []);
-
-  return (
-    <GestureHandlerRootView className="flex-1 bg-background">
-      <View testID={TEST_IDS.appRoot} collapsable={false} style={{ flex: 1 }}>
-        <SafeAreaProvider>
-          <QueryProvider>
-            <AuthProvider strategy={authStrategy} autoInitialize={true}>
-              <AIAssistantProvider>
-                <NotificationProvider>
-                  <KeyboardProvider>
-                    <StatusBar style="auto" />
-                    <AnimatedStack />
-                    <Toaster visibleToasts={2} position="bottom-center" offset={80} />
-                    <PortalHost />
-                  </KeyboardProvider>
-                </NotificationProvider>
-              </AIAssistantProvider>
-            </AuthProvider>
-          </QueryProvider>
-        </SafeAreaProvider>
-      </View>
-    </GestureHandlerRootView>
-  );
-});
-
-const useIsomorphicLayoutEffect =
-  Platform.OS === "web" && typeof window === "undefined" ? React.useEffect : React.useLayoutEffect;
-
-function useSetWebBackgroundClassName() {
-  useIsomorphicLayoutEffect(() => {
-    // Adds the background color to the html element to prevent white background on overscroll.
-    document.documentElement.classList.add("bg-background");
-  }, []);
 }
-
-function useSetAndroidNavigationBar() {
-  React.useLayoutEffect(() => {
-    setAndroidNavigationBar("light");
-  }, []);
-}
-
-function noop() {}
