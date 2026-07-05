@@ -69,3 +69,7 @@
 ## 2025-02-28 - Optimizing Batch I/O in Storage Facades
 **Learning:** Found sequential `await` loops inside fallback `_getBatchAsync`, `_setBatchAsync`, and `_deleteBatchAsync` methods in `data/storage/storage-facade.ts`. For batch operations over N items, this created O(N) sequential network or disk I/O latency instead of O(1) concurrent latency.
 **Action:** Always replace `for...of` loops containing `await` for independent batch I/O operations with `Promise.all(array.map(...))` to maximize concurrency and dramatically reduce overall operation time.
+
+## 2025-03-09 - Bounded Concurrency for DB Writes
+**Learning:** Sequential DB updates inside an unbatched loop cause significant performance overhead due to unneeded synchronous waiting. Using unbound Promise.all with DB writes can cause write contention and locks in local-first database wrappers like WatermelonDB.
+**Action:** When optimizing loop performance for database writes, apply "bounded concurrency" by chunking an array and executing `Promise.all` sequentially over the chunks. This significantly speeds up the operation while preserving database stability and avoiding write contention.

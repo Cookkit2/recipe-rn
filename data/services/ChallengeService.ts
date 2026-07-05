@@ -332,37 +332,43 @@ export class ChallengeService {
 
       const activeChallenges = await this.challengeRepo.getActiveChallenges();
 
-      for (const challenge of activeChallenges) {
-        const requirement = challenge.parsedRequirement;
+      const relevantChallenges = activeChallenges.filter((challenge) =>
+        this.isChallengeRelevant(challenge.parsedRequirement, metric)
+      );
 
-        // Check if this challenge is relevant to the metric
-        if (!this.isChallengeRelevant(requirement, metric)) {
-          continue;
-        }
+      // ⚡ Bolt Performance Optimization: Bounded concurrency (chunks of 3) for database updates to prevent write contention while speeding up sequential processing.
+      const CHUNK_SIZE = 3;
+      for (let i = 0; i < relevantChallenges.length; i += CHUNK_SIZE) {
+        const chunk = relevantChallenges.slice(i, i + CHUNK_SIZE);
 
-        const userChallenge = await this.userChallengeRepo.getByChallengeId(challenge.id);
-        const currentProgress = userChallenge?.progress ?? 0;
-        const newProgress = currentProgress + amount;
+        await Promise.all(
+          chunk.map(async (challenge) => {
+            const requirement = challenge.parsedRequirement;
+            const userChallenge = await this.userChallengeRepo.getByChallengeId(challenge.id);
+            const currentProgress = userChallenge?.progress ?? 0;
+            const newProgress = currentProgress + amount;
 
-        // Update progress
-        await this.updateProgress(challenge.id, newProgress);
+            // Update progress
+            await this.updateProgress(challenge.id, newProgress);
 
-        result.progressUpdated.push({
-          challengeId: challenge.id,
-          title: challenge.title,
-          progress: newProgress,
-          target: requirement.target,
-        });
+            result.progressUpdated.push({
+              challengeId: challenge.id,
+              title: challenge.title,
+              progress: newProgress,
+              target: requirement.target,
+            });
 
-        // Check if newly completed
-        if (newProgress >= requirement.target && !userChallenge?.isCompleted) {
-          result.newlyCompleted.push({
-            challengeId: challenge.id,
-            title: challenge.title,
-            description: challenge.description,
-            xp: challenge.xpValue,
-          });
-        }
+            // Check if newly completed
+            if (newProgress >= requirement.target && !userChallenge?.isCompleted) {
+              result.newlyCompleted.push({
+                challengeId: challenge.id,
+                title: challenge.title,
+                description: challenge.description,
+                xp: challenge.xpValue,
+              });
+            }
+          })
+        );
       }
 
       return result;
