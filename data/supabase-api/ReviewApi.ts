@@ -158,7 +158,7 @@ export const reviewApi = {
 
     const { data, error } = await supabase!
       .from("recipe_review")
-      .select("*, review_photo(*), users(username)")
+      .select("*, review_photo(*)")
       .eq("recipe_id", recipeId)
       .order(orderCol, { ascending: orderAsc })
       .order("created_at", { ascending: false })
@@ -171,11 +171,10 @@ export const reviewApi = {
 
     const reviews = (data ?? []).map((row) => {
       const photos = (row.review_photo ?? []) as ReviewPhotoRow[];
-      const username = (row as any).users?.username ?? null;
       return mapReviewRow(
         row as unknown as ReviewRow,
         photos,
-        getInitial(username),
+        getInitial(null), // TODO: fetch from user metadata in batch
         colorFromUserId(row.user_id)
       );
     });
@@ -227,46 +226,34 @@ export const reviewApi = {
 
     if (error) throw error;
 
-    // ⚡ Bolt Performance Optimization: Parallelize photo uploads and bulk-insert records
-    // Impact: Reduces sequential network latencies and N+1 database queries
+    // Upload photos
     const photoRows: ReviewPhotoRow[] = [];
+    for (const photo of input.photos) {
+      const path = `${userId}/${data.id}/${photo.position}.jpg`;
+      const { error: uploadError } = await supabase!.storage.from("review-photos").upload(path, {
+        uri: photo.uri,
+        type: "image/jpeg",
+        name: `${photo.position}.jpg`,
+      } as unknown as Blob);
 
-    if (input.photos && input.photos.length > 0) {
-      const uploadPromises = input.photos.map(async (photo) => {
-        const path = `${userId}/${data.id}/${photo.position}.jpg`;
-        const { error: uploadError } = await supabase!.storage.from("review-photos").upload(path, {
-          uri: photo.uri,
-          type: "image/jpeg",
-          name: `${photo.position}.jpg`,
-        } as unknown as Blob);
+      if (uploadError) {
+        log.error("[ReviewApi] Photo upload failed:", uploadError);
+        continue;
+      }
 
-        if (uploadError) {
-          log.error("[ReviewApi] Photo upload failed:", uploadError);
-          return null;
-        }
+      const { data: publicUrl } = supabase!.storage.from("review-photos").getPublicUrl(path);
 
-        const { data: publicUrl } = supabase!.storage.from("review-photos").getPublicUrl(path);
-
-        return {
+      const { data: photoData } = await supabase!
+        .from("review_photo")
+        .insert({
           review_id: data.id,
           photo_url: publicUrl.publicUrl,
           position: photo.position,
-        };
-      });
+        })
+        .select()
+        .single();
 
-      const uploadResults = await Promise.all(uploadPromises);
-      const validPhotos = uploadResults.filter((p): p is NonNullable<typeof p> => p !== null);
-
-      if (validPhotos.length > 0) {
-        const { data: insertedPhotos } = await supabase!
-          .from("review_photo")
-          .insert(validPhotos)
-          .select();
-
-        if (insertedPhotos) {
-          photoRows.push(...(insertedPhotos as unknown as ReviewPhotoRow[]));
-        }
-      }
+      if (photoData) photoRows.push(photoData as unknown as ReviewPhotoRow);
     }
 
     return {
@@ -310,36 +297,21 @@ export const reviewApi = {
       // Delete existing photos
       await supabase!.from("review_photo").delete().eq("review_id", reviewId);
 
-      // ⚡ Bolt Performance Optimization: Replaced sequential await for photo uploads with Promise.all to enable concurrent uploading, reducing total upload latency.
-      // Additionally bulk insert the database records instead of running N+1 queries.
+      // Upload new photos
       const userId = await getCurrentUserId();
-      const uploadPromises = input.photos.map(async (photo) => {
+      for (const photo of input.photos) {
         const path = `${userId}/${reviewId}/${photo.position}.jpg`;
-        const { error: uploadError } = await supabase!.storage.from("review-photos").upload(path, {
+        await supabase!.storage.from("review-photos").upload(path, {
           uri: photo.uri,
           type: "image/jpeg",
           name: `${photo.position}.jpg`,
         } as unknown as Blob);
-
-        if (uploadError) {
-          log.error("[ReviewApi] Photo upload failed during update:", uploadError);
-          return null;
-        }
-
         const { data: publicUrl } = supabase!.storage.from("review-photos").getPublicUrl(path);
-
-        return {
+        await supabase!.from("review_photo").insert({
           review_id: reviewId,
           photo_url: publicUrl.publicUrl,
           position: photo.position,
-        };
-      });
-
-      const uploadResults = await Promise.all(uploadPromises);
-      const validPhotos = uploadResults.filter((p): p is NonNullable<typeof p> => p !== null);
-
-      if (validPhotos.length > 0) {
-        await supabase!.from("review_photo").insert(validPhotos);
+        });
       }
     }
   },
@@ -384,7 +356,7 @@ export const reviewApi = {
 
     const { data, error } = await supabase!
       .from("recipe_tip")
-      .select("*, users(username)")
+      .select("*")
       .eq("recipe_id", recipeId)
       .order("helpful_count", { ascending: false })
       .order("created_at", { ascending: false });
@@ -394,20 +366,17 @@ export const reviewApi = {
       return [];
     }
 
-    return (data ?? []).map((row) => {
-      const username = (row as any).users?.username ?? null;
-      return {
-        id: row.id,
-        recipeId: row.recipe_id,
-        userId: row.user_id,
-        body: row.body,
-        helpfulCount: row.helpful_count,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
-        authorInitial: getInitial(username),
-        authorColor: colorFromUserId(row.user_id),
-      };
-    });
+    return (data ?? []).map((row) => ({
+      id: row.id,
+      recipeId: row.recipe_id,
+      userId: row.user_id,
+      body: row.body,
+      helpfulCount: row.helpful_count,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      authorInitial: getInitial(null),
+      authorColor: colorFromUserId(row.user_id),
+    }));
   },
 
   createTip: async (recipeId: string, input: CreateTipInput): Promise<Tip> => {

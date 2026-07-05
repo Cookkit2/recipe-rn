@@ -69,7 +69,7 @@ const BottomActionBar = ({
 
     // User have tried to cook a recipe
     // Present paywall if not subscribed
-    const isPurchased = await presentPaywallIfNeeded({ triggerSource: "recipe_start_cooking" });
+    const isPurchased = await presentPaywallIfNeeded();
     if (isPurchased) {
       router.push(targetPath);
     }

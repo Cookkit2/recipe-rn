@@ -65,51 +65,21 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
       const recipeIds = mappings.map((m) => m.recipeId);
       const recipes = await recipeCollection.query(Q.where("id", Q.oneOf(recipeIds))).fetch();
 
-      // ⚡ Bolt Performance Optimization:
-      // Converting the recipes array to a Map outside the loop eliminates
-      // the O(N^2) bottleneck from calling .find() inside the loop.
-      const recipeLookupMap = new Map(recipes.map((r) => [r.id, r]));
-
-      // ⚡ Bolt Performance Optimization:
-      // Prevent sequential database querying inside loops. Instead of fetching steps
-      // and ingredients inside the for...of loop iteratively (O(N)), we fetch all relevant
-      // associated entities for the matched recipes simultaneously using Q.oneOf(),
-      // group them in memory, and look them up synchronously (O(1)).
-      const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
-      const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
-
-      const validRecipeIds = recipes
-        .filter((r) => r.type === RecipeType.TAILORED && r.sourceUrl === baseRecipeId)
-        .map((r) => r.id);
-
-      if (validRecipeIds.length === 0) return null;
-
-      const [allSteps, allIngredients] = await Promise.all([
-        stepsCollection.query(Q.where("recipe_id", Q.oneOf(validRecipeIds))).fetch(),
-        ingredientsCollection.query(Q.where("recipe_id", Q.oneOf(validRecipeIds))).fetch(),
-      ]);
-
-      const stepsMap = new Map<string, RecipeStep[]>();
-      for (const step of allSteps) {
-        if (!stepsMap.has(step.recipeId)) stepsMap.set(step.recipeId, []);
-        stepsMap.get(step.recipeId)!.push(step);
-      }
-
-      const ingredientsMap = new Map<string, RecipeIngredient[]>();
-      for (const ingredient of allIngredients) {
-        if (!ingredientsMap.has(ingredient.recipeId)) ingredientsMap.set(ingredient.recipeId, []);
-        ingredientsMap.get(ingredient.recipeId)!.push(ingredient);
-      }
-
       for (const mapping of mappings) {
         try {
-          const recipe = recipeLookupMap.get(mapping.recipeId);
+          const recipe = recipes.find((r) => r.id === mapping.recipeId);
 
           // Check if this recipe is a tailored version of the base recipe
           // We store baseRecipeId in the recipe's sourceUrl field for tailored recipes
           if (recipe && recipe.type === RecipeType.TAILORED && recipe.sourceUrl === baseRecipeId) {
-            const steps = stepsMap.get(recipe.id) || [];
-            const ingredients = ingredientsMap.get(recipe.id) || [];
+            const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
+            const ingredientsCollection =
+              database.collections.get<RecipeIngredient>("recipe_ingredient");
+
+            const [steps, ingredients] = await Promise.all([
+              stepsCollection.query(Q.where("recipe_id", recipe.id)).fetch(),
+              ingredientsCollection.query(Q.where("recipe_id", recipe.id)).fetch(),
+            ]);
 
             return {
               mapping,

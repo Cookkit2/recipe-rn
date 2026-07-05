@@ -43,7 +43,7 @@ export default function CameraActionRow({
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     if (isRecipeCooked) {
-      const isPurchased = await presentPaywallIfNeeded({ triggerSource: "camera_capture" });
+      const isPurchased = await presentPaywallIfNeeded();
       if (!isPurchased) {
         return;
       }
@@ -74,7 +74,7 @@ export default function CameraActionRow({
   const pickFromGallery = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (isRecipeCooked) {
-      const isPurchased = await presentPaywallIfNeeded({ triggerSource: "camera_gallery" });
+      const isPurchased = await presentPaywallIfNeeded();
       if (!isPurchased) {
         return;
       }

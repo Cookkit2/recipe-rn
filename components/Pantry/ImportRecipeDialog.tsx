@@ -44,10 +44,7 @@ export default function ImportRecipeDialog({ open, onOpenChange }: ImportRecipeD
         onOpenChange(false);
         setRecipeUrl("");
         reset();
-        // Always land imported recipes on the EDIT screen so any mis-parsed
-        // ingredient/step is correctable before the user commits (issue #730,
-        // acceptance: every result is editable).
-        router.push(`/recipes/${result.recipe.id}/edit`);
+        router.push(`/recipes/${result.recipe.id}`);
       } else {
         const errorMessage = result.error || "Failed to import recipe";
         toast.error(errorMessage);

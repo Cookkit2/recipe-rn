@@ -1531,48 +1531,8 @@ class DatabaseFacade {
   }
 }
 
-// --- Lazy singleton (issue #733: cold-start / TTI) ---------------------------
-// Previously this exported `new DatabaseFacade()`, whose constructor
-// synchronously runs initializeRepositories() (which in turn constructs every
-// repository and reads `database.collections.get(...)` in each BaseRepository
-// constructor). That ran on the JS thread during the launch import graph and
-// delayed Time-to-Interactive. The facade is now constructed on first access
-// via a memoizing Proxy, mirroring the lazy `database` singleton in
-// ./database.ts. Both eager sites from the issue (raw Database + facade) are
-// now lazy, so merely importing this module no longer warms the DB.
-//
-// Consumers call `databaseFacade.method(...)`; the Proxy forwards every
-// property access to the single cached instance, constructing it on first
-// use. Identity and access syntax are unchanged.
-let databaseFacadeInstance: DatabaseFacade | null = null;
-
-function getDatabaseFacadeInstance(): DatabaseFacade {
-  if (databaseFacadeInstance) return databaseFacadeInstance;
-  databaseFacadeInstance = new DatabaseFacade();
-  return databaseFacadeInstance;
-}
-
-/**
- * Lazily-constructed, memoized DatabaseFacade singleton. See the lazy-singleton
- * note above. Forwards every property access to the single underlying
- * DatabaseFacade instance, constructing it on first access.
- */
-export const databaseFacade: DatabaseFacade = new Proxy({} as DatabaseFacade, {
-  get(_target, prop, receiver) {
-    const instance = getDatabaseFacadeInstance();
-    const value = Reflect.get(instance, prop, receiver);
-    return typeof value === "function" ? value.bind(instance) : value;
-  },
-  has(_target, prop) {
-    return prop in getDatabaseFacadeInstance();
-  },
-  ownKeys() {
-    return Reflect.ownKeys(getDatabaseFacadeInstance());
-  },
-  getOwnPropertyDescriptor(_target, prop) {
-    return Reflect.getOwnPropertyDescriptor(getDatabaseFacadeInstance(), prop);
-  },
-});
+// Export a singleton instance
+export const databaseFacade = new DatabaseFacade();
 
 // Export for type usage
 export default DatabaseFacade;

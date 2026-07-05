@@ -8,7 +8,6 @@ import {
   CHALLENGE_COMPLETED_TYPE,
   INGREDIENT_EXPIRY_TYPE,
 } from "~/lib/notifications";
-import { emitExpiringNudgeEngaged } from "~/lib/analytics/funnel-events";
 
 export function useNotificationHandlers() {
   const router = useRouter();
@@ -18,14 +17,6 @@ export function useNotificationHandlers() {
     registerNotificationHandler(INGREDIENT_EXPIRY_TYPE, (response) => {
       const data = extractNotificationData(response);
       const recipeIds = data?.recipeIds as string[] | undefined;
-      // Attribute engagement to the recurring re-engagement notification vs.
-      // the per-ingredient expiry push (#726/#718).
-      if (data?.surface === "reengagement_notification") {
-        emitExpiringNudgeEngaged("reengagement_notification", {
-          recipeId: recipeIds?.[0],
-          recipeIds,
-        });
-      }
       if (recipeIds && recipeIds.length > 0) {
         router.push(`/recipes/${recipeIds[0]}`);
       } else {

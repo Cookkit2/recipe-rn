@@ -55,14 +55,6 @@ export {
   rescheduleExpiryNotification,
 } from "./expiry-notifications/expiry-notifications";
 
-export {
-  scheduleExpiryReengagementNotification,
-  cancelExpiryReengagementNotification,
-  EXPIRY_REENGAGEMENT_NOTIFICATION_ID,
-  EXPIRY_REENGAGEMENT_HOUR,
-  EXPIRY_REENGAGEMENT_MINUTE,
-} from "./expiry-notifications/expiry-reengagement";
-
 // ============================================
 // Types
 // ============================================

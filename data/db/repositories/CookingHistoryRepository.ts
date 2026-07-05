@@ -167,23 +167,14 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
 
   // Get average rating for a recipe
   async getAverageRating(recipeId: string): Promise<number | null> {
-    const records = await this.collection
-      .query(
-        Q.where("recipe_id", recipeId),
-        // ⚡ Bolt Performance Optimization: Push rating filter down to SQLite layer to avoid
-        // instantiating unrated records across the JS bridge and allocating memory for them.
-        Q.where("rating", Q.notEq(null))
-      )
-      .fetch();
+    const records = await this.collection.query(Q.where("recipe_id", recipeId)).fetch();
 
-    if (records.length === 0) return null;
+    const ratingsWithValues = records.filter((r) => r.rating !== undefined);
 
-    // ⚡ Bolt Performance Optimization: Use a single for loop instead of reduce to eliminate closure overhead.
-    let sum = 0;
-    for (let i = 0; i < records.length; i++) {
-      sum += records[i]?.rating || 0;
-    }
-    return sum / records.length;
+    if (ratingsWithValues.length === 0) return null;
+
+    const sum = ratingsWithValues.reduce((acc, r) => acc + (r.rating || 0), 0);
+    return sum / ratingsWithValues.length;
   }
 
   // Update a cooking history record

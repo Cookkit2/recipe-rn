@@ -6,8 +6,6 @@ export interface Location {
   longitude: number;
 }
 
-import type { OpeningHour } from "~/lib/supabase/supabase-types";
-
 export interface StoreWithDistance {
   id: string;
   name: string;
@@ -15,7 +13,6 @@ export interface StoreWithDistance {
   latitude: number | null;
   longitude: number | null;
   distance: number;
-  opening_hours?: OpeningHour[] | null;
 }
 
 export function useDistanceCalculation(
@@ -26,7 +23,6 @@ export function useDistanceCalculation(
     address: string | null;
     latitude: number | null;
     longitude: number | null;
-    opening_hours?: OpeningHour[] | null;
   }>
 ): StoreWithDistance[] {
   return useMemo(() => {
@@ -62,7 +58,6 @@ function useClosestStore(
     address: string | null;
     latitude: number | null;
     longitude: number | null;
-    opening_hours?: OpeningHour[] | null;
   }>
 ): StoreWithDistance | null {
   const storesWithDistance = useDistanceCalculation(userLocation, stores);

@@ -1,8 +1,6 @@
 import { MealPlanTemplateRepository } from "~/data/db/repositories/MealPlanTemplateRepository";
 import { MealPlanRepository } from "~/data/db/repositories/MealPlanRepository";
 import { log } from "~/utils/logger";
-import type { MealPlanData } from "~/data/db/models/MealPlan";
-import type MealPlan from "~/data/db/models/MealPlan";
 
 // Lazy initialization of repositories to avoid timing issues
 let _mealPlanTemplateRepository: MealPlanTemplateRepository | null = null;
@@ -273,7 +271,7 @@ export const mealPlanTemplateApi = {
       const existingPlans = await mealPlanRepo.getByDateRange(templateStartDate, templateEndDate);
 
       // Create a lookup map for O(1) checks
-      const existingPlansMap = new Map<string, MealPlan>();
+      const existingPlansMap = new Map<string, any>();
       for (const plan of existingPlans) {
         // Normalize date to start of day for consistent matching, similar to getByDateAndMealSlot
         const planDate = new Date(plan.date);
@@ -281,8 +279,8 @@ export const mealPlanTemplateApi = {
         existingPlansMap.set(`${planDate.getTime()}-${plan.mealSlot}`, plan);
       }
 
-      const creates: MealPlanData[] = [];
-      const updates: { record: MealPlan; servings: number }[] = [];
+      const creates: any[] = [];
+      const updates: { record: any; servings: number }[] = [];
       // Apply each meal slot in the template
       for (const slot of template.mealSlots) {
         try {
@@ -331,7 +329,7 @@ export const mealPlanTemplateApi = {
 
       // Execute all updates and creates in a single batch
       if (creates.length > 0 || updates.length > 0) {
-        // BatchUpsert expects MealPlanData and MealPlan types
+        // We cast to any here to avoid importing MealPlan inside the API just for types
         await mealPlanRepo.batchUpsert(creates, updates);
         log.info(`Batch executed ${creates.length} creations and ${updates.length} updates`);
       }

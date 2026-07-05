@@ -66,8 +66,6 @@ export default function RateRecipeModal({
               className="p-1"
               accessibilityLabel={`Rate ${starValue} stars`}
               accessibilityHint={rating === starValue ? "Selected" : "Tap to rate"}
-              accessibilityRole="button"
-              accessibilityState={{ checked: rating !== undefined && starValue <= rating }}
             >
               <StarIcon
                 size={32}

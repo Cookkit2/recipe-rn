@@ -13,9 +13,9 @@ import {
   getImportProgress as getProgress,
   getImportStatusMessage as getStatusMessage,
 } from "~/data/api/recipeImportApi";
-import { recipeQueryKeys } from "./recipeQueryKeys";
-import { analyzeUrl, type UrlAnalysisResult, type RecipeUrlType } from "~/utils/url-utils";
+import { analyzeUrl, type UrlAnalysisResult } from "~/utils/url-utils";
 import type { YouTubeImportResult } from "~/types/ScrappedRecipe";
+import { invalidateRecipeLists } from "./queryInvalidationUtils";
 
 // Re-export for convenience
 export { getProgress as getImportProgress, getStatusMessage as getImportStatusMessage };
@@ -68,16 +68,7 @@ export function useImportRecipe() {
 
     onSuccess: (result) => {
       if (result.success && result.recipe) {
-        // Invalidate recipe queries to include new recipe
-        queryClient.invalidateQueries({
-          queryKey: recipeQueryKeys.recipes(),
-        });
-        queryClient.invalidateQueries({
-          queryKey: recipeQueryKeys.available(),
-        });
-        queryClient.invalidateQueries({
-          queryKey: recipeQueryKeys.recommendations(),
-        });
+        invalidateRecipeLists(queryClient);
       }
     },
 
@@ -131,7 +122,7 @@ export function useImportRecipe() {
  * {isValid && isYouTube && <Text>YouTube URL detected!</Text>}
  * ```
  */
-export function useAnalyzeUrl() {
+function useAnalyzeUrl() {
   const [analysis, setAnalysis] = useState<UrlAnalysisResult | null>(null);
 
   const analyze = useCallback((url: string) => {
@@ -153,8 +144,6 @@ export function useAnalyzeUrl() {
     reset,
     analysis,
     isYouTube: analysis?.type === "youtube",
-    isTikTok: analysis?.type === "tiktok",
-    isInstagram: analysis?.type === "instagram",
     isWebsite: analysis?.type === "website",
     isValid: analysis?.isValid ?? false,
   };
@@ -183,10 +172,10 @@ export function useAnalyzeUrl() {
  * return <Text>Importing from {type}...</Text>;
  * ```
  */
-export function validateRecipeUrl(url: string): {
+function validateRecipeUrl(url: string): {
   isValid: boolean;
   error?: string;
-  type?: RecipeUrlType;
+  type?: "youtube" | "website";
 } {
   if (!url.trim()) {
     return { isValid: false, error: "Please enter a URL" };
@@ -198,13 +187,8 @@ export function validateRecipeUrl(url: string): {
     return { isValid: false, error: "Please enter a valid URL" };
   }
 
-  // Supported import sources: YouTube, TikTok, Instagram, and recipe websites.
-  if (
-    analysis.type !== "youtube" &&
-    analysis.type !== "tiktok" &&
-    analysis.type !== "instagram" &&
-    analysis.type !== "website"
-  ) {
+  // Only YouTube and generic websites are currently supported for import.
+  if (analysis.type !== "youtube" && analysis.type !== "website") {
     return { isValid: false, error: "Unsupported URL type" };
   }
 

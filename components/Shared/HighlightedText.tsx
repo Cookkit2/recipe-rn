@@ -26,37 +26,29 @@ const HighlightedText = ({ text, className }: { text: string; className?: string
 
 export default HighlightedText;
 
-// Parse text to find **bold** sections safely without Regex (prevent ReDoS)
+// Parse text to find **bold** sections
 const parseText = (input: string): TextSegment[] => {
   const segments: TextSegment[] = [];
+  const regex = /\*\*(.*?)\*\*/g;
   let lastIndex = 0;
+  let match;
 
-  while (true) {
-    const startIndex = input.indexOf("**", lastIndex);
-    if (startIndex === -1) {
-      break;
-    }
-
-    const endIndex = input.indexOf("**", startIndex + 2);
-    if (endIndex === -1) {
-      break;
-    }
-
+  while ((match = regex.exec(input)) !== null) {
     // Add text before the bold section
-    if (startIndex > lastIndex) {
+    if (match.index > lastIndex) {
       segments.push({
-        text: input.slice(lastIndex, startIndex),
+        text: input.slice(lastIndex, match.index),
         isBold: false,
       });
     }
 
     // Add the bold section
     segments.push({
-      text: input.slice(startIndex + 2, endIndex),
+      text: match[1] || "",
       isBold: true,
     });
 
-    lastIndex = endIndex + 2;
+    lastIndex = regex.lastIndex;
   }
 
   // Add remaining text

@@ -1,4 +1,4 @@
-import { View, ScrollView, Pressable } from "react-native";
+import { View, Image, ScrollView, Pressable } from "react-native";
 import { H3, H4, P } from "~/components/ui/typography";
 import { useMealPlanItems } from "~/hooks/queries/useMealPlanQueries";
 import { useRouter } from "expo-router";

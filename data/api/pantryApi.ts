@@ -386,31 +386,31 @@ export const pantryApi = {
    * Get pantry items by type
    */
   async getPantryItemsByType(type: Exclude<ItemType, "all">): Promise<PantryItem[]> {
-    // ⚡ Bolt Performance Optimization: Filter raw stocks first to avoid expensive Batch Entity fetching for excluded types
-    const rawStocks = await databaseFacade.getAllStock();
-    const dbTypeMatches = (dbType: string | undefined, expectedType: ItemType) => {
-      return mapDbTypeToType(dbType) === expectedType;
-    };
-    const filteredStocks = rawStocks.filter((stock) => dbTypeMatches(stock.storageType, type));
-    return await convertStockToPantryItemBatch(filteredStocks);
+    const allItems = await this.fetchAllPantryItems();
+    return allItems.filter((item) => item.type === type);
   },
 
   /**
    * Search pantry items by name
    */
   async searchPantryItems(query: string): Promise<PantryItem[]> {
-    // ⚡ Bolt Performance Optimization: Push search to DB layer rather than fetching all and filtering in-memory
-    const matchingStocks = await databaseFacade.searchStock(query);
-    return await convertStockToPantryItemBatch(matchingStocks);
+    const allItems = await this.fetchAllPantryItems();
+    const lowerQuery = query.toLowerCase();
+    return allItems.filter((item) => item.name.toLowerCase().includes(lowerQuery));
   },
 
   /**
    * Get expiring items
    */
   async getExpiringItems(days: number = 3): Promise<PantryItem[]> {
-    // ⚡ Bolt Performance Optimization: Push date filtering to DB layer rather than fetching all and filtering in-memory
-    const expiringStocks = await databaseFacade.getExpiringStock(days);
-    return await convertStockToPantryItemBatch(expiringStocks);
+    const allItems = await this.fetchAllPantryItems();
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() + days);
+
+    return allItems.filter((item) => {
+      if (!item.expiry_date) return false;
+      return new Date(item.expiry_date) <= cutoffDate;
+    });
   },
 };
 

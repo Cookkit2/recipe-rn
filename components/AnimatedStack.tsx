@@ -1,4 +1,4 @@
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { H1 } from "~/components/ui/typography";
 import useColors from "~/hooks/useColor";
 import AddToPlanHeaderButton from "~/components/Recipe/Details/AddToPlanHeaderButton";

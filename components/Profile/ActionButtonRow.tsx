@@ -56,8 +56,6 @@ export default function ActionButtonRow() {
         onPressOut={onCookedPressOut}
         onPress={onCookedRecipesPress}
         style={[cookedAnimatedStyle, cookedRoundedStyle]}
-        accessibilityRole="button"
-        accessibilityLabel="Cooked Recipes"
       >
         <CardContent className="py-6 flex gap-3">
           <ChefHatIcon className="text-foreground" size={32} strokeWidth={1.618} />
@@ -70,8 +68,6 @@ export default function ActionButtonRow() {
         onPressOut={onGroceryPressOut}
         onPress={onGroceryListPress}
         style={[groceryAnimatedStyle, groceryRoundedStyle]}
-        accessibilityRole="button"
-        accessibilityLabel="Grocery Lists"
       >
         <CardContent className="py-6 flex gap-3">
           <ShoppingCartIcon className="text-foreground" size={32} strokeWidth={1.618} />

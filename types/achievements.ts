@@ -9,23 +9,23 @@ export const ACHIEVEMENT_CATEGORIES = [
 export type AchievementCategory = (typeof ACHIEVEMENT_CATEGORIES)[number];
 
 // Achievement Types
-export const ACHIEVEMENT_TYPES = ["milestone", "streak", "cumulative", "special"] as const;
+const ACHIEVEMENT_TYPES = ["milestone", "streak", "cumulative", "special"] as const;
 export type AchievementType = (typeof ACHIEVEMENT_TYPES)[number];
 
 // Achievement Status
-export const ACHIEVEMENT_STATUSES = ["locked", "unlocked", "in_progress"] as const;
+const ACHIEVEMENT_STATUSES = ["locked", "unlocked", "in_progress"] as const;
 export type AchievementStatus = (typeof ACHIEVEMENT_STATUSES)[number];
 
 // Challenge Types
-export const CHALLENGE_TYPES = ["daily", "weekly"] as const;
+const CHALLENGE_TYPES = ["daily", "weekly"] as const;
 export type ChallengeType = (typeof CHALLENGE_TYPES)[number];
 
 // Challenge Status
-export const CHALLENGE_STATUSES = ["available", "active", "completed", "expired"] as const;
+const CHALLENGE_STATUSES = ["available", "active", "completed", "expired"] as const;
 export type ChallengeStatus = (typeof CHALLENGE_STATUSES)[number];
 
 // Achievement Reward Types
-export const REWARD_TYPES = ["badge", "title", "theme", "recipe"] as const;
+const REWARD_TYPES = ["badge", "title", "theme", "recipe"] as const;
 export type RewardType = (typeof REWARD_TYPES)[number];
 
 // Core Achievement Interface
@@ -210,50 +210,49 @@ export interface AchievementCategoryDisplay {
 }
 
 // Predefined Achievement Category Display Constants
-export const ACHIEVEMENT_CATEGORY_DISPLAY: Record<AchievementCategory, AchievementCategoryDisplay> =
-  {
-    streak: {
-      category: "streak",
-      title: "Cooking Streaks",
-      description: "Maintain consecutive cooking days",
-      icon: "🔥",
-      color: "#FF6B35",
-    },
-    recipes: {
-      category: "recipes",
-      title: "Recipe Milestones",
-      description: "Cook and discover new recipes",
-      icon: "🍳",
-      color: "#4ECDC4",
-    },
-    ingredients: {
-      category: "ingredients",
-      title: "Ingredient Tracker",
-      description: "Track and manage ingredients",
-      icon: "🥬",
-      color: "#95E1D3",
-    },
-    waste: {
-      category: "waste",
-      title: "Waste Reduction",
-      description: "Reduce food waste",
-      icon: "♻️",
-      color: "#A8E6CF",
-    },
-    social: {
-      category: "social",
-      title: "Social Sharing",
-      description: "Share your cooking journey",
-      icon: "🎉",
-      color: "#FFD93D",
-    },
-  };
+const ACHIEVEMENT_CATEGORY_DISPLAY: Record<AchievementCategory, AchievementCategoryDisplay> = {
+  streak: {
+    category: "streak",
+    title: "Cooking Streaks",
+    description: "Maintain consecutive cooking days",
+    icon: "🔥",
+    color: "#FF6B35",
+  },
+  recipes: {
+    category: "recipes",
+    title: "Recipe Milestones",
+    description: "Cook and discover new recipes",
+    icon: "🍳",
+    color: "#4ECDC4",
+  },
+  ingredients: {
+    category: "ingredients",
+    title: "Ingredient Tracker",
+    description: "Track and manage ingredients",
+    icon: "🥬",
+    color: "#95E1D3",
+  },
+  waste: {
+    category: "waste",
+    title: "Waste Reduction",
+    description: "Reduce food waste",
+    icon: "♻️",
+    color: "#A8E6CF",
+  },
+  social: {
+    category: "social",
+    title: "Social Sharing",
+    description: "Share your cooking journey",
+    icon: "🎉",
+    color: "#FFD93D",
+  },
+};
 
 // XP Level Thresholds
-export const XP_LEVEL_THRESHOLDS = [0, 100, 250, 500, 1000, 2000, 3500, 5000, 7500, 10000] as const;
+const XP_LEVEL_THRESHOLDS = [0, 100, 250, 500, 1000, 2000, 3500, 5000, 7500, 10000] as const;
 
 // Helper function to get level from XP
-export const getLevelFromXP = (xp: number): number => {
+const getLevelFromXP = (xp: number): number => {
   for (let i = XP_LEVEL_THRESHOLDS.length - 1; i >= 0; i--) {
     const threshold = XP_LEVEL_THRESHOLDS[i];
     // @ts-expect-error
@@ -265,7 +264,7 @@ export const getLevelFromXP = (xp: number): number => {
 };
 
 // Helper function to get XP required for next level
-export const getXPForNextLevel = (currentLevel: number): number => {
+const getXPForNextLevel = (currentLevel: number): number => {
   const nextLevelIndex = currentLevel; // levels are 1-indexed
   if (nextLevelIndex < 0) {
     return XP_LEVEL_THRESHOLDS[0];

@@ -15,7 +15,7 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { P } from "~/components/ui/typography";
-import { PlusIcon } from "lucide-uniwind";
+import { PlusIcon, Trash2Icon } from "lucide-uniwind";
 import { useRecordWaste } from "~/hooks/queries/useWasteAnalyticsQueries";
 import { cn } from "~/lib/utils";
 

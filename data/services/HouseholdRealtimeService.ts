@@ -1,13 +1,11 @@
 import { supabase } from "~/lib/supabase/supabase-client";
 import { database } from "~/data/db/database";
-import { Q } from "@nozbe/watermelondb";
 import { useAuthStore } from "~/auth/AuthStore";
 import { log } from "~/utils/logger";
-import { shouldApplyRemoteUpdate } from "./householdSyncResolver";
 
 type RealtimeChannel = import("@supabase/supabase-js").RealtimeChannel;
 
-export class HouseholdRealtimeService {
+class HouseholdRealtimeService {
   private channel: RealtimeChannel | null = null;
   private householdSupabaseId: string | null = null;
 
@@ -91,11 +89,9 @@ export class HouseholdRealtimeService {
     try {
       const stockCollection = database.collections.get("stock");
 
-      // ⚡ Bolt Performance Optimization: Use targeted DB query instead of fetching all records
-      const existingRecords = await stockCollection
-        .query(Q.where("supabase_id", record.id))
-        .fetch();
-      if (existingRecords.length > 0) return;
+      const allItems = await stockCollection.query().fetch();
+      const existing = allItems.find((i: any) => i.supabaseId === record.id);
+      if (existing) return;
 
       await database.write(async () => {
         await (stockCollection as any).create((r: any) => {
@@ -135,25 +131,21 @@ export class HouseholdRealtimeService {
   }): Promise<void> {
     try {
       const stockCollection = database.collections.get("stock");
-
-      // ⚡ Bolt Performance Optimization: Use targeted DB query instead of fetching all records
-      const existingRecords = await stockCollection
-        .query(Q.where("supabase_id", record.id))
-        .fetch();
-      const existing = existingRecords[0];
+      const allItems = await stockCollection.query().fetch();
+      const existing = allItems.find((i: any) => i.supabaseId === record.id);
 
       if (!existing) {
         await this.handleInsert(record);
         return;
       }
 
-      // Last-writer-wins: compare timestamps via the shared resolver
+      // Last-writer-wins: compare timestamps
       const remoteUpdatedAt = new Date(record.updated_at).getTime();
       const localUpdatedAt = (existing as any).updatedAt
         ? new Date((existing as any).updatedAt).getTime()
         : 0;
 
-      if (!shouldApplyRemoteUpdate(remoteUpdatedAt, localUpdatedAt)) {
+      if (remoteUpdatedAt <= localUpdatedAt) {
         return;
       }
 
@@ -181,29 +173,16 @@ export class HouseholdRealtimeService {
   private async handleDelete(record: { id: string }): Promise<void> {
     try {
       const stockCollection = database.collections.get("stock");
-
-      // ⚡ Bolt Performance Optimization: Use targeted DB query instead of fetching all records
-      const existingRecords = await stockCollection
-        .query(Q.where("supabase_id", record.id))
-        .fetch();
-      const existing = existingRecords[0];
+      const allItems = await stockCollection.query().fetch();
+      const existing = allItems.find((i: any) => i.supabaseId === record.id);
 
       if (!existing) return;
 
-      // Soft delete instead of destroyPermanently() (audit defect #2, HIGH):
-      // the `stock` table has no soft-delete columns, so destroyPermanently()
-      // is an irreversible wipe — a racing or accidental cross-device DELETE
-      // would permanently destroy the local row including any unsynced local
-      // edit, with no tombstone and no undo. markAsDeleted() hides the row
-      // from queries (so the pantry UI stops showing it, matching the intent
-      // of the realtime DELETE event) while keeping it recoverable in the DB.
-      // destroyPermanently() is reserved for local-only teardown (e.g.
-      // leaveHousehold) in data/api/householdApi.ts.
       await database.write(async () => {
-        await (existing as any).markAsDeleted();
+        await (existing as any).destroyPermanently();
       });
 
-      log.info(`HouseholdRealtime: soft-deleted stock item ${record.id}`);
+      log.info(`HouseholdRealtime: deleted stock item ${record.id}`);
     } catch (error) {
       log.error("HouseholdRealtime: failed to handle DELETE", error);
     }

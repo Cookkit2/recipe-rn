@@ -479,48 +479,15 @@ export class RecipeRepository extends BaseRepository<Recipe> {
       // WatermelonDB does not cascade deletes: destroying only the parent recipe leaves
       // `recipe_step` / `recipe_ingredient` rows with the same recipe_id, so the subsequent
       // `prepareSyncSingleRecipe` insert duplicates steps and ingredients on every app open.
-
-      // ⚡ Bolt Optimization: Fetch all steps and ingredients in two queries instead of N*2
-      // Impact: Eliminates N+1 database querying, which incurs significant overhead due to database bridge crossings.
-      const recipeIdsToUpdate = existingRecipesToUpdate.map((r) => r.recipe.id);
-      let allSteps: RecipeStep[] = [];
-      let allIngredients: RecipeIngredient[] = [];
-
-      if (recipeIdsToUpdate.length > 0) {
-        [allSteps, allIngredients] = await Promise.all([
-          database.collections
-            .get<RecipeStep>("recipe_step")
-            .query(Q.where("recipe_id", Q.oneOf(recipeIdsToUpdate)))
-            .fetch(),
-          database.collections
-            .get<RecipeIngredient>("recipe_ingredient")
-            .query(Q.where("recipe_id", Q.oneOf(recipeIdsToUpdate)))
-            .fetch(),
-        ]);
-      }
-
-      const stepsByRecipeId = new Map<string, RecipeStep[]>();
-      for (const step of allSteps) {
-        const steps = stepsByRecipeId.get(step.recipeId) || [];
-        steps.push(step);
-        stepsByRecipeId.set(step.recipeId, steps);
-      }
-
-      const ingredientsByRecipeId = new Map<string, RecipeIngredient[]>();
-      for (const ingredient of allIngredients) {
-        const ingredients = ingredientsByRecipeId.get(ingredient.recipeId) || [];
-        ingredients.push(ingredient);
-        ingredientsByRecipeId.set(ingredient.recipeId, ingredients);
-      }
-
       for (const supabaseRecipe of existingRecipesToUpdate) {
         const recipeId = supabaseRecipe.recipe.id;
         const localRecipe = existingRecipesMap.get(recipeId);
         if (localRecipe) {
           try {
-            const existingSteps = stepsByRecipeId.get(recipeId) || [];
-            const existingIngredients = ingredientsByRecipeId.get(recipeId) || [];
-
+            const [existingSteps, existingIngredients] = await Promise.all([
+              localRecipe.steps.fetch(),
+              localRecipe.ingredients.fetch(),
+            ]);
             for (const step of existingSteps) {
               batchOps.push(step.prepareDestroyPermanently());
             }

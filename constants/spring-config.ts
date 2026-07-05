@@ -10,8 +10,31 @@ export const SPRING_CONFIG_SPRINGY = {
   mass: 1,
 };
 
-// Converted Material 3 motion spring tokens (12 total): 6 Standard, 6 Expressive
+// Material 3 motion spring tokens (12 total): 6 Standard, 6 Expressive
 // Token names mirror the Material token IDs for easy mapping across platforms
+// export const SPRINGS = {
+//   // Standard – Spatial
+//   "spring.spatial": { damping: 0.9, stiffness: 700 },
+//   "spring.fast.spatial": { damping: 0.9, stiffness: 1200 },
+//   "spring.slow.spatial": { damping: 0.9, stiffness: 300 },
+
+//   // Standard – Effects
+//   "spring.effects": { damping: 1, stiffness: 1600 },
+//   "spring.fast.effects": { damping: 1, stiffness: 3800 },
+//   "spring.slow.effects": { damping: 1, stiffness: 800 },
+
+//   // Expressive – Spatial
+//   "expressive.spring.spatial": { damping: 0.7, stiffness: 200 },
+//   "expressive.spring.fast.spatial": { damping: 0.7, stiffness: 300 },
+//   "expressive.spring.slow.spatial": { damping: 0.7, stiffness: 150 },
+
+//   // Expressive – Effects
+//   "expressive.spring.effects": { damping: 0.7, stiffness: 250 },
+//   "expressive.spring.fast.effects": { damping: 0.7, stiffness: 350 },
+//   "expressive.spring.slow.effects": { damping: 0.7, stiffness: 200 },
+// } as const;
+
+// Converted
 // Compose uses damping ratio, React Spring uses absolute damping.
 // Compose stiffness is in px/s², React Spring uses an arbitrary spring constant.
 const SPRINGS = {
