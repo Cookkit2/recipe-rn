@@ -153,6 +153,7 @@ abstract class BaseRepository<T extends Model> {
 
   // Delete multiple records
   async deleteMany(ids: string[]): Promise<void>;
+  async deleteRecords(records: T[]): Promise<void>;
 
   // Protected helpers for subclasses
   protected buildSearchQuery(query: Query<T>, searchTerm: string, fields: string[]): Query<T>;
