@@ -327,22 +327,30 @@ export async function withWarningHandling<T>(
  * }
  * ```
  */
-async function withArrayErrorHandling<TInput, TOutput>(
+export async function withArrayErrorHandling<TInput, TOutput>(
   items: TInput[],
   processorFn: (item: TInput) => Promise<TOutput>,
   errorMessagePrefix: string
 ): Promise<TOutput[]> {
   const results: TOutput[] = [];
 
-  // Process each item sequentially, continuing even if individual items fail
-  for (const item of items) {
-    try {
-      const result = await processorFn(item);
-      results.push(result);
-    } catch (error) {
-      // Log the error for this item but continue processing others
-      log.error(`${errorMessagePrefix}:`, item, error);
-      // Continue with other items instead of failing completely
+  // ⚡ Bolt Performance Optimization: Process items using a bounded concurrency
+  // chunking mechanism (size 5). This prevents unbounded concurrency issues like
+  // SQLite write contention while significantly speeding up sequential I/O bottlenecks.
+  const CONCURRENCY_LIMIT = 5;
+  for (let i = 0; i < items.length; i += CONCURRENCY_LIMIT) {
+    const chunk = items.slice(i, i + CONCURRENCY_LIMIT);
+    const settledPromises = await Promise.allSettled(chunk.map(processorFn));
+
+    for (let j = 0; j < settledPromises.length; j++) {
+      const result = settledPromises[j];
+      if (result?.status === "fulfilled") {
+        results.push(result.value);
+      } else if (result?.status === "rejected") {
+        // Log the error for this item but continue processing others
+        log.error(`${errorMessagePrefix}:`, chunk[j], result.reason);
+        // Continue with other items instead of failing completely
+      }
     }
   }
 
