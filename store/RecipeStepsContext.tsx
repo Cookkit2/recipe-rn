@@ -164,30 +164,33 @@ export function RecipeStepsProvider({
 
             const now = Date.now();
 
-            for (const ingredient of ingredients) {
-              // Find matching stock for this specific ingredient using the facade
-              const matchingStocks = await database.getStockByIngredient(ingredient.name);
+            // ⚡ Bolt Performance Optimization:
+            // Use Promise.all to fetch all matching stocks concurrently instead of a sequential for...of loop.
+            // This prevents an N+1 query bottleneck. Database writes are kept in a sequential loop below
+            // to avoid lock contention.
+            const stockMatches = await Promise.all(
+              ingredients.map(async (ingredient) => {
+                const matchingStocks = await database.getStockByIngredient(ingredient.name);
+                return {
+                  ingredient,
+                  exactMatch: matchingStocks.length > 0 ? matchingStocks[0] : null,
+                };
+              })
+            );
 
-              if (matchingStocks.length > 0) {
-                const exactMatch = matchingStocks[0];
-                if (exactMatch && exactMatch.quantity > 0) {
-                  // If the stock has an expiry date, record consumption
-                  // Get full stock model to check expiry
-                  const stockModel = await database.getStockById(exactMatch.id);
-                  if (stockModel && stockModel.expiryDate) {
-                    // Only track if it hasn't expired yet
-                    if (now <= stockModel.expiryDate.getTime()) {
-                      await database.recordConsumption(
-                        stockModel.id,
-                        Math.min(ingredient.quantity, exactMatch.quantity),
-                        {
-                          recipeId: baseRecipeId,
-                          consumedDate: now,
-                          isBeforeExpiry: true,
-                        }
-                      );
+            for (const { ingredient, exactMatch } of stockMatches) {
+              if (exactMatch && exactMatch.quantity > 0 && exactMatch.expiryDate) {
+                // Only track if it hasn't expired yet
+                if (now <= exactMatch.expiryDate.getTime()) {
+                  await database.recordConsumption(
+                    exactMatch.id,
+                    Math.min(ingredient.quantity, exactMatch.quantity),
+                    {
+                      recipeId: baseRecipeId,
+                      consumedDate: now,
+                      isBeforeExpiry: true,
                     }
-                  }
+                  );
                 }
               }
             }
