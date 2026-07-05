@@ -15,6 +15,7 @@ export interface RecipeStep {
   relatedIngredientIds: string[];
 }
 
+// Represents a single page in the recipe step carousel
 export type StepPageData = {
   type: "ingredients" | "step" | "congratulations";
   step: number;

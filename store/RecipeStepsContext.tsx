@@ -6,7 +6,7 @@ import type { ICarouselInstance } from "react-native-reanimated-carousel";
 import type { TextLoopRef } from "~/components/ui/TextLoop";
 import type { Recipe, RecipeIngredient } from "~/types/Recipe";
 import type { PantryItem } from "~/types/PantryItem";
-import type { StepPageData } from "~/app/recipes/[recipeId]/steps";
+import type { StepPageData } from "~/types/Recipe";
 import { storage, database } from "~/data";
 import {
   RECIPE_COOKED_KEY,
