@@ -23,7 +23,7 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { AppState, type AppStateStatus } from "react-native";
 import { voiceCookingService } from "~/utils/voice-cooking";
 import type { Recipe } from "~/types/Recipe";
-import type { StepPageData } from "~/app/recipes/[recipeId]/steps";
+import type { StepPageData } from "~/types/Recipe";
 import { log } from "~/utils/logger";
 
 /**

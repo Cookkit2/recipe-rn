@@ -33,33 +33,7 @@ export const baseIngredientApi = {
 
     if (!baseIngredient) {
       // Try to find by synonym
-      const { data: synonymData, error: synonymError } = await supabase!
-        .from("ingredient_synonym")
-        .select("base_ingredient_id")
-        .ilike("synonym", name)
-        .single();
-
-      if (synonymError && synonymError.code !== "PGRST116") {
-        throw synonymError;
-      }
-
-      if (!synonymData || !synonymData.base_ingredient_id) {
-        return null; // No match found
-      }
-
-      // Fetch the base ingredient by ID from synonym match
-      const { data: ingredientFromSynonym, error: ingredientError } = await supabase!
-        .from("base_ingredient")
-        .select("*")
-        .eq("id", synonymData.base_ingredient_id)
-        .single();
-
-      if (ingredientError) throw ingredientError;
-
-      if (!ingredientFromSynonym) return null;
-
-      // Fetch synonyms and categories for this ingredient
-      return await fetchRelatedData(ingredientFromSynonym.id);
+      return await findIngredientBySynonym(name);
     }
 
     // Fetch synonyms and categories
@@ -96,49 +70,8 @@ export const baseIngredientApi = {
     // Note: Using OR query for case-insensitive matching as .in() doesn't support ilike
     // Input is sanitized to prevent SQL injection
     if (missingNames.length > 0) {
-      // Sanitize input: remove dangerous characters and limit length
-      const sanitizedNames = missingNames
-        .map((n) => n.trim().substring(0, 100))
-        .filter((n) => n.length > 0 && /^[a-zA-Z0-9\s\-']+$/.test(n));
-
-      if (sanitizedNames.length === 0) {
-        return resultMap;
-      }
-
-      // Execute parameterized queries concurrently
-      const synonymPromises = sanitizedNames.map((n) =>
-        supabase!
-          .from("ingredient_synonym")
-          .select("base_ingredient_id, synonym")
-          .ilike("synonym", n)
-      );
-
-      const synonymResults = await Promise.all(synonymPromises);
-
-      const synonymMatches = synonymResults
-        .filter((r) => !r.error && r.data)
-        .flatMap((r) => r.data || []);
-
-      if (synonymMatches.length > 0) {
-        const synonymIngredientIds = [
-          ...new Set(
-            synonymMatches
-              .map((s) => s.base_ingredient_id)
-              .filter((id): id is string => id !== null)
-          ),
-        ];
-
-        if (synonymIngredientIds.length > 0) {
-          const { data: ingredientsFromSynonyms, error: ingredientsError } = await supabase!
-            .from("base_ingredient")
-            .select("*")
-            .in("id", synonymIngredientIds);
-
-          if (!ingredientsError && ingredientsFromSynonyms) {
-            allMatchedIngredients = [...allMatchedIngredients, ...ingredientsFromSynonyms];
-          }
-        }
-      }
+      const ingredientsFromSynonyms = await fetchIngredientsBySynonyms(missingNames);
+      allMatchedIngredients = [...allMatchedIngredients, ...ingredientsFromSynonyms];
     }
 
     if (allMatchedIngredients.length === 0) return resultMap;
@@ -155,54 +88,10 @@ export const baseIngredientApi = {
     const ingredientIds = uniqueIngredients.map((ing) => ing.id);
 
     // Fetch relations for all matched ingredients
-    const [
-      { data: allSynonyms, error: synonymError },
-      { data: allCategoryLinks, error: categoryError },
-    ] = await Promise.all([
-      supabase!
-        .from("ingredient_synonym")
-        .select("id, synonym, base_ingredient_id")
-        .in("base_ingredient_id", ingredientIds),
-      supabase!
-        .from("pivot_ingredient_category")
-        .select("ingredient_category(id, name), ingredient_id")
-        .in("ingredient_id", ingredientIds),
-    ]);
-
-    if (synonymError) throw synonymError;
-    if (categoryError) throw categoryError;
+    const { allSynonyms, allCategoryLinks } = await fetchBatchRelatedData(ingredientIds);
 
     // Build the result
-    for (const ingredient of uniqueIngredients) {
-      const ingredientSynonyms = (allSynonyms || [])
-        .filter((s) => s.base_ingredient_id === ingredient.id)
-        .map((s) => ({ id: s.id, synonym: s.synonym }));
-
-      const ingredientCategoryLinks = (allCategoryLinks || []).filter(
-        (c) => c.ingredient_id === ingredient.id
-      );
-
-      const categories = ingredientCategoryLinks
-        .map((link) => link.ingredient_category)
-        .filter((c: any): c is { id: string; name: string } => c !== null);
-
-      const fullIngredient: BaseIngredientWithRelations = {
-        ...ingredient,
-        synonyms: ingredientSynonyms,
-        categories: categories,
-      };
-
-      // Map it back to the requested names it could match
-      // It matches its own name
-      resultMap.set((ingredient.name || "").toLowerCase(), fullIngredient);
-
-      // And it matches any of its synonyms
-      for (const syn of ingredientSynonyms) {
-        resultMap.set((syn.synonym || "").toLowerCase(), fullIngredient);
-      }
-    }
-
-    return resultMap;
+    return buildIngredientResultMap(uniqueIngredients, allSynonyms, allCategoryLinks);
   },
 
   getAllBaseIngredients: async () => {
@@ -268,4 +157,147 @@ async function fetchRelatedData(baseIngredientId: string): Promise<BaseIngredien
       (c: { id: string; name: string } | null): c is { id: string; name: string } => c !== null
     ),
   };
+}
+
+/**
+ * Try to find a base ingredient by synonym
+ */
+async function findIngredientBySynonym(name: string): Promise<BaseIngredientWithRelations | null> {
+  const { data: synonymData, error: synonymError } = await supabase!
+    .from("ingredient_synonym")
+    .select("base_ingredient_id")
+    .ilike("synonym", name)
+    .single();
+
+  if (synonymError && synonymError.code !== "PGRST116") {
+    throw synonymError;
+  }
+
+  if (!synonymData || !synonymData.base_ingredient_id) {
+    return null; // No match found
+  }
+
+  // Fetch the base ingredient by ID from synonym match
+  const { data: ingredientFromSynonym, error: ingredientError } = await supabase!
+    .from("base_ingredient")
+    .select("*")
+    .eq("id", synonymData.base_ingredient_id)
+    .single();
+
+  if (ingredientError) throw ingredientError;
+
+  if (!ingredientFromSynonym) return null;
+
+  // Fetch synonyms and categories for this ingredient
+  return await fetchRelatedData(ingredientFromSynonym.id);
+}
+
+/**
+ * Fetch multiple base ingredients by a list of missing names
+ */
+async function fetchIngredientsBySynonyms(missingNames: string[]) {
+  // Sanitize input: remove dangerous characters and limit length
+  const sanitizedNames = missingNames
+    .map((n) => n.trim().substring(0, 100))
+    .filter((n) => n.length > 0 && /^[a-zA-Z0-9\s\-']+$/.test(n));
+
+  if (sanitizedNames.length === 0) {
+    return [];
+  }
+
+  // Execute parameterized queries concurrently
+  const synonymPromises = sanitizedNames.map((n) =>
+    supabase!.from("ingredient_synonym").select("base_ingredient_id, synonym").ilike("synonym", n)
+  );
+
+  const synonymResults = await Promise.all(synonymPromises);
+
+  const synonymMatches = synonymResults
+    .filter((r) => !r.error && r.data)
+    .flatMap((r) => r.data || []);
+
+  if (synonymMatches.length > 0) {
+    const synonymIngredientIds = [
+      ...new Set(
+        synonymMatches.map((s) => s.base_ingredient_id).filter((id): id is string => id !== null)
+      ),
+    ];
+
+    if (synonymIngredientIds.length > 0) {
+      const { data: ingredientsFromSynonyms, error: ingredientsError } = await supabase!
+        .from("base_ingredient")
+        .select("*")
+        .in("id", synonymIngredientIds);
+
+      if (!ingredientsError && ingredientsFromSynonyms) {
+        return ingredientsFromSynonyms;
+      }
+    }
+  }
+  return [];
+}
+
+/**
+ * Fetch relations (synonyms and categories) for a batch of ingredient IDs
+ */
+async function fetchBatchRelatedData(ingredientIds: string[]) {
+  const [
+    { data: allSynonyms, error: synonymError },
+    { data: allCategoryLinks, error: categoryError },
+  ] = await Promise.all([
+    supabase!
+      .from("ingredient_synonym")
+      .select("id, synonym, base_ingredient_id")
+      .in("base_ingredient_id", ingredientIds),
+    supabase!
+      .from("pivot_ingredient_category")
+      .select("ingredient_category(id, name), ingredient_id")
+      .in("ingredient_id", ingredientIds),
+  ]);
+
+  if (synonymError) throw synonymError;
+  if (categoryError) throw categoryError;
+
+  return { allSynonyms: allSynonyms || [], allCategoryLinks: allCategoryLinks || [] };
+}
+
+/**
+ * Build the result map for batch base ingredient lookups
+ */
+function buildIngredientResultMap(
+  uniqueIngredients: any[],
+  allSynonyms: any[],
+  allCategoryLinks: any[]
+): Map<string, BaseIngredientWithRelations> {
+  const resultMap = new Map<string, BaseIngredientWithRelations>();
+  for (const ingredient of uniqueIngredients) {
+    const ingredientSynonyms = allSynonyms
+      .filter((s) => s.base_ingredient_id === ingredient.id)
+      .map((s) => ({ id: s.id, synonym: s.synonym }));
+
+    const ingredientCategoryLinks = allCategoryLinks.filter(
+      (c) => c.ingredient_id === ingredient.id
+    );
+
+    const categories = ingredientCategoryLinks
+      .map((link) => link.ingredient_category)
+      .filter((c: any): c is { id: string; name: string } => c !== null);
+
+    const fullIngredient: BaseIngredientWithRelations = {
+      ...ingredient,
+      synonyms: ingredientSynonyms,
+      categories: categories,
+    };
+
+    // Map it back to the requested names it could match
+    // It matches its own name
+    resultMap.set((ingredient.name || "").toLowerCase(), fullIngredient);
+
+    // And it matches any of its synonyms
+    for (const syn of ingredientSynonyms) {
+      resultMap.set((syn.synonym || "").toLowerCase(), fullIngredient);
+    }
+  }
+
+  return resultMap;
 }

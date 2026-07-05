@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from "react";
 import { View, Dimensions } from "react-native";
 import Animated, {
   Easing,
+  type SharedValue,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -36,6 +37,83 @@ const avatarSizeOuter = size * 0.16;
 
 const innerRadius = size * 0.27;
 const avatarSizeInner = size * 0.12;
+
+export function usePlacements(
+  images: Array<{ id: string; url: any }>,
+  magicMultiplier1: number,
+  magicMultiplier2: number,
+  magicAngle: number
+) {
+  return useMemo(() => {
+    const n = images.length || 1;
+    return images.map((img, idx) => {
+      // Create varied spacing instead of even distribution
+      const baseAngle = (idx / n) * Math.PI * 2;
+      const randomOffset = Math.sin((idx + 1) * magicMultiplier1) * magicMultiplier2 * magicAngle;
+      const angle = baseAngle + randomOffset;
+      return { ...img, angle };
+    });
+  }, [images, magicMultiplier1, magicMultiplier2, magicAngle]);
+}
+
+export interface Placement {
+  id: string;
+  url: any;
+  angle: number;
+}
+
+interface OrbitingAvatarsProps {
+  placements: Placement[];
+  radius: number;
+  avatarSize: number;
+  center: number;
+  orbitStyle: any;
+  rotationDegrees: SharedValue<number>;
+  size: number;
+  imageSize: number;
+}
+
+export function OrbitingAvatars({
+  placements,
+  radius,
+  avatarSize,
+  center,
+  orbitStyle,
+  rotationDegrees,
+  size,
+  imageSize,
+}: OrbitingAvatarsProps) {
+  return (
+    <Animated.View className="absolute inset-0" style={[orbitStyle, { width: size, height: size }]}>
+      {placements.map((p, i) => {
+        const x = center + radius * Math.cos(p.angle) - avatarSize / 2;
+        const y = center + radius * Math.sin(p.angle) - avatarSize / 2;
+        return (
+          <View
+            key={p.id}
+            className="absolute rounded-full"
+            style={[
+              {
+                width: avatarSize,
+                height: avatarSize,
+                left: x,
+                top: y,
+              },
+            ]}
+          >
+            <RotationCard
+              index={i}
+              total={placements.length}
+              counterRotationValue={rotationDegrees}
+            >
+              <OutlinedImage source={p.url} size={imageSize} />
+            </RotationCard>
+          </View>
+        );
+      })}
+    </Animated.View>
+  );
+}
 
 export default function DisplayCards() {
   const rotate = useSharedValue(0);
@@ -74,28 +152,9 @@ export default function DisplayCards() {
   });
 
   // Precompute angle placements for inner avatars with varied spacing
-  const innerPlacements = useMemo(() => {
-    const n = innerImages.length || 1;
-    return innerImages.map((img, idx) => {
-      // Create varied spacing instead of even distribution
-      const baseAngle = (idx / n) * Math.PI * 2;
-      const randomOffset = Math.sin((idx + 1) * 17.3) * 0.5 * (Math.PI / 6); // Random offset up to 30 degrees
-      const angle = baseAngle + randomOffset;
-      return { ...img, angle };
-    });
-  }, []);
-
+  const innerPlacements = usePlacements(innerImages, 17.3, 0.5, Math.PI / 6);
   // Precompute angle placements for outer avatars with varied spacing
-  const placements = useMemo(() => {
-    const n = outerImages.length || 1;
-    return outerImages.map((img, idx) => {
-      // Create varied spacing instead of even distribution
-      const baseAngle = (idx / n) * Math.PI * 2;
-      const randomOffset = Math.sin((idx + 1) * 23.7) * 0.7 * (Math.PI / 4); // Random offset up to 45 degrees
-      const angle = baseAngle + randomOffset;
-      return { ...img, angle };
-    });
-  }, []);
+  const placements = usePlacements(outerImages, 23.7, 0.7, Math.PI / 4);
 
   return (
     <View className="justify-center self-center" style={[{ width: size, height: size }]}>
@@ -141,69 +200,27 @@ export default function DisplayCards() {
       />
 
       {/* Rotating Avatars */}
-      <Animated.View
-        className="absolute inset-0"
-        style={[orbitStyle, { width: size, height: size }]}
-      >
-        {placements.map((p, i) => {
-          const x = center + outerRadius * Math.cos(p.angle) - avatarSizeOuter / 2;
-          const y = center + outerRadius * Math.sin(p.angle) - avatarSizeOuter / 2;
-          return (
-            <View
-              key={p.id}
-              className="absolute rounded-full"
-              style={[
-                {
-                  width: avatarSizeOuter,
-                  height: avatarSizeOuter,
-                  left: x,
-                  top: y,
-                },
-              ]}
-            >
-              <RotationCard
-                index={i}
-                total={placements.length}
-                counterRotationValue={rotationDegrees}
-              >
-                <OutlinedImage source={p.url} size={72} />
-              </RotationCard>
-            </View>
-          );
-        })}
-      </Animated.View>
+      <OrbitingAvatars
+        placements={placements}
+        radius={outerRadius}
+        avatarSize={avatarSizeOuter}
+        center={center}
+        orbitStyle={orbitStyle}
+        rotationDegrees={rotationDegrees}
+        size={size}
+        imageSize={72}
+      />
 
-      <Animated.View
-        className="absolute inset-0"
-        style={[orbitStyle, { width: size, height: size }]}
-      >
-        {innerPlacements.map((p, i) => {
-          const x = center + innerRadius * Math.cos(p.angle) - avatarSizeInner / 2;
-          const y = center + innerRadius * Math.sin(p.angle) - avatarSizeInner / 2;
-          return (
-            <View
-              key={p.id}
-              className="absolute rounded-full"
-              style={[
-                {
-                  width: avatarSizeOuter,
-                  height: avatarSizeOuter,
-                  left: x,
-                  top: y,
-                },
-              ]}
-            >
-              <RotationCard
-                index={i}
-                total={innerPlacements.length}
-                counterRotationValue={rotationDegrees}
-              >
-                <OutlinedImage source={p.url} size={64} />
-              </RotationCard>
-            </View>
-          );
-        })}
-      </Animated.View>
+      <OrbitingAvatars
+        placements={innerPlacements}
+        radius={innerRadius}
+        avatarSize={avatarSizeOuter}
+        center={center}
+        orbitStyle={orbitStyle}
+        rotationDegrees={rotationDegrees}
+        size={size}
+        imageSize={64}
+      />
     </View>
   );
 }

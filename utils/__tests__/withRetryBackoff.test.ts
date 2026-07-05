@@ -1,11 +1,12 @@
 import { withRetryBackoff, computeBackoffDelay, defaultIsTerminalError } from "../withRetryBackoff";
+import * as Crypto from "expo-crypto";
 
 describe("computeBackoffDelay", () => {
   it("grows exponentially with attempt and is capped by maxDelayMs", () => {
     const base = 500;
-    // Mock Math.random to the upper jitter bound (0.5 of the half) so the
+    // Mock Crypto.getRandomBytes to the upper bound so the
     // deterministic half dominates the assertion.
-    const randomSpy = jest.spyOn(Math, "random").mockReturnValue(1);
+    const randomSpy = jest.spyOn(Crypto, "getRandomBytes").mockReturnValue(new Uint8Array([255]));
 
     // attempt 1: exp = min(500*2^0, cap)=500; half=250 + jitter[0,250) -> <= 500
     const d1 = computeBackoffDelay(1, base, 30_000);
@@ -21,16 +22,16 @@ describe("computeBackoffDelay", () => {
   });
 
   it("never exceeds maxDelayMs", () => {
-    jest.spyOn(Math, "random").mockReturnValue(1);
+    jest.spyOn(Crypto, "getRandomBytes").mockReturnValue(new Uint8Array([255]));
     const capped = computeBackoffDelay(50, 500, 1000);
     expect(capped).toBeLessThanOrEqual(1000);
-    jest.spyOn(Math, "random").mockRestore();
+    jest.spyOn(Crypto, "getRandomBytes").mockRestore();
   });
 
   it("is always non-negative", () => {
-    jest.spyOn(Math, "random").mockReturnValue(0);
+    jest.spyOn(Crypto, "getRandomBytes").mockReturnValue(new Uint8Array([0]));
     expect(computeBackoffDelay(1, 500, 30_000)).toBeGreaterThanOrEqual(0);
-    jest.spyOn(Math, "random").mockRestore();
+    jest.spyOn(Crypto, "getRandomBytes").mockRestore();
   });
 });
 
@@ -56,6 +57,13 @@ describe("defaultIsTerminalError", () => {
 });
 
 describe("withRetryBackoff", () => {
+  beforeEach(() => {
+    jest.spyOn(Crypto, "getRandomBytes").mockReturnValue(new Uint8Array([128]));
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
   const noSleep = async () => {}; // tests never actually wait
 
   it("resolves on the first success without retrying", async () => {

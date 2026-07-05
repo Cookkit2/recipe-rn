@@ -65,3 +65,7 @@
 **Vulnerability:** Generating IDs using `Math.random()` (e.g., `Math.random().toString(36).slice(2, 8)`) is not cryptographically secure and can result in predictable IDs or collisions.
 **Learning:** In a security context or when uniqueness is critical (like for a sync queue ID), `Math.random()` should be avoided.
 **Prevention:** Use a cryptographically secure pseudo-random number generator (CSPRNG) such as `Crypto.randomUUID()` from the `expo-crypto` library to generate robust, unpredictable unique identifiers.
+## 2026-06-28 - Replace Math.random with Crypto.getRandomBytes for Exponential Backoff Jitter
+**Vulnerability:** Using `Math.random()` to calculate the jitter in exponential backoff algorithms results in predictable network delays and can increase collisions if multiple clients retry simultaneously.
+**Learning:** `Math.random()` is not cryptographically secure and the predictability can make retry algorithms less resilient to thundering-herd scenarios.
+**Prevention:** Use a cryptographically secure pseudo-random number generator (CSPRNG) such as `Crypto.getRandomBytes()` from the `expo-crypto` library to calculate the random component for jitter calculation.

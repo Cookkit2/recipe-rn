@@ -2,7 +2,6 @@ import React, { useMemo, type JSX } from "react";
 import { View, type LayoutChangeEvent } from "react-native";
 import Animated from "react-native-reanimated";
 import useSelectionRing from "~/hooks/animation/useSelectionRing";
-import { cn } from "~/lib/utils";
 import { SharedGroupButton } from "./SharedGroupButton";
 
 const COLUMN_CLASS_MAP = {

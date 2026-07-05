@@ -28,10 +28,35 @@ import useColors from "~/hooks/useColor";
 
 type PermissionState = "unknown" | "granted" | "denied";
 
-export default function VoicePantryCreate() {
+function PermissionDeniedFallback() {
   const router = useRouter();
   const colors = useColors();
   const { top, bottom } = useSafeAreaInsets();
+  return (
+    <View
+      className="flex-1 bg-background items-center justify-center px-6"
+      style={{ paddingTop: top, paddingBottom: bottom }}
+    >
+      <MicOff size={48} color={colors.mutedForeground} />
+      <H1 className="text-foreground mt-4 text-center">Microphone disabled</H1>
+      <P className="text-muted-foreground text-center mt-2">
+        To speak your fridge, enable microphone access in Settings. You can still add items one at a
+        time with the camera.
+      </P>
+      <View className="flex-row gap-3 mt-6">
+        <Button variant="default" onPress={() => router.push("/ingredient/create")}>
+          <H4 className="text-background font-urbanist font-semibold">Use camera</H4>
+        </Button>
+        <Button variant="secondary" onPress={() => router.back()}>
+          <H4 className="text-foreground font-urbanist font-semibold">Go back</H4>
+        </Button>
+      </View>
+    </View>
+  );
+}
+
+function useVoicePantryCreateLogic() {
+  const router = useRouter();
   const { pushVoiceCandidates } = useCreateIngredientStore();
 
   const [permission, setPermission] = useState<PermissionState>("unknown");
@@ -122,29 +147,20 @@ export default function VoicePantryCreate() {
     }
   }, [isListening, handleStart, handleReview]);
 
+  return { permission, isListening, transcript, isReviewing, handleToggle };
+}
+
+export default function VoicePantryCreate() {
+  const router = useRouter();
+  const colors = useColors();
+  const { top, bottom } = useSafeAreaInsets();
+
+  const { permission, isListening, transcript, isReviewing, handleToggle } =
+    useVoicePantryCreateLogic();
+
   // ---- Denied / unsupported fallback: hand off to manual camera entry ----
   if (permission === "denied") {
-    return (
-      <View
-        className="flex-1 bg-background items-center justify-center px-6"
-        style={{ paddingTop: top, paddingBottom: bottom }}
-      >
-        <MicOff size={48} color={colors.mutedForeground} />
-        <H1 className="text-foreground mt-4 text-center">Microphone disabled</H1>
-        <P className="text-muted-foreground text-center mt-2">
-          To speak your fridge, enable microphone access in Settings. You can still add items one at
-          a time with the camera.
-        </P>
-        <View className="flex-row gap-3 mt-6">
-          <Button variant="default" onPress={() => router.push("/ingredient/create")}>
-            <H4 className="text-background font-urbanist font-semibold">Use camera</H4>
-          </Button>
-          <Button variant="secondary" onPress={() => router.back()}>
-            <H4 className="text-foreground font-urbanist font-semibold">Go back</H4>
-          </Button>
-        </View>
-      </View>
-    );
+    return <PermissionDeniedFallback />;
   }
 
   return (

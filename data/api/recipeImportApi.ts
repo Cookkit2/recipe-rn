@@ -222,52 +222,15 @@ export const recipeImportApi = {
 
         log.info("YouTube Import: Recipe extracted:", analysisResult.recipe.title);
 
-        // Step 5: Save recipe to database
-        onStatusChange?.("generating-recipe");
-        log.info("YouTube Import: Saving recipe to database...");
         log.debug("YouTube Import: Recipe:", analysisResult.recipe);
 
-        const recipe = await this.saveRecipeToDatabase(
+        return await this._finalizeImport(
           analysisResult.recipe,
           normalizedUrl,
-          videoInfo.thumbnailUrl
+          "YouTube",
+          videoInfo.thumbnailUrl,
+          onStatusChange
         );
-
-        log.info("YouTube Import: Recipe saved with ID:", recipe.id);
-
-        // Step 6: Compare with pantry and generate shopping list
-        onStatusChange?.("comparing-pantry");
-        log.info("YouTube Import: Comparing with pantry...");
-
-        const shoppingList = await databaseFacade.getShoppingListForRecipe(recipe.id);
-
-        log.info(
-          "YouTube Import: Shopping list generated -",
-          shoppingList.missingIngredients.length,
-          "missing items"
-        );
-
-        // Complete!
-        onStatusChange?.("complete");
-        log.info("YouTube Import: Complete!");
-
-        return {
-          success: true,
-          recipe: {
-            id: recipe.id,
-            title: recipe.title,
-            description: recipe.description,
-            imageUrl: recipe.imageUrl,
-            prepMinutes: recipe.prepMinutes ?? 0,
-            cookMinutes: recipe.cookMinutes ?? 0,
-            difficultyStars: recipe.difficultyStars ?? 3,
-            servings: recipe.servings ?? 4,
-            sourceUrl: recipe.sourceUrl,
-            calories: recipe.calories,
-            tags: recipe.tags,
-          },
-          shoppingList,
-        };
       },
       "YouTube Import",
       onStatusChange
@@ -370,51 +333,13 @@ export const recipeImportApi = {
 
         log.info("Website Import: Recipe extracted:", generatedRecipe.title);
 
-        // Step 3: Save recipe to database
-        onStatusChange?.("generating-recipe");
-        log.info("Website Import: Saving recipe to database...");
-
-        const recipe = await this.saveRecipeToDatabase(
+        return await this._finalizeImport(
           generatedRecipe,
           url,
-          websiteContent.imageUrl
+          "Website",
+          websiteContent.imageUrl,
+          onStatusChange
         );
-
-        log.info("Website Import: Recipe saved with ID:", recipe.id);
-
-        // Step 4: Compare with pantry and generate shopping list
-        onStatusChange?.("comparing-pantry");
-        log.info("Website Import: Comparing with pantry...");
-
-        const shoppingList = await databaseFacade.getShoppingListForRecipe(recipe.id);
-
-        log.info(
-          "Website Import: Shopping list generated -",
-          shoppingList.missingIngredients.length,
-          "missing items"
-        );
-
-        // Complete!
-        onStatusChange?.("complete");
-        log.info("Website Import: Complete!");
-
-        return {
-          success: true,
-          recipe: {
-            id: recipe.id,
-            title: recipe.title,
-            description: recipe.description,
-            imageUrl: recipe.imageUrl,
-            prepMinutes: recipe.prepMinutes ?? 0,
-            cookMinutes: recipe.cookMinutes ?? 0,
-            difficultyStars: recipe.difficultyStars ?? 3,
-            servings: recipe.servings ?? 4,
-            sourceUrl: recipe.sourceUrl,
-            calories: recipe.calories,
-            tags: recipe.tags,
-          },
-          shoppingList,
-        };
       },
       "Website Import",
       onStatusChange
@@ -479,47 +404,13 @@ export const recipeImportApi = {
 
         log.info(`${platformName} Import: Recipe extracted:`, analysisResult.recipe.title);
 
-        // Step 3: Save recipe to database
-        onStatusChange?.("generating-recipe");
-        log.info(`${platformName} Import: Saving recipe to database...`);
-
-        const recipe = await this.saveRecipeToDatabase(analysisResult.recipe, url);
-
-        log.info(`${platformName} Import: Recipe saved with ID:`, recipe.id);
-
-        // Step 4: Compare with pantry and generate shopping list
-        onStatusChange?.("comparing-pantry");
-        log.info(`${platformName} Import: Comparing with pantry...`);
-
-        const shoppingList = await databaseFacade.getShoppingListForRecipe(recipe.id);
-
-        log.info(
-          `${platformName} Import: Shopping list generated -`,
-          shoppingList.missingIngredients.length,
-          "missing items"
+        return await this._finalizeImport(
+          analysisResult.recipe,
+          url,
+          platformName,
+          undefined,
+          onStatusChange
         );
-
-        // Complete!
-        onStatusChange?.("complete");
-        log.info(`${platformName} Import: Complete!`);
-
-        return {
-          success: true,
-          recipe: {
-            id: recipe.id,
-            title: recipe.title,
-            description: recipe.description,
-            imageUrl: recipe.imageUrl,
-            prepMinutes: recipe.prepMinutes ?? 0,
-            cookMinutes: recipe.cookMinutes ?? 0,
-            difficultyStars: recipe.difficultyStars ?? 3,
-            servings: recipe.servings ?? 4,
-            sourceUrl: recipe.sourceUrl,
-            calories: recipe.calories,
-            tags: recipe.tags,
-          },
-          shoppingList,
-        };
       },
       `${platformName} Import`,
       onStatusChange
@@ -530,6 +421,60 @@ export const recipeImportApi = {
     }
 
     return result.data;
+  },
+
+  /**
+   * Finalize the import process: saves recipe to DB, generates shopping list,
+   * and returns the formatted success result.
+   */
+  async _finalizeImport(
+    generatedRecipe: GeneratedRecipe,
+    sourceUrl: string,
+    platformName: string,
+    imageUrl: string | undefined,
+    onStatusChange?: (status: RecipeImportStatus) => void
+  ): Promise<YouTubeImportResult> {
+    // Step: Save recipe to database
+    onStatusChange?.("generating-recipe");
+    log.info(`${platformName} Import: Saving recipe to database...`);
+
+    const recipe = await this.saveRecipeToDatabase(generatedRecipe, sourceUrl, imageUrl);
+
+    log.info(`${platformName} Import: Recipe saved with ID:`, recipe.id);
+
+    // Step: Compare with pantry and generate shopping list
+    onStatusChange?.("comparing-pantry");
+    log.info(`${platformName} Import: Comparing with pantry...`);
+
+    const shoppingList = await databaseFacade.getShoppingListForRecipe(recipe.id);
+
+    log.info(
+      `${platformName} Import: Shopping list generated -`,
+      shoppingList.missingIngredients.length,
+      "missing items"
+    );
+
+    // Complete!
+    onStatusChange?.("complete");
+    log.info(`${platformName} Import: Complete!`);
+
+    return {
+      success: true,
+      recipe: {
+        id: recipe.id,
+        title: recipe.title,
+        description: recipe.description,
+        imageUrl: recipe.imageUrl,
+        prepMinutes: recipe.prepMinutes ?? 0,
+        cookMinutes: recipe.cookMinutes ?? 0,
+        difficultyStars: recipe.difficultyStars ?? 3,
+        servings: recipe.servings ?? 4,
+        sourceUrl: recipe.sourceUrl,
+        calories: recipe.calories,
+        tags: recipe.tags,
+      },
+      shoppingList,
+    };
   },
 
   /**

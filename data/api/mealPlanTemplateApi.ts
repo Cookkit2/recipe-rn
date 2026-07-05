@@ -44,6 +44,27 @@ export interface ApplyTemplateOptions {
   overwriteExisting?: boolean;
 }
 
+// Helper to map DB records to API models and safely parse JSON
+function mapTemplateRecordToData(template: any): MealPlanTemplateData {
+  let mealSlots: MealSlotTemplate[] = [];
+  try {
+    if (template.mealSlots) {
+      mealSlots = JSON.parse(template.mealSlots);
+    }
+  } catch (error) {
+    log.warn(`Failed to parse meal slots for template ${template.id}`);
+  }
+
+  return {
+    id: template.id,
+    name: template.name,
+    description: template.description,
+    mealSlots,
+    createdAt: template.createdAt,
+    updatedAt: template.updatedAt,
+  };
+}
+
 /**
  * Pure API functions for meal plan template operations
  */
@@ -78,14 +99,7 @@ export const mealPlanTemplateApi = {
 
       log.info("✅ Created meal plan template:", template.id);
 
-      return {
-        id: template.id,
-        name: template.name,
-        description: template.description,
-        mealSlots,
-        createdAt: template.createdAt,
-        updatedAt: template.updatedAt,
-      };
+      return mapTemplateRecordToData(template);
     } catch (error) {
       log.error("❌ Error creating meal plan template:", error);
       return null;
@@ -102,24 +116,7 @@ export const mealPlanTemplateApi = {
       const templateRepo = getMealPlanTemplateRepository();
       const templates = await templateRepo.getAllTemplates();
 
-      const templatesWithSlots: MealPlanTemplateData[] = templates.map((template) => {
-        let mealSlots: MealSlotTemplate[] = [];
-        try {
-          mealSlots = JSON.parse(template.mealSlots);
-        } catch (error) {
-          log.warn(`Failed to parse meal slots for template ${template.id}`);
-          mealSlots = [];
-        }
-
-        return {
-          id: template.id,
-          name: template.name,
-          description: template.description,
-          mealSlots,
-          createdAt: template.createdAt,
-          updatedAt: template.updatedAt,
-        };
-      });
+      const templatesWithSlots: MealPlanTemplateData[] = templates.map(mapTemplateRecordToData);
 
       log.info("✅ Fetched meal plan templates:", templatesWithSlots.length);
       return templatesWithSlots;
@@ -142,21 +139,7 @@ export const mealPlanTemplateApi = {
         return null;
       }
 
-      let mealSlots: MealSlotTemplate[] = [];
-      try {
-        mealSlots = JSON.parse(template.mealSlots);
-      } catch (error) {
-        log.warn(`Failed to parse meal slots for template ${template.id}`);
-      }
-
-      return {
-        id: template.id,
-        name: template.name,
-        description: template.description,
-        mealSlots,
-        createdAt: template.createdAt,
-        updatedAt: template.updatedAt,
-      };
+      return mapTemplateRecordToData(template);
     } catch (error) {
       log.error("❌ Error getting template by ID:", error);
       return null;
@@ -200,23 +183,8 @@ export const mealPlanTemplateApi = {
         return null;
       }
 
-      let finalMealSlots: MealSlotTemplate[] = [];
-      try {
-        finalMealSlots = JSON.parse(template.mealSlots);
-      } catch (error) {
-        log.warn(`Failed to parse meal slots for template ${template.id}`);
-      }
-
       log.info("✅ Updated meal plan template:", templateId);
-
-      return {
-        id: template.id,
-        name: template.name,
-        description: template.description,
-        mealSlots: finalMealSlots,
-        createdAt: template.createdAt,
-        updatedAt: template.updatedAt,
-      };
+      return mapTemplateRecordToData(template);
     } catch (error) {
       log.error("❌ Error updating meal plan template:", error);
       return null;
@@ -396,23 +364,7 @@ export const mealPlanTemplateApi = {
       const templateRepo = getMealPlanTemplateRepository();
       const templates = await templateRepo.searchTemplates(searchTerm);
 
-      return templates.map((template) => {
-        let mealSlots: MealSlotTemplate[] = [];
-        try {
-          mealSlots = JSON.parse(template.mealSlots);
-        } catch (error) {
-          log.warn(`Failed to parse meal slots for template ${template.id}`);
-        }
-
-        return {
-          id: template.id,
-          name: template.name,
-          description: template.description,
-          mealSlots,
-          createdAt: template.createdAt,
-          updatedAt: template.updatedAt,
-        };
-      });
+      return templates.map(mapTemplateRecordToData);
     } catch (error) {
       log.error("❌ Error searching templates:", error);
       return [];
