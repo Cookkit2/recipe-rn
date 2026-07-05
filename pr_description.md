@@ -1,0 +1,4 @@
+🎯 **What:** Extracted the tailored recipe data fetching logic and the step page array generation logic out of the `RecipeSteps` component into two new custom hooks (`useTailoredRecipe` and `useRecipeStepPages`). Replaced the local `StepPageData` definition in `steps.tsx` with the existing one from `types/Recipe.ts` and updated the imports across the codebase.
+💡 **Why:** The `RecipeSteps` component was too long and complex, mixing component rendering with data mapping and state management. Extracting this logic improves the maintainability and readability of the component.
+✅ **Verification:** Confirmed changes are safe by running the TypeScript compiler (`tsc --noEmit`), the linter (`bun run lint`), and the full Jest test suite (`bun run test`).
+✨ **Result:** The `RecipeSteps` component is now much shorter and easier to understand, delegating complex data operations to dedicated hooks.
