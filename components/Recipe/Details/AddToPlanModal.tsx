@@ -131,13 +131,23 @@ export default function AddToPlanModal({ recipeId }: AddToPlanModalProps) {
           <View className="flex-1 justify-end">
             <View className="bg-background rounded-t-3xl py-5 flex items-center shadow-md">
               <View className="w-full flex-row justify-between items-center border-b border-border pb-3 px-5">
-                <Pressable className="flex-1" onPress={() => setShowDatePicker(false)}>
+                <Pressable
+                  className="flex-1"
+                  onPress={() => setShowDatePicker(false)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Cancel date selection"
+                >
                   <P className="text-foreground/80">Cancel</P>
                 </Pressable>
                 <View className="flex-2 flex items-center justify-center">
                   <H4>Select Date</H4>
                 </View>
-                <Pressable className="flex-1 items-end" onPress={() => setShowDatePicker(false)}>
+                <Pressable
+                  className="flex-1 items-end"
+                  onPress={() => setShowDatePicker(false)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Confirm date selection"
+                >
                   <P className="text-foreground/80">Done</P>
                 </Pressable>
               </View>
@@ -224,7 +234,12 @@ export default function AddToPlanModal({ recipeId }: AddToPlanModalProps) {
             <View className="gap-1">
               <H4 className="font-urbanist-bold">Select Date</H4>
             </View>
-            <Pressable onPress={() => setShowDatePicker(true)} className="w-full">
+            <Pressable
+              onPress={() => setShowDatePicker(true)}
+              className="w-full"
+              accessibilityRole="button"
+              accessibilityLabel="Open date picker"
+            >
               <View className="flex-row items-center gap-3">
                 <CalendarIcon size={18} className="text-muted-foreground" />
                 <P className="text-lg font-urbanist-semibold text-foreground">
