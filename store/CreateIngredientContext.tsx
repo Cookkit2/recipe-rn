@@ -8,14 +8,20 @@ import { titleCase } from "~/utils/text-formatter";
 import * as Crypto from "expo-crypto";
 import type { Prettify } from "~/utils/type-prettier";
 import { log } from "~/utils/logger";
+import { CONFIDENCE_REVIEW_THRESHOLD } from "~/constants/recognition";
 
 import { type BaseIngredientWithRelations } from "~/data/supabase-api/BaseIngredientApi";
 
 // Cache for base ingredients to avoid redundant API calls
 const baseIngredientCache = new Map<string, BaseIngredientWithRelations | null>();
 
-// Processing status for items being scanned (local to this context)
-export type ProcessingStatus = "processing" | "classifying" | "failed";
+// Processing status for items being scanned (local to this context).
+// `needs_review` is set when the recognition layer returns a low-confidence
+// result (below CONFIDENCE_REVIEW_THRESHOLD). It is distinct from a hard
+// failure: the item still appears with the AI's best guess so the user can
+// correct it inline, rather than silently entering the pantry. See issue #728
+// and the SnapChef recognition-bottleneck finding [F4].
+export type ProcessingStatus = "processing" | "classifying" | "failed" | "needs_review";
 
 // Extended PantryItem type for the creation flow with processing state
 export type CreatePantryItem = Prettify<
@@ -24,8 +30,22 @@ export type CreatePantryItem = Prettify<
     imagePath?: string; // Original image path for processing/retry
     framePosition?: { x: number; y: number }; // Focus point for segmentation
     error?: string; // Error message if processing failed
+    confidence?: number; // Recognition confidence (0.0-1.0); low values flag needs_review
   }
 >;
+
+/**
+ * Decide the processing status from a recognition confidence score.
+ * Below the threshold the item is flagged for review; at/above it flows
+ * through unchanged (status cleared). Exported for unit testing.
+ */
+export const statusForConfidence = (
+  confidence: number | undefined,
+  threshold: number = CONFIDENCE_REVIEW_THRESHOLD
+): ProcessingStatus | undefined => {
+  if (confidence === undefined) return undefined;
+  return confidence < threshold ? "needs_review" : undefined;
+};
 
 interface CreateIngredientContextType {
   processPantryItems: CreatePantryItem[];
@@ -38,6 +58,14 @@ interface CreateIngredientContextType {
   removeItem: (id: string) => void;
   retryItem: (id: string) => void;
   clearFailedItems: () => void;
+  // Apply a user correction to a needs_review item and clear the review flag,
+  // following the existing immutability pattern (spread, no mutation).
+  confirmCorrectedItem: (id: string, patch: Partial<CreatePantryItem>) => void;
+  // Voice-dictation batch entry (#721): merge parsed voice candidates into the
+  // processing list. Camera-origin items are preserved; voice items skip the
+  // Skia pipeline and arrive with status undefined so confirmation.tsx treats
+  // them as eligible for save (same as a finished camera item).
+  pushVoiceCandidates: (candidates: CreatePantryItem[]) => void;
 }
 
 const CreateIngredientContext = createContext<CreateIngredientContextType | null>(null);
@@ -149,6 +177,11 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
         // By default put 5 days expiry
         const expiryDate = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000);
 
+        // Low-confidence recognitions are flagged for review rather than
+        // silently committed. High-confidence items flow through unchanged
+        // (status cleared) — no extra taps for the common case.
+        const nextStatus = statusForConfidence(content.confidence);
+
         // Step 5: Update with classification results
         setProcessPantryItems((prev) =>
           prev.map((i) =>
@@ -159,7 +192,8 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
                   quantity: content.quantity,
                   unit: content.unit,
                   expiry_date: expiryDate,
-                  status: undefined,
+                  confidence: content.confidence,
+                  status: nextStatus,
                   imagePath: undefined,
                   framePosition: undefined,
                 }
@@ -293,6 +327,15 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
     setProcessPantryItems((prev) => prev.filter((item) => item.status !== "failed"));
   }, []);
 
+  // Apply a user correction to a needs_review item and clear the review flag.
+  // The corrected item remains in processPantryItems and is now eligible for
+  // save (status undefined). Follows the existing immutability pattern.
+  const confirmCorrectedItem = useCallback((id: string, patch: Partial<CreatePantryItem>) => {
+    setProcessPantryItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, ...patch, status: undefined } : item))
+    );
+  }, []);
+
   const updateProcessPantryItems = useCallback((currentItem: PantryItem) => {
     setProcessPantryItems((prev) =>
       prev.map((item) => (item.id === currentItem.id ? currentItem : item))
@@ -349,6 +392,39 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
     setProcessPantryItems((prev) => prev.filter((item) => item.id !== id));
   }, []);
 
+  // Merge voice-dictated candidates into the processing list. Existing
+  // camera-origin items are preserved untouched. Duplicates (same normalized
+  // name) merge by summing quantities when units match; otherwise the new
+  // candidate is appended so the user can resolve it in the confirmation sheet.
+  const pushVoiceCandidates = useCallback((candidates: CreatePantryItem[]) => {
+    if (candidates.length === 0) return;
+
+    setProcessPantryItems((prev) => {
+      const next = [...prev];
+
+      for (const candidate of candidates) {
+        const key = candidate.name.toLowerCase();
+        const existingIdx = next.findIndex(
+          (item) => item.name.toLowerCase() === key && item.unit === candidate.unit
+        );
+
+        if (existingIdx >= 0) {
+          const existing = next[existingIdx];
+          if (existing) {
+            next[existingIdx] = {
+              ...existing,
+              quantity: existing.quantity + candidate.quantity,
+            };
+          }
+        } else {
+          next.push(candidate);
+        }
+      }
+
+      return next;
+    });
+  }, []);
+
   return (
     <CreateIngredientContext.Provider
       value={{
@@ -361,6 +437,8 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
         removeItem,
         retryItem,
         clearFailedItems,
+        confirmCorrectedItem,
+        pushVoiceCandidates,
       }}
     >
       {children}

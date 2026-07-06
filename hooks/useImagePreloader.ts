@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Image } from "expo-image";
 
-const PREFETCH_BATCH_SIZE = 8;
+const DEFAULT_PREFETCH_BATCH_SIZE = 8;
 const DEFAULT_DELAY_MS = 100;
 
 function scheduleIdleTask(task: () => void, delayMs?: number) {
@@ -28,7 +28,7 @@ function isValidUrl(url: string): boolean {
   if (!url || typeof url !== "string") return false;
   const trimmed = url.trim();
   if (!trimmed) return false;
-  return trimmed.startsWith("http://") || trimmed.startsWith("https://");
+  return trimmed.startsWith("https://");
 }
 
 function dedupe(urls: string[]): string[] {
@@ -42,6 +42,18 @@ export interface UseImagePreloaderOptions {
   priority?: "low" | "normal" | "high";
   /** Cache policy for prefetched images. */
   cachePolicy?: "disk" | "memory-disk";
+  /**
+   * Max concurrent `Image.prefetch` calls per batch. Lower this on low-tier
+   * devices to avoid saturating the JS thread / network. Defaults to 8 (the
+   * historical module-level value).
+   */
+  concurrency?: number;
+  /**
+   * Gate prefetch on connectivity. When `false`, prefetch is skipped entirely
+   * (no network round-trips) — callers wire this from a connectivity hook so
+   * offline sessions do not queue doomed prefetches. Defaults to `true`.
+   */
+  enabled?: boolean;
   onComplete?: () => void;
   onError?: (error: Error) => void;
 }
@@ -51,6 +63,8 @@ export function useImagePreloader(options: UseImagePreloaderOptions = {}) {
     delay = DEFAULT_DELAY_MS,
     priority = "low",
     cachePolicy = "memory-disk",
+    concurrency = DEFAULT_PREFETCH_BATCH_SIZE,
+    enabled = true,
     onComplete,
     onError,
   } = options;
@@ -68,14 +82,22 @@ export function useImagePreloader(options: UseImagePreloaderOptions = {}) {
 
   const prefetch = useCallback(
     (urls: string | string[]) => {
+      // Skip prefetch entirely when the caller reports offline (or otherwise
+      // disabled). Avoids queueing prefetches that will fail on a dead network.
+      if (!enabled) return Promise.resolve(true);
+
       const list = Array.isArray(urls) ? urls : [urls];
       const valid = dedupe(list);
       if (valid.length === 0) return Promise.resolve(true);
 
+      // Clamp concurrency to >= 1 so an explicit 0 never produces an empty
+      // (infinite-loop) batch slice.
+      const batchSize = Math.max(1, concurrency);
+
       const doPrefetch = async () => {
         let allOk = true;
-        for (let i = 0; i < valid.length && mountedRef.current; i += PREFETCH_BATCH_SIZE) {
-          const batch = valid.slice(i, i + PREFETCH_BATCH_SIZE);
+        for (let i = 0; i < valid.length && mountedRef.current; i += batchSize) {
+          const batch = valid.slice(i, i + batchSize);
           const ok = await Image.prefetch(batch, { cachePolicy });
           if (!ok) allOk = false;
         }
@@ -111,7 +133,7 @@ export function useImagePreloader(options: UseImagePreloaderOptions = {}) {
 
       return Promise.resolve();
     },
-    [delay, priority, cachePolicy, onComplete, onError]
+    [delay, priority, cachePolicy, concurrency, enabled, onComplete, onError]
   );
 
   return { prefetch, isPreloading, error };

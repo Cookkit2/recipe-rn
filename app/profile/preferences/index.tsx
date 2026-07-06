@@ -1,6 +1,5 @@
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MilkIcon, SaladIcon, SpeakerIcon } from "lucide-uniwind";
 import { useRouter } from "expo-router";
 import ListButton from "~/components/Shared/ListButton";

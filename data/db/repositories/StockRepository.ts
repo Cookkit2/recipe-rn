@@ -1,5 +1,6 @@
 import { Q } from "@nozbe/watermelondb";
 import Stock, { type StockData } from "../models/Stock";
+import type IngredientSynonym from "../models/IngredientSynonym";
 import { BaseRepository, type SearchOptions } from "./BaseRepository";
 
 export interface StockSearchOptions extends SearchOptions {
@@ -145,7 +146,7 @@ export class StockRepository extends BaseRepository<Stock> {
   // Get stock by synonym (for recipe matching)
   async getStockBySynonym(synonym: string): Promise<Stock[]> {
     const synonyms = await this.collection.database
-      .get("ingredient_synonym")
+      .get<IngredientSynonym>("ingredient_synonym")
       .query(Q.where("synonym", Q.eq(synonym.toLowerCase())))
       .fetch();
 
@@ -235,10 +236,10 @@ export class StockRepository extends BaseRepository<Stock> {
       }
 
       if (options?.synonyms && options.synonyms.length > 0) {
-        const synonymRepo = this.collection.database.get("ingredient_synonym");
+        const synonymRepo = this.collection.database.get<IngredientSynonym>("ingredient_synonym");
         for (const synonym of options.synonyms!) {
           batchOps.push(
-            synonymRepo.prepareCreate((syn: any) => {
+            synonymRepo.prepareCreate((syn: IngredientSynonym) => {
               syn.stockId = stock.id;
               syn.synonym = synonym.toLowerCase();
             })
@@ -282,13 +283,13 @@ export class StockRepository extends BaseRepository<Stock> {
   // Get stock with synonyms
   async getStockWithSynonyms(stockId: string): Promise<{
     stock: Stock;
-    synonyms: any[];
+    synonyms: IngredientSynonym[];
   } | null> {
     const stock = await this.findById(stockId);
     if (!stock) return null;
 
     const synonyms = await this.collection.database
-      .get("ingredient_synonym")
+      .get<IngredientSynonym>("ingredient_synonym")
       .query(Q.where("stock_id", Q.eq(stockId)))
       .fetch();
 
@@ -312,7 +313,8 @@ export class StockRepository extends BaseRepository<Stock> {
     const lowerNames = names.map((n) => n.toLowerCase());
 
     // 1. Fetch matching synonyms to get their stock IDs
-    const synonymCollection = this.collection.database.collections.get("ingredient_synonym");
+    const synonymCollection =
+      this.collection.database.collections.get<IngredientSynonym>("ingredient_synonym");
 
     // We can't easily do a full wildcard search in WatermelonDB across an array of terms,
     // but we can at least get exact synonym matches, which is what the original N+1 query did.
@@ -321,7 +323,7 @@ export class StockRepository extends BaseRepository<Stock> {
       .query(Q.where("synonym", Q.oneOf(lowerNames)))
       .fetch();
 
-    const stockIdsFromSynonyms = matchingSynonyms.map((syn: any) => syn.stockId);
+    const stockIdsFromSynonyms = matchingSynonyms.map((syn: IngredientSynonym) => syn.stockId);
 
     // 2. Fetch stocks that either match the name exactly OR match a synonym
     let stockQuery = this.collection.query(
@@ -333,12 +335,7 @@ export class StockRepository extends BaseRepository<Stock> {
       )
     );
 
-    // Since isIngredientMatch does substring matching, it's safer to fetch all stocks
-    // if we really want to preserve 100% of the isIngredientMatch functionality.
-    // However, the original loop did:
-    // const stockItems = await this.stocks.findByNameOrSynonym(ingredient.name);
-    // which only did EXACT name or EXACT synonym matches in SQL.
-    // So the query above perfectly matches the original SQL functionality but batched!
+    // The query above perfectly matches the original SQL functionality but batched!
 
     const stocks = await stockQuery.fetch();
 
@@ -354,7 +351,7 @@ export class StockRepository extends BaseRepository<Stock> {
     // 4. Create a map of stockId -> synonyms[]
     const synonymsMap = new Map<string, string[]>();
     for (const syn of allSynonymsForStocks) {
-      const raw = (syn as any)._raw;
+      const raw = (syn as IngredientSynonym)._raw as any;
       const stockId = raw.stock_id;
       const val = raw.synonym;
 
@@ -383,14 +380,15 @@ export class StockRepository extends BaseRepository<Stock> {
     const stocks = await this.collection.query().fetch();
 
     // 2. Fetch all synonyms
-    const synonymCollection = this.collection.database.collections.get("ingredient_synonym");
+    const synonymCollection =
+      this.collection.database.collections.get<IngredientSynonym>("ingredient_synonym");
     const allSynonyms = await synonymCollection.query().fetch();
 
     // 3. Create a map of stockId -> synonyms[]
     const synonymsMap = new Map<string, string[]>();
     for (const syn of allSynonyms) {
       // Access raw data for speed/safety. Cast to any to access _raw.
-      const raw = (syn as any)._raw;
+      const raw = (syn as IngredientSynonym)._raw as any;
       const stockId = raw.stock_id;
       const val = raw.synonym;
 

@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { View, ScrollView, ActivityIndicator, Pressable } from "react-native";
 import { H4, P, Small } from "~/components/ui/typography";
+import { Button } from "~/components/ui/button";
+import { Link } from "expo-router";
 import { TrophyIcon, TargetIcon } from "lucide-uniwind";
 import AchievementBadge from "~/components/Profile/AchievementBadge";
 import ChallengeCard from "~/components/Profile/ChallengeCard";
@@ -66,7 +68,9 @@ export default function AchievementsScreen() {
         className={`flex-1 flex-row items-center justify-center gap-2 py-3 rounded-2xl ${
           isActive ? "bg-primary" : "bg-muted/50"
         }`}
-        accessibilityRole="button"
+        accessibilityRole="tab"
+        accessibilityLabel={`${label} tab`}
+        accessibilityHint={`Switches to the ${label} view`}
         accessibilityState={{ selected: isActive }}
       >
         {icon}
@@ -81,13 +85,19 @@ export default function AchievementsScreen() {
     );
   };
 
-  const renderEmptyState = (title: string, description: string, icon: React.ReactNode) => (
+  const renderEmptyState = (
+    title: string,
+    description: string,
+    icon: React.ReactNode,
+    cta?: React.ReactNode
+  ) => (
     <View className="py-16 items-center justify-center px-6">
       <View className="mb-4">{icon}</View>
       <H4 className="text-muted-foreground font-urbanist-semibold text-center mb-2">{title}</H4>
-      <P className="text-muted-foreground font-urbanist-regular text-center text-sm">
+      <P className="text-muted-foreground font-urbanist-regular text-center text-sm mb-6">
         {description}
       </P>
+      {cta}
     </View>
   );
 
@@ -143,7 +153,12 @@ export default function AchievementsScreen() {
             ? renderEmptyState(
                 "No Achievements Yet",
                 "Start cooking and tracking ingredients to unlock achievements!",
-                <TrophyIcon size={64} className="text-muted-foreground" />
+                <TrophyIcon size={64} className="text-muted-foreground" />,
+                <Link href="/" asChild>
+                  <Button variant="default" className="bg-foreground">
+                    <P className="font-urbanist-semibold text-background">Discover Recipes</P>
+                  </Button>
+                </Link>
               )
             : ACHIEVEMENT_CATEGORIES.map((category) => {
                 const categoryAchievements = groupedAchievements[category];

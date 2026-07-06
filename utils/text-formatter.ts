@@ -1,7 +1,7 @@
 /**
  * Capitalizes the first letter of a string
  */
-const capitalize = (str: string): string => {
+export const capitalize = (str: string): string => {
   if (!str) return "";
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 };
@@ -21,7 +21,7 @@ export const titleCase = (str: string): string => {
 /**
  * Converts text to sentence case (first letter capitalized, rest lowercase)
  */
-const sentenceCase = (str: string): string => {
+export const sentenceCase = (str: string): string => {
   if (!str) return "";
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 };
@@ -30,7 +30,7 @@ const sentenceCase = (str: string): string => {
  * Converts camelCase or PascalCase to readable text
  * Example: "ingredientName" -> "Ingredient Name"
  */
-const camelCaseToReadable = (str: string): string => {
+export const camelCaseToReadable = (str: string): string => {
   if (!str) return "";
   return str
     .replace(/([A-Z])/g, " $1")
@@ -41,7 +41,7 @@ const camelCaseToReadable = (str: string): string => {
 /**
  * Converts text to kebab-case (lowercase with hyphens)
  */
-const toKebabCase = (str: string): string => {
+export const toKebabCase = (str: string): string => {
   if (!str) return "";
   return str
     .replace(/([a-z])([A-Z])/g, "$1-$2")
@@ -52,7 +52,7 @@ const toKebabCase = (str: string): string => {
 /**
  * Converts text to camelCase
  */
-const toCamelCase = (str: string): string => {
+export const toCamelCase = (str: string): string => {
   if (!str) return "";
 
   // Normalize string: convert space/dash/underscore separators to single spaces
@@ -77,7 +77,7 @@ const toCamelCase = (str: string): string => {
 /**
  * Truncates text to specified length and adds ellipsis
  */
-const truncate = (str: string, length: number, suffix: string = "..."): string => {
+export const truncate = (str: string, length: number, suffix: string = "..."): string => {
   if (!str || str.length <= length) return str;
   return str.substring(0, length - suffix.length) + suffix;
 };
@@ -85,7 +85,7 @@ const truncate = (str: string, length: number, suffix: string = "..."): string =
 /**
  * Truncates text to specified number of words
  */
-const truncateWords = (str: string, wordCount: number, suffix: string = "..."): string => {
+export const truncateWords = (str: string, wordCount: number, suffix: string = "..."): string => {
   if (!str) return "";
   const words = str.split(" ");
   if (words.length <= wordCount) return str;
@@ -96,7 +96,7 @@ const truncateWords = (str: string, wordCount: number, suffix: string = "..."): 
  * Extracts initials from a name
  * Example: "John Doe" -> "JD"
  */
-const getInitials = (str: string, maxInitials: number = 2): string => {
+export const getInitials = (str: string, maxInitials: number = 2): string => {
   if (!str) return "";
   return str
     .split(" ")
@@ -108,7 +108,7 @@ const getInitials = (str: string, maxInitials: number = 2): string => {
 /**
  * Removes extra whitespace and normalizes spacing
  */
-const normalizeWhitespace = (str: string): string => {
+export const normalizeWhitespace = (str: string): string => {
   if (!str) return "";
   return str.replace(/\s+/g, " ").trim();
 };
@@ -116,7 +116,7 @@ const normalizeWhitespace = (str: string): string => {
 /**
  * Removes all non-alphanumeric characters except spaces
  */
-const sanitizeText = (str: string): string => {
+export const sanitizeText = (str: string): string => {
   if (!str) return "";
   return str.replace(/[^a-zA-Z0-9\s]/g, "").trim();
 };
@@ -124,7 +124,7 @@ const sanitizeText = (str: string): string => {
 /**
  * Creates a URL-friendly slug from text
  */
-const createSlug = (str: string): string => {
+export const createSlug = (str: string): string => {
   if (!str) return "";
   return str
     .toLowerCase()
@@ -139,7 +139,7 @@ const createSlug = (str: string): string => {
 /**
  * Simple pluralization helper
  */
-const pluralize = (word: string, count: number): string => {
+export const pluralize = (word: string, count: number): string => {
   if (!word) return "";
   if (count === 1) return word;
 
@@ -187,14 +187,14 @@ const pluralize = (word: string, count: number): string => {
  * Formats count with proper pluralization
  * Example: formatCount(1, "recipe") -> "1 recipe", formatCount(2, "recipe") -> "2 recipes"
  */
-const formatCount = (count: number, word: string): string => {
+export const formatCount = (count: number, word: string): string => {
   return `${count} ${pluralize(word, count)}`;
 };
 
 /**
  * Formats numbers with ordinal suffix (1st, 2nd, 3rd, etc.)
  */
-const formatOrdinal = (num: number): string => {
+export const formatOrdinal = (num: number): string => {
   const v = num % 100;
   if (v >= 11 && v <= 13) {
     return num + "th";
@@ -218,7 +218,7 @@ const formatOrdinal = (num: number): string => {
 /**
  * Formats ingredient quantities with proper fractions
  */
-const formatQuantity = (quantity: number): string => {
+export const formatQuantity = (quantity: number): string => {
   if (quantity === 0) return "0";
   if (quantity % 1 === 0) return quantity.toString();
 
@@ -250,7 +250,7 @@ const formatQuantity = (quantity: number): string => {
  * Formats cooking time in a readable format
  * Example: formatCookingTime(90) -> "1 hour 30 minutes"
  */
-const formatCookingTime = (minutes: number): string => {
+export const formatCookingTime = (minutes: number): string => {
   if (minutes < 1) return "Less than a minute";
   if (minutes < 60) return formatCount(minutes, "minute");
 
@@ -267,7 +267,7 @@ const formatCookingTime = (minutes: number): string => {
 /**
  * Formats serving size
  */
-const formatServings = (servings: number): string => {
+export const formatServings = (servings: number): string => {
   if (servings === 1) return "1 serving";
   return `${servings} servings`;
 };
@@ -275,7 +275,7 @@ const formatServings = (servings: number): string => {
 /**
  * Formats recipe difficulty level
  */
-const formatDifficulty = (level: number): string => {
+export const formatDifficulty = (level: number): string => {
   const difficulties = ["Easy", "Medium", "Hard", "Expert"];
   return difficulties[Math.max(0, Math.min(level - 1, difficulties.length - 1))] || "Easy";
 };

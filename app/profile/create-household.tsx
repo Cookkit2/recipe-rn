@@ -1,20 +1,16 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { View, TextInput, Alert } from "react-native";
 import { useRouter } from "expo-router";
-import { isValidSubscription } from "~/utils/subscription-utils";
 import { useCreateHousehold } from "~/hooks/queries/useHouseholdQueries";
+import { useEntitlement } from "~/hooks/queries/useEntitlement";
 import { Button } from "~/components/ui/button";
 import { P } from "~/components/ui/typography";
 
 export default function CreateHouseholdScreen() {
   const [name, setName] = useState("");
-  const [isPro, setIsPro] = useState<boolean | null>(null);
+  const { isPro, isLoading } = useEntitlement();
   const router = useRouter();
   const createMutation = useCreateHousehold();
-
-  React.useEffect(() => {
-    isValidSubscription().then((result) => setIsPro(!!result));
-  }, []);
 
   const handleCreate = () => {
     if (!name.trim()) {
@@ -40,7 +36,7 @@ export default function CreateHouseholdScreen() {
         maxLength={50}
       />
 
-      {isPro === false && (
+      {!isLoading && !isPro && (
         <P className="text-sm text-muted-foreground mb-4">
           Free plan: up to 2 members. Upgrade to Pro for up to 6 members.
         </P>

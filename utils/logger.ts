@@ -48,6 +48,15 @@ function containsSensitiveDataInObject(obj: any): boolean {
     return obj.some((item) => containsSensitiveDataInObject(item));
   }
 
+  if (obj instanceof Error) {
+    return containsSensitiveDataInObject({
+      ...obj,
+      name: obj.name,
+      message: obj.message,
+      stack: obj.stack,
+    });
+  }
+
   // Check keys for sensitive patterns
   for (const key in obj) {
     if (containsSensitiveData(key)) {
@@ -83,12 +92,22 @@ function sanitizeArg(arg: any): any {
   }
 
   if (typeof arg === "object" && arg !== null) {
-    if (containsSensitiveDataInObject(arg)) {
+    let processObj = arg;
+    if (arg instanceof Error) {
+      processObj = {
+        ...arg,
+        name: arg.name,
+        message: arg.message,
+        stack: arg.stack,
+      };
+    }
+
+    if (containsSensitiveDataInObject(processObj)) {
       return "[REDACTED]";
     }
     const filtered: Record<string, unknown> = {};
-    for (const key of Object.keys(arg)) {
-      filtered[key] = sanitizeArg((arg as Record<string, unknown>)[key]);
+    for (const key of Object.keys(processObj)) {
+      filtered[key] = sanitizeArg((processObj as Record<string, unknown>)[key]);
     }
     return filtered;
   }
@@ -104,9 +123,9 @@ export const log = {
    * Trace level logging - detailed diagnostic information
    */
   trace: (message: string, ...args: any[]) => {
-    rnLogger.debug(message, ...args);
     try {
       const filteredArgs = filterSensitiveData(args);
+      rnLogger.debug(message, ...filteredArgs);
       const attributes = parseLogAttributes(filteredArgs);
       Sentry.logger.trace(message, attributes);
     } catch (error) {
@@ -118,9 +137,9 @@ export const log = {
    * Debug level logging - diagnostic information useful for debugging
    */
   debug: (message: string, ...args: any[]) => {
-    rnLogger.debug(message, ...args);
     try {
       const filteredArgs = filterSensitiveData(args);
+      rnLogger.debug(message, ...filteredArgs);
       const attributes = parseLogAttributes(filteredArgs);
       Sentry.logger.debug(message, attributes);
     } catch (error) {
@@ -132,9 +151,9 @@ export const log = {
    * Info level logging - informational messages
    */
   info: (message: string, ...args: any[]) => {
-    rnLogger.info(message, ...args);
     try {
       const filteredArgs = filterSensitiveData(args);
+      rnLogger.info(message, ...filteredArgs);
       const attributes = parseLogAttributes(filteredArgs);
       Sentry.logger.info(message, attributes);
     } catch (error) {
@@ -146,9 +165,9 @@ export const log = {
    * Warning level logging - potentially harmful situations
    */
   warn: (message: string, ...args: any[]) => {
-    rnLogger.warn(message, ...args);
     try {
       const filteredArgs = filterSensitiveData(args);
+      rnLogger.warn(message, ...filteredArgs);
       const attributes = parseLogAttributes(filteredArgs);
       Sentry.logger.warn(message, attributes);
     } catch (error) {
@@ -160,9 +179,9 @@ export const log = {
    * Error level logging - error events
    */
   error: (message: string, ...args: any[]) => {
-    rnLogger.error(message, ...args);
     try {
       const filteredArgs = filterSensitiveData(args);
+      rnLogger.error(message, ...filteredArgs);
       const attributes = parseLogAttributes(filteredArgs);
       Sentry.logger.error(message, attributes);
     } catch (error) {
@@ -174,9 +193,9 @@ export const log = {
    * Fatal level logging - very severe error events
    */
   fatal: (message: string, ...args: any[]) => {
-    rnLogger.error(message, ...args); // react-native-logs doesn't have fatal, use error
     try {
       const filteredArgs = filterSensitiveData(args);
+      rnLogger.error(message, ...filteredArgs); // react-native-logs doesn't have fatal, use error
       const attributes = parseLogAttributes(filteredArgs);
       Sentry.logger.fatal(message, attributes);
     } catch (error) {

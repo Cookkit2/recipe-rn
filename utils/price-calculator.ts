@@ -1,8 +1,8 @@
-function centsToDollars(cents: number): number {
+export function centsToDollars(cents: number): number {
   return cents / 100;
 }
 
-function dollarsToCents(dollars: number): number {
+export function dollarsToCents(dollars: number): number {
   return Math.round(dollars * 100);
 }
 
@@ -11,7 +11,7 @@ export function formatCurrency(cents: number, currency = "MYR"): string {
   return `${currency} ${dollars.toFixed(2)}`;
 }
 
-function calculateTotalPrice(items: Array<{ priceCents: number }>): number {
+export function calculateTotalPrice(items: Array<{ priceCents: number }>): number {
   return items.reduce((sum, item) => sum + item.priceCents, 0);
 }
 
@@ -21,7 +21,7 @@ export interface PriceByCategory {
   itemCount: number;
 }
 
-function groupPricesByCategory(
+export function groupPricesByCategory(
   items: Array<{ priceCents: number; category?: string }>
 ): PriceByCategory[] {
   const categoryMap = new Map<string, { total: number; count: number }>();

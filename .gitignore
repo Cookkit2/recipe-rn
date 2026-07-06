@@ -121,3 +121,6 @@ ios/.xcode.env
 .claude_settings.json
 .security-key
 logs/security/
+
+# Claude Code worktrees (local only, never commit)
+.claude/worktrees/

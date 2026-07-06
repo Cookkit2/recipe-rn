@@ -16,6 +16,7 @@ import {
 } from "~/utils/youtube-utils";
 
 import { RecipeAnalyzer } from "~/lib/recipe-scrapper/youtube/RecipeAnalyzer";
+import { socialRecipeService } from "~/lib/recipe-scrapper/SocialRecipeService";
 import { databaseFacade } from "~/data/db/DatabaseFacade";
 import type { CreateRecipeData, ShoppingListResult } from "~/data/db/DatabaseFacade";
 import { RecipeType } from "~/data/db/models/Recipe";
@@ -295,10 +296,18 @@ export const recipeImportApi = {
         const websiteContent = await websiteRecipeService.fetchWebsiteContent(url);
         log.info(
           "Website Import: Content fetched, hasStructuredData:",
-          websiteContent.hasStructuredData
+          websiteContent.hasStructuredData,
+          "source:",
+          websiteContent.structuredDataSource ?? "none"
         );
 
-        // Step 2: Parse/extract recipe
+        // Step 2: Parse/extract recipe via the layered fallback chain.
+        //   (1) JSON-LD structured data
+        //   (2) Microdata
+        //   (3) RDFa
+        //   (4) Gemini extraction from readable HTML (confidence-gated)
+        // Each structured-data branch routes through the same clean path so
+        // all results are validated by isValidRecipe inside cleanRecipeWithGemini.
         onStatusChange?.("parsing-content" as RecipeImportStatus);
 
         let generatedRecipe: GeneratedRecipe;
@@ -307,8 +316,10 @@ export const recipeImportApi = {
           websiteContent.hasStructuredData &&
           websiteContent.structuredData?.recipeIngredient?.length
         ) {
-          // Use structured data if available and has ingredients
-          log.info("Website Import: Using structured recipe data");
+          // Structured data (JSON-LD / microdata / RDFa) — today's fast, accurate path.
+          log.info(
+            `Website Import: Using structured recipe data (source: ${websiteContent.structuredDataSource ?? "json-ld"})`
+          );
           const rawRecipe = websiteRecipeService.convertStructuredDataToRecipe(
             websiteContent.structuredData,
             url
@@ -321,11 +332,40 @@ export const recipeImportApi = {
             rawRecipe
           )) as GeneratedRecipe;
         } else {
-          // No structured data available - throw error
-          throw new Error(
-            `This page does not contain structured recipe data that we can extract. ` +
-              `Try a different recipe website with clear recipe schema or ingredients list.`
+          // No structured data of any kind — fall back to AI extraction from
+          // the readable HTML. Previously this hard-threw; now it attempts a
+          // confidence-scored extraction so previously-unimportable pages can
+          // still import (issue #730).
+          onStatusChange?.("analyzing");
+          log.info("Website Import: No structured data; attempting AI extraction from HTML...");
+
+          const { recipe: aiRecipe, confidence } = await websiteRecipeService.extractRecipeFromHtml(
+            websiteContent,
+            url
           );
+
+          // Wire MIN_RECIPE_CONFIDENCE as a gate for the first time (it was
+          // previously defined but never used as a gate anywhere).
+          if (!aiRecipe || confidence < MIN_RECIPE_CONFIDENCE) {
+            const confidencePercent = (confidence * 100).toFixed(0);
+            // Surface a soft warning rather than silently accepting garbage,
+            // then throw the existing structured error so the caller shows a
+            // recoverable message (the result always opens in the edit screen).
+            log.warn(
+              `Website Import: AI extraction below confidence gate (${confidencePercent}% < ${MIN_RECIPE_CONFIDENCE * 100}%), source: ai-html`
+            );
+            throw new Error(
+              `We couldn't confidently extract a recipe from this page ` +
+                `(confidence: ${confidencePercent}%). The page may not contain ` +
+                `a recipe, or its format isn't supported yet. ` +
+                `Try a different link or enter the recipe manually.`
+            );
+          }
+
+          log.info(
+            `Website Import: Recipe extracted via AI fallback (source: ai-html, confidence: ${(confidence * 100).toFixed(0)}%)`
+          );
+          generatedRecipe = aiRecipe;
         }
 
         log.info("Website Import: Recipe extracted:", generatedRecipe.title);
@@ -389,6 +429,11 @@ export const recipeImportApi = {
 
   /**
    * Import a recipe from TikTok or Instagram
+   *
+   * Social platforms often block direct scraping or serve login walls, so this
+   * flow fetches page metadata (og:title/og:description, JSON-LD), then asks
+   * Gemini to extract the recipe from that text. If the platform blocks us or no
+   * recipe is detected, we surface a clear error pointing the user to manual entry.
    */
   async importRecipeFromSocialMedia(
     url: string,
@@ -398,13 +443,93 @@ export const recipeImportApi = {
   ): Promise<YouTubeImportResult> {
     const platformName = platform === "tiktok" ? "TikTok" : "Instagram";
 
-    log.info(`${platformName} Import: Import requested for ${url} (DISABLED)`);
+    const result = await withImportErrorHandling(
+      async () => {
+        // Step 1: Fetch page metadata + analyze with Gemini in one call.
+        // SocialRecipeService handles the fetch internally and falls back to
+        // empty metadata if the platform blocks scraping.
+        onStatusChange?.("fetching-social");
+        log.info(`${platformName} Import: Fetching content...`, url);
 
-    // Social media import is currently disabled
-    return {
-      success: false,
-      error: `Importing from ${platformName} is currently unsupported.`,
-    };
+        const analysisResult = await socialRecipeService.analyzeForRecipe({
+          platform,
+          url,
+          postId,
+        });
+
+        // Step 2: Graceful fallback — platform blocked the fetch or the LLM
+        // couldn't confidently detect a recipe. Prompt manual entry rather than
+        // presenting a fabricated recipe.
+        if (!analysisResult.isCookingVideo) {
+          const confidencePercent = (analysisResult.confidence * 100).toFixed(0);
+          throw new Error(
+            `We couldn't extract a recipe from this ${platformName} post ` +
+              `(confidence: ${confidencePercent}%). The post may not be a recipe, ` +
+              `or ${platformName} may have blocked access. ` +
+              `Try a different link or enter the recipe manually.`
+          );
+        }
+
+        if (!analysisResult.recipe) {
+          throw new Error(
+            `No recipe could be extracted from this ${platformName} post. ` +
+              `Please try a different link or enter the recipe manually.`
+          );
+        }
+
+        log.info(`${platformName} Import: Recipe extracted:`, analysisResult.recipe.title);
+
+        // Step 3: Save recipe to database
+        onStatusChange?.("generating-recipe");
+        log.info(`${platformName} Import: Saving recipe to database...`);
+
+        const recipe = await this.saveRecipeToDatabase(analysisResult.recipe, url);
+
+        log.info(`${platformName} Import: Recipe saved with ID:`, recipe.id);
+
+        // Step 4: Compare with pantry and generate shopping list
+        onStatusChange?.("comparing-pantry");
+        log.info(`${platformName} Import: Comparing with pantry...`);
+
+        const shoppingList = await databaseFacade.getShoppingListForRecipe(recipe.id);
+
+        log.info(
+          `${platformName} Import: Shopping list generated -`,
+          shoppingList.missingIngredients.length,
+          "missing items"
+        );
+
+        // Complete!
+        onStatusChange?.("complete");
+        log.info(`${platformName} Import: Complete!`);
+
+        return {
+          success: true,
+          recipe: {
+            id: recipe.id,
+            title: recipe.title,
+            description: recipe.description,
+            imageUrl: recipe.imageUrl,
+            prepMinutes: recipe.prepMinutes ?? 0,
+            cookMinutes: recipe.cookMinutes ?? 0,
+            difficultyStars: recipe.difficultyStars ?? 3,
+            servings: recipe.servings ?? 4,
+            sourceUrl: recipe.sourceUrl,
+            calories: recipe.calories,
+            tags: recipe.tags,
+          },
+          shoppingList,
+        };
+      },
+      `${platformName} Import`,
+      onStatusChange
+    );
+
+    if (!result.success) {
+      return result;
+    }
+
+    return result.data;
   },
 
   /**

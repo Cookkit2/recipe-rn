@@ -43,3 +43,21 @@
 **Learning:** Hardcoded emails in frontend code (like React Native apps) can be easily extracted by reverse-engineering the compiled bundle or by scraping source repositories. This exposes developers to spam, phishing, and potential social engineering attacks, while also coupling application logic to a specific individual.
 
 **Prevention:** Always extract support or contact email addresses into environment variables or server-fetched configurations. Use generic aliases (e.g., support@domain.com) instead of personal developer emails. Ensure fallback logic uses non-personal generic addresses if the environment variable is missing.
+
+## 2025-03-08 - [Insecure Randomness for Invite Code Generation]
+**Vulnerability:** Found `Math.random()` being used to select characters from a predefined charset to generate invite codes.
+**Learning:** `Math.random()` is not cryptographically secure and predictable, which could allow attackers to guess or predict invite codes and potentially bypass access controls.
+**Prevention:** Always use a cryptographically secure pseudo-random number generator (CSPRNG) like `expo-crypto`'s `getRandomBytes` when generating security-sensitive random values like invite codes, tokens, or passwords. Ensure you also handle modulo bias when mapping random bytes to a character set.
+## 2026-06-09 - Prevent URL Parameter Injection with API Keys
+**Vulnerability:** Interpolating unencoded environment variables like `API_KEY` directly into URL strings (e.g., `const url = \`${BASE_URL}?key=${API_KEY}\`;`) could lead to parameter injection or malformed requests if the variable contains unexpected characters (like `&` or `=`).
+**Learning:** While API keys are generally assumed to be URL-safe alphanumeric strings, defensively encoding them guarantees structural integrity and prevents theoretical SSRF or query pollution vectors.
+**Prevention:** When constructing URL query strings via template literals, always defensively encode all interpolated variables—including environment-loaded API keys and standard identifiers—using `encodeURIComponent()`.
+## 2026-06-13 - Removed Gemini API String Replacement Redaction
+**Vulnerability:** The Gemini API Key could be leaked in error logs due to incomplete or error-prone string replacement on raw error text.
+**Learning:** Using string `replaceAll` for redaction on raw network payloads is unsafe. If the API returns the key in a different format (e.g., URL-encoded, or if the API key happens to be a substring of a larger logged variable), the replacement fails.
+**Prevention:** Prevent secrets from entering the error context entirely by parsing safe metadata (like `response.status`) and never logging raw, untrusted response payloads (`response.text()`).
+## 2026-05-03 - Prevent Sensitive Data Exposure in React Native Logs
+**Vulnerability:** The logger abstraction (`utils/logger.ts`) was filtering sensitive data for Sentry, but sending unfiltered sensitive arguments directly to `react-native-logs` via `rnLogger`, causing potential credentials/API keys to be written to local debug logs.
+**Learning:** Local logs (even in development) can expose secrets if the device is compromised or logs are accessed by other apps/tools.
+**Prevention:** Always apply the filter to the arguments *before* passing them to any logging destination, including local loggers.
+## 2025-06-18 - Generic Error Messages Prevent Secret Leakage\n**Vulnerability:** Downstream APIs error payloads (like YouTube Data API) were being caught and the raw messages embedded into new application errors, relying on complex manual string replacement (`replaceAll`) to try to sanitize API keys.\n**Learning:** Relying on manual string sanitization for untrusted error payloads is inherently dangerous. Unpredictable error structures or unexpected encoding variations could easily bypass the filter and leak secrets.\n**Prevention:** Never embed untrusted downstream network payloads into application error messages. Instead, use safe, generic, opaque error messages (e.g., `API error: HTTP 403`) to completely isolate internal state from the error context.

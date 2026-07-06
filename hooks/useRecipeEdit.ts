@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { Alert } from "react-native";
-import { Collection } from "@nozbe/watermelondb";
+import { Collection, Model } from "@nozbe/watermelondb";
 import { database } from "~/data/db/database";
 import type Recipe from "~/data/db/models/Recipe";
 import type RecipeIngredient from "~/data/db/models/RecipeIngredient";
@@ -61,7 +61,7 @@ async function syncRecipeIngredients(
   workingCopy: EditableRecipe,
   ingredientsCollection: Collection<RecipeIngredient>
 ) {
-  const batchOps: any[] = [];
+  const batchOps: Model[] = [];
 
   // Delete removed ingredients
   const existingIngredients = await recipe.ingredients.fetch();
@@ -85,7 +85,7 @@ async function syncRecipeIngredients(
       const existing = existingIngredientsMap.get(ingredient.id);
       if (existing) {
         batchOps.push(
-          (existing as any).prepareUpdate((ing: RecipeIngredient) => {
+          existing.prepareUpdate((ing: RecipeIngredient) => {
             ing.name = ingredient.name;
             ing.quantity = ingredient.quantity;
             ing.unit = ingredient.unit;
@@ -117,7 +117,7 @@ async function syncRecipeSteps(
   workingCopy: EditableRecipe,
   stepsCollection: Collection<RecipeStep>
 ) {
-  const batchOps: any[] = [];
+  const batchOps: Model[] = [];
 
   // Delete removed steps
   const existingSteps = await recipe.steps.fetch();
@@ -139,7 +139,7 @@ async function syncRecipeSteps(
       const existing = existingStepsMap.get(step.id);
       if (existing) {
         batchOps.push(
-          (existing as any).prepareUpdate((s: RecipeStep) => {
+          existing.prepareUpdate((s: RecipeStep) => {
             s.step = step.step;
             s.title = step.title;
             s.description = step.description;

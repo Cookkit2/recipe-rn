@@ -47,14 +47,16 @@ export class AuthYouTubeService implements IYouTubeService {
       );
     }
 
-    const url = `${this.BASE_URL}/videos?part=snippet,contentDetails&id=${encodeURIComponent(videoId)}&key=${API_KEY}`;
+    const url = `${this.BASE_URL}/videos?part=snippet,contentDetails&id=${encodeURIComponent(videoId)}`;
 
     try {
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: {
+          "x-goog-api-key": API_KEY,
+        },
+      });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-
         if (response.status === 403) {
           throw new YouTubeServiceError(
             "YouTube API quota exceeded or API key invalid",
@@ -62,12 +64,9 @@ export class AuthYouTubeService implements IYouTubeService {
           );
         }
 
-        const rawMessage = String(errorData.error?.message || `API error: HTTP ${response.status}`);
-        const sanitizedMessage = API_KEY
-          ? rawMessage.replaceAll(API_KEY, "[REDACTED_API_KEY]")
-          : rawMessage;
-
-        throw new YouTubeServiceError(sanitizedMessage, "API_ERROR");
+        // Return a generic error message instead of parsing downstream errors
+        // to prevent accidental secret leakage
+        throw new YouTubeServiceError(`API error: HTTP ${response.status}`, "API_ERROR");
       }
 
       const data = await response.json();
@@ -91,14 +90,12 @@ export class AuthYouTubeService implements IYouTubeService {
         throw error;
       }
 
-      const rawMessage = String(
-        `Network error: ${error instanceof Error ? error.message : "Unknown error"}`
+      // Return a generic network error message instead of preserving standard error instances
+      // to prevent accidental secret leakage
+      throw new YouTubeServiceError(
+        "Network error: Failed to connect to YouTube API",
+        "NETWORK_ERROR"
       );
-      const sanitizedMessage = API_KEY
-        ? rawMessage.replaceAll(API_KEY, "[REDACTED_API_KEY]")
-        : rawMessage;
-
-      throw new YouTubeServiceError(sanitizedMessage, "NETWORK_ERROR");
     }
   }
 

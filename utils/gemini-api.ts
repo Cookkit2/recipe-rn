@@ -69,7 +69,7 @@ interface ModelListResponse {
 /**
  * Calculate estimated cost from token usage
  */
-const calculateTokenCost = (usage: {
+export const calculateTokenCost = (usage: {
   promptTokenCount: number;
   candidatesTokenCount: number;
 }): TokenUsage => {
@@ -120,11 +120,7 @@ export class GeminiAPI {
       if (timeoutId !== undefined) clearTimeout(timeoutId);
 
       if (!response.ok) {
-        const errorText = await response.text();
-        const sanitizedErrorText = API_KEY
-          ? errorText.replaceAll(API_KEY, "[REDACTED_API_KEY]")
-          : errorText;
-        log.error(`Gemini API error: ${response.status} - ${sanitizedErrorText}`);
+        log.error(`Gemini API error: ${response.status} ${response.statusText}`);
         throw new Error("Gemini API request failed. Please try again later.");
       }
 
@@ -182,11 +178,7 @@ export class GeminiAPI {
       if (timeoutId !== undefined) clearTimeout(timeoutId);
 
       if (!response.ok) {
-        const errorText = await response.text();
-        const sanitizedErrorText = API_KEY
-          ? errorText.replaceAll(API_KEY, "[REDACTED_API_KEY]")
-          : errorText;
-        log.error(`Gemini API error: ${response.status} - ${sanitizedErrorText}`);
+        log.error(`Gemini API error: ${response.status} ${response.statusText}`);
         throw new Error("Gemini API request failed. Please try again later.");
       }
 
@@ -204,4 +196,5 @@ export const generateGeminiContent = async (body: string): Promise<string> => {
 };
 
 // Export pricing info for reference
+export { PRICING };
 export type { TokenUsage };

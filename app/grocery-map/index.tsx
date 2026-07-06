@@ -10,6 +10,7 @@ import { useNearbyStores } from "~/hooks/queries/useStoreQueries";
 import { useDistanceCalculation } from "~/hooks/useDistanceCalculation";
 import { toast } from "sonner-native";
 import { openDirections } from "~/services/geolocation";
+import { calculateStoreStatus } from "~/utils/store-hours";
 
 // Default location (Kuala Lumpur, Malaysia)
 const DEFAULT_LATITUDE = 3.1577;
@@ -105,7 +106,7 @@ export default function GroceryMapPage() {
         name: store.name,
         latitude: store.latitude ?? DEFAULT_LATITUDE,
         longitude: store.longitude ?? DEFAULT_LONGITUDE,
-        totalPriceCents: 0, // TODO: Calculate from grocery list
+        totalPriceCents: 0, // Pending Phase 2: Price Integration
         distance: store.distance,
       })),
     [storesWithDistance]
@@ -118,12 +119,17 @@ export default function GroceryMapPage() {
         name: store.name,
         address: store.address ?? "Unknown address",
         distance: store.distance,
-        totalPriceCents: 0, // TODO: Calculate from grocery list
+        totalPriceCents: 0, // Pending Phase 2: Price Integration
       })),
     [storesWithDistance]
   );
 
   const selectedStoreData = storesWithDistance.find((s) => s.id === selectedStore);
+
+  const storeStatus = useMemo(() => {
+    if (!selectedStoreData?.opening_hours) return { isOpen: false };
+    return calculateStoreStatus(selectedStoreData.opening_hours);
+  }, [selectedStoreData?.opening_hours]);
 
   return (
     <>
@@ -148,9 +154,9 @@ export default function GroceryMapPage() {
                 name: selectedStoreData.name,
                 address: selectedStoreData.address ?? "Unknown address",
                 distance: selectedStoreData.distance,
-                totalPriceCents: 0, // TODO: Calculate from grocery list
-                isOpen: false, // TODO: Calculate from opening hours
-                closingTime: undefined, // TODO: Calculate from opening hours
+                totalPriceCents: 0, // Pending Phase 2: Price Integration
+                isOpen: storeStatus.isOpen,
+                closingTime: storeStatus.closingTime,
                 latitude: selectedStoreData.latitude ?? DEFAULT_LATITUDE,
                 longitude: selectedStoreData.longitude ?? DEFAULT_LONGITUDE,
               }}
@@ -160,8 +166,9 @@ export default function GroceryMapPage() {
                   name: selectedStoreData.name,
                   address: selectedStoreData.address ?? "",
                   distance: selectedStoreData.distance,
-                  totalPriceCents: 0, // TODO: Calculate from grocery list
-                  isOpen: false, // TODO: Calculate from opening hours
+                  totalPriceCents: 0, // Pending Phase 2: Price Integration
+                  isOpen: storeStatus.isOpen,
+                  closingTime: storeStatus.closingTime,
                   latitude: selectedStoreData.latitude ?? DEFAULT_LATITUDE,
                   longitude: selectedStoreData.longitude ?? DEFAULT_LONGITUDE,
                 })

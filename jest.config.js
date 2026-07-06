@@ -23,7 +23,7 @@ module.exports = {
     "^.+\\.(js|jsx)$": ["babel-jest", { presets: ["babel-preset-expo"] }],
   },
   transformIgnorePatterns: [
-    "node_modules/(?!(react-native|@react-native|@nozbe|@expo|expo|expo-modules-core|expo-constants|expo-secure-store|expo-crypto|expo-auth-session|expo-linking|react-navigation|react-native-reanimated|react-native-worklets|@rn-primitives|llama\\.rn|expo-file-system|expo-maps|lucide-react-native|@testing-library)/)",
+    "node_modules/(?!(react-native-purchases|react-native-purchases-ui|react-native|@react-native|@nozbe|@expo|expo|expo-modules-core|expo-constants|expo-secure-store|expo-crypto|expo-auth-session|expo-linking|react-navigation|react-native-reanimated|react-native-worklets|@rn-primitives|llama\\.rn|expo-file-system|expo-maps|lucide-react-native|@testing-library)/)",
   ],
   moduleNameMapper: {
     "^expo-constants$": "<rootDir>/__mocks__/expo-constants.ts",
