@@ -178,9 +178,9 @@ export function useRecipeVersioning(options: UseRecipeVersioningOptions) {
       let deletedCount = 0;
 
       try {
-        const idsToDelete = versionsToDelete.map((v) => v.id);
-        await recipeVersionRepository.deleteMany(idsToDelete);
-        deletedCount = idsToDelete.length;
+        // ⚡ Bolt Performance Optimization: Skip mapping to IDs and re-querying the database by passing the models directly to batch delete
+        await recipeVersionRepository.deleteRecords(versionsToDelete);
+        deletedCount = versionsToDelete.length;
       } catch (error) {
         log.error("Failed to delete old versions in batch:", error);
       }

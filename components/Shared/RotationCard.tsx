@@ -9,7 +9,7 @@ import Animated, {
 import type { ViewStyle } from "react-native";
 import { cn } from "~/lib/utils";
 import { SEED_INDEX_MULTIPLIER, SEED_TOTAL_MULTIPLIER } from "~/constants/seeds";
-import { SPRING_CONFIG, SPRING_CONFIG_SPRINGY } from "~/constants/spring-config";
+import { SPRING_CONFIG_SPRINGY } from "~/constants/spring-config";
 
 const RotationCard = ({
   index,

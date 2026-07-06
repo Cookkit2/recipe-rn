@@ -20,7 +20,7 @@ const TIKTOK_PATTERNS = [
  * Supports: instagram.com/p/abc, instagram.com/reel/abc, instagram.com/reels/abc
  */
 const INSTAGRAM_PATTERNS = [
-  /^https?:\/\/(?:www\.)?instagram\.com\/(?:p|reel|reels)\/([\w-]+)/i,
+  /^https?:\/\/(?:www\.)?(?:instagram\.com|instagr\.am)\/(?:p|reel|reels)\/([\w-]+)/i,
   /^https?:\/\/(?:www\.)?instagr\.am\/(?:p|reel|reels)\/([\w-]+)/i,
 ];
 
@@ -50,7 +50,7 @@ function extractTikTokVideoId(url: string): string | null {
  * Extract Instagram post/reel ID from URL
  */
 function extractInstagramPostId(url: string): string | null {
-  const match = url.match(/instagram\.com\/(?:p|reel|reels)\/([\w-]+)/i);
+  const match = url.match(/(?:instagram\.com|instagr\.am)\/(?:p|reel|reels)\/([\w-]+)/i);
   return match?.[1] ?? null;
 }
 
