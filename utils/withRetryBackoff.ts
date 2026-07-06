@@ -1,3 +1,5 @@
+import * as Crypto from "expo-crypto";
+
 /**
  * Reusable exponential-backoff-with-jitter retry helper for *writes*.
  *
@@ -50,7 +52,8 @@ export function computeBackoffDelay(
   // Deterministic exponential component, capped.
   const exponential = Math.min(baseDelayMs * Math.pow(2, attempt - 1), maxDelayMs);
   // Equal jitter: half deterministic + half random in [0, exponential/2].
-  const jitter = Math.floor(Math.random() * (exponential / 2));
+  const randomRatio = Crypto.getRandomBytes(1)[0]! / 256;
+  const jitter = Math.floor(randomRatio * (exponential / 2));
   const delay = Math.floor(exponential / 2) + jitter;
   return Math.min(Math.max(delay, 0), maxDelayMs);
 }

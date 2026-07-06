@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useRef } from "react";
 import { ScrollView } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -9,13 +9,11 @@ import Animated, {
   withSpring,
   useAnimatedStyle,
   useAnimatedScrollHandler,
-  useAnimatedReaction,
   type AnimatedRef,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import * as Haptics from "expo-haptics";
 import {
-  SCALE_FACTOR,
   ENABLE_HORIZONTAL_DRAG_CLOSE,
   DIRECTION_LOCK_ANGLE,
   HORIZONTAL_DRAG_THRESHOLD,

@@ -12,13 +12,9 @@ import { useRecipe } from "~/hooks/queries/useRecipeQueries";
 import { setStatusBarStyle } from "expo-status-bar";
 import type { Recipe } from "~/types/Recipe";
 import { databaseFacade } from "~/data/db/DatabaseFacade";
+import { useTailoredRecipe } from "~/hooks/useTailoredRecipe";
+import { useRecipeStepPages, type StepPageData } from "~/hooks/useRecipeStepPages";
 import AddTimerDialog from "~/components/Timer/AddTimerDialog";
-
-export type StepPageData = {
-  type: "ingredients" | "step" | "congratulations";
-  step: number;
-  content: RecipeIngredient[] | RecipeStep | null;
-};
 
 export default function RecipeSteps() {
   const { recipeId, tailored, tailoredId } = useLocalSearchParams<{
@@ -28,7 +24,7 @@ export default function RecipeSteps() {
   }>();
   const { data: recipe, isLoading, error } = useRecipe(recipeId);
   const isTailored = tailored === "1";
-  const [tailoredRecipe, setTailoredRecipe] = React.useState<Recipe | null>(null);
+  const { tailoredRecipe } = useTailoredRecipe(isTailored, tailoredId, recipeId, recipe);
   const [isAddTimerDialogOpen, setIsAddTimerDialogOpen] = useState(false);
 
   // Keep the display awake while the cook is actively on this screen.
@@ -36,99 +32,13 @@ export default function RecipeSteps() {
   // only stays awake on the cooking surface (not pantry/profile/etc).
   useKeepAwake("cooking-screen");
 
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadTailoredRecipe = async () => {
-      if (!isTailored || !recipeId) {
-        if (isMounted) setTailoredRecipe(null);
-        return;
-      }
-      if (!tailoredId) {
-        if (isMounted) setTailoredRecipe(null);
-        return;
-      }
-
-      const tailoredDetails = await databaseFacade.getTailoredRecipeWithDetails(tailoredId);
-
-      if (!isMounted) return;
-      if (!tailoredDetails) {
-        setTailoredRecipe(null);
-        return;
-      }
-
-      const baseRecipe = recipe;
-      const mapped: Recipe = {
-        id: tailoredDetails.recipe.id,
-        title: tailoredDetails.recipe.title,
-        description: tailoredDetails.recipe.description,
-        imageUrl: tailoredDetails.recipe.imageUrl || baseRecipe?.imageUrl || "",
-        prepMinutes: tailoredDetails.recipe.prepMinutes,
-        cookMinutes: tailoredDetails.recipe.cookMinutes,
-        difficultyStars: tailoredDetails.recipe.difficultyStars,
-        servings: tailoredDetails.recipe.servings,
-        calories: tailoredDetails.recipe.calories ?? baseRecipe?.calories,
-        tags: tailoredDetails.recipe.tags || baseRecipe?.tags,
-        ingredients: tailoredDetails.ingredients.map((ing, index) => ({
-          name: ing.name,
-          relatedIngredientId: `tailored-${tailoredDetails.recipe.id}-${index + 1}`,
-          quantity: ing.quantity,
-          unit: ing.unit,
-          notes: ing.notes,
-        })),
-        instructions: tailoredDetails.steps.map((step) => ({
-          step: step.step,
-          title: step.title,
-          description: step.description,
-          relatedIngredientIds: [],
-        })),
-        sourceUrl: baseRecipe?.sourceUrl,
-      };
-
-      setTailoredRecipe(mapped);
-    };
-
-    loadTailoredRecipe();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [isTailored, tailoredId, recipeId, recipe]);
-
   const activeRecipe = tailoredRecipe || recipe;
 
   useEffect(() => {
     setStatusBarStyle("auto", true);
   }, []);
 
-  const stepPages = useMemo((): StepPageData[] => {
-    if (!activeRecipe) return [];
-
-    const pages: StepPageData[] = [
-      {
-        type: "ingredients",
-        step: 0,
-        content: activeRecipe.ingredients,
-      },
-    ];
-
-    activeRecipe.instructions.forEach((step) => {
-      pages.push({
-        type: "step",
-        step: step.step,
-        content: step,
-      });
-    });
-
-    // Lastly push a congratulation page
-    pages.push({
-      type: "congratulations",
-      step: activeRecipe.instructions.length + 1,
-      content: null,
-    });
-
-    return pages;
-  }, [activeRecipe]);
+  const stepPages = useRecipeStepPages(activeRecipe);
 
   // Loading state
   if (isLoading && !tailoredRecipe) {

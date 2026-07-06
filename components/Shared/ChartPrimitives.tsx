@@ -7,7 +7,7 @@
 
 import * as React from "react";
 import { View, StyleSheet } from "react-native";
-import { Line, Text as SvgText } from "react-native-svg";
+import { Line, Text } from "react-native-svg";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { P } from "~/components/ui/typography";
 import { cn } from "~/lib/utils";
@@ -63,9 +63,9 @@ export function renderGridLines(
         strokeWidth={1}
         strokeDasharray="4 4"
       />
-      <SvgText x={CHART_PADDING - 5} y={line.y + 4} fontSize={10} fill="#9ca3af" textAnchor="end">
+      <Text x={CHART_PADDING - 5} y={line.y + 4} fontSize={10} fill="#9ca3af" textAnchor="end">
         {formatValue(line.value)}
-      </SvgText>
+      </Text>
     </React.Fragment>
   ));
 }
