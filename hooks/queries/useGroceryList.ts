@@ -672,10 +672,20 @@ export function groupGroceryItemsIntoSections(groceryList: GroceryItem[]): Groce
  * Step 4: Computes statistics for the grocery list.
  */
 export function computeGroceryStats(groceryList: GroceryItem[]) {
+  // ⚡ Bolt Performance Optimization: Replaced multiple filter.length calls with a single for loop to avoid O(3N) iteration and intermediate array allocations.
   const totalItems = groceryList.length;
-  const neededItems = groceryList.filter((item) => !item.isCovered).length;
-  const checkedItems = groceryList.filter((item) => item.isChecked).length;
-  const coveredItems = groceryList.filter((item) => item.isCovered).length;
+  let neededItems = 0;
+  let checkedItems = 0;
+  let coveredItems = 0;
+
+  for (let i = 0; i < totalItems; i++) {
+    const item = groceryList[i];
+    if (item) {
+      if (!item.isCovered) neededItems++;
+      if (item.isChecked) checkedItems++;
+      if (item.isCovered) coveredItems++;
+    }
+  }
 
   return {
     totalItems,
