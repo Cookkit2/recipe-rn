@@ -332,15 +332,25 @@ export class ChallengeService {
 
       const activeChallenges = await this.challengeRepo.getActiveChallenges();
 
-      for (const challenge of activeChallenges) {
+      // Filter for relevant challenges first
+      const relevantChallenges = activeChallenges.filter((c) =>
+        this.isChallengeRelevant(c.parsedRequirement, metric)
+      );
+
+      if (relevantChallenges.length === 0) {
+        return result;
+      }
+
+      // ⚡ Bolt Performance Optimization: Batch fetch user challenges to prevent N+1 queries
+      const relevantChallengeIds = relevantChallenges.map((c) => c.id);
+      const userChallenges = await this.userChallengeRepo.getByChallengeIds(relevantChallengeIds);
+
+      // Create a map for O(1) lookups
+      const userChallengeMap = new Map(userChallenges.map((uc) => [uc.challengeId, uc]));
+
+      for (const challenge of relevantChallenges) {
         const requirement = challenge.parsedRequirement;
-
-        // Check if this challenge is relevant to the metric
-        if (!this.isChallengeRelevant(requirement, metric)) {
-          continue;
-        }
-
-        const userChallenge = await this.userChallengeRepo.getByChallengeId(challenge.id);
+        const userChallenge = userChallengeMap.get(challenge.id);
         const currentProgress = userChallenge?.progress ?? 0;
         const newProgress = currentProgress + amount;
 
