@@ -117,6 +117,15 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
       query = query.extend(Q.where("progress", Q.gte(options.minProgress)));
     }
 
+    // ⚡ Bolt Performance Optimization:
+    // Push claimed filter down to the native SQLite layer before pagination.
+    // This prevents incorrect pagination counts and avoids instantiating unused records across the JS bridge.
+    if (options.claimed === true) {
+      query = query.extend(Q.where("claimed_at", Q.notEq(null)));
+    } else if (options.claimed === false) {
+      query = query.extend(Q.where("claimed_at", null));
+    }
+
     // Apply sorting and pagination
     query = this.applySortAndPaginate(
       query,
@@ -125,16 +134,7 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
       options
     );
 
-    let records = await query.fetch();
-
-    // Post-process filters that can't be done in SQL
-    if (options.claimed === true) {
-      records = records.filter((r) => r.isClaimed);
-    } else if (options.claimed === false) {
-      records = records.filter((r) => !r.isClaimed);
-    }
-
-    return records;
+    return await query.fetch();
   }
 
   // Get available challenges
@@ -167,8 +167,10 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
 
   // Get unclaimed completed challenges (completed but not claimed)
   async getUnclaimedChallenges(): Promise<UserChallenge[]> {
-    const completed = await this.getCompletedChallenges();
-    return completed.filter((c) => !c.isClaimed);
+    // ⚡ Bolt Performance Optimization: Filter at DB layer instead of fetching all records
+    return await this.collection
+      .query(Q.where("status", "completed"), Q.where("claimed_at", null))
+      .fetch();
   }
 
   // Get user challenges for multiple challenges
