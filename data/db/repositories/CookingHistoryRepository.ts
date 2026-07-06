@@ -46,6 +46,20 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
       query = query.extend(Q.where("rating", Q.gte(options.minRating)));
     }
 
+    // ⚡ Bolt Performance Optimization: Filter at DB layer instead of fetching all records
+    // and using JavaScript .filter() memory overhead
+    if (options.hasRating === true) {
+      query = query.extend(Q.where("rating", Q.notEq(null)));
+    } else if (options.hasRating === false) {
+      query = query.extend(Q.where("rating", null));
+    }
+
+    if (options.hasPhoto === true) {
+      query = query.extend(Q.where("photo_url", Q.notEq(null)));
+    } else if (options.hasPhoto === false) {
+      query = query.extend(Q.where("photo_url", null));
+    }
+
     // Apply sorting (most recent first by default)
     query = this.applySorting(query, options.sortBy || "cooked_at", options.sortOrder || "desc");
 
@@ -58,19 +72,6 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
     }
 
     let records = await query.fetch();
-
-    // Post-process filters that can't be done in SQL
-    if (options.hasRating === true) {
-      records = records.filter((r) => r.rating !== undefined);
-    } else if (options.hasRating === false) {
-      records = records.filter((r) => r.rating === undefined);
-    }
-
-    if (options.hasPhoto === true) {
-      records = records.filter((r) => r.hasPhoto);
-    } else if (options.hasPhoto === false) {
-      records = records.filter((r) => !r.hasPhoto);
-    }
 
     return records;
   }
