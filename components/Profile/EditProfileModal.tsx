@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { EyeIcon, EyeOffIcon } from "lucide-uniwind";
 import { H4, P } from "~/components/ui/typography";
 import { Input } from "~/components/ui/input";
@@ -194,9 +194,8 @@ export default function EditProfileModal({
         <Button
           className="min-w-full mt-4 rounded-2xl bg-foreground flex-row justify-center items-center gap-2"
           onPress={onSubmit}
-          disabled={isSigningUp}
+          isLoading={isSigningUp}
         >
-          {isSigningUp && <ActivityIndicator size="small" />}
           <P className="font-urbanist-semibold text-background">Confirm</P>
         </Button>
       </View>

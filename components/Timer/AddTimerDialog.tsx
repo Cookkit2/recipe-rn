@@ -6,7 +6,7 @@
  */
 
 import React, { useState } from "react";
-import { View, TextInput, ActivityIndicator } from "react-native";
+import { View, TextInput } from "react-native";
 import { ClockIcon } from "lucide-uniwind";
 import { toast } from "sonner-native";
 import { Button } from "~/components/ui/button";
@@ -236,8 +236,12 @@ export default function AddTimerDialog({
               <Text>Cancel</Text>
             </Button>
           </DialogClose>
-          <Button onPress={handleSubmit} disabled={isCreating || !isValidName || !hasValidDuration}>
-            {isCreating ? <ActivityIndicator size="small" color="white" /> : <Text>Add Timer</Text>}
+          <Button
+            onPress={handleSubmit}
+            disabled={!isValidName || !hasValidDuration}
+            isLoading={isCreating}
+          >
+            <Text>Add Timer</Text>
           </Button>
         </DialogFooter>
       </DialogContent>

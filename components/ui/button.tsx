@@ -1,6 +1,11 @@
 import React, { useCallback, useMemo } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-import { Pressable, type GestureResponderEvent, type Insets } from "react-native";
+import {
+  Pressable,
+  type GestureResponderEvent,
+  type Insets,
+  ActivityIndicator,
+} from "react-native";
 import { TextClassContext } from "~/components/ui/text";
 import { cn } from "~/lib/utils";
 import Animated from "react-native-reanimated";
@@ -74,6 +79,7 @@ type ButtonProps = React.ComponentProps<typeof Pressable> &
     accessibilityLabel?: string;
     accessibilityHint?: string;
     accessibilityRole?: string;
+    isLoading?: boolean;
   };
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -90,6 +96,7 @@ const Button = React.forwardRef<React.ComponentRef<typeof Pressable>, ButtonProp
       onPress,
       enableAnimation = true,
       accessibilityRole = "button",
+      isLoading = false,
       ...props
     }: ButtonProps,
     ref
@@ -148,7 +155,7 @@ const Button = React.forwardRef<React.ComponentRef<typeof Pressable>, ButtonProp
         <Animated.View style={animatedStyle} className={cn(containerClassName, "overflow-hidden")}>
           <AnimatedPressable
             className={cn(
-              props.disabled && "opacity-50 web:pointer-events-none",
+              (props.disabled || isLoading) && "opacity-50 web:pointer-events-none",
               "border-continuous",
               buttonVariants({ variant, size, className })
             )}
@@ -159,9 +166,26 @@ const Button = React.forwardRef<React.ComponentRef<typeof Pressable>, ButtonProp
             ref={ref}
             role="button"
             accessibilityRole={accessibilityRole}
-            accessibilityState={{ disabled: !!props.disabled }}
+            accessibilityState={{ disabled: !!props.disabled || isLoading }}
             style={[props.style, roundedStyle]}
+            disabled={props.disabled || isLoading}
             {...props}
+            children={
+              typeof props.children === "function" ? (
+                props.children
+              ) : (
+                <>
+                  {isLoading && (
+                    <ActivityIndicator
+                      size="small"
+                      color={variant === "outline" || variant === "ghost" ? undefined : "white"}
+                      className="mr-2"
+                    />
+                  )}
+                  {props.children}
+                </>
+              )
+            }
           />
         </Animated.View>
       </TextClassContext.Provider>

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Pressable, ActivityIndicator, TextInput } from "react-native";
+import { View, Pressable, TextInput } from "react-native";
 import { StarIcon } from "lucide-uniwind";
 import { H4, P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
@@ -123,9 +123,8 @@ export default function RateRecipeModal({
           <Button
             className="flex-1 rounded-2xl bg-foreground flex-row justify-center items-center gap-2"
             onPress={handleSave}
-            disabled={isSaving}
+            isLoading={isSaving}
           >
-            {isSaving && <ActivityIndicator size="small" color={"white"} />}
             <P className="font-urbanist-semibold text-background">Save</P>
           </Button>
         </View>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, TextInput, ActivityIndicator } from "react-native";
+import { View, TextInput } from "react-native";
 import { useRouter } from "expo-router";
 import { LinkIcon } from "lucide-uniwind";
 import { toast } from "sonner-native";
@@ -100,8 +100,8 @@ export default function ImportRecipeDialog({ open, onOpenChange }: ImportRecipeD
               <Text>Cancel</Text>
             </Button>
           </DialogClose>
-          <Button onPress={handleSubmit} disabled={isImporting || !recipeUrl.trim()}>
-            {isImporting ? <ActivityIndicator size="small" color="white" /> : <Text>Import</Text>}
+          <Button onPress={handleSubmit} disabled={!recipeUrl.trim()} isLoading={isImporting}>
+            <Text>Import</Text>
           </Button>
         </DialogFooter>
       </DialogContent>
