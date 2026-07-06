@@ -134,14 +134,28 @@ export class ChallengeRepository extends BaseRepository<Challenge> {
 
   // Get active daily challenges
   async getActiveDailyChallenges(): Promise<Challenge[]> {
-    const allDaily = await this.getDailyChallenges();
-    return allDaily.filter((c) => c.isActive);
+    const now = Date.now();
+    // ⚡ Bolt Performance Optimization: Push filtering logic down to SQLite
+    return await this.collection
+      .query(
+        Q.where("type", "daily"),
+        Q.where("start_date", Q.lte(now)),
+        Q.where("end_date", Q.gte(now))
+      )
+      .fetch();
   }
 
   // Get active weekly challenges
   async getActiveWeeklyChallenges(): Promise<Challenge[]> {
-    const allWeekly = await this.getWeeklyChallenges();
-    return allWeekly.filter((c) => c.isActive);
+    const now = Date.now();
+    // ⚡ Bolt Performance Optimization: Push filtering logic down to SQLite
+    return await this.collection
+      .query(
+        Q.where("type", "weekly"),
+        Q.where("start_date", Q.lte(now)),
+        Q.where("end_date", Q.gte(now))
+      )
+      .fetch();
   }
 
   // Update challenge
