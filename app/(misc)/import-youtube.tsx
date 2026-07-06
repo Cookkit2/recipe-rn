@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, TextInput, Pressable, ActivityIndicator, ScrollView } from "react-native";
+import { View, TextInput, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { H4, P } from "~/components/ui/typography";
 import { LinkIcon } from "lucide-uniwind";
@@ -12,6 +12,7 @@ import {
 import { isValidYouTubeUrl } from "~/utils/youtube-utils";
 import ImportProgressBar from "~/components/Recipe/ImportProgressBar";
 import ImportResultCard from "~/components/Recipe/ImportResultCard";
+import { Button } from "~/components/ui/button";
 
 export default function ImportYouTubeRecipe() {
   const router = useRouter();
@@ -113,24 +114,16 @@ export default function ImportYouTubeRecipe() {
           </View>
 
           {/* Import Button */}
-          <Pressable
-            className={`py-4 rounded-xl items-center justify-center mt-4 ${
-              isImporting || !!urlError || !youtubeUrl.trim()
-                ? "bg-muted"
-                : "bg-primary active:bg-primary/90"
-            }`}
+          <Button
+            className="py-4 mt-4"
+            size="lg"
             onPress={handleImport}
-            disabled={isImporting || !!urlError || !youtubeUrl.trim()}
-            accessibilityRole="button"
+            disabled={!!urlError || !youtubeUrl.trim()}
+            isLoading={isImporting}
             accessibilityLabel="Import Recipe"
-            accessibilityState={{ disabled: isImporting || !!urlError || !youtubeUrl.trim() }}
           >
-            {isImporting ? (
-              <ActivityIndicator color="white" size="small" />
-            ) : (
-              <Text className="text-primary-foreground font-bold text-lg">Import Recipe</Text>
-            )}
-          </Pressable>
+            <Text className="text-primary-foreground font-bold text-lg">Import Recipe</Text>
+          </Button>
 
           {/* Tips */}
           <View className="mt-6 p-4 bg-muted/50 rounded-xl">
