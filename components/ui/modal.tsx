@@ -29,10 +29,14 @@ export default function BaseModal({
         <Pressable
           className="flex-1 justify-center items-center bg-black/50 px-4 z-[2]"
           onPress={onCancel}
+          accessibilityRole="button"
+          accessibilityLabel="Dismiss modal"
+          accessibilityHint="Closes the currently active modal"
         >
           <Pressable
             onPress={(e) => e.stopPropagation()}
             className="w-full max-w-sm flex items-center"
+            importantForAccessibility="no"
           >
             {children}
           </Pressable>
