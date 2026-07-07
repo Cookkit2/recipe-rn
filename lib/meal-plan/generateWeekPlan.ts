@@ -406,7 +406,8 @@ export function projectPlannedMacros(meals: PlannedMeal[], candidates: Recipe[])
   // the normalized values to the existing aggregator (single source of truth
   // for the sums) with multiplier 1 — the per-meal scaling is folded in here.
   // ⚡ Bolt Performance Optimization: Replace chaining .map().filter() with a single loop to avoid multiple array allocations
-  const inputs: { calories: number; protein: number; carbs: number; fat: number; fiber: number; }[] = [];
+  const inputs: { calories: number; protein: number; carbs: number; fat: number; fiber: number }[] =
+    [];
   for (let i = 0; i < meals.length; i++) {
     const meal = meals[i];
     if (meal) {
