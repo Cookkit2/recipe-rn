@@ -12,27 +12,10 @@ const TEST_ENV_KEY = "MMKV_ENCRYPTION_KEY";
 let lastKeyError: unknown = null;
 
 function getEncryptionKey(): string | undefined {
-  // Primary: EXPO_PUBLIC_* key inlined from .env at build time (no Keychain dependency,
-  // so it works even where per-device SecureStore generation is unavailable — e.g. the simulator).
-  // IMPORTANT: babel-preset-expo only inlines STATIC property access
-  // (`process.env.EXPO_PUBLIC_X`). Computed access (`process.env[SOME_VAR]`) is NOT inlined
-  // and would always be undefined at runtime.
-  if (typeof process !== "undefined" && process.env?.EXPO_PUBLIC_MMKV_ENCRYPTION_KEY) {
-    return process.env.EXPO_PUBLIC_MMKV_ENCRYPTION_KEY;
-  }
-  if (Constants.expoConfig?.extra?.EXPO_PUBLIC_MMKV_ENCRYPTION_KEY) {
-    return Constants.expoConfig.extra.EXPO_PUBLIC_MMKV_ENCRYPTION_KEY;
-  }
-
-  // Test override
-  if (typeof process !== "undefined" && process.env?.[TEST_ENV_KEY]) {
-    return process.env[TEST_ENV_KEY];
-  }
-
-  if (Constants.expoConfig?.extra?.[TEST_ENV_KEY]) {
-    return Constants.expoConfig.extra[TEST_ENV_KEY];
-  }
-
+  // 1. Primary: per-device key via SecureStore (strongest — unique per install).
+  //    On environments where the sync keychain call fails (e.g. the iOS 26.5 simulator,
+  //    where getValueWithKeySync throws a FunctionCallException), this throws and we
+  //    fall through to the env fallback below so the app still runs.
   try {
     // Try to get existing key
     let key = SecureStore.getItem(SECURE_STORE_KEY);
@@ -45,15 +28,36 @@ function getEncryptionKey(): string | undefined {
       log.info("Generated new per-device MMKV encryption key");
     }
 
-    return key;
+    if (key) {
+      return key;
+    }
   } catch (error) {
     lastKeyError = error;
     console.error("[storage-config] SecureStore/Crypto failure:", error);
     log.error("Failed to access SecureStore for encryption key:", error);
-    // If SecureStore fails (e.g. during certain testing environments), we'll return undefined
-    // which will be caught by getEncryptedConfig's validation
-    return undefined;
+    // fall through to the env fallback
   }
+
+  // 2. Fallback: EXPO_PUBLIC_* key inlined from .env at build time. Used where
+  //    SecureStore is unavailable. IMPORTANT: babel-preset-expo only inlines STATIC
+  //    property access (`process.env.EXPO_PUBLIC_X`); computed access is NOT inlined
+  //    and would always be undefined at runtime.
+  if (typeof process !== "undefined" && process.env?.EXPO_PUBLIC_MMKV_ENCRYPTION_KEY) {
+    return process.env.EXPO_PUBLIC_MMKV_ENCRYPTION_KEY;
+  }
+  if (Constants.expoConfig?.extra?.EXPO_PUBLIC_MMKV_ENCRYPTION_KEY) {
+    return Constants.expoConfig.extra.EXPO_PUBLIC_MMKV_ENCRYPTION_KEY;
+  }
+
+  // 3. Test/development override
+  if (typeof process !== "undefined" && process.env?.[TEST_ENV_KEY]) {
+    return process.env[TEST_ENV_KEY];
+  }
+  if (Constants.expoConfig?.extra?.[TEST_ENV_KEY]) {
+    return Constants.expoConfig.extra[TEST_ENV_KEY];
+  }
+
+  return undefined;
 }
 
 /**
