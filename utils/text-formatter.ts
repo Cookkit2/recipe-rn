@@ -19,14 +19,6 @@ export const titleCase = (str: string): string => {
 };
 
 /**
- * Converts text to sentence case (first letter capitalized, rest lowercase)
- */
-export const sentenceCase = (str: string): string => {
-  if (!str) return "";
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-};
-
-/**
  * Converts camelCase or PascalCase to readable text
  * Example: "ingredientName" -> "Ingredient Name"
  */
