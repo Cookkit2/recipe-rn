@@ -44,7 +44,7 @@ export function aggregateNutrition(
   return { calories, protein, carbs, fat, fiber };
 }
 
-function sumNutrition(summaries: NutritionSummary[]): NutritionSummary {
+export function sumNutrition(summaries: NutritionSummary[]): NutritionSummary {
   if (summaries.length === 0) return { ...EMPTY_SUMMARY };
 
   // ⚡ Bolt Performance Optimization: Replace multiple O(N) array.reduce calls with a single O(N) loop
