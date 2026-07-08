@@ -84,18 +84,24 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
       cookCount: number;
     }[]
   > {
-    const allHistory = await this.collection.query(Q.sortBy("cooked_at", Q.desc)).fetch();
+    // ⚡ Bolt Performance Optimization: Bypass WatermelonDB model instantiation overhead
+    // by fetching raw DB records and using a standard for-loop.
+    const allHistory = await this.collection.query(Q.sortBy("cooked_at", Q.desc)).unsafeFetchRaw();
 
     // Group by recipe and get unique recipes
     const recipeMap = new Map<string, { lastCookedAt: number; cookCount: number }>();
 
-    for (const record of allHistory) {
-      const existing = recipeMap.get(record.recipeId);
+    for (let i = 0; i < allHistory.length; i++) {
+      const record = allHistory[i] as any;
+      const recipeId = record.recipe_id;
+      const cookedAt = record.cooked_at;
+
+      const existing = recipeMap.get(recipeId);
       if (existing) {
         existing.cookCount++;
       } else {
-        recipeMap.set(record.recipeId, {
-          lastCookedAt: record.cookedAt,
+        recipeMap.set(recipeId, {
+          lastCookedAt: cookedAt,
           cookCount: 1,
         });
       }
@@ -120,22 +126,28 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
       lastCookedAt: number;
     }[]
   > {
-    const allHistory = await this.collection.query().fetch();
+    // ⚡ Bolt Performance Optimization: Bypass WatermelonDB model instantiation overhead
+    // by fetching raw DB records and using a standard for-loop.
+    const allHistory = await this.collection.query().unsafeFetchRaw();
 
     // Group by recipe and count
     const recipeMap = new Map<string, { cookCount: number; lastCookedAt: number }>();
 
-    for (const record of allHistory) {
-      const existing = recipeMap.get(record.recipeId);
+    for (let i = 0; i < allHistory.length; i++) {
+      const record = allHistory[i] as any;
+      const recipeId = record.recipe_id;
+      const cookedAt = record.cooked_at;
+
+      const existing = recipeMap.get(recipeId);
       if (existing) {
         existing.cookCount++;
-        if (record.cookedAt > existing.lastCookedAt) {
-          existing.lastCookedAt = record.cookedAt;
+        if (cookedAt > existing.lastCookedAt) {
+          existing.lastCookedAt = cookedAt;
         }
       } else {
-        recipeMap.set(record.recipeId, {
+        recipeMap.set(recipeId, {
           cookCount: 1,
-          lastCookedAt: record.cookedAt,
+          lastCookedAt: cookedAt,
         });
       }
     }
