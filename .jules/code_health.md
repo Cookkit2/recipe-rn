@@ -30,3 +30,7 @@
 ## 2024-05-30 - Extract Complex State Logic to Custom Hooks
 **Learning:** Excessively long components with complex inline state and event handlers reduce readability and maintainability.
 **Action:** Extract independent state and action handlers into dedicated custom hooks in the `hooks/` directory.
+
+## 2025-02-20 - Extracting excessive Stack.Screen definitions
+**Learning:** Overly long React components with huge chunks of `Stack.Screen` definitions can be safely extracted into smaller module-specific groups without breaking the Expo Router, as long as they return `Stack.Screen` directly or via a Fragment. However, because React Navigation requires the direct children of a Navigator to be Screen or Group components, they must be called as functions `{ScreenGroup()}` rather than rendered as components `<ScreenGroup />`.
+**Action:** Extract large screen configurations into separate `ScreenGroup*` functions that return fragments, and call them directly in the navigator stack to improve readability.
