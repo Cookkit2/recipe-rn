@@ -72,3 +72,6 @@
 ## 2026-07-05 - Extracted custom hooks for Code Health
 **Learning:** Extracting component state mapping (e.g. step page array generation) and complex data fetching (e.g. useTailoredRecipe) into custom hooks significantly reduces the length of React components and isolates responsibilities.
 **Action:** When a component mixes data mapping and state management, move the logic to custom hooks.
+## 2025-02-15 - Write Comprehensive Tests Including Error Paths
+**Learning:** Adding robust test coverage for utility functions like JSON parsers should include tests that deliberately invoke the catch block with malformed inputs to ensure fallback behavior works correctly.
+**Action:** When creating tests for data-parsing utilities, always write explicit tests for malformed input paths rather than relying solely on happy path scenarios.
