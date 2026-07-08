@@ -115,7 +115,7 @@
     "react-native-reanimated-carousel": "^4.0.3",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screen-corner-radius": "^0.2.3",
-    "react-native-screens": "4.25.1",
+    "react-native-screens": "4.25.2",
     "react-native-svg": "15.15.4",
     "react-native-vision-camera": "^5.0.10",
     "react-native-web": "^0.21.0",
@@ -162,7 +162,8 @@
     "@babel/runtime": ">=7.26.10",
     "jest-environment-node": "30.4.1",
     "jest-mock": "30.4.1",
-    "tmp": ">=0.2.6"
+    "tmp": ">=0.2.6",
+    "react-native-screens": "4.25.2"
   },
   "private": true,
   "reanimated": {
