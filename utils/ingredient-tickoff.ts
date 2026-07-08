@@ -17,6 +17,17 @@
  * the issue scope (no multi-device CRDT sync).
  */
 
+/** Returns a new Set with the given id toggled in/out of `used`. */
+export function toggleIngredientUsed(used: ReadonlySet<string>, id: string): Set<string> {
+  const next = new Set(used);
+  if (next.has(id)) {
+    next.delete(id);
+  } else {
+    next.add(id);
+  }
+  return next;
+}
+
 /**
  * True when every ingredient id for the recipe is present in `used`.
  * Returns false when there are no ingredients (nothing to complete).
