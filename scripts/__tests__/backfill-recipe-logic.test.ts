@@ -44,6 +44,33 @@ describe("parseArgs", () => {
   it("throws on non-integer numeric value", () => {
     expect(() => parseArgs(["--limit=abc"])).toThrow(/Expected integer for --limit/);
   });
+
+  it("rejects hex/scientific/empty strings as non-integers", () => {
+    expect(() => parseArgs(["--limit=0x10"])).toThrow(/Expected integer for --limit/);
+    expect(() => parseArgs(["--limit=1e2"])).toThrow(/Expected integer for --limit/);
+    expect(() => parseArgs(["--limit="])).toThrow(/Expected integer for --limit/);
+  });
+
+  it("rejects concurrency below 1", () => {
+    expect(() => parseArgs(["--concurrency=0"])).toThrow(/--concurrency must be >= 1/);
+    expect(() => parseArgs(["--concurrency=-1"])).toThrow(/--concurrency must be >= 1/);
+  });
+
+  it("rejects limit below 1 when provided", () => {
+    expect(() => parseArgs(["--limit=0"])).toThrow(/--limit must be >= 1/);
+    expect(() => parseArgs(["--limit=-5"])).toThrow(/--limit must be >= 1/);
+  });
+
+  it("rejects quality outside [1,100]", () => {
+    expect(() => parseArgs(["--quality=0"])).toThrow(/--quality must be between 1 and 100/);
+    expect(() => parseArgs(["--quality=101"])).toThrow(/--quality must be between 1 and 100/);
+    expect(() => parseArgs(["--quality=-1"])).toThrow(/--quality must be between 1 and 100/);
+  });
+
+  it("rejects max-width below 1 when provided", () => {
+    expect(() => parseArgs(["--max-width=0"])).toThrow(/--max-width must be >= 1/);
+    expect(() => parseArgs(["--max-width=-3"])).toThrow(/--max-width must be >= 1/);
+  });
 });
 
 describe("getBucketPublicHost", () => {
