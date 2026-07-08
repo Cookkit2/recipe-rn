@@ -150,7 +150,7 @@ export function compareQuantities(
  * @param availableUnit - The unit of the available quantity
  * @returns ConvertedQuantity with deficit amount, or null if incompatible/unknown
  */
-function calculateDeficit(
+export function calculateDeficit(
   requiredQuantity: number,
   requiredUnit: string,
   availableQuantity: number,
@@ -181,7 +181,7 @@ function calculateDeficit(
  * @param requiredUnit - The unit of the required quantity
  * @returns true if sufficient, false if insufficient or incompatible
  */
-function hasSufficientQuantity(
+export function hasSufficientQuantity(
   availableQuantity: number,
   availableUnit: string,
   requiredQuantity: number,
@@ -254,7 +254,7 @@ export function aggregateQuantities(
  * @param requiredUnit - The unit of the required quantity
  * @returns Percentage from 0-100, or null if incompatible
  */
-function calculateAvailabilityPercentage(
+export function calculateAvailabilityPercentage(
   availableQuantity: number,
   availableUnit: string,
   requiredQuantity: number,
