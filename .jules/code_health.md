@@ -26,3 +26,7 @@
 ## 2024-03-24 - Removing bun.lockb changes
 **Learning:** Running `bun install` can unintentionally modify `bun.lockb` if the environment's Bun version differs, which gets staged as an extraneous change during task execution.
 **Action:** Always check `git status` and specifically revert `bun.lockb` (using `git restore --staged bun.lockb && git checkout bun.lockb`) before submitting a pull request to ensure only the intended code changes are included.
+
+## 2024-05-30 - Extract Complex State Logic to Custom Hooks
+**Learning:** Excessively long components with complex inline state and event handlers reduce readability and maintainability.
+**Action:** Extract independent state and action handlers into dedicated custom hooks in the `hooks/` directory.
