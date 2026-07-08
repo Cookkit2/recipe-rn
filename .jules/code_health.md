@@ -18,3 +18,7 @@
 ## 2025-02-18 - Remove unused function
 **Learning:** Removing unused utility functions reduces codebase clutter, cognitive load, and potentially bundle size.
 **Action:** When asked to remove an unused export, always verify it's unused via global text search (`grep -rn "exportName" .`), then completely remove it and its associated tests and imports. Ensure you run type checks and tests to verify everything is safe before submitting.
+
+## 2024-07-08 - Extracted RecipeDetails Review and Tip logic into a custom hook
+**Learning:** Overly long React components often contain clusters of related state and effect logic that can be isolated. In `app/recipes/[recipeId]/index.tsx`, the review and tip logic was mixed with UI rendering.
+**Action:** Extracting related state and React Query hooks into custom hooks (e.g. `useRecipeReviewsAndTips`) reduces component complexity and improves maintainability by encapsulating concerns. Always check for untracked artifact files like `test_extract.ts` or lockfiles before requesting review.
