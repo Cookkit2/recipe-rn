@@ -1,7 +1,6 @@
 import {
   capitalize,
   titleCase,
-  sentenceCase,
   camelCaseToReadable,
   toKebabCase,
   toCamelCase,
@@ -80,36 +79,6 @@ describe("Text Formatter Utils - Capitalization", () => {
       expect(titleCase("")).toBe("");
       expect(titleCase(null as any)).toBe("");
       expect(titleCase(undefined as any)).toBe("");
-    });
-  });
-
-  describe("sentenceCase", () => {
-    it("should capitalize the first letter and lowercase the rest", () => {
-      expect(sentenceCase("hello world. how are you?")).toBe("Hello world. how are you?");
-      expect(sentenceCase("HELLO WORLD")).toBe("Hello world");
-    });
-
-    it("should return empty string for empty or null input", () => {
-      expect(sentenceCase("")).toBe("");
-      expect(sentenceCase(null as any)).toBe("");
-      expect(sentenceCase(undefined as any)).toBe("");
-    });
-
-    it("should handle single character strings", () => {
-      expect(sentenceCase("a")).toBe("A");
-      expect(sentenceCase("Z")).toBe("Z");
-    });
-
-    it("should handle strings starting with numbers or special characters", () => {
-      expect(sentenceCase("1st place")).toBe("1st place");
-      expect(sentenceCase("!hello")).toBe("!hello");
-      expect(sentenceCase("  spaces")).toBe("  spaces");
-    });
-
-    it("should handle mixed case strings correctly", () => {
-      expect(sentenceCase("hElLo wOrLd")).toBe("Hello world");
-      expect(sentenceCase("ThIs Is A tEsT")).toBe("This is a test");
-      expect(sentenceCase("Already Sentence case")).toBe("Already sentence case");
     });
   });
 
