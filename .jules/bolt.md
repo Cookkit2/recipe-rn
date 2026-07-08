@@ -86,3 +86,7 @@
 ## 2025-02-15 - Write Comprehensive Tests Including Error Paths
 **Learning:** Adding robust test coverage for utility functions like JSON parsers should include tests that deliberately invoke the catch block with malformed inputs to ensure fallback behavior works correctly.
 **Action:** When creating tests for data-parsing utilities, always write explicit tests for malformed input paths rather than relying solely on happy path scenarios.
+
+## 2024-05-17 - Optimize WatermelonDB Array Iterations with SQL Groups
+**Learning:** For analytical and aggregate functions over large datasets in React Native apps, fetching the entire array of WatermelonDB models over the native bridge (`.fetch()`) and subsequently iterating over them with JavaScript (`reduce`, `Map`, `forEach`) incurs massive overhead (CPU serialization, memory bloat, and bridge congestion).
+**Action:** Always prefer pushing grouping, sorting, and pagination logic down directly into SQLite. Use `this.collection.query(Q.unsafeSqlQuery(sql, params)).unsafeFetchRaw()` paired with a strict `WHERE _status != 'deleted'` filter and parameterized variables to implement safe, native-speed data transformation functions that do not allocate ORM models.

@@ -120,35 +120,28 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
       lastCookedAt: number;
     }[]
   > {
-    const allHistory = await this.collection.query().fetch();
+    // ⚡ Bolt Performance Optimization: Filter at DB layer instead of fetching all records
+    // and using JavaScript Maps to group and reduce. This avoids cross-bridge memory
+    // allocations for every cooking history record.
+    const rawRecords = await this.collection
+      .query(
+        Q.unsafeSqlQuery(
+          `SELECT recipe_id, count(*) as cookCount, max(cooked_at) as lastCookedAt
+         FROM ${this.collection.table}
+         WHERE _status != 'deleted'
+         GROUP BY recipe_id
+         ORDER BY cookCount DESC
+         LIMIT ?`,
+          [limit]
+        )
+      )
+      .unsafeFetchRaw();
 
-    // Group by recipe and count
-    const recipeMap = new Map<string, { cookCount: number; lastCookedAt: number }>();
-
-    for (const record of allHistory) {
-      const existing = recipeMap.get(record.recipeId);
-      if (existing) {
-        existing.cookCount++;
-        if (record.cookedAt > existing.lastCookedAt) {
-          existing.lastCookedAt = record.cookedAt;
-        }
-      } else {
-        recipeMap.set(record.recipeId, {
-          cookCount: 1,
-          lastCookedAt: record.cookedAt,
-        });
-      }
-    }
-
-    // Convert to array and sort by cook count
-    return Array.from(recipeMap.entries())
-      .map(([recipeId, data]) => ({
-        recipeId,
-        cookCount: data.cookCount,
-        lastCookedAt: data.lastCookedAt,
-      }))
-      .sort((a, b) => b.cookCount - a.cookCount)
-      .slice(0, limit);
+    return rawRecords.map((r: any) => ({
+      recipeId: String(r.recipe_id),
+      cookCount: Number(r.cookCount),
+      lastCookedAt: Number(r.lastCookedAt),
+    }));
   }
 
   // Get cook count for a specific recipe
