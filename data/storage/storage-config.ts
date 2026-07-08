@@ -5,11 +5,26 @@ import type { StorageConfig } from ".";
 import { log } from "~/utils/logger";
 
 const SECURE_STORE_KEY = "mmkv_encryption_key";
-// Fallback for tests/development
+// Fallback override for tests/development
 const TEST_ENV_KEY = "MMKV_ENCRYPTION_KEY";
 
+// Captures the most recent SecureStore/Crypto failure so getEncryptedConfig can surface it.
+let lastKeyError: unknown = null;
+
 function getEncryptionKey(): string | undefined {
-  // Check for test override first
+  // Primary: EXPO_PUBLIC_* key inlined from .env at build time (no Keychain dependency,
+  // so it works even where per-device SecureStore generation is unavailable — e.g. the simulator).
+  // IMPORTANT: babel-preset-expo only inlines STATIC property access
+  // (`process.env.EXPO_PUBLIC_X`). Computed access (`process.env[SOME_VAR]`) is NOT inlined
+  // and would always be undefined at runtime.
+  if (typeof process !== "undefined" && process.env?.EXPO_PUBLIC_MMKV_ENCRYPTION_KEY) {
+    return process.env.EXPO_PUBLIC_MMKV_ENCRYPTION_KEY;
+  }
+  if (Constants.expoConfig?.extra?.EXPO_PUBLIC_MMKV_ENCRYPTION_KEY) {
+    return Constants.expoConfig.extra.EXPO_PUBLIC_MMKV_ENCRYPTION_KEY;
+  }
+
+  // Test override
   if (typeof process !== "undefined" && process.env?.[TEST_ENV_KEY]) {
     return process.env[TEST_ENV_KEY];
   }
@@ -32,6 +47,8 @@ function getEncryptionKey(): string | undefined {
 
     return key;
   } catch (error) {
+    lastKeyError = error;
+    console.error("[storage-config] SecureStore/Crypto failure:", error);
     log.error("Failed to access SecureStore for encryption key:", error);
     // If SecureStore fails (e.g. during certain testing environments), we'll return undefined
     // which will be caught by getEncryptedConfig's validation
@@ -50,7 +67,8 @@ function getEncryptedConfig(): StorageConfig {
   // Always require encryption key for sensitive data storage
   if (!key) {
     throw new Error(
-      "CRITICAL: Encryption key could not be generated or retrieved for encrypted auth storage. Sensitive credentials cannot be stored without encryption."
+      "CRITICAL: Encryption key could not be generated or retrieved for encrypted auth storage. Sensitive credentials cannot be stored without encryption. Underlying error: " +
+        (lastKeyError instanceof Error ? lastKeyError.message : String(lastKeyError))
     );
   }
 
