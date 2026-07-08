@@ -27,15 +27,3 @@ export function toggleIngredientUsed(used: ReadonlySet<string>, id: string): Set
   }
   return next;
 }
-
-/**
- * True when every ingredient id for the recipe is present in `used`.
- * Returns false when there are no ingredients (nothing to complete).
- */
-export function areAllIngredientsUsed(
-  used: ReadonlySet<string>,
-  ingredientIds: readonly string[]
-): boolean {
-  if (ingredientIds.length === 0) return false;
-  return ingredientIds.every((id) => used.has(id));
-}
