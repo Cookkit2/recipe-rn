@@ -4,16 +4,16 @@ import type { PantryItem } from "~/types/PantryItem";
 
 describe("buildIngredientPreviewData", () => {
   const mockIngredients: RecipeIngredient[] = [
-    { name: "Flour", quantity: 2, unit: "cups" },
-    { name: "Sugar", quantity: 1, unit: "cup" },
-    { name: "Salt", quantity: 1, unit: "tsp" },
-    { name: "Eggs", quantity: 2, unit: "large" },
+    { name: "Flour", quantity: 2, unit: "cups", relatedIngredientId: "1" },
+    { name: "Sugar", quantity: 1, unit: "cup", relatedIngredientId: "2" },
+    { name: "Salt", quantity: 1, unit: "tsp", relatedIngredientId: "3" },
+    { name: "Eggs", quantity: 2, unit: "large", relatedIngredientId: "4" },
   ];
 
   it("should categorize matching ingredients with image_url as matched", () => {
     const mockFindMatch = (ingredient: RecipeIngredient): PantryItem | null => {
       if (ingredient.name === "Flour") {
-        return { name: "Flour", image_url: "flour.jpg" } as PantryItem;
+        return { name: "Flour", image_url: "flour.jpg" } as unknown as PantryItem;
       }
       return null;
     };
@@ -30,7 +30,7 @@ describe("buildIngredientPreviewData", () => {
   it("should categorize matching ingredients without image_url as missing", () => {
     const mockFindMatch = (ingredient: RecipeIngredient): PantryItem | null => {
       if (ingredient.name === "Flour") {
-        return { name: "Flour", image_url: null } as PantryItem;
+        return { name: "Flour", image_url: null } as unknown as PantryItem;
       }
       return null;
     };
@@ -44,7 +44,7 @@ describe("buildIngredientPreviewData", () => {
 
   it("should respect the limit parameter", () => {
     const mockFindMatch = (ingredient: RecipeIngredient): PantryItem | null => {
-      return { name: ingredient.name, image_url: `${ingredient.name}.jpg` } as PantryItem;
+      return { name: ingredient.name, image_url: `${ingredient.name}.jpg` } as unknown as PantryItem;
     };
 
     const result = buildIngredientPreviewData(mockIngredients, mockFindMatch, 2);
