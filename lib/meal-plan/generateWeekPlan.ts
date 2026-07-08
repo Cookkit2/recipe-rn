@@ -405,21 +405,26 @@ export function projectPlannedMacros(meals: PlannedMeal[], candidates: Recipe[])
   // Scale each meal's per-serving nutrition to its slot servings, then hand
   // the normalized values to the existing aggregator (single source of truth
   // for the sums) with multiplier 1 — the per-meal scaling is folded in here.
-  const inputs = meals
-    .map((meal) => {
+  // ⚡ Bolt Performance Optimization: Replace chaining .map().filter() with a single loop to avoid multiple array allocations
+  const inputs: { calories: number; protein: number; carbs: number; fat: number; fiber: number }[] =
+    [];
+  for (let i = 0; i < meals.length; i++) {
+    const meal = meals[i];
+    if (meal) {
       const recipe = byId.get(meal.recipeId);
-      if (!recipe) return null;
-      const base = servingsPerRecipe(recipe);
-      const multiplier = base > 0 ? meal.servings / base : 1;
-      return {
-        calories: (recipe.calories ?? 0) * multiplier,
-        protein: (recipe.protein ?? 0) * multiplier,
-        carbs: (recipe.carbs ?? 0) * multiplier,
-        fat: (recipe.fat ?? 0) * multiplier,
-        fiber: (recipe.fiber ?? 0) * multiplier,
-      };
-    })
-    .filter((x): x is NonNullable<typeof x> => x !== null);
+      if (recipe) {
+        const base = servingsPerRecipe(recipe);
+        const multiplier = base > 0 ? meal.servings / base : 1;
+        inputs.push({
+          calories: (recipe.calories ?? 0) * multiplier,
+          protein: (recipe.protein ?? 0) * multiplier,
+          carbs: (recipe.carbs ?? 0) * multiplier,
+          fat: (recipe.fat ?? 0) * multiplier,
+          fiber: (recipe.fiber ?? 0) * multiplier,
+        });
+      }
+    }
+  }
 
   if (inputs.length === 0) {
     return { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 };
