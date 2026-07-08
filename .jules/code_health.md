@@ -22,3 +22,7 @@
 ## 2024-07-08 - Extracted RecipeDetails Review and Tip logic into a custom hook
 **Learning:** Overly long React components often contain clusters of related state and effect logic that can be isolated. In `app/recipes/[recipeId]/index.tsx`, the review and tip logic was mixed with UI rendering.
 **Action:** Extracting related state and React Query hooks into custom hooks (e.g. `useRecipeReviewsAndTips`) reduces component complexity and improves maintainability by encapsulating concerns. Always check for untracked artifact files like `test_extract.ts` or lockfiles before requesting review.
+
+## 2024-03-24 - Removing bun.lockb changes
+**Learning:** Running `bun install` can unintentionally modify `bun.lockb` if the environment's Bun version differs, which gets staged as an extraneous change during task execution.
+**Action:** Always check `git status` and specifically revert `bun.lockb` (using `git restore --staged bun.lockb && git checkout bun.lockb`) before submitting a pull request to ensure only the intended code changes are included.
