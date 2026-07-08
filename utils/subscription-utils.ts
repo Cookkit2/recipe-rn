@@ -34,25 +34,6 @@ export async function readEntitlement(): Promise<PurchasesEntitlementInfo | null
   }
 }
 
-/**
- * @deprecated Use `useEntitlement` (hooks/queries/useEntitlement.ts) for any React
- * read of Pro state, or `readEntitlement` for an imperative one-off. Kept only for
- * the paywall action path that has not yet migrated. Behavior is intentionally
- * unchanged from before the refactor: returns the raw entitlement (truthy, or
- * `undefined` when absent) on success, and `false` when the read throws.
- */
-export const isValidSubscription = async () => {
-  try {
-    const customerInfo = await Purchases.getCustomerInfo();
-    log.info("Customer Info:", customerInfo);
-    // Use the same entitlement identifier as configured in RevenueCat dashboard
-    return customerInfo.entitlements.active[ENTITLEMENT_IDENTIFIER];
-  } catch (e) {
-    log.error("Error getting customer info:", e);
-    return false;
-  }
-};
-
 export async function presentPaywall(): Promise<boolean> {
   // Present paywall for current offering:
   const paywallResult: PAYWALL_RESULT = await RevenueCatUI.presentPaywall();

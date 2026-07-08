@@ -3,7 +3,7 @@ import { householdSyncService } from "~/data/services/HouseholdSyncService";
 import { householdRealtimeService } from "~/data/services/HouseholdRealtimeService";
 import { useAuthStore } from "~/auth/AuthStore";
 import { generateInviteCode } from "~/utils/invite-code";
-import { isValidSubscription } from "~/utils/subscription-utils";
+import { readEntitlement } from "~/utils/subscription-utils";
 import { database } from "~/data/db/database";
 import { Q } from "@nozbe/watermelondb";
 import type Household from "~/data/db/models/Household";
@@ -75,7 +75,7 @@ export const createHousehold = async (name: string): Promise<Household> => {
   const user = useAuthStore.getState().user;
   if (!user) throw new Error("Not authenticated");
 
-  const isPro = !!(await isValidSubscription());
+  const isPro = !!(await readEntitlement());
   const maxMembers = isPro ? 6 : 2;
 
   const inviteCode = generateInviteCode();
