@@ -1,95 +1,24 @@
-import { View, FlatList, ActivityIndicator, Pressable, Alert } from "react-native";
+import { View, FlatList, ActivityIndicator, Pressable } from "react-native";
 import { H3, P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
 import { TrashIcon, CheckCircleIcon, XIcon, Edit2Icon, ShoppingCartIcon } from "lucide-uniwind";
 import { useGroceryList } from "~/hooks/queries/useGroceryList";
-import {
-  useClearGroceryChecks,
-  useClearMealPlan,
-  useDeleteGroceryItem,
-} from "~/hooks/queries/useMealPlanQueries";
+import { useGroceryListActions } from "~/hooks/useGroceryListActions";
 import GroceryListItem from "~/components/GroceryList/GroceryListItem";
 import GroceryListHeader from "~/components/GroceryList/GroceryListHeader";
 import { Stack, Link } from "expo-router";
-import { toast } from "sonner-native";
-import { useState } from "react";
 
 export default function GroceryListPage() {
   const { sections, stats, isLoading, isEmpty, hasNeededItems } = useGroceryList();
-  const clearChecks = useClearGroceryChecks();
-  const clearMealPlan = useClearMealPlan();
-  const deleteItem = useDeleteGroceryItem();
-
-  const [isSelectionMode, setIsSelectionMode] = useState(false);
-  const [selectedItemNames, setSelectedItemNames] = useState<Set<string>>(new Set());
-
-  const handleClearChecked = () => {
-    clearChecks.mutate(undefined, {
-      onSuccess: () => {
-        toast.success("Cleared all checked items");
-      },
-    });
-  };
-
-  const handleClearAll = () => {
-    Alert.alert("Clear All", "Are you sure you want to clear your entire meal plan?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Clear",
-        style: "destructive",
-        onPress: () => {
-          clearMealPlan.mutate(undefined, {
-            onSuccess: () => {
-              toast.success("Cleared all planned recipes");
-            },
-          });
-        },
-      },
-    ]);
-  };
-
-  const toggleSelectionMode = () => {
-    setIsSelectionMode(!isSelectionMode);
-    setSelectedItemNames(new Set());
-  };
-
-  const toggleItemSelection = (name: string) => {
-    const next = new Set(selectedItemNames);
-    if (next.has(name)) {
-      next.delete(name);
-    } else {
-      next.add(name);
-    }
-    setSelectedItemNames(next);
-  };
-
-  const handleDeleteSelected = async () => {
-    if (selectedItemNames.size === 0) {
-      return;
-    }
-
-    Alert.alert(
-      "Delete Selected",
-      `Are you sure you want to delete ${selectedItemNames.size} items?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            // Delete items
-            for (const name of selectedItemNames) {
-              deleteItem.mutate(name);
-            }
-
-            setIsSelectionMode(false);
-            setSelectedItemNames(new Set());
-            toast.success("Deleted selected items");
-          },
-        },
-      ]
-    );
-  };
+  const {
+    isSelectionMode,
+    selectedItemNames,
+    handleClearChecked,
+    handleClearAll,
+    toggleSelectionMode,
+    toggleItemSelection,
+    handleDeleteSelected,
+  } = useGroceryListActions();
 
   const allItems = sections.flatMap((section) => section.items);
 
