@@ -7,7 +7,7 @@ import { databaseFacade } from "~/data/db/DatabaseFacade";
 import type RecipeIngredientModel from "~/data/db/models/RecipeIngredient";
 import type RecipeStepModel from "~/data/db/models/RecipeStep";
 import type { Recipe as DbRecipe } from "~/data/db/models";
-import type { EditableRecipe, EditableIngredient, EditableStep } from "~/hooks/useRecipeEdit";
+import type { EditableRecipe } from "~/hooks/useRecipeEdit";
 import { log } from "~/utils/logger";
 import RecipeEditForm from "~/components/Recipe/Edit/RecipeEditForm";
 import type { Recipe } from "~/types/Recipe";
@@ -154,9 +154,9 @@ export default function RecipeEdit() {
         );
 
         // Delete removed ingredients
-        // ⚡ Bolt Performance Optimization: Changed O(N^2) `.some()` check inside loop to O(N) Set lookup
+        // ⚡ Bolt Performance Optimization: Use a Set for O(1) lookups instead of O(N) Array.some()
         const editableIngredientIds = new Set(
-          editable.ingredients.map((ing: EditableIngredient) => ing.id).filter(Boolean)
+          editable.ingredients.map((ing) => ing.id).filter((id): id is string => Boolean(id))
         );
         for (const existing of existingIngredients) {
           if (!editableIngredientIds.has(existing.id)) {
@@ -200,9 +200,9 @@ export default function RecipeEdit() {
         );
 
         // Delete removed steps
-        // ⚡ Bolt Performance Optimization: Changed O(N^2) `.some()` check inside loop to O(N) Set lookup
+        // ⚡ Bolt Performance Optimization: Use a Set for O(1) lookups instead of O(N) Array.some()
         const editableStepIds = new Set(
-          editable.steps.map((step: EditableStep) => step.id).filter(Boolean)
+          editable.steps.map((step) => step.id).filter((id): id is string => Boolean(id))
         );
         for (const existing of existingSteps) {
           if (!editableStepIds.has(existing.id)) {
