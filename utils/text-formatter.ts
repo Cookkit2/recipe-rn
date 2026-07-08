@@ -27,18 +27,6 @@ export const sentenceCase = (str: string): string => {
 };
 
 /**
- * Converts camelCase or PascalCase to readable text
- * Example: "ingredientName" -> "Ingredient Name"
- */
-export const camelCaseToReadable = (str: string): string => {
-  if (!str) return "";
-  return str
-    .replace(/([A-Z])/g, " $1")
-    .replace(/^./, (str) => str.toUpperCase())
-    .trim();
-};
-
-/**
  * Converts text to kebab-case (lowercase with hyphens)
  */
 export const toKebabCase = (str: string): string => {

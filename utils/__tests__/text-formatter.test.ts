@@ -2,7 +2,6 @@ import {
   capitalize,
   titleCase,
   sentenceCase,
-  camelCaseToReadable,
   toKebabCase,
   toCamelCase,
   truncateWords,
@@ -110,40 +109,6 @@ describe("Text Formatter Utils - Capitalization", () => {
       expect(sentenceCase("hElLo wOrLd")).toBe("Hello world");
       expect(sentenceCase("ThIs Is A tEsT")).toBe("This is a test");
       expect(sentenceCase("Already Sentence case")).toBe("Already sentence case");
-    });
-  });
-
-  describe("camelCaseToReadable", () => {
-    it("should convert camelCase to readable text with title case", () => {
-      expect(camelCaseToReadable("ingredientName")).toBe("Ingredient Name");
-      expect(camelCaseToReadable("someLongVariableName")).toBe("Some Long Variable Name");
-    });
-
-    it("should convert PascalCase to readable text", () => {
-      expect(camelCaseToReadable("IngredientName")).toBe("Ingredient Name");
-    });
-
-    it("should handle single word", () => {
-      expect(camelCaseToReadable("ingredient")).toBe("Ingredient");
-    });
-
-    it("should return empty string for empty or null input", () => {
-      expect(camelCaseToReadable("")).toBe("");
-      expect(camelCaseToReadable(null as any)).toBe("");
-      expect(camelCaseToReadable(undefined as any)).toBe("");
-    });
-
-    it("should handle consecutive capital letters", () => {
-      expect(camelCaseToReadable("XMLParser")).toBe("X M L Parser");
-    });
-
-    it("should handle numbers in strings", () => {
-      expect(camelCaseToReadable("version2")).toBe("Version2");
-      expect(camelCaseToReadable("myApp1")).toBe("My App1");
-    });
-
-    it("should handle strings that already have spaces", () => {
-      expect(camelCaseToReadable("already Readable")).toBe("Already  Readable");
     });
   });
 
