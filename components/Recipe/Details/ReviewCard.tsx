@@ -28,12 +28,19 @@ export default function ReviewCard({
   onPhotoPress,
 }: ReviewCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const [hasVoted, setHasVoted] = useState(false);
+
   const isEdited =
     new Date(review.updatedAt).getTime() - new Date(review.createdAt).getTime() > 60_000;
 
   const toggleExpand = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setExpanded(!expanded);
+  };
+
+  const handleToggleHelpful = () => {
+    setHasVoted(!hasVoted);
+    onToggleHelpful(review.id);
   };
 
   return (
@@ -100,9 +107,9 @@ export default function ReviewCard({
 
       <View className="flex-row items-center justify-between mt-3">
         <HelpfulButton
-          count={review.helpfulCount}
-          isVoted={false}
-          onPress={() => onToggleHelpful(review.id)}
+          count={review.helpfulCount + (hasVoted ? 1 : 0)}
+          isVoted={hasVoted}
+          onPress={handleToggleHelpful}
         />
 
         {isOwnReview && (

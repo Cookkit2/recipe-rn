@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Pressable } from "react-native";
 import { P, Small } from "~/components/ui/typography";
 import HelpfulButton from "~/components/ui/HelpfulButton";
@@ -19,6 +19,13 @@ export default function TipCard({
   onDelete,
   onToggleHelpful,
 }: TipCardProps) {
+  const [hasVoted, setHasVoted] = useState(false);
+
+  const handleToggleHelpful = () => {
+    setHasVoted(!hasVoted);
+    onToggleHelpful(tip.id);
+  };
+
   return (
     <View className="py-3 border-b border-border/50">
       <View className="flex-row items-center gap-2 mb-1.5">
@@ -39,9 +46,9 @@ export default function TipCard({
 
       <View className="flex-row items-center justify-between">
         <HelpfulButton
-          count={tip.helpfulCount}
-          isVoted={false}
-          onPress={() => onToggleHelpful(tip.id)}
+          count={tip.helpfulCount + (hasVoted ? 1 : 0)}
+          isVoted={hasVoted}
+          onPress={handleToggleHelpful}
         />
         {isOwnTip && (
           <View className="flex-row gap-3">
