@@ -21,6 +21,6 @@ export function generateInviteCode(): string {
   return code;
 }
 
-function isValidInviteCodeFormat(code: string): boolean {
+export function isValidInviteCodeFormat(code: string): boolean {
   return /^[A-Z0-9]{8}$/.test(code);
 }
