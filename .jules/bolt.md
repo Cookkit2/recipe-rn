@@ -72,3 +72,6 @@
 ## 2026-07-05 - Extracted custom hooks for Code Health
 **Learning:** Extracting component state mapping (e.g. step page array generation) and complex data fetching (e.g. useTailoredRecipe) into custom hooks significantly reduces the length of React components and isolates responsibilities.
 **Action:** When a component mixes data mapping and state management, move the logic to custom hooks.
+## 2025-02-23 - Optimize Array Comparisons for Deletions
+**Learning:** Checking for deletions using `array.some(x => x.id === existing.id)` inside a loop over `existing` objects results in an O(N^2) operation, which can cause severe performance issues with large datasets.
+**Action:** When determining which records were removed between two arrays (e.g. an "editable" array and an "existing" DB array), map the new IDs to a `Set` first (`new Set(array.map(x => x.id).filter(Boolean))`), and then iterate over the existing records using `set.has(existing.id)`. This changes the complexity to O(N).
