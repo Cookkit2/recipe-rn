@@ -1,4 +1,4 @@
-import { formatDistanceStrict } from "date-fns";
+import { formatDuration as dateFnsFormatDuration, intervalToDuration } from "date-fns";
 
 /**
  * Formats duration from milliseconds to readable format using date-fns
@@ -7,13 +7,9 @@ import { formatDistanceStrict } from "date-fns";
 export const formatDuration = (milliseconds: number): string => {
   if (milliseconds < 1000) return "less than a second";
 
-  // Create two dates with the duration between them
-  const startDate = new Date(0);
-  const endDate = new Date(milliseconds);
+  // Get exact breakdown of the duration
+  const duration = intervalToDuration({ start: 0, end: milliseconds });
 
-  // Use date-fns formatDistanceStrict for precise formatting
-  return formatDistanceStrict(startDate, endDate, {
-    unit: "second",
-    roundingMethod: "floor",
-  });
+  // Use date-fns formatDuration to create the human readable string
+  return dateFnsFormatDuration(duration) || "less than a second";
 };
