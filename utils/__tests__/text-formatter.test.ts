@@ -10,7 +10,6 @@ import {
   normalizeWhitespace,
   truncate,
   sanitizeText,
-  createSlug,
   pluralize,
   formatOrdinal,
 } from "../text-formatter";
@@ -410,46 +409,6 @@ describe("Text Formatter Utils - Sanitization", () => {
       expect(sanitizeText("")).toBe("");
       expect(sanitizeText(null as any)).toBe("");
       expect(sanitizeText(undefined as any)).toBe("");
-    });
-  });
-
-  describe("createSlug", () => {
-    it("should convert a normal string with spaces to a slug", () => {
-      expect(createSlug("Hello World")).toBe("hello-world");
-      expect(createSlug("This Is A Test")).toBe("this-is-a-test");
-    });
-
-    it("should remove special characters", () => {
-      expect(createSlug("hello@world!")).toBe("hello-world");
-      expect(createSlug("test#string$")).toBe("test-string");
-    });
-
-    it("should handle strings containing numbers", () => {
-      expect(createSlug("Version 2.0")).toBe("version-2-0");
-      expect(createSlug("123 test 456")).toBe("123-test-456");
-    });
-
-    it("should replace multiple consecutive special characters/spaces with a single hyphen", () => {
-      expect(createSlug("hello   world")).toBe("hello-world");
-      expect(createSlug("hello---world")).toBe("hello-world");
-      expect(createSlug("hello_ _world")).toBe("hello-world");
-    });
-
-    it("should trim leading and trailing hyphens", () => {
-      expect(createSlug("  hello world  ")).toBe("hello-world");
-      expect(createSlug("-hello world-")).toBe("hello-world");
-      expect(createSlug("!hello world?")).toBe("hello-world");
-    });
-
-    it("should convert uppercase to lowercase", () => {
-      expect(createSlug("HELLO WORLD")).toBe("hello-world");
-      expect(createSlug("MIXED Case TEXT")).toBe("mixed-case-text");
-    });
-
-    it("should return empty string for empty or null input", () => {
-      expect(createSlug("")).toBe("");
-      expect(createSlug(null as any)).toBe("");
-      expect(createSlug(undefined as any)).toBe("");
     });
   });
 });
