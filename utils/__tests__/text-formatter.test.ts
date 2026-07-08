@@ -77,7 +77,6 @@ describe("Text Formatter Utils - Capitalization", () => {
       expect(titleCase(undefined as any)).toBe("");
     });
   });
-
 });
 
 describe("Text Formatter Utils - getInitials", () => {

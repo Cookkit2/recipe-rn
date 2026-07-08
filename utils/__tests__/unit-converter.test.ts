@@ -1,7 +1,4 @@
-import {
-  areDimensionsCompatible,
-  roundToReasonablePrecision,
-} from "../unit-converter";
+import { areDimensionsCompatible, roundToReasonablePrecision } from "../unit-converter";
 
 describe("areDimensionsCompatible", () => {
   it("should return true for compatible weight units", () => {

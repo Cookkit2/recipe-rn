@@ -130,23 +130,23 @@ describe("CameraOnboardingSheet", () => {
     mockIsLoading = false;
   });
 
-  it("should render nothing when loading is true", () => {
+  it("should render nothing when loading is true", async () => {
     mockIsLoading = true;
-    const { toJSON } = render(<CameraOnboardingSheet />);
+    const { toJSON } = await render(<CameraOnboardingSheet />);
     expect(toJSON()).toBeNull();
   });
 
-  it("should expand sheet and play video when onboarding is incomplete", () => {
+  it("should expand sheet and play video when onboarding is incomplete", async () => {
     mockIsOnboardingComplete = false;
-    render(<CameraOnboardingSheet />);
+    await render(<CameraOnboardingSheet />);
 
     expect(mockExpand).toHaveBeenCalled();
     expect(mockPlay).toHaveBeenCalled();
   });
 
-  it("should close sheet and pause video when onboarding is complete", () => {
+  it("should close sheet and pause video when onboarding is complete", async () => {
     mockIsOnboardingComplete = true;
-    render(<CameraOnboardingSheet />);
+    await render(<CameraOnboardingSheet />);
 
     expect(mockClose).toHaveBeenCalled();
     expect(mockPause).toHaveBeenCalled();
@@ -154,7 +154,7 @@ describe("CameraOnboardingSheet", () => {
 
   it("should mark onboarding complete, trigger haptics, pause video, and close sheet when 'Got It' button is pressed", async () => {
     mockIsOnboardingComplete = false;
-    const { getByText } = render(<CameraOnboardingSheet />);
+    const { getByText } = await render(<CameraOnboardingSheet />);
 
     const gotItButton = getByText("Got It");
     fireEvent.press(gotItButton);

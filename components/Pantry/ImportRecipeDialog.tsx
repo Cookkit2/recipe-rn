@@ -80,6 +80,7 @@ export default function ImportRecipeDialog({ open, onOpenChange }: ImportRecipeD
           <View className="flex-row items-center bg-muted rounded-xl px-4 py-3">
             <LinkIcon className="text-muted-foreground mr-2" size={18} />
             <TextInput
+              testID="import-recipe-url-input"
               className="flex-1 text-foreground"
               placeholder="Paste recipe URL here..."
               placeholderTextColor="#888"
