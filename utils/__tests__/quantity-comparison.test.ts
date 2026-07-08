@@ -3,7 +3,7 @@ import {
   aggregateQuantities,
   calculateDeficit,
   hasSufficientQuantity,
-  calculateAvailabilityPercentage
+  calculateAvailabilityPercentage,
 } from "../quantity-comparison";
 
 describe("quantity-comparison", () => {
@@ -29,7 +29,9 @@ describe("quantity-comparison", () => {
     });
 
     it("should return 'incompatible' if units are unknown", () => {
-      expect(compareQuantities(100, "unknown_unit", 50, "unknown_unit").result).toBe("incompatible");
+      expect(compareQuantities(100, "unknown_unit", 50, "unknown_unit").result).toBe(
+        "incompatible"
+      );
     });
 
     it("should return 'sufficient' when available >= required (same units)", () => {
@@ -151,28 +153,34 @@ describe("quantity-comparison", () => {
     });
 
     it("should return null for mixed dimensions", () => {
-      expect(aggregateQuantities([
-        { quantity: 10, unit: "g" },
-        { quantity: 10, unit: "ml" }
-      ])).toBeNull();
+      expect(
+        aggregateQuantities([
+          { quantity: 10, unit: "g" },
+          { quantity: 10, unit: "ml" },
+        ])
+      ).toBeNull();
     });
 
     it("should correctly aggregate valid quantities of the same dimension", () => {
-      expect(aggregateQuantities([
-        { quantity: 100, unit: "g" },
-        { quantity: 50, unit: "g" }
-      ])).toBe(150);
+      expect(
+        aggregateQuantities([
+          { quantity: 100, unit: "g" },
+          { quantity: 50, unit: "g" },
+        ])
+      ).toBe(150);
     });
 
     it("should convert and aggregate quantities with different units but same dimension", () => {
-      expect(aggregateQuantities([
-        { quantity: 1, unit: "kg" }, // 1000g
-        { quantity: 500, unit: "g" }
-      ])).toBe(1500);
+      expect(
+        aggregateQuantities([
+          { quantity: 1, unit: "kg" }, // 1000g
+          { quantity: 500, unit: "g" },
+        ])
+      ).toBe(1500);
 
       const mlTotal = aggregateQuantities([
         { quantity: 1, unit: "l" }, // 1000ml
-        { quantity: 1, unit: "cup" } // 236.588ml
+        { quantity: 1, unit: "cup" }, // 236.588ml
       ]);
       expect(mlTotal).toBeCloseTo(1236.59, 1);
     });
