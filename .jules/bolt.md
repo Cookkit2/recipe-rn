@@ -90,3 +90,9 @@
 ## 2024-05-17 - Optimize WatermelonDB Array Iterations with SQL Groups
 **Learning:** For analytical and aggregate functions over large datasets in React Native apps, fetching the entire array of WatermelonDB models over the native bridge (`.fetch()`) and subsequently iterating over them with JavaScript (`reduce`, `Map`, `forEach`) incurs massive overhead (CPU serialization, memory bloat, and bridge congestion).
 **Action:** Always prefer pushing grouping, sorting, and pagination logic down directly into SQLite. Use `this.collection.query(Q.unsafeSqlQuery(sql, params)).unsafeFetchRaw()` paired with a strict `WHERE _status != 'deleted'` filter and parameterized variables to implement safe, native-speed data transformation functions that do not allocate ORM models.
+
+## 2025-02-12 - Date group aggregation performance
+
+**Learning:** When looping over large arrays locally (which cannot be done cleanly in DB via SQL due to the client-side ORM design limitations/missing `unsafeSqlQuery` support in WatermelonDB), avoid parsing/creating JS `Date` objects repeatedly to floor dates to day bounds. Calling `Math.setHours(0,0,0,0)` on the timestamp is orders of magnitudes faster than creating multiple objects per iteration (`new Date(year, month, day)`).
+
+**Action:** When grouping time series metrics by dates on the frontend or backend in Node.js/JS, rely on Date operations directly via the number epoch and avoid new allocations.
