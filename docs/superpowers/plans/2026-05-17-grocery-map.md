@@ -669,7 +669,7 @@ export default function GroceryMapPage() {
     name: store.name,
     latitude: store.latitude || 0,
     longitude: store.longitude || 0,
-    totalPriceCents: calculateTotalPrice(groceryListItems),
+    totalPriceCents: 1500, // TODO: Calculate from grocery list
     distance: store.distance,
   }));
 
@@ -678,7 +678,7 @@ export default function GroceryMapPage() {
     name: store.name,
     address: (store as any).address || "Unknown address",
     distance: store.distance,
-    totalPriceCents: calculateTotalPrice(groceryListItems),
+    totalPriceCents: 1500, // TODO: Calculate from grocery list
   }));
 
   const selectedStoreData = storesWithDistance.find((s) => s.id === selectedStore);
@@ -708,7 +708,7 @@ export default function GroceryMapPage() {
                 name: selectedStoreData.name,
                 address: (selectedStoreData as any).address || "Unknown address",
                 distance: selectedStoreData.distance,
-                totalPriceCents: calculateTotalPrice(groceryListItems),
+                totalPriceCents: 1500, // TODO: Calculate from grocery list
                 isOpen: true,
                 closingTime: "22:00",
               }}
