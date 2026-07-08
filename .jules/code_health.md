@@ -10,3 +10,7 @@
 ## 2024-05-16 - Module-Scoped Component Extraction
 **Learning:** Extracting inline render functions into module-scoped functional components improves readability and maintainability without causing unnecessary re-renders. It separates concerns clearly.
 **Action:** Identify overly long components with mixed concerns or inline render functions and extract them to module scope, passing necessary state via props.
+
+## 2025-02-13 - Remove unused useGroceryItemCount hook
+**Learning:** Removing unused exports helps keep the bundle size small and the codebase clean, reducing cognitive load.
+**Action:** Continually check for and remove unused code as part of routine code health maintenance.
