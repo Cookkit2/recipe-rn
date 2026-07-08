@@ -29,7 +29,7 @@ describe("scaleRecipeIngredients", () => {
     expect(result).toBe(baseIngredients);
   });
 
-  it("returns ingredients with 0 quantity if newServings is <= 0", () => {
+  it("returns original ingredients if newServings is <= 0", () => {
     const result = scaleRecipeIngredients(baseIngredients, 2, 0);
     expect(result).toBe(baseIngredients);
   });
