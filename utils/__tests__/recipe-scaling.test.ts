@@ -5,7 +5,7 @@ import {
   formatScalingChange,
   isValidServingSize,
   scaleIngredientQuantity,
-  adjustToCommonFraction
+  adjustToCommonFraction,
 } from "../recipe-scaling";
 
 describe("recipe-scaling", () => {
@@ -73,15 +73,27 @@ describe("recipe-scaling", () => {
 
   describe("scaleRecipeIngredients", () => {
     it("should correctly scale up ingredient quantities", () => {
-      const ingredients = [{ id: 1, quantity: 100 }, { id: 2, quantity: 2 }];
+      const ingredients = [
+        { id: 1, quantity: 100 },
+        { id: 2, quantity: 2 },
+      ];
       const result = scaleRecipeIngredients(ingredients, 2, 4);
-      expect(result).toEqual([{ id: 1, quantity: 200 }, { id: 2, quantity: 4 }]);
+      expect(result).toEqual([
+        { id: 1, quantity: 200 },
+        { id: 2, quantity: 4 },
+      ]);
     });
 
     it("should correctly scale down ingredient quantities", () => {
-      const ingredients = [{ id: 1, quantity: 100 }, { id: 2, quantity: 2 }];
+      const ingredients = [
+        { id: 1, quantity: 100 },
+        { id: 2, quantity: 2 },
+      ];
       const result = scaleRecipeIngredients(ingredients, 4, 2);
-      expect(result).toEqual([{ id: 1, quantity: 50 }, { id: 2, quantity: 1 }]);
+      expect(result).toEqual([
+        { id: 1, quantity: 50 },
+        { id: 2, quantity: 1 },
+      ]);
     });
 
     it("should return empty array if ingredients array is empty or undefined", () => {
@@ -97,15 +109,15 @@ describe("recipe-scaling", () => {
     });
 
     it("should correctly round quantities to max 2 decimals", () => {
-        const ingredients = [{ id: 1, quantity: 3 }];
-        const result = scaleRecipeIngredients(ingredients, 2, 3);
-        // scale factor = 1.5, quantity = 4.5
-        expect(result).toEqual([{ id: 1, quantity: 4.5 }]);
+      const ingredients = [{ id: 1, quantity: 3 }];
+      const result = scaleRecipeIngredients(ingredients, 2, 3);
+      // scale factor = 1.5, quantity = 4.5
+      expect(result).toEqual([{ id: 1, quantity: 4.5 }]);
 
-        const ingredients2 = [{ id: 1, quantity: 1 }];
-        const result2 = scaleRecipeIngredients(ingredients2, 3, 1);
-        // scale factor = 1/3, quantity = 0.3333333 -> 0.33
-        expect(result2).toEqual([{ id: 1, quantity: 0.33 }]);
+      const ingredients2 = [{ id: 1, quantity: 1 }];
+      const result2 = scaleRecipeIngredients(ingredients2, 3, 1);
+      // scale factor = 1/3, quantity = 0.3333333 -> 0.33
+      expect(result2).toEqual([{ id: 1, quantity: 0.33 }]);
     });
   });
 
@@ -171,8 +183,8 @@ describe("recipe-scaling", () => {
     });
 
     it("should adjust to common fractions if within tolerance", () => {
-      expect(adjustToCommonFraction(0.33)).toBeCloseTo(1/3, 5); // 0.333...
-      expect(adjustToCommonFraction(1.33)).toBeCloseTo(1 + 1/3, 5);
+      expect(adjustToCommonFraction(0.33)).toBeCloseTo(1 / 3, 5); // 0.333...
+      expect(adjustToCommonFraction(1.33)).toBeCloseTo(1 + 1 / 3, 5);
       expect(adjustToCommonFraction(0.51)).toBeCloseTo(0.5, 5);
       expect(adjustToCommonFraction(0.49)).toBeCloseTo(0.5, 5);
       expect(adjustToCommonFraction(0.74)).toBeCloseTo(0.75, 5);
