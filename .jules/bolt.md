@@ -100,3 +100,7 @@
 ## 2025-02-28 - Optimize WatermelonDB large result fetching
 **Learning:** Instantiating thousands of WatermelonDB `Model` instances using `.fetch()` is extremely memory intensive and slow due to closure overhead and getters across the JS bridge. When aggregating large datasets where model methods/setters are not needed, `.unsafeFetchRaw()` is significantly faster (~35%+ improvement).
 **Action:** When calculating aggregations over many WatermelonDB records without needing full `Model` instances, prefer using `.unsafeFetchRaw()` and reading the raw SQLite columns (e.g. `record.recipe_id`) to avoid instantiation overhead.
+
+## 2024-03-01 - Optimizing sequential awaits in DB batch conversion
+**Learning:** Iterating over batches with `for...of` loops and using `await convertStockToPantryItemBatch(batch)` causes sequential resolution, blocking the thread and increasing total runtime from O(1) to O(N).
+**Action:** Replace `for` loops containing sequential `await` for independent batches with `Promise.all` to resolve them concurrently, significantly reducing total latency.
