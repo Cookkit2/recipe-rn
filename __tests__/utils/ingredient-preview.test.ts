@@ -44,7 +44,10 @@ describe("buildIngredientPreviewData", () => {
 
   it("should respect the limit parameter", () => {
     const mockFindMatch = (ingredient: RecipeIngredient): PantryItem | null => {
-      return { name: ingredient.name, image_url: `${ingredient.name}.jpg` } as unknown as PantryItem;
+      return {
+        name: ingredient.name,
+        image_url: `${ingredient.name}.jpg`,
+      } as unknown as PantryItem;
     };
 
     const result = buildIngredientPreviewData(mockIngredients, mockFindMatch, 2);
