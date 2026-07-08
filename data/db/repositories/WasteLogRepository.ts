@@ -136,7 +136,8 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
 
   // Get waste statistics for a specific time period
   async getWasteStats(startDate?: number, endDate?: number): Promise<WasteStats> {
-    const records = await this.buildDateRangeQuery(startDate, endDate).fetch();
+    // ⚡ Bolt Performance Optimization: Use unsafeFetchRaw to avoid heavy Model instantiation when aggregating records
+    const records = await this.buildDateRangeQuery(startDate, endDate).unsafeFetchRaw();
 
     const totalWasteEntries = records.length;
     let totalQuantityWasted = 0;
@@ -150,15 +151,15 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
     >();
 
     for (const record of records) {
-      const quantity = record.quantityWasted;
-      const cost = record.estimatedCost ?? 0;
+      const quantity = (record.quantity_wasted as number) || 0;
+      const cost = (record.estimated_cost as number) || 0;
 
       // Update totals
       totalQuantityWasted += quantity;
       totalEstimatedCost += cost;
 
       // Update waste by reason
-      const reason = record.reason || "unknown";
+      const reason = (record.reason as string) || "unknown";
       if (!wasteByReason[reason]) {
         wasteByReason[reason] = { count: 0, quantity: 0, cost: 0 };
       }
@@ -167,13 +168,14 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
       wasteByReason[reason].cost += cost;
 
       // Update most wasted items
-      const existing = itemMap.get(record.stockId);
+      const stockId = record.stock_id as string;
+      const existing = itemMap.get(stockId);
       if (existing) {
         existing.wasteCount++;
         existing.totalQuantity += quantity;
         existing.totalCost += cost;
       } else {
-        itemMap.set(record.stockId, {
+        itemMap.set(stockId, {
           wasteCount: 1,
           totalQuantity: quantity,
           totalCost: cost,
@@ -209,7 +211,7 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
   }
 
   // Calculate streaks (consecutive days without waste)
-  private calculateStreaks(records: WasteLog[]): { currentStreak: number; longestStreak: number } {
+  private calculateStreaks(records: any[]): { currentStreak: number; longestStreak: number } {
     if (records.length === 0) {
       // No waste entries means infinite streak, but we cap at a reasonable number for display
       const daysSinceEpoch = Math.floor(Date.now() / (24 * 60 * 60 * 1000));
@@ -219,7 +221,9 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
     // Group waste events by date (day granularity)
     const wasteDates = new Set<number>();
     for (const record of records) {
-      const date = new Date(record.wasteDate);
+      // Raw records use snake_case (waste_date), while WasteLog objects use camelCase (wasteDate)
+      const wasteDateValue = record.waste_date ?? record.wasteDate;
+      const date = new Date(wasteDateValue);
       const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
       wasteDates.add(dayStart);
     }
