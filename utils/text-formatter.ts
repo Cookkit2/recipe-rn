@@ -81,17 +81,6 @@ export const sanitizeText = (str: string): string => {
   return str.replace(/[^a-zA-Z0-9\s]/g, "").trim();
 };
 
-/**
- * Creates a URL-friendly slug from text
- */
-export const createSlug = (str: string): string => {
-  if (!str) return "";
-  return str
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-};
-
 // ========================
 // PLURALIZATION & NUMBERS
 // ========================
