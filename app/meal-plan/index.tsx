@@ -23,6 +23,7 @@ import type { MealSlot } from "~/types/MealPlan";
 import type { RecipeDragData } from "~/types/MealPlan";
 import type { MacroTarget, NutritionSummary } from "~/types/Nutrition";
 import RecipeDraggable from "~/components/MealPlanCalendar/RecipeDraggable";
+import { WeekNavigationHeader, RecipeSelectionSheet, MealPlanHeaderRight } from "./components";
 import * as Haptics from "expo-haptics";
 import { log } from "~/utils/logger";
 import { toast } from "sonner-native";
@@ -69,60 +70,6 @@ export default function MealPlanPage() {
       toast.error(message);
     }
   }, [generateWeekPlan, selectedWeek, macroTarget]);
-
-  // Week navigation
-  const goToPreviousWeek = () => {
-    const newDate = new Date(selectedWeek);
-    newDate.setDate(newDate.getDate() - 7);
-    changeSelectedWeek(newDate);
-  };
-
-  const goToNextWeek = () => {
-    const newDate = new Date(selectedWeek);
-    newDate.setDate(newDate.getDate() + 7);
-    changeSelectedWeek(newDate);
-  };
-
-  const goToToday = () => {
-    changeSelectedWeek(new Date());
-  };
-
-  // Format week range for display
-  const formatWeekRange = () => {
-    const startDate = new Date(selectedWeek);
-    const endDate = new Date(selectedWeek);
-    endDate.setDate(endDate.getDate() + 6);
-
-    const options: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
-    const start = startDate.toLocaleDateString("en-US", options);
-    const end = endDate.toLocaleDateString("en-US", options);
-
-    // Add year if different year
-    if (startDate.getFullYear() !== endDate.getFullYear()) {
-      const startWithYear = startDate.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      });
-      return `${startWithYear} - ${endDate.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })}`;
-    }
-
-    return `${start} - ${end}`;
-  };
-
-  // Check if current week is this week
-  const isCurrentWeek = () => {
-    const now = new Date();
-    const weekStart = new Date(selectedWeek);
-    const weekEnd = new Date(selectedWeek);
-    weekEnd.setDate(weekEnd.getDate() + 6);
-
-    return now >= weekStart && now <= weekEnd;
-  };
 
   // Handle meal slot press to open recipe selection
   const handleMealSlotPress = (date: Date, mealSlot: MealSlot) => {
@@ -182,84 +129,35 @@ export default function MealPlanPage() {
           headerTransparent: true,
           headerTitle: "",
           headerRight: () => (
-            <View className="flex-row items-center gap-2">
-              {/* "Plan my week" auto-generation (#727). Dark-launched behind the
-                  ai_meal_plan feature flag; rendered only once the flag resolves
-                  so the header never flickers. */}
-              {aiMealPlanEnabled && !isFlagLoading && (
-                <Pressable
-                  onPress={handlePlanMyWeek}
-                  disabled={generateWeekPlan.isPending}
-                  className="px-2 py-2"
-                  accessibilityRole="button"
-                  accessibilityLabel="Plan my week automatically"
-                  accessibilityHint="Generates a pantry-aware week plan from your recipes"
-                >
-                  {generateWeekPlan.isPending ? (
-                    <ActivityIndicator size="small" className="text-foreground" />
-                  ) : (
-                    <SparklesIcon className="text-foreground" strokeWidth={2} size={22} />
-                  )}
-                </Pressable>
-              )}
-              <Pressable
-                onPress={() => setIsTemplateSheetOpen(true)}
-                className="px-2 py-2"
-                accessibilityRole="button"
-                accessibilityLabel="Meal plan templates"
-              >
-                <BookTemplateIcon className="text-foreground" strokeWidth={2} size={22} />
-              </Pressable>
-              <Pressable
-                onPress={() => updateRecipeSheetOpen(true)}
-                className="px-4 py-2"
-                accessibilityRole="button"
-                accessibilityLabel="Add recipe"
-              >
-                <PlusIcon className="text-foreground" strokeWidth={2.618} />
-              </Pressable>
-            </View>
+            <MealPlanHeaderRight
+              aiMealPlanEnabled={aiMealPlanEnabled}
+              isFlagLoading={isFlagLoading}
+              isPendingGeneration={generateWeekPlan.isPending}
+              onPlanMyWeek={handlePlanMyWeek}
+              onOpenTemplateSheet={() => setIsTemplateSheetOpen(true)}
+              onOpenRecipeSheet={() => updateRecipeSheetOpen(true)}
+            />
           ),
         }}
       />
 
       {/* Week Navigation Header */}
-      <View className="bg-background/95 backdrop-blur-sm border-b border-border/20 px-4 py-3">
-        <View className="flex-row items-center justify-between">
-          <Pressable
-            onPress={goToPreviousWeek}
-            className="p-2"
-            accessibilityRole="button"
-            accessibilityLabel="Previous week"
-          >
-            <ChevronLeftIcon className="text-foreground" size={24} strokeWidth={2} />
-          </Pressable>
-
-          <View className="flex-1 items-center">
-            <P className="text-muted-foreground text-xs font-urbanist-semibold uppercase tracking-wide">
-              {formatWeekRange()}
-            </P>
-          </View>
-
-          <Pressable
-            onPress={goToNextWeek}
-            className="p-2"
-            accessibilityRole="button"
-            accessibilityLabel="Next week"
-          >
-            <ChevronRightIcon className="text-foreground" size={24} strokeWidth={2} />
-          </Pressable>
-        </View>
-
-        {!isCurrentWeek() && (
-          <View className="items-center mt-2">
-            <Button variant="ghost" size="sm" onPress={goToToday} className="h-7 px-3 rounded-full">
-              <CalendarIcon size={14} strokeWidth={2} className="text-foreground mr-1" />
-              <P className="text-xs font-urbanist-semibold text-foreground">Today</P>
-            </Button>
-          </View>
-        )}
-      </View>
+      <WeekNavigationHeader
+        selectedWeek={selectedWeek}
+        onPreviousWeek={() => {
+          const newDate = new Date(selectedWeek);
+          newDate.setDate(newDate.getDate() - 7);
+          changeSelectedWeek(newDate);
+        }}
+        onNextWeek={() => {
+          const newDate = new Date(selectedWeek);
+          newDate.setDate(newDate.getDate() + 7);
+          changeSelectedWeek(newDate);
+        }}
+        onGoToToday={() => {
+          changeSelectedWeek(new Date());
+        }}
+      />
 
       {/* Macro target panel — dark-launched behind ai_meal_plan (#746). Placed
           above the calendar so the target input + projected readout stay
@@ -276,54 +174,12 @@ export default function MealPlanPage() {
       <WeeklyCalendar onMealSlotPress={handleMealSlotPress} onMealSlotDrop={handleMealSlotDrop} />
 
       {/* Recipe Selection Panel (Bottom Sheet) */}
-      {isRecipeSheetOpen && (
-        <View className="absolute inset-x-0 bottom-0 top-0 bg-background/80">
-          <View className="absolute bottom-0 left-0 right-0 max-h-[70%] bg-background rounded-t-3xl border-t border-border/20 shadow-2xl">
-            {/* Handle Bar */}
-            <View className="items-center pt-3 pb-1">
-              <View className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
-            </View>
-
-            {/* Header */}
-            <View className="flex-row items-center justify-between px-6 py-3 border-b border-border/10">
-              <H3 className="font-bowlby-one">Select Recipe</H3>
-              <Pressable
-                onPress={() => updateRecipeSheetOpen(false)}
-                className="p-2"
-                accessibilityRole="button"
-                accessibilityLabel="Close recipe selection"
-              >
-                <P className="text-muted-foreground font-urbanist-semibold">Done</P>
-              </Pressable>
-            </View>
-
-            {/* Recipe List */}
-            {isLoadingRecipes ? (
-              <View className="flex-1 items-center justify-center py-12">
-                <ActivityIndicator size="large" />
-                <P className="mt-4 text-muted-foreground">Loading recipes...</P>
-              </View>
-            ) : recipes.length === 0 ? (
-              <View className="flex-1 items-center justify-center py-12 px-6">
-                <P className="text-muted-foreground text-center">No recipes available.</P>
-              </View>
-            ) : (
-              <FlatList
-                data={recipes}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <View className="mb-3">
-                    <RecipeDraggable recipe={item} servings={4} />
-                  </View>
-                )}
-                className="flex-1 px-4 pt-4 pb-8"
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 32 }}
-              />
-            )}
-          </View>
-        </View>
-      )}
+      <RecipeSelectionSheet
+        isOpen={isRecipeSheetOpen}
+        onClose={() => updateRecipeSheetOpen(false)}
+        isLoading={isLoadingRecipes}
+        recipes={recipes}
+      />
 
       {/* Template Sheet */}
       {isTemplateSheetOpen && (
