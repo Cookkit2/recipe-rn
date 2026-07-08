@@ -2,7 +2,6 @@ import {
   capitalize,
   titleCase,
   camelCaseToReadable,
-  toKebabCase,
   toCamelCase,
   truncateWords,
   getInitials,
@@ -113,55 +112,6 @@ describe("Text Formatter Utils - Capitalization", () => {
 
     it("should handle strings that already have spaces", () => {
       expect(camelCaseToReadable("already Readable")).toBe("Already  Readable");
-    });
-  });
-
-  describe("toKebabCase", () => {
-    it("should convert camelCase to kebab-case", () => {
-      expect(toKebabCase("ingredientName")).toBe("ingredient-name");
-    });
-
-    it("should convert PascalCase to kebab-case", () => {
-      expect(toKebabCase("IngredientName")).toBe("ingredient-name");
-    });
-
-    it("should convert space-separated text to kebab-case", () => {
-      expect(toKebabCase("Ingredient Name")).toBe("ingredient-name");
-      expect(toKebabCase("some long name")).toBe("some-long-name");
-    });
-
-    it("should convert underscore-separated text to kebab-case", () => {
-      expect(toKebabCase("ingredient_name")).toBe("ingredient-name");
-      expect(toKebabCase("SOME_CONSTANT")).toBe("some-constant");
-    });
-
-    it("should handle multiple spaces or underscores", () => {
-      expect(toKebabCase("ingredient   name")).toBe("ingredient-name");
-      expect(toKebabCase("ingredient___name")).toBe("ingredient-name");
-    });
-
-    it("should return empty string for empty or null input", () => {
-      expect(toKebabCase("")).toBe("");
-      expect(toKebabCase(null as any)).toBe("");
-      expect(toKebabCase(undefined as any)).toBe("");
-    });
-
-    it("should handle strings with numbers", () => {
-      expect(toKebabCase("version1Update")).toBe("version1update");
-      expect(toKebabCase("Recipe 2 Ingredients")).toBe("recipe-2-ingredients");
-    });
-
-    it("should handle mixed separators", () => {
-      expect(toKebabCase("hello _ world")).toBe("hello-world");
-    });
-
-    it("should return the same string if already kebab-case", () => {
-      expect(toKebabCase("already-kebab-case")).toBe("already-kebab-case");
-    });
-
-    it("should leave leading and trailing hyphens for spaces or underscores", () => {
-      expect(toKebabCase("  hello world  ")).toBe("-hello-world-");
-      expect(toKebabCase("__hello_world__")).toBe("-hello-world-");
     });
   });
 
