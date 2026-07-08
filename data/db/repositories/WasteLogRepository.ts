@@ -367,9 +367,15 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
 
   // Get total quantity wasted for a specific stock item
   async getStockTotalWasteQuantity(stockId: string): Promise<number> {
-    const records = await this.collection.query(Q.where("stock_id", stockId)).fetch();
+    // ⚡ Bolt Performance Optimization: Bypass model instantiation via unsafeFetchRaw and replace reduce with for-loop for large aggregations
+    const records = await this.collection.query(Q.where("stock_id", stockId)).unsafeFetchRaw();
 
-    return records.reduce((sum, r) => sum + r.quantityWasted, 0);
+    let total = 0;
+    for (let i = 0; i < records.length; i++) {
+      total += records[i].quantity_wasted || 0;
+    }
+
+    return total;
   }
 
   // Delete waste logs for a specific stock item
