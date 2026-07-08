@@ -14,3 +14,7 @@
 ## 2025-02-13 - Remove unused useGroceryItemCount hook
 **Learning:** Removing unused exports helps keep the bundle size small and the codebase clean, reducing cognitive load.
 **Action:** Continually check for and remove unused code as part of routine code health maintenance.
+
+## 2025-02-18 - Remove unused function
+**Learning:** Removing unused utility functions reduces codebase clutter, cognitive load, and potentially bundle size.
+**Action:** When asked to remove an unused export, always verify it's unused via global text search (`grep -rn "exportName" .`), then completely remove it and its associated tests and imports. Ensure you run type checks and tests to verify everything is safe before submitting.

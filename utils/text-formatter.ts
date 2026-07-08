@@ -30,27 +30,6 @@ export const camelCaseToReadable = (str: string): string => {
     .trim();
 };
 
-/**
- * Converts text to camelCase
- */
-export const toCamelCase = (str: string): string => {
-  if (!str) return "";
-
-  // Normalize string: convert space/dash/underscore separators to single spaces
-  let normalized = str.trim().replace(/[\s\-_]+/g, " ");
-
-  // Handle ALL CAPS string as a special case before CamelCasing (with u flag for punctuation)
-  if (/^[A-Z\s0-9\p{P}]+$/u.test(normalized)) {
-    normalized = normalized.toLowerCase();
-  }
-
-  // Then replace a space followed by a letter with the uppercase version of that letter
-  return normalized
-    .replace(/ (\w)/g, (_, c) => c.toUpperCase())
-    .replace(/^[A-Z]/, (c) => c.toLowerCase())
-    .replace(/\s+/g, ""); // remove any remaining spaces (e.g. from trailing separators)
-};
-
 // ========================
 // TEXT MANIPULATION
 // ========================

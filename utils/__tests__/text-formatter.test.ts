@@ -2,7 +2,6 @@ import {
   capitalize,
   titleCase,
   camelCaseToReadable,
-  toCamelCase,
   truncateWords,
   getInitials,
   normalizeWhitespace,
@@ -115,56 +114,6 @@ describe("Text Formatter Utils - Capitalization", () => {
     });
   });
 
-  describe("toCamelCase", () => {
-    it("should convert space-separated text to camelCase", () => {
-      expect(toCamelCase("ingredient name")).toBe("ingredientName");
-      expect(toCamelCase("some long variable name")).toBe("someLongVariableName");
-    });
-
-    it("should convert kebab-case to camelCase", () => {
-      expect(toCamelCase("ingredient-name")).toBe("ingredientName");
-    });
-
-    it("should convert snake_case to camelCase", () => {
-      expect(toCamelCase("ingredient_name")).toBe("ingredientName");
-    });
-
-    it("should convert Title Case to camelCase", () => {
-      expect(toCamelCase("Ingredient Name")).toBe("ingredientName");
-    });
-
-    it("should convert PascalCase to camelCase", () => {
-      expect(toCamelCase("IngredientName")).toBe("ingredientName");
-    });
-
-    it("should handle multiple separators", () => {
-      expect(toCamelCase("ingredient--name")).toBe("ingredientName");
-      expect(toCamelCase("ingredient__name")).toBe("ingredientName");
-      expect(toCamelCase("ingredient  name")).toBe("ingredientName");
-    });
-
-    it("should handle ALL CAPS", () => {
-      expect(toCamelCase("HELLO WORLD")).toBe("helloWorld");
-      expect(toCamelCase("INGREDIENT")).toBe("ingredient");
-    });
-
-    it("should handle strings with numbers", () => {
-      expect(toCamelCase("version 2.0")).toBe("version2.0");
-      expect(toCamelCase("ingredient 1")).toBe("ingredient1");
-    });
-
-    it("should handle leading and trailing spaces", () => {
-      expect(toCamelCase("  leading spaces")).toBe("leadingSpaces");
-      expect(toCamelCase("trailing spaces  ")).toBe("trailingSpaces");
-      expect(toCamelCase("  both spaces  ")).toBe("bothSpaces");
-    });
-
-    it("should return empty string for empty or null input", () => {
-      expect(toCamelCase("")).toBe("");
-      expect(toCamelCase(null as any)).toBe("");
-      expect(toCamelCase(undefined as any)).toBe("");
-    });
-  });
 });
 
 describe("Text Formatter Utils - Text Manipulation", () => {
