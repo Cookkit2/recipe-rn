@@ -2,7 +2,12 @@ import { formatDistance, formatOpenStatus } from "../store-display";
 
 describe("store-display utilities", () => {
   describe("formatDistance", () => {
+    it("throws an error for negative distances", () => {
+      expect(() => formatDistance(-1)).toThrow("Distance cannot be negative");
+    });
+
     it("formats distances less than 1km in meters", () => {
+      expect(formatDistance(0)).toBe("0m");
       expect(formatDistance(0.5)).toBe("500m");
       expect(formatDistance(0.999)).toBe("999m");
     });
@@ -11,10 +16,7 @@ describe("store-display utilities", () => {
       expect(formatDistance(1)).toBe("1.0km");
       expect(formatDistance(1.5)).toBe("1.5km");
       expect(formatDistance(2.78)).toBe("2.8km");
-    });
-
-    it("throws an error for negative distances", () => {
-      expect(() => formatDistance(-1)).toThrow("Distance cannot be negative");
+      expect(formatDistance(10.25)).toBe("10.3km");
     });
   });
 
