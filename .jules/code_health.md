@@ -1,4 +1,3 @@
-## 2024-07-05 - Refactor NutritionReportScreen
-
-**Learning:** Extracting large inline useMemo logic (like computation for stats) into custom hooks greatly improves the readability of the UI component.
-**Action:** Actively look for inline useMemo hooks in UI components and extract them when they represent self-contained business logic.
+## 2025-02-20 - Extracting excessive Stack.Screen definitions
+**Learning:** Overly long React components with huge chunks of `Stack.Screen` definitions can be safely extracted into smaller module-specific groups without breaking the Expo Router, as long as they return `Stack.Screen` directly or via a Fragment. However, because React Navigation requires the direct children of a Navigator to be Screen or Group components, they must be called as functions `{ScreenGroup()}` rather than rendered as components `<ScreenGroup />`.
+**Action:** Extract large screen configurations into separate `ScreenGroup*` functions that return fragments, and call them directly in the navigator stack to improve readability.
