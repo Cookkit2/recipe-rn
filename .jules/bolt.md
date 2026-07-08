@@ -37,6 +37,7 @@
 
 **Learning:** In `hooks/queries/useGroceryList.ts`, the loop allocating `pantryItem.synonyms?.map(...)` on every iteration of a doubly-nested loop mapping unmatched ingredients against pantry items causes massive array allocation penalties and GC pressure (e.g., thousands of times per generation).
 **Action:** Lift the array transformation out of the inner loop, or modify the matching utility (`isIngredientMatch`) to accept the raw array of objects so mapping is completely avoided.
+
 ## 2026-06-07 - [Avoid adding non-compatible native dependencies for benchmarks]
 **Learning:** Adding 'better-sqlite3' to a React Native/Expo project for the sole purpose of running a local benchmark script can pollute the project and cause compilation failures.
 **Action:** Mock necessary classes and dependencies rather than adding new native modules to the project.
@@ -45,12 +46,15 @@
 
 **Learning:** When fetching active, expired, or upcoming challenges, fetching all records from the table using `.query().fetch()` and then applying JavaScript `.filter()` in-memory is highly inefficient in WatermelonDB, as it unnecessarily serializes, deserializes, and allocates thousands of unused objects across the React Native bridge.
 **Action:** Always push filtering logic down to the native database layer using WatermelonDB query constraints (e.g., `Q.where("start_date", Q.lte(now))`) to only retrieve the specific models needed, significantly reducing memory footprint and processing latency.
+
 ## 2024-05-18 - Avoid Client-Side `.find()` After Full DB Fetch
 **Learning:** In WatermelonDB services (like `HouseholdRealtimeService` or `HouseholdSyncService`), it is an anti-pattern to call `collection.query().fetch()` to load the entire table into memory and then use JavaScript's `array.find()` to locate a specific record by `supabaseId`. This causes a full table scan in SQLite and loads massive arrays into the JS thread.
 **Action:** Use targeted database queries directly via `Q.where("column_name", value)` to delegate filtering to the native SQLite layer, or build a `Map` if processing batches in loops to avoid N+1 queries.
+
 ## 2024-06-20 - Batch Database Queries Inside Loop Iteration Bottleneck
 **Learning:** Sequential WatermelonDB fetch queries within a loop (such as iterating over mappings to find associated steps and ingredients) significantly downgrade UI performance even if errors bypass the loop condition, blocking the JS thread for 50-100ms.
 **Action:** When finding multiple relational entities inside a loop, always extract the database query outside the loop, use `Q.where('id', Q.oneOf(ids))` to perform a single batched fetch, construct in-memory Maps keyed by foreign IDs, and iterate over the local maps for O(1) retrieval.
+
 ## 2026-06-19 - Optimize O(N^2) array lookup in tailored recipe mapping repository
 **Learning:** Converting an array to a Map outside a loop reduces inner lookups from O(N) to O(1), improving overall time complexity from O(N^2) to O(N). This is critical when iterating over large arrays inside database repository methods.
 **Action:** Use a Map to cache items before looping when multiple lookups are required.
@@ -58,6 +62,7 @@
 ## 2026-06-17 - Optimize Array Reductions in Loops
 **Learning:** Repeated calls to `Array.prototype.reduce()` allocating closure functions inside loops or mapping over arrays dynamically can cause noticeable performance overhead, allocating unnecessary intermediate garbage and causing excessive GC cycles. This is particularly problematic in computationally intensive contexts like nutrition calculations where numbers are aggregated across multiple recipes and items.
 **Action:** When computing sums across lists (especially inside other render layers or data-heavy loops), replace multiple `Array.prototype.reduce()` calls with a single standard `for` loop that aggregates multiple scalar properties simultaneously. This eliminates closure allocations and dramatically reduces both memory allocations and total time complexity by traversing the array only once.
+
 ## 2026-06-14 - Optimize Sequential Upload Latency
 **Learning:** Performing network uploads inside a `for...of` loop with `await` introduces significant latency due to sequential processing of I/O operations.
 **Action:** When performing independent network uploads in a loop, always use `input.map(async () => ...)` to generate promises, and resolve them concurrently with `await Promise.all(...)`. Combining this with bulk inserting database records afterwards prevents N+1 queries.
@@ -69,9 +74,15 @@
 ## 2025-02-28 - Optimizing Batch I/O in Storage Facades
 **Learning:** Found sequential `await` loops inside fallback `_getBatchAsync`, `_setBatchAsync`, and `_deleteBatchAsync` methods in `data/storage/storage-facade.ts`. For batch operations over N items, this created O(N) sequential network or disk I/O latency instead of O(1) concurrent latency.
 **Action:** Always replace `for...of` loops containing `await` for independent batch I/O operations with `Promise.all(array.map(...))` to maximize concurrency and dramatically reduce overall operation time.
+
 ## 2026-07-05 - Extracted custom hooks for Code Health
 **Learning:** Extracting component state mapping (e.g. step page array generation) and complex data fetching (e.g. useTailoredRecipe) into custom hooks significantly reduces the length of React components and isolates responsibilities.
 **Action:** When a component mixes data mapping and state management, move the logic to custom hooks.
+
 ## 2025-02-23 - Optimize Array Comparisons for Deletions
 **Learning:** Checking for deletions using `array.some(x => x.id === existing.id)` inside a loop over `existing` objects results in an O(N^2) operation, which can cause severe performance issues with large datasets.
 **Action:** When determining which records were removed between two arrays (e.g. an "editable" array and an "existing" DB array), map the new IDs to a `Set` first (`new Set(array.map(x => x.id).filter(Boolean))`), and then iterate over the existing records using `set.has(existing.id)`. This changes the complexity to O(N).
+
+## 2025-02-15 - Write Comprehensive Tests Including Error Paths
+**Learning:** Adding robust test coverage for utility functions like JSON parsers should include tests that deliberately invoke the catch block with malformed inputs to ensure fallback behavior works correctly.
+**Action:** When creating tests for data-parsing utilities, always write explicit tests for malformed input paths rather than relying solely on happy path scenarios.
