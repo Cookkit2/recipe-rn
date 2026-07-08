@@ -34,3 +34,7 @@
 ## 2025-02-20 - Extracting excessive Stack.Screen definitions
 **Learning:** Overly long React components with huge chunks of `Stack.Screen` definitions can be safely extracted into smaller module-specific groups without breaking the Expo Router, as long as they return `Stack.Screen` directly or via a Fragment. However, because React Navigation requires the direct children of a Navigator to be Screen or Group components, they must be called as functions `{ScreenGroup()}` rather than rendered as components `<ScreenGroup />`.
 **Action:** Extract large screen configurations into separate `ScreenGroup*` functions that return fragments, and call them directly in the navigator stack to improve readability.
+
+## 2024-05-14 - Remove Unused Code
+**Learning:** Cleaning up dead utility functions reduces mental overhead and prevents obsolete code from creeping back in.
+**Action:** When finding unused exports, aggressively remove them along with their test coverage, then verify with `typecheck` and `test`.

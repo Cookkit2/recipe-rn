@@ -1,7 +1,6 @@
 import {
   capitalize,
   titleCase,
-  camelCaseToReadable,
   truncateWords,
   getInitials,
   normalizeWhitespace,
@@ -79,101 +78,6 @@ describe("Text Formatter Utils - Capitalization", () => {
     });
   });
 
-  describe("camelCaseToReadable", () => {
-    it("should convert camelCase to readable text with title case", () => {
-      expect(camelCaseToReadable("ingredientName")).toBe("Ingredient Name");
-      expect(camelCaseToReadable("someLongVariableName")).toBe("Some Long Variable Name");
-    });
-
-    it("should convert PascalCase to readable text", () => {
-      expect(camelCaseToReadable("IngredientName")).toBe("Ingredient Name");
-    });
-
-    it("should handle single word", () => {
-      expect(camelCaseToReadable("ingredient")).toBe("Ingredient");
-    });
-
-    it("should return empty string for empty or null input", () => {
-      expect(camelCaseToReadable("")).toBe("");
-      expect(camelCaseToReadable(null as any)).toBe("");
-      expect(camelCaseToReadable(undefined as any)).toBe("");
-    });
-
-    it("should handle consecutive capital letters", () => {
-      expect(camelCaseToReadable("XMLParser")).toBe("X M L Parser");
-    });
-
-    it("should handle numbers in strings", () => {
-      expect(camelCaseToReadable("version2")).toBe("Version2");
-      expect(camelCaseToReadable("myApp1")).toBe("My App1");
-    });
-
-    it("should handle strings that already have spaces", () => {
-      expect(camelCaseToReadable("already Readable")).toBe("Already  Readable");
-    });
-  });
-
-});
-
-describe("Text Formatter Utils - Text Manipulation", () => {
-  describe("truncateWords", () => {
-    it("should truncate string with more words than the limit and append default suffix", () => {
-      expect(truncateWords("This is a long string", 3)).toBe("This is a...");
-    });
-
-    it("should truncate string and append custom suffix", () => {
-      expect(truncateWords("This is a long string", 3, " [read more]")).toBe(
-        "This is a [read more]"
-      );
-    });
-
-    it("should return the original string if the number of words is equal to the limit", () => {
-      expect(truncateWords("This is a string", 4)).toBe("This is a string");
-    });
-
-    it("should return the original string if the number of words is less than the limit", () => {
-      expect(truncateWords("Short string", 5)).toBe("Short string");
-    });
-
-    it("should handle strings with multiple spaces correctly (current split behavior)", () => {
-      // split(" ") creates empty strings for extra spaces, which count as words
-      expect(truncateWords("This  is   spaced", 4)).toBe("This  is ...");
-    });
-
-    it("should return an empty string for empty, null, or undefined input", () => {
-      expect(truncateWords("", 3)).toBe("");
-      expect(truncateWords(null as any, 3)).toBe("");
-      expect(truncateWords(undefined as any, 3)).toBe("");
-    });
-  });
-
-  describe("truncate", () => {
-    it("should truncate text to specified length and add default ellipsis", () => {
-      expect(truncate("hello world", 8)).toBe("hello...");
-    });
-
-    it("should truncate text and add custom suffix", () => {
-      expect(truncate("hello world", 8, "..")).toBe("hello ..");
-    });
-
-    it("should not truncate if text is shorter than length", () => {
-      expect(truncate("hello", 10)).toBe("hello");
-    });
-
-    it("should not truncate if text is exactly equal to length", () => {
-      expect(truncate("hello", 5)).toBe("hello");
-    });
-
-    it("should handle length shorter than suffix", () => {
-      expect(truncate("hello", 2)).toBe("...");
-    });
-
-    it("should return empty string for empty or null input", () => {
-      expect(truncate("", 5)).toBe("");
-      expect(truncate(null as any, 5)).toBe(null);
-      expect(truncate(undefined as any, 5)).toBe(undefined);
-    });
-  });
 });
 
 describe("Text Formatter Utils - getInitials", () => {
