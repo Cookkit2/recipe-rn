@@ -290,26 +290,32 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
     const records = await query.fetch();
 
     // Group by time period
+    // ⚡ Bolt Performance Optimization: Optimize memory allocations and CPU usage by caching records.length, reusing Date objects, and avoiding unnecessary intermediate object instantiations via Math.setHours.
     const timeMap = new Map<number, { count: number; quantity: number; cost: number }>();
+    const ONE_DAY = 24 * 60 * 60 * 1000;
 
-    for (const record of records) {
-      const date = new Date(record.wasteDate);
+    for (let i = 0, len = records.length; i < len; i++) {
+      const record = records[i];
+      if (!record) continue;
+
       let key: number;
+      const d = new Date(record.wasteDate);
 
       if (groupBy === "day") {
         // Group by day (start of day)
-        key = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+        key = d.setHours(0, 0, 0, 0);
       } else if (groupBy === "week") {
         // Group by week (start of week - Sunday)
-        const dayOfWeek = date.getDay();
-        key = new Date(date.getFullYear(), date.getMonth(), date.getDate() - dayOfWeek).getTime();
+        d.setHours(0, 0, 0, 0);
+        const dayOfWeek = d.getDay();
+        key = d.getTime() - dayOfWeek * ONE_DAY;
       } else {
         // Group by month (start of month)
-        key = new Date(date.getFullYear(), date.getMonth(), 1).getTime();
+        key = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
       }
 
       const existing = timeMap.get(key);
-      if (existing) {
+      if (existing !== undefined) {
         existing.count++;
         existing.quantity += record.quantityWasted;
         existing.cost += record.estimatedCost ?? 0;
