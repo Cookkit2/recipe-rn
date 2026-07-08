@@ -41,13 +41,17 @@ async function fetchAllPantryItemsCore(): Promise<PantryItem[]> {
   }
 
   const batchSize = 100;
-  const pantryItemsConverted: PantryItem[] = [];
 
+  // ⚡ Bolt Performance Optimization: Process DB conversion batches concurrently
+  // Impact: Eliminates O(N/B) sequential latency, improving large inventory fetch time
+  const batchPromises: Promise<PantryItem[]>[] = [];
   for (let i = 0; i < stockItems.length; i += batchSize) {
     const batch = stockItems.slice(i, i + batchSize);
-    const converted = await convertStockToPantryItemBatch(batch);
-    pantryItemsConverted.push(...converted);
+    batchPromises.push(convertStockToPantryItemBatch(batch));
   }
+
+  const results = await Promise.all(batchPromises);
+  const pantryItemsConverted: PantryItem[] = results.flat();
 
   log.info("✅ Converted pantry items:", pantryItemsConverted.length);
   return pantryItemsConverted;
@@ -292,12 +296,18 @@ export const pantryApi = {
     });
 
     const batchSize = 10;
-    const createdItems: PantryItem[] = [];
+
+    // ⚡ Bolt Performance Optimization: Process DB conversion batches concurrently
+    // Impact: Eliminates O(N/B) sequential latency, improving bulk insert/update time
+    const batchPromises: Promise<PantryItem[]>[] = [];
     for (let i = 0; i < createdOrUpdatedStockRefs.length; i += batchSize) {
       const batch = createdOrUpdatedStockRefs.slice(i, i + batchSize);
-      const converted = await convertStockToPantryItemBatch(batch);
-      createdItems.push(...converted);
+      batchPromises.push(convertStockToPantryItemBatch(batch));
     }
+
+    const results = await Promise.all(batchPromises);
+    const createdItems: PantryItem[] = results.flat();
+
     log.info("addPantryItemsWithMetadata: created/updated", createdItems.length, "items");
     return createdItems;
   },

@@ -72,3 +72,6 @@
 ## 2026-07-05 - Extracted custom hooks for Code Health
 **Learning:** Extracting component state mapping (e.g. step page array generation) and complex data fetching (e.g. useTailoredRecipe) into custom hooks significantly reduces the length of React components and isolates responsibilities.
 **Action:** When a component mixes data mapping and state management, move the logic to custom hooks.
+## 2024-03-01 - Optimizing sequential awaits in DB batch conversion
+**Learning:** Iterating over batches with `for...of` loops and using `await convertStockToPantryItemBatch(batch)` causes sequential resolution, blocking the thread and increasing total runtime from O(1) to O(N).
+**Action:** Replace `for` loops containing sequential `await` for independent batches with `Promise.all` to resolve them concurrently, significantly reducing total latency.
