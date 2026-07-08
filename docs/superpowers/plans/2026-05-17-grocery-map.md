@@ -598,6 +598,7 @@ import { StoreInfoCard, StoreInfo } from "~/components/GroceryMap/StoreInfoCard"
 import { useLocation } from "~/hooks/useLocation";
 import { useNearbyStores } from "~/hooks/queries/useStoreQueries";
 import { useDistanceCalculation } from "~/hooks/useDistanceCalculation";
+import { useGroceryList } from "~/hooks/queries/useGroceryList";
 import { toast } from "sonner-native";
 import { openDirections } from "~/services/geolocation";
 
@@ -613,6 +614,14 @@ export default function GroceryMapPage() {
   );
 
   const storesWithDistance = useDistanceCalculation(location, stores);
+  const { groceryList } = useGroceryList();
+
+  // Helper to calculate mock price based on grocery list
+  const calculateStorePrice = (storeId: string) => {
+    if (!groceryList || groceryList.length === 0) return 0;
+    // Mock price calculation for the MVP: 500 cents ($5.00) per item
+    return groceryList.length * 500;
+  };
 
   const bottomSheetRef = useRef<BottomSheet>(null);
 
@@ -669,7 +678,7 @@ export default function GroceryMapPage() {
     name: store.name,
     latitude: store.latitude || 0,
     longitude: store.longitude || 0,
-    totalPriceCents: 1500, // TODO: Calculate from grocery list
+    totalPriceCents: calculateStorePrice(store.id),
     distance: store.distance,
   }));
 
@@ -678,7 +687,7 @@ export default function GroceryMapPage() {
     name: store.name,
     address: (store as any).address || "Unknown address",
     distance: store.distance,
-    totalPriceCents: 1500, // TODO: Calculate from grocery list
+    totalPriceCents: calculateStorePrice(store.id),
   }));
 
   const selectedStoreData = storesWithDistance.find((s) => s.id === selectedStore);
@@ -708,7 +717,7 @@ export default function GroceryMapPage() {
                 name: selectedStoreData.name,
                 address: (selectedStoreData as any).address || "Unknown address",
                 distance: selectedStoreData.distance,
-                totalPriceCents: 1500, // TODO: Calculate from grocery list
+                totalPriceCents: calculateStorePrice(selectedStoreData.id),
                 isOpen: true,
                 closingTime: "22:00",
               }}
@@ -718,7 +727,7 @@ export default function GroceryMapPage() {
                   name: selectedStoreData.name,
                   address: (selectedStoreData as any).address || "",
                   distance: selectedStoreData.distance,
-                  totalPriceCents: 1500,
+                  totalPriceCents: calculateStorePrice(selectedStoreData.id),
                   isOpen: true,
                 })
               }
