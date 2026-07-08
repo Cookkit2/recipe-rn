@@ -747,21 +747,3 @@ export function useGroceryList(startDate?: Date, endDate?: Date) {
     hasNeededItems: stats.neededItems > 0,
   };
 }
-
-/**
- * Hook to get the count of grocery items that need to be purchased
- *
- * @returns Object containing the count of needed items and loading state
- *
- * @remarks
- * Useful for displaying a badge count on UI elements.
- * Returns the number of items that are not fully covered by pantry stock.
- */
-export function useGroceryItemCount() {
-  const { stats, isLoading } = useGroceryList();
-
-  return {
-    count: stats.neededItems,
-    isLoading,
-  };
-}
