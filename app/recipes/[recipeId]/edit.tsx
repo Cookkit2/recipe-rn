@@ -154,8 +154,14 @@ export default function RecipeEdit() {
         );
 
         // Delete removed ingredients
+        // ⚡ Bolt Performance Optimization: Use a Set for O(1) lookups instead of O(N) Array.some()
+        const editableIngredientIds = new Set(
+          editable.ingredients
+            .filter((ing: EditableIngredient) => ing.id !== undefined)
+            .map((ing: EditableIngredient) => ing.id)
+        );
         for (const existing of existingIngredients) {
-          if (!editable.ingredients.some((ing: EditableIngredient) => ing.id === existing.id)) {
+          if (!editableIngredientIds.has(existing.id)) {
             batchOperations.push(existing.prepareDestroyPermanently());
           }
         }
@@ -196,8 +202,14 @@ export default function RecipeEdit() {
         );
 
         // Delete removed steps
+        // ⚡ Bolt Performance Optimization: Use a Set for O(1) lookups instead of O(N) Array.some()
+        const editableStepIds = new Set(
+          editable.steps
+            .filter((step: EditableStep) => step.id !== undefined)
+            .map((step: EditableStep) => step.id)
+        );
         for (const existing of existingSteps) {
-          if (!editable.steps.some((step: EditableStep) => step.id === existing.id)) {
+          if (!editableStepIds.has(existing.id)) {
             batchOperations.push(existing.prepareDestroyPermanently());
           }
         }
