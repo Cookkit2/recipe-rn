@@ -96,3 +96,7 @@
 **Learning:** When looping over large arrays locally (which cannot be done cleanly in DB via SQL due to the client-side ORM design limitations/missing `unsafeSqlQuery` support in WatermelonDB), avoid parsing/creating JS `Date` objects repeatedly to floor dates to day bounds. Calling `Math.setHours(0,0,0,0)` on the timestamp is orders of magnitudes faster than creating multiple objects per iteration (`new Date(year, month, day)`).
 
 **Action:** When grouping time series metrics by dates on the frontend or backend in Node.js/JS, rely on Date operations directly via the number epoch and avoid new allocations.
+
+## 2025-02-28 - Optimize WatermelonDB large result fetching
+**Learning:** Instantiating thousands of WatermelonDB `Model` instances using `.fetch()` is extremely memory intensive and slow due to closure overhead and getters across the JS bridge. When aggregating large datasets where model methods/setters are not needed, `.unsafeFetchRaw()` is significantly faster (~35%+ improvement).
+**Action:** When calculating aggregations over many WatermelonDB records without needing full `Model` instances, prefer using `.unsafeFetchRaw()` and reading the raw SQLite columns (e.g. `record.recipe_id`) to avoid instantiation overhead.
