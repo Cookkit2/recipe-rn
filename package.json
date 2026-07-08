@@ -20,7 +20,7 @@
     "e2e:test:ios:release": "EXPO_PUBLIC_E2E=true detox test -c ios.sim.release",
     "e2e:ios:release": "bun run e2e:build:ios:release && bun run e2e:test:ios:release",
     "prepare": "husky",
-    "backfill:recipe-images": "bun run scripts/backfill-recipe-images.ts",
+    "backfill:recipe-images": "bun run scripts/backfill-recipe-images.ts"
   },
   "dependencies": {
     "@babel/plugin-proposal-decorators": "^7.28.6",
