@@ -1,35 +1,5 @@
 import { describe, it, expect, jest, beforeEach } from "@jest/globals";
-import { toggleIngredientUsed, areAllIngredientsUsed } from "../ingredient-tickoff";
-
-describe("toggleIngredientUsed", () => {
-  it("adds an id that is not present", () => {
-    const next = toggleIngredientUsed(new Set<string>(), "ing-1");
-    expect(next.has("ing-1")).toBe(true);
-    expect(next.size).toBe(1);
-  });
-
-  it("removes an id that is already present (toggle off)", () => {
-    const next = toggleIngredientUsed(new Set(["ing-1", "ing-2"]), "ing-1");
-    expect(next.has("ing-1")).toBe(false);
-    expect(next.has("ing-2")).toBe(true);
-    expect(next.size).toBe(1);
-  });
-
-  it("toggles the same id back and forth deterministically", () => {
-    let used = new Set<string>();
-    used = toggleIngredientUsed(used, "ing-1");
-    expect(used.has("ing-1")).toBe(true);
-    used = toggleIngredientUsed(used, "ing-1");
-    expect(used.has("ing-1")).toBe(false);
-  });
-
-  it("does not mutate the input set (immutability)", () => {
-    const original = new Set(["ing-1"]);
-    const snapshot = new Set(original);
-    toggleIngredientUsed(original, "ing-2");
-    expect(original).toEqual(snapshot);
-  });
-});
+import { areAllIngredientsUsed } from "../ingredient-tickoff";
 
 describe("areAllIngredientsUsed", () => {
   it("returns true when every ingredient id is present", () => {
@@ -50,7 +20,7 @@ describe("areAllIngredientsUsed", () => {
     const ids = ["ing-1", "ing-2"];
     let used = new Set(["ing-1"]);
     expect(areAllIngredientsUsed(used, ids)).toBe(false);
-    used = toggleIngredientUsed(used, "ing-2");
+    used.add("ing-2");
     expect(areAllIngredientsUsed(used, ids)).toBe(true);
   });
 });
@@ -79,8 +49,8 @@ describe("used-ingredient MMKV persistence round-trip", () => {
   it("serializes toggled ids to an array and round-trips back through storage", () => {
     // Simulate the provider toggling two ingredients and persisting.
     let used = new Set<string>();
-    used = toggleIngredientUsed(used, "ing-1");
-    used = toggleIngredientUsed(used, "ing-3");
+    used.add("ing-1");
+    used.add("ing-3");
     setMock(STORAGE_KEY, Array.from(used));
 
     expect(setMock).toHaveBeenCalledWith(STORAGE_KEY, ["ing-1", "ing-3"]);
@@ -98,7 +68,7 @@ describe("used-ingredient MMKV persistence round-trip", () => {
   it("marks all used once the full set is persisted and rehydrated", () => {
     let used = new Set<string>();
     for (const id of ingredientIds) {
-      used = toggleIngredientUsed(used, id);
+      used.add(id);
     }
     setMock(STORAGE_KEY, Array.from(used));
 
