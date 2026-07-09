@@ -8,6 +8,10 @@ const SECURE_STORE_KEY = "mmkv_encryption_key";
 // Fallback for tests/development
 const TEST_ENV_KEY = "MMKV_ENCRYPTION_KEY";
 
+function encodeBytesAsHex(bytes: Uint8Array): string {
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
 function getEncryptionKey(): string | undefined {
   // Check for test override first, restricted to non-production environments
   if (__DEV__ || (typeof process !== "undefined" && process.env?.NODE_ENV === "test")) {
@@ -27,11 +31,8 @@ function getEncryptionKey(): string | undefined {
     if (!key) {
       // Generate a new cryptographically secure 256-bit (32 byte) key
       const bytes = Crypto.getRandomBytes(32);
-      // Convert to base64 string to safely store and satisfy entropy checks
-      const binaryString = Array.from(bytes)
-        .map((byte) => String.fromCharCode(byte))
-        .join("");
-      key = btoa(binaryString);
+      // Store as hex without relying on browser-only globals like btoa.
+      key = encodeBytesAsHex(bytes);
       SecureStore.setItem(SECURE_STORE_KEY, key);
       log.info("Generated new per-device MMKV encryption key");
     }

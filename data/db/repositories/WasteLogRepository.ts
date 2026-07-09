@@ -294,9 +294,8 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
     const records = await query.fetch();
 
     // Group by time period
-    // ⚡ Bolt Performance Optimization: Optimize memory allocations and CPU usage by caching records.length, reusing Date objects, and avoiding unnecessary intermediate object instantiations via Math.setHours.
+    // ⚡ Bolt Performance Optimization: Optimize memory allocations and CPU usage by caching records.length and reusing Date objects.
     const timeMap = new Map<number, { count: number; quantity: number; cost: number }>();
-    const ONE_DAY = 24 * 60 * 60 * 1000;
 
     for (let i = 0, len = records.length; i < len; i++) {
       const record = records[i];
@@ -312,7 +311,7 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
         // Group by week (start of week - Sunday)
         d.setHours(0, 0, 0, 0);
         const dayOfWeek = d.getDay();
-        key = d.getTime() - dayOfWeek * ONE_DAY;
+        key = new Date(d.getFullYear(), d.getMonth(), d.getDate() - dayOfWeek).getTime();
       } else {
         // Group by month (start of month)
         key = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
