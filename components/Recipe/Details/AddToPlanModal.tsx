@@ -136,6 +136,7 @@ export default function AddToPlanModal({ recipeId }: AddToPlanModalProps) {
                   onPress={() => setShowDatePicker(false)}
                   accessibilityRole="button"
                   accessibilityLabel="Cancel date selection"
+                  accessibilityHint="Closes the date selection modal"
                 >
                   <P className="text-foreground/80">Cancel</P>
                 </Pressable>
@@ -147,6 +148,7 @@ export default function AddToPlanModal({ recipeId }: AddToPlanModalProps) {
                   onPress={() => setShowDatePicker(false)}
                   accessibilityRole="button"
                   accessibilityLabel="Confirm date selection"
+                  accessibilityHint="Confirms the selected date"
                 >
                   <P className="text-foreground/80">Done</P>
                 </Pressable>
@@ -239,6 +241,7 @@ export default function AddToPlanModal({ recipeId }: AddToPlanModalProps) {
               className="w-full"
               accessibilityRole="button"
               accessibilityLabel="Open date picker"
+              accessibilityHint="Opens a date picker to select a date"
             >
               <View className="flex-row items-center gap-3">
                 <CalendarIcon size={18} className="text-muted-foreground" />

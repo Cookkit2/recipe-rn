@@ -138,7 +138,12 @@ async function migrateRow(
     const after = await convertToWebp(before, opts.quality, opts.maxWidth);
 
     if (opts.dryRun) {
-      return { ...base, bytesBefore: before.byteLength, bytesAfter: after.byteLength, status: "dry_run" };
+      return {
+        ...base,
+        bytesBefore: before.byteLength,
+        bytesAfter: after.byteLength,
+        status: "dry_run",
+      };
     }
 
     const newKey = targetKeyFor(row.image_url, bucketHost, row.id);
@@ -199,7 +204,9 @@ async function main() {
   const client = loadAdminClientFromEnv();
   const bucketHost = getBucketPublicHost(process.env.EXPO_PUBLIC_SUPABASE_URL ?? "", BUCKET);
 
-  console.log(`[backfill] dryRun=${opts.dryRun} limit=${opts.limit ?? "none"} concurrency=${opts.concurrency}`);
+  console.log(
+    `[backfill] dryRun=${opts.dryRun} limit=${opts.limit ?? "none"} concurrency=${opts.concurrency}`
+  );
   const all = await fetchAllRecipes(client);
   const target = opts.limit ? all.slice(0, opts.limit) : all;
   console.log(`[backfill] recipes=${all.length} processing=${target.length}`);
@@ -214,14 +221,20 @@ async function main() {
       if (entry.status === "migrated" || entry.status === "dry_run") migrated++;
       else if (entry.status === "failed") failed++;
       if (completed % PROGRESS_EVERY === 0) {
-        console.log(`[backfill] progress ${completed}/${total} migrated=${migrated} failed=${failed}`);
+        console.log(
+          `[backfill] progress ${completed}/${total} migrated=${migrated} failed=${failed}`
+        );
       }
     }
   );
 
   await writeFile(
     REPORT_PATH,
-    JSON.stringify({ generatedAt: new Date().toISOString(), bucket: BUCKET, dryRun: opts.dryRun, entries }, null, 2)
+    JSON.stringify(
+      { generatedAt: new Date().toISOString(), bucket: BUCKET, dryRun: opts.dryRun, entries },
+      null,
+      2
+    )
   );
 
   console.log("[backfill] " + summarize(entries));
