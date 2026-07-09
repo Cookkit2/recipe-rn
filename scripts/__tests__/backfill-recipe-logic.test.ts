@@ -3,6 +3,9 @@ import {
   getBucketPublicHost,
   decideMigration,
   objectKeyFor,
+  objectPathFromUrl,
+  swapExtensionToWebp,
+  targetKeyFor,
   bytesSaved,
 } from "~/scripts/lib/backfill-recipe-logic";
 
@@ -95,11 +98,58 @@ describe("decideMigration", () => {
     expect(decideMigration("", HOST).action).toBe("skip_empty");
     expect(decideMigration("   ", HOST).action).toBe("skip_empty");
   });
-  it("skips urls already in our bucket", () => {
-    expect(decideMigration(HOST + "abc.webp", HOST).action).toBe("skip_migrated");
+  it("skips in-bucket .webp urls (already converted)", () => {
+    expect(decideMigration(HOST + "abc.webp", HOST).action).toBe("skip_webp");
+    expect(decideMigration(HOST + "foo.webp?token=1", HOST).action).toBe("skip_webp");
+  });
+  it("migrates in-bucket non-webp urls (jpg/png/jpeg/avif need recompression)", () => {
+    expect(decideMigration(HOST + "steamed-oysters.jpg", HOST).action).toBe("migrate");
+    expect(decideMigration(HOST + "foo.png", HOST).action).toBe("migrate");
+    expect(decideMigration(HOST + "a.jpeg", HOST).action).toBe("migrate");
+    expect(decideMigration(HOST + "b.avif", HOST).action).toBe("migrate");
   });
   it("migrates external urls", () => {
     expect(decideMigration("https://other.example.com/img.jpg", HOST).action).toBe("migrate");
+  });
+});
+
+describe("objectPathFromUrl", () => {
+  it("extracts the object path from an in-bucket url", () => {
+    expect(objectPathFromUrl(HOST + "steamed-oysters.jpg", HOST)).toBe("steamed-oysters.jpg");
+  });
+  it("strips query strings", () => {
+    expect(objectPathFromUrl(HOST + "foo.png?x=1&y=2", HOST)).toBe("foo.png");
+  });
+  it("returns null for external urls", () => {
+    expect(objectPathFromUrl("https://other.com/a.jpg", HOST)).toBeNull();
+  });
+  it("returns null for null/empty/host-only urls", () => {
+    expect(objectPathFromUrl(null, HOST)).toBeNull();
+    expect(objectPathFromUrl("", HOST)).toBeNull();
+    expect(objectPathFromUrl(HOST, HOST)).toBeNull();
+  });
+});
+
+describe("swapExtensionToWebp", () => {
+  it("replaces the last extension", () => {
+    expect(swapExtensionToWebp("steamed-oysters.jpg")).toBe("steamed-oysters.webp");
+    expect(swapExtensionToWebp("foo.png")).toBe("foo.webp");
+    expect(swapExtensionToWebp("a.b.jpeg")).toBe("a.b.webp");
+  });
+  it("appends .webp when there is no extension", () => {
+    expect(swapExtensionToWebp("noext")).toBe("noext.webp");
+  });
+  it("ignores a trailing query string", () => {
+    expect(swapExtensionToWebp("foo.jpg?x=1")).toBe("foo.webp");
+  });
+});
+
+describe("targetKeyFor", () => {
+  it("preserves an in-bucket key with the extension swapped", () => {
+    expect(targetKeyFor(HOST + "steamed-oysters.jpg", HOST, "r-1")).toBe("steamed-oysters.webp");
+  });
+  it("falls back to <id>.webp for external urls", () => {
+    expect(targetKeyFor("https://other.com/a.jpg", HOST, "r-1")).toBe("r-1.webp");
   });
 });
 

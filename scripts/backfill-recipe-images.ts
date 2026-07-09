@@ -23,7 +23,8 @@ import {
   parseArgs,
   getBucketPublicHost,
   decideMigration,
-  objectKeyFor,
+  targetKeyFor,
+  objectPathFromUrl,
   bytesSaved,
 } from "./lib/backfill-recipe-logic";
 import type { MigrationAction } from "./lib/backfill-recipe-logic";
@@ -140,13 +141,15 @@ async function migrateRow(
       return { ...base, bytesBefore: before.byteLength, bytesAfter: after.byteLength, status: "dry_run" };
     }
 
-    const key = objectKeyFor(row.id);
+    const newKey = targetKeyFor(row.image_url, bucketHost, row.id);
+    const oldKey = objectPathFromUrl(row.image_url, bucketHost);
+
     const { error: uploadError } = await client.storage
       .from(BUCKET)
-      .upload(key, after, { contentType: "image/webp", upsert: true });
+      .upload(newKey, after, { contentType: "image/webp", upsert: true });
     if (uploadError) throw uploadError;
 
-    const { data } = client.storage.from(BUCKET).getPublicUrl(key);
+    const { data } = client.storage.from(BUCKET).getPublicUrl(newKey);
     const newUrl = data.publicUrl;
 
     const { error: updateError } = await client
@@ -155,7 +158,22 @@ async function migrateRow(
       .eq("id", row.id);
     if (updateError) throw updateError;
 
-    return { ...base, new: newUrl, bytesBefore: before.byteLength, bytesAfter: after.byteLength, status: "migrated" };
+    // Delete the now-unreferenced old object so the bucket stays clean. Best-effort:
+    // a failure leaves a harmless orphan (old extension), recorded in `error` for cleanup.
+    let warning: string | undefined;
+    if (oldKey && oldKey !== newKey) {
+      const { error: deleteError } = await client.storage.from(BUCKET).remove([oldKey]);
+      if (deleteError) warning = `orphan-left:${oldKey} (${deleteError.message})`;
+    }
+
+    return {
+      ...base,
+      new: newUrl,
+      bytesBefore: before.byteLength,
+      bytesAfter: after.byteLength,
+      status: "migrated",
+      ...(warning ? { error: warning } : {}),
+    };
   } catch (err) {
     return { ...base, status: "failed", error: err instanceof Error ? err.message : String(err) };
   }
@@ -167,11 +185,11 @@ function summarize(entries: ReportEntry[]): string {
   const migrated = count((e) => e.status === "migrated");
   const dryRun = count((e) => e.status === "dry_run");
   const skipEmpty = count((e) => e.status === "skip_empty");
-  const skipMigrated = count((e) => e.status === "skip_migrated");
+  const skipWebp = count((e) => e.status === "skip_webp");
   const totalBefore = entries.reduce((sum, e) => sum + e.bytesBefore, 0);
   const totalAfter = entries.reduce((sum, e) => sum + e.bytesAfter, 0);
   return [
-    `migrated=${migrated} dry_run=${dryRun} skip_empty=${skipEmpty} skip_migrated=${skipMigrated} failed=${failed}`,
+    `migrated=${migrated} dry_run=${dryRun} skip_empty=${skipEmpty} skip_webp=${skipWebp} failed=${failed}`,
     `bytes: ${totalBefore} -> ${totalAfter} (saved ${bytesSaved(totalBefore, totalAfter)})`,
   ].join("\n");
 }

@@ -12,7 +12,7 @@ export interface CliOptions {
   concurrency: number;
 }
 
-export type MigrationAction = "skip_empty" | "skip_migrated" | "migrate";
+export type MigrationAction = "skip_empty" | "skip_webp" | "migrate";
 
 export interface MigrationDecision {
   action: MigrationAction;
@@ -80,7 +80,18 @@ export function getBucketPublicHost(supabaseUrl: string, bucket: string): string
   return `${base}/storage/v1/object/public/${bucket}/`;
 }
 
-/** Decide whether a recipe row should be migrated, skipped as empty, or skipped as already migrated. */
+/** True if a URL points at a .webp object (query/hash stripped). */
+function isWebpObjectUrl(url: string): boolean {
+  const path = url.split("?")[0]?.split("#")[0] ?? "";
+  return path.toLowerCase().endsWith(".webp");
+}
+
+/**
+ * Decide whether a recipe row should be migrated or skipped.
+ * - skip_empty: null/empty image_url.
+ * - skip_webp: already an in-bucket .webp object (fully converted).
+ * - migrate: an external URL, OR an in-bucket non-webp object that needs recompression.
+ */
 export function decideMigration(
   imageUrl: string | null | undefined,
   bucketHost: string
@@ -88,8 +99,40 @@ export function decideMigration(
   if (imageUrl === null || imageUrl === undefined) return { action: "skip_empty" };
   const trimmed = imageUrl.trim();
   if (trimmed.length === 0) return { action: "skip_empty" };
-  if (trimmed.startsWith(bucketHost)) return { action: "skip_migrated" };
+  if (trimmed.startsWith(bucketHost)) {
+    return isWebpObjectUrl(trimmed) ? { action: "skip_webp" } : { action: "migrate" };
+  }
   return { action: "migrate" };
+}
+
+/** Object key (path within bucket) for a URL already in our bucket, or null if external/empty. Query stripped. */
+export function objectPathFromUrl(
+  imageUrl: string | null | undefined,
+  bucketHost: string
+): string | null {
+  if (!imageUrl) return null;
+  const trimmed = imageUrl.trim();
+  if (!trimmed.startsWith(bucketHost)) return null;
+  const objectPath = trimmed.slice(bucketHost.length).split("?")[0] ?? "";
+  return objectPath.length > 0 ? objectPath : null;
+}
+
+/** Swap a storage object path's extension to .webp (foo.jpg -> foo.webp; no-ext -> foo.webp). */
+export function swapExtensionToWebp(objectPath: string): string {
+  const noQuery = objectPath.split("?")[0] ?? objectPath;
+  const dot = noQuery.lastIndexOf(".");
+  if (dot <= 0) return `${noQuery}.webp`;
+  return `${noQuery.slice(0, dot)}.webp`;
+}
+
+/** Target storage key for the converted object: preserve an in-bucket key (swap ext), else <id>.webp. */
+export function targetKeyFor(
+  imageUrl: string | null | undefined,
+  bucketHost: string,
+  recipeId: string
+): string {
+  const existing = objectPathFromUrl(imageUrl, bucketHost);
+  return existing ? swapExtensionToWebp(existing) : objectKeyFor(recipeId);
 }
 
 /** Storage object key within the bucket for a given recipe id. */
