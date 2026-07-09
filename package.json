@@ -19,7 +19,8 @@
     "e2e:build:ios:release": "EXPO_PUBLIC_E2E=true detox build -c ios.sim.release",
     "e2e:test:ios:release": "EXPO_PUBLIC_E2E=true detox test -c ios.sim.release",
     "e2e:ios:release": "bun run e2e:build:ios:release && bun run e2e:test:ios:release",
-    "prepare": "husky"
+    "prepare": "husky",
+    "backfill:recipe-images": "bun run scripts/backfill-recipe-images.ts"
   },
   "dependencies": {
     "@babel/plugin-proposal-decorators": "^7.28.6",
@@ -115,7 +116,7 @@
     "react-native-reanimated-carousel": "^4.0.3",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screen-corner-radius": "^0.2.3",
-    "react-native-screens": "4.25.1",
+    "react-native-screens": "4.25.2",
     "react-native-svg": "15.15.4",
     "react-native-vision-camera": "^5.0.10",
     "react-native-web": "^0.21.0",
@@ -148,6 +149,7 @@
     "prettier": "^3.8.3",
     "prettier-plugin-tailwindcss": "^0.8.0",
     "react-test-renderer": "19.2.3",
+    "sharp": "^0.35.3",
     "ts-jest": "^29.4.11",
     "typescript": "~6.0.3",
     "zustand": "^5.0.12"
@@ -162,7 +164,8 @@
     "@babel/runtime": ">=7.26.10",
     "jest-environment-node": "30.4.1",
     "jest-mock": "30.4.1",
-    "tmp": ">=0.2.6"
+    "tmp": ">=0.2.6",
+    "react-native-screens": "4.25.2"
   },
   "private": true,
   "reanimated": {

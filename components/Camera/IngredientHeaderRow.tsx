@@ -3,7 +3,7 @@ import { Alert, Pressable, View } from "react-native";
 import Animated, { LinearTransition } from "react-native-reanimated";
 import IngredientThumbnail from "../Ingredient/IngredientThumbnail";
 import { Button } from "../ui/button";
-import { XIcon, KeyboardIcon } from "lucide-uniwind";
+import { XIcon } from "lucide-uniwind";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { useCreateIngredientStore } from "~/store/CreateIngredientContext";
@@ -20,14 +20,6 @@ export default function IngredientHeaderRow() {
   const onConfirm = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push("/ingredient/confirmation");
-  };
-
-  // Graceful fallback to fully manual entry — never depends on a successful
-  // AI classify/segment call. Available whether or not the AI produced items,
-  // so a bad network or a hard failure never blocks adding an item.
-  const onTypeManually = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.push("/ingredient/create");
   };
 
   const onBack = () => {
@@ -95,17 +87,6 @@ export default function IngredientHeaderRow() {
         )}
       />
       <View className="flex-row items-center">
-        {/* Manual-entry fallback: always available so a failed/low-confidence
-            scan never dead-ends the user. */}
-        <Button
-          size="icon-sm"
-          variant="ghost"
-          className="rounded-full"
-          onPress={onTypeManually}
-          accessibilityLabel="Type ingredient manually"
-        >
-          <KeyboardIcon className="text-white" size={18} />
-        </Button>
         <Button
           size="icon-sm"
           variant="ghost"
