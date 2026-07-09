@@ -105,7 +105,9 @@ export function decideMigration(
   return { action: "migrate" };
 }
 
-/** Object key (path within bucket) for a URL already in our bucket, or null if external/empty. Query stripped. */
+/** Object key (path within bucket) for a URL already in our bucket, or null if external/empty.
+ *  Query stripped; the path is URI-decoded so keys with spaces/special chars round-trip correctly
+ *  (extracting verbatim from the URL and re-uploading would double-encode them). */
 export function objectPathFromUrl(
   imageUrl: string | null | undefined,
   bucketHost: string
@@ -113,8 +115,13 @@ export function objectPathFromUrl(
   if (!imageUrl) return null;
   const trimmed = imageUrl.trim();
   if (!trimmed.startsWith(bucketHost)) return null;
-  const objectPath = trimmed.slice(bucketHost.length).split("?")[0] ?? "";
-  return objectPath.length > 0 ? objectPath : null;
+  const rawPath = trimmed.slice(bucketHost.length).split("?")[0] ?? "";
+  if (rawPath.length === 0) return null;
+  try {
+    return decodeURIComponent(rawPath);
+  } catch {
+    return rawPath; // malformed %-sequence — fall back to the raw path
+  }
 }
 
 /** Swap a storage object path's extension to .webp (foo.jpg -> foo.webp; no-ext -> foo.webp). */

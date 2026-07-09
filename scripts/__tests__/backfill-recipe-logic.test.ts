@@ -128,6 +128,10 @@ describe("objectPathFromUrl", () => {
     expect(objectPathFromUrl("", HOST)).toBeNull();
     expect(objectPathFromUrl(HOST, HOST)).toBeNull();
   });
+  it("URI-decodes the object path (spaces/special chars round-trip)", () => {
+    expect(objectPathFromUrl(HOST + "images%20(2).jpeg", HOST)).toBe("images (2).jpeg");
+    expect(objectPathFromUrl(HOST + "%E2%97%8F-bullet.png", HOST)).toBe("●-bullet.png");
+  });
 });
 
 describe("swapExtensionToWebp", () => {
@@ -150,6 +154,9 @@ describe("targetKeyFor", () => {
   });
   it("falls back to <id>.webp for external urls", () => {
     expect(targetKeyFor("https://other.com/a.jpg", HOST, "r-1")).toBe("r-1.webp");
+  });
+  it("decodes an encoded in-bucket key before swapping the extension", () => {
+    expect(targetKeyFor(HOST + "images%20(2).jpeg", HOST, "r-1")).toBe("images (2).webp");
   });
 });
 
