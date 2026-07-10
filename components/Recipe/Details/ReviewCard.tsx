@@ -87,6 +87,7 @@ export default function ReviewCard({
               onPress={() => onPhotoPress(photo.photoUrl)}
               accessibilityRole="button"
               accessibilityLabel="View full size photo"
+              accessibilityHint="Opens a full screen view of this photo"
             >
               <Image
                 source={{ uri: photo.photoUrl }}
@@ -112,6 +113,7 @@ export default function ReviewCard({
               hitSlop={8}
               accessibilityRole="button"
               accessibilityLabel="Edit review"
+              accessibilityHint="Opens the review editor"
             >
               <Small className="text-primary">Edit</Small>
             </Pressable>
@@ -120,6 +122,7 @@ export default function ReviewCard({
               hitSlop={8}
               accessibilityRole="button"
               accessibilityLabel="Delete review"
+              accessibilityHint="Permanently deletes this review"
             >
               <Small className="text-destructive">Delete</Small>
             </Pressable>

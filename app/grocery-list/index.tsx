@@ -165,6 +165,7 @@ export default function GroceryListPage() {
                         className="px-1.5"
                         accessibilityRole="button"
                         accessibilityLabel="Cancel selection"
+                        accessibilityHint="Exits selection mode without deleting items"
                       >
                         <XIcon className="text-muted-foreground" size={24} />
                       </Pressable>
@@ -178,6 +179,7 @@ export default function GroceryListPage() {
                         className="px-1.5"
                         accessibilityRole="button"
                         accessibilityLabel="Delete selected items"
+                        accessibilityHint="Permanently deletes the selected items"
                       >
                         <TrashIcon className="text-destructive" size={24} />
                       </Pressable>
@@ -193,6 +195,7 @@ export default function GroceryListPage() {
                         className="px-1.5"
                         accessibilityRole="button"
                         accessibilityLabel="Edit selection mode"
+                        accessibilityHint="Enables selection mode to delete multiple items"
                       >
                         <Edit2Icon className="text-foreground" size={24} />
                       </Pressable>

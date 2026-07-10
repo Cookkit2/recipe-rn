@@ -27,7 +27,16 @@ describe("parseArgs", () => {
   });
 
   it("parses space-separated numeric flags", () => {
-    const o = parseArgs(["--limit", "10", "--quality", "70", "--max-width", "800", "--concurrency", "3"]);
+    const o = parseArgs([
+      "--limit",
+      "10",
+      "--quality",
+      "70",
+      "--max-width",
+      "800",
+      "--concurrency",
+      "3",
+    ]);
     expect(o).toMatchObject({ limit: 10, quality: 70, maxWidth: 800, concurrency: 3 });
   });
 

@@ -7,9 +7,7 @@
     "icon": "./assets/icon.png",
     "scheme": "cookkit",
     "userInterfaceStyle": "automatic",
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "icon": "./assets/icon.png",
       "supportsTablet": false,
@@ -30,9 +28,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "app.cookkit.cookkit",
-      "permissions": [
-        "android.permission.CAMERA"
-      ],
+      "permissions": ["android.permission.CAMERA"],
       "intentFilters": [
         {
           "action": "VIEW",
@@ -43,10 +39,7 @@
               "host": "recipe"
             }
           ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
+          "category": ["BROWSABLE", "DEFAULT"]
         }
       ]
     },

@@ -137,10 +137,11 @@ describe("gemini-api", () => {
           ok: false,
           status: 400,
           statusText: "Bad Request",
+          text: jest.fn().mockResolvedValue("Bad request text"),
         });
 
         await expect(api.generateContent("DEFAULT_GEMINI_MODEL", "Hello")).rejects.toThrow(
-          "Gemini API request failed. Please try again later."
+          "Gemini API request failed (400 Bad Request). Please try again later."
         );
 
         expect(log.error).toHaveBeenCalledWith(

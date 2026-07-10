@@ -69,8 +69,7 @@ export function parseArgs(argv: string[]): CliOptions {
   if (opts.limit !== undefined && opts.limit < 1) throw new Error(`--limit must be >= 1`);
   if (opts.quality < 1 || opts.quality > 100)
     throw new Error(`--quality must be between 1 and 100`);
-  if (opts.maxWidth !== undefined && opts.maxWidth < 1)
-    throw new Error(`--max-width must be >= 1`);
+  if (opts.maxWidth !== undefined && opts.maxWidth < 1) throw new Error(`--max-width must be >= 1`);
   return opts;
 }
 
