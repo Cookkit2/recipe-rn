@@ -72,3 +72,6 @@
 ## 2026-07-05 - Extracted custom hooks for Code Health
 **Learning:** Extracting component state mapping (e.g. step page array generation) and complex data fetching (e.g. useTailoredRecipe) into custom hooks significantly reduces the length of React components and isolates responsibilities.
 **Action:** When a component mixes data mapping and state management, move the logic to custom hooks.
+## 2026-07-10 - Optimize Array Iterations in Chart Renders
+**Learning:** In frequently rendered components like `NutritionChart`, chaining array methods such as `data.map(d => d.calories)` inside `Math.max()` or `data.reduce()` creates unnecessary intermediate arrays and closure allocations, leading to avoidable garbage collection pressure.
+**Action:** Replace these multiple O(N) array method chains with a single standard `for` loop that computes all required aggregates (like max and total/average) simultaneously, eliminating allocations and improving rendering performance.

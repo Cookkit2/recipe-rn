@@ -43,8 +43,18 @@ export function NutritionChart({ data, className }: NutritionChartProps) {
     const innerWidth = CHART_WIDTH - CHART_PADDING * 2;
     const innerHeight = CHART_HEIGHT - CHART_PADDING * 2;
 
-    const maxCalories = Math.max(...data.map((d) => d.calories), 1);
-    const avgCalories = Math.round(data.reduce((sum, d) => sum + d.calories, 0) / data.length);
+    let maxCalories = 1;
+    let totalCalories = 0;
+    for (let i = 0; i < data.length; i++) {
+      const item = data[i];
+      if (item) {
+        if (item.calories > maxCalories) {
+          maxCalories = item.calories;
+        }
+        totalCalories += item.calories;
+      }
+    }
+    const avgCalories = Math.round(totalCalories / data.length);
 
     const barCount = data.length;
     const barGroupWidth = innerWidth / barCount;
