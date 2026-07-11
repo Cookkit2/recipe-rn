@@ -75,3 +75,6 @@
 ## 2026-07-10 - Optimize Array Iterations in Chart Renders
 **Learning:** In frequently rendered components like `NutritionChart`, chaining array methods such as `data.map(d => d.calories)` inside `Math.max()` or `data.reduce()` creates unnecessary intermediate arrays and closure allocations, leading to avoidable garbage collection pressure.
 **Action:** Replace these multiple O(N) array method chains with a single standard `for` loop that computes all required aggregates (like max and total/average) simultaneously, eliminating allocations and improving rendering performance.
+## 2025-02-14 - Replace Intermediate Map Object Arrays and .reduce
+**Learning:** Initializing objects like `Map<string, number[]>` then using `Array.prototype.reduce()` on them causes O(M) intermediate allocations and closures when calculating average ratings, negatively impacting the JS bridge garbage collector.
+**Action:** Always maintain primitive structural properties in single-pass scalar mapping (`Map<string, { sum: number, count: number }>`) without pushing into array lengths, reducing allocations to O(1) structures per entry.

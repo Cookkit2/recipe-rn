@@ -21,18 +21,21 @@ export function useRecipes() {
       const recipes = await recipeApi.fetchAllRecipes();
       // Fetch cooking history to compute avg ratings for all recipes
       const cookingHistory = await databaseFacade.getCookingHistory(500);
-      const ratingsByRecipe = new Map<string, number[]>();
+      const ratingsByRecipe = new Map<string, { sum: number; count: number }>();
       for (const record of cookingHistory) {
         if (record.rating !== undefined && record.rating >= 1 && record.rating <= 5) {
-          const existing = ratingsByRecipe.get(record.recipeId) || [];
-          existing.push(record.rating);
-          ratingsByRecipe.set(record.recipeId, existing);
+          const current = ratingsByRecipe.get(record.recipeId);
+          if (current) {
+            current.sum += record.rating;
+            current.count += 1;
+          } else {
+            ratingsByRecipe.set(record.recipeId, { sum: record.rating, count: 1 });
+          }
         }
       }
       const ratingsMap = new Map<string, number | null>();
-      for (const [recipeId, ratings] of ratingsByRecipe) {
-        const avgRating = ratings.reduce((sum, r) => sum + r, 0) / ratings.length;
-        ratingsMap.set(recipeId, avgRating);
+      for (const [recipeId, data] of ratingsByRecipe) {
+        ratingsMap.set(recipeId, data.sum / data.count);
       }
       // Attach avgRating to recipes
       return recipes.map((recipe) => ({
@@ -217,19 +220,22 @@ export function useRecipeRecommendations(options?: UseRecipeRecommendationsOptio
         ])
       );
 
-      const ratingsByRecipe = new Map<string, number[]>();
+      const ratingsByRecipe = new Map<string, { sum: number; count: number }>();
       for (const record of cookingHistoryDataRaw) {
         if (record.rating !== undefined && record.rating >= 1 && record.rating <= 5) {
-          const existing = ratingsByRecipe.get(record.recipeId) || [];
-          existing.push(record.rating);
-          ratingsByRecipe.set(record.recipeId, existing);
+          const current = ratingsByRecipe.get(record.recipeId);
+          if (current) {
+            current.sum += record.rating;
+            current.count += 1;
+          } else {
+            ratingsByRecipe.set(record.recipeId, { sum: record.rating, count: 1 });
+          }
         }
       }
 
       const ratingsMap = new Map<string, number>();
-      for (const [recipeId, ratings] of ratingsByRecipe) {
-        const avgRating = ratings.reduce((sum, r) => sum + r, 0) / ratings.length;
-        ratingsMap.set(recipeId, avgRating);
+      for (const [recipeId, data] of ratingsByRecipe) {
+        ratingsMap.set(recipeId, data.sum / data.count);
       }
 
       const cookingHistoryData = {
