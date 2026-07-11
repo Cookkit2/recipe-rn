@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Pressable } from "react-native";
 import { P, H4 } from "~/components/ui/typography";
+import * as Haptics from "expo-haptics";
 import { CheckIcon } from "lucide-uniwind";
 import type { RecipeStep as RecipeStepType } from "~/types/Recipe";
 
@@ -14,7 +15,10 @@ export function RecipeStep({ step, isLast }: RecipeStepProps) {
 
   return (
     <Pressable
-      onPress={() => setIsCompleted(!isCompleted)}
+      onPress={() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        setIsCompleted(!isCompleted);
+      }}
       accessibilityRole="checkbox"
       accessibilityState={{ checked: isCompleted }}
       accessibilityLabel={`Mark step ${step.step} complete`}
