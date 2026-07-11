@@ -553,12 +553,18 @@ export function calculateNeededQuantities(
             totalPantryQuantity = pantryQuantityInRecipeUnit;
           } else {
             // Unknown units, fall back to simple sum
-            totalPantryQuantity = matchingPantryItems.reduce((sum, item) => sum + item.quantity, 0);
+            totalPantryQuantity = 0;
+            for (let i = 0; i < matchingPantryItems.length; i++) {
+              totalPantryQuantity += matchingPantryItems[i]!.quantity;
+            }
             pantryQuantityInRecipeUnit = totalPantryQuantity;
           }
         } else {
           // Unknown recipe dimension, fall back to simple sum
-          totalPantryQuantity = matchingPantryItems.reduce((sum, item) => sum + item.quantity, 0);
+          totalPantryQuantity = 0;
+          for (let i = 0; i < matchingPantryItems.length; i++) {
+            totalPantryQuantity += matchingPantryItems[i]!.quantity;
+          }
           pantryQuantityInRecipeUnit = totalPantryQuantity;
         }
       } else {
