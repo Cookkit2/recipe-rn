@@ -84,18 +84,18 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
       cookCount: number;
     }[]
   > {
-    const allHistory = await this.collection.query(Q.sortBy("cooked_at", Q.desc)).fetch();
+    const allHistory = await this.collection.query(Q.sortBy("cooked_at", Q.desc)).unsafeFetchRaw();
 
     // Group by recipe and get unique recipes
     const recipeMap = new Map<string, { lastCookedAt: number; cookCount: number }>();
 
     for (const record of allHistory) {
-      const existing = recipeMap.get(record.recipeId);
+      const existing = recipeMap.get(record.recipe_id as string);
       if (existing) {
         existing.cookCount++;
       } else {
-        recipeMap.set(record.recipeId, {
-          lastCookedAt: record.cookedAt,
+        recipeMap.set(record.recipe_id as string, {
+          lastCookedAt: record.cooked_at as number,
           cookCount: 1,
         });
       }
@@ -120,22 +120,22 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
       lastCookedAt: number;
     }[]
   > {
-    const allHistory = await this.collection.query().fetch();
+    const allHistory = await this.collection.query().unsafeFetchRaw();
 
     // Group by recipe and count
     const recipeMap = new Map<string, { cookCount: number; lastCookedAt: number }>();
 
     for (const record of allHistory) {
-      const existing = recipeMap.get(record.recipeId);
+      const existing = recipeMap.get(record.recipe_id as string);
       if (existing) {
         existing.cookCount++;
-        if (record.cookedAt > existing.lastCookedAt) {
-          existing.lastCookedAt = record.cookedAt;
+        if ((record.cooked_at as number) > existing.lastCookedAt) {
+          existing.lastCookedAt = record.cooked_at as number;
         }
       } else {
-        recipeMap.set(record.recipeId, {
+        recipeMap.set(record.recipe_id as string, {
           cookCount: 1,
-          lastCookedAt: record.cookedAt,
+          lastCookedAt: record.cooked_at as number,
         });
       }
     }
