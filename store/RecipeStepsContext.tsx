@@ -29,7 +29,6 @@ import { queryClient } from "./QueryProvider";
 import { recipeQueryKeys } from "~/hooks/queries/recipeQueryKeys";
 import { cookingHistoryQueryKeys } from "~/hooks/queries/useCookingHistoryQueries";
 import { log } from "~/utils/logger";
-import { toggleIngredientUsed, areAllIngredientsUsed } from "~/utils/ingredient-tickoff";
 
 interface RecipeStepsContextType {
   currentStep: number;
@@ -119,7 +118,12 @@ export function RecipeStepsProvider({
   const toggleIngredient = useCallback(
     (id: string) => {
       setUsedIngredientIds((prev) => {
-        const next = toggleIngredientUsed(prev, id);
+        const next = new Set(prev);
+        if (next.has(id)) {
+          next.delete(id);
+        } else {
+          next.add(id);
+        }
         persistUsedIngredientIds(next);
         return next;
       });
@@ -133,7 +137,8 @@ export function RecipeStepsProvider({
     () => recipe.ingredients.map((ing) => ing.relatedIngredientId).filter(Boolean) as string[],
     [recipe.ingredients]
   );
-  const allIngredientsUsed = areAllIngredientsUsed(usedIngredientIds, ingredientIds);
+  const allIngredientsUsed =
+    ingredientIds.length > 0 && ingredientIds.every((id) => usedIngredientIds.has(id));
 
   const animateLoopToIndex = useCallback((index: number) => {
     loopRef.current?.animateToIndex(index);

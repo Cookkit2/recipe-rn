@@ -5,6 +5,21 @@ global.__ADEXPERIMENTAL__ = true;
 global.__DEV__ = true;
 global.IS_REACT_ACT_ENVIRONMENT = true;
 global.IS_REACT_NATIVE_TEST_ENVIRONMENT = true;
+global.nativeFabricUIManager = global.nativeFabricUIManager || {};
+
+// RN 0.86's Fabric renderer lazily initializes DOM/devtools globals in Node.
+// Keep these no-op in Jest so component tests do not load browser-only devtools setup.
+jest.mock("react-native/Libraries/Core/setUpReactDevTools", () => {});
+jest.mock("react-native/Libraries/Core/setUpErrorHandling", () => {});
+jest.mock("react-native/Libraries/Core/setUpTimers", () => {});
+jest.mock("react-native/src/private/setup/setUpDOM", () => ({
+  __esModule: true,
+  default: () => {},
+}));
+jest.mock("react-native/src/private/setup/setUpDefaultReactNativeEnvironment", () => ({
+  __esModule: true,
+  default: () => {},
+}));
 
 // RN 0.83 internals (DebuggingOverlayRegistry, AppContainer-dev) reference
 // `window.__REACT_DEVTOOLS_GLOBAL_HOOK__`. Node's test env has no `window`,

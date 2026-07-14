@@ -1,59 +1,4 @@
 import { describe, it, expect, jest, beforeEach } from "@jest/globals";
-import { toggleIngredientUsed, areAllIngredientsUsed } from "../ingredient-tickoff";
-
-describe("toggleIngredientUsed", () => {
-  it("adds an id that is not present", () => {
-    const next = toggleIngredientUsed(new Set<string>(), "ing-1");
-    expect(next.has("ing-1")).toBe(true);
-    expect(next.size).toBe(1);
-  });
-
-  it("removes an id that is already present (toggle off)", () => {
-    const next = toggleIngredientUsed(new Set(["ing-1", "ing-2"]), "ing-1");
-    expect(next.has("ing-1")).toBe(false);
-    expect(next.has("ing-2")).toBe(true);
-    expect(next.size).toBe(1);
-  });
-
-  it("toggles the same id back and forth deterministically", () => {
-    let used = new Set<string>();
-    used = toggleIngredientUsed(used, "ing-1");
-    expect(used.has("ing-1")).toBe(true);
-    used = toggleIngredientUsed(used, "ing-1");
-    expect(used.has("ing-1")).toBe(false);
-  });
-
-  it("does not mutate the input set (immutability)", () => {
-    const original = new Set(["ing-1"]);
-    const snapshot = new Set(original);
-    toggleIngredientUsed(original, "ing-2");
-    expect(original).toEqual(snapshot);
-  });
-});
-
-describe("areAllIngredientsUsed", () => {
-  it("returns true when every ingredient id is present", () => {
-    const used = new Set(["ing-1", "ing-2", "ing-3"]);
-    expect(areAllIngredientsUsed(used, ["ing-1", "ing-2", "ing-3"])).toBe(true);
-  });
-
-  it("returns false when at least one ingredient is missing", () => {
-    const used = new Set(["ing-1", "ing-2"]);
-    expect(areAllIngredientsUsed(used, ["ing-1", "ing-2", "ing-3"])).toBe(false);
-  });
-
-  it("returns false when there are no ingredients (nothing to complete)", () => {
-    expect(areAllIngredientsUsed(new Set(["ing-1"]), [])).toBe(false);
-  });
-
-  it("returns true once the last remaining id is added", () => {
-    const ids = ["ing-1", "ing-2"];
-    let used = new Set(["ing-1"]);
-    expect(areAllIngredientsUsed(used, ids)).toBe(false);
-    used = toggleIngredientUsed(used, "ing-2");
-    expect(areAllIngredientsUsed(used, ids)).toBe(true);
-  });
-});
 
 /**
  * Persistence round-trip: verifies the provider's MMKV write/read contract for
@@ -78,9 +23,9 @@ describe("used-ingredient MMKV persistence round-trip", () => {
 
   it("serializes toggled ids to an array and round-trips back through storage", () => {
     // Simulate the provider toggling two ingredients and persisting.
-    let used = new Set<string>();
-    used = toggleIngredientUsed(used, "ing-1");
-    used = toggleIngredientUsed(used, "ing-3");
+    const used = new Set<string>();
+    used.add("ing-1");
+    used.add("ing-3");
     setMock(STORAGE_KEY, Array.from(used));
 
     expect(setMock).toHaveBeenCalledWith(STORAGE_KEY, ["ing-1", "ing-3"]);
@@ -92,24 +37,24 @@ describe("used-ingredient MMKV persistence round-trip", () => {
     expect(rehydrated.has("ing-1")).toBe(true);
     expect(rehydrated.has("ing-3")).toBe(true);
     expect(rehydrated.has("ing-2")).toBe(false);
-    expect(areAllIngredientsUsed(rehydrated, ingredientIds)).toBe(false);
+    expect(ingredientIds.length > 0 && ingredientIds.every((id) => rehydrated.has(id))).toBe(false);
   });
 
   it("marks all used once the full set is persisted and rehydrated", () => {
-    let used = new Set<string>();
+    const used = new Set<string>();
     for (const id of ingredientIds) {
-      used = toggleIngredientUsed(used, id);
+      used.add(id);
     }
     setMock(STORAGE_KEY, Array.from(used));
 
     const rehydrated = new Set(getMock(STORAGE_KEY) ?? []);
-    expect(areAllIngredientsUsed(rehydrated, ingredientIds)).toBe(true);
+    expect(ingredientIds.length > 0 && ingredientIds.every((id) => rehydrated.has(id))).toBe(true);
   });
 
   it("starts fresh when nothing has been persisted for the recipe", () => {
     const stored = getMock(STORAGE_KEY);
     const rehydrated = new Set(Array.isArray(stored) ? stored : []);
     expect(rehydrated.size).toBe(0);
-    expect(areAllIngredientsUsed(rehydrated, ingredientIds)).toBe(false);
+    expect(ingredientIds.length > 0 && ingredientIds.every((id) => rehydrated.has(id))).toBe(false);
   });
 });

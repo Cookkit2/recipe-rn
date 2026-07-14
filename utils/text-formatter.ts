@@ -18,58 +18,6 @@ export const titleCase = (str: string): string => {
     .join(" ");
 };
 
-/**
- * Converts text to sentence case (first letter capitalized, rest lowercase)
- */
-export const sentenceCase = (str: string): string => {
-  if (!str) return "";
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-};
-
-/**
- * Converts camelCase or PascalCase to readable text
- * Example: "ingredientName" -> "Ingredient Name"
- */
-export const camelCaseToReadable = (str: string): string => {
-  if (!str) return "";
-  return str
-    .replace(/([A-Z])/g, " $1")
-    .replace(/^./, (str) => str.toUpperCase())
-    .trim();
-};
-
-/**
- * Converts text to kebab-case (lowercase with hyphens)
- */
-export const toKebabCase = (str: string): string => {
-  if (!str) return "";
-  return str
-    .replace(/([a-z])([A-Z])/g, "$1-$2")
-    .replace(/[\s_]+/g, "-")
-    .toLowerCase();
-};
-
-/**
- * Converts text to camelCase
- */
-export const toCamelCase = (str: string): string => {
-  if (!str) return "";
-
-  // Normalize string: convert space/dash/underscore separators to single spaces
-  let normalized = str.trim().replace(/[\s\-_]+/g, " ");
-
-  // Handle ALL CAPS string as a special case before CamelCasing (with u flag for punctuation)
-  if (/^[A-Z\s0-9\p{P}]+$/u.test(normalized)) {
-    normalized = normalized.toLowerCase();
-  }
-
-  // Then replace a space followed by a letter with the uppercase version of that letter
-  return normalized
-    .replace(/ (\w)/g, (_, c) => c.toUpperCase())
-    .replace(/^[A-Z]/, (c) => c.toLowerCase())
-    .replace(/\s+/g, ""); // remove any remaining spaces (e.g. from trailing separators)
-};
-
 // ========================
 // TEXT MANIPULATION
 // ========================
@@ -119,17 +67,6 @@ export const normalizeWhitespace = (str: string): string => {
 export const sanitizeText = (str: string): string => {
   if (!str) return "";
   return str.replace(/[^a-zA-Z0-9\s]/g, "").trim();
-};
-
-/**
- * Creates a URL-friendly slug from text
- */
-export const createSlug = (str: string): string => {
-  if (!str) return "";
-  return str
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
 };
 
 // ========================

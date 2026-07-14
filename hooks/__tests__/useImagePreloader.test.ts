@@ -19,7 +19,7 @@ describe("useImagePreloader", () => {
   });
 
   it("filters out insecure http URLs", async () => {
-    const { result } = renderHook(() => useImagePreloader({ priority: "high" }));
+    const { result } = await renderHook(() => useImagePreloader({ priority: "high" }));
 
     await act(async () => {
       const promise = result.current.prefetch([
@@ -37,7 +37,7 @@ describe("useImagePreloader", () => {
   });
 
   it("uses the default batch size of 8 (no more than 8 URLs per prefetch call)", async () => {
-    const { result } = renderHook(() => useImagePreloader({ priority: "high" }));
+    const { result } = await renderHook(() => useImagePreloader({ priority: "high" }));
     const urls = Array.from({ length: 20 }, (_, i) => `https://example.com/img-${i}.jpg`);
 
     await act(async () => {
@@ -53,7 +53,9 @@ describe("useImagePreloader", () => {
   });
 
   it("honors a lower concurrency cap (1 URL per batch on low-tier devices)", async () => {
-    const { result } = renderHook(() => useImagePreloader({ priority: "high", concurrency: 1 }));
+    const { result } = await renderHook(() =>
+      useImagePreloader({ priority: "high", concurrency: 1 })
+    );
     const urls = Array.from({ length: 3 }, (_, i) => `https://example.com/img-${i}.jpg`);
 
     await act(async () => {
@@ -69,7 +71,9 @@ describe("useImagePreloader", () => {
   });
 
   it("clamps an explicit concurrency of 0 to 1 (no empty/infinite batch)", async () => {
-    const { result } = renderHook(() => useImagePreloader({ priority: "high", concurrency: 0 }));
+    const { result } = await renderHook(() =>
+      useImagePreloader({ priority: "high", concurrency: 0 })
+    );
 
     await act(async () => {
       const promise = result.current.prefetch(["https://example.com/a.jpg"]);
@@ -82,7 +86,9 @@ describe("useImagePreloader", () => {
   });
 
   it("skips prefetch entirely when enabled is false (offline)", async () => {
-    const { result } = renderHook(() => useImagePreloader({ priority: "high", enabled: false }));
+    const { result } = await renderHook(() =>
+      useImagePreloader({ priority: "high", enabled: false })
+    );
 
     await act(async () => {
       const promise = result.current.prefetch([

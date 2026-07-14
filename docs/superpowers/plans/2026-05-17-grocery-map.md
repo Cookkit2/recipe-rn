@@ -44,8 +44,8 @@ import { MapLayer } from "../MapLayer";
 describe("MapLayer", () => {
   it("renders map with markers", () => {
     const mockStores = [
-      { id: "1", name: "Store A", latitude: 3.1577, longitude: 101.7122, totalPriceCents: 1500, distance: 1.2 },
-      { id: "2", name: "Store B", latitude: 3.1580, longitude: 101.7130, totalPriceCents: 1200, distance: 0.8 },
+      { id: "1", name: "Store A", latitude: 3.1577, longitude: 101.7122, totalPriceCents: 0, distance: 1.2 },
+      { id: "2", name: "Store B", latitude: 3.1580, longitude: 101.7130, totalPriceCents: 0, distance: 0.8 },
     ];
 
     const { getByTestId } = render(
@@ -63,7 +63,7 @@ describe("MapLayer", () => {
   it("calls onMarkerPress when marker clicked", () => {
     const mockOnPress = jest.fn();
     const mockStores = [
-      { id: "1", name: "Store A", latitude: 3.1577, longitude: 101.7122, totalPriceCents: 1500, distance: 1.2 },
+      { id: "1", name: "Store A", latitude: 3.1577, longitude: 101.7122, totalPriceCents: 0, distance: 1.2 },
     ];
 
     const { getByTestId } = render(
@@ -251,9 +251,9 @@ import { MiniStoreList } from "../MiniStoreList";
 describe("MiniStoreList", () => {
   it("renders 3 nearest stores", () => {
     const mockStores = [
-      { id: "1", name: "Store A", address: "123 Main St", distance: 0.5, totalPriceCents: 1200 },
-      { id: "2", name: "Store B", address: "456 Oak Ave", distance: 1.2, totalPriceCents: 1500 },
-      { id: "3", name: "Store C", address: "789 Pine Rd", distance: 2.0, totalPriceCents: 1000 },
+      { id: "1", name: "Store A", address: "123 Main St", distance: 0.5, totalPriceCents: 0 },
+      { id: "2", name: "Store B", address: "456 Oak Ave", distance: 1.2, totalPriceCents: 0 },
+      { id: "3", name: "Store C", address: "789 Pine Rd", distance: 2.0, totalPriceCents: 0 },
     ];
 
     const { getByText } = render(
@@ -268,7 +268,7 @@ describe("MiniStoreList", () => {
   it("calls onStorePress when card tapped", () => {
     const mockOnPress = jest.fn();
     const mockStores = [
-      { id: "1", name: "Store A", address: "123 Main St", distance: 0.5, totalPriceCents: 1200 },
+      { id: "1", name: "Store A", address: "123 Main St", distance: 0.5, totalPriceCents: 0 },
     ];
 
     const { getByText } = render(
@@ -397,7 +397,7 @@ describe("StoreInfoCard", () => {
       name: "Store A",
       address: "123 Main St",
       distance: 0.5,
-      totalPriceCents: 1200,
+      totalPriceCents: 0,
       isOpen: true,
       closingTime: "22:00",
     };
@@ -420,7 +420,7 @@ describe("StoreInfoCard", () => {
       name: "Store A",
       address: "123 Main St",
       distance: 0.5,
-      totalPriceCents: 1200,
+      totalPriceCents: 0,
       isOpen: true,
       closingTime: "22:00",
     };
@@ -598,6 +598,7 @@ import { StoreInfoCard, StoreInfo } from "~/components/GroceryMap/StoreInfoCard"
 import { useLocation } from "~/hooks/useLocation";
 import { useNearbyStores } from "~/hooks/queries/useStoreQueries";
 import { useDistanceCalculation } from "~/hooks/useDistanceCalculation";
+import { useGroceryList } from "~/hooks/queries/useGroceryList";
 import { toast } from "sonner-native";
 import { openDirections } from "~/services/geolocation";
 
@@ -613,6 +614,14 @@ export default function GroceryMapPage() {
   );
 
   const storesWithDistance = useDistanceCalculation(location, stores);
+  const { groceryList } = useGroceryList();
+
+  // Helper to calculate mock price based on grocery list
+  const calculateStorePrice = (storeId: string) => {
+    if (!groceryList || groceryList.length === 0) return 0;
+    // Mock price calculation for the MVP: 500 cents ($5.00) per item
+    return groceryList.length * 500;
+  };
 
   const bottomSheetRef = useRef<BottomSheet>(null);
 
@@ -669,7 +678,7 @@ export default function GroceryMapPage() {
     name: store.name,
     latitude: store.latitude || 0,
     longitude: store.longitude || 0,
-    totalPriceCents: 1500, // TODO: Calculate from grocery list
+    totalPriceCents: calculateStorePrice(store.id),
     distance: store.distance,
   }));
 
@@ -678,7 +687,7 @@ export default function GroceryMapPage() {
     name: store.name,
     address: (store as any).address || "Unknown address",
     distance: store.distance,
-    totalPriceCents: 1500, // TODO: Calculate from grocery list
+    totalPriceCents: calculateStorePrice(store.id),
   }));
 
   const selectedStoreData = storesWithDistance.find((s) => s.id === selectedStore);
@@ -708,7 +717,7 @@ export default function GroceryMapPage() {
                 name: selectedStoreData.name,
                 address: (selectedStoreData as any).address || "Unknown address",
                 distance: selectedStoreData.distance,
-                totalPriceCents: 1500, // TODO: Calculate from grocery list
+                totalPriceCents: calculateStorePrice(selectedStoreData.id),
                 isOpen: true,
                 closingTime: "22:00",
               }}
@@ -718,7 +727,7 @@ export default function GroceryMapPage() {
                   name: selectedStoreData.name,
                   address: (selectedStoreData as any).address || "",
                   distance: selectedStoreData.distance,
-                  totalPriceCents: 1500,
+                  totalPriceCents: calculateStorePrice(selectedStoreData.id),
                   isOpen: true,
                 })
               }

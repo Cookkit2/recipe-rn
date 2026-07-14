@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { View, ActivityIndicator, ScrollView } from "react-native";
 import { LegendList } from "@legendapp/list";
 import { useQueryClient } from "@tanstack/react-query";
@@ -24,10 +24,6 @@ import LogWasteDialog from "~/components/Analytics/LogWasteDialog";
 import AchievementConfetti from "~/components/Analytics/AchievementConfetti";
 import { Card, CardContent } from "~/components/ui/card";
 
-// CO2 conversion factor: 1kg of food waste ≈ 2.5kg CO2 equivalent
-// Based on FAO (Food and Agriculture Organization) average for mixed food waste
-const CO2_CONVERSION_FACTOR = 2.5;
-
 // Helper function to get date range for time period
 function getDateRangeForPeriod(period: TimePeriod): { start?: number; end?: number } {
   const now = Date.now();
@@ -51,67 +47,12 @@ function getDateRangeForPeriod(period: TimePeriod): { start?: number; end?: numb
 }
 
 // Helper function to calculate achievements from stats
-function calculateAchievements(stats: Partial<WasteStats>): Achievement[] {
-  const totalWasteEntries = stats.totalWasteEntries || 0;
-  const totalMoneyWasted = (stats.totalEstimatedCost || 0) / 100; // Convert cents to dollars
-  const totalCO2FromWaste = (stats.totalQuantityWasted || 0) * CO2_CONVERSION_FACTOR; // Apply conversion
-  const currentStreak = stats.currentStreak || 0;
-  const longestStreak = stats.longestStreak || 0;
-
-  const achievements: Achievement[] = [
-    {
-      id: "first-log",
-      title: "Waste Warrior",
-      description: "Log your first waste item",
-      icon: "🗑️",
-      unlocked: totalWasteEntries > 0,
-    },
-    {
-      id: "zero-waste-week",
-      title: "Zero Waste Week",
-      description: "Go 7 days without logging any waste",
-      icon: "🌿",
-      unlocked: currentStreak >= 7,
-      progress: currentStreak,
-      target: 7,
-    },
-    {
-      id: "money-saver",
-      title: "Money Saver",
-      description: "Track $100 worth of waste (awareness saves money)",
-      icon: "💰",
-      unlocked: totalMoneyWasted >= 100,
-      progress: Math.floor(totalMoneyWasted),
-      target: 100,
-    },
-    {
-      id: "eco-hero",
-      title: "Eco Hero",
-      description: "Track 50kg of CO2 equivalent emissions",
-      icon: "🌍",
-      unlocked: totalCO2FromWaste >= 50,
-      progress: Math.floor(totalCO2FromWaste),
-      target: 50,
-    },
-    {
-      id: "streak-master",
-      title: "Streak Master",
-      description: "Maintain a 30-day no-waste streak",
-      icon: "🔥",
-      unlocked: longestStreak >= 30,
-      progress: longestStreak,
-      target: 30,
-    },
-  ];
-  return achievements;
-}
+import { useAchievements, CO2_CONVERSION_FACTOR } from "~/hooks/analytics/useAchievements";
 
 function AnalyticsContent() {
   const { selectedTimePeriod, selectedMetric } = useWasteAnalyticsStore();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const previousUnlockedIds = useRef<Set<string>>(new Set());
 
   // Calculate date range based on selected time period
   const { start, end } = useMemo(
@@ -144,31 +85,9 @@ function AnalyticsContent() {
     error: historyError,
   } = useWasteHistory(50);
 
-  // Calculate achievements from stats (always run hooks before any early returns)
-  const achievements = useMemo(() => calculateAchievements(wasteStats || {}), [wasteStats]);
-
-  const unlockedAchievements = achievements.filter((a) => a.unlocked);
-  const lockedAchievements = achievements.filter((a) => !a.unlocked);
-
-  // Detect newly unlocked achievements and show confetti
-  useEffect(() => {
-    const currentUnlockedIds = new Set(unlockedAchievements.map((a) => a.id));
-    const newlyUnlocked = Array.from(currentUnlockedIds).filter(
-      (id) => !previousUnlockedIds.current.has(id)
-    );
-
-    if (newlyUnlocked.length > 0) {
-      setShowConfetti(true);
-      // Auto-hide confetti after animation completes (2000ms + buffer)
-      const timeout = setTimeout(() => {
-        setShowConfetti(false);
-      }, 2500);
-      return () => clearTimeout(timeout);
-    }
-
-    // Update previous unlocked state for next comparison
-    previousUnlockedIds.current = currentUnlockedIds;
-  }, [unlockedAchievements]);
+  // Calculate achievements and handle confetti
+  const { unlockedAchievements, lockedAchievements, showConfetti, setShowConfetti } =
+    useAchievements(wasteStats);
 
   // Metrics data (using actual stats or defaults)
   const itemsWasted = wasteStats?.totalWasteEntries || 0;

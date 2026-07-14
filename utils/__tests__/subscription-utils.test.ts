@@ -1,4 +1,4 @@
-import { isValidSubscription, presentPaywall, presentPaywallIfNeeded } from "../subscription-utils";
+import { presentPaywall, presentPaywallIfNeeded } from "../subscription-utils";
 import { log } from "../logger";
 import { setStatusBarStyle } from "expo-status-bar";
 import { invalidateSubscriptionEntitlementsQuery } from "~/lib/subscription-query-sync";
@@ -48,89 +48,6 @@ jest.mock("expo-status-bar", () => ({
 describe("subscription-utils", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-  });
-
-  describe("isValidSubscription", () => {
-    it("should return false when Purchases.getCustomerInfo() throws an error", async () => {
-      // Mock error
-      const error = new Error("Mocked error");
-      (Purchases.getCustomerInfo as jest.Mock).mockRejectedValueOnce(error);
-
-      const result = await isValidSubscription();
-
-      expect(result).toBe(false);
-      expect(log.error).toHaveBeenCalledWith("Error getting customer info:", error);
-    });
-
-    it("should return the entitlement when customer info has active subscription", async () => {
-      const mockCustomerInfo = {
-        entitlements: {
-          active: {
-            Pro: true,
-          },
-        },
-      };
-      (Purchases.getCustomerInfo as jest.Mock).mockResolvedValueOnce(mockCustomerInfo);
-
-      const result = await isValidSubscription();
-
-      expect(result).toBe(true);
-      expect(log.info).toHaveBeenCalledWith("Customer Info:", mockCustomerInfo);
-    });
-
-    it("should return undefined/falsy when customer info does not have active subscription", async () => {
-      const mockCustomerInfo = {
-        entitlements: {
-          active: {},
-        },
-      };
-      (Purchases.getCustomerInfo as jest.Mock).mockResolvedValueOnce(mockCustomerInfo);
-
-      const result = await isValidSubscription();
-
-      expect(result).toBeUndefined();
-      expect(log.info).toHaveBeenCalledWith("Customer Info:", mockCustomerInfo);
-    });
-
-    it("should return false when accessing entitlements throws an error (malformed customer info)", async () => {
-      // Mock malformed customer info missing 'entitlements'
-      const mockCustomerInfo = {};
-      (Purchases.getCustomerInfo as jest.Mock).mockResolvedValueOnce(mockCustomerInfo);
-
-      const result = await isValidSubscription();
-
-      expect(result).toBe(false);
-      expect(log.error).toHaveBeenCalled();
-      // Error message check is optional, but we know it gets logged
-    });
-
-    it("should return false when customer info is malformed (missing active entitlements object)", async () => {
-      const mockCustomerInfo = {
-        entitlements: {},
-      };
-      (Purchases.getCustomerInfo as jest.Mock).mockResolvedValueOnce(mockCustomerInfo);
-
-      const result = await isValidSubscription();
-
-      expect(result).toBe(false);
-      expect(log.error).toHaveBeenCalled();
-    });
-
-    it("should return undefined/falsy when customer has a different active subscription", async () => {
-      const mockCustomerInfo = {
-        entitlements: {
-          active: {
-            Basic: true,
-          },
-        },
-      };
-      (Purchases.getCustomerInfo as jest.Mock).mockResolvedValueOnce(mockCustomerInfo);
-
-      const result = await isValidSubscription();
-
-      expect(result).toBeUndefined();
-      expect(log.info).toHaveBeenCalledWith("Customer Info:", mockCustomerInfo);
-    });
   });
 
   describe("presentPaywall", () => {

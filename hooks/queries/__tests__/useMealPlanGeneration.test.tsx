@@ -63,7 +63,7 @@ describe("useMealPlanGeneration", () => {
     });
     const invalidateSpy = jest.spyOn(client, "invalidateQueries");
 
-    const { result } = renderHook(() => useMealPlanGeneration(), {
+    const { result } = await renderHook(() => useMealPlanGeneration(), {
       wrapper: wrapper(client),
     });
 
@@ -99,7 +99,7 @@ describe("useMealPlanGeneration", () => {
     const client = new QueryClient({
       defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
     });
-    const { result } = renderHook(() => useMealPlanGeneration(), {
+    const { result } = await renderHook(() => useMealPlanGeneration(), {
       wrapper: wrapper(client),
     });
 
@@ -121,7 +121,7 @@ describe("useMealPlanGeneration", () => {
     const client = new QueryClient({
       defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
     });
-    const { result } = renderHook(() => useMealPlanGeneration(), {
+    const { result } = await renderHook(() => useMealPlanGeneration(), {
       wrapper: wrapper(client),
     });
 
@@ -147,7 +147,7 @@ describe("useMealPlanGeneration", () => {
     });
     const invalidateSpy = jest.spyOn(client, "invalidateQueries");
 
-    const { result } = renderHook(() => useMealPlanGeneration(), {
+    const { result } = await renderHook(() => useMealPlanGeneration(), {
       wrapper: wrapper(client),
     });
 

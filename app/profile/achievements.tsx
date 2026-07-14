@@ -16,6 +16,131 @@ type TabValue = "achievements" | "challenges";
 const achievementService = new AchievementService();
 const challengeService = new ChallengeService();
 
+const TabButton = ({
+  value,
+  label,
+  icon,
+  activeTab,
+  setActiveTab,
+}: {
+  value: TabValue;
+  label: string;
+  icon: React.ReactNode;
+  activeTab: TabValue;
+  setActiveTab: (v: TabValue) => void;
+}) => {
+  const isActive = activeTab === value;
+  return (
+    <Pressable
+      onPress={() => setActiveTab(value)}
+      className={`flex-1 flex-row items-center justify-center gap-2 py-3 rounded-2xl ${
+        isActive ? "bg-primary" : "bg-muted/50"
+      }`}
+      accessibilityRole="tab"
+      accessibilityLabel={`${label} tab`}
+      accessibilityHint={`Switches to the ${label} view`}
+      accessibilityState={{ selected: isActive }}
+    >
+      {icon}
+      <Small
+        className={`font-urbanist-semibold ${
+          isActive ? "text-primary-foreground" : "text-foreground/70"
+        }`}
+      >
+        {label}
+      </Small>
+    </Pressable>
+  );
+};
+
+const EmptyState = ({
+  title,
+  description,
+  icon,
+  cta,
+}: {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  cta?: React.ReactNode;
+}) => (
+  <View className="py-16 items-center justify-center px-6">
+    <View className="mb-4">{icon}</View>
+    <H4 className="text-muted-foreground font-urbanist-semibold text-center mb-2">{title}</H4>
+    <P className="text-muted-foreground font-urbanist-regular text-center text-sm mb-6">
+      {description}
+    </P>
+    {cta}
+  </View>
+);
+
+const AchievementsList = ({
+  groupedAchievements,
+}: {
+  groupedAchievements: Record<string, AchievementProgress[]>;
+}) => {
+  if (Object.keys(groupedAchievements).length === 0) {
+    return (
+      <EmptyState
+        title="No Achievements Yet"
+        description="Start cooking and tracking ingredients to unlock achievements!"
+        icon={<TrophyIcon size={64} className="text-muted-foreground" />}
+        cta={
+          <Link href="/" asChild>
+            <Button variant="default" className="bg-foreground">
+              <P className="font-urbanist-semibold text-background">Discover Recipes</P>
+            </Button>
+          </Link>
+        }
+      />
+    );
+  }
+
+  return (
+    <>
+      {ACHIEVEMENT_CATEGORIES.map((category) => {
+        const categoryAchievements = groupedAchievements[category];
+        if (!categoryAchievements || categoryAchievements.length === 0) {
+          return null;
+        }
+
+        return (
+          <View key={category}>
+            <P className="text-foreground/60 font-urbanist-semibold px-6 mb-2 capitalize">
+              {category.replace("_", " ")}
+            </P>
+            <View className="gap-3 px-6">
+              {categoryAchievements.map((achievement) => (
+                <AchievementBadge key={achievement.achievement.id} achievement={achievement} />
+              ))}
+            </View>
+          </View>
+        );
+      })}
+    </>
+  );
+};
+
+const ChallengesList = ({ challenges }: { challenges: ChallengeProgress[] }) => {
+  if (challenges.length === 0) {
+    return (
+      <EmptyState
+        title="No Active Challenges"
+        description="Check back later for new daily and weekly challenges!"
+        icon={<TargetIcon size={64} className="text-muted-foreground" />}
+      />
+    );
+  }
+
+  return (
+    <>
+      {challenges.map((challenge) => (
+        <ChallengeCard key={challenge.challenge.id} challenge={challenge} />
+      ))}
+    </>
+  );
+};
+
 export default function AchievementsScreen() {
   const [activeTab, setActiveTab] = useState<TabValue>("achievements");
   const [achievements, setAchievements] = useState<AchievementProgress[]>([]);
@@ -60,47 +185,6 @@ export default function AchievementsScreen() {
     {} as Record<string, AchievementProgress[]>
   );
 
-  const renderTabButton = (value: TabValue, label: string, icon: React.ReactNode) => {
-    const isActive = activeTab === value;
-    return (
-      <Pressable
-        onPress={() => setActiveTab(value)}
-        className={`flex-1 flex-row items-center justify-center gap-2 py-3 rounded-2xl ${
-          isActive ? "bg-primary" : "bg-muted/50"
-        }`}
-        accessibilityRole="tab"
-        accessibilityLabel={`${label} tab`}
-        accessibilityHint={`Switches to the ${label} view`}
-        accessibilityState={{ selected: isActive }}
-      >
-        {icon}
-        <Small
-          className={`font-urbanist-semibold ${
-            isActive ? "text-primary-foreground" : "text-foreground/70"
-          }`}
-        >
-          {label}
-        </Small>
-      </Pressable>
-    );
-  };
-
-  const renderEmptyState = (
-    title: string,
-    description: string,
-    icon: React.ReactNode,
-    cta?: React.ReactNode
-  ) => (
-    <View className="py-16 items-center justify-center px-6">
-      <View className="mb-4">{icon}</View>
-      <H4 className="text-muted-foreground font-urbanist-semibold text-center mb-2">{title}</H4>
-      <P className="text-muted-foreground font-urbanist-regular text-center text-sm mb-6">
-        {description}
-      </P>
-      {cta}
-    </View>
-  );
-
   if (isLoading) {
     return (
       <View className="flex-1 bg-background items-center justify-center">
@@ -126,74 +210,42 @@ export default function AchievementsScreen() {
       stickyHeaderIndices={[0]}
     >
       <View className="px-6 pt-6 pb-4 flex-row gap-2 bg-background">
-        {renderTabButton(
-          "achievements",
-          "Achievements",
-          <TrophyIcon
-            size={16}
-            className={
-              activeTab === "achievements" ? "text-primary-foreground" : "text-foreground/70"
-            }
-          />
-        )}
-        {renderTabButton(
-          "challenges",
-          "Challenges",
-          <TargetIcon
-            size={16}
-            className={
-              activeTab === "challenges" ? "text-primary-foreground" : "text-foreground/70"
-            }
-          />
-        )}
+        <TabButton
+          value="achievements"
+          label="Achievements"
+          icon={
+            <TrophyIcon
+              size={16}
+              className={
+                activeTab === "achievements" ? "text-primary-foreground" : "text-foreground/70"
+              }
+            />
+          }
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+        />
+        <TabButton
+          value="challenges"
+          label="Challenges"
+          icon={
+            <TargetIcon
+              size={16}
+              className={
+                activeTab === "challenges" ? "text-primary-foreground" : "text-foreground/70"
+              }
+            />
+          }
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+        />
       </View>
       {activeTab === "achievements" ? (
         <View className="gap-6 pb-8">
-          {Object.keys(groupedAchievements).length === 0
-            ? renderEmptyState(
-                "No Achievements Yet",
-                "Start cooking and tracking ingredients to unlock achievements!",
-                <TrophyIcon size={64} className="text-muted-foreground" />,
-                <Link href="/" asChild>
-                  <Button variant="default" className="bg-foreground">
-                    <P className="font-urbanist-semibold text-background">Discover Recipes</P>
-                  </Button>
-                </Link>
-              )
-            : ACHIEVEMENT_CATEGORIES.map((category) => {
-                const categoryAchievements = groupedAchievements[category];
-                if (!categoryAchievements || categoryAchievements.length === 0) {
-                  return null;
-                }
-
-                return (
-                  <View key={category}>
-                    <P className="text-foreground/60 font-urbanist-semibold px-6 mb-2 capitalize">
-                      {category.replace("_", " ")}
-                    </P>
-                    <View className="gap-3 px-6">
-                      {categoryAchievements.map((achievement) => (
-                        <AchievementBadge
-                          key={achievement.achievement.id}
-                          achievement={achievement}
-                        />
-                      ))}
-                    </View>
-                  </View>
-                );
-              })}
+          <AchievementsList groupedAchievements={groupedAchievements} />
         </View>
       ) : (
         <View className="gap-3 px-6 pb-8">
-          {challenges.length === 0
-            ? renderEmptyState(
-                "No Active Challenges",
-                "Check back later for new daily and weekly challenges!",
-                <TargetIcon size={64} className="text-muted-foreground" />
-              )
-            : challenges.map((challenge) => (
-                <ChallengeCard key={challenge.challenge.id} challenge={challenge} />
-              ))}
+          <ChallengesList challenges={challenges} />
         </View>
       )}
     </ScrollView>

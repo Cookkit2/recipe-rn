@@ -8,6 +8,22 @@ const SECURE_STORE_KEY = "mmkv_encryption_key";
 // Fallback override for tests/development
 const TEST_ENV_KEY = "MMKV_ENCRYPTION_KEY";
 
+function encodeBytesAsHex(bytes: Uint8Array): string {
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function getEncryptionKey(): string | undefined {
+  // Check for test override first, restricted to non-production environments
+  if (__DEV__ || (typeof process !== "undefined" && process.env?.NODE_ENV === "test")) {
+    if (typeof process !== "undefined" && process.env?.[TEST_ENV_KEY]) {
+      return process.env[TEST_ENV_KEY];
+    }
+
+    if (Constants.expoConfig?.extra?.[TEST_ENV_KEY]) {
+      return Constants.expoConfig.extra[TEST_ENV_KEY];
+    }
+  }
+
 // Captures the most recent SecureStore/Crypto failure so getEncryptedConfig can surface it.
 let lastKeyError: unknown = null;
 
@@ -21,9 +37,10 @@ function getEncryptionKey(): string | undefined {
     let key = SecureStore.getItem(SECURE_STORE_KEY);
 
     if (!key) {
-      // Generate a new secure 32+ char key using crypto if one doesn't exist
-      // randomUUID is 36 chars long (with dashes), which meets our > 32 length requirement
-      key = Crypto.randomUUID() + "-" + Crypto.randomUUID().substring(0, 8);
+      // Generate a new cryptographically secure 256-bit (32 byte) key
+      const bytes = Crypto.getRandomBytes(32);
+      // Store as hex without relying on browser-only globals like btoa.
+      key = encodeBytesAsHex(bytes);
       SecureStore.setItem(SECURE_STORE_KEY, key);
       log.info("Generated new per-device MMKV encryption key");
     }

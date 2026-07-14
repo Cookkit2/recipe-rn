@@ -7,8 +7,7 @@
  */
 
 import { describe, it, expect, jest } from "@jest/globals";
-import { render, fireEvent } from "@testing-library/react-native";
-import { TextInput } from "react-native";
+import { render, fireEvent, act, waitFor } from "@testing-library/react-native";
 import React from "react";
 
 const pushMock = jest.fn();
@@ -47,13 +46,14 @@ jest.mock("~/components/ui/text", () => {
 });
 jest.mock("~/components/ui/dialog", () => {
   const React = require("react");
+  const { Text: RNText } = require("react-native");
   return {
     __esModule: true,
     Dialog: ({ children }: any) => React.createElement(React.Fragment, null, children),
     DialogContent: ({ children }: any) => React.createElement(React.Fragment, null, children),
     DialogHeader: ({ children }: any) => React.createElement(React.Fragment, null, children),
-    DialogTitle: ({ children }: any) => React.createElement(React.Fragment, null, children),
-    DialogDescription: ({ children }: any) => React.createElement(React.Fragment, null, children),
+    DialogTitle: ({ children }: any) => React.createElement(RNText, null, children),
+    DialogDescription: ({ children }: any) => React.createElement(RNText, null, children),
     DialogFooter: ({ children }: any) => React.createElement(React.Fragment, null, children),
     DialogClose: ({ children }: any) => React.createElement(React.Fragment, null, children),
   };
@@ -86,25 +86,25 @@ describe("ImportRecipeDialog routing (always-editable)", () => {
       recipe: { id: "recipe-42", title: "Soup" },
     });
 
-    const { getAllByTestId, UNSAFE_getByType } = render(
+    const { getAllByTestId, getByTestId } = await render(
       <ImportRecipeDialog open={true} onOpenChange={jest.fn()} />
     );
 
-    const input = UNSAFE_getByType(TextInput);
-    fireEvent.changeText(input, "https://example.com/r");
+    const input = getByTestId("import-recipe-url-input");
+    await act(async () => {
+      fireEvent.changeText(input, "https://example.com/r");
+    });
 
     // The Import button is the second testID="btn" (Cancel is first).
     const buttons = getAllByTestId("btn");
     const importButton = buttons[buttons.length - 1];
     if (importButton) {
-      fireEvent.press(importButton);
+      await act(async () => {
+        fireEvent.press(importButton);
+      });
     }
 
-    // Flush the async handleSubmit.
-    await Promise.resolve();
-    await Promise.resolve();
-
-    expect(pushMock).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(pushMock).toHaveBeenCalledTimes(1));
     expect(pushMock).toHaveBeenCalledWith("/recipes/recipe-42/edit");
     // Sanity: must NOT route to the view screen.
     expect(pushMock).not.toHaveBeenCalledWith("/recipes/recipe-42");

@@ -170,11 +170,60 @@ function decodeEntities(text: string): string {
  * first matching element, or undefined.
  */
 function getAttrValue(html: string, attr: string): string | undefined {
-  // Matches attr="value", attr='value', and unquoted attr=value
-  const re = new RegExp(`${attr}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s"'>]+))`, "i");
-  const match = html.match(re);
-  if (!match) return undefined;
-  return (match[1] ?? match[2] ?? match[3] ?? "").trim();
+  // Replaced regex with a safe string parsing approach to prevent ReDoS (Regular Expression Denial of Service).
+  // The original regex `${attr}\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))` could cause catastrophic backtracking
+  // when parsing large and malformed HTML strings.
+
+  const searchStr = attr.toLowerCase();
+  const lowerHtml = html.toLowerCase();
+
+  let startIndex = 0;
+  while (true) {
+    const attrIdx = lowerHtml.indexOf(searchStr, startIndex);
+    if (attrIdx === -1) return undefined;
+
+    // Check if it's a whole word (preceded by space or <)
+    const prevChar = attrIdx === 0 ? " " : lowerHtml.charAt(attrIdx - 1);
+    if (!/[\s<]/.test(prevChar)) {
+      startIndex = attrIdx + searchStr.length;
+      continue;
+    }
+
+    let i = attrIdx + searchStr.length;
+
+    // skip whitespace
+    while (i < html.length && /[\s]/.test(html.charAt(i))) i++;
+
+    // check for '='
+    if (i >= html.length || html.charAt(i) !== "=") {
+      startIndex = attrIdx + searchStr.length;
+      continue;
+    }
+
+    i++; // skip '='
+
+    // skip whitespace after '='
+    while (i < html.length && /[\s]/.test(html.charAt(i))) i++;
+
+    if (i >= html.length) return undefined;
+
+    const quote = html.charAt(i);
+    if (quote === '"' || quote === "'") {
+      i++;
+      const endQuoteIdx = html.indexOf(quote, i);
+      if (endQuoteIdx === -1) {
+        return html.slice(i).trim();
+      }
+      return html.slice(i, endQuoteIdx).trim();
+    } else {
+      // unquoted value: ends at space, >, or string end
+      let endIdx = i;
+      while (endIdx < html.length && !/[\s>]/.test(html.charAt(endIdx))) {
+        endIdx++;
+      }
+      return html.slice(i, endIdx).trim();
+    }
+  }
 }
 
 /**
