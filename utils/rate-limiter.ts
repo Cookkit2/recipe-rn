@@ -13,7 +13,7 @@ interface RateLimitConfig {
   windowMs: number;
 }
 
-class RateLimiter {
+export class RateLimiter {
   private attempts: Map<string, RateLimitEntry> = new Map();
   private config: RateLimitConfig;
 
@@ -147,7 +147,7 @@ const apiRateLimiter = new RateLimiter({
 });
 
 // Clean up expired entries every 10 minutes
-if (typeof setInterval !== "undefined") {
+if (typeof setInterval !== "undefined" && process.env.NODE_ENV !== "test") {
   setInterval(() => {
     authRateLimiter.cleanup();
     apiRateLimiter.cleanup();
