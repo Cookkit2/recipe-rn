@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@babel/plugin-proposal-decorators": "^7.28.6",
-    "@expo/ui": "~56.0.21",
+    "@expo/ui": "~57.0.4",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@legendapp/list": "^2.0.19",
     "@lucide/lab": "^0.1.2",
