@@ -89,16 +89,16 @@ describe("buildIngredientPreviewData", () => {
 
     expect(result.matched).toHaveLength(1);
     expect(result.missing).toHaveLength(2);
-    expect(result.matched[0].name).toBe("Tomato");
-    expect(result.missing[0].name).toBe("Onion");
-    expect(result.missing[1].name).toBe("Garlic");
+    expect(result.matched?.[0]?.name).toBe("Tomato");
+    expect(result.missing?.[0]?.name).toBe("Onion");
+    expect(result.missing?.[1]?.name).toBe("Garlic");
   });
 
   it("should honor the default limit of 6 for both arrays", () => {
     const ingredients = Array.from({ length: 10 }, (_, i) => createRecipeIngredient(`Item ${i}`));
 
     const matchFn = (ingredient: RecipeIngredient) => {
-      const idx = parseInt(ingredient.name.split(" ")[1], 10);
+      const idx = parseInt(ingredient.name.split(" ")[1] ?? "0", 10);
       if (idx % 2 === 0) {
         return createPantryItem(ingredient.name, "image.jpg") as PantryItem;
       }
@@ -129,7 +129,7 @@ describe("buildIngredientPreviewData", () => {
 
     expect(result.matched).toHaveLength(limit);
     expect(result.missing).toHaveLength(limit);
-    expect(result.matched[result.matched.length - 1].name).toBe("Matched Item 2");
-    expect(result.missing[result.missing.length - 1].name).toBe("Missing Item 2");
+    expect(result.matched?.[result.matched.length - 1]?.name).toBe("Matched Item 2");
+    expect(result.missing?.[result.missing.length - 1]?.name).toBe("Missing Item 2");
   });
 });
