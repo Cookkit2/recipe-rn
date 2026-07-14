@@ -126,7 +126,11 @@ const searchRecipesCore = async (
 };
 
 const addRecipeCore = async (recipe: Omit<Recipe, "id">): Promise<Recipe> => {
-  await databaseFacade.createRecipe({
+  // ⚡ Bolt Performance Optimization:
+  // Instead of querying all recipes via fetchAllRecipesCore() and doing an O(N) client-side .find(),
+  // we capture the returned newRecipe object directly from databaseFacade.createRecipe
+  // which saves database time and prevents massive memory allocation over the JS bridge.
+  const createdDbRecipe = await databaseFacade.createRecipe({
     title: recipe.title,
     description: recipe.description,
     imageUrl: recipe.imageUrl,
@@ -152,8 +156,10 @@ const addRecipeCore = async (recipe: Omit<Recipe, "id">): Promise<Recipe> => {
     })),
   });
 
-  const allRecipes = await fetchAllRecipesCore();
-  const newRecipe = allRecipes.find((r) => r.title === recipe.title);
+  // Convert Db Recipe to the UI equivalent search summary format
+  const convertedRecipes = convertDbRecipesToUISearchSummaries([createdDbRecipe]);
+  const newRecipe = convertedRecipes[0];
+
   if (!newRecipe) {
     throw new Error("Failed to retrieve newly created recipe");
   }
