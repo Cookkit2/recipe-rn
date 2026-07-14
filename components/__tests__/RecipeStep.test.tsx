@@ -16,15 +16,15 @@ jest.mock("lucide-uniwind", () => ({
 }));
 
 describe("RecipeStep", () => {
-  it("triggers haptics on press", () => {
+  it("triggers haptics on press", async () => {
     const step = {
       step: 1,
       title: "Test",
       description: "Test description",
       relatedIngredientIds: [],
     };
-    const { getByRole } = render(<RecipeStep step={step} />);
-    const checkbox = getByRole("checkbox");
+    const { getByLabelText } = await render(<RecipeStep step={step} />);
+    const checkbox = getByLabelText("Mark step 1 complete");
     act(() => {
       fireEvent.press(checkbox);
     });

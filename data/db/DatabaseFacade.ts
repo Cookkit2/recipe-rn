@@ -1237,11 +1237,17 @@ class DatabaseFacade {
       // eliminating the need for expensive map.has() checks on every iteration.
       for (let i = pantryItemsWithMetadata.length - 1; i >= 0; i--) {
         const item = pantryItemsWithMetadata[i];
+        if (!item) continue;
 
         for (let j = item.synonyms.length - 1; j >= 0; j--) {
-          pantryIndex.set(item.synonyms[j].toLowerCase().trim(), item);
+          const syn = item.synonyms[j];
+          if (syn) {
+            pantryIndex.set(syn.toLowerCase().trim(), item);
+          }
         }
-        pantryIndex.set(item.name.toLowerCase().trim(), item);
+        if (item.name) {
+          pantryIndex.set(item.name.toLowerCase().trim(), item);
+        }
       }
 
       const allRecipes = await this.recipes.findAll();
