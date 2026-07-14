@@ -12,7 +12,7 @@ function encodeBytesAsHex(bytes: Uint8Array): string {
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-function getEncryptionKey(): string | undefined {
+function getEncryptionKeyTest(): string | undefined {
   // Check for test override first, restricted to non-production environments
   if (__DEV__ || (typeof process !== "undefined" && process.env?.NODE_ENV === "test")) {
     if (typeof process !== "undefined" && process.env?.[TEST_ENV_KEY]) {
@@ -23,6 +23,7 @@ function getEncryptionKey(): string | undefined {
       return Constants.expoConfig.extra[TEST_ENV_KEY];
     }
   }
+}
 
 // Captures the most recent SecureStore/Crypto failure so getEncryptedConfig can surface it.
 let lastKeyError: unknown = null;
@@ -83,7 +84,7 @@ function getEncryptionKey(): string | undefined {
  * to avoid timing issues with Expo's environment initialization
  */
 function getEncryptedConfig(): StorageConfig {
-  const key = getEncryptionKey();
+  const key = getEncryptionKey() || getEncryptionKeyTest();
 
   // Always require encryption key for sensitive data storage
   if (!key) {
