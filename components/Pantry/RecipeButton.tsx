@@ -1,8 +1,8 @@
+import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "~/components/ui/button";
 import { ChefHatIcon } from "lucide-uniwind";
 import { H4 } from "~/components/ui/typography";
-import TextShimmer from "~/components/ui/TextShimmer";
 import Animated, { useAnimatedStyle, withTiming } from "react-native-reanimated";
 import { CURVES } from "~/constants/curves";
 import { usePantryStore } from "~/store/PantryContext";
@@ -49,10 +49,10 @@ export default function RecipeButton() {
         className="rounded-2xl border-continuous bg-foreground/80"
         onPress={onRecipeButtonPress}
       >
-        <TextShimmer className="flex-row items-center gap-2 justify-center">
+        <View className="flex-row items-center gap-2 justify-center">
           <ChefHatIcon className="text-background" size={18} strokeWidth={3} />
           <H4 className="text-background font-urbanist-bold">Let's Cook</H4>
-        </TextShimmer>
+        </View>
       </Button>
     </Animated.View>
   );

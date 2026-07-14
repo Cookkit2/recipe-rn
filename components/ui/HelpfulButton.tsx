@@ -18,6 +18,7 @@ export default function HelpfulButton({ count, isVoted, onPress, className }: He
       hitSlop={8}
       accessibilityLabel="Mark as helpful"
       accessibilityRole="button"
+      accessibilityHint="Toggles your helpful vote for this review"
       accessibilityState={{ selected: isVoted }}
     >
       <View className={cn("flex-row items-center gap-1.5", className)}>

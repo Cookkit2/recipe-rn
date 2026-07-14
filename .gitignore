@@ -124,3 +124,6 @@ logs/security/
 
 # Claude Code worktrees (local only, never commit)
 .claude/worktrees/
+
+# Backfill script output (contains old/new URL mappings)
+scripts/*.report.json

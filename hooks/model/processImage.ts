@@ -16,7 +16,12 @@ import { Skia, type SkImage } from "@shopify/react-native-skia";
  * }
  */
 export const loadImageIntoSkia = async (imageUri: string) => {
-  const imageData = await Skia.Data.fromURI(imageUri);
+  // Skia.Data.fromURI requires a URI (file://, http://, …). vision-camera's
+  // capturePhotoToFile returns a plain filesystem path with NO scheme
+  // (e.g. /private/var/mobile/.../tmp/<uuid>.jpeg), which Skia can't resolve —
+  // so normalize it to a file:// URI when no scheme is present.
+  const uri = /^[a-z][a-z0-9+.-]*:\/\//i.test(imageUri) ? imageUri : `file://${imageUri}`;
+  const imageData = await Skia.Data.fromURI(uri);
   return Skia.Image.MakeImageFromEncoded(imageData);
 };
 

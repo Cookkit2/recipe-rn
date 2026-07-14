@@ -100,59 +100,76 @@ export class GeminiAPI {
       throw new Error("Gemini API key is not set");
     }
 
-    const controller = signal ? undefined : new AbortController();
-    const timeoutId =
-      controller === undefined
-        ? undefined
-        : setTimeout(() => controller!.abort(), GEMINI_REQUEST_TIMEOUT_MS);
-    const effectiveSignal = signal ?? controller!.signal;
+    // Transient, server-side errors worth retrying (Google overload, rate limit).
+    const RETRYABLE_STATUS = new Set([408, 425, 429, 500, 502, 503, 504]);
+    const MAX_ATTEMPTS = 3;
+    let lastError = "Gemini API request failed. Please try again later.";
 
-    try {
-      const response = await fetch(`${BASE_URL}/models/${model}:generateContent`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-goog-api-key": API_KEY,
-        },
-        body: body,
-        signal: effectiveSignal,
-      });
-      if (timeoutId !== undefined) clearTimeout(timeoutId);
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      const controller = signal ? undefined : new AbortController();
+      const timeoutId =
+        controller === undefined
+          ? undefined
+          : setTimeout(() => controller!.abort(), GEMINI_REQUEST_TIMEOUT_MS);
+      const effectiveSignal = signal ?? controller!.signal;
 
-      if (!response.ok) {
-        log.error(`Gemini API error: ${response.status} ${response.statusText}`);
-        throw new Error("Gemini API request failed. Please try again later.");
-      }
-
-      const data: GeminiResponse = await response.json();
-
-      if (!data.candidates || data.candidates.length === 0) {
-        throw new Error("No response generated from Gemini API");
-      }
-
-      const candidate = data.candidates[0];
-      if (!candidate?.content?.parts?.[0]?.text) {
-        throw new Error("Invalid response format from Gemini API");
-      }
-
-      if (data.usageMetadata) {
-        const usage = calculateTokenCost({
-          promptTokenCount: data.usageMetadata.promptTokenCount,
-          candidatesTokenCount: data.usageMetadata.candidatesTokenCount,
+      try {
+        const response = await fetch(`${BASE_URL}/models/${model}:generateContent`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-goog-api-key": API_KEY,
+          },
+          body: body,
+          signal: effectiveSignal,
         });
-        log.info(
-          `Gemini API Token Usage - ` +
-            `Prompt: ${usage.promptTokenCount}, ` +
-            `Candidates: ${usage.candidatesTokenCount}, ` +
-            `Total: ${usage.totalTokenCount}, ` +
-            `Est. Cost: $${usage.estimatedCost.toFixed(6)}`
-        );
-      }
 
-      return candidate.content.parts[0].text;
-    } finally {
-      if (timeoutId !== undefined) clearTimeout(timeoutId);
+        if (response.ok) {
+          const data: GeminiResponse = await response.json();
+
+          if (!data.candidates || data.candidates.length === 0) {
+            throw new Error("No response generated from Gemini API");
+          }
+
+          const candidate = data.candidates[0];
+          if (!candidate?.content?.parts?.[0]?.text) {
+            throw new Error("Invalid response format from Gemini API");
+          }
+
+          if (data.usageMetadata) {
+            const usage = calculateTokenCost({
+              promptTokenCount: data.usageMetadata.promptTokenCount,
+              candidatesTokenCount: data.usageMetadata.candidatesTokenCount,
+            });
+            log.info(
+              `Gemini API Token Usage - ` +
+                `Prompt: ${usage.promptTokenCount}, ` +
+                `Candidates: ${usage.candidatesTokenCount}, ` +
+                `Total: ${usage.totalTokenCount}, ` +
+                `Est. Cost: $${usage.estimatedCost.toFixed(6)}`
+            );
+          }
+
+          return candidate.content.parts[0].text;
+        }
+
+        // Non-OK: log, drain the body, and retry if the error is transient.
+        lastError = `Gemini API request failed (${response.status} ${response.statusText}). Please try again later.`;
+        log.error(`Gemini API error: ${response.status} ${response.statusText}`);
+        await response.text().catch(() => {});
+
+        if (RETRYABLE_STATUS.has(response.status) && attempt < MAX_ATTEMPTS) {
+          // Exponential backoff: ~1s, then ~2s.
+          await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
+          continue;
+        }
+        throw new Error(lastError);
+      } finally {
+        if (timeoutId !== undefined) clearTimeout(timeoutId);
+      }
     }
+
+    throw new Error(lastError);
   }
 
   /**

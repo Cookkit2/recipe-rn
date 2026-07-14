@@ -79,6 +79,11 @@ jest.mock("react-native/Libraries/TurboModule/TurboModuleRegistry", () => ({
   get: () => null,
 }));
 
+// Mock WebSocket for supabase client in node env without native ws
+if (typeof globalThis.WebSocket === "undefined") {
+  globalThis.WebSocket = require("ws");
+}
+
 // Jest resolves `Platform.js` incorrectly vs Metro (self-import shim); Pressable needs a real `OS`.
 jest.mock("react-native/Libraries/Utilities/Platform", () => ({
   __esModule: true,

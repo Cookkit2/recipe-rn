@@ -115,6 +115,7 @@ export default function ImportResultCard({
           <Pressable
             className="bg-primary active:bg-primary/90 py-4 rounded-xl items-center justify-center"
             onPress={onViewRecipe}
+            accessibilityRole="button"
           >
             <Text className="text-primary-foreground font-bold text-lg">View Recipe</Text>
           </Pressable>
@@ -122,6 +123,7 @@ export default function ImportResultCard({
           <Pressable
             className="bg-muted active:bg-muted/70 py-3 rounded-xl items-center justify-center"
             onPress={onTryAgain}
+            accessibilityRole="button"
           >
             <Text className="text-foreground font-medium">Import Another Recipe</Text>
           </Pressable>
@@ -199,6 +201,7 @@ export default function ImportResultCard({
         <Pressable
           className="bg-primary active:bg-primary/90 py-4 rounded-xl items-center justify-center"
           onPress={onTryAgain}
+          accessibilityRole="button"
         >
           <Text className="text-primary-foreground font-bold text-lg">Try Another URL</Text>
         </Pressable>

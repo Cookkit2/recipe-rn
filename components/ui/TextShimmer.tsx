@@ -1,105 +1,30 @@
-import React, { useMemo } from "react";
+import type { ReactNode } from "react";
 import { View, type ViewProps } from "react-native";
-import MaskedView from "@expo/ui/community/masked-view";
-import { LinearGradient } from "expo-linear-gradient";
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-  withRepeat,
-} from "react-native-reanimated";
 import { cn } from "~/lib/utils";
-import useColors from "~/hooks/useColor";
 
 type TextShimmerProps = Omit<ViewProps, "children"> & {
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
-  durationSec?: number; // seconds
-  spread?: number; // pixels per character multiplier
+  /** Kept for API compatibility (no-op). */
+  durationSec?: number;
+  spread?: number;
   colors?: { base: string; highlight: string };
 };
 
 /**
- * Shimmering gradient text using MaskedView + LinearGradient + Reanimated.
- * - durationSec: animation duration in seconds
- * - spread: controls gradient width relative to text length (px per char)
+ * Renders children inside a plain View.
+ *
+ * Previously this applied a shimmering gradient using @expo/ui's `MaskedView`,
+ * but that MaskedView did not reliably render its masked content — the text and
+ * icons it wrapped vanished on device — so the component now renders children
+ * directly. The shimmer-related props are kept for API compatibility but are
+ * ignored. If a shimmer effect is needed again, reimplement it without
+ * MaskedView (e.g. an animated text color or a non-masked gradient overlay).
  */
-export default function TextShimmer({
-  children,
-  className,
-  durationSec = 8,
-  spread = 2,
-  colors,
-  ...props
-}: TextShimmerProps) {
-  const systemColors = useColors();
-
-  const currentColors = colors || {
-    base: systemColors.background,
-    highlight: systemColors.muted,
-  };
-
-  const gradientWidth = useMemo(() => {
-    const width = Math.max(120, Math.floor(String(children).length * spread * 8));
-    // Ensure a minimum width to cover short strings and look smooth
-    return width;
-  }, [children, spread]);
-
-  const translateX = useSharedValue(gradientWidth);
-
-  React.useEffect(() => {
-    translateX.value = withRepeat(
-      withTiming(-gradientWidth, {
-        duration: Math.max(300, Math.floor(durationSec * 1000)),
-        easing: Easing.linear,
-      }),
-      -1,
-      false
-    );
-  }, [durationSec, gradientWidth, translateX]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: translateX.value },
-      // Move diagonally to match 45° gradient orientation
-      { translateY: translateX.value },
-    ],
-  }));
-
+export default function TextShimmer({ children, className, ...props }: TextShimmerProps) {
   return (
-    <MaskedView
-      maskElement={
-        <View {...props} className={cn(className)}>
-          {children}
-        </View>
-      }
-    >
-      <View pointerEvents="none">
-        {/* Base color background to mimic bg-clip:text with base color */}
-        <View {...props} className={cn(className)}>
-          {children}
-        </View>
-        {/* Moving highlight gradient */}
-        <Animated.View
-          className="absolute top-0 bottom-0"
-          style={[{ left: -gradientWidth, right: -gradientWidth }, animatedStyle]}
-        >
-          <LinearGradient
-            // 45° diagonal sweep
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            colors={[
-              "transparent", // Transparent start
-              currentColors.highlight,
-              "transparent", // Transparent end
-            ]}
-            locations={[0.3, 0.5, 0.7]}
-            // Make gradient tall enough so diagonal translation never leaves gaps
-            style={{ width: gradientWidth * 2, height: gradientWidth * 2 }}
-          />
-        </Animated.View>
-      </View>
-    </MaskedView>
+    <View className={cn(className)} {...props}>
+      {children}
+    </View>
   );
 }
