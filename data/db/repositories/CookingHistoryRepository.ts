@@ -103,13 +103,6 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
       } else {
         recipeMap.set(recipeId, {
           lastCookedAt: cookedAt,
-    for (const record of allHistory) {
-      const existing = recipeMap.get(record.recipe_id as string);
-      if (existing) {
-        existing.cookCount++;
-      } else {
-        recipeMap.set(record.recipe_id as string, {
-          lastCookedAt: record.cooked_at as number,
           cookCount: 1,
         });
       }
@@ -151,6 +144,16 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
             lastCookedAt: record.cookedAt,
           });
         }
+      }
+      return Array.from(recipeMap.entries())
+        .map(([recipeId, data]) => ({
+          recipeId,
+          cookCount: data.cookCount,
+          lastCookedAt: data.lastCookedAt,
+        }))
+        .sort((a, b) => b.cookCount - a.cookCount)
+        .slice(0, limit);
+    }
     const allHistory = await this.collection.query().unsafeFetchRaw();
 
     // Group by recipe and count
@@ -169,15 +172,6 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
           lastCookedAt: record.cooked_at as number,
         });
       }
-
-      return Array.from(recipeMap.entries())
-        .map(([recipeId, data]) => ({
-          recipeId,
-          cookCount: data.cookCount,
-          lastCookedAt: data.lastCookedAt,
-        }))
-        .sort((a, b) => b.cookCount - a.cookCount)
-        .slice(0, limit);
     }
 
     // ⚡ Bolt Performance Optimization: Filter at DB layer instead of fetching all records
