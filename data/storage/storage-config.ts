@@ -12,18 +12,6 @@ function encodeBytesAsHex(bytes: Uint8Array): string {
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-function getEncryptionKey(): string | undefined {
-  // Check for test override first, restricted to non-production environments
-  if (__DEV__ || (typeof process !== "undefined" && process.env?.NODE_ENV === "test")) {
-    if (typeof process !== "undefined" && process.env?.[TEST_ENV_KEY]) {
-      return process.env[TEST_ENV_KEY];
-    }
-
-    if (Constants.expoConfig?.extra?.[TEST_ENV_KEY]) {
-      return Constants.expoConfig.extra[TEST_ENV_KEY];
-    }
-  }
-
 // Captures the most recent SecureStore/Crypto failure so getEncryptedConfig can surface it.
 let lastKeyError: unknown = null;
 
@@ -179,3 +167,5 @@ const storageFeatures = {
   // Enable storage migration between types
   enableMigration: true,
 };
+
+export { getStorageConfig, storageFeatures };
