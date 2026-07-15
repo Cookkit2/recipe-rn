@@ -55,11 +55,14 @@ function getEncryptionKey(): string | undefined {
   }
 
   // 3. Test/development override
-  if (typeof process !== "undefined" && process.env?.[TEST_ENV_KEY]) {
-    return process.env[TEST_ENV_KEY];
-  }
-  if (Constants.expoConfig?.extra?.[TEST_ENV_KEY]) {
-    return Constants.expoConfig.extra[TEST_ENV_KEY];
+  // 🛡️ Sentinel: Guard test fallbacks so they are stripped from production builds
+  if (__DEV__ || (typeof process !== "undefined" && process.env?.NODE_ENV === "test")) {
+    if (typeof process !== "undefined" && process.env?.[TEST_ENV_KEY]) {
+      return process.env[TEST_ENV_KEY];
+    }
+    if (Constants.expoConfig?.extra?.[TEST_ENV_KEY]) {
+      return Constants.expoConfig.extra[TEST_ENV_KEY];
+    }
   }
 
   return undefined;
