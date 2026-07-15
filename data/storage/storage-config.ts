@@ -12,6 +12,9 @@ function encodeBytesAsHex(bytes: Uint8Array): string {
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
+// Captures the most recent SecureStore/Crypto failure so getEncryptedConfig can surface it.
+let lastKeyError: unknown = null;
+
 function getEncryptionKey(): string | undefined {
   // Check for test override first, restricted to non-production environments
   if (__DEV__ || (typeof process !== "undefined" && process.env?.NODE_ENV === "test")) {
@@ -23,11 +26,6 @@ function getEncryptionKey(): string | undefined {
       return Constants.expoConfig.extra[TEST_ENV_KEY];
     }
   }
-
-// Captures the most recent SecureStore/Crypto failure so getEncryptedConfig can surface it.
-let lastKeyError: unknown = null;
-
-function getEncryptionKey(): string | undefined {
   // 1. Primary: per-device key via SecureStore (strongest — unique per install).
   //    On environments where the sync keychain call fails (e.g. the iOS 26.5 simulator,
   //    where getValueWithKeySync throws a FunctionCallException), this throws and we

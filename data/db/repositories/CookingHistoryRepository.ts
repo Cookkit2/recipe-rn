@@ -94,8 +94,8 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
 
     for (let i = 0; i < allHistory.length; i++) {
       const record = allHistory[i] as any;
-      const recipeId = record.recipe_id;
-      const cookedAt = record.cooked_at;
+      const recipeId = record.recipe_id as string;
+      const cookedAt = record.cooked_at as number;
 
       const existing = recipeMap.get(recipeId);
       if (existing) {
@@ -103,13 +103,6 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
       } else {
         recipeMap.set(recipeId, {
           lastCookedAt: cookedAt,
-    for (const record of allHistory) {
-      const existing = recipeMap.get(record.recipe_id as string);
-      if (existing) {
-        existing.cookCount++;
-      } else {
-        recipeMap.set(record.recipe_id as string, {
-          lastCookedAt: record.cooked_at as number,
           cookCount: 1,
         });
       }
@@ -138,7 +131,9 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
       const allHistory = await this.collection.query().fetch();
       const recipeMap = new Map<string, { cookCount: number; lastCookedAt: number }>();
 
-      for (const record of allHistory) {
+      for (let i = 0; i < allHistory.length; i++) {
+        const record = allHistory[i];
+        if (!record) continue;
         const existing = recipeMap.get(record.recipeId);
         if (existing) {
           existing.cookCount++;
@@ -151,23 +146,6 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
             lastCookedAt: record.cookedAt,
           });
         }
-    const allHistory = await this.collection.query().unsafeFetchRaw();
-
-    // Group by recipe and count
-    const recipeMap = new Map<string, { cookCount: number; lastCookedAt: number }>();
-
-    for (const record of allHistory) {
-      const existing = recipeMap.get(record.recipe_id as string);
-      if (existing) {
-        existing.cookCount++;
-        if ((record.cooked_at as number) > existing.lastCookedAt) {
-          existing.lastCookedAt = record.cooked_at as number;
-        }
-      } else {
-        recipeMap.set(record.recipe_id as string, {
-          cookCount: 1,
-          lastCookedAt: record.cooked_at as number,
-        });
       }
 
       return Array.from(recipeMap.entries())
@@ -176,7 +154,7 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
           cookCount: data.cookCount,
           lastCookedAt: data.lastCookedAt,
         }))
-        .sort((a, b) => b.cookCount - a.cookCount)
+        .sort((a, b) => b.cookCount - a.cookCount || b.lastCookedAt - a.lastCookedAt)
         .slice(0, limit);
     }
 
