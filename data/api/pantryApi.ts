@@ -217,79 +217,79 @@ export const pantryApi = {
     const createdOrUpdatedStockRefs: Stock[] = [];
     const batchOps: Model[] = [];
 
-    await database.write(async () => {
-      const stockCollection = database.collections.get("stock");
-      const synonymCollection = database.collections.get("ingredient_synonym");
-      const stockCategoryCollection = database.collections.get("stock_category");
+    const stockCollection = database.collections.get("stock");
+    const synonymCollection = database.collections.get("ingredient_synonym");
+    const stockCategoryCollection = database.collections.get("stock_category");
 
-      for (const item of uniqueItems) {
-        try {
-          const existingStock = stockMapByLowerName.get(item.name.toLowerCase());
+    for (const item of uniqueItems) {
+      try {
+        const existingStock = stockMapByLowerName.get(item.name.toLowerCase());
 
-          let stockItem: Stock;
+        let stockItem: Stock;
 
-          if (existingStock) {
-            const op = existingStock.prepareUpdate((stock) => {
-              (stock as Stock).quantity = existingStock.quantity + item.quantity;
-              if (typeof item.image_url === "string") {
-                (stock as Stock).imageUrl = item.image_url;
-              }
-              if (item.unit) (stock as Stock).unit = item.unit;
-              if (item.expiry_date) (stock as Stock).expiryDate = item.expiry_date;
-              if (item.type) (stock as Stock).storageType = item.type;
-              if (item.background_color) (stock as Stock).backgroundColor = item.background_color;
-            });
-            batchOps.push(op);
-            stockItem = existingStock;
-          } else {
-            stockItem = stockCollection.prepareCreate((stock) => {
-              (stock as Stock).name = item.name;
-              (stock as Stock).quantity = item.quantity;
-              (stock as Stock).unit = item.unit;
-              if (item.expiry_date) (stock as Stock).expiryDate = item.expiry_date;
-              if (item.type) (stock as Stock).storageType = item.type;
-              if (item.background_color) (stock as Stock).backgroundColor = item.background_color;
-              if (typeof item.image_url === "string") (stock as Stock).imageUrl = item.image_url;
-            }) as Stock;
-            batchOps.push(stockItem);
-            stockMapByLowerName.set(item.name.toLowerCase(), stockItem);
-          }
-
-          if (!existingStock && item.categories && item.categories.length > 0) {
-            for (const category of item.categories) {
-              let categoryRecord = categoryMapByName.get(category.name);
-              if (!categoryRecord) {
-                categoryRecord = categoryCollection.prepareCreate((cat) => {
-                  (cat as IngredientCategory).name = category.name;
-                  (cat as IngredientCategory).syncedAt = Date.now();
-                }) as IngredientCategory;
-                batchOps.push(categoryRecord);
-                categoryMapByName.set(category.name, categoryRecord);
-              }
-              const scOp = stockCategoryCollection.prepareCreate((sc) => {
-                (sc as StockCategory).stockId = stockItem.id;
-                (sc as StockCategory).categoryId = categoryRecord!.id;
-              });
-              batchOps.push(scOp);
+        if (existingStock) {
+          const op = existingStock.prepareUpdate((stock) => {
+            (stock as Stock).quantity = existingStock.quantity + item.quantity;
+            if (typeof item.image_url === "string") {
+              (stock as Stock).imageUrl = item.image_url;
             }
-          }
-
-          if (!existingStock && item.synonyms && item.synonyms.length > 0) {
-            for (const synonym of item.synonyms) {
-              const synOp = synonymCollection.prepareCreate((syn) => {
-                (syn as IngredientSynonym).stockId = stockItem.id;
-                (syn as IngredientSynonym).synonym = synonym.synonym.toLowerCase();
-              });
-              batchOps.push(synOp);
-            }
-          }
-
-          createdOrUpdatedStockRefs.push(stockItem);
-        } catch (error) {
-          log.error(`Failed to add/update pantry item ${item.name}:`, error);
+            if (item.unit) (stock as Stock).unit = item.unit;
+            if (item.expiry_date) (stock as Stock).expiryDate = item.expiry_date;
+            if (item.type) (stock as Stock).storageType = item.type;
+            if (item.background_color) (stock as Stock).backgroundColor = item.background_color;
+          });
+          batchOps.push(op);
+          stockItem = existingStock;
+        } else {
+          stockItem = stockCollection.prepareCreate((stock) => {
+            (stock as Stock).name = item.name;
+            (stock as Stock).quantity = item.quantity;
+            (stock as Stock).unit = item.unit;
+            if (item.expiry_date) (stock as Stock).expiryDate = item.expiry_date;
+            if (item.type) (stock as Stock).storageType = item.type;
+            if (item.background_color) (stock as Stock).backgroundColor = item.background_color;
+            if (typeof item.image_url === "string") (stock as Stock).imageUrl = item.image_url;
+          }) as Stock;
+          batchOps.push(stockItem);
+          stockMapByLowerName.set(item.name.toLowerCase(), stockItem);
         }
-      }
 
+        if (!existingStock && item.categories && item.categories.length > 0) {
+          for (const category of item.categories) {
+            let categoryRecord = categoryMapByName.get(category.name);
+            if (!categoryRecord) {
+              categoryRecord = categoryCollection.prepareCreate((cat) => {
+                (cat as IngredientCategory).name = category.name;
+                (cat as IngredientCategory).syncedAt = Date.now();
+              }) as IngredientCategory;
+              batchOps.push(categoryRecord);
+              categoryMapByName.set(category.name, categoryRecord);
+            }
+            const scOp = stockCategoryCollection.prepareCreate((sc) => {
+              (sc as StockCategory).stockId = stockItem.id;
+              (sc as StockCategory).categoryId = categoryRecord!.id;
+            });
+            batchOps.push(scOp);
+          }
+        }
+
+        if (!existingStock && item.synonyms && item.synonyms.length > 0) {
+          for (const synonym of item.synonyms) {
+            const synOp = synonymCollection.prepareCreate((syn) => {
+              (syn as IngredientSynonym).stockId = stockItem.id;
+              (syn as IngredientSynonym).synonym = synonym.synonym.toLowerCase();
+            });
+            batchOps.push(synOp);
+          }
+        }
+
+        createdOrUpdatedStockRefs.push(stockItem);
+      } catch (error) {
+        log.error(`Failed to add/update pantry item ${item.name}:`, error);
+      }
+    }
+
+    await database.write(async () => {
       if (batchOps.length > 0) {
         await database.batch(batchOps);
       }
