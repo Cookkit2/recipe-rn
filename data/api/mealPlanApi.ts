@@ -78,11 +78,6 @@ async function getGroceryAttributesCore(): Promise<
   return await groceryCheckRepo.getCheckAttributesMap();
 }
 
-async function getGroceryCheckStatesCore(): Promise<Map<string, boolean>> {
-  const groceryCheckRepo = getGroceryItemCheckRepository();
-  return await groceryCheckRepo.getCheckStatesMap();
-}
-
 async function toggleGroceryItemCheckCore(ingredientName: string): Promise<boolean> {
   const groceryCheckRepo = getGroceryItemCheckRepository();
   return await groceryCheckRepo.toggleChecked(ingredientName);
@@ -534,28 +529,6 @@ const groceryMealPlanApi = {
     AppResult<Map<string, { isChecked: boolean; isDeleted: boolean }>, AppError>
   > {
     return logAndWrapResult(() => getGroceryAttributesCore(), "Error getting grocery attributes");
-  },
-
-  /**
-   * Get all grocery item check states
-   * @deprecated Use getGroceryItemAttributes instead
-   */
-  async getGroceryCheckStates(): Promise<Map<string, boolean>> {
-    return withErrorHandling(
-      () => getGroceryCheckStatesCore(),
-      "Error getting grocery check states",
-      new Map()
-    );
-  },
-
-  /**
-   * Result-based variant of getGroceryCheckStates.
-   */
-  async getGroceryCheckStatesResult(): Promise<AppResult<Map<string, boolean>, AppError>> {
-    return logAndWrapResult(
-      () => getGroceryCheckStatesCore(),
-      "Error getting grocery check states"
-    );
   },
 
   /**
