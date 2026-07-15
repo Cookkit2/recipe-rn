@@ -97,22 +97,6 @@ export function useGroceryItemAttributes() {
 }
 
 /**
- * Hook to get grocery item check states
- * @deprecated Use useGroceryItemAttributes instead
- */
-function useGroceryCheckStates() {
-  return useQuery({
-    queryKey: mealPlanQueryKeys.groceryChecks(),
-    queryFn: async () => {
-      // Fallback for compatibility
-      const map = await mealPlanApi.getGroceryCheckStates();
-      return Object.fromEntries(map);
-    },
-    staleTime: 30 * 1000,
-  });
-}
-
-/**
  * Mutation hook to add a recipe to the meal plan
  *
  * @returns React Query mutation for adding a recipe with specified servings
@@ -330,31 +314,17 @@ export function useToggleGroceryItemCheck() {
     onMutate: async (ingredientName) => {
       // Cancel outgoing queries
       await queryClient.cancelQueries({
-        queryKey: mealPlanQueryKeys.groceryChecks(),
-      });
-      await queryClient.cancelQueries({
         queryKey: ["grocery_attributes"],
       });
 
       // Snapshot previous value
-      const previousChecks = queryClient.getQueryData<Record<string, boolean>>(
-        mealPlanQueryKeys.groceryChecks()
-      );
       const previousAttributes = queryClient.getQueryData<
         Record<string, { isChecked: boolean; isDeleted: boolean }>
       >(["grocery_attributes"]);
 
       const normalizedName = ingredientName.toLowerCase().trim();
 
-      // Optimistically update checks (deprecated hook)
-      if (previousChecks) {
-        queryClient.setQueryData<Record<string, boolean>>(mealPlanQueryKeys.groceryChecks(), {
-          ...previousChecks,
-          [normalizedName]: !previousChecks[normalizedName],
-        });
-      }
-
-      // Optimistically update attributes (new hook)
+      // Optimistically update attributes
       if (previousAttributes) {
         const prev = previousAttributes[normalizedName] || { isChecked: false, isDeleted: false };
         queryClient.setQueryData<Record<string, { isChecked: boolean; isDeleted: boolean }>>(
@@ -366,22 +336,16 @@ export function useToggleGroceryItemCheck() {
         );
       }
 
-      return { previousChecks, previousAttributes };
+      return { previousAttributes };
     },
     onError: (_, __, context) => {
       // Rollback on error
-      if (context?.previousChecks) {
-        queryClient.setQueryData(mealPlanQueryKeys.groceryChecks(), context.previousChecks);
-      }
       if (context?.previousAttributes) {
         queryClient.setQueryData(["grocery_attributes"], context.previousAttributes);
       }
     },
     onSettled: () => {
       // Refetch after mutation
-      queryClient.invalidateQueries({
-        queryKey: mealPlanQueryKeys.groceryChecks(),
-      });
       queryClient.invalidateQueries({
         queryKey: ["grocery_attributes"],
       });
@@ -503,7 +467,7 @@ export function useClearGroceryChecks() {
     mutationFn: () => mealPlanApi.uncheckAllGroceryItems(),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: mealPlanQueryKeys.groceryChecks(),
+        queryKey: ["grocery_attributes"],
       });
     },
   });
@@ -589,7 +553,7 @@ function useRefreshMealPlan() {
         queryKey: mealPlanQueryKeys.count(),
       }),
       queryClient.invalidateQueries({
-        queryKey: mealPlanQueryKeys.groceryChecks(),
+        queryKey: ["grocery_attributes"],
       }),
     ]);
   };
