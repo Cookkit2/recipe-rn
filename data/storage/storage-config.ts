@@ -16,6 +16,17 @@ function encodeBytesAsHex(bytes: Uint8Array): string {
 let lastKeyError: unknown = null;
 
 function getEncryptionKey(): string | undefined {
+  // Check for test override first, restricted to non-production environments
+  if (__DEV__ || (typeof process !== "undefined" && process.env?.NODE_ENV === "test")) {
+    if (typeof process !== "undefined" && process.env?.[TEST_ENV_KEY]) {
+      return process.env[TEST_ENV_KEY];
+    }
+
+    if (Constants.expoConfig?.extra?.[TEST_ENV_KEY]) {
+      return Constants.expoConfig.extra[TEST_ENV_KEY];
+    }
+  }
+
   // 1. Primary: per-device key via SecureStore (strongest — unique per install).
   //    On environments where the sync keychain call fails (e.g. the iOS 26.5 simulator,
   //    where getValueWithKeySync throws a FunctionCallException), this throws and we
