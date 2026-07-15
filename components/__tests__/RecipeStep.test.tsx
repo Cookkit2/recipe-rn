@@ -1,4 +1,4 @@
-import { render, fireEvent, act } from "@testing-library/react-native";
+import * as ReactTesting from "react-test-renderer";
 import { RecipeStep } from "../RecipeStep";
 import * as Haptics from "expo-haptics";
 import React from "react";
@@ -23,11 +23,18 @@ describe("RecipeStep", () => {
       description: "Test description",
       relatedIngredientIds: [],
     };
-    const { getByRole } = render(<RecipeStep step={step} />);
-    const checkbox = getByRole("checkbox");
-    act(() => {
-      fireEvent.press(checkbox);
+
+    let root: any;
+    ReactTesting.act(() => {
+      root = ReactTesting.create(<RecipeStep step={step} />);
     });
+
+    const checkbox = root.root.findByProps({ accessibilityRole: "checkbox" });
+
+    ReactTesting.act(() => {
+      checkbox.props.onPress();
+    });
+
     expect(Haptics.impactAsync).toHaveBeenCalledWith(Haptics.ImpactFeedbackStyle.Light);
   });
 });

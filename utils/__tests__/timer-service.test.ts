@@ -154,8 +154,8 @@ describe("TimerService", () => {
     const allTimers = timerService.getAllTimers();
     expect(allTimers.length).toBe(2);
     // Running timers should be first
-    expect(allTimers[0].id).toBe(timer2.id);
-    expect(allTimers[1].id).toBe(timer1.id);
+    expect(allTimers[0]?.id).toBe(timer2.id);
+    expect(allTimers[1]?.id).toBe(timer1.id);
   });
 
   it("should get active timers", async () => {
