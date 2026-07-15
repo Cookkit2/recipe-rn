@@ -3,7 +3,6 @@
   "compilerOptions": {
     "strict": true,
     "ignoreDeprecations": "6.0",
-    "baseUrl": ".",
     "verbatimModuleSyntax": true,
     "noUncheckedIndexedAccess": true,
     "noEmit": true,
@@ -11,11 +10,10 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "incremental": true,
-    "downlevelIteration": true,
     "noErrorTruncation": true,
     "experimentalDecorators": true,
     "paths": {
-      "~/*": ["*"]
+      "~/*": ["./*"]
     },
     "types": ["jest", "node"]
   },
