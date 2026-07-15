@@ -23,7 +23,7 @@ import { YouTubeServiceError } from "./types";
 import { NoAuthYouTubeService } from "./NoAuthYouTubeService";
 import Constants from "expo-constants";
 
-const API_KEY =
+const getApiKey = () =>
   process.env.EXPO_PUBLIC_YOUTUBE_API_KEY ||
   Constants.expoConfig?.extra?.EXPO_PUBLIC_YOUTUBE_API_KEY;
 
@@ -40,7 +40,8 @@ export class AuthYouTubeService implements IYouTubeService {
    * Fetch video info using YouTube Data API v3
    */
   async getVideoInfo(videoId: string): Promise<YouTubeVideoInfo> {
-    if (!API_KEY) {
+    const apiKey = getApiKey();
+    if (!apiKey) {
       throw new YouTubeServiceError(
         "YouTube API key not configured. Set EXPO_PUBLIC_YOUTUBE_API_KEY.",
         "API_ERROR"
@@ -52,7 +53,7 @@ export class AuthYouTubeService implements IYouTubeService {
     try {
       const response = await fetch(url, {
         headers: {
-          "x-goog-api-key": API_KEY,
+          "x-goog-api-key": apiKey as string,
         },
       });
 
