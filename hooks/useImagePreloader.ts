@@ -95,12 +95,14 @@ export function useImagePreloader(options: UseImagePreloaderOptions = {}) {
 
       const doPrefetch = async () => {
         let allOk = true;
+        const promises = [];
         for (let i = 0; i < valid.length && mountedRef.current; i += batchSize) {
           const batch = valid.slice(i, i + batchSize);
-          const ok = await Image.prefetch(batch, { cachePolicy });
-          if (!ok) allOk = false;
+          promises.push(Image.prefetch(batch, { cachePolicy }));
         }
+        const results = await Promise.all(promises);
         if (!mountedRef.current) return;
+        allOk = results.every((ok) => ok);
         if (!allOk) {
           const err = new Error("Image prefetch failed for one or more URLs");
           setError(err);
