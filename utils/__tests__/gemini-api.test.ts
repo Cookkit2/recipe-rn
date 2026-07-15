@@ -19,7 +19,7 @@ jest.mock("~/utils/logger", () => ({
 }));
 
 // Setup initial API_KEY expectation for our tests
-const API_KEY =
+const getApiKey = () =>
   process.env.EXPO_PUBLIC_GEMINI_API_KEY || Constants.expoConfig?.extra?.EXPO_PUBLIC_GEMINI_API_KEY;
 
 describe("gemini-api", () => {
@@ -98,7 +98,7 @@ describe("gemini-api", () => {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "X-goog-api-key": API_KEY,
+              "X-goog-api-key": getApiKey(),
             },
             body: "Hello",
           })
@@ -147,7 +147,7 @@ describe("gemini-api", () => {
         expect(log.error).toHaveBeenCalledWith(
           expect.stringContaining("Gemini API error: 400 Bad Request")
         );
-        expect(log.error).not.toHaveBeenCalledWith(expect.stringContaining(API_KEY as string));
+        expect(log.error).not.toHaveBeenCalledWith(expect.stringContaining(getApiKey() as string));
       });
 
       it("should throw if response has no candidates", async () => {
@@ -223,7 +223,7 @@ describe("gemini-api", () => {
           expect.objectContaining({
             method: "GET",
             headers: {
-              "X-goog-api-key": API_KEY,
+              "X-goog-api-key": getApiKey(),
             },
           })
         );

@@ -145,15 +145,17 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
           });
         }
       }
+
       return Array.from(recipeMap.entries())
         .map(([recipeId, data]) => ({
           recipeId,
           cookCount: data.cookCount,
           lastCookedAt: data.lastCookedAt,
         }))
-        .sort((a, b) => b.cookCount - a.cookCount)
+        .sort((a, b) => b.cookCount - a.cookCount || b.lastCookedAt - a.lastCookedAt)
         .slice(0, limit);
     }
+
     const allHistory = await this.collection.query().unsafeFetchRaw();
 
     // Group by recipe and count
@@ -172,6 +174,15 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
           lastCookedAt: record.cooked_at as number,
         });
       }
+
+      return Array.from(recipeMap.entries())
+        .map(([recipeId, data]) => ({
+          recipeId,
+          cookCount: data.cookCount,
+          lastCookedAt: data.lastCookedAt,
+        }))
+        .sort((a, b) => b.cookCount - a.cookCount)
+        .slice(0, limit);
     }
 
     // ⚡ Bolt Performance Optimization: Filter at DB layer instead of fetching all records
