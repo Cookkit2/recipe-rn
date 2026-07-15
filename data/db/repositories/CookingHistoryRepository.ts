@@ -145,6 +145,7 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
           });
         }
       }
+
       return Array.from(recipeMap.entries())
         .map(([recipeId, data]) => ({
           recipeId,

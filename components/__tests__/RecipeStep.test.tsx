@@ -23,9 +23,9 @@ describe("RecipeStep", () => {
       description: "Test description",
       relatedIngredientIds: [],
     };
-    const { getByLabelText } = await render(<RecipeStep step={step} />);
-    const checkbox = getByLabelText("Mark step 1 complete");
-    act(() => {
+    const rendered = await render(<RecipeStep step={step} />);
+    const checkbox = rendered.getByRole("checkbox");
+    await act(async () => {
       fireEvent.press(checkbox);
     });
     expect(Haptics.impactAsync).toHaveBeenCalledWith(Haptics.ImpactFeedbackStyle.Light);
