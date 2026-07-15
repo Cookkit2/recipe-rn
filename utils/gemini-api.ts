@@ -3,7 +3,7 @@ import { log } from "~/utils/logger";
 
 const GEMINI_REQUEST_TIMEOUT_MS = 60_000;
 
-const API_KEY =
+const getApiKey = () =>
   process.env.EXPO_PUBLIC_GEMINI_API_KEY || Constants.expoConfig?.extra?.EXPO_PUBLIC_GEMINI_API_KEY;
 
 const BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
@@ -96,7 +96,8 @@ export class GeminiAPI {
     body: string,
     signal?: AbortSignal
   ): Promise<string> {
-    if (!API_KEY) {
+    const apiKey = getApiKey();
+    if (!apiKey) {
       throw new Error("Gemini API key is not set");
     }
 
@@ -118,7 +119,7 @@ export class GeminiAPI {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "X-goog-api-key": API_KEY,
+            "X-goog-api-key": apiKey as string,
           },
           body: body,
           signal: effectiveSignal,
@@ -177,6 +178,7 @@ export class GeminiAPI {
    * Pass signal when using from TanStack Query; otherwise a 60s timeout is applied.
    */
   async listModels(signal?: AbortSignal): Promise<ModelListResponse> {
+    const apiKey = getApiKey();
     const controller = signal ? undefined : new AbortController();
     const timeoutId =
       controller === undefined
@@ -188,7 +190,7 @@ export class GeminiAPI {
       const response = await fetch(`${BASE_URL}/models`, {
         method: "GET",
         headers: {
-          "X-goog-api-key": API_KEY,
+          "X-goog-api-key": apiKey as string,
         },
         signal: effectiveSignal,
       });

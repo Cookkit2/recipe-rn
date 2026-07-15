@@ -1,4 +1,4 @@
-import * as ReactTesting from "react-test-renderer";
+import { render, fireEvent, act } from "@testing-library/react-native";
 import { RecipeStep } from "../RecipeStep";
 import * as Haptics from "expo-haptics";
 import React from "react";
@@ -16,25 +16,18 @@ jest.mock("lucide-uniwind", () => ({
 }));
 
 describe("RecipeStep", () => {
-  it("triggers haptics on press", () => {
+  it("triggers haptics on press", async () => {
     const step = {
       step: 1,
       title: "Test",
       description: "Test description",
       relatedIngredientIds: [],
     };
-
-    let root: any;
-    ReactTesting.act(() => {
-      root = ReactTesting.create(<RecipeStep step={step} />);
+    const rendered = await render(<RecipeStep step={step} />);
+    const checkbox = rendered.getByRole("checkbox");
+    await act(async () => {
+      fireEvent.press(checkbox);
     });
-
-    const checkbox = root.root.findByProps({ accessibilityRole: "checkbox" });
-
-    ReactTesting.act(() => {
-      checkbox.props.onPress();
-    });
-
     expect(Haptics.impactAsync).toHaveBeenCalledWith(Haptics.ImpactFeedbackStyle.Light);
   });
 });

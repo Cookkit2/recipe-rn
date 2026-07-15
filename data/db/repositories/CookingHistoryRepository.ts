@@ -152,9 +152,10 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
           cookCount: data.cookCount,
           lastCookedAt: data.lastCookedAt,
         }))
-        .sort((a, b) => b.cookCount - a.cookCount)
+        .sort((a, b) => b.cookCount - a.cookCount || b.lastCookedAt - a.lastCookedAt)
         .slice(0, limit);
     }
+
     const allHistory = await this.collection.query().unsafeFetchRaw();
 
     // Group by recipe and count
