@@ -193,6 +193,8 @@ class TimerService {
         try {
           const scheduled = await Notifications.getAllScheduledNotificationsAsync();
 
+          const cancelPromises: Promise<void>[] = [];
+
           for (const request of scheduled) {
             const data = (request.content?.data ?? {}) as any;
             const timerId = data.timerId as string | undefined;
@@ -205,21 +207,21 @@ class TimerService {
 
             // No matching timer in storage: cancel stale notification
             if (!restoredTimer) {
-              try {
-                await cancelNotification(request.identifier);
-              } catch (cancelError) {
-                log.error("Failed to cancel stale notification for missing timer:", cancelError);
-              }
+              cancelPromises.push(
+                cancelNotification(request.identifier).catch((cancelError) => {
+                  log.error("Failed to cancel stale notification for missing timer:", cancelError);
+                })
+              );
               continue;
             }
 
             // Timer exists but is not active anymore: cancel stale notification
             if (restoredTimer.status !== "running" && restoredTimer.status !== "paused") {
-              try {
-                await cancelNotification(request.identifier);
-              } catch (cancelError) {
-                log.error("Failed to cancel stale notification for inactive timer:", cancelError);
-              }
+              cancelPromises.push(
+                cancelNotification(request.identifier).catch((cancelError) => {
+                  log.error("Failed to cancel stale notification for inactive timer:", cancelError);
+                })
+              );
               continue;
             }
 
@@ -227,6 +229,10 @@ class TimerService {
             if (this.notificationIds) {
               this.notificationIds.set(timerId, request.identifier);
             }
+          }
+
+          if (cancelPromises.length > 0) {
+            await Promise.all(cancelPromises);
           }
         } catch (notificationError) {
           log.error(

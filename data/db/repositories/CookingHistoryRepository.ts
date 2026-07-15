@@ -152,6 +152,35 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
           cookCount: data.cookCount,
           lastCookedAt: data.lastCookedAt,
         }))
+        .sort((a, b) => b.cookCount - a.cookCount || b.lastCookedAt - a.lastCookedAt)
+        .slice(0, limit);
+    }
+
+    const allHistory = await this.collection.query().unsafeFetchRaw();
+
+    // Group by recipe and count
+    const recipeMap = new Map<string, { cookCount: number; lastCookedAt: number }>();
+
+    for (const record of allHistory) {
+      const existing = recipeMap.get(record.recipe_id as string);
+      if (existing) {
+        existing.cookCount++;
+        if ((record.cooked_at as number) > existing.lastCookedAt) {
+          existing.lastCookedAt = record.cooked_at as number;
+        }
+      } else {
+        recipeMap.set(record.recipe_id as string, {
+          cookCount: 1,
+          lastCookedAt: record.cooked_at as number,
+        });
+      }
+
+      return Array.from(recipeMap.entries())
+        .map(([recipeId, data]) => ({
+          recipeId,
+          cookCount: data.cookCount,
+          lastCookedAt: data.lastCookedAt,
+        }))
         .sort((a, b) => b.cookCount - a.cookCount)
         .slice(0, limit);
     }
