@@ -1233,20 +1233,21 @@ class DatabaseFacade {
 
       // Pre-compute an index of pantry items and their synonyms for O(1) matching.
       const pantryIndex = new Map<string, { name: string; synonyms: string[] }>();
-      // Iterate backwards so that earlier occurrences naturally overwrite duplicates,
-      // eliminating the need for expensive map.has() checks on every iteration.
-      for (let i = pantryItemsWithMetadata.length - 1; i >= 0; i--) {
-        const item = pantryItemsWithMetadata[i];
-        if (!item) continue;
+      for (const item of pantryItemsWithMetadata) {
+        const normalizedName = item.name.toLowerCase().trim();
 
-        for (let j = item.synonyms.length - 1; j >= 0; j--) {
-          const syn = item.synonyms[j];
-          if (syn) {
-            pantryIndex.set(syn.toLowerCase().trim(), item);
-          }
+        // Index the main name
+        if (!pantryIndex.has(normalizedName)) {
+          pantryIndex.set(normalizedName, item);
         }
-        if (item.name) {
-          pantryIndex.set(item.name.toLowerCase().trim(), item);
+
+        // Index all synonyms and categories
+        for (const synonym of item.synonyms) {
+          const normalizedSynonym = synonym.toLowerCase().trim();
+
+          if (!pantryIndex.has(normalizedSynonym)) {
+            pantryIndex.set(normalizedSynonym, item);
+          }
         }
       }
 

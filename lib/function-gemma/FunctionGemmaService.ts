@@ -351,12 +351,14 @@ export function parseFunctionCalls(
 
   const calls: Array<{ name: string; arguments: Record<string, any> }> = [];
 
-  for (const callMatch of text.matchAll(callRegex)) {
+  let callMatch: RegExpExecArray | null;
+  while ((callMatch = callRegex.exec(text)) !== null) {
     const name = callMatch[1] ?? "";
     const argsStr = callMatch[2] ?? "";
     const args: Record<string, any> = {};
 
-    for (const argMatch of argsStr.matchAll(argRegex)) {
+    let argMatch: RegExpExecArray | null;
+    while ((argMatch = argRegex.exec(argsStr)) !== null) {
       const key = argMatch[1] ?? "";
       if (!key) continue;
       if (argMatch[2] !== undefined) {
@@ -367,7 +369,8 @@ export function parseFunctionCalls(
         const arrayContent = argMatch[3];
         const items: any[] = [];
         const itemRegex = /<escape>(.*?)<escape>|([^,\[\]]+)/g;
-        for (const itemMatch of arrayContent.matchAll(itemRegex)) {
+        let itemMatch: RegExpExecArray | null;
+        while ((itemMatch = itemRegex.exec(arrayContent)) !== null) {
           const val = itemMatch[1] ?? itemMatch[2] ?? "";
           if (val.trim()) items.push(castValue(val));
         }

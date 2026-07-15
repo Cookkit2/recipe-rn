@@ -141,6 +141,18 @@ export class GroceryItemCheckRepository extends BaseRepository<GroceryItemCheck>
     return map;
   }
 
+  // Deprecated: keeping for compatibility during migration, or remove if safe
+  async getCheckStatesMap(): Promise<Map<string, boolean>> {
+    const allRecords = await this.findAll();
+    const map = new Map<string, boolean>();
+
+    for (const record of allRecords) {
+      map.set(record.ingredientName, record.isChecked);
+    }
+
+    return map;
+  }
+
   // Set deleted state for an ingredient
   async setDeleted(ingredientName: string, isDeleted: boolean): Promise<GroceryItemCheck> {
     return this.upsertRecord(

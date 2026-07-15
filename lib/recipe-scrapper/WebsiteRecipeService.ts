@@ -271,8 +271,7 @@ function findElementsByAttr(
     }
 
     // Paired form: find the matching close tag at the same depth.
-    const escapedTagName = tagName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const closeRe = new RegExp(`</${escapedTagName}\\s*>`, "gi");
+    const closeRe = new RegExp(`</${tagName}\\s*>`, "gi");
     closeRe.lastIndex = tagEnd;
     const closeMatch = closeRe.exec(html);
     if (closeMatch) {

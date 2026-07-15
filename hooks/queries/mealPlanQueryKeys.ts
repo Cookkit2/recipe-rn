@@ -21,6 +21,9 @@ export const mealPlanQueryKeys = {
   // Grocery list (computed from meal plan)
   groceryList: () => [...mealPlanQueryKeys.all, "groceryList"] as const,
 
+  // Grocery item check states
+  groceryChecks: () => [...mealPlanQueryKeys.all, "groceryChecks"] as const,
+
   // Calendar meal plans by date range
   dateRange: (startDate: string, endDate: string) =>
     [...mealPlanQueryKeys.all, "dateRange", startDate, endDate] as const,
