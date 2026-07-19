@@ -138,7 +138,7 @@
     "@testing-library/react-hooks": "^8.0.1",
     "@testing-library/react-native": "^14.0.1",
     "@types/detox": "^18.1.3",
-    "@types/jest": "30.0.0",
+    "@types/jest": "^30.0.0",
     "@types/jwt-encode": "^1.0.3",
     "@types/react": "~19.2.15",
     "@types/ws": "^8.18.1",
