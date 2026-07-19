@@ -48,6 +48,8 @@ export default function ReviewsList({
           <Pressable
             key={option}
             onPress={() => onSortChange(option)}
+            accessibilityRole="button"
+            accessibilityState={{ selected: sort === option }}
             className={`px-3 py-1.5 rounded-full border ${
               sort === option ? "bg-foreground border-foreground" : "bg-transparent border-border"
             }`}
@@ -77,7 +79,13 @@ export default function ReviewsList({
       ))}
 
       {hasMore && (
-        <Pressable onPress={onLoadMore} className="py-4 items-center" disabled={isFetchingNextPage}>
+        <Pressable
+          onPress={onLoadMore}
+          className="py-4 items-center"
+          disabled={isFetchingNextPage}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: isFetchingNextPage }}
+        >
           {isFetchingNextPage ? (
             <ActivityIndicator size="small" />
           ) : (
