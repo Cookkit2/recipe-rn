@@ -1,5 +1,5 @@
 import React from "react";
-import { FlatList, View, StyleSheet, ScrollView, Pressable } from "react-native";
+import { View, StyleSheet, ScrollView, Pressable } from "react-native";
 import type { RecipeIngredient } from "~/types/Recipe";
 import { H2, P } from "~/components/ui/typography";
 import { Text } from "~/components/ui/text";
@@ -54,26 +54,19 @@ export const IngredientsContent: React.FC<{
         <H2 className="text-center text-foreground font-bowlby-one tracking-wide my-3">
           Ingredients
         </H2>
-        <FlatList
-          numColumns={3}
-          className="flex-1 w-full max-w-sm"
-          contentContainerClassName="pt-2 pb-6"
-          showsVerticalScrollIndicator={false}
-          data={ingredients}
-          scrollEnabled={false}
-          keyExtractor={(item) => item.relatedIngredientId}
-          renderItem={({ item, index }) => (
-            <IngredientItem
-              key={item.relatedIngredientId}
-              ingredient={item}
-              index={index}
-              matchedPantryItem={findMatch(item)}
-              isUsed={usedIngredientIds.has(item.relatedIngredientId)}
-              onToggle={() => toggleIngredient(item.relatedIngredientId)}
-            />
-          )}
-          ItemSeparatorComponent={() => <View className="h-3" />}
-        />
+        <View className="flex-row flex-wrap justify-start w-full max-w-sm pt-2 pb-6">
+          {ingredients.map((item, index) => (
+            <View key={item.relatedIngredientId} style={{ width: "33.33%" }} className="mb-3">
+              <IngredientItem
+                ingredient={item}
+                index={index}
+                matchedPantryItem={findMatch(item)}
+                isUsed={usedIngredientIds.has(item.relatedIngredientId)}
+                onToggle={() => toggleIngredient(item.relatedIngredientId)}
+              />
+            </View>
+          ))}
+        </View>
         {allIngredientsUsed && (
           <Button
             size="lg"
