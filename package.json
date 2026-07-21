@@ -26,7 +26,7 @@
     "@babel/plugin-proposal-decorators": "^7.28.6",
     "@expo/ui": "~57.0.4",
     "@gorhom/bottom-sheet": "^5.2.14",
-    "@legendapp/list": "^2.0.19",
+    "@legendapp/list": "^3.3.3",
     "@lucide/lab": "^0.1.2",
     "@nozbe/watermelondb": "^0.28.0",
     "@react-native-clipboard/clipboard": "^1.16.3",
