@@ -146,7 +146,7 @@
     "detox": "^20.51.0",
     "fast-uri": "4.1.0",
     "husky": "^9.1.7",
-    "jest-expo": "~57.0.1",
+    "jest-expo": "~57.0.2",
     "prettier": "^3.9.5",
     "prettier-plugin-tailwindcss": "^0.8.0",
     "react-test-renderer": "19.2.7",
