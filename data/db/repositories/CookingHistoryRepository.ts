@@ -277,7 +277,8 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
     averageRating: number | null;
     photosCount: number;
   }> {
-    const allRecords = await this.findAll();
+    // ⚡ Bolt Performance Optimization: Use unsafeFetchRaw to avoid heavy Model instantiation when aggregating records
+    const allRecords = await this.collection.query().unsafeFetchRaw();
 
     // ⚡ Bolt Performance Optimization:
     // Prevent multiple array traversals and allocations by computing all stats
@@ -288,16 +289,17 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
     let ratingCount = 0;
 
     for (let i = 0; i < allRecords.length; i++) {
-      const r = allRecords[i];
+      const r = allRecords[i] as any;
       if (!r) continue;
 
-      seenRecipes.add(r.recipeId);
+      seenRecipes.add(r.recipe_id);
 
-      if (r.hasPhoto) photosCount++;
+      if (!!r.photo_url) photosCount++;
 
-      if (r.hasValidRating) {
+      const rating = r.rating;
+      if (rating !== undefined && rating !== null && rating >= 1 && rating <= 5) {
         ratingCount++;
-        ratingSum += r.rating || 0;
+        ratingSum += rating || 0;
       }
     }
 
