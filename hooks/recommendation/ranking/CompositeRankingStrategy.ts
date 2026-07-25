@@ -57,7 +57,9 @@ export class CompositeRankingStrategy implements RecipeRankingStrategy {
   score(recipe: Recipe, context?: RankingContext): number {
     let total = 0;
     for (let i = 0, len = this.strategies.length; i < len; i++) {
-      const { strategy, weight } = this.strategies[i];
+      const strat = this.strategies[i];
+      if (!strat) continue;
+      const { strategy, weight } = strat;
       total += strategy.score(recipe, context) * weight;
     }
     return total;
