@@ -22,28 +22,21 @@ describe("JSONSerializer", () => {
     expect(deserialized).toEqual(data);
   });
 
-  it("should handle JSON.parse errors gracefully and return null", () => {
+  it("should handle JSON.parse errors gracefully and return null via safeJsonParse", () => {
     const malformedJson = "{ key: value }"; // Invalid JSON format (missing quotes)
 
     const result = serializer.deserialize(malformedJson);
 
     expect(result).toBeNull();
-    expect(console.warn).toHaveBeenCalledWith(
-      "JSONSerializer failed to parse value",
-      expect.any(SyntaxError)
-    );
+    // safeJsonParse logs its own warnings, so we just verify the return value
   });
 
-  it("should handle JSON.stringify errors gracefully and return an empty string", () => {
+  it("should throw on JSON.stringify errors to prevent silent data corruption", () => {
     const circularReference: any = {};
     circularReference.myself = circularReference;
 
-    const result = serializer.serialize(circularReference);
-
-    expect(result).toBe("");
-    expect(console.warn).toHaveBeenCalledWith(
-      "JSONSerializer failed to serialize value",
-      expect.any(TypeError)
-    );
+    expect(() => {
+      serializer.serialize(circularReference);
+    }).toThrow(TypeError);
   });
 });
