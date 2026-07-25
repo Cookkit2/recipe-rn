@@ -159,10 +159,20 @@ export interface ISerializer<T> {
 
 export class JSONSerializer<T> implements ISerializer<T> {
   serialize(value: T): string {
-    return JSON.stringify(value);
+    try {
+      return JSON.stringify(value);
+    } catch (error) {
+      console.warn("JSONSerializer failed to serialize value", error);
+      return "";
+    }
   }
 
   deserialize(value: string): T {
-    return JSON.parse(value);
+    try {
+      return JSON.parse(value);
+    } catch (error) {
+      console.warn("JSONSerializer failed to parse value", error);
+      return null as unknown as T;
+    }
   }
 }
