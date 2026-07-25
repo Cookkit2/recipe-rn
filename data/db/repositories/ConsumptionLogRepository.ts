@@ -19,6 +19,23 @@ export class ConsumptionLogRepository extends BaseRepository<ConsumptionLog> {
     super("consumption_log");
   }
 
+  // Prepare a consumption log entry for batch creation
+  prepareRecordConsumption(
+    stockId: string,
+    quantityConsumed: number,
+    recipeId?: string,
+    consumedDate?: number,
+    isBeforeExpiry: boolean = false
+  ): ConsumptionLog {
+    return this.collection.prepareCreate((record: any) => {
+      record.stockId = stockId;
+      record.quantityConsumed = quantityConsumed;
+      if (recipeId) record.recipeId = recipeId;
+      record.consumedDate = consumedDate ?? Date.now();
+      record.isBeforeExpiry = isBeforeExpiry;
+    });
+  }
+
   // Record a new consumption log entry
   async recordConsumption(
     stockId: string,
