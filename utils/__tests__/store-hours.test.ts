@@ -9,6 +9,13 @@ describe("store-hours utilities", () => {
       expect(timeToMinutes("22:00")).toBe(22 * 60);
       expect(timeToMinutes("23:59")).toBe(23 * 60 + 59);
     });
+
+    it("handles edge cases and invalid inputs gracefully", () => {
+      expect(timeToMinutes("")).toBe(0);
+      expect(timeToMinutes("12")).toBe(12 * 60);
+      expect(timeToMinutes("abc:def")).toBe(0);
+      expect(timeToMinutes("12:abc")).toBe(12 * 60);
+    });
   });
 
   describe("calculateStoreStatus", () => {
