@@ -111,3 +111,6 @@
 **Learning:** Initializing objects like `Map<string, number[]>` then using `Array.prototype.reduce()` on them causes O(M) intermediate allocations and closures when calculating average ratings, negatively impacting the JS bridge garbage collector.
 **Action:** Always maintain primitive structural properties in single-pass scalar mapping (`Map<string, { sum: number, count: number }>`) without pushing into array lengths, reducing allocations to O(1) structures per entry.
 ## 2024-07-14 - Promise.all Optimization\n**Learning:** Replacing sequential await calls inside loops with Promise.all reduces N+1 async bottlenecks effectively.\n**Action:** Use Promise.all when independent async tasks are run inside a loop.
+## 2025-02-27 - Minimize database lock time in WatermelonDB
+**Learning:** In WatermelonDB, fetching relational data inside a \`database.write()\` block unnecessarily extends the duration of the database lock, which can block concurrent operations and degrade responsiveness.
+**Action:** Always fetch required relational data (using \`.fetch()\`) outside and before the \`database.write()\` transaction, then pass the fetched data into the transaction block to construct batch operations.
