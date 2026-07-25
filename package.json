@@ -160,22 +160,12 @@
     "ws": "^8.21.0",
     "zustand": "^5.0.12"
   },
-  "resolutions": {
+  "overrides": {
     "fast-uri": ">=3.1.4",
     "shell-quote": ">=1.8.5",
     "brace-expansion": ">=2.1.2",
     "postcss": ">=8.5.18",
     "js-yaml": ">=4.3.0"
-  },
-  "overrides": {
-    "form-data": "^4.0.6",
-    "fast-uri": "^3.1.2",
-    "hermes-compiler": "250829098.0.4",
-    "@babel/runtime": ">=7.26.10",
-    "jest-environment-node": "30.4.1",
-    "jest-mock": "30.4.1",
-    "tmp": ">=0.2.6",
-    "react-native-screens": "4.25.2"
   },
   "private": true,
   "reanimated": {

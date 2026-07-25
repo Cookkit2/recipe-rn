@@ -4,3 +4,6 @@
 ## 2025-02-27 - Resolve high severity dependency vulnerabilities
 **Learning:** CI pipelines running `bun audit --audit-level=high` will fail if deep dependencies contain high severity vulnerabilities.
 **Action:** Use the `resolutions` field in `package.json` to force the package manager to use non-vulnerable versions of the affected transitive dependencies, and run `bun install` to update the lockfile.
+## 2025-02-27 - Bun uses overrides instead of resolutions
+**Learning:** While Yarn uses the `resolutions` field in `package.json` to force transitive dependency versions, Bun uses the `overrides` field (similar to npm). Using `resolutions` with Bun may not successfully update nested dependencies, leading to continued CI audit failures.
+**Action:** When fixing dependency vulnerabilities in a Bun project, use the `overrides` field in `package.json` to ensure deep dependency versions are correctly overridden across the entire tree.
