@@ -1,6 +1,11 @@
 import { Stack } from "expo-router";
+import type { ComponentProps } from "react";
 
-export function ScreenGroupMisc({ commonHeaderOptions }: { commonHeaderOptions: any }) {
+export function ScreenGroupMisc({
+  commonHeaderOptions,
+}: {
+  commonHeaderOptions: ComponentProps<typeof Stack.Screen>["options"];
+}) {
   return (
     <>
       {/* ======== ONBOARDING ======== */}
