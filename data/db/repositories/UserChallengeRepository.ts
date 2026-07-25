@@ -262,6 +262,72 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
     });
   }
 
+  // Batch check and update challenge status based on progress
+  async batchCheckAndUpdateStatus(
+    updates: Array<{
+      challengeId: string;
+      currentProgress: number;
+      targetProgress: number;
+    }>
+  ): Promise<UserChallenge[]> {
+    if (updates.length === 0) return [];
+
+    const challengeIds = updates.map((u) => u.challengeId);
+    const existing = await this.collection
+      .query(Q.where("challenge_id", Q.oneOf(challengeIds)))
+      .fetch();
+    const existingMap = new Map(existing.map((uc) => [uc.challengeId, uc]));
+
+    return await this.collection.database.write(async () => {
+      const batchOps: import("@nozbe/watermelondb").Model[] = [];
+      const results: UserChallenge[] = [];
+
+      for (const update of updates) {
+        const userChallenge = existingMap.get(update.challengeId);
+
+        let newStatus = userChallenge?.status || "available";
+        if (update.currentProgress >= update.targetProgress && newStatus !== "completed") {
+          newStatus = "completed";
+        } else if (update.currentProgress > 0 && newStatus === "available") {
+          newStatus = "active";
+        }
+
+        if (userChallenge) {
+          batchOps.push(
+            userChallenge.prepareUpdate((record: any) => {
+              record.progress = update.currentProgress;
+              record.status = newStatus;
+              if (newStatus === "active" && !record.startedAt) {
+                record.startedAt = Date.now();
+              }
+              if (newStatus === "completed" && !record.completedAt) {
+                record.completedAt = Date.now();
+              }
+            })
+          );
+          results.push(userChallenge);
+        } else {
+          const newRecord = this.collection.prepareCreate((record: any) => {
+            record.challengeId = update.challengeId;
+            record.status = newStatus;
+            record.progress = update.currentProgress;
+            if (newStatus === "active") {
+              record.startedAt = Date.now();
+            }
+            if (newStatus === "completed") {
+              record.completedAt = Date.now();
+            }
+          });
+          batchOps.push(newRecord);
+          results.push(newRecord as UserChallenge);
+        }
+      }
+
+      await database.batch(batchOps);
+      return results;
+    });
+  }
+
   // Get challenges that need to be expired
   // (active or available challenges whose parent challenge has expired)
   async getChallengesToExpire(): Promise<UserChallenge[]> {
