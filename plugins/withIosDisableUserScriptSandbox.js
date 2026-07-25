@@ -19,6 +19,18 @@ function withIosDisableUserScriptSandbox(config) {
       const buildConfig = buildConfigs[key];
       if (buildConfig && buildConfig.buildSettings) {
         buildConfig.buildSettings.ENABLE_USER_SCRIPT_SANDBOXING = "NO";
+
+        const target = buildConfig.buildSettings.IPHONEOS_DEPLOYMENT_TARGET;
+        if (target) {
+          const version = parseFloat(target.replace(/["']/g, ""));
+          if (version < 16.4) {
+            buildConfig.buildSettings.IPHONEOS_DEPLOYMENT_TARGET = target.startsWith('"')
+              ? '"16.4"'
+              : target.startsWith("'")
+                ? "'16.4'"
+                : "16.4";
+          }
+        }
       }
     }
 
