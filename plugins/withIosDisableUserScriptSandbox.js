@@ -1,7 +1,7 @@
 /**
  * Expo config plugin to:
  * 1. Disable Xcode's ENABLE_USER_SCRIPT_SANDBOXING
- * 2. Fix iOS deployment target mismatches in Pods project (bump <16.4 → 16.4)
+ * 2. Adjust iOS deployment target mismatches in Pods project (bump <16.4 → 16.4)
  *
  * Required because some pods (react-native-image-colors) target iOS 15.1
  * but ExpoModulesCore requires 16.4+, causing Swift module import failures.
@@ -12,7 +12,7 @@ const path = require("path");
 
 function withIosDisableUserScriptSandbox(config) {
   return withXcodeProject(config, async (config) => {
-    // Fix main app target
+    // Adjust main app target
     const xcodeProject = config.modResults;
     const buildConfigs = xcodeProject.pbxXCBuildConfigurationSection();
     for (const key in buildConfigs) {
@@ -22,7 +22,7 @@ function withIosDisableUserScriptSandbox(config) {
       }
     }
 
-    // Fix Pods project deployment targets
+    // Adjust Pods project deployment targets
     const podsProjectPath = path.join(
       config.modRequest.platformProjectRoot,
       "Pods",
