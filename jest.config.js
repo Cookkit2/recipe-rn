@@ -8,7 +8,7 @@ module.exports = {
   testMatch: ["**/__tests__/**/*.test.(js|jsx|ts|tsx)"],
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json"],
   transform: {
-    "^.+\\.(js|jsx|ts|tsx)$": ["babel-jest", { presets: ["babel-preset-expo"] }],
+    "^.+\\.(js|jsx|ts|tsx)$": "babel-jest",
   },
   transformIgnorePatterns: [
     "node_modules/(?!(react-native-purchases|react-native-purchases-ui|react-native|@react-native|@nozbe|@expo|expo|expo-modules-core|expo-constants|expo-secure-store|expo-crypto|expo-auth-session|expo-linking|react-navigation|react-native-reanimated|react-native-worklets|@rn-primitives|llama\\.rn|expo-file-system|expo-maps|lucide-react-native|@testing-library)/)",
