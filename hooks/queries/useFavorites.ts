@@ -59,7 +59,6 @@ export function useToggleFavorite() {
       if (previousRecipe) {
         queryClient.setQueryData<Recipe>(recipeQueryKeys.recipe(recipeId), {
           ...previousRecipe,
-          isFavorite: !previousRecipe.isFavorite,
         });
       }
 
@@ -67,7 +66,7 @@ export function useToggleFavorite() {
       if (previousRecipes) {
         queryClient.setQueryData<Recipe[]>(
           recipeQueryKeys.recipes(),
-          previousRecipes.map((r) => (r.id === recipeId ? { ...r, isFavorite: !r.isFavorite } : r))
+          previousRecipes.map((r) => (r.id === recipeId ? { ...r } : r))
         );
       }
 

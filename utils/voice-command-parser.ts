@@ -402,8 +402,11 @@ class VoiceCommandParser {
       step: ["Try saying 'explain this step'", "Try saying 'what do I do'", "Try saying 'repeat'"],
     };
 
-    if (currentContext && contextSuggestions[currentContext]) {
-      return [...baseSuggestions, ...contextSuggestions[currentContext]];
+    if (currentContext) {
+      const suggestions = contextSuggestions[currentContext];
+      if (suggestions) {
+        return [...baseSuggestions, ...suggestions];
+      }
     }
 
     return baseSuggestions;

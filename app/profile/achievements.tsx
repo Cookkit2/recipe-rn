@@ -176,10 +176,12 @@ export default function AchievementsScreen() {
   const groupedAchievements = achievements.reduce(
     (acc, achievement) => {
       const category = achievement.achievement.category;
-      if (!acc[category]) {
-        acc[category] = [];
+      let categoryArr = acc[category];
+      if (!categoryArr) {
+        categoryArr = [];
+        acc[category] = categoryArr;
       }
-      acc[category].push(achievement);
+      categoryArr.push(achievement);
       return acc;
     },
     {} as Record<string, AchievementProgress[]>

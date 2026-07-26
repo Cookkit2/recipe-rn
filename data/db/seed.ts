@@ -105,8 +105,9 @@ function mapIngredientName(recipeName: string, pantryNames: string[]): string {
   };
 
   // Check direct mappings first
-  if (mappings[lower]) {
-    return mappings[lower];
+  const mapping = mappings[lower];
+  if (mapping) {
+    return mapping;
   }
 
   // Try partial matching - if recipe ingredient contains a pantry ingredient name
