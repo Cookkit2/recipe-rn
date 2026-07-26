@@ -17,6 +17,7 @@ module.exports = {
           allowSyntheticDefaultImports: true,
           skipLibCheck: true,
           rootDir: "<rootDir>",
+          verbatimModuleSyntax: false,
         },
       },
     ],
