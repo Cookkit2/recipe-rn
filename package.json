@@ -144,7 +144,7 @@
     "@types/ws": "^8.18.1",
     "babel-jest": "30.4.1",
     "detox": "^20.51.0",
-    "fast-uri": "4.1.0",
+    "fast-uri": "3.1.2",
     "husky": "^9.1.7",
     "jest-expo": "~57.0.1",
     "prettier": "^3.9.5",
@@ -152,7 +152,7 @@
     "react-test-renderer": "19.2.7",
     "sharp": "^0.35.3",
     "ts-jest": "^29.4.11",
-    "typescript": "~7.0.2",
+    "typescript": "5.4.5",
     "ws": "^8.21.0",
     "zustand": "^5.0.12"
   },
@@ -161,13 +161,17 @@
   },
   "overrides": {
     "form-data": "^4.0.6",
-    "fast-uri": "^3.1.2",
     "hermes-compiler": "250829098.0.4",
     "@babel/runtime": ">=7.26.10",
     "jest-environment-node": "30.4.1",
     "jest-mock": "30.4.1",
     "tmp": ">=0.2.6",
-    "react-native-screens": "4.25.2"
+    "react-native-screens": "4.25.2",
+    "fast-uri": ">=3.1.4 <4.0.0",
+    "shell-quote": "^1.10.0",
+    "brace-expansion": "^2.1.2",
+    "postcss": "^8.5.18",
+    "js-yaml": "^4.3.0"
   },
   "private": true,
   "reanimated": {
