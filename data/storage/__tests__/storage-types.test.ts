@@ -1,4 +1,4 @@
-import { JSONSerializer } from "../storage-types";
+import { JSONSerializer, StorageError } from "../storage-types";
 
 describe("JSONSerializer", () => {
   let serializer: JSONSerializer<any>;
@@ -22,13 +22,16 @@ describe("JSONSerializer", () => {
     expect(deserialized).toEqual(data);
   });
 
-  it("should handle JSON.parse errors gracefully and return null via safeJsonParse", () => {
+  it("should handle JSON.parse errors by throwing a StorageError", () => {
     const malformedJson = "{ key: value }"; // Invalid JSON format (missing quotes)
 
-    const result = serializer.deserialize(malformedJson);
-
-    expect(result).toBeNull();
-    // safeJsonParse logs its own warnings, so we just verify the return value
+    expect(() => {
+      serializer.deserialize(malformedJson);
+    }).toThrow(StorageError);
+    expect(console.warn).toHaveBeenCalledWith(
+      "JSONSerializer failed to parse value",
+      expect.any(SyntaxError)
+    );
   });
 
   it("should throw on JSON.stringify errors to prevent silent data corruption", () => {

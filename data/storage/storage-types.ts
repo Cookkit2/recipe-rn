@@ -1,5 +1,3 @@
-import { safeJsonParse } from "~/utils/json-parsing";
-
 // ===== CORE INTERFACES (Interface Segregation Principle) =====
 
 // Basic read operations
@@ -165,6 +163,11 @@ export class JSONSerializer<T> implements ISerializer<T> {
   }
 
   deserialize(value: string): T {
-    return safeJsonParse(value, null as unknown as T);
+    try {
+      return JSON.parse(value);
+    } catch (error) {
+      console.warn("JSONSerializer failed to parse value", error);
+      throw new StorageError(`Failed to parse value: ${error}`, "unknown" as StorageType);
+    }
   }
 }
