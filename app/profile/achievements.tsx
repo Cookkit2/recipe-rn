@@ -179,7 +179,7 @@ export default function AchievementsScreen() {
       if (!acc[category]) {
         acc[category] = [];
       }
-      acc[category].push(achievement);
+      acc[category]!.push(achievement);
       return acc;
     },
     {} as Record<string, AchievementProgress[]>

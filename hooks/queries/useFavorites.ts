@@ -31,7 +31,9 @@ export function useToggleFavorite() {
 
       // Snapshot the previous values
       const previousFavorites = queryClient.getQueryData<Recipe[]>(recipeQueryKeys.favorites());
-      const previousRecipe = queryClient.getQueryData<Recipe>(recipeQueryKeys.recipe(recipeId));
+      const previousRecipe = queryClient.getQueryData<Recipe | undefined>(
+        recipeQueryKeys.recipe(recipeId)
+      );
       const previousRecipes = queryClient.getQueryData<Recipe[]>(recipeQueryKeys.recipes());
 
       // Optimistically update favorites list
@@ -57,10 +59,9 @@ export function useToggleFavorite() {
 
       // Optimistically update individual recipe
       if (previousRecipe) {
-        queryClient.setQueryData<Recipe>(recipeQueryKeys.recipe(recipeId), {
-          ...previousRecipe,
-          isFavorite: !previousRecipe.isFavorite,
-        });
+        queryClient.setQueryData<Recipe>(recipeQueryKeys.recipe(recipeId), (old) =>
+          old ? { ...old, isFavorite: !old.isFavorite } : (undefined as any)
+        );
       }
 
       // Optimistically update recipes list
