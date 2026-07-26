@@ -1,26 +1,14 @@
 const path = require("path");
 
 module.exports = {
-  preset: "ts-jest",
+  preset: "jest-expo",
   testEnvironment: "node",
   rootDir: path.resolve(__dirname),
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
   testMatch: ["**/__tests__/**/*.test.(js|jsx|ts|tsx)"],
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json"],
   transform: {
-    "^.+\\.(ts|tsx)$": [
-      "ts-jest",
-      {
-        tsconfig: {
-          jsx: "react-jsx",
-          esModuleInterop: true,
-          allowSyntheticDefaultImports: true,
-          skipLibCheck: true,
-          rootDir: "<rootDir>",
-        },
-      },
-    ],
-    "^.+\\.(js|jsx)$": ["babel-jest", { presets: ["babel-preset-expo"] }],
+    "^.+\\.(js|jsx|ts|tsx)$": ["babel-jest", { presets: ["babel-preset-expo"] }],
   },
   transformIgnorePatterns: [
     "node_modules/(?!(react-native-purchases|react-native-purchases-ui|react-native|@react-native|@nozbe|@expo|expo|expo-modules-core|expo-constants|expo-secure-store|expo-crypto|expo-auth-session|expo-linking|react-navigation|react-native-reanimated|react-native-worklets|@rn-primitives|llama\\.rn|expo-file-system|expo-maps|lucide-react-native|@testing-library)/)",
