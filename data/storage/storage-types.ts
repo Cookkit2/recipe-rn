@@ -167,7 +167,8 @@ export class JSONSerializer<T> implements ISerializer<T> {
       return JSON.parse(value);
     } catch (error) {
       console.warn("JSONSerializer failed to parse value", error);
-      throw new StorageError(`Failed to parse value: ${error}`, "unknown" as StorageType);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new StorageError(`Failed to parse value: ${errorMessage}`, "unknown" as StorageType);
     }
   }
 }
