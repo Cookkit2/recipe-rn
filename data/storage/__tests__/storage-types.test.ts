@@ -5,7 +5,7 @@ describe("JSONSerializer", () => {
 
   beforeEach(() => {
     serializer = new JSONSerializer();
-    jest.spyOn(console, 'warn').mockImplementation(() => {});
+    jest.spyOn(console, "warn").mockImplementation(() => {});
   });
 
   afterEach(() => {
