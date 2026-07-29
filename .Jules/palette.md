@@ -1,0 +1,3 @@
+## 2024-05-30 - Interactive Elements Feedback
+**Learning:** Adding `hitSlop` and `active:opacity-70` to icon-only buttons (`<Pressable>`) makes a huge difference in the perceived responsiveness and usability of the app, particularly for elements like the "Delete Ingredient" button which otherwise have very small touch targets. This brings them closer to the recommended 44x44 points minimum target.
+**Action:** When adding small icon buttons or `Pressable`s in this app, proactively add `active:opacity-70` to their `className` and set `hitSlop` to ensure they are easily tappable. Avoid using floating scratch files as they break linting. Use `git restore` on unrelated files if a global formatting pass affects them.
