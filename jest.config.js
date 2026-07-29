@@ -8,11 +8,9 @@ module.exports = {
   testMatch: ["**/__tests__/**/*.test.(js|jsx|ts|tsx)"],
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json"],
   transform: {
-    // ts-jest needs the isolatedModules option when using verbatimModuleSyntax
     "^.+\\.(ts|tsx)$": [
       "ts-jest",
       {
-        isolatedModules: true,
         tsconfig: {
           jsx: "react-jsx",
           esModuleInterop: true,

@@ -93,9 +93,8 @@ export const pluralize = (word: string, count: number): string => {
   };
 
   const lowerWord = word.toLowerCase();
-  const irregular = irregulars[lowerWord];
-  if (irregular) {
-    return irregular;
+  if (irregulars[lowerWord]) {
+    return irregulars[lowerWord];
   }
 
   // Handle regular plurals
