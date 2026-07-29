@@ -54,6 +54,10 @@ export const IngredientsContent: React.FC<{
         <H2 className="text-center text-foreground font-bowlby-one tracking-wide my-3">
           Ingredients
         </H2>
+        {/* ⚡ Bolt Optimization:
+            Replaced unscrollable FlatList with mapped View to eliminate virtualization
+            overhead. This reduces memory allocations and speeds up initial render
+            for static grids by avoiding VirtualizedList logic entirely. */}
         <View className="flex-1 w-full max-w-sm pt-2 pb-6 flex-row flex-wrap justify-start">
           {ingredients.map((item, index) => (
             <View key={item.relatedIngredientId} className="w-1/3 mb-3">

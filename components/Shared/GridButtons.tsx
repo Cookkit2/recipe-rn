@@ -15,6 +15,10 @@ export default function GridButtons<T>({
   value,
   onValueChange,
 }: SegmentedButtonsProps<T>) {
+  // ⚡ Bolt Optimization:
+  // Replaced unscrollable FlatList with mapped View to eliminate virtualization
+  // overhead (subview clipping, layout mapping). This reduces memory allocations
+  // and speeds up rendering for this static component.
   return (
     <View className="mt-2 flex-row flex-wrap">
       {buttons.map((item, index) => (
