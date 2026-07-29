@@ -160,12 +160,14 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
 
       // Update waste by reason
       const reason = (record.reason as string) || "unknown";
-      if (!wasteByReason[reason]) {
-        wasteByReason[reason] = { count: 0, quantity: 0, cost: 0 };
+      let reasonStats = wasteByReason[reason];
+      if (!reasonStats) {
+        reasonStats = { count: 0, quantity: 0, cost: 0 };
+        wasteByReason[reason] = reasonStats;
       }
-      wasteByReason[reason].count++;
-      wasteByReason[reason].quantity += quantity;
-      wasteByReason[reason].cost += cost;
+      reasonStats.count++;
+      reasonStats.quantity += quantity;
+      reasonStats.cost += cost;
 
       // Update most wasted items
       const stockId = record.stock_id as string;

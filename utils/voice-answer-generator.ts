@@ -341,8 +341,9 @@ class VoiceAnswerGenerator {
         return baseUnit;
       }
 
-      if (specialPlural[baseUnit]) {
-        return specialPlural[baseUnit];
+      const special = specialPlural[baseUnit];
+      if (special) {
+        return special;
       }
 
       return `${baseUnit}s`;
