@@ -111,3 +111,6 @@
 **Learning:** Initializing objects like `Map<string, number[]>` then using `Array.prototype.reduce()` on them causes O(M) intermediate allocations and closures when calculating average ratings, negatively impacting the JS bridge garbage collector.
 **Action:** Always maintain primitive structural properties in single-pass scalar mapping (`Map<string, { sum: number, count: number }>`) without pushing into array lengths, reducing allocations to O(1) structures per entry.
 ## 2024-07-14 - Promise.all Optimization\n**Learning:** Replacing sequential await calls inside loops with Promise.all reduces N+1 async bottlenecks effectively.\n**Action:** Use Promise.all when independent async tasks are run inside a loop.
+## 2024-07-29 - Avoid FlatList for small static grids
+**Learning:** Using `FlatList` with `scrollEnabled={false}` for small, static layouts (like appliance grids or ingredient lists) within a React Native `ScrollView` introduces unnecessary layout, batching, and virtualization initialization overhead for no benefit. It can also cause nested scroll view warnings.
+**Action:** Always map over arrays directly into a flex container (`<View className="flex-row flex-wrap">`) when lists are statically small or non-scrollable to dramatically reduce mount time and bridge allocations.
