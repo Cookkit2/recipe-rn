@@ -158,9 +158,9 @@
   },
   "resolutions": {
     "fast-uri": "^3.1.4",
-    "shell-quote": "^1.8.4",
+    "shell-quote": "^1.10.0",
     "brace-expansion": "^2.1.2",
-    "postcss": "^8.5.17",
+    "postcss": "^8.5.23",
     "js-yaml": "^4.3.0"
   },
   "overrides": {
@@ -172,9 +172,9 @@
     "jest-mock": "30.4.1",
     "tmp": ">=0.2.6",
     "react-native-screens": "4.25.2",
-    "shell-quote": "^1.8.4",
+    "shell-quote": "^1.10.0",
     "brace-expansion": "^2.1.2",
-    "postcss": "^8.5.17",
+    "postcss": "^8.5.23",
     "js-yaml": "^4.3.0"
   },
   "private": true,
