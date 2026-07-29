@@ -16,15 +16,15 @@ export default function GridButtons<T>({
   onValueChange,
 }: SegmentedButtonsProps<T>) {
   return (
-    <View className="flex-row flex-wrap mt-2">
+    <View className="flex-row flex-wrap mt-2 -mx-1">
       {buttons.map((item, index) => (
-        <View key={`group-button-${index}`} className="w-1/3">
+        <View key={`group-button-${index}`} className="basis-1/3 p-1">
           <SharedGroupButton
             item={item}
             selected={value.includes(item.value)}
             onPress={() => onValueChange(item.value)}
             className={cn(
-              "rounded-2xl border-continuous p-1 m-1 py-3 items-center justify-center gap-2 border-2",
+              "w-full h-full rounded-2xl border-continuous py-3 items-center justify-center gap-2 border-2",
               value.includes(item.value) ? "border-muted-foreground/40" : "border-transparent"
             )}
           />
