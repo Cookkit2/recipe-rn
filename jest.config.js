@@ -11,13 +11,7 @@ module.exports = {
     "^.+\\.(ts|tsx)$": [
       "ts-jest",
       {
-        tsconfig: {
-          jsx: "react-jsx",
-          esModuleInterop: true,
-          allowSyntheticDefaultImports: true,
-          skipLibCheck: true,
-          rootDir: "<rootDir>",
-        },
+        tsconfig: "tsconfig.json",
       },
     ],
     "^.+\\.(js|jsx)$": ["babel-jest", { presets: ["babel-preset-expo"] }],
