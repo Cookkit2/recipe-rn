@@ -351,9 +351,18 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
 
   // Get total waste cost for a period
   async getTotalWasteCost(startDate?: number, endDate?: number): Promise<number> {
-    const records = await this.buildDateRangeQuery(startDate, endDate).fetch();
+    // ⚡ Bolt Performance Optimization: Bypass WatermelonDB model instantiation overhead
+    // by fetching raw DB records and replacing the array .reduce() with a simple for-loop.
+    const records = await this.buildDateRangeQuery(startDate, endDate).unsafeFetchRaw();
 
-    return records.reduce((sum, r) => sum + (r.estimatedCost ?? 0), 0);
+    let totalCost = 0;
+    for (let i = 0; i < records.length; i++) {
+      const estimatedCost = (records[i] as any).estimated_cost;
+      if (estimatedCost) {
+        totalCost += estimatedCost;
+      }
+    }
+    return totalCost;
   }
 
   // Get most wasted items
