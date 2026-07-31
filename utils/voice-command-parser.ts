@@ -403,7 +403,7 @@ class VoiceCommandParser {
     };
 
     if (currentContext && contextSuggestions[currentContext]) {
-      return [...baseSuggestions, ...(contextSuggestions[currentContext] || [])];
+      return [...baseSuggestions, ...contextSuggestions[currentContext]];
     }
 
     return baseSuggestions;

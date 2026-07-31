@@ -112,7 +112,7 @@ function applyNMS(detections: Detection[], iouThreshold: number = 0.5): Detectio
     }
 
     // Calculate IoU with remaining detections
-    const [x1Current, y1Current, x2Current, y2Current] = boxes[current] || [0, 0, 0, 0];
+    const [x1Current, y1Current, x2Current, y2Current] = boxes[current];
 
     const filteredRemaining = remaining.filter((idx) => {
       const [x1, y1, x2, y2] = boxes[idx] ?? [];
@@ -151,7 +151,7 @@ function applyNMS(detections: Detection[], iouThreshold: number = 0.5): Detectio
   for (let idx = 0; idx < keep.length; idx++) {
     const i = keep[idx];
     if (i !== undefined && detections[i] !== undefined) {
-      finalDetections.push(detections[i] as Detection);
+      finalDetections.push(detections[i]);
     }
   }
   return finalDetections;

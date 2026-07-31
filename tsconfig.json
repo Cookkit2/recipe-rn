@@ -3,7 +3,7 @@
   "compilerOptions": {
     "strict": true,
     "ignoreDeprecations": "5.0",
-    "verbatimModuleSyntax": false,
+    "verbatimModuleSyntax": true,
     "noUncheckedIndexedAccess": true,
     "noEmit": true,
     "esModuleInterop": true,
