@@ -95,5 +95,5 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Check untrusted dependencies
-        run: bun pm untrusted
+      - name: Run Bun audit
+        run: bun audit --audit-level=high

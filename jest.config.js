@@ -1,13 +1,25 @@
 const path = require("path");
 
 module.exports = {
+  preset: "ts-jest",
   testEnvironment: "node",
   rootDir: path.resolve(__dirname),
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
   testMatch: ["**/__tests__/**/*.test.(js|jsx|ts|tsx)"],
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json"],
   transform: {
-    "^.+\\.(ts|tsx)$": ["babel-jest", { presets: ["babel-preset-expo"] }],
+    "^.+\\.(ts|tsx)$": [
+      "ts-jest",
+      {
+        tsconfig: {
+          jsx: "react-jsx",
+          esModuleInterop: true,
+          allowSyntheticDefaultImports: true,
+          skipLibCheck: true,
+          rootDir: "<rootDir>",
+        },
+      },
+    ],
     "^.+\\.(js|jsx)$": ["babel-jest", { presets: ["babel-preset-expo"] }],
   },
   transformIgnorePatterns: [
