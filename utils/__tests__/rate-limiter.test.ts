@@ -136,7 +136,7 @@ describe("RateLimiter", () => {
       authRateLimiter.canAttempt(TEST_ID_2);
 
       // Advance past the first identifier's window
-      jest.advanceTimersByTime((WINDOW_MS / 2) + 1);
+      jest.advanceTimersByTime(WINDOW_MS / 2 + 1);
 
       authRateLimiter.cleanup();
 
