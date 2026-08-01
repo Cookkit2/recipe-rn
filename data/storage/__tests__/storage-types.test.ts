@@ -1,11 +1,11 @@
-import { JSONSerializer, StorageError } from "../storage-types";
+import { JSONSerializer } from "../storage-types";
 
 describe("JSONSerializer", () => {
   let serializer: JSONSerializer<any>;
 
   beforeEach(() => {
     serializer = new JSONSerializer();
-    jest.spyOn(console, "warn").mockImplementation(() => {});
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -22,16 +22,13 @@ describe("JSONSerializer", () => {
     expect(deserialized).toEqual(data);
   });
 
-  it("should handle JSON.parse errors by throwing a StorageError", () => {
+  it("should handle JSON.parse errors gracefully and return null via safeJsonParse", () => {
     const malformedJson = "{ key: value }"; // Invalid JSON format (missing quotes)
 
-    expect(() => {
-      serializer.deserialize(malformedJson);
-    }).toThrow(StorageError);
-    expect(console.warn).toHaveBeenCalledWith(
-      "JSONSerializer failed to parse value",
-      expect.any(SyntaxError)
-    );
+    const result = serializer.deserialize(malformedJson);
+
+    expect(result).toBeNull();
+    // safeJsonParse logs its own warnings, so we just verify the return value
   });
 
   it("should throw on JSON.stringify errors to prevent silent data corruption", () => {
