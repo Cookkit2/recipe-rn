@@ -47,11 +47,13 @@ function getEncryptionKey(): string | undefined {
   //    SecureStore is unavailable. IMPORTANT: babel-preset-expo only inlines STATIC
   //    property access (`process.env.EXPO_PUBLIC_X`); computed access is NOT inlined
   //    and would always be undefined at runtime.
-  if (typeof process !== "undefined" && process.env?.EXPO_PUBLIC_MMKV_ENCRYPTION_KEY) {
-    return process.env.EXPO_PUBLIC_MMKV_ENCRYPTION_KEY;
-  }
-  if (Constants.expoConfig?.extra?.EXPO_PUBLIC_MMKV_ENCRYPTION_KEY) {
-    return Constants.expoConfig.extra.EXPO_PUBLIC_MMKV_ENCRYPTION_KEY;
+  if (__DEV__) {
+    if (typeof process !== "undefined" && process.env?.EXPO_PUBLIC_MMKV_ENCRYPTION_KEY) {
+      return process.env.EXPO_PUBLIC_MMKV_ENCRYPTION_KEY;
+    }
+    if (Constants.expoConfig?.extra?.EXPO_PUBLIC_MMKV_ENCRYPTION_KEY) {
+      return Constants.expoConfig.extra.EXPO_PUBLIC_MMKV_ENCRYPTION_KEY;
+    }
   }
 
   // 3. Test/development override
