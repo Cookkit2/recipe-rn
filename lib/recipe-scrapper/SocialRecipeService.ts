@@ -24,6 +24,32 @@ export class SocialRecipeService {
   }
 
   /**
+   * Validates that the URL belongs to an allowed social media domain
+   * to prevent SSRF vulnerabilities.
+   */
+  private isValidUrl(urlString: string): boolean {
+    try {
+      const url = new URL(urlString);
+
+      // Enforce HTTP/HTTPS protocols only
+      if (url.protocol !== "http:" && url.protocol !== "https:") {
+        return false;
+      }
+
+      const hostname = url.hostname.toLowerCase();
+      const allowedDomains = ["tiktok.com", "instagram.com"];
+
+      // Check if hostname is exactly the allowed domain or a subdomain
+      return allowedDomains.some(
+        (domain) => hostname === domain || hostname.endsWith(`.${domain}`)
+      );
+    } catch (e) {
+      // Invalid URL format
+      return false;
+    }
+  }
+
+  /**
    * Analyze a TikTok or Instagram video for recipe content
    *
    * strategy:
@@ -35,6 +61,16 @@ export class SocialRecipeService {
   async analyzeForRecipe(content: SocialMediaContent): Promise<RecipeAnalysisResult> {
     try {
       log.info(`SocialRecipeService: Analyzing ${content.platform} content...`);
+
+      // Validate URL against SSRF
+      if (!this.isValidUrl(content.url)) {
+        log.warn(`SocialRecipeService: Invalid or restricted URL blocked: ${content.url}`);
+        return {
+          isCookingVideo: false,
+          confidence: 0,
+          errorMessage: "Invalid or restricted URL provided.",
+        };
+      }
 
       // 1. Fetch page content to get metadata
       const metadata = await this.fetchPageMetadata(content.url);
