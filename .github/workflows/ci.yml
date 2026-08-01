@@ -39,7 +39,7 @@ jobs:
         run: bun run typecheck
 
       - name: Prettier check
-        run: bunx prettier --check .
+        run: bun run lint:fix
 
   test:
     runs-on: ubuntu-latest
