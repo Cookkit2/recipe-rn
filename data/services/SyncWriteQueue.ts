@@ -119,28 +119,39 @@ export class SyncWriteQueue {
     let drained = 0;
     const remaining: QueuedPush[] = [];
 
-    for (const payload of mine) {
-      try {
-        await withRetryBackoff(() => push(payload.rows), {
-          maxAttempts: MAX_RETRIES_PER_DRAIN,
-          ...(options.sleep ? { sleep: options.sleep } : {}),
-        });
-        drained++;
-      } catch (error) {
-        const failures = payload.failures + 1;
-        if (failures >= MAX_DEAD_LETTER_FAILURES) {
-          // Dead-letter: drop the payload, log observably. Do NOT throw — the
-          // caller surfaces sync errors non-blocking per the issue spec.
-          if (__DEV__) {
-            log.error(
-              `[sync-write-queue] dead-lettered payload ${payload.id} for ` +
-                `${householdId} after ${failures} failures:`,
-              error
-            );
+    const results = await Promise.all(
+      mine.map(async (payload) => {
+        try {
+          await withRetryBackoff(() => push(payload.rows), {
+            maxAttempts: MAX_RETRIES_PER_DRAIN,
+            ...(options.sleep ? { sleep: options.sleep } : {}),
+          });
+          return { success: true, payload: null };
+        } catch (error) {
+          const failures = payload.failures + 1;
+          if (failures >= MAX_DEAD_LETTER_FAILURES) {
+            // Dead-letter: drop the payload, log observably. Do NOT throw — the
+            // caller surfaces sync errors non-blocking per the issue spec.
+            if (__DEV__) {
+              log.error(
+                `[sync-write-queue] dead-lettered payload ${payload.id} for ` +
+                  `${householdId} after ${failures} failures:`,
+                error
+              );
+            }
+            return { success: false, payload: null };
+          } else {
+            return { success: false, payload: { ...payload, failures } };
           }
-        } else {
-          remaining.push({ ...payload, failures });
         }
+      })
+    );
+
+    for (const result of results) {
+      if (result.success) {
+        drained++;
+      } else if (result.payload) {
+        remaining.push(result.payload);
       }
     }
 
