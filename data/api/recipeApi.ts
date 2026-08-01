@@ -589,25 +589,7 @@ export const recipeApi = {
               ])
             );
 
-            const cookingHistory = await databaseFacade.getCookingHistory(500);
-            const ratingsMap = new Map<string, number>();
-            const ratingsByRecipe = new Map<string, { sum: number; count: number }>();
-
-            for (const record of cookingHistory) {
-              if (record.rating !== undefined && record.rating >= 1 && record.rating <= 5) {
-                const current = ratingsByRecipe.get(record.recipeId);
-                if (current) {
-                  current.sum += record.rating;
-                  current.count += 1;
-                } else {
-                  ratingsByRecipe.set(record.recipeId, { sum: record.rating, count: 1 });
-                }
-              }
-            }
-
-            for (const [recipeId, data] of ratingsByRecipe) {
-              ratingsMap.set(recipeId, data.sum / data.count);
-            }
+            const ratingsMap = await databaseFacade.getAverageRatings();
 
             cookingHistoryData = {
               mostCooked: mostCookedMap,
