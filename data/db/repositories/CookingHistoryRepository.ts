@@ -188,11 +188,18 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
     // ⚡ Bolt Performance Optimization: Filter at DB layer instead of fetching all records
     // and using JavaScript Maps to group and reduce. This avoids cross-bridge memory
     // allocations for every cooking history record.
+
+    // Strict table name validation to prevent SQL injection vulnerabilities
+    const tableName = this.collection.table;
+    if (!/^[a-zA-Z0-9_]+$/.test(tableName)) {
+      throw new Error(`Invalid table name: ${tableName}`);
+    }
+
     const rawRecords = await this.collection
       .query(
         Q.unsafeSqlQuery(
           `SELECT recipe_id, count(*) as cookCount, max(cooked_at) as lastCookedAt
-         FROM ${this.collection.table}
+         FROM ${tableName}
          WHERE _status != 'deleted'
          GROUP BY recipe_id
          ORDER BY cookCount DESC
