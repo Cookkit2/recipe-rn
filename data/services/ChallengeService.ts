@@ -348,32 +348,36 @@ export class ChallengeService {
       // Create a map for O(1) lookups
       const userChallengeMap = new Map(userChallenges.map((uc) => [uc.challengeId, uc]));
 
-      for (const challenge of relevantChallenges) {
-        const requirement = challenge.parsedRequirement;
-        const userChallenge = userChallengeMap.get(challenge.id);
-        const currentProgress = userChallenge?.progress ?? 0;
-        const newProgress = currentProgress + amount;
+      // ⚡ Bolt Performance Optimization:
+      // Update progress using Promise.all to prevent sequential database access wait times
+      await Promise.all(
+        relevantChallenges.map(async (challenge) => {
+          const requirement = challenge.parsedRequirement;
+          const userChallenge = userChallengeMap.get(challenge.id);
+          const currentProgress = userChallenge?.progress ?? 0;
+          const newProgress = currentProgress + amount;
 
-        // Update progress
-        await this.updateProgress(challenge.id, newProgress);
+          // Update progress
+          await this.updateProgress(challenge.id, newProgress);
 
-        result.progressUpdated.push({
-          challengeId: challenge.id,
-          title: challenge.title,
-          progress: newProgress,
-          target: requirement.target,
-        });
-
-        // Check if newly completed
-        if (newProgress >= requirement.target && !userChallenge?.isCompleted) {
-          result.newlyCompleted.push({
+          result.progressUpdated.push({
             challengeId: challenge.id,
             title: challenge.title,
-            description: challenge.description,
-            xp: challenge.xpValue,
+            progress: newProgress,
+            target: requirement.target,
           });
-        }
-      }
+
+          // Check if newly completed
+          if (newProgress >= requirement.target && !userChallenge?.isCompleted) {
+            result.newlyCompleted.push({
+              challengeId: challenge.id,
+              title: challenge.title,
+              description: challenge.description,
+              xp: challenge.xpValue,
+            });
+          }
+        })
+      );
 
       return result;
     } catch (error) {
