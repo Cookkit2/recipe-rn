@@ -32,7 +32,7 @@ export function RecipeSelectionSheet({
           <H3 className="font-bowlby-one">Select Recipe</H3>
           <Pressable
             onPress={onClose}
-            className="p-2"
+            className="p-2 active:opacity-70"
             accessibilityRole="button"
             accessibilityLabel="Close recipe selection"
           >
