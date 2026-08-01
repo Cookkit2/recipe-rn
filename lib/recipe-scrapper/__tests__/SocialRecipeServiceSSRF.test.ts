@@ -11,7 +11,7 @@ jest.mock("~/utils/logger", () => ({
 
 jest.mock("~/utils/gemini-api", () => ({
   GeminiAPI: jest.fn().mockImplementation(() => ({
-    generateContent: jest.fn().mockResolvedValue(
+    generateContent: jest.fn().mockImplementation(async () =>
       JSON.stringify({
         isCookingVideo: false,
         confidence: 0.0,
