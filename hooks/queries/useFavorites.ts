@@ -48,7 +48,7 @@ export function useToggleFavorite() {
           // Add to favorites (try to find it in other caches)
           const recipeToAdd = previousRecipe || previousRecipes?.find((r) => r.id === recipeId);
           if (recipeToAdd) {
-            updatedFavorites.push({ ...recipeToAdd, isFavorite: true });
+            updatedFavorites.push({ ...recipeToAdd, isFavorite: true } as Recipe);
           }
         }
 
@@ -60,14 +60,16 @@ export function useToggleFavorite() {
         queryClient.setQueryData<Recipe>(recipeQueryKeys.recipe(recipeId), {
           ...previousRecipe,
           isFavorite: !previousRecipe.isFavorite,
-        });
+        } as Recipe);
       }
 
       // Optimistically update recipes list
       if (previousRecipes) {
         queryClient.setQueryData<Recipe[]>(
           recipeQueryKeys.recipes(),
-          previousRecipes.map((r) => (r.id === recipeId ? { ...r, isFavorite: !r.isFavorite } : r))
+          previousRecipes.map((r) =>
+            r.id === recipeId ? ({ ...r, isFavorite: !r.isFavorite } as Recipe) : r
+          )
         );
       }
 

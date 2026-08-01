@@ -342,7 +342,7 @@ class VoiceAnswerGenerator {
       }
 
       if (specialPlural[baseUnit]) {
-        return specialPlural[baseUnit];
+        return specialPlural[baseUnit] || baseUnit;
       }
 
       return `${baseUnit}s`;
