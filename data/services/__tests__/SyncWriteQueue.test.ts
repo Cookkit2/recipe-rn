@@ -148,4 +148,30 @@ describe("SyncWriteQueue", () => {
     expect(queue.pendingFor("household-A")).toHaveLength(0);
     expect(queue.pendingFor("household-B")).toHaveLength(1);
   });
+
+  it("drains payloads concurrently while limiting concurrency to bounded limit", async () => {
+    const storage = makeMemoryStorage();
+    const queue = new SyncWriteQueue(storage);
+    for (let i = 0; i < 10; i++) {
+      queue.enqueue("household-A", [{ id: `s${i}` }]);
+    }
+
+    let activePushes = 0;
+    let maxActivePushes = 0;
+    const push = jest.fn().mockImplementation(async () => {
+      activePushes++;
+      maxActivePushes = Math.max(maxActivePushes, activePushes);
+      await new Promise(r => setTimeout(r, 10)); // simulated network latency
+      activePushes--;
+    });
+
+    const drained = await queue.drain("household-A", push, { sleep: async () => {} });
+
+    expect(drained).toBe(10);
+    // Bounded concurrency should not exceed MAX_CONCURRENCY (which is 5)
+    expect(maxActivePushes).toBeLessThanOrEqual(5);
+    // Should be more than 1 to prove it is actually concurrent
+    expect(maxActivePushes).toBeGreaterThan(1);
+    expect(queue.pendingFor("household-A")).toHaveLength(0);
+  });
 });

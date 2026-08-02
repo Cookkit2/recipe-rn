@@ -116,17 +116,29 @@ export class SyncWriteQueue {
     const mine = queue.filter((p) => p.householdId === householdId);
     if (mine.length === 0) return 0;
 
+    const MAX_CONCURRENCY = 5;
     let drained = 0;
     const remaining: QueuedPush[] = [];
 
-    const results = await Promise.all(
-      mine.map(async (payload) => {
+    // We process payloads concurrently to optimize drain speed, while bounding
+    // concurrency to MAX_CONCURRENCY to prevent exceeding backend limits.
+    // Writes are independent (atomic upserts with last-writer-wins conflict resolution),
+    // so reordering during concurrent execution does not break sync semantics.
+    const results: { success: boolean; payload: QueuedPush | null }[] = new Array(mine.length);
+    let index = 0;
+
+    const workers = Array.from({ length: MAX_CONCURRENCY }, async () => {
+      while (index < mine.length) {
+        const i = index++;
+        const payload = mine[i];
+        if (!payload) continue;
+
         try {
           await withRetryBackoff(() => push(payload.rows), {
             maxAttempts: MAX_RETRIES_PER_DRAIN,
             ...(options.sleep ? { sleep: options.sleep } : {}),
           });
-          return { success: true, payload: null };
+          results[i] = { success: true, payload: null };
         } catch (error) {
           const failures = payload.failures + 1;
           if (failures >= MAX_DEAD_LETTER_FAILURES) {
@@ -139,13 +151,15 @@ export class SyncWriteQueue {
                 error
               );
             }
-            return { success: false, payload: null };
+            results[i] = { success: false, payload: null };
           } else {
-            return { success: false, payload: { ...payload, failures } };
+            results[i] = { success: false, payload: { ...payload, failures } };
           }
         }
-      })
-    );
+      }
+    });
+
+    await Promise.all(workers);
 
     for (const result of results) {
       if (result.success) {
