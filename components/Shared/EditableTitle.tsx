@@ -66,7 +66,7 @@ export default function EditableTitle({
       {!isEditing ? (
         <Pressable
           onPress={beginEditing}
-          accessibilityRole="button"
+          role="button"
           disabled={!editable}
           accessibilityLabel="Edit title"
         >
