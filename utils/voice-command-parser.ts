@@ -27,6 +27,44 @@ export interface TemperatureInfo {
   context?: string; // e.g., "Preheat oven to", "Bake at"
 }
 
+function singularizeIngredientWord(word: string): string {
+  const pluralRules = [
+    { pattern: /ies$/i, replacement: "y" }, // cherries -> cherry
+    { pattern: /oes$/i, replacement: "o" }, // tomatoes -> tomato
+    { pattern: /ses$/i, replacement: "se" }, // cases -> case
+    { pattern: /ves$/i, replacement: "f" }, // halves -> half
+    { pattern: /xes$/i, replacement: "x" }, // boxes -> box
+    { pattern: /ches$/i, replacement: "ch" }, // peaches -> peach
+    { pattern: /shes$/i, replacement: "sh" }, // dishes -> dish
+    { pattern: /s$/i, replacement: "" }, // onions -> onion
+  ];
+
+  for (const rule of pluralRules) {
+    if (rule.pattern.test(word)) {
+      return word.replace(rule.pattern, rule.replacement);
+    }
+  }
+
+  return word;
+}
+
+/**
+ * Normalize an ingredient phrase for fuzzy matching.
+ */
+export function normalizeIngredientName(name: string): string[] {
+  return name
+    .toLowerCase()
+    .replace(
+      /\b(fresh|frozen|canned|dried|cooked|raw|organic|whole|sliced|diced|chopped|steamed|boiled|fried|grilled|ground|minced)\b/g,
+      ""
+    )
+    .split(/[\s,\-()]+/)
+    .flatMap((word) => {
+      const trimmed = word.trim();
+      return trimmed.length > 2 ? [singularizeIngredientWord(trimmed)] : [];
+    });
+}
+
 /**
  * Voice Command Parser class
  *
@@ -171,51 +209,6 @@ class VoiceCommandParser {
   }
 
   /**
-   * Normalize ingredient name by removing common modifiers and handling plurals
-   *
-   * @param name - The ingredient name to normalize
-   * @returns Normalized name with key words extracted
-   */
-  private normalizeIngredientName(name: string): string[] {
-    return name
-      .toLowerCase()
-      .replace(
-        /\b(fresh|frozen|canned|dried|cooked|raw|organic|whole|sliced|diced|chopped|steamed|boiled|fried|grilled|ground|minced)\b/g,
-        ""
-      )
-      .split(/[\s,\-()]+/)
-      .filter((word) => word.length > 2)
-      .map((word) => this.singularize(word.trim()));
-  }
-
-  /**
-   * Convert plural form to singular (simple implementation)
-   *
-   * @param word - The word to singularize
-   * @returns Singular form of the word
-   */
-  private singularize(word: string): string {
-    // Common plural endings
-    const pluralRules = [
-      { pattern: /ies$/i, replacement: "y" }, // tomatoes -> tomato, cherries -> cherry
-      { pattern: /ses$/i, replacement: "s" }, // houses -> house (keeps s)
-      { pattern: /ves$/i, replacement: "f" }, // knives -> knife
-      { pattern: /xes$/i, replacement: "x" }, // boxes -> box
-      { pattern: /ches$/i, replacement: "ch" }, // peaches -> peach
-      { pattern: /shes$/i, replacement: "sh" }, // dishes -> dish
-      { pattern: /s$/i, replacement: "" }, // cats -> cat
-    ];
-
-    for (const rule of pluralRules) {
-      if (rule.pattern.test(word)) {
-        return word.replace(rule.pattern, rule.replacement);
-      }
-    }
-
-    return word;
-  }
-
-  /**
    * Calculate fuzzy match score between two sets of words
    *
    * @param spokenWords - Words from spoken text
@@ -271,8 +264,8 @@ class VoiceCommandParser {
     }
 
     // Normalize and compare using fuzzy matching with plural handling
-    const spokenWords = this.normalizeIngredientName(spoken);
-    const ingredientWords = this.normalizeIngredientName(ingredientName);
+    const spokenWords = normalizeIngredientName(spoken);
+    const ingredientWords = normalizeIngredientName(ingredientName);
 
     const fuzzyScore = this.calculateFuzzyScore(spokenWords, ingredientWords);
     if (fuzzyScore > 0) {
