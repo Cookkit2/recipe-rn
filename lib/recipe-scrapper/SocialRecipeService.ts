@@ -127,7 +127,20 @@ export class SocialRecipeService {
             "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1",
           Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         },
+        redirect: "manual",
       });
+
+      // Handle redirects to ensure the target is also a valid URL
+      if (response.status >= 300 && response.status < 400) {
+        const location = response.headers.get("location");
+        if (location) {
+          if (!this.isValidUrl(location)) {
+            throw new Error(`Blocked redirect to invalid or restricted URL: ${location}`);
+          }
+          // Follow the redirect
+          return this.fetchPageMetadata(location);
+        }
+      }
 
       if (!response.ok) {
         throw new Error(`Failed to fetch URL: ${response.status}`);

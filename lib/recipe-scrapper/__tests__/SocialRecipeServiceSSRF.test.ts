@@ -34,6 +34,50 @@ describe("SocialRecipeService SSRF protections", () => {
     service = new SocialRecipeService();
     fetchMock = jest.fn(async () => new Response("<html></html>", { status: 200 }));
     globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+    it("blocks redirects to disallowed domains", async () => {
+      // First request succeeds but returns a redirect
+      fetchMock.mockReturnValueOnce(
+        Promise.resolve(
+          new Response(null, {
+            status: 301,
+            headers: { location: "http://localhost:8080/internal" },
+          })
+        )
+      );
+
+      const result = await service.analyzeForRecipe({
+        platform: "tiktok",
+        url: "https://www.tiktok.com/@user/video/123",
+      });
+
+      // Should fetch the first valid URL
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(result.isCookingVideo).toBe(false);
+    });
+
+    it("follows valid redirects", async () => {
+      // First request returns a redirect
+      fetchMock.mockReturnValueOnce(
+        Promise.resolve(
+          new Response(null, {
+            status: 301,
+            headers: { location: "https://www.instagram.com/p/123" },
+          })
+        )
+      );
+      // Second request returns valid content
+      fetchMock.mockReturnValueOnce(
+        Promise.resolve(new Response("<html></html>", { status: 200 }))
+      );
+
+      const result = await service.analyzeForRecipe({
+        platform: "tiktok",
+        url: "https://www.tiktok.com/@user/video/123",
+      });
+
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
   });
 
   afterEach(() => {
