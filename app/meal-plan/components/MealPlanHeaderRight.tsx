@@ -28,7 +28,7 @@ export function MealPlanHeaderRight({
         <Pressable
           onPress={onPlanMyWeek}
           disabled={isPendingGeneration}
-          className="px-2 py-2"
+          className="px-2 py-2 active:opacity-70"
           accessibilityRole="button"
           accessibilityLabel="Plan my week automatically"
           accessibilityHint="Generates a pantry-aware week plan from your recipes"
@@ -42,7 +42,7 @@ export function MealPlanHeaderRight({
       )}
       <Pressable
         onPress={onOpenTemplateSheet}
-        className="px-2 py-2"
+        className="px-2 py-2 active:opacity-70"
         accessibilityRole="button"
         accessibilityLabel="Meal plan templates"
       >
@@ -50,7 +50,7 @@ export function MealPlanHeaderRight({
       </Pressable>
       <Pressable
         onPress={onOpenRecipeSheet}
-        className="px-4 py-2"
+        className="px-4 py-2 active:opacity-70"
         accessibilityRole="button"
         accessibilityLabel="Add recipe"
       >

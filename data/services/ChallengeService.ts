@@ -348,36 +348,55 @@ export class ChallengeService {
       // Create a map for O(1) lookups
       const userChallengeMap = new Map(userChallenges.map((uc) => [uc.challengeId, uc]));
 
-      // ⚡ Bolt Performance Optimization:
-      // Update progress using Promise.all to prevent sequential database access wait times
-      await Promise.all(
-        relevantChallenges.map(async (challenge) => {
-          const requirement = challenge.parsedRequirement;
-          const userChallenge = userChallengeMap.get(challenge.id);
-          const currentProgress = userChallenge?.progress ?? 0;
-          const newProgress = currentProgress + amount;
+      // Prepare batch updates
+      const updates = relevantChallenges.map((challenge) => {
+        const requirement = challenge.parsedRequirement;
+        const userChallenge = userChallengeMap.get(challenge.id);
+        const currentProgress = userChallenge?.progress ?? 0;
+        const newProgress = currentProgress + amount;
 
-          // Update progress
-          await this.updateProgress(challenge.id, newProgress);
+        return {
+          challengeId: challenge.id,
+          currentProgress: newProgress,
+          targetProgress: requirement.target,
+          challenge,
+          userChallenge,
+          previousStatus: userChallenge?.status,
+        };
+      });
 
-          result.progressUpdated.push({
+      // Execute batch update
+      const updatedUserChallenges = await this.userChallengeRepo.batchCheckAndUpdateStatus(updates);
+
+      // Process results
+      for (let i = 0; i < updates.length; i++) {
+        const update = updates[i];
+        if (!update) continue;
+        const challenge = update.challenge;
+        const requirement = challenge.parsedRequirement;
+        const previousStatus = update.previousStatus;
+        const newUserChallenge = updatedUserChallenges[i];
+
+        result.progressUpdated.push({
+          challengeId: challenge.id,
+          title: challenge.title,
+          progress: update.currentProgress,
+          target: requirement.target,
+        });
+
+        // Check if newly completed
+        if (newUserChallenge?.status === "completed" && previousStatus !== "completed") {
+          log.info(`✅ Challenge completed: ${challenge.title}`);
+          await this.notifyIfNewCompletion(challenge, previousStatus);
+
+          result.newlyCompleted.push({
             challengeId: challenge.id,
             title: challenge.title,
-            progress: newProgress,
-            target: requirement.target,
+            description: challenge.description,
+            xp: challenge.xpValue,
           });
-
-          // Check if newly completed
-          if (newProgress >= requirement.target && !userChallenge?.isCompleted) {
-            result.newlyCompleted.push({
-              challengeId: challenge.id,
-              title: challenge.title,
-              description: challenge.description,
-              xp: challenge.xpValue,
-            });
-          }
-        })
-      );
+        }
+      }
 
       return result;
     } catch (error) {
