@@ -27,7 +27,7 @@
     "@expo/ui": "~57.0.4",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@legendapp/list": "^2.0.19",
-    "@lucide/lab": "^0.1.2",
+    "@lucide/lab": "^0.2.0",
     "@nozbe/watermelondb": "^0.28.0",
     "@react-native-clipboard/clipboard": "^1.16.3",
     "@react-native-community/datetimepicker": "9.1.0",
