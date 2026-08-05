@@ -21,9 +21,12 @@ function withIosDisableUserScriptSandbox(config) {
     const applicationConfigs = new Set();
 
     for (const uuid in nativeTargets) {
-      if (uuid.endsWith('_comment')) continue;
+      if (uuid.endsWith("_comment")) continue;
       const target = nativeTargets[uuid];
-      if (target.productType === '"com.apple.product-type.application"' || target.productType === 'com.apple.product-type.application') {
+      if (
+        target.productType === '"com.apple.product-type.application"' ||
+        target.productType === "com.apple.product-type.application"
+      ) {
         const configListUuid = target.buildConfigurationList;
         const configList = configListSection[configListUuid];
         if (configList && configList.buildConfigurations) {
@@ -36,7 +39,7 @@ function withIosDisableUserScriptSandbox(config) {
 
     const buildConfigs = xcodeProject.pbxXCBuildConfigurationSection();
     for (const key in buildConfigs) {
-      if (key.endsWith('_comment')) continue;
+      if (key.endsWith("_comment")) continue;
       if (applicationConfigs.has(key)) {
         const buildConfig = buildConfigs[key];
         if (buildConfig && buildConfig.buildSettings) {
