@@ -14,11 +14,34 @@ function withIosDisableUserScriptSandbox(config) {
   return withXcodeProject(config, async (config) => {
     // Fix main app target
     const xcodeProject = config.modResults;
+
+    // Find main app targets based on product type
+    const nativeTargets = xcodeProject.pbxNativeTargetSection();
+    const configListSection = xcodeProject.pbxXCConfigurationList();
+    const applicationConfigs = new Set();
+
+    for (const uuid in nativeTargets) {
+      if (uuid.endsWith('_comment')) continue;
+      const target = nativeTargets[uuid];
+      if (target.productType === '"com.apple.product-type.application"' || target.productType === 'com.apple.product-type.application') {
+        const configListUuid = target.buildConfigurationList;
+        const configList = configListSection[configListUuid];
+        if (configList && configList.buildConfigurations) {
+          for (const buildConfig of configList.buildConfigurations) {
+            applicationConfigs.add(buildConfig.value);
+          }
+        }
+      }
+    }
+
     const buildConfigs = xcodeProject.pbxXCBuildConfigurationSection();
     for (const key in buildConfigs) {
-      const buildConfig = buildConfigs[key];
-      if (buildConfig && buildConfig.buildSettings) {
-        buildConfig.buildSettings.ENABLE_USER_SCRIPT_SANDBOXING = "NO";
+      if (key.endsWith('_comment')) continue;
+      if (applicationConfigs.has(key)) {
+        const buildConfig = buildConfigs[key];
+        if (buildConfig && buildConfig.buildSettings) {
+          buildConfig.buildSettings.ENABLE_USER_SCRIPT_SANDBOXING = '"NO"';
+        }
       }
     }
 
