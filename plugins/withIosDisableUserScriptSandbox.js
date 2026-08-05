@@ -35,10 +35,10 @@ function withIosDisableUserScriptSandbox(config) {
       // Replace all deployment targets below 16.4 with 16.4
       // Match patterns like: IPHONEOS_DEPLOYMENT_TARGET = 15.1;
       const replaced = pbxproj.replace(
-        /IPHONEOS_DEPLOYMENT_TARGET = (\d+\.\d+);/g,
-        (match, version) => {
+        /IPHONEOS_DEPLOYMENT_TARGET = (["']?)(\d+(?:\.\d+)?)\1;/g,
+        (match, quote, version) => {
           if (parseFloat(version) < 16.4) {
-            return "IPHONEOS_DEPLOYMENT_TARGET = 16.4;";
+            return `IPHONEOS_DEPLOYMENT_TARGET = ${quote || ""}16.4${quote || ""};`;
           }
           return match;
         }
