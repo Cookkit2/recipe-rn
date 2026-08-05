@@ -1854,7 +1854,12 @@ export default function ReviewCard({
     setExpanded(!expanded);
   };
 
-  const hasVoted = false; // TODO: track user's helpful votes in state
+  const [hasVoted, setHasVoted] = useState(false);
+
+  const handleToggleHelpful = () => {
+    setHasVoted(!hasVoted);
+    onToggleHelpful(review.id);
+  };
 
   return (
     <View className="py-4 border-b border-border/50">
@@ -1919,9 +1924,9 @@ export default function ReviewCard({
       {/* Footer: helpful + edit/delete */}
       <View className="flex-row items-center justify-between mt-3">
         <HelpfulButton
-          count={review.helpfulCount}
+          count={review.helpfulCount + (hasVoted ? 1 : 0)}
           isVoted={hasVoted}
-          onPress={() => onToggleHelpful(review.id)}
+          onPress={handleToggleHelpful}
         />
 
         {isOwnReview && (
