@@ -1,0 +1,17 @@
+<<<<<<< SEARCH
+    await database.write(async () => {
+      const batchOps: import("@nozbe/watermelondb").Model[] = [];
+
+      // ⚡ Bolt Performance Optimization: Fetch all items once and use a Map for O(1) lookups
+      // instead of fetching all items from DB inside the loop for every remote item.
+      const allItems = await stockCollection.query().fetch();
+      const itemsMap = new Map();
+=======
+    await database.write(async () => {
+      const batchOps: import("@nozbe/watermelondb").Model[] = [];
+
+      // ⚡ Bolt Performance Optimization: Fetch all items once and use a Map for O(1) lookups
+      // instead of fetching all items from DB inside the loop for every remote item.
+      const allItems = await stockCollection.query(Q.where("household_id", householdSupabaseId)).fetch();
+      const itemsMap = new Map();
+>>>>>>> REPLACE

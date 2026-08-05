@@ -1,0 +1,3 @@
+Fix N+1 query issue for pullRemoteChanges
+
+Replaced full-table scan query().fetch() followed by JavaScript filtering in HouseholdSyncService.pullRemoteChanges with an indexed query using Q.where("household_id", householdSupabaseId). This mirrors the logic previously fixed in pushLocalChanges, resolving the N+1 issue for fetching sync data. Also updated tests to ensure the correct Q.where builder is used instead of fetch-all.
