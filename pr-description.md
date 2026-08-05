@@ -1,7 +1,6 @@
-🎯 **What:** Removed the unsafe `eslint-disable-next-line` comment and correctly added `ringH`, `ringW`, `ringX`, and `ringY` to the `useEffect` hook's dependency array in `hooks/animation/useSelectionRing.ts`.
+🧹 Refactor MealSlot component to reduce complexity
 
-💡 **Why:** Disabling the `react-hooks/exhaustive-deps` rule is generally unsafe, as it can hide bugs where reactive values change but effects do not re-run, leading to stale state or UI synchronization issues. By properly including all dependencies from the outer scope, we ensure the hook functions reliably according to React conventions and improving code maintainability.
-
-✅ **Verification:** Verified via `bun run typecheck` which completed successfully with zero emissions, demonstrating the codebase remains structurally sound. The change was properly formatted via `prettier --write`.
-
-✨ **Result:** The codebase is now safer, healthier, and follows strict ESLint guidelines, preventing unexpected side effects in the `useSelectionRing` hook.
+🎯 **What:** Extracted the complex drag-and-drop state, gestures, and animations into a `useMealSlotDrop` custom hook. Extracted the conditional render branches into dedicated functional subcomponents (`PlannedMealContent` and `EmptyMealContent`).
+💡 **Why:** The `MealSlot` component was overly long and complex, violating the "Function is too long" code health guideline. This refactoring clearly separates the state management (drag and drop) from the UI rendering, making the component much more readable and maintainable.
+✅ **Verification:** Verified that `bun run typecheck` passes, `bun run lint` passes, and the full test suite (`bun run test`) passed with 526/526 passing.
+✨ **Result:** The main `MealSlot` function is now significantly shorter and focused purely on layout orchestration, drastically improving local readability without altering any component functionality or behavior.
