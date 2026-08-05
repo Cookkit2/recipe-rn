@@ -6,13 +6,13 @@ import IngredientQuantity from "~/components/Ingredient/IngredientQuantity";
 import EditableTitle from "~/components/Shared/EditableTitle";
 import OutlinedImage from "~/components/ui/outlined-image";
 import { Button } from "~/components/ui/button";
-import { Trash2Icon, RefreshCwIcon } from "lucide-uniwind";
+import { Trash2Icon, RefreshCwIcon, CheckIcon } from "lucide-uniwind";
 import { H3, Muted } from "~/components/ui/typography";
 import Skeleton from "../ui/skeleton";
 
 function HorizontalIngredientItemCard({ item }: { item: CreatePantryItem }) {
   const { image_url, name, quantity, unit, status } = item;
-  const { updateProcessPantryItems, deleteProcessPantryItems, retryItem } =
+  const { updateProcessPantryItems, deleteProcessPantryItems, retryItem, confirmCorrectedItem } =
     useCreateIngredientStore();
 
   // Memoized callbacks to prevent re-renders
@@ -45,6 +45,10 @@ function HorizontalIngredientItemCard({ item }: { item: CreatePantryItem }) {
     retryItem(item.id);
   }, [item.id, retryItem]);
 
+  const handleConfirm = useCallback(() => {
+    confirmCorrectedItem(item.id, {});
+  }, [item.id, confirmCorrectedItem]);
+
   // Show loading skeleton for processing/classifying states
   if (status === "processing" || status === "classifying") {
     return <LoadingState />;
@@ -69,10 +73,15 @@ function HorizontalIngredientItemCard({ item }: { item: CreatePantryItem }) {
           onChangeText={handleNameChange}
           placeholder="Enter title"
           TextComponent="H3"
-          textClassName="opacity-80 font-urbanist-bold"
+          textClassName={
+            status === "needs_review"
+              ? "text-primary font-urbanist-bold"
+              : "opacity-80 font-urbanist-bold"
+          }
+          autoSelectOnEdit={status === "needs_review"}
         />
         <View className="flex-1" />
-        <View className="flex-row justify-between">
+        <View className="flex-row justify-between items-center">
           <IngredientQuantity
             size="sm"
             quantity={quantity}
@@ -81,15 +90,29 @@ function HorizontalIngredientItemCard({ item }: { item: CreatePantryItem }) {
             updateQuantity={handleQuantityChange}
             updateUnit={handleUnitChange}
           />
-          <Button
-            size="icon"
-            variant="ghost"
-            className="rounded-full"
-            onPress={handleDelete}
-            accessibilityLabel="Delete item"
-          >
-            <Trash2Icon className="text-destructive" size={20} strokeWidth={2.618} />
-          </Button>
+          <View className="flex-row items-center gap-1">
+            {status === "needs_review" && (
+              <Button
+                size="sm"
+                className="rounded-full px-4 border border-primary bg-primary/10"
+                variant="ghost"
+                onPress={handleConfirm}
+                accessibilityLabel="Confirm ingredient"
+              >
+                <CheckIcon className="text-primary mr-1" size={16} strokeWidth={3} />
+                <H3 className="text-primary text-sm">Confirm</H3>
+              </Button>
+            )}
+            <Button
+              size="icon"
+              variant="ghost"
+              className="rounded-full"
+              onPress={handleDelete}
+              accessibilityLabel="Delete item"
+            >
+              <Trash2Icon className="text-destructive" size={20} strokeWidth={2.618} />
+            </Button>
+          </View>
         </View>
       </View>
     </View>
