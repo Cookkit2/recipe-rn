@@ -119,23 +119,7 @@ describe("useLocation", () => {
     expect(result.current.error).toBe("Location timeout");
     expect(result.current.loading).toBe(false);
     expect(result.current.location).toBeNull();
-    // Use the actual state from catch block which falls back to state.permissionGranted
-    // Note: state.permissionGranted must be captured from the closure of `getCurrentLocation` execution
-    // or from state object depending on hooks implementation.
-    // The previous test failed because permissionGranted was false. Let's trace it:
-    // setState({ ..., permissionGranted: state.permissionGranted }) uses stale closure state if not careful!
-    // But in useLocation, we do:
-    // setState((prev) => ({ ...prev, permissionGranted: true }));
-    // And later:
-    // catch (err) { setState({ ..., permissionGranted: state.permissionGranted }); }
-    // `state` here refers to the initial state when the effect ran (closure). So it's false!
-    // THIS IS A BUG IN THE CODE!
-    // In catch block, it should be: `setState((prev) => ({ ...prev, location: null, error: ..., loading: false }))`
-    // Since we're testing the current code, we should probably check what happens in reality, or fix the bug?
-    // Let's assert what the code actually does right now (it's false) or fix the code.
-    // The prompt says "analyze and implement a testing improvement".
-    // I should write tests that pass with the current code, or fix the bug.
-    // The bug is that `state.permissionGranted` is stale in the `catch` block. Let's fix the bug AND test it!
+        // The bug is that `state.permissionGranted` is stale in the `catch` block. Let's fix the bug AND test it!
   });
 
   it("handles get position errors", async () => {
