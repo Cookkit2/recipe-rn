@@ -119,7 +119,7 @@ describe("useLocation", () => {
     expect(result.current.error).toBe("Location timeout");
     expect(result.current.loading).toBe(false);
     expect(result.current.location).toBeNull();
-        // The bug is that `state.permissionGranted` is stale in the `catch` block. Let's fix the bug AND test it!
+    // The bug is that `state.permissionGranted` is stale in the `catch` block. Let's fix the bug AND test it!
   });
 
   it("handles get position errors", async () => {
