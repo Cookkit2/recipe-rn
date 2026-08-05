@@ -43,17 +43,6 @@ function getEncryptionKey(): string | undefined {
     // fall through to the env fallback
   }
 
-  // 2. Fallback: EXPO_PUBLIC_* key inlined from .env at build time. Used where
-  //    SecureStore is unavailable. IMPORTANT: babel-preset-expo only inlines STATIC
-  //    property access (`process.env.EXPO_PUBLIC_X`); computed access is NOT inlined
-  //    and would always be undefined at runtime.
-  if (typeof process !== "undefined" && process.env?.EXPO_PUBLIC_MMKV_ENCRYPTION_KEY) {
-    return process.env.EXPO_PUBLIC_MMKV_ENCRYPTION_KEY;
-  }
-  if (Constants.expoConfig?.extra?.EXPO_PUBLIC_MMKV_ENCRYPTION_KEY) {
-    return Constants.expoConfig.extra.EXPO_PUBLIC_MMKV_ENCRYPTION_KEY;
-  }
-
   // 3. Test/development override
   // 🛡️ Sentinel: Guard test fallbacks so they are stripped from production builds
   if (__DEV__ || (typeof process !== "undefined" && process.env?.NODE_ENV === "test")) {
