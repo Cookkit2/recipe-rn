@@ -1,4 +1,4 @@
-import { Prettify } from '../type-prettier';
+import type { Prettify } from '../type-prettier';
 
 // Type testing utilities
 type Equal<X, Y> = (<T>() => T extends X ? 1 : 2) extends <T>() => T extends Y ? 1 : 2
