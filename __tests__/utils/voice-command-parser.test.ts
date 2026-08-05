@@ -114,7 +114,7 @@ describe("VoiceCommandParser", () => {
         ["how many dishes", "Dish"],
       ];
 
-      for (const [command, expectedIngredient] of testCases) {
+      for (const [command, expectedIngredient] of testCases as [string, string][]) {
         const result = parser.parseCommand(command, mockRecipe);
         expect(result.type).toBe("ingredient_amount");
         expect(result.ingredient?.name).toBe(expectedIngredient);
