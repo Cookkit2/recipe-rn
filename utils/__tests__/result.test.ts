@@ -36,7 +36,7 @@ describe("utils/result", () => {
       expect(mockErrorResult.isErr()).toBe(true);
 
       if (mockErrorResult.isErr()) {
-         expect(mockErrorResult.error).toBeInstanceOf(Error);
+        expect(mockErrorResult.error).toBeInstanceOf(Error);
       }
     });
 
