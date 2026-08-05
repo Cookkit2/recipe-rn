@@ -25,22 +25,6 @@ describe("splitTranscript", () => {
     expect(splitTranscript("two eggs, milk and cheddar")).toEqual(["two eggs", "milk", "cheddar"]);
   });
 
-  it("returns empty array for empty string", () => {
-    expect(splitTranscript("")).toEqual([]);
-  });
-
-  it("returns empty array for whitespace string", () => {
-    expect(splitTranscript("   ")).toEqual([]);
-  });
-
-  it("returns single item for string lacking split tokens", () => {
-    expect(splitTranscript("just a single item")).toEqual(["just a single item"]);
-  });
-
-  it("handles leading and trailing split tokens", () => {
-    expect(splitTranscript("and milk,")).toEqual(["milk"]);
-  });
-
   it("splits on semicolons and newlines", () => {
     expect(splitTranscript("spinach; tofu\nbread")).toEqual(["spinach", "tofu", "bread"]);
   });

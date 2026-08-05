@@ -164,13 +164,7 @@ export default function HouseholdSettingsScreen() {
         <View className="flex-row items-center mb-2">
           <P className="text-xl font-urbanist-bold">{(household as any).name}</P>
           {isCreator && (
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onPress={handleStartEditName}
-              accessibilityRole="button"
-              accessibilityLabel="Edit household name"
-            >
+            <Button variant="ghost" size="icon-sm" onPress={handleStartEditName}>
               <P className="text-primary text-sm">Edit</P>
             </Button>
           )}
@@ -194,8 +188,6 @@ export default function HouseholdSettingsScreen() {
             variant="ghost"
             size="icon-sm"
             onPress={() => syncMutation.mutate(householdSupabaseId)}
-            accessibilityRole="button"
-            accessibilityLabel={syncError ? "Retry syncing household" : "Sync household now"}
           >
             <P className="text-primary text-xs ml-2">{syncError ? "Retry" : "Sync now"}</P>
           </Button>
@@ -236,8 +228,6 @@ export default function HouseholdSettingsScreen() {
                     onPress={() =>
                       handleRemoveMember(member.userId, member.displayName || member.userId)
                     }
-                    accessibilityRole="button"
-                    accessibilityLabel="Remove member"
                   >
                     <P className="text-destructive text-sm">Remove</P>
                   </Button>
