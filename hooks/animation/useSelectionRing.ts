@@ -57,8 +57,7 @@ export default function useSelectionRing(selectedIndex: number) {
     ringW.value = withSpring(target.width, SPRING_CONFIG);
     ringH.value = target.height;
     // ringH.value = withSpring(target.height, SPRING_CONFIG);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedIndex]);
+  }, [selectedIndex, ringH, ringW, ringX, ringY]);
 
   const ringStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: ringX.value }, { translateY: ringY.value }],
