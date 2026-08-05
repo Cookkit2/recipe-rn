@@ -1,5 +1,5 @@
-import { ok, err, AppResult } from "../result";
-import { Result } from "neverthrow";
+import { ok, err } from "../result";
+import type { AppResult } from "../result";
 
 describe("utils/result", () => {
   it("should create an ok result", () => {
