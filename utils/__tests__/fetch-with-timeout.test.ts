@@ -3,12 +3,12 @@ import { fetchWithTimeout } from "../fetch-with-timeout";
 describe("fetchWithTimeout", () => {
   beforeEach(() => {
     jest.useFakeTimers();
-    global.fetch = jest.fn();
+    jest.spyOn(global, 'fetch');
   });
 
   afterEach(() => {
     jest.useRealTimers();
-    jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   it("resolves successfully if fetch completes before timeout", async () => {
