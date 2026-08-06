@@ -161,7 +161,7 @@ describe("SyncWriteQueue", () => {
     const push = jest.fn().mockImplementation(async () => {
       activePushes++;
       maxActivePushes = Math.max(maxActivePushes, activePushes);
-      await new Promise(r => setTimeout(r, 10)); // simulated network latency
+      await new Promise((r) => setTimeout(r, 10)); // simulated network latency
       activePushes--;
     });
 
