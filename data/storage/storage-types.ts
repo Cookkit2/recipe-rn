@@ -138,7 +138,7 @@ export interface StorageConfig {
   options?: Record<string, any>;
 }
 
-export type StorageType = "mmkv" | "unknown";
+export type StorageType = "mmkv";
 
 // Error types
 export class StorageError extends Error {
@@ -163,12 +163,6 @@ export class JSONSerializer<T> implements ISerializer<T> {
   }
 
   deserialize(value: string): T {
-    try {
-      return JSON.parse(value);
-    } catch (error) {
-      console.warn("JSONSerializer failed to parse value", error);
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      throw new StorageError(`Failed to parse value: ${errorMessage}`, "unknown");
-    }
+    return JSON.parse(value);
   }
 }

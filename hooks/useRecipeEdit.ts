@@ -43,27 +43,30 @@ export interface UseRecipeEditOptions {
   onCancel?: () => void;
 }
 
-function prepareUpdateRecipeDetails(recipe: Recipe, workingCopy: EditableRecipe) {
-  return recipe.prepareUpdate((r) => {
-    r.title = workingCopy.title;
-    r.description = workingCopy.description;
-    if (workingCopy.imageUrl !== undefined) r.imageUrl = workingCopy.imageUrl;
-    r.prepMinutes = workingCopy.prepMinutes;
-    r.cookMinutes = workingCopy.cookMinutes;
-    r.difficultyStars = workingCopy.difficultyStars;
-    r.servings = workingCopy.servings;
-    if (workingCopy.tags !== undefined) r.tags = workingCopy.tags;
+async function updateRecipeDetails(recipe: Recipe, workingCopy: EditableRecipe) {
+  await recipe.updateRecipe({
+    title: workingCopy.title,
+    description: workingCopy.description,
+    imageUrl: workingCopy.imageUrl,
+    prepMinutes: workingCopy.prepMinutes,
+    cookMinutes: workingCopy.cookMinutes,
+    difficultyStars: workingCopy.difficultyStars,
+    servings: workingCopy.servings,
+    tags: workingCopy.tags,
   });
 }
 
-function prepareSyncRecipeIngredients(
+async function syncRecipeIngredients(
   recipe: Recipe,
   workingCopy: EditableRecipe,
-  existingIngredients: RecipeIngredient[],
   ingredientsCollection: Collection<RecipeIngredient>
-): Model[] {
+) {
   const batchOps: Model[] = [];
 
+  // Delete removed ingredients
+  const existingIngredients = await recipe.ingredients.fetch();
+
+  // Create O(1) lookups for performance optimization
   const workingIngredientIds = new Set(
     workingCopy.ingredients.map((ing) => ing.id).filter(Boolean)
   );
@@ -75,8 +78,10 @@ function prepareSyncRecipeIngredients(
     }
   }
 
+  // Update or create ingredients
   for (const ingredient of workingCopy.ingredients) {
     if (ingredient.id) {
+      // Update existing
       const existing = existingIngredientsMap.get(ingredient.id);
       if (existing) {
         batchOps.push(
@@ -89,6 +94,7 @@ function prepareSyncRecipeIngredients(
         );
       }
     } else {
+      // Create new
       batchOps.push(
         ingredientsCollection.prepareCreate((ing: RecipeIngredient) => {
           ing.recipeId = recipe.id;
@@ -101,17 +107,22 @@ function prepareSyncRecipeIngredients(
     }
   }
 
-  return batchOps;
+  if (batchOps.length > 0) {
+    await ingredientsCollection.database.batch(batchOps);
+  }
 }
 
-function prepareSyncRecipeSteps(
+async function syncRecipeSteps(
   recipe: Recipe,
   workingCopy: EditableRecipe,
-  existingSteps: RecipeStep[],
   stepsCollection: Collection<RecipeStep>
-): Model[] {
+) {
   const batchOps: Model[] = [];
 
+  // Delete removed steps
+  const existingSteps = await recipe.steps.fetch();
+
+  // Create O(1) lookups for performance optimization
   const workingStepIds = new Set(workingCopy.steps.map((step) => step.id).filter(Boolean));
   const existingStepsMap = new Map(existingSteps.map((step) => [step.id, step]));
 
@@ -121,8 +132,10 @@ function prepareSyncRecipeSteps(
     }
   }
 
+  // Update or create steps
   for (const step of workingCopy.steps) {
     if (step.id) {
+      // Update existing
       const existing = existingStepsMap.get(step.id);
       if (existing) {
         batchOps.push(
@@ -134,6 +147,7 @@ function prepareSyncRecipeSteps(
         );
       }
     } else {
+      // Create new
       batchOps.push(
         stepsCollection.prepareCreate((s: RecipeStep) => {
           s.step = step.step;
@@ -145,7 +159,9 @@ function prepareSyncRecipeSteps(
     }
   }
 
-  return batchOps;
+  if (batchOps.length > 0) {
+    await stepsCollection.database.batch(batchOps);
+  }
 }
 
 function useRecipeEdit(recipe: Recipe | null, options: UseRecipeEditOptions = {}) {
@@ -343,23 +359,15 @@ function useRecipeEdit(recipe: Recipe | null, options: UseRecipeEditOptions = {}
     if (!recipe || !workingCopy) return;
 
     try {
-      const existingIngredients = await recipe.ingredients.fetch();
-      const existingSteps = await recipe.steps.fetch();
-
-      const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
-      const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
-
-      const recipeOp = prepareUpdateRecipeDetails(recipe, workingCopy);
-      const ingredientOps = prepareSyncRecipeIngredients(
-        recipe,
-        workingCopy,
-        existingIngredients,
-        ingredientsCollection
-      );
-      const stepOps = prepareSyncRecipeSteps(recipe, workingCopy, existingSteps, stepsCollection);
-
       await database.write(async () => {
-        await database.batch([recipeOp, ...ingredientOps, ...stepOps]);
+        await updateRecipeDetails(recipe, workingCopy);
+
+        const ingredientsCollection =
+          database.collections.get<RecipeIngredient>("recipe_ingredient");
+        await syncRecipeIngredients(recipe, workingCopy, ingredientsCollection);
+
+        const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
+        await syncRecipeSteps(recipe, workingCopy, stepsCollection);
       });
 
       setIsEditing(false);

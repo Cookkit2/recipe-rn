@@ -192,7 +192,7 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
       .query(
         Q.unsafeSqlQuery(
           `SELECT recipe_id, count(*) as cookCount, max(cooked_at) as lastCookedAt
-         FROM cooking_history
+         FROM ${this.collection.table}
          WHERE _status != 'deleted'
          GROUP BY recipe_id
          ORDER BY cookCount DESC
