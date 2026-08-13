@@ -54,7 +54,7 @@ function RecipeItemCard({
       <Link href={`/recipes/${recipe.id}`} asChild>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`View recipe for ${recipe.title}`}
+          accessibilityHint={`View recipe for ${recipe.title}`}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             onEngage?.(recipe.id.toString());
