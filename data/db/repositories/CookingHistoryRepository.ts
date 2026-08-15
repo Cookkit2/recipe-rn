@@ -277,25 +277,25 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
     averageRating: number | null;
     photosCount: number;
   }> {
-    const allRecords = await this.findAll();
+    // ⚡ Bolt Performance Optimization: Bypass WatermelonDB model instantiation overhead
+    // by fetching raw DB records and using a standard for-loop. This dramatically reduces
+    // cross-bridge memory allocations when aggregating cooking statistics over large datasets.
+    const rawRecords = await this.collection.query().unsafeFetchRaw();
 
-    // ⚡ Bolt Performance Optimization:
-    // Prevent multiple array traversals and allocations by computing all stats
-    // in a single pass rather than chaining map/filter/reduce.
     const seenRecipes = new Set<string>();
     let photosCount = 0;
     let ratingSum = 0;
     let ratingCount = 0;
 
-    for (let i = 0; i < allRecords.length; i++) {
-      const r = allRecords[i];
-      if (!r) continue;
+    for (let i = 0; i < rawRecords.length; i++) {
+      const r = rawRecords[i] as any;
+      if (!r || r._status === "deleted") continue;
 
-      seenRecipes.add(r.recipeId);
+      seenRecipes.add(r.recipe_id);
 
-      if (r.hasPhoto) photosCount++;
+      if (r.photo_url) photosCount++;
 
-      if (r.hasValidRating) {
+      if (r.rating !== null && r.rating !== undefined) {
         ratingCount++;
         ratingSum += r.rating || 0;
       }
@@ -305,7 +305,7 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
     const averageRating = ratingCount > 0 ? ratingSum / ratingCount : null;
 
     return {
-      totalCooks: allRecords.length,
+      totalCooks: rawRecords.length,
       uniqueRecipes,
       averageRating,
       photosCount,
