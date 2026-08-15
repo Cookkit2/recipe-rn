@@ -277,41 +277,66 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
     averageRating: number | null;
     photosCount: number;
   }> {
-    // ⚡ Bolt Performance Optimization: Bypass WatermelonDB model instantiation overhead
-    // by fetching raw DB records and using a standard for-loop. This dramatically reduces
-    // cross-bridge memory allocations when aggregating cooking statistics over large datasets.
-    const rawRecords = await this.collection.query().unsafeFetchRaw();
+    if (Platform.OS === "web") {
+      const allRecords = await this.findAll();
 
-    const seenRecipes = new Set<string>();
-    let photosCount = 0;
-    let ratingSum = 0;
-    let ratingCount = 0;
-    let totalCooks = 0;
+      const seenRecipes = new Set<string>();
+      let photosCount = 0;
+      let ratingSum = 0;
+      let ratingCount = 0;
 
-    for (let i = 0; i < rawRecords.length; i++) {
-      const r = rawRecords[i] as any;
-      if (!r || r._status === "deleted") continue;
+      for (let i = 0; i < allRecords.length; i++) {
+        const r = allRecords[i];
+        if (!r) continue;
 
-      totalCooks++;
-      seenRecipes.add(r.recipe_id);
+        seenRecipes.add(r.recipeId);
 
-      if (r.photo_url) photosCount++;
+        if (r.hasPhoto) photosCount++;
 
-      // hasValidRating logic: rating >= 1 && rating <= 5
-      if (r.rating !== null && r.rating !== undefined && r.rating >= 1 && r.rating <= 5) {
-        ratingCount++;
-        ratingSum += r.rating || 0;
+        if (r.hasValidRating) {
+          ratingCount++;
+          ratingSum += r.rating || 0;
+        }
       }
+
+      const uniqueRecipes = seenRecipes.size;
+      const averageRating = ratingCount > 0 ? ratingSum / ratingCount : null;
+
+      return {
+        totalCooks: allRecords.length,
+        uniqueRecipes,
+        averageRating,
+        photosCount,
+      };
     }
 
-    const uniqueRecipes = seenRecipes.size;
-    const averageRating = ratingCount > 0 ? ratingSum / ratingCount : null;
+    // ⚡ Bolt Performance Optimization: Push aggregations down to the SQLite layer to avoid
+    // instantiating unneeded records across the JS bridge. This is an O(1) operation on the bridge
+    // versus an O(N) operation for fetching all records.
+    const rawStats = await this.collection
+      .query(
+        Q.unsafeSqlQuery(
+          `SELECT
+            count(*) as totalCooks,
+            count(DISTINCT recipe_id) as uniqueRecipes,
+            avg(CASE WHEN rating >= 1 AND rating <= 5 THEN rating ELSE null END) as averageRating,
+            count(photo_url) as photosCount
+           FROM cooking_history
+           WHERE _status != 'deleted'`
+        )
+      )
+      .unsafeFetchRaw();
+
+    const stats = rawStats[0] as any;
 
     return {
-      totalCooks,
-      uniqueRecipes,
-      averageRating,
-      photosCount,
+      totalCooks: Number(stats?.totalCooks || 0),
+      uniqueRecipes: Number(stats?.uniqueRecipes || 0),
+      averageRating:
+        stats?.averageRating !== null && stats?.averageRating !== undefined
+          ? Number(stats.averageRating)
+          : null,
+      photosCount: Number(stats?.photosCount || 0),
     };
   }
 }
