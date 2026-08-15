@@ -286,16 +286,19 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
     let photosCount = 0;
     let ratingSum = 0;
     let ratingCount = 0;
+    let totalCooks = 0;
 
     for (let i = 0; i < rawRecords.length; i++) {
       const r = rawRecords[i] as any;
       if (!r || r._status === "deleted") continue;
 
+      totalCooks++;
       seenRecipes.add(r.recipe_id);
 
       if (r.photo_url) photosCount++;
 
-      if (r.rating !== null && r.rating !== undefined) {
+      // hasValidRating logic: rating >= 1 && rating <= 5
+      if (r.rating !== null && r.rating !== undefined && r.rating >= 1 && r.rating <= 5) {
         ratingCount++;
         ratingSum += r.rating || 0;
       }
@@ -305,7 +308,7 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
     const averageRating = ratingCount > 0 ? ratingSum / ratingCount : null;
 
     return {
-      totalCooks: rawRecords.length,
+      totalCooks,
       uniqueRecipes,
       averageRating,
       photosCount,
