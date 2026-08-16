@@ -66,10 +66,15 @@ export default function AchievementsCard() {
 
   const a11yLabel = `Achievements. ${totalUnlocked} of ${totalAchievements} unlocked. ${
     currentStreak && currentStreak > 0 ? `Current streak ${currentStreak} days.` : ""
-  } Tap to view all achievements.`;
+  }`;
 
   return (
-    <Pressable onPress={handlePress} accessibilityRole="button" accessibilityLabel={a11yLabel}>
+    <Pressable
+      onPress={handlePress}
+      accessibilityRole="button"
+      accessibilityLabel={a11yLabel}
+      accessibilityHint="Opens your achievements list"
+    >
       <Card className="flex-1 mx-6 mt-6 rounded-3xl shadow-md shadow-foreground/10 border-none">
         <CardContent className="py-6 gap-4">
           {/* Header */}
