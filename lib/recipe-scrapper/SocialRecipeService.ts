@@ -24,6 +24,32 @@ export class SocialRecipeService {
   }
 
   /**
+   * Validates that the URL belongs to an allowed social media domain
+   * to prevent SSRF vulnerabilities.
+   */
+  private isValidUrl(urlString: string): boolean {
+    try {
+      const url = new URL(urlString);
+
+      // Enforce HTTP/HTTPS protocols only
+      if (url.protocol !== "http:" && url.protocol !== "https:") {
+        return false;
+      }
+
+      const hostname = url.hostname.toLowerCase();
+      const allowedDomains = ["tiktok.com", "instagram.com"];
+
+      // Check if hostname is exactly the allowed domain or a subdomain
+      return allowedDomains.some(
+        (domain) => hostname === domain || hostname.endsWith(`.${domain}`)
+      );
+    } catch (e) {
+      // Invalid URL format
+      return false;
+    }
+  }
+
+  /**
    * Analyze a TikTok or Instagram video for recipe content
    *
    * strategy:
@@ -35,6 +61,16 @@ export class SocialRecipeService {
   async analyzeForRecipe(content: SocialMediaContent): Promise<RecipeAnalysisResult> {
     try {
       log.info(`SocialRecipeService: Analyzing ${content.platform} content...`);
+
+      // Validate URL against SSRF
+      if (!this.isValidUrl(content.url)) {
+        log.warn(`SocialRecipeService: Invalid or restricted URL blocked: ${content.url}`);
+        return {
+          isCookingVideo: false,
+          confidence: 0,
+          errorMessage: "Invalid or restricted URL provided.",
+        };
+      }
 
       // 1. Fetch page content to get metadata
       const metadata = await this.fetchPageMetadata(content.url);
@@ -91,7 +127,20 @@ export class SocialRecipeService {
             "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1",
           Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         },
+        redirect: "manual",
       });
+
+      // Handle redirects to ensure the target is also a valid URL
+      if (response.status >= 300 && response.status < 400) {
+        const location = response.headers.get("location");
+        if (location) {
+          if (!this.isValidUrl(location)) {
+            throw new Error(`Blocked redirect to invalid or restricted URL: ${location}`);
+          }
+          // Follow the redirect
+          return this.fetchPageMetadata(location);
+        }
+      }
 
       if (!response.ok) {
         throw new Error(`Failed to fetch URL: ${response.status}`);
