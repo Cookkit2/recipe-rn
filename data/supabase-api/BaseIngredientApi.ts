@@ -2,9 +2,10 @@ import { supabase } from "~/lib/supabase/supabase-client";
 
 /**
  * Escapes characters that have special meaning in LIKE/ILIKE queries
+ * Note: PostgREST also treats * as a wildcard character.
  */
 function escapeIlike(str: string): string {
-  return str.replace(/[%_\\]/g, "\\$&");
+  return str.replace(/[%_\\*]/g, "\\$&");
 }
 
 function guardSupabase() {
@@ -214,10 +215,7 @@ async function fetchIngredientsBySynonyms(missingNames: string[]) {
 
   // Execute parameterized queries concurrently
   const synonymPromises = sanitizedNames.map((n) =>
-    supabase!
-      .from("ingredient_synonym")
-      .select("base_ingredient_id, synonym")
-      .ilike("synonym", escapeIlike(n))
+    supabase!.from("ingredient_synonym").select("base_ingredient_id, synonym").ilike("synonym", escapeIlike(n))
   );
 
   const synonymResults = await Promise.all(synonymPromises);
