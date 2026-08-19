@@ -1,1 +1,1 @@
-## Reflection\nCompleted formatting to satisfy pre-commit constraint.
+## Reflection\nRan type checks again, and formatted.
