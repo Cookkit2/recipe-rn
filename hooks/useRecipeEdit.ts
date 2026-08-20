@@ -178,20 +178,24 @@ function useRecipeEdit(recipe: Recipe | null, options: UseRecipeEditOptions = {}
         difficultyStars: r.difficultyStars,
         servings: r.servings,
         tags: r.tags,
-        ingredients: ingredients.map((ing): EditableIngredient => ({
-          id: ing.id,
-          name: ing.name,
-          quantity: ing.quantity,
-          unit: ing.unit,
-          notes: ing.notes,
-        })),
+        ingredients: ingredients.map(
+          (ing): EditableIngredient => ({
+            id: ing.id,
+            name: ing.name,
+            quantity: ing.quantity,
+            unit: ing.unit,
+            notes: ing.notes,
+          })
+        ),
         steps: steps
-          .map((s): EditableStep => ({
-            id: s.id,
-            step: s.step,
-            title: s.title,
-            description: s.description,
-          }))
+          .map(
+            (s): EditableStep => ({
+              id: s.id,
+              step: s.step,
+              title: s.title,
+              description: s.description,
+            })
+          )
           .sort((a, b) => a.step - b.step),
       });
 
