@@ -4,6 +4,14 @@ function guardSupabase() {
   return supabase != null;
 }
 
+/**
+ * Escapes special characters for use in a Supabase .ilike() or .like() query
+ * to prevent wildcard injection attacks.
+ */
+function sanitizeForIlike(value: string): string {
+  return value.replace(/[%_*?\\]/g, "\\$&");
+}
+
 export interface BaseIngredientWithRelations {
   id: string;
   name: string;
@@ -23,7 +31,7 @@ export const baseIngredientApi = {
     const { data: baseIngredient, error: baseError } = await supabase!
       .from("base_ingredient")
       .select("*")
-      .ilike("name", name)
+      .ilike("name", sanitizeForIlike(name))
       .single();
 
     if (baseError && baseError.code !== "PGRST116") {
@@ -166,7 +174,7 @@ async function findIngredientBySynonym(name: string): Promise<BaseIngredientWith
   const { data: synonymData, error: synonymError } = await supabase!
     .from("ingredient_synonym")
     .select("base_ingredient_id")
-    .ilike("synonym", name)
+    .ilike("synonym", sanitizeForIlike(name))
     .single();
 
   if (synonymError && synonymError.code !== "PGRST116") {
@@ -207,7 +215,10 @@ async function fetchIngredientsBySynonyms(missingNames: string[]) {
 
   // Execute parameterized queries concurrently
   const synonymPromises = sanitizedNames.map((n) =>
-    supabase!.from("ingredient_synonym").select("base_ingredient_id, synonym").ilike("synonym", n)
+    supabase!
+      .from("ingredient_synonym")
+      .select("base_ingredient_id, synonym")
+      .ilike("synonym", sanitizeForIlike(n))
   );
 
   const synonymResults = await Promise.all(synonymPromises);
