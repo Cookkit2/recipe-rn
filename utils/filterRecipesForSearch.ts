@@ -58,12 +58,22 @@ export function filterRecipesForSearch(
 ): Recipe[] {
   const q = textQuery.trim().toLowerCase();
 
-  return recipes.filter((r) => {
-    if (!matchesTextQuery(r, q)) return false;
-    if (!matchesTags(r, filters?.tags)) return false;
-    if (!matchesDifficulty(r, filters?.difficulty)) return false;
-    if (filters && !matchesTimeFilters(r, filters)) return false;
-    if (!matchesRating(r, filters?.minRating)) return false;
-    return true;
-  });
+  // ⚡ Bolt Performance Optimization: Replaced O(N) array.filter with a standard for loop
+  // to avoid closure allocation overhead on every keystroke during search.
+  const result: Recipe[] = [];
+
+  for (let i = 0; i < recipes.length; i++) {
+    const r = recipes[i];
+    if (r) {
+      if (!matchesTextQuery(r, q)) continue;
+      if (!matchesTags(r, filters?.tags)) continue;
+      if (!matchesDifficulty(r, filters?.difficulty)) continue;
+      if (filters && !matchesTimeFilters(r, filters)) continue;
+      if (!matchesRating(r, filters?.minRating)) continue;
+
+      result.push(r);
+    }
+  }
+
+  return result;
 }
