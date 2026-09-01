@@ -78,6 +78,27 @@ describe("HouseholdSyncService pullRemoteChanges — LWW guard (audit defect #1,
     service = new HouseholdSyncService();
   });
 
+  it("queries stock by household_id in pullRemoteChanges (no fetch-all)", async () => {
+    stockCollection.fetch.mockResolvedValueOnce([]);
+
+    (householdApi.getSharedStock as jest.Mock).mockResolvedValueOnce([
+      {
+        id: "stock-1",
+        name: "Milk",
+        quantity: 2,
+        unit: "carton",
+        updated_at: "2024-01-01T00:00:00.000Z",
+      },
+    ]);
+
+    await (service as any).pullRemoteChanges("household-1");
+
+    expect(stockCollection.query).toHaveBeenCalledTimes(1);
+    const args = (stockCollection.query as jest.Mock).mock.calls[0] ?? [];
+    expect(args[0]).toEqual({ col: "household_id", op: "household-1" });
+    expect(Q.where).toHaveBeenCalledWith("household_id", "household-1");
+  });
+
   it("preserves a fresher local edit and does NOT call prepareUpdate", async () => {
     // Local row was edited at 2024-01-10; remote row is staler at 2024-01-01.
     const localRow = makeStockRow({
