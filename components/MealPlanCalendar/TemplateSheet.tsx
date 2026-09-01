@@ -97,6 +97,8 @@ const TemplateSheetMemo = function TemplateSheet({
                     disabled={isSaving || !templateName.trim() || isSavePending}
                     variant="default"
                     className="mt-2"
+                    accessibilityRole="button"
+                    accessibilityLabel={isSaving ? "Saving..." : "Save as Template"}
                   >
                     <H4 className="text-primary-foreground font-urbanist font-semibold">
                       {isSaving ? "Saving..." : "Save as Template"}
@@ -185,6 +187,8 @@ const TemplateSheetMemo = function TemplateSheet({
                       disabled={isExporting || !currentWeekMeals || currentWeekMeals.length === 0}
                       variant="default"
                       className="flex-1"
+                      accessibilityRole="button"
+                      accessibilityLabel={isExporting ? "Exporting..." : "Export Meal Plan"}
                     >
                       <ShareIcon size={16} className="text-primary-foreground mr-2" />
                       <H4 className="text-primary-foreground font-urbanist font-semibold">
@@ -196,6 +200,8 @@ const TemplateSheetMemo = function TemplateSheet({
                       disabled={isImporting}
                       variant="outline"
                       className="flex-1"
+                      accessibilityRole="button"
+                      accessibilityLabel={isImporting ? "Importing..." : "Import Meal Plan"}
                     >
                       <DownloadIcon size={16} className="text-foreground mr-2" />
                       <H4 className="text-foreground font-urbanist font-semibold">
@@ -217,7 +223,13 @@ const TemplateSheetMemo = function TemplateSheet({
               </Card>
 
               {/* Close Button */}
-              <Button onPress={handleClose} variant="outline" className="mt-4">
+              <Button
+                onPress={handleClose}
+                variant="outline"
+                className="mt-4"
+                accessibilityRole="button"
+                accessibilityLabel="Close template sheet"
+              >
                 <H4 className="text-foreground font-urbanist font-semibold">Close</H4>
               </Button>
             </View>
