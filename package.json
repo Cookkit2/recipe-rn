@@ -152,7 +152,7 @@
     "react-test-renderer": "19.2.7",
     "sharp": "^0.35.3",
     "ts-jest": "^29.4.11",
-    "typescript": "~7.0.2",
+    "typescript": "~5.7.3",
     "ws": "^8.21.0",
     "zustand": "^5.0.12"
   },
@@ -161,13 +161,20 @@
   },
   "overrides": {
     "form-data": "^4.0.6",
-    "fast-uri": "^3.1.2",
+    "fast-uri": "3.1.5",
     "hermes-compiler": "250829098.0.4",
     "@babel/runtime": ">=7.26.10",
     "jest-environment-node": "30.4.1",
     "jest-mock": "30.4.1",
     "tmp": ">=0.2.6",
-    "react-native-screens": "4.25.2"
+    "react-native-screens": "4.25.2",
+    "image-size": "https://github.com/image-size/image-size/tarball/master",
+    "brace-expansion": "1.1.18",
+    "browserslist": "4.28.7",
+    "js-yaml": "4.3.1",
+    "nanoid": "3.3.18",
+    "postcss": "8.5.23",
+    "shell-quote": "1.9.0"
   },
   "private": true,
   "reanimated": {
