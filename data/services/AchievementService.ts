@@ -487,13 +487,23 @@ export class AchievementService {
           return spicesStock.length;
         }
 
-        case "ingredients_used_before_expiry":
-          // Prefer DB-derived count when available (backed by consumption_log)
-          try {
-            return await databaseFacade.getIngredientsUsedBeforeExpiryCount();
-          } catch {
-            return Number(storage.get(INGREDIENTS_USED_BEFORE_EXPIRY_KEY)) || 0;
+        case "ingredients_used_before_expiry": {
+          // Check storage cache first for fast path
+          const cachedValue = storage.get(INGREDIENTS_USED_BEFORE_EXPIRY_KEY);
+          if (cachedValue !== null && cachedValue !== undefined) {
+            return Number(cachedValue) || 0;
           }
+
+          // Fallback to DB-derived count if cache is empty
+          try {
+            const dbCount = await databaseFacade.getIngredientsUsedBeforeExpiryCount();
+            // Cache the result for future reads
+            storage.set(INGREDIENTS_USED_BEFORE_EXPIRY_KEY, dbCount.toString());
+            return dbCount;
+          } catch {
+            return 0;
+          }
+        }
 
         case "achievements_shared":
           return Number(storage.get(SOCIAL_SHARES_COUNT_KEY)) || 0;
