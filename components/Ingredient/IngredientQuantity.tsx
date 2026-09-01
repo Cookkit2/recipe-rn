@@ -64,7 +64,7 @@ export default function IngredientQuantity({
         <Pressable
           onPress={showUnitPicker}
           className="min-w-6"
-          accessibilityLabel={`Select unit, currently ${unit}`}
+          accessibilityLabel="Select unit"
           accessibilityRole="button"
         >
           <P className="text-center font-urbanist-medium text-xl">{unit}</P>
