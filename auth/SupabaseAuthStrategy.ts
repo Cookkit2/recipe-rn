@@ -562,6 +562,15 @@ export class SupabaseAuthStrategy extends BaseAuthStrategy {
   async resetPassword(email: string): Promise<AuthResult> {
     if (!supabase) return supabaseUnavailableResult();
 
+    const identifier = email.toLowerCase().trim();
+    if (!authRateLimiter.canAttempt(identifier)) {
+      return this.createErrorResult(
+        "TOO_MANY_ATTEMPTS",
+        "Too many password reset attempts. Please try again later.",
+        false
+      );
+    }
+
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${APP_CONFIG.DEEP_LINK_SCHEME}://${APP_CONFIG.DEEP_LINK_PATHS.RESET_PASSWORD}`,
