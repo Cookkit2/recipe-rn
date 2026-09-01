@@ -169,7 +169,11 @@ export function generateMultiAchievementShareContent(
   const { userName, includeUrl = true } = options ?? {};
 
   const unlockedCount = achievements.filter((a) => a.isUnlocked).length;
-  const totalXP = achievements.reduce((sum, a) => sum + (a.achievement.xp || 0), 0);
+  // ⚡ Bolt Performance Optimization: Replaced .reduce() with a standard for loop to avoid intermediate closure allocations
+  let totalXP = 0;
+  for (let i = 0; i < achievements.length; i++) {
+    totalXP += achievements[i]?.achievement.xp || 0;
+  }
 
   const userPrefix = userName ? `${userName} ` : "I ";
   const icons = achievements.map((a) => a.achievement.icon).join(" ");
