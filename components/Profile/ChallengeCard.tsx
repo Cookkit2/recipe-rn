@@ -196,7 +196,7 @@ export default function ChallengeCard({ challenge, onPress }: ChallengeCardProps
         className={cn("rounded-3xl shadow-md shadow-foreground/10 border-none", getCardStyle())}
         onPress={onPress}
         accessibilityRole="button"
-        accessibilityLabel={`Challenge: ${challenge.challenge.title}`}
+        accessibilityHint="Views challenge details"
       >
         {content}
       </AnimatedPressable>
