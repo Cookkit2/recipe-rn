@@ -1,0 +1,19 @@
+<<<<<<< SEARCH
+export interface ToolCall {
+  id: string;
+  type: "function";
+  function: {
+    name: string;
+    arguments: Record<string, any>;
+  };
+}
+=======
+export interface ToolCall {
+  id: string;
+  type: "function";
+  function: {
+    name: string;
+    arguments: Record<string, unknown>;
+  };
+}
+>>>>>>> REPLACE

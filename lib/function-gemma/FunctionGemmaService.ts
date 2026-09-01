@@ -23,7 +23,7 @@ export interface FridgitTool {
     description: string;
     parameters: {
       type: "object";
-      properties: Record<string, any>;
+      properties: Record<string, unknown>;
       required?: string[];
     };
   };
@@ -34,7 +34,7 @@ export interface ToolCall {
   type: "function";
   function: {
     name: string;
-    arguments: Record<string, any>;
+    arguments: Record<string, unknown>;
   };
 }
 
@@ -345,16 +345,16 @@ function castValue(v: string): string | number | boolean {
  */
 export function parseFunctionCalls(
   text: string
-): Array<{ name: string; arguments: Record<string, any> }> {
+): Array<{ name: string; arguments: Record<string, unknown> }> {
   const callRegex = /<start_function_call>call:(\w+)\{(.*?)\}<end_function_call>/gs;
   const argRegex = /(\w+):(?:<escape>(.*?)<escape>|(\[[^\]]*\])|([^,}]*))/g;
 
-  const calls: Array<{ name: string; arguments: Record<string, any> }> = [];
+  const calls: Array<{ name: string; arguments: Record<string, unknown> }> = [];
 
   for (const callMatch of text.matchAll(callRegex)) {
     const name = callMatch[1] ?? "";
     const argsStr = callMatch[2] ?? "";
-    const args: Record<string, any> = {};
+    const args: Record<string, unknown> = {};
 
     for (const argMatch of argsStr.matchAll(argRegex)) {
       const key = argMatch[1] ?? "";
