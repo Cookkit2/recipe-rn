@@ -51,22 +51,24 @@ const APPLIANCE_OPTIONS: GroupButton<Appliance>[] = [
   },
 ];
 
+const applianceSerializer = {
+  parse: (value: string) => {
+    if (!value) return [];
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) return parsed as Appliance[];
+      return []; // Ignore if not array
+    } catch {
+      return value.split(",") as Appliance[];
+    }
+  },
+  stringify: (value: unknown) => JSON.stringify(value),
+};
+
 export default function AppliancesSection() {
   const [appliances = [], setAppliances] = useLocalStorageState<Appliance[]>(PREF_APPLIANCES_KEY, {
     defaultValue: [],
-    serializer: {
-      parse: (value: string) => {
-        if (!value) return [];
-        try {
-          const parsed = JSON.parse(value);
-          if (Array.isArray(parsed)) return parsed as Appliance[];
-          return []; // Ignore if not array
-        } catch {
-          return value.split(",") as Appliance[];
-        }
-      },
-      stringify: (value: unknown) => JSON.stringify(value),
-    },
+    serializer: applianceSerializer,
   });
 
   const handleToggleAppliance = useCallback(
