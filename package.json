@@ -168,6 +168,7 @@
     "jest-mock": "30.4.1",
     "tmp": ">=0.2.6",
     "react-native-screens": "4.25.2",
+    "image-size": "https://github.com/image-size/image-size/tarball/master",
     "brace-expansion": "1.1.18",
     "browserslist": "4.28.7",
     "js-yaml": "4.3.1",
