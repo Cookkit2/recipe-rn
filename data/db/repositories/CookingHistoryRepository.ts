@@ -277,38 +277,66 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
     averageRating: number | null;
     photosCount: number;
   }> {
-    const allRecords = await this.findAll();
+    if (Platform.OS === "web") {
+      const allRecords = await this.findAll();
 
-    // ⚡ Bolt Performance Optimization:
-    // Prevent multiple array traversals and allocations by computing all stats
-    // in a single pass rather than chaining map/filter/reduce.
-    const seenRecipes = new Set<string>();
-    let photosCount = 0;
-    let ratingSum = 0;
-    let ratingCount = 0;
+      const seenRecipes = new Set<string>();
+      let photosCount = 0;
+      let ratingSum = 0;
+      let ratingCount = 0;
 
-    for (let i = 0; i < allRecords.length; i++) {
-      const r = allRecords[i];
-      if (!r) continue;
+      for (let i = 0; i < allRecords.length; i++) {
+        const r = allRecords[i];
+        if (!r) continue;
 
-      seenRecipes.add(r.recipeId);
+        seenRecipes.add(r.recipeId);
 
-      if (r.hasPhoto) photosCount++;
+        if (r.hasPhoto) photosCount++;
 
-      if (r.hasValidRating) {
-        ratingCount++;
-        ratingSum += r.rating || 0;
+        if (r.hasValidRating) {
+          ratingCount++;
+          ratingSum += r.rating || 0;
+        }
       }
+
+      const uniqueRecipes = seenRecipes.size;
+      const averageRating = ratingCount > 0 ? ratingSum / ratingCount : null;
+
+      return {
+        totalCooks: allRecords.length,
+        uniqueRecipes,
+        averageRating,
+        photosCount,
+      };
     }
 
-    const uniqueRecipes = seenRecipes.size;
-    const averageRating = ratingCount > 0 ? ratingSum / ratingCount : null;
+    // ⚡ Bolt Performance Optimization: Push aggregations down to the SQLite layer to avoid
+    // instantiating unneeded records across the JS bridge. This is an O(1) operation on the bridge
+    // versus an O(N) operation for fetching all records.
+    const rawStats = await this.collection
+      .query(
+        Q.unsafeSqlQuery(
+          `SELECT
+            count(*) as totalCooks,
+            count(DISTINCT recipe_id) as uniqueRecipes,
+            avg(CASE WHEN rating >= 1 AND rating <= 5 THEN rating ELSE null END) as averageRating,
+            count(photo_url) as photosCount
+           FROM cooking_history
+           WHERE _status != 'deleted'`
+        )
+      )
+      .unsafeFetchRaw();
+
+    const stats = rawStats[0] as any;
 
     return {
-      totalCooks: allRecords.length,
-      uniqueRecipes,
-      averageRating,
-      photosCount,
+      totalCooks: Number(stats?.totalCooks || 0),
+      uniqueRecipes: Number(stats?.uniqueRecipes || 0),
+      averageRating:
+        stats?.averageRating !== null && stats?.averageRating !== undefined
+          ? Number(stats.averageRating)
+          : null,
+      photosCount: Number(stats?.photosCount || 0),
     };
   }
 }

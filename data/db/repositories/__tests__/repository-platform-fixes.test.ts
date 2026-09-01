@@ -58,6 +58,46 @@ describe("repository platform-safe aggregations", () => {
     expect(queryResult.unsafeFetchRaw).not.toHaveBeenCalled();
   });
 
+  it("uses JS aggregation for cooking stats on web/Loki instead of unsafe SQL", async () => {
+    const historyRows = [
+      { recipeId: "recipe-a", hasPhoto: true, hasValidRating: true, rating: 5 },
+      { recipeId: "recipe-b", hasPhoto: false, hasValidRating: true, rating: 4 },
+      { recipeId: "recipe-a", hasPhoto: true, hasValidRating: false },
+    ];
+    const queryResult = {
+      fetch: jest.fn(async () => historyRows),
+      unsafeFetchRaw: jest.fn(async () => {
+        throw new Error("Loki should not use unsafeFetchRaw");
+      }),
+    };
+    const query = jest.fn((...clauses: Array<{ type?: string }>) => {
+      if (clauses.some((clause) => clause?.type === "sqlQuery")) {
+        throw new Error("[Loki] Q.unsafeSqlQuery are not supported with LokiJSAdapter");
+      }
+      return queryResult;
+    });
+    mockCollections.cooking_history = {
+      table: "cooking_history",
+      query,
+    };
+
+    const repo = new CookingHistoryRepository();
+
+    // We override findAll since that's what getCookingStats uses on web
+    repo.findAll = jest.fn().mockResolvedValue(historyRows);
+
+    const result = await repo.getCookingStats();
+
+    expect(result).toEqual({
+      totalCooks: 3,
+      uniqueRecipes: 2,
+      averageRating: 4.5,
+      photosCount: 2,
+    });
+    expect(repo.findAll).toHaveBeenCalledTimes(1);
+    expect(queryResult.unsafeFetchRaw).not.toHaveBeenCalled();
+  });
+
   it("groups weekly waste data with local date arithmetic across DST boundaries", async () => {
     const previousTimezone = process.env.TZ;
     process.env.TZ = "America/New_York";
