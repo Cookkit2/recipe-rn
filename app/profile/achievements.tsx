@@ -173,17 +173,16 @@ export default function AchievementsScreen() {
   }, [fetchData]);
 
   // Group achievements by category
-  const groupedAchievements = achievements.reduce(
-    (acc, achievement) => {
-      const category = achievement.achievement.category;
-      if (!acc[category]) {
-        acc[category] = [];
-      }
-      acc[category].push(achievement);
-      return acc;
-    },
-    {} as Record<string, AchievementProgress[]>
-  );
+  const groupedAchievements: Record<string, AchievementProgress[]> = {};
+  for (let i = 0; i < achievements.length; i++) {
+    const achievement = achievements[i];
+    if (!achievement) continue;
+    const category = achievement.achievement.category;
+    if (!groupedAchievements[category]) {
+      groupedAchievements[category] = [];
+    }
+    groupedAchievements[category].push(achievement);
+  }
 
   if (isLoading) {
     return (
