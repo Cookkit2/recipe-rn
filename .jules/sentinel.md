@@ -4,4 +4,4 @@
 ## 2026-09-07 - Fix Supabase Wildcard Injection
 **Vulnerability:** Unsanitized user inputs passed directly to `.ilike()` or `.like()` in Supabase queries could lead to wildcard injection.
 **Learning:** In Supabase/PostgREST projects, user input passed to `.ilike()` is vulnerable if special characters (%, _, \) are not escaped.
-**Prevention:** Always sanitize inputs passed to `.ilike()` using `str.replace(/[%_\]/g, "\$&")` to prevent unauthorized pattern matching or slow query DoS attacks.
+**Prevention:** Always sanitize inputs passed to `.ilike()` using `str.replace(/[%_\\]/g, "\\$&")` to prevent unauthorized pattern matching or slow query DoS attacks.
