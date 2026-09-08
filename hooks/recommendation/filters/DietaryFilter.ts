@@ -196,10 +196,19 @@ export class DietaryFilter implements RecipeFilterStrategy {
     if (Array.isArray(otherAllergens)) {
       customAllergens.push(...(otherAllergens as string[]));
     } else if (typeof otherAllergens === "string" && otherAllergens) {
-      const parsed = otherAllergens
-        .split(",")
-        .map((a) => a.trim())
-        .filter((a) => a.length > 0);
+      // ⚡ Bolt Performance Optimization: Replace chaining .map().filter() with a single loop
+      // to avoid closure allocation overhead and reduce garbage collection pressure.
+      const parsed: string[] = [];
+      const parts = otherAllergens.split(",");
+      for (let i = 0; i < parts.length; i++) {
+        const a = parts[i];
+        if (a) {
+          const trimmed = a.trim();
+          if (trimmed.length > 0) {
+            parsed.push(trimmed);
+          }
+        }
+      }
       customAllergens.push(...parsed);
     }
 
