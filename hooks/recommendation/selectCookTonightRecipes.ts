@@ -100,18 +100,22 @@ export function selectCookTonightRecipes(
 
   // 1) Keep only 100%-complete recipes (what AvailabilityFilter({min:100})
   //    resolves to given the completion map).
-  const cookable = recipes.filter((recipe) => filter.filter(recipe, filterCtx));
-
   // 2) Tag with completion + matchCategory, then rank via ReadinessStrategy
   //    (higher score first).
-  const tagged: CookTonightRecipe[] = cookable.map((recipe) => {
-    const completionPercentage = completionPercentages.get(recipe.id) ?? 0;
-    return {
-      recipe,
-      completionPercentage,
-      matchCategory: matchCategoryForCompletion(completionPercentage),
-    };
-  });
+  // ⚡ Bolt Performance Optimization: Replace chaining .filter().map() with a single loop
+  // to avoid closure allocation overhead and reduce garbage collection pressure.
+  const tagged: CookTonightRecipe[] = [];
+  for (let i = 0; i < recipes.length; i++) {
+    const recipe = recipes[i];
+    if (recipe && filter.filter(recipe, filterCtx)) {
+      const completionPercentage = completionPercentages.get(recipe.id) ?? 0;
+      tagged.push({
+        recipe,
+        completionPercentage,
+        matchCategory: matchCategoryForCompletion(completionPercentage),
+      });
+    }
+  }
 
   tagged.sort((a, b) => ranker.score(b.recipe, rankingCtx) - ranker.score(a.recipe, rankingCtx));
 

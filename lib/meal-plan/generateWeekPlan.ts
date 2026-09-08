@@ -540,16 +540,22 @@ export function rankCandidates(
   };
 
   // Filter (DietaryFilter reads diet/allergen prefs from storage itself).
-  const filtered = allRecipes.filter((recipe) => filterStrategy.filter(recipe, filterCtx));
+  // ⚡ Bolt Performance Optimization: Replace chaining .filter().map() with a single loop
+  // to avoid closure allocation overhead and reduce garbage collection pressure.
+  const scored: Array<{ recipe: Recipe; completionPercentage: number; score: number }> = [];
+  for (let i = 0; i < allRecipes.length; i++) {
+    const recipe = allRecipes[i];
+    if (recipe && filterStrategy.filter(recipe, filterCtx)) {
+      scored.push({
+        recipe,
+        completionPercentage: completionMap.get(recipe.id) ?? 0,
+        score: rankingStrategy.score(recipe, rankingCtx),
+      });
+    }
+  }
 
   // Rank.
-  const scored = filtered
-    .map((recipe) => ({
-      recipe,
-      completionPercentage: completionMap.get(recipe.id) ?? 0,
-      score: rankingStrategy.score(recipe, rankingCtx),
-    }))
-    .sort((a, b) => b.score - a.score);
+  scored.sort((a, b) => b.score - a.score);
 
   const ranked: RankedCandidate[] = scored.map(({ recipe, completionPercentage }) => ({
     recipe,

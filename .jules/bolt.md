@@ -111,3 +111,6 @@
 **Learning:** Initializing objects like `Map<string, number[]>` then using `Array.prototype.reduce()` on them causes O(M) intermediate allocations and closures when calculating average ratings, negatively impacting the JS bridge garbage collector.
 **Action:** Always maintain primitive structural properties in single-pass scalar mapping (`Map<string, { sum: number, count: number }>`) without pushing into array lengths, reducing allocations to O(1) structures per entry.
 ## 2024-07-14 - Promise.all Optimization\n**Learning:** Replacing sequential await calls inside loops with Promise.all reduces N+1 async bottlenecks effectively.\n**Action:** Use Promise.all when independent async tasks are run inside a loop.
+## 2026-09-08 - Combine chained array methods
+**Learning:** Chaining array methods like `.filter()` and `.map()` sequentially allocates multiple intermediate closure functions and throws away intermediate array allocations, increasing the workload for the garbage collector in hot execution paths like complex recipe filtering or meal plan generation.
+**Action:** Replace multiple chained array iteration methods with a single standard `for` loop to execute both transformations in one pass without creating temporary array wrappers.
