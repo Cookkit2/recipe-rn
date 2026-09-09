@@ -114,9 +114,21 @@ export class HouseholdSyncService {
     await database.write(async () => {
       const batchOps: import("@nozbe/watermelondb").Model[] = [];
 
-      // ⚡ Bolt Performance Optimization: Fetch all items once and use a Map for O(1) lookups
+      // ⚡ Bolt Performance Optimization: Fetch only relevant items once and use a Map for O(1) lookups
       // instead of fetching all items from DB inside the loop for every remote item.
-      const allItems = await stockCollection.query().fetch();
+      const remoteIds = remoteItems.map((item) => item.id);
+
+      const allItems: import("@nozbe/watermelondb").Model[] = [];
+      // SQLite has a limit on the number of variables in an IN clause (usually 999).
+      // We chunk the array to prevent "too many SQL variables" exceptions on massive pantries.
+      for (let i = 0; i < remoteIds.length; i += 500) {
+        const chunk = remoteIds.slice(i, i + 500);
+        const chunkItems = await stockCollection
+          .query(Q.where("supabase_id", Q.oneOf(chunk)))
+          .fetch();
+        allItems.push(...chunkItems);
+      }
+
       const itemsMap = new Map();
       for (const item of allItems) {
         if ((item as any).supabaseId) {
