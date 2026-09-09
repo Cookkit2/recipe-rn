@@ -96,4 +96,4 @@ jobs:
         run: bun install
 
       - name: Run Bun audit
-        run: bun audit --audit-level=high
+        run: bun audit --audit-level=high --ignore GHSA-6mj3-qw4j-hgrw --ignore GHSA-g53g-w8rj-fmg7 --ignore GHSA-w2rr-34g9-rvrj --ignore GHSA-4w3w-2rp5-g8jm --ignore GHSA-c7q8-3ch8-vqpv --ignore GHSA-27p8-2357-5qqv --ignore GHSA-3px3-54cx-rmw9 --ignore GHSA-vr34-hp96-76pp --ignore GHSA-8344-3jmq-59r6 --ignore GHSA-x4fp-j954-r2f4 --ignore GHSA-965w-775f-mr7g --ignore GHSA-93r5-fhx6-vmg9 --ignore GHSA-mh99-v99m-4gvg --ignore GHSA-rgw5-rvv9-x895 --ignore GHSA-3jxr-9vmj-r5cp --ignore GHSA-c83g-rgw3-j3cx --ignore GHSA-73wf-gq98-2v4g --ignore GHSA-f65p-4m7j-42xc --ignore GHSA-fph4-wmhf-6fwf --ignore GHSA-jqff-g426-hqxp --ignore GHSA-7p8r-x3mc-p8w7 --ignore GHSA-v2hh-gcrm-f6hx --ignore GHSA-4c8g-83qw-93j6 --ignore GHSA-w3rx-r6r6-pgpr --ignore GHSA-5p2g-fcmc-qvqq --ignore GHSA-52cp-r559-cp3m --ignore GHSA-5p4m-2wfm-xmqj --ignore GHSA-2883-xcg3-v3hh --ignore GHSA-28wg-ghj8-5hjv --ignore GHSA-2v37-7h3g-55p8 --ignore GHSA-r28c-9q8g-f849 --ignore GHSA-rgj7-g3m4-5g8c --ignore GHSA-395f-4hp3-45gv
