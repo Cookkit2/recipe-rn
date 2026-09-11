@@ -270,18 +270,34 @@ function buildIngredientResultMap(
   allCategoryLinks: any[]
 ): Map<string, BaseIngredientWithRelations> {
   const resultMap = new Map<string, BaseIngredientWithRelations>();
-  for (const ingredient of uniqueIngredients) {
-    const ingredientSynonyms = allSynonyms
-      .filter((s) => s.base_ingredient_id === ingredient.id)
-      .map((s) => ({ id: s.id, synonym: s.synonym }));
 
-    const ingredientCategoryLinks = allCategoryLinks.filter(
-      (c) => c.ingredient_id === ingredient.id
-    );
+  // ⚡ Bolt Performance Optimization: Replace O(N*M) array.filter calls with O(N+M) maps
+  const synonymsByIngredient = new Map<string, any[]>();
+  for (let i = 0; i < allSynonyms.length; i++) {
+    const s = allSynonyms[i];
+    if (s) {
+      const arr = synonymsByIngredient.get(s.base_ingredient_id) || [];
+      arr.push({ id: s.id, synonym: s.synonym });
+      synonymsByIngredient.set(s.base_ingredient_id, arr);
+    }
+  }
 
-    const categories = ingredientCategoryLinks
-      .map((link) => link.ingredient_category)
-      .filter((c: any): c is { id: string; name: string } => c !== null);
+  const categoriesByIngredient = new Map<string, any[]>();
+  for (let i = 0; i < allCategoryLinks.length; i++) {
+    const link = allCategoryLinks[i];
+    if (link && link.ingredient_category !== null) {
+      const arr = categoriesByIngredient.get(link.ingredient_id) || [];
+      arr.push(link.ingredient_category);
+      categoriesByIngredient.set(link.ingredient_id, arr);
+    }
+  }
+
+  for (let i = 0; i < uniqueIngredients.length; i++) {
+    const ingredient = uniqueIngredients[i];
+    if (!ingredient) continue;
+
+    const ingredientSynonyms = synonymsByIngredient.get(ingredient.id) || [];
+    const categories = categoriesByIngredient.get(ingredient.id) || [];
 
     const fullIngredient: BaseIngredientWithRelations = {
       ...ingredient,
@@ -294,8 +310,11 @@ function buildIngredientResultMap(
     resultMap.set((ingredient.name || "").toLowerCase(), fullIngredient);
 
     // And it matches any of its synonyms
-    for (const syn of ingredientSynonyms) {
-      resultMap.set((syn.synonym || "").toLowerCase(), fullIngredient);
+    for (let j = 0; j < ingredientSynonyms.length; j++) {
+      const syn = ingredientSynonyms[j];
+      if (syn) {
+        resultMap.set((syn.synonym || "").toLowerCase(), fullIngredient);
+      }
     }
   }
 
