@@ -210,18 +210,26 @@ const getAvailableRecipesCore = async (): Promise<{
 
   const canMake = convertDbRecipesToUIRecipesBatch(availability.canMake, recipeDetailsMap);
 
-  const partiallyCanMake = availability.partiallyCanMake
-    .map((item) => {
-      const uiRecipes = convertDbRecipesToUIRecipesBatch([item.recipe], recipeDetailsMap);
-      if (uiRecipes.length === 0) {
-        return null;
-      }
-      return {
-        recipe: uiRecipes[0],
+  const partialDbRecipes = availability.partiallyCanMake.map((item) => item.recipe);
+  const partialUiRecipes = convertDbRecipesToUIRecipesBatch(partialDbRecipes, recipeDetailsMap);
+
+  const partiallyCanMake: Array<{ recipe: Recipe; completionPercentage: number }> = [];
+
+  // Re-associate UI recipes with their completion percentages.
+  // Note: convertDbRecipesToUIRecipesBatch may skip recipes if details are missing,
+  // so we create a map to look them up by ID.
+  const uiRecipeMap = new Map<string, Recipe>();
+  partialUiRecipes.forEach((r) => uiRecipeMap.set(r.id, r));
+
+  for (const item of availability.partiallyCanMake) {
+    const uiRecipe = uiRecipeMap.get(item.recipe.id);
+    if (uiRecipe) {
+      partiallyCanMake.push({
+        recipe: uiRecipe,
         completionPercentage: item.completionPercentage,
-      };
-    })
-    .filter((item): item is { recipe: Recipe; completionPercentage: number } => item !== null);
+      });
+    }
+  }
 
   return { canMake, partiallyCanMake };
 };
