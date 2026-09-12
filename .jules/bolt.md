@@ -111,3 +111,6 @@
 **Learning:** Initializing objects like `Map<string, number[]>` then using `Array.prototype.reduce()` on them causes O(M) intermediate allocations and closures when calculating average ratings, negatively impacting the JS bridge garbage collector.
 **Action:** Always maintain primitive structural properties in single-pass scalar mapping (`Map<string, { sum: number, count: number }>`) without pushing into array lengths, reducing allocations to O(1) structures per entry.
 ## 2024-07-14 - Promise.all Optimization\n**Learning:** Replacing sequential await calls inside loops with Promise.all reduces N+1 async bottlenecks effectively.\n**Action:** Use Promise.all when independent async tasks are run inside a loop.
+## 2026-09-12 - Fix N+1 Query in Recipe Batch Processing
+**Learning:** When using batch processing functions like `convertDbRecipesToUIRecipesBatch`, calling them sequentially inside a loop (e.g., mapping over `availability.partiallyCanMake`) defeats the purpose of the batch method and creates an N+1 query bottleneck.
+**Action:** Extract all elements that require processing into a single array, call the batch method once, and use a `Map` to re-associate the processed UI models with their original metadata (like completion percentages) before returning.
