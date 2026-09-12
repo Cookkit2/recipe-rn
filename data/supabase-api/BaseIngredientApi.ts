@@ -5,7 +5,7 @@ import { supabase } from "~/lib/supabase/supabase-client";
  * (%, _, \, and *) to prevent wildcard injection attacks.
  */
 function escapeLikePattern(str: string): string {
-  if (typeof str !== 'string') return str;
+  if (typeof str !== "string") return str;
   return str.replace(/[%_\\*]/g, "\\$&");
 }
 
@@ -216,7 +216,10 @@ async function fetchIngredientsBySynonyms(missingNames: string[]) {
 
   // Execute parameterized queries concurrently
   const synonymPromises = sanitizedNames.map((n) =>
-    supabase!.from("ingredient_synonym").select("base_ingredient_id, synonym").ilike("synonym", escapeLikePattern(n))
+    supabase!
+      .from("ingredient_synonym")
+      .select("base_ingredient_id, synonym")
+      .ilike("synonym", escapeLikePattern(n))
   );
 
   const synonymResults = await Promise.all(synonymPromises);
