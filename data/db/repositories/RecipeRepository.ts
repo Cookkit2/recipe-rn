@@ -7,6 +7,7 @@ import { database } from "../database";
 import { recipeApi, type SupabaseRecipeWithDetails } from "~/data/supabase-api/RecipeApi";
 import type { Tables } from "~/lib/supabase/supabase-types";
 import { log } from "~/utils/logger";
+import { Platform } from "react-native";
 import { sanitizeSearchTerm } from "~/utils/input-sanitization";
 import type { NutritionSource, DietaryTag } from "~/types/Nutrition";
 
@@ -432,10 +433,17 @@ export class RecipeRepository extends BaseRepository<Recipe> {
 
   // Get quick recipes (under 30 minutes total time)
   async getQuickRecipes(maxTotalMinutes: number = 30): Promise<Recipe[]> {
-    // Note: WatermelonDB doesn't support computed columns in queries directly
-    // So we'll fetch and filter in JavaScript
-    const recipes = await this.collection.query().fetch();
-    return recipes.filter((recipe) => recipe.prepMinutes + recipe.cookMinutes <= maxTotalMinutes);
+    // ⚡ Bolt Performance Optimization: Push filtering logic down to SQLite using an unsafe expression
+    // when native, preventing a massive full-table fetch across the JS bridge. Fall back to JS
+    // filtering only on web where SQLite isn't available.
+    if (Platform.OS === "web") {
+      const recipes = await this.collection.query().fetch();
+      return recipes.filter((recipe) => recipe.prepMinutes + recipe.cookMinutes <= maxTotalMinutes);
+    }
+
+    return await this.collection
+      .query(Q.unsafeSqlExpr(`prep_minutes + cook_minutes <= ${maxTotalMinutes}`))
+      .fetch();
   }
 
   // Sync recipes from Supabase
