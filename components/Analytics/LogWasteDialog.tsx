@@ -243,6 +243,7 @@ function LogWasteDialog({
             setOpen(true);
           }}
           accessibilityLabel="Log waste"
+          accessibilityRole="button"
         >
           <PlusIcon className="text-foreground" size={18} strokeWidth={3} />
         </Button>

@@ -87,6 +87,7 @@ function HorizontalIngredientItemCard({ item }: { item: CreatePantryItem }) {
             className="rounded-full"
             onPress={handleDelete}
             accessibilityLabel="Delete item"
+            accessibilityRole="button"
           >
             <Trash2Icon className="text-destructive" size={20} strokeWidth={2.618} />
           </Button>

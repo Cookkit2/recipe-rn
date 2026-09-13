@@ -79,6 +79,7 @@ function ErrorState({ error, onRetry }: { error: Error; onRetry: () => void }) {
           size="icon-sm"
           onPress={onRetry}
           accessibilityLabel="Retry loading recipes"
+          accessibilityRole="button"
         >
           <RefreshCwIcon size={16} className="text-muted-foreground" strokeWidth={2} />
         </Button>
@@ -201,6 +202,7 @@ export default function ExpiringRecipesSection() {
           onPress={handleDismiss}
           accessibilityLabel="Dismiss Cook Now section"
           accessibilityHint="Hide this section for 24 hours"
+          accessibilityRole="button"
         >
           <XIcon size={16} className="text-muted-foreground" strokeWidth={2.5} />
         </Button>

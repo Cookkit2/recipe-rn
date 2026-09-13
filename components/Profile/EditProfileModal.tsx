@@ -195,8 +195,6 @@ export default function EditProfileModal({
           className="min-w-full mt-4 rounded-2xl bg-foreground flex-row justify-center items-center gap-2"
           onPress={onSubmit}
           isLoading={isSigningUp}
-          accessibilityRole="button"
-          accessibilityLabel={isSigningUp ? "Confirming profile changes..." : "Confirm profile changes"}
         >
           <P className="font-urbanist-semibold text-background">Confirm</P>
         </Button>

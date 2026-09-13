@@ -125,6 +125,7 @@ export default function CameraActionRow({
         className="rounded-full active:bg-white/10"
         onPress={pickFromGallery}
         accessibilityLabel="Pick from gallery"
+        accessibilityRole="button"
       >
         <ImagesIcon className="text-white/80" size={24} />
       </Button>
