@@ -93,7 +93,6 @@ export default function IngredientHeaderRow() {
           className="rounded-full mx-4"
           onPress={onBack}
           accessibilityLabel="Close camera"
-          accessibilityRole="button"
         >
           <XIcon className="text-white" size={20} />
         </Button>

@@ -155,7 +155,6 @@ const TemplateSheetMemo = function TemplateSheet({
                                 onPress={() => handleDeleteTemplate(template)}
                                 disabled={isDeletePending}
                                 accessibilityLabel="Delete template"
-                                accessibilityRole="button"
                               >
                                 <Trash2Icon size={16} className="text-destructive" />
                               </Button>

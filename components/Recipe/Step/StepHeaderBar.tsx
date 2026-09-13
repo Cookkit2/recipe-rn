@@ -49,7 +49,6 @@ export default function StepHeaderBar() {
           className="rounded-full"
           onPress={handleClose}
           accessibilityLabel="Close"
-          accessibilityRole="button"
         >
           <XIcon className="text-foreground" />
         </Button>

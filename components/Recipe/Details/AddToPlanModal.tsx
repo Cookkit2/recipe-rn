@@ -208,7 +208,6 @@ export default function AddToPlanModal({ recipeId }: AddToPlanModalProps) {
                 disabled={servings <= 1}
                 onPress={() => servings > 1 && setServings(servings - 1)}
                 accessibilityLabel="Decrease servings"
-                accessibilityRole="button"
               >
                 <MinusIcon className="text-foreground" size={20} strokeWidth={2.618} />
               </Button>
@@ -225,7 +224,6 @@ export default function AddToPlanModal({ recipeId }: AddToPlanModalProps) {
                 enableDebounce={false}
                 onPress={() => setServings(servings + 1)}
                 accessibilityLabel="Increase servings"
-                accessibilityRole="button"
               >
                 <PlusIcon className="text-foreground" size={20} strokeWidth={2.618} />
               </Button>

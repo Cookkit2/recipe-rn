@@ -105,7 +105,6 @@ export default function EditStepItem({
           enableDebounce={false}
           onPress={handleDelete}
           accessibilityLabel="Delete step"
-          accessibilityRole="button"
         >
           <Trash2Icon className="text-destructive" size={18} strokeWidth={2.618} />
         </Button>

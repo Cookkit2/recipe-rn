@@ -134,7 +134,6 @@ export default function EditIngredientItem({
         enableDebounce={false}
         onPress={handleDelete}
         accessibilityLabel="Delete ingredient"
-        accessibilityRole="button"
       >
         <Trash2Icon className="text-destructive" size={18} strokeWidth={2.618} />
       </Button>
