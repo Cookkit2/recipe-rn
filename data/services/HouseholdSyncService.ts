@@ -128,7 +128,6 @@ export class HouseholdSyncService {
           .fetch();
         allItems.push(...chunkItems);
       }
-
       const itemsMap = new Map();
       for (const item of allItems) {
         if ((item as any).supabaseId) {
