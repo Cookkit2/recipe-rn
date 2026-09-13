@@ -21,7 +21,7 @@ export function RecipeStep({ step, isLast }: RecipeStepProps) {
       }}
       accessibilityRole="checkbox"
       accessibilityState={{ checked: isCompleted }}
-      accessibilityLabel={`Step ${step.step}: ${step.title}. ${step.description}`}
+      accessibilityLabel={`Step ${step.step}`}
       accessibilityHint="Toggles step completion"
       className={`py-4 ${!isLast ? "border-b border-border/40" : ""}`}
     >
