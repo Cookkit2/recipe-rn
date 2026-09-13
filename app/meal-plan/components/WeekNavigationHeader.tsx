@@ -59,7 +59,7 @@ export function WeekNavigationHeader({
       <View className="flex-row items-center justify-between">
         <Pressable
           onPress={onPreviousWeek}
-          className="p-2"
+          className="p-2 active:opacity-70"
           accessibilityRole="button"
           accessibilityLabel="Previous week"
         >
@@ -74,7 +74,7 @@ export function WeekNavigationHeader({
 
         <Pressable
           onPress={onNextWeek}
-          className="p-2"
+          className="p-2 active:opacity-70"
           accessibilityRole="button"
           accessibilityLabel="Next week"
         >

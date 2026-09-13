@@ -73,6 +73,7 @@ export default function WriteTipModal({
             maxLength={MAX_LENGTH}
             className="w-full min-h-[80px] rounded-lg bg-muted px-3 py-2 text-base font-urbanist-regular border-continuous"
             editable={!isSubmitting}
+            accessibilityLabel="Your tip"
           />
         </View>
 
