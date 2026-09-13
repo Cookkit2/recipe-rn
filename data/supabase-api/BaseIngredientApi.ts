@@ -2,11 +2,11 @@ import { supabase } from "~/lib/supabase/supabase-client";
 
 /**
  * Escapes characters that have special meaning in PostgREST LIKE/ILIKE filters
- * (%, _, \, and *) to prevent wildcard injection attacks.
+ * to prevent wildcard injection attacks.
  */
 function escapeLikePattern(str: string): string {
   if (typeof str !== "string") return str;
-  return str.replace(/[%_\\*]/g, "\\$&");
+  return str.replace(/[%_*?\\]/g, "\\$&");
 }
 
 function guardSupabase() {
