@@ -14,7 +14,7 @@ module.exports = function (api) {
       ],
       "react-native-reanimated/plugin",
     ],
-    // Fix WatermelonDB decorator fields: `@field("x") x!: string;`
+    // Workaround for WatermelonDB decorator fields: `@field("x") x!: string;`
     // Babel's @babel/plugin-transform-typescript throws "Definitely assigned fields
     // cannot be initialized here" because the legacy decorators plugin transforms
     // class fields before TypeScript sees them. Adding allowDeclareFields prevents
@@ -27,7 +27,7 @@ module.exports = function (api) {
         test: (fileName) =>
           !!fileName && !fileName.includes("/node_modules/") && /\.tsx?$/.test(fileName),
         plugins: [
-          ["@babel/plugin-proposal-decorators", { legacy: true }],
+          ["@babel/plugin-proposal-decorators", { version: "legacy" }],
           ["@babel/plugin-proposal-class-properties", { loose: true }],
         ],
       },
