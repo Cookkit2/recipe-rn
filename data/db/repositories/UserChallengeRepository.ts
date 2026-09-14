@@ -352,12 +352,13 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
     // We cannot reliably access getters like isExpired directly on mock POJOs returned by the mocked database
     // in test environments without a proper mock instantiation or hydration step.
     // This allows the test mock objects to pass their `isExpired` property while also supporting WatermelonDB models.
-    const expiredChallengeIds = challenges.reduce((set, c: any) => {
+    const expiredChallengeIds = new Set<string>();
+    for (let i = 0; i < challenges.length; i++) {
+      const c = challenges[i] as any;
       if (c.isExpired) {
-        set.add(c.id);
+        expiredChallengeIds.add(c.id);
       }
-      return set;
-    }, new Set<string>());
+    }
 
     // Filter user challenges whose parent challenge is expired
     return allUserChallenges.filter((uc) => expiredChallengeIds.has(uc.challengeId));
