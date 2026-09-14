@@ -16,6 +16,7 @@ const Input = React.forwardRef<TextInput, InputProps>(({ className, error, ...pr
         error && "border-2 border-destructive",
         className
       )}
+      accessibilityLabel={props.placeholder || props.accessibilityLabel || "Input field"}
       {...props}
     />
   );
