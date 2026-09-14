@@ -1,5 +1,9 @@
 import { supabase } from "~/lib/supabase/supabase-client";
 
+function sanitizeIlike(str: string): string {
+  return str.replace(/[%_*?\\]/g, "\\$&");
+}
+
 function guardSupabase() {
   return supabase != null;
 }
@@ -23,7 +27,7 @@ export const baseIngredientApi = {
     const { data: baseIngredient, error: baseError } = await supabase!
       .from("base_ingredient")
       .select("*")
-      .ilike("name", name)
+      .ilike("name", sanitizeIlike(name))
       .single();
 
     if (baseError && baseError.code !== "PGRST116") {
@@ -166,7 +170,7 @@ async function findIngredientBySynonym(name: string): Promise<BaseIngredientWith
   const { data: synonymData, error: synonymError } = await supabase!
     .from("ingredient_synonym")
     .select("base_ingredient_id")
-    .ilike("synonym", name)
+    .ilike("synonym", sanitizeIlike(name))
     .single();
 
   if (synonymError && synonymError.code !== "PGRST116") {
@@ -207,7 +211,10 @@ async function fetchIngredientsBySynonyms(missingNames: string[]) {
 
   // Execute parameterized queries concurrently
   const synonymPromises = sanitizedNames.map((n) =>
-    supabase!.from("ingredient_synonym").select("base_ingredient_id, synonym").ilike("synonym", n)
+    supabase!
+      .from("ingredient_synonym")
+      .select("base_ingredient_id, synonym")
+      .ilike("synonym", sanitizeIlike(n))
   );
 
   const synonymResults = await Promise.all(synonymPromises);
