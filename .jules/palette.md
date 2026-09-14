@@ -9,3 +9,7 @@
 ## 2024-05-23 - Avoid Modifying Encapsulated UI Components Piecemeal
 **Learning:** If a standard UI primitive (like a `Button` component) is missing a default accessibility role, adding the role manually to every single call site is an anti-pattern that bloats the codebase and fragments accessibility implementations.
 **Action:** Always attempt to apply accessibility defaults at the component definition level (e.g., inside `components/ui/button.tsx`) rather than modifying individual instances. If the core component already has the proper defaults, ensure you are not redundantly targeting those components.
+
+## 2024-05-23 - Accessibility Labels for TextInputs
+**Learning:** TextInputs need an `accessibilityLabel` for screen readers to properly announce their purpose. If `accessibilityLabel` is missing, adding a dynamic fallback like `props.placeholder || "Input field"` in a custom `Input` wrapper can resolve widespread accessibility gaps.
+**Action:** When creating form inputs, directly provide an `accessibilityLabel`. For core UI library wrappers like `<Input>`, implement a fallback mechanism based on the `placeholder` prop to ensure all consumers inherit a baseline level of accessibility automatically.
