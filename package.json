@@ -167,7 +167,8 @@
     "jest-environment-node": "30.4.1",
     "jest-mock": "30.4.1",
     "tmp": ">=0.2.6",
-    "react-native-screens": "4.25.2"
+    "react-native-screens": "4.25.2",
+    "image-size": "^1.1.1"
   },
   "private": true,
   "reanimated": {
