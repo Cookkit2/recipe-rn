@@ -68,3 +68,5 @@ export default function useSelectionRing(selectedIndex: number) {
 
   return { onItemLayout, ringStyle } as const;
 }
+
+// Forced trigger space for resubmission
