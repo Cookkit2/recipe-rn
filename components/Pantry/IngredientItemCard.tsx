@@ -31,7 +31,7 @@ const IngredientItemCard = ({ item, index }: { item: PantryItem; index: number }
       <Link href={`/ingredient/${item.id}`} asChild>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`View details for ${item.name}`}
+          accessibilityHint={`View details for ${item.name}`}
           onPress={debouncedPress}
           onPressIn={() => {
             if (onPressIn && !isRecipeOpen) {
