@@ -348,47 +348,24 @@ export class ChallengeService {
       // Create a map for O(1) lookups
       const userChallengeMap = new Map(userChallenges.map((uc) => [uc.challengeId, uc]));
 
-      // Prepare batch updates
-      const updates = relevantChallenges.map((challenge) => {
+      for (const challenge of relevantChallenges) {
         const requirement = challenge.parsedRequirement;
         const userChallenge = userChallengeMap.get(challenge.id);
         const currentProgress = userChallenge?.progress ?? 0;
         const newProgress = currentProgress + amount;
 
-        return {
-          challengeId: challenge.id,
-          currentProgress: newProgress,
-          targetProgress: requirement.target,
-          challenge,
-          userChallenge,
-          previousStatus: userChallenge?.status,
-        };
-      });
-
-      // Execute batch update
-      const updatedUserChallenges = await this.userChallengeRepo.batchCheckAndUpdateStatus(updates);
-
-      // Process results
-      for (let i = 0; i < updates.length; i++) {
-        const update = updates[i];
-        if (!update) continue;
-        const challenge = update.challenge;
-        const requirement = challenge.parsedRequirement;
-        const previousStatus = update.previousStatus;
-        const newUserChallenge = updatedUserChallenges[i];
+        // Update progress
+        await this.updateProgress(challenge.id, newProgress);
 
         result.progressUpdated.push({
           challengeId: challenge.id,
           title: challenge.title,
-          progress: update.currentProgress,
+          progress: newProgress,
           target: requirement.target,
         });
 
         // Check if newly completed
-        if (newUserChallenge?.status === "completed" && previousStatus !== "completed") {
-          log.info(`✅ Challenge completed: ${challenge.title}`);
-          await this.notifyIfNewCompletion(challenge, previousStatus);
-
+        if (newProgress >= requirement.target && !userChallenge?.isCompleted) {
           result.newlyCompleted.push({
             challengeId: challenge.id,
             title: challenge.title,

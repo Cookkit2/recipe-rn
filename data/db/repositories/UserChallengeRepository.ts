@@ -1,4 +1,4 @@
-import { Q, type Model } from "@nozbe/watermelondb";
+import { Q } from "@nozbe/watermelondb";
 import UserChallenge, { type UserChallengeData } from "../models/UserChallenge";
 import type Challenge from "../models/Challenge";
 import { BaseRepository, type SearchOptions } from "./BaseRepository";
@@ -259,72 +259,6 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
           record.completedAt = Date.now();
         }
       });
-    });
-  }
-
-  // Batch check and update challenge status based on progress
-  async batchCheckAndUpdateStatus(
-    updates: Array<{
-      challengeId: string;
-      currentProgress: number;
-      targetProgress: number;
-    }>
-  ): Promise<UserChallenge[]> {
-    if (updates.length === 0) return [];
-
-    const challengeIds = updates.map((u) => u.challengeId);
-    const existing = await this.collection
-      .query(Q.where("challenge_id", Q.oneOf(challengeIds)))
-      .fetch();
-    const existingMap = new Map(existing.map((uc) => [uc.challengeId, uc]));
-
-    return await this.collection.database.write(async () => {
-      const batchOps: Model[] = [];
-      const results: UserChallenge[] = [];
-
-      for (const update of updates) {
-        const userChallenge = existingMap.get(update.challengeId);
-
-        let newStatus = userChallenge?.status || "available";
-        if (update.currentProgress >= update.targetProgress && newStatus !== "completed") {
-          newStatus = "completed";
-        } else if (update.currentProgress > 0 && newStatus === "available") {
-          newStatus = "active";
-        }
-
-        if (userChallenge) {
-          batchOps.push(
-            userChallenge.prepareUpdate((record: UserChallenge) => {
-              record.progress = update.currentProgress;
-              record.status = newStatus;
-              if (newStatus === "active" && !record.startedAt) {
-                record.startedAt = Date.now();
-              }
-              if (newStatus === "completed" && !record.completedAt) {
-                record.completedAt = Date.now();
-              }
-            })
-          );
-          results.push(userChallenge);
-        } else {
-          const newRecord = this.collection.prepareCreate((record: UserChallenge) => {
-            record.challengeId = update.challengeId;
-            record.status = newStatus;
-            record.progress = update.currentProgress;
-            if (newStatus === "active") {
-              record.startedAt = Date.now();
-            }
-            if (newStatus === "completed") {
-              record.completedAt = Date.now();
-            }
-          });
-          batchOps.push(newRecord);
-          results.push(newRecord);
-        }
-      }
-
-      await database.batch(batchOps);
-      return results;
     });
   }
 
