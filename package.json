@@ -95,6 +95,7 @@
     "expo-video": "~56.1.4",
     "expo-web-browser": "~56.0.5",
     "form-data": "^4.0.6",
+    "image-size": "^2.0.4",
     "jwt-encode": "^1.0.1",
     "llama.rn": "^0.11.5",
     "lucide-react-native": "^0.553.0",
@@ -152,7 +153,7 @@
     "react-test-renderer": "19.2.7",
     "sharp": "^0.35.3",
     "ts-jest": "^29.4.11",
-    "typescript": "~7.0.2",
+    "typescript": "~5.7.3",
     "ws": "^8.21.0",
     "zustand": "^5.0.12"
   },
