@@ -77,6 +77,33 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
     return records;
   }
 
+  // Get average ratings for all recipes
+  async getAverageRatings(): Promise<Map<string, number>> {
+    // ⚡ Bolt Performance Optimization: Aggregate ratings at the DB layer using SQLite
+    // GROUP BY to avoid fetching all history records and allocating Map structures in JS.
+    const rawRecords = await this.collection
+      .query(
+        Q.unsafeSqlQuery(`
+          SELECT recipe_id, sum(rating) as sumRating, count(rating) as countRating
+          FROM ${this.collection.table}
+          WHERE _status != 'deleted' AND rating IS NOT NULL AND rating >= 1 AND rating <= 5
+          GROUP BY recipe_id
+        `)
+      )
+      .unsafeFetchRaw();
+
+    const ratingsMap = new Map<string, number>();
+    for (let i = 0; i < rawRecords.length; i++) {
+      const r = rawRecords[i] as any;
+      const sum = Number(r.sumRating);
+      const count = Number(r.countRating);
+      if (count > 0) {
+        ratingsMap.set(String(r.recipe_id), sum / count);
+      }
+    }
+    return ratingsMap;
+  }
+
   // Get recently cooked recipes (unique recipes)
   async getRecentlyCookedRecipes(limit: number = 10): Promise<
     {
