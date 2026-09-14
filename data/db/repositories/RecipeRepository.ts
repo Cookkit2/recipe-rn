@@ -442,7 +442,7 @@ export class RecipeRepository extends BaseRepository<Recipe> {
     }
 
     return await this.collection
-      .query(Q.unsafeSqlExpr(`prep_minutes + cook_minutes <= ${maxTotalMinutes}`))
+      .query(Q.unsafeSqlExpr(`prep_minutes + cook_minutes <= ${Number(maxTotalMinutes)}`))
       .fetch();
   }
 
