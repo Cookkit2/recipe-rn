@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, View } from "react-native";
+import { Pressable, View, ActivityIndicator } from "react-native";
 import { Text } from "~/components/ui/text";
 import { cn } from "~/lib/utils";
 import Animated from "react-native-reanimated";
@@ -55,8 +55,8 @@ export function SocialAuthButton({
         onPressOut={handlePressOut}
         disabled={disabled || loading}
         accessibilityRole="button"
-        accessibilityLabel={config.label}
-        accessibilityState={{ disabled: disabled || loading }}
+        accessibilityLabel={loading ? "Connecting..." : config.label}
+        accessibilityState={{ disabled: disabled || loading, busy: loading }}
         className={cn(
           "flex-row items-center justify-center h-12 px-4 py-3 rounded-lg border",
           config.bgColor,
@@ -67,7 +67,11 @@ export function SocialAuthButton({
       >
         <View className="flex-row items-center space-x-3">
           <View className="w-5 h-5 items-center justify-center">
-            <Text className={cn("font-bold text-lg", config.textColor)}>{config.icon}</Text>
+            {loading ? (
+              <ActivityIndicator size="small" color={provider === "apple" ? "white" : undefined} />
+            ) : (
+              <Text className={cn("font-bold text-lg", config.textColor)}>{config.icon}</Text>
+            )}
           </View>
           <Text className={cn("font-medium", config.textColor)}>
             {loading ? "Connecting..." : config.label}
