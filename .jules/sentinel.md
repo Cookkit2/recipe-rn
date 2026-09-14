@@ -1,3 +1,4 @@
-## 2025-02-26 - Secure MMKV Encryption Key Generation
-**Learning:** `Crypto.randomUUID()` generates a UUIDv4 which relies on PRNGs that are not cryptographically secure and should not be used for encryption keys. Furthermore, test environment fallback keys should be strictly guarded.
-**Action:** Always use `Crypto.getRandomBytes()` or a proper CSPRNG for generating encryption keys, convert the output to a safe format like base64, and wrap test fallbacks in `__DEV__` or `NODE_ENV === 'test'` checks so they are stripped from production builds.
+## 2024-05-24 - Wildcard Injection in Supabase ilike
+**Vulnerability:** Supabase `.ilike()` and `.like()` queries are vulnerable to wildcard injection (%, _, *, ?, \) if user input is passed directly without sanitization, leading to logic bypass and potential ReDoS.
+**Learning:** Developers often forget that `.ilike()` interprets these special characters as wildcards, not literal strings, even when aiming for exact, case-insensitive matching.
+**Prevention:** Always extract user input going into `.ilike()` into a sanitized variable by escaping special characters using a pattern like `term.replace(/[%_*\\?]/g, "\\$&")`.
