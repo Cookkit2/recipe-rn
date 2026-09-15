@@ -4,4 +4,4 @@
 ## 2024-05-24 - PostgREST Wildcard Injection
 **Vulnerability:** Unsanitized user input passed directly to `.ilike()` or `.like()` methods in Supabase/PostgREST.
 **Learning:** PostgREST explicitly supports `*` as an alias for the `%` wildcard, in addition to standard PostgreSQL wildcards `%` and `_`.
-**Prevention:** Always sanitize inputs by escaping `%`, `_`, `\`, and `*` (e.g., using `str.replace(/[%_\\*]/g, "\\$&")`) before passing to LIKE/ILIKE filters to prevent unauthorized pattern matching or slow query DoS attacks.
+**Prevention:** Always sanitize inputs by escaping `%`, `_`, `*`, `?`, and `\` (e.g., using `str.replace(/[%_*?\\]/g, "\\$&")`) before passing to LIKE/ILIKE filters to prevent unauthorized pattern matching or slow query DoS attacks.
