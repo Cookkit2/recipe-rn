@@ -290,7 +290,7 @@ function buildIngredientResultMap(
         arr = [];
         categoriesByIngredientId.set(c.ingredient_id, arr);
       }
-      arr.push(c.ingredient_category);
+      arr.push(c.ingredient_category as { id: string; name: string });
     }
   }
 
