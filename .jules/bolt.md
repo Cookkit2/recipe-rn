@@ -111,3 +111,7 @@
 **Learning:** Initializing objects like `Map<string, number[]>` then using `Array.prototype.reduce()` on them causes O(M) intermediate allocations and closures when calculating average ratings, negatively impacting the JS bridge garbage collector.
 **Action:** Always maintain primitive structural properties in single-pass scalar mapping (`Map<string, { sum: number, count: number }>`) without pushing into array lengths, reducing allocations to O(1) structures per entry.
 ## 2024-07-14 - Promise.all Optimization\n**Learning:** Replacing sequential await calls inside loops with Promise.all reduces N+1 async bottlenecks effectively.\n**Action:** Use Promise.all when independent async tasks are run inside a loop.
+
+## 2024-05-20 - Batch Q.oneOf to Avoid SQLite Variable Limit
+**Learning:** Using `Q.oneOf(array)` in WatermelonDB to fetch related records directly translates to a SQL `IN (...)` clause. SQLite has a hard limit on query variables (typically 999). Passing an arbitrarily large array (like incoming remote sync items) will cause the app to crash with a "too many SQL variables" error during large syncs.
+**Action:** When filtering by a large array of IDs using `Q.oneOf`, always chunk the array into smaller batches (e.g., 500 items per batch), execute the queries in a loop or `Promise.all`, and concatenate the results to safely retrieve all records.
