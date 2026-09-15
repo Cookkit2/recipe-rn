@@ -139,6 +139,7 @@ export default function CameraActionRow({
         disabled={!isCameraAvailable}
         accessibilityLabel="Take picture"
         accessibilityRole="button"
+        accessibilityState={{ disabled: !isCameraAvailable }}
       >
         <View className="w-15 h-15 rounded-full bg-white border-2 border-gray-400" />
       </AnimatedPressable>
