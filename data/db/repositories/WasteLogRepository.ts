@@ -316,6 +316,7 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
       } else {
         // Group by month (start of month)
         d.setDate(1);
+        d.setHours(0, 0, 0, 0);
         key = d.getTime();
       }
 
