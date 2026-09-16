@@ -107,6 +107,7 @@ export default function RateRecipeModal({
             textAlignVertical="top"
             className="w-full min-h-[100px] rounded-lg bg-muted px-3 py-2 text-base font-urbanist-regular border-continuous"
             editable={!isSaving}
+            accessibilityLabel="Cooking notes (optional)"
           />
         </View>
 
