@@ -151,7 +151,7 @@ const SegmentedButton = React.memo(function SegmentedButton({
         startTransition(() => snapToExpanded());
       }}
       accessibilityRole="button"
-      accessibilityHint={`Filter by ${label}`}
+      accessibilityLabel={`Filter by ${label}`}
       accessibilityState={{ selected: selectedRecipeTags.includes(tag) }}
     >
       {React.cloneElement(icon, {
