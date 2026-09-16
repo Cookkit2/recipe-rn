@@ -1,1 +1,1 @@
-## Reflection\nRan Prettier check to confirm valid formatting.
+## Reflection\nRan type checks again, and formatted.
