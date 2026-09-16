@@ -6,7 +6,7 @@ import { supabase } from "~/lib/supabase/supabase-client";
  */
 function escapeLikePattern(str: string): string {
   if (typeof str !== "string") return str;
-  return str.replace(/[%_*?\\]/g, "\\$&");
+  return str.replace(/[%_*\\]/g, "\\$&");
 }
 
 function guardSupabase() {
