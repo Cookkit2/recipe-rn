@@ -21,7 +21,7 @@ export const baseIngredientApi = {
   getBaseIngredientByName: async (name: string): Promise<BaseIngredientWithRelations | null> => {
     if (!guardSupabase()) return null;
     // SECURITY: Escape PostgREST wildcard characters to prevent wildcard injection and slow query DoS attacks.
-    const sanitizedName = name.replace(/[%_\\*?]/g, "\\$&");
+    const sanitizedName = name.replace(/[%_\\*?]/g, (match) => "\\" + match);
     const { data: baseIngredient, error: baseError } = await supabase!
       .from("base_ingredient")
       .select("*")
@@ -166,7 +166,7 @@ async function fetchRelatedData(baseIngredientId: string): Promise<BaseIngredien
  */
 async function findIngredientBySynonym(name: string): Promise<BaseIngredientWithRelations | null> {
   // SECURITY: Escape PostgREST wildcard characters to prevent wildcard injection and slow query DoS attacks.
-  const sanitizedName = name.replace(/[%_\\*?]/g, "\\$&");
+  const sanitizedName = name.replace(/[%_\\*?]/g, (match) => "\\" + match);
   const { data: synonymData, error: synonymError } = await supabase!
     .from("ingredient_synonym")
     .select("base_ingredient_id")
@@ -212,7 +212,7 @@ async function fetchIngredientsBySynonyms(missingNames: string[]) {
   // Execute parameterized queries concurrently
   const synonymPromises = sanitizedNames.map((n) => {
     // SECURITY: Escape PostgREST wildcard characters to prevent wildcard injection and slow query DoS attacks.
-    const sanitizedName = n.replace(/[%_\\*?]/g, "\\$&");
+    const sanitizedName = n.replace(/[%_\\*?]/g, (match) => "\\" + match);
     return supabase!
       .from("ingredient_synonym")
       .select("base_ingredient_id, synonym")
