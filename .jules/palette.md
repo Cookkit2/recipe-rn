@@ -13,3 +13,7 @@
 ## 2024-05-23 - Accessibility Labels for TextInputs
 **Learning:** TextInputs need an `accessibilityLabel` for screen readers to properly announce their purpose. If `accessibilityLabel` is missing, adding a dynamic fallback like `props.placeholder || "Input field"` in a custom `Input` wrapper can resolve widespread accessibility gaps.
 **Action:** When creating form inputs, directly provide an `accessibilityLabel`. For core UI library wrappers like `<Input>`, implement a fallback mechanism based on the `placeholder` prop to ensure all consumers inherit a baseline level of accessibility automatically.
+
+## 2024-05-23 - Clean Prop Destructuring for Default Fallbacks
+**Learning:** When creating a higher-order wrapper component (like `<Input>`) that sets a default accessibility fallback (e.g., using a placeholder as an `accessibilityLabel`), relying on the trailing `{...props}` spread to overwrite the fallback is fragile. It breaks if a consumer explicitly passes an `undefined` value for the prop.
+**Action:** Always destructure the props you intend to provide fallbacks for directly in the function arguments, evaluate the fallback securely (e.g., `accessibilityLabel={accessibilityLabel || placeholder}`), and explicitly omit them from the `...props` rest parameter to ensure robust behavior.
