@@ -5,3 +5,6 @@
 ## 2026-07-13 - Pressable accessibilityLabel Overrides Nested Children
 **Learning:** In React Native, applying an `accessibilityLabel` to a container element like `Pressable` overrides the accessibility readout of its child elements. If there is text inside, screen readers will completely ignore it and only read the label. If the button has descriptive text, you don't need a label.
 **Action:** When working on making `Pressable` elements accessible, carefully consider if the contents should be read by a screen reader. If they should, avoid adding an `accessibilityLabel` directly to the `Pressable`, but you can still add an `accessibilityRole="button"` if appropriate.
+## 2026-07-28 - Checkbox Accessibility in React Native
+**Learning:** When using `accessibilityRole="checkbox"` on a `Pressable`, the `accessibilityLabel` should describe the item itself (e.g., 'Step 1: Preheat oven') rather than the action ('Mark step complete'). The action to be taken when interacted with should be placed in `accessibilityHint`. This prevents screen readers from outputting redundant or confusing states like 'Mark step complete, checked, checkbox'.
+**Action:** Always verify that `accessibilityLabel` identifies *what* the element is, and use `accessibilityHint` to describe *what happens* when you interact with it, especially for stateful roles like checkboxes or switches.
