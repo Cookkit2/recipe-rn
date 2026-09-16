@@ -75,7 +75,7 @@ describe("SocialRecipeService SSRF protections", () => {
       Promise.resolve(
         new Response(null, {
           status: 301,
-          headers: { location: "http://localhost:8080/internal" },
+          headers: new Headers({ location: "http://localhost:8080/internal" }),
         })
       )
     );
@@ -96,7 +96,7 @@ describe("SocialRecipeService SSRF protections", () => {
       Promise.resolve(
         new Response(null, {
           status: 301,
-          headers: { location: "https://www.instagram.com/p/123" },
+          headers: new Headers({ location: "https://www.instagram.com/p/123" }),
         })
       )
     );
