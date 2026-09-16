@@ -41,7 +41,7 @@ function sanitizeForDatabase(input: string, options: SanitizationOptions = {}): 
   sanitized = sanitized.replace(/\s+/g, " ").trim();
 
   // 3. Escape SQL wildcards and backslashes AFTER removing dangerous patterns
-  sanitized = sanitized.replace(/[%_\\]/g, "\\$&");
+  sanitized = sanitized.replace(/[%_*?\\]/g, "\\$&");
 
   // 4. Handle HTML if not allowed
   if (!allowHtml) {
