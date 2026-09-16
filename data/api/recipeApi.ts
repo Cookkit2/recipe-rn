@@ -210,18 +210,24 @@ const getAvailableRecipesCore = async (): Promise<{
 
   const canMake = convertDbRecipesToUIRecipesBatch(availability.canMake, recipeDetailsMap);
 
+  const partiallyDbRecipes = availability.partiallyCanMake.map((item) => item.recipe);
+  const partiallyUiRecipes = convertDbRecipesToUIRecipesBatch(partiallyDbRecipes, recipeDetailsMap);
+
+  // Map the resulting UI recipes by ID for fast lookup
+  const uiRecipeMap = new Map<string, Recipe>();
+  for (const r of partiallyUiRecipes) {
+    uiRecipeMap.set(r.id, r);
+  }
+
   const partiallyCanMake = availability.partiallyCanMake
-    .map((item) => {
-      const uiRecipes = convertDbRecipesToUIRecipesBatch([item.recipe], recipeDetailsMap);
-      if (uiRecipes.length === 0) {
-        return null;
-      }
-      return {
-        recipe: uiRecipes[0],
-        completionPercentage: item.completionPercentage,
-      };
-    })
-    .filter((item): item is { recipe: Recipe; completionPercentage: number } => item !== null);
+    .map((item) => ({
+      recipe: uiRecipeMap.get(item.recipe.id),
+      completionPercentage: item.completionPercentage,
+    }))
+    .filter((item) => item.recipe !== undefined) as Array<{
+    recipe: Recipe;
+    completionPercentage: number;
+  }>;
 
   return { canMake, partiallyCanMake };
 };
