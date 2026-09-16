@@ -21,9 +21,14 @@ import type {
 } from "./types";
 import { YouTubeServiceError } from "./types";
 import { NoAuthYouTubeService } from "./NoAuthYouTubeService";
-import { supabase } from "../../supabase/supabase-client";
+import Constants from "expo-constants";
+
+const getApiKey = () =>
+  process.env.EXPO_PUBLIC_YOUTUBE_API_KEY ||
+  Constants.expoConfig?.extra?.EXPO_PUBLIC_YOUTUBE_API_KEY;
 
 export class AuthYouTubeService implements IYouTubeService {
+  private readonly BASE_URL = "https://www.googleapis.com/youtube/v3";
   private readonly noAuthService: NoAuthYouTubeService;
 
   constructor() {
@@ -32,34 +37,40 @@ export class AuthYouTubeService implements IYouTubeService {
   }
 
   /**
-   * Fetch video info using YouTube Data API v3 proxy Edge Function
+   * Fetch video info using YouTube Data API v3
    */
   async getVideoInfo(videoId: string): Promise<YouTubeVideoInfo> {
-    if (!supabase) {
+    const apiKey = getApiKey();
+    if (!apiKey) {
       throw new YouTubeServiceError(
-        "Supabase client not configured. Cannot invoke youtube proxy.",
+        "YouTube API key not configured. Set EXPO_PUBLIC_YOUTUBE_API_KEY.",
         "API_ERROR"
       );
     }
 
+    const url = `${this.BASE_URL}/videos?part=snippet,contentDetails&id=${encodeURIComponent(videoId)}`;
+
     try {
-      const { data, error } = await supabase.functions.invoke("youtube-proxy", {
-        body: { videoId },
+      const response = await fetch(url, {
+        headers: {
+          "x-goog-api-key": apiKey as string,
+        },
       });
 
-      if (error) {
-        throw new YouTubeServiceError(`API error: HTTP ${error.status || 500}`, "API_ERROR");
-      }
-
-      if (data?.error) {
-        if (data.status === 403) {
+      if (!response.ok) {
+        if (response.status === 403) {
           throw new YouTubeServiceError(
             "YouTube API quota exceeded or API key invalid",
             "RATE_LIMITED"
           );
         }
-        throw new YouTubeServiceError(`API error: ${data.error}`, "API_ERROR");
+
+        // Return a generic error message instead of parsing downstream errors
+        // to prevent accidental secret leakage
+        throw new YouTubeServiceError(`API error: HTTP ${response.status}`, "API_ERROR");
       }
+
+      const data = await response.json();
 
       if (!data.items || data.items.length === 0) {
         throw new YouTubeServiceError("Video not found or is private", "VIDEO_NOT_FOUND");

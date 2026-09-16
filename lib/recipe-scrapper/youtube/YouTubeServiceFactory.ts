@@ -5,8 +5,8 @@
 
 import type { IYouTubeService } from "./types";
 import { NoAuthYouTubeService } from "./NoAuthYouTubeService";
+import Constants from "expo-constants";
 import { AuthYouTubeService } from "./AuthYouTubeService";
-import { supabase } from "../../supabase/supabase-client";
 
 export type YouTubeServiceType = "noauth" | "auth";
 
@@ -26,13 +26,16 @@ function createYouTubeService(type: YouTubeServiceType = "noauth"): IYouTubeServ
 
 /**
  * Get the default YouTube service based on environment configuration
- * Returns Auth service if supabase client is available (for Edge Functions proxy), otherwise falls back to NoAuth service
+ * Returns Auth service if API key is available, otherwise falls back to NoAuth service
  */
 export function getDefaultYouTubeService(): IYouTubeService {
-  // Check if Supabase client is configured to use the proxy Edge Function
-  const hasSupabaseProxy = !!supabase;
+  // Check if YouTube Data API key is configured
+  const hasApiKey = !!(
+    process.env.EXPO_PUBLIC_YOUTUBE_API_KEY ||
+    Constants.expoConfig?.extra?.EXPO_PUBLIC_YOUTUBE_API_KEY
+  );
 
-  return createYouTubeService(hasSupabaseProxy ? "auth" : "noauth");
+  return createYouTubeService(hasApiKey ? "auth" : "noauth");
 }
 
 /**
