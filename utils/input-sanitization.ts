@@ -72,6 +72,17 @@ function sanitizeForDatabase(input: string, options: SanitizationOptions = {}): 
  * @param options - Sanitization options
  * @returns Sanitized search term ready for LIKE queries
  */
+/**
+ * Sanitizes input for Supabase ilike/like queries by escaping wildcards
+ * @param input - The raw user input
+ * @returns Sanitized string safe for ilike/like operations
+ */
+export function sanitizeSupabaseIlike(input: string): string {
+  if (typeof input !== "string") return input;
+  // Escape %, _, *, and \. We DO NOT escape ? as it is not a wildcard in Postgres/PostgREST.
+  return input.replace(/[%_*\\]/g, "\\$&");
+}
+
 export function sanitizeSearchTerm(searchTerm: string, options: SanitizationOptions = {}): string {
   const sanitized = sanitizeForDatabase(searchTerm, {
     maxLength: 100,
