@@ -20,10 +20,11 @@ describe("sanitizeSearchTerm", () => {
     expect(sanitizeSearchTerm("  fresh   apple  ")).toBe("%fresh apple%");
   });
 
-  it("should escape SQL wildcards (%, _, \\)", () => {
+  it("should escape SQL wildcards (%, _, \\) and PostgREST wildcards (*, ?)", () => {
     expect(sanitizeSearchTerm("100% juice")).toBe("%100\\% juice%");
     expect(sanitizeSearchTerm("user_name")).toBe("%user\\_name%");
     expect(sanitizeSearchTerm("path\\to")).toBe("%path\\\\to%");
+    expect(sanitizeSearchTerm("test*ing?")).toBe("%test\\*ing\\?%");
   });
 
   it("should strip HTML tags by default", () => {
