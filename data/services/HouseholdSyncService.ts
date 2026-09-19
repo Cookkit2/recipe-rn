@@ -61,7 +61,7 @@ export class HouseholdSyncService {
     const stockCollection = database.collections.get("stock");
 
     // Query by household_id + updated_at > lastSync at the DB layer instead of
-    // fetching the entire collection and filtering in JS (issue #734 N+1 fix).
+    // fetching the entire collection and filtering in JS (Resolved N+1 query issue).
     // `household_id` is isIndexed:true in the schema (the indexed leg); the
     // `updated_at` leg is an unindexed post-filter, so on very large pantries
     // the household_id index does the heavy lifting — same shape as the
@@ -116,7 +116,11 @@ export class HouseholdSyncService {
 
       // ⚡ Bolt Performance Optimization: Fetch all items once and use a Map for O(1) lookups
       // instead of fetching all items from DB inside the loop for every remote item.
-      const allItems = await stockCollection.query().fetch();
+      // Prevent fetching the entire stock collection by filtering by the exact remote IDs being synced.
+      const remoteIds = remoteItems.map((item: any) => item.id);
+      const allItems = await stockCollection
+        .query(Q.where("supabase_id", Q.oneOf(remoteIds)))
+        .fetch();
       const itemsMap = new Map();
       for (const item of allItems) {
         if ((item as any).supabaseId) {
