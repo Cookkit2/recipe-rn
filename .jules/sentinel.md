@@ -4,3 +4,7 @@
 ## 2025-02-27 - Wildcard Injection in Supabase ILIKE queries
 **Learning:** In Supabase/PostgREST projects, passing user input directly to `.ilike()` or `.like()` methods exposes the application to wildcard injection because PostgREST implicitly supports `*` as an alias for `%`.
 **Action:** Always sanitize user inputs passed to `ilike`/`like` by explicitly verifying type (`if (typeof str !== 'string') return str;`) and escaping `%`, `_`, `\`, and `*` using `str.replace(/[%_*\\]/g, "\\$&")` before issuing the query.
+## 2026-09-19 - Wildcard Injection in Supabase ILIKE queries
+**Vulnerability:** Unsanitized user input passed directly to `.ilike()` or `.like()` methods exposes the application to wildcard injection because PostgREST implicitly supports `*` as an alias for `%`.
+**Learning:** PostgREST query methods implicitly map standard wildcard characters.
+**Prevention:** Always sanitize user inputs passed to `ilike`/`like` by explicitly escaping `%`, `_`, `\`, and `*` using `str.replace(/[%_*\\]/g, "\\$&")` before issuing the query.
