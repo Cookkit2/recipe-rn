@@ -38,7 +38,6 @@ jest.mock("@nozbe/watermelondb", () => ({
   Q: {
     where: jest.fn((col: string, op: unknown) => ({ col, op })),
     gt: jest.fn((value: number) => ({ gt: value })),
-    oneOf: jest.fn((value: unknown[]) => ({ oneOf: value })),
   },
 }));
 
