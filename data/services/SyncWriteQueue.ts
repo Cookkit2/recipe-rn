@@ -116,31 +116,56 @@ export class SyncWriteQueue {
     const mine = queue.filter((p) => p.householdId === householdId);
     if (mine.length === 0) return 0;
 
+    const MAX_CONCURRENCY = 5;
     let drained = 0;
     const remaining: QueuedPush[] = [];
 
-    for (const payload of mine) {
-      try {
-        await withRetryBackoff(() => push(payload.rows), {
-          maxAttempts: MAX_RETRIES_PER_DRAIN,
-          ...(options.sleep ? { sleep: options.sleep } : {}),
-        });
-        drained++;
-      } catch (error) {
-        const failures = payload.failures + 1;
-        if (failures >= MAX_DEAD_LETTER_FAILURES) {
-          // Dead-letter: drop the payload, log observably. Do NOT throw — the
-          // caller surfaces sync errors non-blocking per the issue spec.
-          if (__DEV__) {
-            log.error(
-              `[sync-write-queue] dead-lettered payload ${payload.id} for ` +
-                `${householdId} after ${failures} failures:`,
-              error
-            );
+    // We process payloads concurrently to optimize drain speed, while bounding
+    // concurrency to MAX_CONCURRENCY to prevent exceeding backend limits.
+    // Writes are independent (atomic upserts with last-writer-wins conflict resolution),
+    // so reordering during concurrent execution does not break sync semantics.
+    const results: { success: boolean; payload: QueuedPush | null }[] = new Array(mine.length);
+    let index = 0;
+
+    const workers = Array.from({ length: MAX_CONCURRENCY }, async () => {
+      while (index < mine.length) {
+        const i = index++;
+        const payload = mine[i];
+        if (!payload) continue;
+
+        try {
+          await withRetryBackoff(() => push(payload.rows), {
+            maxAttempts: MAX_RETRIES_PER_DRAIN,
+            ...(options.sleep ? { sleep: options.sleep } : {}),
+          });
+          results[i] = { success: true, payload: null };
+        } catch (error) {
+          const failures = payload.failures + 1;
+          if (failures >= MAX_DEAD_LETTER_FAILURES) {
+            // Dead-letter: drop the payload, log observably. Do NOT throw — the
+            // caller surfaces sync errors non-blocking per the issue spec.
+            if (__DEV__) {
+              log.error(
+                `[sync-write-queue] dead-lettered payload ${payload.id} for ` +
+                  `${householdId} after ${failures} failures:`,
+                error
+              );
+            }
+            results[i] = { success: false, payload: null };
+          } else {
+            results[i] = { success: false, payload: { ...payload, failures } };
           }
-        } else {
-          remaining.push({ ...payload, failures });
         }
+      }
+    });
+
+    await Promise.all(workers);
+
+    for (const result of results) {
+      if (result.success) {
+        drained++;
+      } else if (result.payload) {
+        remaining.push(result.payload);
       }
     }
 
