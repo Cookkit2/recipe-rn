@@ -577,3 +577,5 @@ export class ChallengeService {
 
 // Singleton instance
 const challengeService = new ChallengeService();
+
+// Final PR abandon close loop
