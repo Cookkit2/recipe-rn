@@ -737,6 +737,13 @@ class DatabaseFacade {
   }
 
   /**
+   * Get average ratings for all recipes
+   */
+  async getAverageRatings(): Promise<Map<string, number>> {
+    return await this.cookingHistory.getAverageRatings();
+  }
+
+  /**
    * Get recently cooked recipes
    */
   async getRecentlyCookedRecipes(
