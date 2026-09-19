@@ -143,7 +143,7 @@ export default function DateSection() {
         <CardContent className="flex gap-2 p-5 items-center">
           <Pressable
             onPress={() => setExpiresDateOpen(true)}
-            accessibilityLabel="Change expiry date"
+            accessibilityHint="Change expiry date"
             accessibilityRole="button"
           >
             <H4 className="font-urbanist-semibold text-center">
@@ -155,7 +155,7 @@ export default function DateSection() {
           </Pressable>
           <Pressable
             onPress={() => setPurchasedDateOpen(true)}
-            accessibilityLabel="Change purchase date"
+            accessibilityHint="Change purchase date"
             accessibilityRole="button"
           >
             <P className="text-sm font-urbanist-regular tracking-wider text-foreground/80 text-center">
