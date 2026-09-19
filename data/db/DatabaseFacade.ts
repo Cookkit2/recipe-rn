@@ -1094,23 +1094,6 @@ class DatabaseFacade {
   // ============================================
 
   /**
-   * Prepare a consumption log entry for batching
-   */
-  prepareRecordConsumption(
-    stockId: string,
-    quantityConsumed: number,
-    data?: RecordConsumptionData
-  ): ConsumptionLog {
-    return this.consumptionLog.prepareRecordConsumption(
-      stockId,
-      quantityConsumed,
-      data?.recipeId,
-      data?.consumedDate,
-      data?.isBeforeExpiry
-    );
-  }
-
-  /**
    * Record a consumption log entry for used ingredients
    */
   async recordConsumption(
