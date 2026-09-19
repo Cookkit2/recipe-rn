@@ -1,3 +1,4 @@
-## 2025-02-26 - Secure MMKV Encryption Key Generation
-**Learning:** `Crypto.randomUUID()` generates a UUIDv4 which relies on PRNGs that are not cryptographically secure and should not be used for encryption keys. Furthermore, test environment fallback keys should be strictly guarded.
-**Action:** Always use `Crypto.getRandomBytes()` or a proper CSPRNG for generating encryption keys, convert the output to a safe format like base64, and wrap test fallbacks in `__DEV__` or `NODE_ENV === 'test'` checks so they are stripped from production builds.
+## 2024-08-05 - Insecure Local Storage Encryption Key Fallback
+**Vulnerability:** The application used `EXPO_PUBLIC_MMKV_ENCRYPTION_KEY` as a fallback encryption key if generating/retrieving a key from SecureStore failed.
+**Learning:** `EXPO_PUBLIC_` variables are inlined at build time, meaning the encryption key was hardcoded into the application bundle. This defeats the purpose of local encryption as anyone with the app bundle could decompile it and read the key.
+**Prevention:** Never use public build-time environment variables for sensitive cryptographic keys. Keys should always be dynamically generated and stored in a secure enclave (like iOS Keychain / Android Keystore via SecureStore) or fetched securely at runtime over an encrypted channel.
