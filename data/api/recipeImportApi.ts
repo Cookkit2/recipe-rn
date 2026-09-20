@@ -36,10 +36,7 @@ const MIN_RECIPE_CONFIDENCE = 0.6; // Minimum confidence score to accept a recip
 
 // Extend import status for all import types
 export type RecipeImportStatus =
-  | YouTubeImportStatus
-  | "fetching-website"
-  | "parsing-content"
-  | "fetching-social";
+  YouTubeImportStatus | "fetching-website" | "parsing-content" | "fetching-social";
 
 // Re-export for convenience
 export type { YouTubeImportResult as RecipeImportResult };
