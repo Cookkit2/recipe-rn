@@ -286,19 +286,17 @@ export const dissolveHousehold = async (
     const sharedStock = await stockCollection
       .query(Q.where("household_id", householdSupabaseId))
       .fetch();
-    for (const stock of sharedStock) {
-      batchOps.push(
+    batchOps.push(
+      ...sharedStock.map((stock) =>
         stock.prepareUpdate((record) => {
           (record as Stock).householdId = undefined;
         })
-      );
-    }
+      )
+    );
 
     // Remove all members for this household
     const members = await memberCollection.query(Q.where("household_id", householdId)).fetch();
-    for (const member of members) {
-      batchOps.push(member.prepareDestroyPermanently());
-    }
+    batchOps.push(...members.map((member) => member.prepareDestroyPermanently()));
 
     // Remove household
     try {

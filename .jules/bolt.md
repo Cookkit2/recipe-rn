@@ -111,3 +111,9 @@
 **Learning:** Initializing objects like `Map<string, number[]>` then using `Array.prototype.reduce()` on them causes O(M) intermediate allocations and closures when calculating average ratings, negatively impacting the JS bridge garbage collector.
 **Action:** Always maintain primitive structural properties in single-pass scalar mapping (`Map<string, { sum: number, count: number }>`) without pushing into array lengths, reducing allocations to O(1) structures per entry.
 ## 2024-07-14 - Promise.all Optimization\n**Learning:** Replacing sequential await calls inside loops with Promise.all reduces N+1 async bottlenecks effectively.\n**Action:** Use Promise.all when independent async tasks are run inside a loop.
+## 2026-09-21 - Optimize Batch Operations Preparation Array Accumulations
+**Learning:** Accumulating massive datasets by looping over records with `for...of` loops to generate `batchOps.push()` causes unneeded execution latency in JS environments compared to vectorized iterations.
+**Action:** Use `.map()` combined with the spread operator (`...`) instead of `for...of` loops when pushing items into batch operation arrays, generating batch objects more efficiently in single JS thread execution sweeps.
+## 2026-09-21 - Optimize Achievement Evaluation Parallelism
+**Learning:** Checking achievements inside a `for...of` loop running `await this._evaluateAchievement` sequentially blocks the JS thread and accumulates latency across dozens of achievements, creating a noticeable UI lag.
+**Action:** Use `Promise.all(achievements.map(async (a) => ...))` when evaluating independent achievements to run the checks concurrently, significantly reducing total latency.
