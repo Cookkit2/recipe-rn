@@ -215,10 +215,7 @@ async function fetchIngredientsBySynonyms(missingNames: string[]) {
 
   // Execute parameterized queries concurrently
   const synonymPromises = sanitizedNames.map((n) =>
-    supabase!
-      .from("ingredient_synonym")
-      .select("base_ingredient_id, synonym")
-      .ilike("synonym", escapePostgrestWildcards(n))
+    supabase!.from("ingredient_synonym").select("base_ingredient_id, synonym").ilike("synonym", n)
   );
 
   const synonymResults = await Promise.all(synonymPromises);
