@@ -1,5 +1,13 @@
 import { supabase } from "~/lib/supabase/supabase-client";
 
+/**
+ * Escapes PostgREST wildcards to prevent wildcard injection (DoS/unbounded search)
+ */
+function escapePostgrestWildcards(str: string): string {
+  if (typeof str !== "string") return str;
+  return str.replace(/[%_*\\]/g, "\\$&");
+}
+
 function guardSupabase() {
   return supabase != null;
 }
@@ -23,7 +31,7 @@ export const baseIngredientApi = {
     const { data: baseIngredient, error: baseError } = await supabase!
       .from("base_ingredient")
       .select("*")
-      .ilike("name", name)
+      .ilike("name", escapePostgrestWildcards(name))
       .single();
 
     if (baseError && baseError.code !== "PGRST116") {
@@ -166,7 +174,7 @@ async function findIngredientBySynonym(name: string): Promise<BaseIngredientWith
   const { data: synonymData, error: synonymError } = await supabase!
     .from("ingredient_synonym")
     .select("base_ingredient_id")
-    .ilike("synonym", name)
+    .ilike("synonym", escapePostgrestWildcards(name))
     .single();
 
   if (synonymError && synonymError.code !== "PGRST116") {
@@ -207,7 +215,10 @@ async function fetchIngredientsBySynonyms(missingNames: string[]) {
 
   // Execute parameterized queries concurrently
   const synonymPromises = sanitizedNames.map((n) =>
-    supabase!.from("ingredient_synonym").select("base_ingredient_id, synonym").ilike("synonym", n)
+    supabase!
+      .from("ingredient_synonym")
+      .select("base_ingredient_id, synonym")
+      .ilike("synonym", escapePostgrestWildcards(n))
   );
 
   const synonymResults = await Promise.all(synonymPromises);
