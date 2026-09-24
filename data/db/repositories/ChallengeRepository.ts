@@ -176,25 +176,31 @@ export class ChallengeRepository extends BaseRepository<Challenge> {
   // Get total XP available for all active challenges
   async getTotalXPAvailable(): Promise<number> {
     const activeChallenges = await this.getActiveChallenges();
-    return activeChallenges.reduce((total, challenge) => {
-      return total + challenge.xpValue;
-    }, 0);
+    let total = 0;
+    for (let i = 0; i < activeChallenges.length; i++) {
+      total += activeChallenges[i]!.xpValue;
+    }
+    return total;
   }
 
   // Get XP available for daily challenges
   async getDailyXPAvailable(): Promise<number> {
     const dailyChallenges = await this.getActiveDailyChallenges();
-    return dailyChallenges.reduce((total, challenge) => {
-      return total + challenge.xpValue;
-    }, 0);
+    let total = 0;
+    for (let i = 0; i < dailyChallenges.length; i++) {
+      total += dailyChallenges[i]!.xpValue;
+    }
+    return total;
   }
 
   // Get XP available for weekly challenges
   async getWeeklyXPAvailable(): Promise<number> {
     const weeklyChallenges = await this.getActiveWeeklyChallenges();
-    return weeklyChallenges.reduce((total, challenge) => {
-      return total + challenge.xpValue;
-    }, 0);
+    let total = 0;
+    for (let i = 0; i < weeklyChallenges.length; i++) {
+      total += weeklyChallenges[i]!.xpValue;
+    }
+    return total;
   }
 
   // Get challenges expiring soon (within 24 hours)
