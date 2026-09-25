@@ -21,8 +21,12 @@ export default function GroceryListPage() {
     handleDeleteSelected,
   } = useGroceryListActions();
 
+  // Memoize the flattened items array to prevent recalculation on every render
   const allItems = useMemo(() => sections.flatMap((section) => section.items), [sections]);
 
+  // Extract renderItem using useCallback to prevent FlatList from unnecessarily
+  // re-rendering all items when the parent component updates.
+  // Performance impact: Reduces JS thread overhead during selection mode toggles
   const renderItem = useCallback(
     ({ item }: { item: GroceryItem }) => (
       <GroceryListItem
@@ -156,6 +160,8 @@ export default function GroceryListPage() {
         className="flex-1 bg-background"
         showsVerticalScrollIndicator={false}
         renderItem={renderItem}
+        // Virtualization props to improve memory usage and scrolling speed
+        // for lists with potentially hundreds of ingredients
         removeClippedSubviews={true}
         initialNumToRender={10}
         maxToRenderPerBatch={5}

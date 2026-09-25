@@ -17,6 +17,8 @@ export function RecipeSelectionSheet({
   isLoading,
   recipes,
 }: RecipeSelectionSheetProps) {
+  // Extract renderItem using useCallback to prevent FlatList from unnecessarily
+  // re-rendering all items when the parent component updates.
   const renderItem = useCallback(
     ({ item }: { item: Recipe }) => (
       <View className="mb-3">
@@ -67,6 +69,7 @@ export function RecipeSelectionSheet({
             className="flex-1 px-4 pt-4 pb-8"
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 32 }}
+            // Virtualization props to improve memory usage and rendering speed
             removeClippedSubviews={true}
             initialNumToRender={10}
             maxToRenderPerBatch={5}

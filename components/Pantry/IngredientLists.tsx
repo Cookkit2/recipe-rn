@@ -5,6 +5,7 @@ import IngredientItemCard from "./IngredientItemCard";
 import { View, ActivityIndicator } from "react-native";
 import { H4, P } from "~/components/ui/typography";
 import { usePantryItemsByType } from "~/hooks/queries/usePantryQueries";
+import type { PantryItem } from "~/types/PantryItem";
 import Animated, { LinearTransition, useAnimatedStyle, withTiming } from "react-native-reanimated";
 import { CURVES } from "~/constants/curves";
 import IngredientCategoryButtonGroup from "./IngredientCategoryButtonGroup";
@@ -14,9 +15,11 @@ export default function IngredientLists() {
   const { selectedItemType, ingredientScrollRef, isRecipeOpen } = usePantryStore();
   const { data, isLoading, error } = usePantryItemsByType(selectedItemType);
 
+  // Extract renderItem using useCallback to prevent FlatList from unnecessarily
+  // re-rendering all items when the parent component updates.
   const renderItem = useCallback(
-    ({ item, index }: { item: any; index: number }) => (
-      <IngredientItemCard key={item.id} item={item} index={index} />
+    ({ item, index }: { item: PantryItem; index: number }) => (
+      <IngredientItemCard item={item} index={index} />
     ),
     []
   );
@@ -78,7 +81,8 @@ export default function IngredientLists() {
       renderItem={renderItem}
       ListEmptyComponent={emptyState}
       scrollEventThrottle={16}
-      removeClippedSubviews={true}
+      // Virtualization props to improve memory usage and scrolling speed.
+      // Omitted removeClippedSubviews to avoid conflicts with itemLayoutAnimation
       initialNumToRender={10}
       maxToRenderPerBatch={5}
       windowSize={5}
