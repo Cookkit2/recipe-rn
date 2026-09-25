@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePantryStore } from "~/store/PantryContext";
 import IngredientItemCard from "./IngredientItemCard";
@@ -13,6 +13,13 @@ export default function IngredientLists() {
   const { bottom } = useSafeAreaInsets();
   const { selectedItemType, ingredientScrollRef, isRecipeOpen } = usePantryStore();
   const { data, isLoading, error } = usePantryItemsByType(selectedItemType);
+
+  const renderItem = useCallback(
+    ({ item, index }: { item: any; index: number }) => (
+      <IngredientItemCard key={item.id} item={item} index={index} />
+    ),
+    []
+  );
   const items = data ?? [];
   const ingredientListStyle = useAnimatedStyle(() => ({
     paddingHorizontal: withTiming(isRecipeOpen ? 4 : 12, CURVES["expressive.default.spatial"]),
@@ -68,11 +75,13 @@ export default function IngredientLists() {
           <IngredientCategoryButtonGroup />
         </View>
       }
-      renderItem={({ item, index }) => (
-        <IngredientItemCard key={item.id} item={item} index={index} />
-      )}
+      renderItem={renderItem}
       ListEmptyComponent={emptyState}
       scrollEventThrottle={16}
+      removeClippedSubviews={true}
+      initialNumToRender={10}
+      maxToRenderPerBatch={5}
+      windowSize={5}
       itemLayoutAnimation={LinearTransition.springify()
         .damping(20)
         .mass(1)

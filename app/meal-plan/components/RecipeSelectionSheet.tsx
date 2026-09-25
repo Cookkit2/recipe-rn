@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { View, Pressable, ActivityIndicator, FlatList } from "react-native";
 import { H3, P } from "~/components/ui/typography";
 import RecipeDraggable from "~/components/MealPlanCalendar/RecipeDraggable";
@@ -17,6 +17,15 @@ export function RecipeSelectionSheet({
   isLoading,
   recipes,
 }: RecipeSelectionSheetProps) {
+  const renderItem = useCallback(
+    ({ item }: { item: Recipe }) => (
+      <View className="mb-3">
+        <RecipeDraggable recipe={item} servings={4} />
+      </View>
+    ),
+    []
+  );
+
   if (!isOpen) return null;
 
   return (
@@ -54,14 +63,14 @@ export function RecipeSelectionSheet({
           <FlatList
             data={recipes}
             keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <View className="mb-3">
-                <RecipeDraggable recipe={item} servings={4} />
-              </View>
-            )}
+            renderItem={renderItem}
             className="flex-1 px-4 pt-4 pb-8"
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 32 }}
+            removeClippedSubviews={true}
+            initialNumToRender={10}
+            maxToRenderPerBatch={5}
+            windowSize={5}
           />
         )}
       </View>
