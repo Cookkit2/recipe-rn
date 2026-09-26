@@ -111,3 +111,6 @@
 **Learning:** Initializing objects like `Map<string, number[]>` then using `Array.prototype.reduce()` on them causes O(M) intermediate allocations and closures when calculating average ratings, negatively impacting the JS bridge garbage collector.
 **Action:** Always maintain primitive structural properties in single-pass scalar mapping (`Map<string, { sum: number, count: number }>`) without pushing into array lengths, reducing allocations to O(1) structures per entry.
 ## 2024-07-14 - Promise.all Optimization\n**Learning:** Replacing sequential await calls inside loops with Promise.all reduces N+1 async bottlenecks effectively.\n**Action:** Use Promise.all when independent async tasks are run inside a loop.
+## 2026-09-26 - Push-down stock quantity filtering to SQLite
+**Learning:** Fetching all `Stock` models and using `allStock.filter(stock => stock.quantity > 0)` instantiated every zeroed stock across the JS bridge and allocated garbage arrays.
+**Action:** Pushed down `Q.where("quantity", Q.gt(0))` directly into SQLite via `getActiveStock()` in `StockRepository`, preventing bridge overhead and reducing available recipes computation time.
