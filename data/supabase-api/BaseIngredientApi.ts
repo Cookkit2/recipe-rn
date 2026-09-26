@@ -270,18 +270,33 @@ function buildIngredientResultMap(
   allCategoryLinks: any[]
 ): Map<string, BaseIngredientWithRelations> {
   const resultMap = new Map<string, BaseIngredientWithRelations>();
+
+  // ⚡ Bolt Performance Optimization: Replace O(N*M) nested array.filter searches with O(N+M) hash map lookups
+  const synonymsByIngredientId = new Map<string, { id: string; synonym: string }[]>();
+  for (const s of allSynonyms) {
+    let arr = synonymsByIngredientId.get(s.base_ingredient_id);
+    if (!arr) {
+      arr = [];
+      synonymsByIngredientId.set(s.base_ingredient_id, arr);
+    }
+    arr.push({ id: s.id, synonym: s.synonym });
+  }
+
+  const categoriesByIngredientId = new Map<string, { id: string; name: string }[]>();
+  for (const c of allCategoryLinks) {
+    if (c.ingredient_category !== null) {
+      let arr = categoriesByIngredientId.get(c.ingredient_id);
+      if (!arr) {
+        arr = [];
+        categoriesByIngredientId.set(c.ingredient_id, arr);
+      }
+      arr.push(c.ingredient_category as { id: string; name: string });
+    }
+  }
+
   for (const ingredient of uniqueIngredients) {
-    const ingredientSynonyms = allSynonyms
-      .filter((s) => s.base_ingredient_id === ingredient.id)
-      .map((s) => ({ id: s.id, synonym: s.synonym }));
-
-    const ingredientCategoryLinks = allCategoryLinks.filter(
-      (c) => c.ingredient_id === ingredient.id
-    );
-
-    const categories = ingredientCategoryLinks
-      .map((link) => link.ingredient_category)
-      .filter((c: any): c is { id: string; name: string } => c !== null);
+    const ingredientSynonyms = synonymsByIngredientId.get(ingredient.id) || [];
+    const categories = categoriesByIngredientId.get(ingredient.id) || [];
 
     const fullIngredient: BaseIngredientWithRelations = {
       ...ingredient,
