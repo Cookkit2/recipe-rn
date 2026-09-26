@@ -33,7 +33,7 @@ export interface TemperatureInfo {
  * Parses natural language voice commands and extracts relevant information
  * from recipe context for voice answer generation.
  */
-class VoiceCommandParser {
+export class VoiceCommandParser {
   // Patterns for detecting ingredient amount queries
   private readonly INGREDIENT_PATTERNS = [
     /\b(how much|how many|quantity|amount of|what amount)\b/i,
