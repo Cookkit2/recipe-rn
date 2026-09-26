@@ -17,6 +17,19 @@ export interface SanitizationOptions {
 }
 
 /**
+ * Escapes wildcards used in PostgREST / PostgreSQL queries (ILIKE/LIKE).
+ * Prevent wildcard injection by escaping %, _, *, and \
+ * @param input - The raw user input
+ * @returns Escaped string
+ */
+export function escapeWildcards(input: string): string {
+  if (!input || typeof input !== "string") {
+    return "";
+  }
+  return input.replace(/[%_*\\]/g, "\\$&");
+}
+
+/**
  * Sanitizes user input for database queries
  * @param input - The raw user input
  * @param options - Sanitization options
