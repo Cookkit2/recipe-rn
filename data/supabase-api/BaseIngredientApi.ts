@@ -219,7 +219,10 @@ async function fetchIngredientsBySynonyms(missingNames: string[]) {
   if (synonymMatches.length > 0) {
     const synonymIngredientIds = [
       ...new Set(
-        synonymMatches.map((s) => s.base_ingredient_id).filter((id): id is string => id !== null)
+        synonymMatches.reduce((acc: string[], s) => {
+          if (s.base_ingredient_id !== null) acc.push(s.base_ingredient_id);
+          return acc;
+        }, [])
       ),
     ];
 
