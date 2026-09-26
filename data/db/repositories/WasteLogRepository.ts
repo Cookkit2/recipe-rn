@@ -223,8 +223,8 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
     for (const record of records) {
       // Raw records use snake_case (waste_date), while WasteLog objects use camelCase (wasteDate)
       const wasteDateValue = record.waste_date ?? record.wasteDate;
-
-      const dayStart = new Date(wasteDateValue).setHours(0, 0, 0, 0);
+      const date = new Date(wasteDateValue);
+      const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
       wasteDates.add(dayStart);
     }
 
@@ -232,8 +232,8 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
 
     // Calculate current streak (days without waste, counting backward from today)
     let currentStreak = 0;
-
-    const todayStart = new Date().setHours(0, 0, 0, 0);
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
     const oneDay = 24 * 60 * 60 * 1000;
 
     // Check each day going backward from today
@@ -311,13 +311,10 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
         // Group by week (start of week - Sunday)
         d.setHours(0, 0, 0, 0);
         const dayOfWeek = d.getDay();
-        d.setDate(d.getDate() - dayOfWeek);
-        key = d.getTime();
+        key = new Date(d.getFullYear(), d.getMonth(), d.getDate() - dayOfWeek).getTime();
       } else {
         // Group by month (start of month)
-        d.setDate(1);
-        d.setHours(0, 0, 0, 0);
-        key = d.getTime();
+        key = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
       }
 
       const existing = timeMap.get(key);
