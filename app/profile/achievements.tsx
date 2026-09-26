@@ -37,7 +37,6 @@ const TabButton = ({
         isActive ? "bg-primary" : "bg-muted/50"
       }`}
       accessibilityRole="tab"
-      accessibilityLabel={`${label} tab`}
       accessibilityHint={`Switches to the ${label} view`}
       accessibilityState={{ selected: isActive }}
     >
