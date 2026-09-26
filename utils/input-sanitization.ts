@@ -67,6 +67,17 @@ function sanitizeForDatabase(input: string, options: SanitizationOptions = {}): 
 }
 
 /**
+ * Escapes PostgREST wildcards (%, _, *, \) from user input to prevent wildcard injection in .ilike() / .like() queries.
+ * Note: Does not escape '?' as it is not a PostgREST wildcard.
+ */
+export function escapePostgrestWildcards(input: string): string {
+  if (typeof input !== "string") {
+    return input;
+  }
+  return input.replace(/[%_*\\]/g, "\\$&");
+}
+
+/**
  * Sanitizes search terms specifically for LIKE queries
  * @param searchTerm - The search term to sanitize
  * @param options - Sanitization options
