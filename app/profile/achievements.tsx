@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { View, ScrollView, ActivityIndicator, Pressable } from "react-native";
 import { H4, P, Small } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
@@ -173,17 +173,20 @@ export default function AchievementsScreen() {
   }, [fetchData]);
 
   // Group achievements by category
-  const groupedAchievements = achievements.reduce(
-    (acc, achievement) => {
-      const category = achievement.achievement.category;
-      if (!acc[category]) {
-        acc[category] = [];
+  const groupedAchievements = useMemo(() => {
+    const acc: Record<string, AchievementProgress[]> = {};
+    for (let i = 0; i < achievements.length; i++) {
+      const achievement = achievements[i];
+      if (achievement) {
+        const category = achievement.achievement.category;
+        if (!acc[category]) {
+          acc[category] = [];
+        }
+        acc[category].push(achievement);
       }
-      acc[category].push(achievement);
-      return acc;
-    },
-    {} as Record<string, AchievementProgress[]>
-  );
+    }
+    return acc;
+  }, [achievements]);
 
   if (isLoading) {
     return (
