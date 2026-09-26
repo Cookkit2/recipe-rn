@@ -34,6 +34,7 @@ type SearchResultRowProps = {
   /** Right content slot */
   children: React.ReactNode;
   contentStyle?: ViewStyle;
+  accessibilityLabel?: string;
 };
 
 export function SearchResultRow({
@@ -42,6 +43,7 @@ export function SearchResultRow({
   media,
   children,
   contentStyle,
+  accessibilityLabel,
 }: SearchResultRowProps) {
   return (
     <Link href={href} asChild>
@@ -49,6 +51,7 @@ export function SearchResultRow({
         onPress={() => Keyboard.dismiss()}
         className="px-5 flex-row items-center gap-3 active:bg-muted"
         accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
       >
         <Link.AppleZoom>
           <View collapsable={false}>{media}</View>
