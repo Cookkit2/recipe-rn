@@ -197,7 +197,8 @@ class VoiceCommandParser {
   private singularize(word: string): string {
     // Common plural endings
     const pluralRules = [
-      { pattern: /ies$/i, replacement: "y" }, // tomatoes -> tomato, cherries -> cherry
+      { pattern: /ies$/i, replacement: "y" },
+      { pattern: /oes$/i, replacement: "o" },
       { pattern: /ses$/i, replacement: "s" }, // houses -> house (keeps s)
       { pattern: /ves$/i, replacement: "f" }, // knives -> knife
       { pattern: /xes$/i, replacement: "x" }, // boxes -> box
