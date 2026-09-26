@@ -1,8 +1,9 @@
+import { useMemo, useCallback } from "react";
 import { View, FlatList, ActivityIndicator, Pressable } from "react-native";
 import { H3, P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
 import { TrashIcon, CheckCircleIcon, XIcon, Edit2Icon, ShoppingCartIcon } from "lucide-uniwind";
-import { useGroceryList } from "~/hooks/queries/useGroceryList";
+import { useGroceryList, type GroceryItem } from "~/hooks/queries/useGroceryList";
 import { useGroceryListActions } from "~/hooks/useGroceryListActions";
 import GroceryListItem from "~/components/GroceryList/GroceryListItem";
 import GroceryListHeader from "~/components/GroceryList/GroceryListHeader";
@@ -20,7 +21,23 @@ export default function GroceryListPage() {
     handleDeleteSelected,
   } = useGroceryListActions();
 
-  const allItems = sections.flatMap((section) => section.items);
+  // Memoize the flattened items array to prevent recalculation on every render
+  const allItems = useMemo(() => sections.flatMap((section) => section.items), [sections]);
+
+  // Extract renderItem using useCallback to prevent FlatList from unnecessarily
+  // re-rendering all items when the parent component updates.
+  // Performance impact: Reduces JS thread overhead during selection mode toggles
+  const renderItem = useCallback(
+    ({ item }: { item: GroceryItem }) => (
+      <GroceryListItem
+        item={item}
+        isSelectionMode={isSelectionMode}
+        isSelected={selectedItemNames.has(item.normalizedName)}
+        onToggleSelect={() => toggleItemSelection(item.normalizedName)}
+      />
+    ),
+    [isSelectionMode, selectedItemNames, toggleItemSelection]
+  );
 
   // Loading state
   if (isLoading) {
@@ -142,14 +159,13 @@ export default function GroceryListPage() {
         contentContainerStyle={{ paddingBottom: 32 }}
         className="flex-1 bg-background"
         showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <GroceryListItem
-            item={item}
-            isSelectionMode={isSelectionMode}
-            isSelected={selectedItemNames.has(item.normalizedName)}
-            onToggleSelect={() => toggleItemSelection(item.normalizedName)}
-          />
-        )}
+        renderItem={renderItem}
+        // Virtualization props to improve memory usage and scrolling speed
+        // for lists with potentially hundreds of ingredients
+        removeClippedSubviews={true}
+        initialNumToRender={10}
+        maxToRenderPerBatch={5}
+        windowSize={5}
       />
     </>
   );
