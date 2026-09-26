@@ -210,27 +210,18 @@ const getAvailableRecipesCore = async (): Promise<{
 
   const canMake = convertDbRecipesToUIRecipesBatch(availability.canMake, recipeDetailsMap);
 
-  // ⚡ Bolt Performance Optimization:
-  // 1. Replaced chained .map().filter() with a single loop to avoid multiple intermediate array allocations.
-  // 2. Fixed N+1 anti-pattern: converted all partiallyCanMake DB models to UI recipes in a single batch pass
-  //    rather than calling the batch conversion function inside a loop for single items.
-  const partiallyCanMakeDbRecipes = availability.partiallyCanMake.map((item) => item.recipe);
-  const partiallyCanMakeUiRecipes = convertDbRecipesToUIRecipesBatch(
-    partiallyCanMakeDbRecipes,
-    recipeDetailsMap
-  );
-  const partiallyCanMakeUiMap = new Map(partiallyCanMakeUiRecipes.map((r) => [r.id, r]));
-
-  const partiallyCanMake: Array<{ recipe: Recipe; completionPercentage: number }> = [];
-  for (const item of availability.partiallyCanMake) {
-    const uiRecipe = partiallyCanMakeUiMap.get(item.recipe.id);
-    if (uiRecipe) {
-      partiallyCanMake.push({
-        recipe: uiRecipe,
+  const partiallyCanMake = availability.partiallyCanMake
+    .map((item) => {
+      const uiRecipes = convertDbRecipesToUIRecipesBatch([item.recipe], recipeDetailsMap);
+      if (uiRecipes.length === 0) {
+        return null;
+      }
+      return {
+        recipe: uiRecipes[0],
         completionPercentage: item.completionPercentage,
-      });
-    }
-  }
+      };
+    })
+    .filter((item): item is { recipe: Recipe; completionPercentage: number } => item !== null);
 
   return { canMake, partiallyCanMake };
 };
