@@ -1,4 +1,17 @@
-import { sanitizeSearchTerm } from "../input-sanitization";
+import { sanitizeSearchTerm, escapePostgrestWildcards } from "../input-sanitization";
+
+describe("escapePostgrestWildcards", () => {
+  it("escapes %, _, *, and \\", () => {
+    expect(escapePostgrestWildcards("apple%")).toBe("apple\\%");
+    expect(escapePostgrestWildcards("apple_")).toBe("apple\\_");
+    expect(escapePostgrestWildcards("apple*")).toBe("apple\\*");
+    expect(escapePostgrestWildcards("apple\\")).toBe("apple\\\\");
+  });
+
+  it("does not escape ?", () => {
+    expect(escapePostgrestWildcards("apple?")).toBe("apple?");
+  });
+});
 
 describe("sanitizeSearchTerm", () => {
   it("should wrap a standard search term with wildcards", () => {
