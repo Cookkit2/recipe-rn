@@ -13,7 +13,7 @@ interface RateLimitConfig {
   windowMs: number;
 }
 
-class RateLimiter {
+export class RateLimiter {
   private attempts: Map<string, RateLimitEntry> = new Map();
   private config: RateLimitConfig;
 
