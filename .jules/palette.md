@@ -5,3 +5,6 @@
 ## 2026-07-13 - Pressable accessibilityLabel Overrides Nested Children
 **Learning:** In React Native, applying an `accessibilityLabel` to a container element like `Pressable` overrides the accessibility readout of its child elements. If there is text inside, screen readers will completely ignore it and only read the label. If the button has descriptive text, you don't need a label.
 **Action:** When working on making `Pressable` elements accessible, carefully consider if the contents should be read by a screen reader. If they should, avoid adding an `accessibilityLabel` directly to the `Pressable`, but you can still add an `accessibilityRole="button"` if appropriate.
+## 2024-05-24 - Accessibility state for loading buttons
+**Learning:** In React Native, to ensure screen readers properly announce the loading state of an interactive component (e.g., a button displaying an `ActivityIndicator`), explicitly set `busy: true` (or `isLoading`) inside the component's `accessibilityState` object. This maps to `aria-busy` and informs users of processing, rather than merely announcing the element as 'disabled'.
+**Action:** Always include `busy: isLoading` in the `accessibilityState` of any `Pressable` or `TouchableOpacity` component that acts as a button and supports a loading state.
