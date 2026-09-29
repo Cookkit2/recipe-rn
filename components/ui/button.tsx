@@ -166,7 +166,7 @@ const Button = React.forwardRef<React.ComponentRef<typeof Pressable>, ButtonProp
             ref={ref}
             role="button"
             accessibilityRole={accessibilityRole}
-            accessibilityState={{ disabled: !!props.disabled || isLoading }}
+            accessibilityState={{ disabled: !!props.disabled || isLoading, busy: isLoading }}
             style={[props.style, roundedStyle]}
             disabled={props.disabled || isLoading}
             {...props}
