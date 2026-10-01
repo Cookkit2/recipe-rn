@@ -4,10 +4,11 @@ import { Button } from "~/components/ui/button";
 import { Text } from "~/components/ui/text";
 import { H2, H4, P } from "~/components/ui/typography";
 import { Separator } from "~/components/ui/separator";
-import { PlusIcon, HistoryIcon } from "lucide-uniwind";
 import { cn } from "~/lib/utils";
-import EditIngredientItem from "./EditIngredientItem";
-import EditStepItem from "./EditStepItem";
+import { TitleSection } from "./TitleSection";
+import { DescriptionSection } from "./DescriptionSection";
+import { IngredientsSection } from "./IngredientsSection";
+import { StepsSection } from "./StepsSection";
 import VersionHistorySheet from "./VersionHistorySheet";
 import type { Recipe, RecipeIngredient, RecipeStep } from "~/types/Recipe";
 import { useRecipeVersioning } from "~/hooks/useRecipeVersioning";
@@ -34,33 +35,12 @@ export default function RecipeEditForm({
   isSaving = false,
   className,
 }: RecipeEditFormProps) {
-  const [titleHeight, setTitleHeight] = useState<number | undefined>(undefined);
-  const [descriptionHeight, setDescriptionHeight] = useState<number | undefined>(undefined);
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const titleInputRef = useRef<TextInput>(null);
   const descriptionInputRef = useRef<TextInput>(null);
 
   // Get version history
   const { versions, isLoadingVersions } = useRecipeVersioning({ recipeId });
-
-  const titleInputStyle = React.useMemo(
-    () => ({
-      height: titleHeight,
-      paddingVertical: 0,
-      includeFontPadding: false,
-    }),
-    [titleHeight]
-  );
-
-  const descriptionInputStyle = React.useMemo(
-    () => ({
-      height: descriptionHeight,
-      paddingVertical: 0,
-      includeFontPadding: false,
-      minHeight: 80,
-    }),
-    [descriptionHeight]
-  );
 
   const handleTitleChange = (newTitle: string) => {
     onChange({ ...recipe, title: newTitle });
@@ -190,131 +170,36 @@ export default function RecipeEditForm({
         contentContainerClassName="gap-6 pb-24"
         keyboardShouldPersistTaps="handled"
       >
-        {/* Title Section */}
-        <View className="gap-2 px-4">
-          <View className="flex-row items-center justify-between">
-            <View className="flex-1 relative">
-              <TextInput
-                ref={titleInputRef}
-                value={recipe.title}
-                onChangeText={handleTitleChange}
-                placeholder="Recipe Title"
-                multiline
-                scrollEnabled={false}
-                textAlignVertical="center"
-                returnKeyType="done"
-                underlineColorAndroid="transparent"
-                className="text-3xl text-foreground font-bowlby-one bg-transparent pr-20"
-                style={titleInputStyle}
-              />
-            </View>
-            <Button
-              size="sm"
-              variant="secondary"
-              onPress={() => setShowVersionHistory(true)}
-              className="rounded-full mb-1"
-            >
-              <View className="flex-row items-center gap-1.5">
-                <HistoryIcon size={14} strokeWidth={2.5} />
-                <Text className="text-sm">History</Text>
-              </View>
-            </Button>
-          </View>
-        </View>
+        <TitleSection
+          title={recipe.title}
+          onChangeText={handleTitleChange}
+          onShowVersionHistory={() => setShowVersionHistory(true)}
+          titleInputRef={titleInputRef}
+        />
 
-        {/* Description Section */}
-        <View className="gap-2 px-4">
-          <H4>Description</H4>
-          <View className="relative bg-muted rounded-xl px-4 py-3">
-            <TextInput
-              ref={descriptionInputRef}
-              value={recipe.description}
-              onChangeText={handleDescriptionChange}
-              placeholder="Add a description for your recipe..."
-              multiline
-              scrollEnabled={false}
-              textAlignVertical="top"
-              returnKeyType="done"
-              underlineColorAndroid="transparent"
-              className="flex-1 text-base text-foreground font-urbanist-regular bg-transparent leading-relaxed"
-              style={descriptionInputStyle}
-            />
-          </View>
-        </View>
+        <DescriptionSection
+          description={recipe.description}
+          onChangeText={handleDescriptionChange}
+          descriptionInputRef={descriptionInputRef}
+        />
 
         <Separator className="mx-4" />
 
-        {/* Ingredients Section */}
-        <View className="gap-3 px-4">
-          <View className="flex-row items-center justify-between">
-            <H2>Ingredients</H2>
-            <Button
-              size="sm"
-              variant="secondary"
-              onPress={handleAddIngredient}
-              className="flex-row items-center gap-2"
-            >
-              <PlusIcon size={16} strokeWidth={2.5} />
-              <Text>Add Ingredient</Text>
-            </Button>
-          </View>
-
-          {recipe.ingredients.length === 0 ? (
-            <View className="py-8 items-center justify-center">
-              <P className="text-muted-foreground text-center">
-                No ingredients yet. Tap "Add Ingredient" to get started.
-              </P>
-            </View>
-          ) : (
-            <View className="gap-3">
-              {recipe.ingredients.map((ingredient, index) => (
-                <EditIngredientItem
-                  key={`ingredient-${index}-${ingredient.name}`}
-                  ingredient={ingredient}
-                  onChange={(updatedIngredient) => handleIngredientChange(index, updatedIngredient)}
-                  onDelete={() => handleRemoveIngredient(index)}
-                />
-              ))}
-            </View>
-          )}
-        </View>
+        <IngredientsSection
+          ingredients={recipe.ingredients}
+          onAddIngredient={handleAddIngredient}
+          onChangeIngredient={handleIngredientChange}
+          onRemoveIngredient={handleRemoveIngredient}
+        />
 
         <Separator className="mx-4" />
 
-        {/* Steps Section */}
-        <View className="gap-3 px-4">
-          <View className="flex-row items-center justify-between">
-            <H2>Steps</H2>
-            <Button
-              size="sm"
-              variant="secondary"
-              onPress={handleAddStep}
-              className="flex-row items-center gap-2"
-            >
-              <PlusIcon size={16} strokeWidth={2.5} />
-              <Text>Add Step</Text>
-            </Button>
-          </View>
-
-          {recipe.instructions.length === 0 ? (
-            <View className="py-8 items-center justify-center">
-              <P className="text-muted-foreground text-center">
-                No steps yet. Tap "Add Step" to get started.
-              </P>
-            </View>
-          ) : (
-            <View className="gap-3">
-              {recipe.instructions.map((step, index) => (
-                <EditStepItem
-                  key={`step-${index}-${step.step}`}
-                  step={step}
-                  onChange={(updatedStep) => handleStepChange(index, updatedStep)}
-                  onDelete={() => handleRemoveStep(index)}
-                />
-              ))}
-            </View>
-          )}
-        </View>
+        <StepsSection
+          steps={recipe.instructions}
+          onAddStep={handleAddStep}
+          onChangeStep={handleStepChange}
+          onRemoveStep={handleRemoveStep}
+        />
       </ScrollView>
 
       {/* Footer with Save/Cancel buttons */}
