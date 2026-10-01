@@ -41,7 +41,7 @@ describe("safeJsonParse", () => {
   });
 
   it("returns fallback when passing malformed JSON (catch block)", () => {
-    expect(safeJsonParse("{malformed json}", { fallback: true })).toEqual({ fallback: true });
+    expect(safeJsonParse("{bad", { fallback: true })).toEqual({ fallback: true });
     expect(log.warn).toHaveBeenCalledWith("Failed to safely parse JSON. Returning fallback value.");
   });
 });
