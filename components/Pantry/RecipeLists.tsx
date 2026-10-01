@@ -41,7 +41,7 @@ function RecipeListEmptyState({
   selectedCategoriesText,
 }: {
   isLoading: boolean;
-  error: any;
+  error: Error | null;
   selectedRecipeTags: string[];
   selectedCategoriesText: string;
 }) {
