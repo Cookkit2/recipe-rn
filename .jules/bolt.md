@@ -115,3 +115,8 @@
 
 **Learning:** When aggregating or formatting data based on timestamps inside loops, repeatedly instantiating `new Date(year, month, day)` causes significant garbage collection overhead and slows down processing. Mutating dates in place via `.setHours(0,0,0,0)` or `.setDate()` on a single instance or immediately after creating a date from a timestamp is much faster (e.g. ~50% reduction in execution time for large loops).
 **Action:** When working with dates inside computationally heavy loops, prefer in-place Date mutations that return timestamps over allocating new `Date` objects repeatedly.
+
+## 2024-05-20 - Avoid unnecessary Date object allocations
+
+**Learning:** When aggregating or formatting data based on timestamps inside loops, repeatedly instantiating `new Date(year, month, day)` causes significant garbage collection overhead and slows down processing. Mutating dates in place via `.setHours(0,0,0,0)` or `.setDate()` on a single instance or immediately after creating a date from a timestamp is much faster (e.g. ~50% reduction in execution time for large loops).
+**Action:** When working with dates inside computationally heavy loops, prefer in-place Date mutations that return timestamps over allocating new `Date` objects repeatedly.
