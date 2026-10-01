@@ -34,18 +34,159 @@ const SCROLL_PREFETCH_THROTTLE_MS = 200;
 const INITIAL_RECIPE_LIMIT = 30;
 const LOAD_MORE_THRESHOLD = 10; // Load more when 10 items from bottom
 
+function useRecipePagination(recipesLength: number, selectedRecipeTags: string[]) {
+  const [displayLimit, setDisplayLimit] = useState(INITIAL_RECIPE_LIMIT);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const isLoadingMoreRef = useRef(false);
+
+  const loadMore = useCallback(() => {
+    if (isLoadingMoreRef.current || displayLimit >= recipesLength) return;
+
+    isLoadingMoreRef.current = true;
+    setIsLoadingMore(true);
+
+    // Simulate async loading for smooth UX
+    setTimeout(() => {
+      setDisplayLimit((prev) => Math.min(prev + INITIAL_RECIPE_LIMIT, recipesLength));
+      setIsLoadingMore(false);
+      isLoadingMoreRef.current = false;
+    }, 100);
+  }, [displayLimit, recipesLength]);
+
+  // Reset display limit when filters change
+  useEffect(() => {
+    setDisplayLimit(INITIAL_RECIPE_LIMIT);
+  }, [selectedRecipeTags]);
+
+  return { displayLimit, isLoadingMore, isLoadingMoreRef, loadMore };
+}
+
+function useScrollPrefetch(prefetch: (urls: string[]) => void) {
+  const lastPrefetchStartRef = useRef(-1);
+  const throttleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (throttleRef.current != null) {
+        clearTimeout(throttleRef.current);
+        throttleRef.current = null;
+      }
+    };
+  }, []);
+
+  const scheduleScrollPrefetch = useCallback(
+    (contentOffsetY: number, data: RecipeWithCompletion[]) => {
+      if (data.length === 0) return;
+      if (throttleRef.current != null) return;
+      throttleRef.current = setTimeout(() => {
+        throttleRef.current = null;
+        const row = Math.floor(contentOffsetY / 200);
+        const startIndex = Math.min(row * NUM_COLUMNS, data.length - 1);
+        if (startIndex < 0) return;
+        if (startIndex === lastPrefetchStartRef.current) return;
+        lastPrefetchStartRef.current = startIndex;
+        const endIndex = Math.min(startIndex + PRELOAD_WINDOW_SIZE, data.length);
+        const urls = data
+          .slice(startIndex, endIndex)
+          .map((item) => item.recipe.imageUrl)
+          .filter(Boolean);
+        if (urls.length > 0) prefetch(urls);
+      }, SCROLL_PREFETCH_THROTTLE_MS);
+    },
+    [prefetch]
+  );
+
+  return { scheduleScrollPrefetch };
+}
+
+function RecipeListEmptyState({
+  isLoading,
+  error,
+  selectedRecipeTags,
+  selectedCategoriesText,
+}: {
+  isLoading: boolean;
+  error: Error | null;
+  selectedRecipeTags: string[];
+  selectedCategoriesText: string;
+}) {
+  if (isLoading) {
+    return (
+      <View className="py-16 items-center justify-center">
+        <ActivityIndicator size="small" />
+        <P className="mt-2 text-muted-foreground">
+          {selectedRecipeTags.length > 0
+            ? `Loading ${selectedCategoriesText.toLowerCase()}...`
+            : "Loading recipes..."}
+        </P>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View className="py-16 items-center justify-center">
+        <P className="text-destructive text-center">{error.message}</P>
+      </View>
+    );
+  }
+
+  return (
+    <View className="py-16 items-center justify-center">
+      <H4 className="text-muted-foreground font-urbanist-semibold text-center">
+        {selectedRecipeTags.length > 0
+          ? `No ${selectedCategoriesText.toLowerCase()} available`
+          : "No recipes available"}
+      </H4>
+      <P className="text-muted-foreground font-urbanist-regular text-center text-sm mt-1">
+        {selectedRecipeTags.length > 0
+          ? `Try adding more ingredients for ${selectedCategoriesText.toLowerCase()} or select different categories`
+          : "Try adding more ingredients to your pantry or adjust your dietary preferences"}
+      </P>
+    </View>
+  );
+}
+
+function RecipeListFooter({
+  isLoading,
+  isLoadingMore,
+  hasMoreToLoad,
+  recipesLength,
+}: {
+  isLoading: boolean;
+  isLoadingMore: boolean;
+  hasMoreToLoad: boolean;
+  recipesLength: number;
+}) {
+  if (isLoading) return null;
+
+  if (!hasMoreToLoad && recipesLength > 0) {
+    return (
+      <View className="py-6 items-center justify-center">
+        <P className="text-muted-foreground text-sm">
+          You've seen all {recipesLength} recipe{recipesLength !== 1 ? "s" : ""}
+        </P>
+      </View>
+    );
+  }
+
+  if (isLoadingMore) {
+    return (
+      <View className="py-4 items-center justify-center">
+        <ActivityIndicator size="small" />
+        <P className="mt-2 text-muted-foreground text-sm">Loading more recipes...</P>
+      </View>
+    );
+  }
+
+  return null;
+}
+
 export default function RecipeLists() {
   const { bottom } = useSafeAreaInsets();
   const { selectedRecipeTags } = useRecipeStore();
   const scrollY = useSharedValue(0);
   const { prefetch } = useImagePreloader({ priority: "low", delay: 50 });
-  const lastPrefetchStartRef = useRef(-1);
-  const throttleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // State for progressive loading
-  const [displayLimit, setDisplayLimit] = useState(INITIAL_RECIPE_LIMIT);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const isLoadingMoreRef = useRef(false);
 
   // Regular scroll handler that updates shared value (LegendList doesn't support Reanimated handlers)
   const handleScroll = useCallback(
@@ -92,30 +233,17 @@ export default function RecipeLists() {
     rankingStrategy,
   });
 
+  const { displayLimit, isLoadingMore, isLoadingMoreRef, loadMore } = useRecipePagination(
+    recipes.length,
+    selectedRecipeTags
+  );
+
+  const { scheduleScrollPrefetch } = useScrollPrefetch(prefetch);
+
   // Display only a subset of recipes for performance
   const displayedRecipes = useMemo(() => {
     return recipes.slice(0, displayLimit);
   }, [recipes, displayLimit]);
-
-  // Load more function
-  const loadMore = useCallback(() => {
-    if (isLoadingMoreRef.current || displayLimit >= recipes.length) return;
-
-    isLoadingMoreRef.current = true;
-    setIsLoadingMore(true);
-
-    // Simulate async loading for smooth UX
-    setTimeout(() => {
-      setDisplayLimit((prev) => Math.min(prev + INITIAL_RECIPE_LIMIT, recipes.length));
-      setIsLoadingMore(false);
-      isLoadingMoreRef.current = false;
-    }, 100);
-  }, [displayLimit, recipes.length]);
-
-  // Reset display limit when filters change
-  useEffect(() => {
-    setDisplayLimit(INITIAL_RECIPE_LIMIT);
-  }, [selectedRecipeTags]);
 
   // Create display text for selected categories
   const selectedCategoriesText = useMemo(() => {
@@ -155,38 +283,6 @@ export default function RecipeLists() {
     if (urls.length > 0) prefetch(urls);
   }, [listData, prefetch]);
 
-  useEffect(() => {
-    return () => {
-      if (throttleRef.current != null) {
-        clearTimeout(throttleRef.current);
-        throttleRef.current = null;
-      }
-    };
-  }, []);
-
-  // Preload images for visible + next window on scroll (throttled)
-  const scheduleScrollPrefetch = useCallback(
-    (contentOffsetY: number, data: RecipeWithCompletion[]) => {
-      if (data.length === 0) return;
-      if (throttleRef.current != null) return;
-      throttleRef.current = setTimeout(() => {
-        throttleRef.current = null;
-        const row = Math.floor(contentOffsetY / 200);
-        const startIndex = Math.min(row * NUM_COLUMNS, data.length - 1);
-        if (startIndex < 0) return;
-        if (startIndex === lastPrefetchStartRef.current) return;
-        lastPrefetchStartRef.current = startIndex;
-        const endIndex = Math.min(startIndex + PRELOAD_WINDOW_SIZE, data.length);
-        const urls = data
-          .slice(startIndex, endIndex)
-          .map((item) => item.recipe.imageUrl)
-          .filter(Boolean);
-        if (urls.length > 0) prefetch(urls);
-      }, SCROLL_PREFETCH_THROTTLE_MS);
-    },
-    [prefetch]
-  );
-
   const handleScrollWithPrefetch = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       handleScroll(event);
@@ -212,43 +308,14 @@ export default function RecipeLists() {
     ]
   );
 
-  const emptyState = () => {
-    if (isLoading) {
-      return (
-        <View className="py-16 items-center justify-center">
-          <ActivityIndicator size="small" />
-          <P className="mt-2 text-muted-foreground">
-            {selectedRecipeTags.length > 0
-              ? `Loading ${selectedCategoriesText.toLowerCase()}...`
-              : "Loading recipes..."}
-          </P>
-        </View>
-      );
-    }
-
-    if (error) {
-      return (
-        <View className="py-16 items-center justify-center">
-          <P className="text-destructive text-center">{error.message}</P>
-        </View>
-      );
-    }
-
-    return (
-      <View className="py-16 items-center justify-center">
-        <H4 className="text-muted-foreground font-urbanist-semibold text-center">
-          {selectedRecipeTags.length > 0
-            ? `No ${selectedCategoriesText.toLowerCase()} available`
-            : "No recipes available"}
-        </H4>
-        <P className="text-muted-foreground font-urbanist-regular text-center text-sm mt-1">
-          {selectedRecipeTags.length > 0
-            ? `Try adding more ingredients for ${selectedCategoriesText.toLowerCase()} or select different categories`
-            : "Try adding more ingredients to your pantry or adjust your dietary preferences"}
-        </P>
-      </View>
-    );
-  };
+  const emptyState = () => (
+    <RecipeListEmptyState
+      isLoading={isLoading}
+      error={error}
+      selectedRecipeTags={selectedRecipeTags}
+      selectedCategoriesText={selectedCategoriesText}
+    />
+  );
 
   // Memoized render item to prevent re-creation on each render
   const renderRecipeItem = useCallback(
@@ -266,33 +333,17 @@ export default function RecipeLists() {
   const ITEM_HEIGHT = 200;
 
   // Footer component for loading more indicator
-  const ListFooter = useCallback(() => {
-    // Don't show footer if we're still loading initial data
-    if (isLoading) return null;
-
-    // Show all recipes loaded message if we have recipes but no more to load
-    if (!hasMoreToLoad && recipes.length > 0) {
-      return (
-        <View className="py-6 items-center justify-center">
-          <P className="text-muted-foreground text-sm">
-            You've seen all {recipes.length} recipe{recipes.length !== 1 ? "s" : ""}
-          </P>
-        </View>
-      );
-    }
-
-    // Show loading indicator
-    if (isLoadingMore) {
-      return (
-        <View className="py-4 items-center justify-center">
-          <ActivityIndicator size="small" />
-          <P className="mt-2 text-muted-foreground text-sm">Loading more recipes...</P>
-        </View>
-      );
-    }
-
-    return null;
-  }, [isLoading, isLoadingMore, hasMoreToLoad, recipes.length]);
+  const ListFooter = useCallback(
+    () => (
+      <RecipeListFooter
+        isLoading={isLoading}
+        isLoadingMore={isLoadingMore}
+        hasMoreToLoad={hasMoreToLoad}
+        recipesLength={recipes.length}
+      />
+    ),
+    [isLoading, isLoadingMore, hasMoreToLoad, recipes.length]
+  );
 
   return (
     <>
