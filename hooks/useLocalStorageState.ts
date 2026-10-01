@@ -152,8 +152,7 @@ function useAsyncStorage<T>(
     return () => {
       mounted = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]); // Only run on mount and when key changes
+  }, [key, defaultValue, parse, stringify]);
 
   const setState = useCallback(
     (newValue: SetStateAction<T | undefined>): void => {

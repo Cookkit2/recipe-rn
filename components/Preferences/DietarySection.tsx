@@ -20,19 +20,21 @@ const DIET_OPTIONS: GroupButton<Diet>[] = [
   { label: "Pescatarian", icon: <FishIcon />, value: "pescatarian" },
 ];
 
+const dietSerializer = {
+  parse: (value: string) => {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value as Diet;
+    }
+  },
+  stringify: (value: unknown) => JSON.stringify(value),
+};
+
 export default function DietarySection() {
   const queryClient = useQueryClient();
   const [diet, setDiet] = useLocalStorageState<Diet>(PREF_DIET_KEY, {
-    serializer: {
-      parse: (value: string) => {
-        try {
-          return JSON.parse(value);
-        } catch {
-          return value as Diet;
-        }
-      },
-      stringify: (value: unknown) => JSON.stringify(value),
-    },
+    serializer: dietSerializer,
   });
 
   const handleToggleDiet = useCallback(

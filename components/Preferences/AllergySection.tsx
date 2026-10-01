@@ -35,40 +35,44 @@ const ALLERGEN_OPTIONS: GroupButton<Allergen>[] = [
   { label: "Sesame", icon: <CircleDotIcon />, value: "sesame" },
 ];
 
+const allergenSerializer = {
+  parse: (value: string) => {
+    if (!value) return [];
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) return parsed as Allergen[];
+      return []; // Ignore if not array
+    } catch {
+      return value.split(",") as Allergen[];
+    }
+  },
+  stringify: (value: unknown) => JSON.stringify(value),
+};
+
+const otherAllergenSerializer = {
+  parse: (value: string) => {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value;
+    }
+  },
+  stringify: (value: unknown) => JSON.stringify(value),
+};
+
 export default function AllergySection() {
   const queryClient = useQueryClient();
 
   const [allergens = [], setAllergens] = useLocalStorageState<Allergen[]>(PREF_ALLERGENS_KEY, {
     defaultValue: [],
-    serializer: {
-      parse: (value: string) => {
-        if (!value) return [];
-        try {
-          const parsed = JSON.parse(value);
-          if (Array.isArray(parsed)) return parsed as Allergen[];
-          return []; // Ignore if not array
-        } catch {
-          return value.split(",") as Allergen[];
-        }
-      },
-      stringify: (value: unknown) => JSON.stringify(value),
-    },
+    serializer: allergenSerializer,
   });
 
   const [otherAllergens = "", setOtherAllergens] = useLocalStorageState<string>(
     PREF_OTHER_ALLERGENS_KEY,
     {
       defaultValue: "",
-      serializer: {
-        parse: (value: string) => {
-          try {
-            return JSON.parse(value);
-          } catch {
-            return value;
-          }
-        },
-        stringify: (value: unknown) => JSON.stringify(value),
-      },
+      serializer: otherAllergenSerializer,
     }
   );
 
