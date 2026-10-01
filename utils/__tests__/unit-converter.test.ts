@@ -94,4 +94,12 @@ describe("roundToReasonablePrecision", () => {
     // Object.is helps distinguish between 0 and -0
     expect(Object.is(roundToReasonablePrecision(-0), -0)).toBe(true);
   });
+
+  it("handles extreme bounds correctly without overflowing to Infinity", () => {
+    expect(roundToReasonablePrecision(Number.MAX_VALUE)).toBe(Number.MAX_VALUE);
+    expect(roundToReasonablePrecision(-Number.MAX_VALUE)).toBe(-Number.MAX_VALUE);
+    expect(roundToReasonablePrecision(Number.MAX_SAFE_INTEGER)).toBe(Number.MAX_SAFE_INTEGER);
+    expect(roundToReasonablePrecision(Number.MIN_SAFE_INTEGER)).toBe(Number.MIN_SAFE_INTEGER);
+    expect(roundToReasonablePrecision(Number.MIN_VALUE)).toBe(0);
+  });
 });
