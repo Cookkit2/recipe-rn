@@ -86,10 +86,31 @@ export class AchievementService {
         userAchievementsMap = new Map(userAchievements.map((ua: any) => [ua.achievementId, ua]));
       }
 
+      // Pre-fetch metrics that might be needed by multiple achievements
+      // This prevents running the same DB queries repeatedly in the loop below
+      const preFetchedMetrics = {
+        currentStreak: await this.streakService.calculateCurrentStreak(),
+        longestStreak: await this.streakService.calculateLongestStreak(),
+        cookingStats: await this.cookingHistoryRepo.getCookingStats(),
+        allCooks: await this.cookingHistoryRepo.getCookingHistory(),
+        stockCount: await this.stockRepo.count(),
+
+        // These will be fetched only if needed
+        spicesCategory: undefined as any,
+        ingredientsUsedBeforeExpiry: undefined as number | undefined,
+        achievementsShared: undefined as number | undefined,
+        breakfastRecipes: undefined as any[] | undefined,
+        dinnerRecipes: undefined as any[] | undefined,
+      };
+
       // Check each achievement
       for (const achievement of achievements) {
         const userAchievement = userAchievementsMap.get(achievement.id);
-        const checkResult = await this._evaluateAchievement(achievement, userAchievement);
+        const checkResult = await this._evaluateAchievement(
+          achievement,
+          userAchievement,
+          preFetchedMetrics
+        );
 
         if (checkResult.newlyUnlocked) {
           result.newlyUnlocked.push({
@@ -123,7 +144,8 @@ export class AchievementService {
    */
   private async _evaluateAchievement(
     achievement: any,
-    userAchievement?: any
+    userAchievement?: any,
+    preFetchedMetrics?: any
   ): Promise<{
     newlyUnlocked: boolean;
     progressUpdated: boolean;
@@ -145,7 +167,7 @@ export class AchievementService {
 
       // Parse requirement and get current progress
       const requirement = achievement.parsedRequirement as AchievementRequirement;
-      const currentProgress = await this.getCurrentProgress(requirement);
+      const currentProgress = await this.getCurrentProgress(requirement, preFetchedMetrics);
       const target = requirement.target;
 
       // Update progress
@@ -452,34 +474,43 @@ export class AchievementService {
    * Get current progress for a specific requirement
    * This is where we calculate progress based on the requirement type
    */
-  private async getCurrentProgress(requirement: AchievementRequirement): Promise<number> {
+  private async getCurrentProgress(
+    requirement: AchievementRequirement,
+    preFetchedMetrics?: any
+  ): Promise<number> {
     try {
       switch (requirement.metric) {
         case "consecutive_days":
-          // Current streak
-          return await this.streakService.calculateCurrentStreak();
+          return (
+            preFetchedMetrics?.currentStreak ?? (await this.streakService.calculateCurrentStreak())
+          );
 
         case "longest_streak":
-          // Longest streak
-          return await this.streakService.calculateLongestStreak();
+          return (
+            preFetchedMetrics?.longestStreak ?? (await this.streakService.calculateLongestStreak())
+          );
 
         case "recipes_cooked":
-          // Total unique recipes cooked
-          const stats = await this.cookingHistoryRepo.getCookingStats();
+          const stats =
+            preFetchedMetrics?.cookingStats ?? (await this.cookingHistoryRepo.getCookingStats());
           return stats.uniqueRecipes;
 
         case "total_cooks":
-          // Total cooking sessions
-          const allCooks = await this.cookingHistoryRepo.getCookingHistory();
+          const allCooks =
+            preFetchedMetrics?.allCooks ?? (await this.cookingHistoryRepo.getCookingHistory());
           return allCooks.length;
 
         case "ingredients_tracked":
-          return await this.stockRepo.count();
+          return preFetchedMetrics?.stockCount ?? (await this.stockRepo.count());
 
         case "spices_tracked": {
-          const spicesCategory =
-            (await this.categoryRepo.findByName("Spices")) ??
-            (await this.categoryRepo.findByName("spices"));
+          let spicesCategory = preFetchedMetrics?.spicesCategory;
+          if (!spicesCategory) {
+            spicesCategory =
+              (await this.categoryRepo.findByName("Spices")) ??
+              (await this.categoryRepo.findByName("spices"));
+            if (preFetchedMetrics) preFetchedMetrics.spicesCategory = spicesCategory;
+          }
 
           if (!spicesCategory) return 0;
 
@@ -488,28 +519,48 @@ export class AchievementService {
         }
 
         case "ingredients_used_before_expiry":
-          // Prefer DB-derived count when available (backed by consumption_log)
-          try {
-            return await databaseFacade.getIngredientsUsedBeforeExpiryCount();
-          } catch {
-            return Number(storage.get(INGREDIENTS_USED_BEFORE_EXPIRY_KEY)) || 0;
+          if (preFetchedMetrics?.ingredientsUsedBeforeExpiry !== undefined) {
+            return preFetchedMetrics.ingredientsUsedBeforeExpiry;
           }
+          let usedCount = 0;
+          try {
+            usedCount = await databaseFacade.getIngredientsUsedBeforeExpiryCount();
+          } catch {
+            usedCount = Number(storage.get(INGREDIENTS_USED_BEFORE_EXPIRY_KEY)) || 0;
+          }
+          if (preFetchedMetrics) preFetchedMetrics.ingredientsUsedBeforeExpiry = usedCount;
+          return usedCount;
 
         case "achievements_shared":
-          return Number(storage.get(SOCIAL_SHARES_COUNT_KEY)) || 0;
+          if (preFetchedMetrics?.achievementsShared !== undefined) {
+            return preFetchedMetrics.achievementsShared;
+          }
+          const shares = Number(storage.get(SOCIAL_SHARES_COUNT_KEY)) || 0;
+          if (preFetchedMetrics) preFetchedMetrics.achievementsShared = shares;
+          return shares;
 
         case "breakfast_recipes_cooked": {
-          const breakfastRecipes = await this.recipeRepo.getRecipesByTag("breakfast");
-          const breakfastRecipeIds = new Set(breakfastRecipes.map((r) => r.id));
-          const allCooks = await this.cookingHistoryRepo.getCookingHistory();
-          return allCooks.filter((c) => breakfastRecipeIds.has(c.recipeId)).length;
+          let breakfastRecipes = preFetchedMetrics?.breakfastRecipes;
+          if (!breakfastRecipes) {
+            breakfastRecipes = await this.recipeRepo.getRecipesByTag("breakfast");
+            if (preFetchedMetrics) preFetchedMetrics.breakfastRecipes = breakfastRecipes;
+          }
+          const breakfastRecipeIds = new Set(breakfastRecipes.map((r: any) => r.id));
+          const allBreakfastCooks =
+            preFetchedMetrics?.allCooks ?? (await this.cookingHistoryRepo.getCookingHistory());
+          return allBreakfastCooks.filter((c: any) => breakfastRecipeIds.has(c.recipeId)).length;
         }
 
         case "dinner_recipes_cooked": {
-          const dinnerRecipes = await this.recipeRepo.getRecipesByTag("dinner");
-          const dinnerRecipeIds = new Set(dinnerRecipes.map((r) => r.id));
-          const allCooks = await this.cookingHistoryRepo.getCookingHistory();
-          return allCooks.filter((c) => dinnerRecipeIds.has(c.recipeId)).length;
+          let dinnerRecipes = preFetchedMetrics?.dinnerRecipes;
+          if (!dinnerRecipes) {
+            dinnerRecipes = await this.recipeRepo.getRecipesByTag("dinner");
+            if (preFetchedMetrics) preFetchedMetrics.dinnerRecipes = dinnerRecipes;
+          }
+          const dinnerRecipeIds = new Set(dinnerRecipes.map((r: any) => r.id));
+          const allDinnerCooks =
+            preFetchedMetrics?.allCooks ?? (await this.cookingHistoryRepo.getCookingHistory());
+          return allDinnerCooks.filter((c: any) => dinnerRecipeIds.has(c.recipeId)).length;
         }
 
         default:
