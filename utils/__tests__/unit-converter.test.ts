@@ -1,4 +1,121 @@
-import { areDimensionsCompatible, roundToReasonablePrecision } from "../unit-converter";
+import {
+  areDimensionsCompatible,
+  roundToReasonablePrecision,
+  convertToUnitSystem,
+} from "../unit-converter";
+
+describe("convertToUnitSystem", () => {
+  it("should return the original quantity and unit for invalid inputs", () => {
+    expect(convertToUnitSystem(null as any, "g", "imperial")).toEqual({
+      quantity: null,
+      unit: "g",
+    });
+    expect(convertToUnitSystem(NaN, "g", "imperial")).toEqual({
+      quantity: NaN,
+      unit: "g",
+    });
+    expect(convertToUnitSystem(100, "", "imperial")).toEqual({
+      quantity: 100,
+      unit: "",
+    });
+  });
+
+  it("should return the original quantity and unit for unknown units", () => {
+    expect(convertToUnitSystem(100, "unknown", "imperial")).toEqual({
+      quantity: 100,
+      unit: "unknown",
+    });
+  });
+
+  it("should not convert if target system is the same as the unit's system", () => {
+    expect(convertToUnitSystem(100, "g", "metric")).toEqual({
+      quantity: 100,
+      unit: "g",
+    });
+    expect(convertToUnitSystem(100, "oz", "imperial")).toEqual({
+      quantity: 100,
+      unit: "oz",
+    });
+  });
+
+  it("should not convert count dimensions", () => {
+    expect(convertToUnitSystem(100, "piece", "imperial")).toEqual({
+      quantity: 100,
+      unit: "piece",
+    });
+    expect(convertToUnitSystem(100, "units", "imperial")).toEqual({
+      quantity: 100,
+      unit: "units",
+    });
+  });
+
+  it("should be case-insensitive", () => {
+    expect(convertToUnitSystem(100, "G", "imperial")).toEqual({
+      quantity: 3.527,
+      unit: "oz",
+    });
+    expect(convertToUnitSystem(100, "Ml", "imperial")).toEqual({
+      quantity: 3.381,
+      unit: "fl_oz",
+    });
+  });
+
+  it("should convert metric weight to imperial", () => {
+    expect(convertToUnitSystem(100, "g", "imperial")).toEqual({
+      quantity: 3.527,
+      unit: "oz",
+    });
+    expect(convertToUnitSystem(500, "g", "imperial")).toEqual({
+      quantity: 1.102,
+      unit: "lb",
+    });
+    expect(convertToUnitSystem(2, "kg", "imperial")).toEqual({
+      quantity: 4.409,
+      unit: "lb",
+    });
+  });
+
+  it("should convert imperial weight to metric", () => {
+    expect(convertToUnitSystem(10, "oz", "metric")).toEqual({
+      quantity: 283.495,
+      unit: "g",
+    });
+    expect(convertToUnitSystem(2, "lb", "metric")).toEqual({
+      quantity: 0.907,
+      unit: "kg",
+    });
+  });
+
+  it("should convert metric volume to imperial", () => {
+    expect(convertToUnitSystem(100, "ml", "imperial")).toEqual({
+      quantity: 3.381,
+      unit: "fl_oz",
+    });
+    expect(convertToUnitSystem(500, "ml", "imperial")).toEqual({
+      quantity: 0.528,
+      unit: "qt",
+    });
+    expect(convertToUnitSystem(2, "l", "imperial")).toEqual({
+      quantity: 2.113,
+      unit: "qt",
+    });
+  });
+
+  it("should convert imperial volume to metric", () => {
+    expect(convertToUnitSystem(10, "fl_oz", "metric")).toEqual({
+      quantity: 295.735,
+      unit: "ml",
+    });
+    expect(convertToUnitSystem(2, "qt", "metric")).toEqual({
+      quantity: 1.893,
+      unit: "l",
+    });
+    expect(convertToUnitSystem(1, "cup", "metric")).toEqual({
+      quantity: 236.588,
+      unit: "ml",
+    });
+  });
+});
 
 describe("areDimensionsCompatible", () => {
   it("should return true for compatible weight units", () => {
