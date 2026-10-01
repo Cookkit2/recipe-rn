@@ -116,7 +116,9 @@ export class HouseholdSyncService {
 
       // ⚡ Bolt Performance Optimization: Fetch all items once and use a Map for O(1) lookups
       // instead of fetching all items from DB inside the loop for every remote item.
-      const allItems = await stockCollection.query().fetch();
+      const allItems = await stockCollection
+        .query(Q.where("household_id", householdSupabaseId))
+        .fetch();
       const itemsMap = new Map();
       for (const item of allItems) {
         if ((item as any).supabaseId) {
