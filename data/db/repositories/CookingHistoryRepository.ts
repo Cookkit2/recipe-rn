@@ -277,37 +277,68 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
     averageRating: number | null;
     photosCount: number;
   }> {
-    const allRecords = await this.findAll();
+    if (Platform.OS === "web") {
+      const allRecords = await this.findAll();
 
-    // ⚡ Bolt Performance Optimization:
-    // Prevent multiple array traversals and allocations by computing all stats
-    // in a single pass rather than chaining map/filter/reduce.
-    const seenRecipes = new Set<string>();
-    let photosCount = 0;
-    let ratingSum = 0;
-    let ratingCount = 0;
+      const seenRecipes = new Set<string>();
+      let photosCount = 0;
+      let ratingSum = 0;
+      let ratingCount = 0;
 
-    for (let i = 0; i < allRecords.length; i++) {
-      const r = allRecords[i];
-      if (!r) continue;
+      for (let i = 0; i < allRecords.length; i++) {
+        const r = allRecords[i];
+        if (!r) continue;
 
-      seenRecipes.add(r.recipeId);
+        seenRecipes.add(r.recipeId);
 
-      if (r.hasPhoto) photosCount++;
+        if (r.hasPhoto) photosCount++;
 
-      if (r.hasValidRating) {
-        ratingCount++;
-        ratingSum += r.rating || 0;
+        if (r.hasValidRating) {
+          ratingCount++;
+          ratingSum += r.rating || 0;
+        }
       }
+
+      const uniqueRecipes = seenRecipes.size;
+      const averageRating = ratingCount > 0 ? ratingSum / ratingCount : null;
+
+      return {
+        totalCooks: allRecords.length,
+        uniqueRecipes,
+        averageRating,
+        photosCount,
+      };
     }
 
-    const uniqueRecipes = seenRecipes.size;
-    const averageRating = ratingCount > 0 ? ratingSum / ratingCount : null;
+    // ⚡ Bolt Performance Optimization:
+    // Prevent multiple array traversals and allocations across JS bridge
+    // by pushing aggregation down to SQLite layer.
+    const rawResult = await this.collection
+      .query(
+        Q.unsafeSqlQuery(`
+          SELECT
+            COUNT(*) as totalCooks,
+            COUNT(DISTINCT recipe_id) as uniqueRecipes,
+            SUM(CASE WHEN rating IS NOT NULL AND rating >= 1 AND rating <= 5 THEN rating ELSE 0 END) as ratingSum,
+            SUM(CASE WHEN rating IS NOT NULL AND rating >= 1 AND rating <= 5 THEN 1 ELSE 0 END) as ratingCount,
+            SUM(CASE WHEN photo_url IS NOT NULL AND photo_url != '' THEN 1 ELSE 0 END) as photosCount
+          FROM cooking_history
+          WHERE _status != 'deleted'
+        `)
+      )
+      .unsafeFetchRaw();
+
+    const row = rawResult[0] as any;
+    const totalCooks = Number(row?.totalCooks || 0);
+    const uniqueRecipes = Number(row?.uniqueRecipes || 0);
+    const ratingSum = Number(row?.ratingSum || 0);
+    const ratingCount = Number(row?.ratingCount || 0);
+    const photosCount = Number(row?.photosCount || 0);
 
     return {
-      totalCooks: allRecords.length,
+      totalCooks,
       uniqueRecipes,
-      averageRating,
+      averageRating: ratingCount > 0 ? ratingSum / ratingCount : null,
       photosCount,
     };
   }
