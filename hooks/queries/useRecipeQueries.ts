@@ -20,23 +20,7 @@ export function useRecipes() {
     queryFn: async () => {
       const recipes = await recipeApi.fetchAllRecipes();
       // Fetch cooking history to compute avg ratings for all recipes
-      const cookingHistory = await databaseFacade.getCookingHistory(500);
-      const ratingsByRecipe = new Map<string, { sum: number; count: number }>();
-      for (const record of cookingHistory) {
-        if (record.rating !== undefined && record.rating >= 1 && record.rating <= 5) {
-          const current = ratingsByRecipe.get(record.recipeId);
-          if (current) {
-            current.sum += record.rating;
-            current.count += 1;
-          } else {
-            ratingsByRecipe.set(record.recipeId, { sum: record.rating, count: 1 });
-          }
-        }
-      }
-      const ratingsMap = new Map<string, number | null>();
-      for (const [recipeId, data] of ratingsByRecipe) {
-        ratingsMap.set(recipeId, data.sum / data.count);
-      }
+      const ratingsMap = await databaseFacade.getAverageRatings();
       // Attach avgRating to recipes
       return recipes.map((recipe) => ({
         ...recipe,
@@ -192,8 +176,8 @@ export function useRecipeRecommendations(options?: UseRecipeRecommendationsOptio
   });
 
   const cookingHistoryQuery = useQuery({
-    queryKey: ["cookingHistory", "list", 500],
-    queryFn: () => databaseFacade.getCookingHistory(500),
+    queryKey: ["cookingHistory", "ratings"],
+    queryFn: () => databaseFacade.getAverageRatings(),
     staleTime: 1 * 60 * 1000, // 1 minute
   });
 
@@ -210,7 +194,7 @@ export function useRecipeRecommendations(options?: UseRecipeRecommendationsOptio
     ],
     queryFn: async () => {
       const mostCookedData = mostCookedQuery.data ?? [];
-      const cookingHistoryDataRaw = cookingHistoryQuery.data ?? [];
+      const ratingsMap = cookingHistoryQuery.data ?? new Map<string, number>();
 
       // Build cooking history data from cached queries
       const mostCookedMap = new Map(
@@ -219,24 +203,6 @@ export function useRecipeRecommendations(options?: UseRecipeRecommendationsOptio
           { cookCount: d.cookCount, lastCookedAt: d.lastCookedAt },
         ])
       );
-
-      const ratingsByRecipe = new Map<string, { sum: number; count: number }>();
-      for (const record of cookingHistoryDataRaw) {
-        if (record.rating !== undefined && record.rating >= 1 && record.rating <= 5) {
-          const current = ratingsByRecipe.get(record.recipeId);
-          if (current) {
-            current.sum += record.rating;
-            current.count += 1;
-          } else {
-            ratingsByRecipe.set(record.recipeId, { sum: record.rating, count: 1 });
-          }
-        }
-      }
-
-      const ratingsMap = new Map<string, number>();
-      for (const [recipeId, data] of ratingsByRecipe) {
-        ratingsMap.set(recipeId, data.sum / data.count);
-      }
 
       const cookingHistoryData = {
         mostCooked: mostCookedMap,
