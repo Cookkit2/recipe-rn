@@ -4,7 +4,7 @@ import { Button } from "~/components/ui/button";
 import { Text } from "~/components/ui/text";
 import { H2, H4, P } from "~/components/ui/typography";
 import { Separator } from "~/components/ui/separator";
-import { PlusIcon, HistoryIcon } from "lucide-uniwind";
+import { HistoryIcon } from "lucide-uniwind";
 import { cn } from "~/lib/utils";
 import EditIngredientsSection from "./EditIngredientsSection";
 import EditStepsSection from "./EditStepsSection";
