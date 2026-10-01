@@ -84,4 +84,44 @@ describe("haversineDistance", () => {
 
     expect(d1).toBe(d2);
   });
+
+  it("should calculate correct distance when crossing the International Date Line", () => {
+    const lat1 = 0;
+    const lon1 = 179;
+    const lat2 = 0;
+    const lon2 = -179;
+
+    const distance = haversineDistance(lat1, lon1, lat2, lon2);
+
+    // 2 degrees at the equator is approx 222.39 km
+    expect(distance).toBeGreaterThan(222);
+    expect(distance).toBeLessThan(223);
+  });
+
+  it("should calculate correct distance between North and South poles", () => {
+    const lat1 = 90;
+    const lon1 = 0;
+    const lat2 = -90;
+    const lon2 = 0;
+
+    const distance = haversineDistance(lat1, lon1, lat2, lon2);
+
+    // Half circumference of Earth (pi * R)
+    // 3.14159 * 6371 = 20015 km approx
+    expect(distance).toBeGreaterThan(20000);
+    expect(distance).toBeLessThan(20050);
+  });
+
+  it("should return correct distance for very small coordinate changes", () => {
+    const lat1 = 40.7128;
+    const lon1 = -74.006;
+    const lat2 = 40.71281; // change by 0.00001 degree (approx 1.11 meters)
+    const lon2 = -74.006;
+
+    const distance = haversineDistance(lat1, lon1, lat2, lon2);
+
+    // approx 1.11 meters = 0.00111 km
+    expect(distance).toBeGreaterThan(0.001);
+    expect(distance).toBeLessThan(0.002);
+  });
 });
