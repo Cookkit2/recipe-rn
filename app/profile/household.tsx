@@ -164,10 +164,12 @@ function HouseholdMembersList({
   members,
   user,
   isCreator,
+  household,
 }: {
   members: any[];
   user: any;
   isCreator: boolean;
+  household?: any;
 }) {
   const removeMemberMutation = useRemoveMember();
 
@@ -312,7 +314,12 @@ export default function HouseholdSettingsScreen() {
       <HouseholdHeader household={household} isCreator={isCreator} memberCount={memberCount} />
       <HouseholdSyncStatus householdSupabaseId={(household as any).supabaseId} />
       <HouseholdActions household={household} isCreator={isCreator} />
-      <HouseholdMembersList members={members ?? []} user={user} isCreator={isCreator} />
+      <HouseholdMembersList
+        members={members ?? []}
+        user={user}
+        isCreator={isCreator}
+        household={household}
+      />
       <HouseholdDestructiveActions household={household} isCreator={isCreator} />
     </View>
   );
