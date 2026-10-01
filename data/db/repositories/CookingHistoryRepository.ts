@@ -322,7 +322,7 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
             SUM(CASE WHEN rating IS NOT NULL AND rating >= 1 AND rating <= 5 THEN rating ELSE 0 END) as ratingSum,
             SUM(CASE WHEN rating IS NOT NULL AND rating >= 1 AND rating <= 5 THEN 1 ELSE 0 END) as ratingCount,
             SUM(CASE WHEN photo_url IS NOT NULL AND photo_url != '' THEN 1 ELSE 0 END) as photosCount
-          FROM cooking_history
+          FROM ${this.collection.table}
           WHERE _status != 'deleted'
         `)
       )
