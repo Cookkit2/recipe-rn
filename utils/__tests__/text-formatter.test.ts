@@ -213,6 +213,12 @@ describe("Text Formatter Utils - Pluralization", () => {
     it("should handle irregular plurals regardless of case", () => {
       expect(pluralize("CHILD", 2)).toBe("children");
       expect(pluralize("Person", 5)).toBe("people");
+      expect(pluralize("MAN", 0)).toBe("men");
+      expect(pluralize("wOman", 3)).toBe("women");
+      expect(pluralize("TOOTH", 10)).toBe("teeth");
+      expect(pluralize("fOoT", 2)).toBe("feet");
+      expect(pluralize("MOUSE", 4)).toBe("mice");
+      expect(pluralize("GoosE", 6)).toBe("geese");
     });
 
     it("should handle words ending in 'y' preceded by a consonant", () => {
