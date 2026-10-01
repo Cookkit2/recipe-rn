@@ -6,8 +6,8 @@ import { H2, H4, P } from "~/components/ui/typography";
 import { Separator } from "~/components/ui/separator";
 import { PlusIcon, HistoryIcon } from "lucide-uniwind";
 import { cn } from "~/lib/utils";
-import EditIngredientItem from "./EditIngredientItem";
-import EditStepItem from "./EditStepItem";
+import EditIngredientsSection from "./EditIngredientsSection";
+import EditStepsSection from "./EditStepsSection";
 import VersionHistorySheet from "./VersionHistorySheet";
 import type { Recipe, RecipeIngredient, RecipeStep } from "~/types/Recipe";
 import { useRecipeVersioning } from "~/hooks/useRecipeVersioning";
@@ -68,85 +68,6 @@ export default function RecipeEditForm({
 
   const handleDescriptionChange = (newDescription: string) => {
     onChange({ ...recipe, description: newDescription });
-  };
-
-  const handleIngredientChange = (index: number, updatedIngredient: RecipeIngredient) => {
-    const newIngredients = [...recipe.ingredients];
-    newIngredients[index] = updatedIngredient;
-    onChange({ ...recipe, ingredients: newIngredients });
-  };
-
-  const handleAddIngredient = () => {
-    const newIngredient: RecipeIngredient = {
-      name: "",
-      relatedIngredientId: "",
-      quantity: 1,
-      unit: "cup",
-      notes: "",
-    };
-    onChange({ ...recipe, ingredients: [...recipe.ingredients, newIngredient] });
-  };
-
-  const handleRemoveIngredient = (index: number) => {
-    const ingredient = recipe.ingredients[index];
-    if (!ingredient) {
-      return;
-    }
-    Alert.alert(
-      "Delete Ingredient",
-      `Are you sure you want to remove "${ingredient.name || "this ingredient"}" from the recipe?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            const newIngredients = recipe.ingredients.filter((_, i) => i !== index);
-            onChange({ ...recipe, ingredients: newIngredients });
-          },
-        },
-      ]
-    );
-  };
-
-  const handleStepChange = (index: number, updatedStep: RecipeStep) => {
-    const newSteps = [...recipe.instructions];
-    newSteps[index] = updatedStep;
-    onChange({ ...recipe, instructions: newSteps });
-  };
-
-  const handleAddStep = () => {
-    const newStep: RecipeStep = {
-      step: recipe.instructions.length + 1,
-      title: "",
-      description: "",
-      relatedIngredientIds: [],
-    };
-    onChange({ ...recipe, instructions: [...recipe.instructions, newStep] });
-  };
-
-  const handleRemoveStep = (index: number) => {
-    const step = recipe.instructions[index];
-    if (!step) {
-      return;
-    }
-    Alert.alert(
-      "Delete Step",
-      `Are you sure you want to remove step "${step.title || "Untitled"}"?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            const newSteps = recipe.instructions
-              .filter((_, i) => i !== index)
-              .map((s, i) => ({ ...s, step: i + 1 }));
-            onChange({ ...recipe, instructions: newSteps });
-          },
-        },
-      ]
-    );
   };
 
   const handleRevertToVersion = (versionNumber: number, version: RecipeVersionMetadata) => {
@@ -245,76 +166,18 @@ export default function RecipeEditForm({
         <Separator className="mx-4" />
 
         {/* Ingredients Section */}
-        <View className="gap-3 px-4">
-          <View className="flex-row items-center justify-between">
-            <H2>Ingredients</H2>
-            <Button
-              size="sm"
-              variant="secondary"
-              onPress={handleAddIngredient}
-              className="flex-row items-center gap-2"
-            >
-              <PlusIcon size={16} strokeWidth={2.5} />
-              <Text>Add Ingredient</Text>
-            </Button>
-          </View>
-
-          {recipe.ingredients.length === 0 ? (
-            <View className="py-8 items-center justify-center">
-              <P className="text-muted-foreground text-center">
-                No ingredients yet. Tap "Add Ingredient" to get started.
-              </P>
-            </View>
-          ) : (
-            <View className="gap-3">
-              {recipe.ingredients.map((ingredient, index) => (
-                <EditIngredientItem
-                  key={`ingredient-${index}-${ingredient.name}`}
-                  ingredient={ingredient}
-                  onChange={(updatedIngredient) => handleIngredientChange(index, updatedIngredient)}
-                  onDelete={() => handleRemoveIngredient(index)}
-                />
-              ))}
-            </View>
-          )}
-        </View>
+        <EditIngredientsSection
+          ingredients={recipe.ingredients}
+          onChange={(ingredients) => onChange({ ...recipe, ingredients })}
+        />
 
         <Separator className="mx-4" />
 
         {/* Steps Section */}
-        <View className="gap-3 px-4">
-          <View className="flex-row items-center justify-between">
-            <H2>Steps</H2>
-            <Button
-              size="sm"
-              variant="secondary"
-              onPress={handleAddStep}
-              className="flex-row items-center gap-2"
-            >
-              <PlusIcon size={16} strokeWidth={2.5} />
-              <Text>Add Step</Text>
-            </Button>
-          </View>
-
-          {recipe.instructions.length === 0 ? (
-            <View className="py-8 items-center justify-center">
-              <P className="text-muted-foreground text-center">
-                No steps yet. Tap "Add Step" to get started.
-              </P>
-            </View>
-          ) : (
-            <View className="gap-3">
-              {recipe.instructions.map((step, index) => (
-                <EditStepItem
-                  key={`step-${index}-${step.step}`}
-                  step={step}
-                  onChange={(updatedStep) => handleStepChange(index, updatedStep)}
-                  onDelete={() => handleRemoveStep(index)}
-                />
-              ))}
-            </View>
-          )}
-        </View>
+        <EditStepsSection
+          steps={recipe.instructions}
+          onChange={(instructions) => onChange({ ...recipe, instructions })}
+        />
       </ScrollView>
 
       {/* Footer with Save/Cancel buttons */}
