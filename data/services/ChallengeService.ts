@@ -288,7 +288,12 @@ export class ChallengeService {
     if (challenges.length === 0) return [];
 
     try {
-      const challengeIds = challenges.map((c) => c.id).filter(Boolean);
+      const challengeIds: string[] = [];
+      for (let i = 0; i < challenges.length; i++) {
+        if (challenges[i]?.id) {
+          challengeIds.push(challenges[i].id);
+        }
+      }
       const userChallenges = await this.userChallengeRepo.getByChallengeIds(challengeIds);
 
       const userChallengeMap = new Map();
