@@ -8,6 +8,7 @@ import {
   sanitizeText,
   pluralize,
   formatOrdinal,
+  formatQuantity,
 } from "../text-formatter";
 
 describe("Text Formatter Utils - Capitalization", () => {
@@ -293,6 +294,45 @@ describe("Text Formatter Utils - Pluralization", () => {
 
     it("should handle 0", () => {
       expect(formatOrdinal(0)).toBe("0th");
+    });
+  });
+});
+
+describe("Text Formatter Utils - Recipe-Specific Utilities", () => {
+  describe("formatQuantity", () => {
+    it("should return '0' for 0", () => {
+      expect(formatQuantity(0)).toBe("0");
+    });
+
+    it("should return whole numbers as strings", () => {
+      expect(formatQuantity(1)).toBe("1");
+      expect(formatQuantity(5)).toBe("5");
+      expect(formatQuantity(10)).toBe("10");
+    });
+
+    it("should convert exact decimals to fraction strings", () => {
+      expect(formatQuantity(0.5)).toBe("½");
+      expect(formatQuantity(0.25)).toBe("¼");
+      expect(formatQuantity(0.75)).toBe("¾");
+      expect(formatQuantity(0.33)).toBe("⅓");
+      expect(formatQuantity(0.333)).toBe("⅓");
+      expect(formatQuantity(0.66)).toBe("⅔");
+      expect(formatQuantity(0.667)).toBe("⅔");
+      expect(formatQuantity(0.125)).toBe("⅛");
+      expect(formatQuantity(0.875)).toBe("⅞");
+    });
+
+    it("should format whole number with decimal as mixed fractions", () => {
+      expect(formatQuantity(1.5)).toBe("1 ½");
+      expect(formatQuantity(2.25)).toBe("2 ¼");
+      expect(formatQuantity(3.75)).toBe("3 ¾");
+      expect(formatQuantity(1.333)).toBe("1 ⅓");
+    });
+
+    it("should return unmodified decimal as string if there is no matching fraction", () => {
+      expect(formatQuantity(0.1)).toBe("0.1");
+      expect(formatQuantity(1.1)).toBe("1.1");
+      expect(formatQuantity(2.555)).toBe("2.555");
     });
   });
 });
