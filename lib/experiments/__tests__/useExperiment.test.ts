@@ -71,10 +71,10 @@ describe("getExperimentAssignment", () => {
   });
 
   it("recomputes when the persisted value is no longer in the variants list (variant removed mid-experiment)", () => {
-    setExperimentAssignmentForTesting("exp", "deprecated_variant");
-    // variants no longer contains "deprecated_variant" → must recompute.
+    setExperimentAssignmentForTesting("exp", "removed_variant");
+    // variants no longer contains "removed_variant" → must recompute.
     const v = getExperimentAssignment("exp", ["control", "treatment"]);
-    expect(v).not.toBe("deprecated_variant");
+    expect(v).not.toBe("removed_variant");
     expect(["control", "treatment"]).toContain(v);
   });
 });
