@@ -2,7 +2,6 @@ import React, { useRef, useState } from "react";
 import { View, ScrollView, TextInput, KeyboardAvoidingView, Platform, Alert } from "react-native";
 import { Button } from "~/components/ui/button";
 import { Text } from "~/components/ui/text";
-import { H2, H4, P } from "~/components/ui/typography";
 import { Separator } from "~/components/ui/separator";
 import { cn } from "~/lib/utils";
 import { TitleSection } from "./TitleSection";
