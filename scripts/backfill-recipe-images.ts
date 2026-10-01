@@ -204,12 +204,12 @@ async function main() {
   const client = loadAdminClientFromEnv();
   const bucketHost = getBucketPublicHost(process.env.EXPO_PUBLIC_SUPABASE_URL ?? "", BUCKET);
 
-  console.log(
+  console.info(
     `[backfill] dryRun=${opts.dryRun} limit=${opts.limit ?? "none"} concurrency=${opts.concurrency}`
   );
   const all = await fetchAllRecipes(client);
   const target = opts.limit ? all.slice(0, opts.limit) : all;
-  console.log(`[backfill] recipes=${all.length} processing=${target.length}`);
+  console.info(`[backfill] recipes=${all.length} processing=${target.length}`);
 
   let migrated = 0;
   let failed = 0;
@@ -221,7 +221,7 @@ async function main() {
       if (entry.status === "migrated" || entry.status === "dry_run") migrated++;
       else if (entry.status === "failed") failed++;
       if (completed % PROGRESS_EVERY === 0) {
-        console.log(
+        console.info(
           `[backfill] progress ${completed}/${total} migrated=${migrated} failed=${failed}`
         );
       }
@@ -237,8 +237,8 @@ async function main() {
     )
   );
 
-  console.log("[backfill] " + summarize(entries));
-  console.log(`[backfill] report written to ${REPORT_PATH}`);
+  console.info("[backfill] " + summarize(entries));
+  console.info(`[backfill] report written to ${REPORT_PATH}`);
 
   const failedTotal = entries.filter((e) => e.status === "failed").length;
   process.exit(failedTotal > 0 ? 1 : 0);
