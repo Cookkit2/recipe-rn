@@ -25,6 +25,7 @@ describe("RecipeStep", () => {
     };
     const rendered = await render(<RecipeStep step={step} />);
     const checkbox = rendered.getByRole("checkbox");
+    rendered.getByLabelText("Step 1: Test. Test description");
     await act(async () => {
       fireEvent.press(checkbox);
     });
