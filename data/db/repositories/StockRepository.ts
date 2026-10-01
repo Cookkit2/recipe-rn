@@ -59,6 +59,12 @@ export class StockRepository extends BaseRepository<Stock> {
     return items;
   }
 
+  // Get active stock items (quantity > 0)
+  async getActiveStock(): Promise<Stock[]> {
+    // ⚡ Bolt Performance Optimization: Push active stock filter down to SQLite
+    return await this.collection.query(Q.where("quantity", Q.gt(0))).fetch();
+  }
+
   // Get expired items
   async getExpiredItems(): Promise<Stock[]> {
     const items = await this.findAll();

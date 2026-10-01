@@ -1156,10 +1156,8 @@ class DatabaseFacade {
    */
   async getAvailableRecipes(): Promise<AvailableRecipesResult> {
     try {
-      const allStock = await this.stocks.findAll();
-
-      // Pre-fetch synonyms and categories for all stock items - Optimized to avoid N+1 queries
-      const activeStock = allStock.filter((stock) => stock.quantity > 0);
+      // Pre-fetch synonyms and categories for active stock items - Optimized to avoid N+1 queries
+      const activeStock = await this.stocks.getActiveStock();
       const activeStockIds = activeStock.map((s) => s.id);
 
       let allSynonyms: IngredientSynonym[] = [];
