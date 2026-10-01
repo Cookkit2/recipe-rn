@@ -251,7 +251,7 @@ type FormTitleSectionProps = {
   onChangeText: (text: string) => void;
   onHistoryPress: () => void;
   titleInputRef: React.RefObject<TextInput | null>;
-  titleInputStyle: any;
+  titleInputStyle: import("react-native").StyleProp<import("react-native").TextStyle>;
 };
 
 function FormTitleSection({
@@ -299,7 +299,7 @@ type FormDescriptionSectionProps = {
   description: string;
   onChangeText: (text: string) => void;
   descriptionInputRef: React.RefObject<TextInput | null>;
-  descriptionInputStyle: any;
+  descriptionInputStyle: import("react-native").StyleProp<import("react-native").TextStyle>;
 };
 
 function FormDescriptionSection({
