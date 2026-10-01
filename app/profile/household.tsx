@@ -20,33 +20,77 @@ import { CardContent } from "~/components/ui/card";
 import ListButton from "~/components/Shared/ListButton";
 import { toast } from "sonner-native";
 
-export default function HouseholdSettingsScreen() {
-  const router = useRouter();
-  const user = useAuthStore((s) => s.user);
-  const { data: household } = useCurrentHousehold();
-  const { data: members } = useHouseholdMembers(household?.id);
-  const leaveMutation = useLeaveHousehold();
-  const dissolveMutation = useDissolveHousehold();
-  const regenerateMutation = useRegenerateInviteCode();
-  const removeMemberMutation = useRemoveMember();
+function HouseholdHeader({
+  household,
+  isCreator,
+  memberCount,
+}: {
+  household: any;
+  isCreator: boolean;
+  memberCount: number;
+}) {
   const updateNameMutation = useUpdateHouseholdName();
-  const syncMutation = useSyncSharedStock();
-  const { lastSyncedAt, syncError } = useHouseholdStore();
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState("");
 
-  if (!household) {
-    return (
-      <View className="flex-1 bg-background p-6">
-        <P>You're not in a household.</P>
-      </View>
-    );
-  }
+  const handleStartEditName = () => {
+    setEditedName(household.name);
+    setIsEditingName(true);
+  };
 
-  const isCreator = (household as any).createdByUserId === user?.id;
-  const memberCount = members?.length ?? 0;
-  const inviteLink = `cookkit://join/${(household as any).inviteCode}`;
-  const householdSupabaseId = (household as any).supabaseId;
+  const handleSaveName = () => {
+    if (!editedName.trim() || editedName.trim() === household.name) {
+      setIsEditingName(false);
+      return;
+    }
+    updateNameMutation.mutate(
+      {
+        householdId: household.id,
+        householdSupabaseId: household.supabaseId,
+        name: editedName.trim(),
+      },
+      { onSuccess: () => setIsEditingName(false) }
+    );
+  };
+
+  return (
+    <>
+      {isEditingName ? (
+        <TextInput
+          className="text-xl font-urbanist-bold mb-2 border-b border-primary pb-1 text-foreground"
+          value={editedName}
+          onChangeText={setEditedName}
+          onBlur={handleSaveName}
+          onSubmitEditing={handleSaveName}
+          autoFocus
+          maxLength={50}
+        />
+      ) : (
+        <View className="flex-row items-center mb-2">
+          <P className="text-xl font-urbanist-bold">{household.name}</P>
+          {isCreator && (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onPress={handleStartEditName}
+              accessibilityRole="button"
+              accessibilityLabel="Edit household name"
+            >
+              <P className="text-primary text-sm">Edit</P>
+            </Button>
+          )}
+        </View>
+      )}
+      <P className="text-muted-foreground mb-4">
+        {memberCount} of {household.maxMembers} members
+      </P>
+    </>
+  );
+}
+
+function HouseholdSyncStatus({ householdSupabaseId }: { householdSupabaseId: string }) {
+  const syncMutation = useSyncSharedStock();
+  const { lastSyncedAt, syncError } = useHouseholdStore();
 
   const formatSyncTime = (ts: number | null): string => {
     if (!ts) return "Never";
@@ -57,6 +101,34 @@ export default function HouseholdSettingsScreen() {
     if (minutes < 60) return `${minutes}m ago`;
     return `${Math.floor(minutes / 60)}h ago`;
   };
+
+  return (
+    <View className="flex-row items-center mb-6">
+      <P className="text-xs text-muted-foreground">
+        {syncMutation.isPending
+          ? "Syncing..."
+          : syncError
+            ? "Sync failed"
+            : `Synced ${formatSyncTime(lastSyncedAt)}`}
+      </P>
+      {(syncError || !syncMutation.isPending) && householdSupabaseId && (
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onPress={() => syncMutation.mutate(householdSupabaseId)}
+          accessibilityRole="button"
+          accessibilityLabel={syncError ? "Retry syncing household" : "Sync household now"}
+        >
+          <P className="text-primary text-xs ml-2">{syncError ? "Retry" : "Sync now"}</P>
+        </Button>
+      )}
+    </View>
+  );
+}
+
+function HouseholdActions({ household, isCreator }: { household: any; isCreator: boolean }) {
+  const regenerateMutation = useRegenerateInviteCode();
+  const inviteLink = `cookkit://join/${household.inviteCode}`;
 
   const handleShareLink = () => {
     Clipboard.setString(inviteLink);
@@ -72,65 +144,34 @@ export default function HouseholdSettingsScreen() {
         onPress: () =>
           regenerateMutation.mutate({
             householdId: household.id,
-            householdSupabaseId,
+            householdSupabaseId: household.supabaseId,
           }),
       },
     ]);
   };
 
-  const handleLeave = () => {
-    Alert.alert("Leave Household?", "Your added items will stay with the household.", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Leave",
-        style: "destructive",
-        onPress: () => {
-          leaveMutation.mutate(household.id, {
-            onSuccess: () => router.back(),
-          });
-        },
-      },
-    ]);
-  };
+  return (
+    <View className="rounded-2xl bg-muted/50 overflow-hidden border-continuous mb-6">
+      <CardContent className="flex p-0 py-2">
+        <ListButton title="Share Invite Link" onPress={handleShareLink} />
+        {isCreator && <ListButton title="Regenerate Invite Code" onPress={handleRegenerate} />}
+      </CardContent>
+    </View>
+  );
+}
 
-  const handleDissolve = () => {
-    Alert.alert("Dissolve Household?", "All members will be removed. Shared items return to you.", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Dissolve",
-        style: "destructive",
-        onPress: () => {
-          dissolveMutation.mutate(
-            {
-              householdId: household.id,
-              householdSupabaseId,
-            },
-            { onSuccess: () => router.back() }
-          );
-        },
-      },
-    ]);
-  };
-
-  const handleStartEditName = () => {
-    setEditedName((household as any).name);
-    setIsEditingName(true);
-  };
-
-  const handleSaveName = () => {
-    if (!editedName.trim() || editedName.trim() === (household as any).name) {
-      setIsEditingName(false);
-      return;
-    }
-    updateNameMutation.mutate(
-      {
-        householdId: household.id,
-        householdSupabaseId,
-        name: editedName.trim(),
-      },
-      { onSuccess: () => setIsEditingName(false) }
-    );
-  };
+function HouseholdMembersList({
+  members,
+  user,
+  isCreator,
+  household,
+}: {
+  members: any[];
+  user: any;
+  isCreator: boolean;
+  household?: any;
+}) {
+  const removeMemberMutation = useRemoveMember();
 
   const handleRemoveMember = (memberUserId: string, memberName: string) => {
     Alert.alert(
@@ -147,74 +188,14 @@ export default function HouseholdSettingsScreen() {
     );
   };
 
+  if (!members || members.length === 0) return null;
+
   return (
-    <View className="flex-1 bg-background p-6">
-      {/* Household Name — editable by creator */}
-      {isEditingName ? (
-        <TextInput
-          className="text-xl font-urbanist-bold mb-2 border-b border-primary pb-1 text-foreground"
-          value={editedName}
-          onChangeText={setEditedName}
-          onBlur={handleSaveName}
-          onSubmitEditing={handleSaveName}
-          autoFocus
-          maxLength={50}
-        />
-      ) : (
-        <View className="flex-row items-center mb-2">
-          <P className="text-xl font-urbanist-bold">{(household as any).name}</P>
-          {isCreator && (
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onPress={handleStartEditName}
-              accessibilityRole="button"
-              accessibilityLabel="Edit household name"
-            >
-              <P className="text-primary text-sm">Edit</P>
-            </Button>
-          )}
-        </View>
-      )}
-      <P className="text-muted-foreground mb-4">
-        {memberCount} of {(household as any).maxMembers} members
-      </P>
-
-      {/* Sync Status */}
-      <View className="flex-row items-center mb-6">
-        <P className="text-xs text-muted-foreground">
-          {syncMutation.isPending
-            ? "Syncing..."
-            : syncError
-              ? "Sync failed"
-              : `Synced ${formatSyncTime(lastSyncedAt)}`}
-        </P>
-        {(syncError || !syncMutation.isPending) && householdSupabaseId && (
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onPress={() => syncMutation.mutate(householdSupabaseId)}
-            accessibilityRole="button"
-            accessibilityLabel={syncError ? "Retry syncing household" : "Sync household now"}
-          >
-            <P className="text-primary text-xs ml-2">{syncError ? "Retry" : "Sync now"}</P>
-          </Button>
-        )}
-      </View>
-
-      {/* Actions */}
-      <View className="rounded-2xl bg-muted/50 overflow-hidden border-continuous mb-6">
-        <CardContent className="flex p-0 py-2">
-          <ListButton title="Share Invite Link" onPress={handleShareLink} />
-          {isCreator && <ListButton title="Regenerate Invite Code" onPress={handleRegenerate} />}
-        </CardContent>
-      </View>
-
-      {/* Members List */}
+    <>
       <P className="text-sm font-urbanist-bold mb-2">Members</P>
       <View className="rounded-2xl bg-muted/50 overflow-hidden border-continuous mb-6">
         <CardContent className="flex p-0 py-2">
-          {members?.map((member: any) => {
+          {members.map((member: any) => {
             const isMe = member.userId === user?.id;
             return (
               <View
@@ -247,20 +228,99 @@ export default function HouseholdSettingsScreen() {
           })}
         </CardContent>
       </View>
+    </>
+  );
+}
 
-      {/* Destructive Actions */}
-      <View className="space-y-3">
-        {!isCreator && (
-          <Button variant="destructive" onPress={handleLeave}>
-            <P className="text-destructive-foreground">Leave Household</P>
-          </Button>
-        )}
-        {isCreator && (
-          <Button variant="destructive" onPress={handleDissolve}>
-            <P className="text-destructive-foreground">Dissolve Household</P>
-          </Button>
-        )}
+function HouseholdDestructiveActions({
+  household,
+  isCreator,
+}: {
+  household: any;
+  isCreator: boolean;
+}) {
+  const router = useRouter();
+  const leaveMutation = useLeaveHousehold();
+  const dissolveMutation = useDissolveHousehold();
+
+  const handleLeave = () => {
+    Alert.alert("Leave Household?", "Your added items will stay with the household.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Leave",
+        style: "destructive",
+        onPress: () => {
+          leaveMutation.mutate(household.id, {
+            onSuccess: () => router.back(),
+          });
+        },
+      },
+    ]);
+  };
+
+  const handleDissolve = () => {
+    Alert.alert("Dissolve Household?", "All members will be removed. Shared items return to you.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Dissolve",
+        style: "destructive",
+        onPress: () => {
+          dissolveMutation.mutate(
+            {
+              householdId: household.id,
+              householdSupabaseId: household.supabaseId,
+            },
+            { onSuccess: () => router.back() }
+          );
+        },
+      },
+    ]);
+  };
+
+  return (
+    <View className="space-y-3">
+      {!isCreator && (
+        <Button variant="destructive" onPress={handleLeave}>
+          <P className="text-destructive-foreground">Leave Household</P>
+        </Button>
+      )}
+      {isCreator && (
+        <Button variant="destructive" onPress={handleDissolve}>
+          <P className="text-destructive-foreground">Dissolve Household</P>
+        </Button>
+      )}
+    </View>
+  );
+}
+
+export default function HouseholdSettingsScreen() {
+  const user = useAuthStore((s) => s.user);
+  const { data: household } = useCurrentHousehold();
+  const { data: members } = useHouseholdMembers(household?.id);
+
+  if (!household) {
+    return (
+      <View className="flex-1 bg-background p-6">
+        <P>You're not in a household.</P>
       </View>
+    );
+  }
+
+  const isCreator = (household as any).createdByUserId === user?.id;
+  const memberCount = members?.length ?? 0;
+
+  return (
+    <View className="flex-1 bg-background p-6">
+      <HouseholdHeader household={household} isCreator={isCreator} memberCount={memberCount} />
+      <HouseholdSyncStatus householdSupabaseId={(household as any).supabaseId} />
+      <HouseholdActions household={household} isCreator={isCreator} />
+      <HouseholdMembersList
+        members={members ?? []}
+        user={user}
+        isCreator={isCreator}
+        household={household}
+      />
+      <HouseholdDestructiveActions household={household} isCreator={isCreator} />
     </View>
   );
 }
