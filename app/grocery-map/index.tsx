@@ -21,6 +21,26 @@ const SNAP_HIDDEN = 0;
 const SNAP_COMPACT = 1;
 const SNAP_EXPANDED = 2;
 
+const LoadingState = () => (
+  <View style={styles.loadingContainer}>
+    <ActivityIndicator size="large" accessibilityLiveRegion="polite" />
+    <Text style={styles.loadingText} accessibilityLiveRegion="polite">
+      Finding nearby stores...
+    </Text>
+  </View>
+);
+
+const ErrorState = ({ message }: { message: string }) => (
+  <View style={styles.errorContainer}>
+    <Text style={styles.errorTitle} accessibilityLiveRegion="assertive">
+      Location Error
+    </Text>
+    <Text style={styles.errorMessage} accessibilityLiveRegion="polite">
+      {message}
+    </Text>
+  </View>
+);
+
 export default function GroceryMapPage() {
   const { location, loading: locationLoading, error: locationError } = useLocation();
   const [selectedStore, setSelectedStore] = useState<string | null>(null);
@@ -71,27 +91,11 @@ export default function GroceryMapPage() {
   );
 
   if (locationLoading || storesLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" accessibilityLiveRegion="polite" />
-        <Text style={styles.loadingText} accessibilityLiveRegion="polite">
-          Finding nearby stores...
-        </Text>
-      </View>
-    );
+    return <LoadingState />;
   }
 
   if (locationError) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorTitle} accessibilityLiveRegion="assertive">
-          Location Error
-        </Text>
-        <Text style={styles.errorMessage} accessibilityLiveRegion="polite">
-          {locationError}
-        </Text>
-      </View>
-    );
+    return <ErrorState message={locationError} />;
   }
 
   const userLocation = {
