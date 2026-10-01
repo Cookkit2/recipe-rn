@@ -116,7 +116,15 @@ function LogWasteDialog({
     );
   };
 
-  const ReasonButton = ({ value, label }: { value: WasteReason; label: string }) => (
+  const ReasonButton = ({
+    value,
+    label,
+    description,
+  }: {
+    value: WasteReason;
+    label: string;
+    description: string;
+  }) => (
     <Button
       variant={reason === value ? "default" : "outline"}
       className={cn("flex-1", reason === value && "border-primary")}
@@ -124,6 +132,9 @@ function LogWasteDialog({
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         setReason(value);
       }}
+      accessibilityRole="radio"
+      accessibilityState={{ checked: reason === value }}
+      accessibilityHint={description}
     >
       <P className={cn(reason === value ? "text-primary-foreground" : "text-foreground")}>
         {label}
@@ -189,7 +200,7 @@ function LogWasteDialog({
             <View className="flex-row gap-2 flex-wrap">
               {WASTE_REASONS.map((r) => (
                 <View key={r.value || "none"} className="flex-1 min-w-[45%]">
-                  <ReasonButton value={r.value} label={r.label} />
+                  <ReasonButton value={r.value} label={r.label} description={r.description} />
                 </View>
               ))}
             </View>
@@ -224,7 +235,12 @@ function LogWasteDialog({
           >
             <P className="text-foreground">Cancel</P>
           </Button>
-          <Button className="flex-1" onPress={handleSubmit} disabled={recordWaste.isPending}>
+          <Button
+            className="flex-1"
+            onPress={handleSubmit}
+            disabled={recordWaste.isPending}
+            isLoading={recordWaste.isPending}
+          >
             <P className="text-primary-foreground">Save</P>
           </Button>
         </View>
