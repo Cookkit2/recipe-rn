@@ -20,10 +20,12 @@ export const baseIngredientApi = {
    */
   getBaseIngredientByName: async (name: string): Promise<BaseIngredientWithRelations | null> => {
     if (!guardSupabase()) return null;
+    // SECURITY: Escape PostgREST wildcard characters to prevent wildcard injection and slow query DoS attacks.
+    const sanitizedName = name.replace(/[%_\\*?]/g, (match) => "\\" + match);
     const { data: baseIngredient, error: baseError } = await supabase!
       .from("base_ingredient")
       .select("*")
-      .ilike("name", name)
+      .ilike("name", sanitizedName)
       .single();
 
     if (baseError && baseError.code !== "PGRST116") {
@@ -163,10 +165,12 @@ async function fetchRelatedData(baseIngredientId: string): Promise<BaseIngredien
  * Try to find a base ingredient by synonym
  */
 async function findIngredientBySynonym(name: string): Promise<BaseIngredientWithRelations | null> {
+  // SECURITY: Escape PostgREST wildcard characters to prevent wildcard injection and slow query DoS attacks.
+  const sanitizedName = name.replace(/[%_\\*?]/g, (match) => "\\" + match);
   const { data: synonymData, error: synonymError } = await supabase!
     .from("ingredient_synonym")
     .select("base_ingredient_id")
-    .ilike("synonym", name)
+    .ilike("synonym", sanitizedName)
     .single();
 
   if (synonymError && synonymError.code !== "PGRST116") {
@@ -206,9 +210,14 @@ async function fetchIngredientsBySynonyms(missingNames: string[]) {
   }
 
   // Execute parameterized queries concurrently
-  const synonymPromises = sanitizedNames.map((n) =>
-    supabase!.from("ingredient_synonym").select("base_ingredient_id, synonym").ilike("synonym", n)
-  );
+  const synonymPromises = sanitizedNames.map((n) => {
+    // SECURITY: Escape PostgREST wildcard characters to prevent wildcard injection and slow query DoS attacks.
+    const sanitizedName = n.replace(/[%_\\*?]/g, (match) => "\\" + match);
+    return supabase!
+      .from("ingredient_synonym")
+      .select("base_ingredient_id, synonym")
+      .ilike("synonym", sanitizedName);
+  });
 
   const synonymResults = await Promise.all(synonymPromises);
 
