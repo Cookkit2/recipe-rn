@@ -1,4 +1,5 @@
 import { BaseAuthStrategy } from "./AuthStrategy";
+import { checkRateLimit, normalizeRateLimitId } from "./authHelpers";
 import { log } from "~/utils/logger";
 import type {
   User,
@@ -246,6 +247,11 @@ export class MockAuthStrategy extends BaseAuthStrategy {
 
   async resetPassword(email: string): Promise<AuthResult> {
     await this.simulateDelay();
+
+    // Rate limiting check
+    const identifier = normalizeRateLimitId(email);
+    const rateLimitResult = checkRateLimit(identifier, "reset-password");
+    if (rateLimitResult) return rateLimitResult;
 
     if (!this.users.has(email)) {
       // Don't reveal if email exists or not for security
