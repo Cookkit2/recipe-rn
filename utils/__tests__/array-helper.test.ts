@@ -82,7 +82,7 @@ describe("toggleFromArray", () => {
   });
 
   it("should handle falsy values", () => {
-    const initialArray = [1, 2];
+    const initialArray: (number | boolean | string)[] = [1, 2];
 
     // Adding 0
     expect(toggleFromArray(initialArray, 0)).toEqual([1, 2, 0]);
