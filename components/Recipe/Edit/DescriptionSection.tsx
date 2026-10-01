@@ -5,7 +5,7 @@ import { H4 } from "~/components/ui/typography";
 type DescriptionSectionProps = {
   description: string;
   onChangeText: (newDescription: string) => void;
-  descriptionInputRef?: React.RefObject<TextInput>;
+  descriptionInputRef?: React.RefObject<TextInput | null>;
 };
 
 export function DescriptionSection({

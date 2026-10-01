@@ -8,7 +8,7 @@ type TitleSectionProps = {
   title: string;
   onChangeText: (newTitle: string) => void;
   onShowVersionHistory: () => void;
-  titleInputRef?: React.RefObject<TextInput>;
+  titleInputRef?: React.RefObject<TextInput | null>;
 };
 
 export function TitleSection({
