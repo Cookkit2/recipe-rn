@@ -5,7 +5,7 @@ import { supabase } from "~/lib/supabase/supabase-client";
  */
 function sanitizeForILike(input: string): string {
   if (!input) return "";
-  return input.replace(/[%_*?\\]/g, "\\function guardSupabase() {");
+  return input.replace(/[%_\\*?]/g, "\\$&");
 }
 
 function guardSupabase() {
