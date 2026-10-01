@@ -13,3 +13,13 @@ export const formatDuration = (milliseconds: number): string => {
   // Use date-fns formatDuration to create the human readable string
   return dateFnsFormatDuration(duration) || "less than a second";
 };
+
+export const formatSyncTime = (ts: number | null): string => {
+  if (!ts) return "Never";
+  const seconds = Math.floor((Date.now() - ts) / 1000);
+  if (seconds < 10) return "Just now";
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  return `${Math.floor(minutes / 60)}h ago`;
+};

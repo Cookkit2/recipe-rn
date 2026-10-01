@@ -1,4 +1,4 @@
-import { formatDuration } from "../time-formatter";
+import { formatDuration, formatSyncTime } from "../time-formatter";
 
 describe("formatDuration", () => {
   it('returns "less than a second" for durations under 1000ms', () => {
@@ -27,5 +27,40 @@ describe("formatDuration", () => {
   it("formats combinations correctly", () => {
     // 2 minutes and 5 seconds -> 125000ms
     expect(formatDuration(125000)).toBe("2 minutes 5 seconds");
+  });
+});
+
+describe("formatSyncTime", () => {
+  beforeAll(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2024-01-01T12:00:00Z"));
+  });
+
+  afterAll(() => {
+    jest.useRealTimers();
+  });
+
+  it('returns "Never" if ts is null', () => {
+    expect(formatSyncTime(null)).toBe("Never");
+  });
+
+  it('returns "Just now" for less than 10 seconds ago', () => {
+    const now = Date.now();
+    expect(formatSyncTime(now - 5000)).toBe("Just now");
+  });
+
+  it("returns seconds ago for less than 60 seconds ago", () => {
+    const now = Date.now();
+    expect(formatSyncTime(now - 30000)).toBe("30s ago");
+  });
+
+  it("returns minutes ago for less than 60 minutes ago", () => {
+    const now = Date.now();
+    expect(formatSyncTime(now - 300000)).toBe("5m ago");
+  });
+
+  it("returns hours ago for 60 or more minutes ago", () => {
+    const now = Date.now();
+    expect(formatSyncTime(now - 7200000)).toBe("2h ago");
   });
 });

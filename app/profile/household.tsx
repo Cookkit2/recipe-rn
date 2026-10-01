@@ -19,6 +19,7 @@ import { P } from "~/components/ui/typography";
 import { CardContent } from "~/components/ui/card";
 import ListButton from "~/components/Shared/ListButton";
 import { toast } from "sonner-native";
+import { formatSyncTime } from "~/utils/time-formatter";
 
 export default function HouseholdSettingsScreen() {
   const router = useRouter();
@@ -47,16 +48,6 @@ export default function HouseholdSettingsScreen() {
   const memberCount = members?.length ?? 0;
   const inviteLink = `cookkit://join/${(household as any).inviteCode}`;
   const householdSupabaseId = (household as any).supabaseId;
-
-  const formatSyncTime = (ts: number | null): string => {
-    if (!ts) return "Never";
-    const seconds = Math.floor((Date.now() - ts) / 1000);
-    if (seconds < 10) return "Just now";
-    if (seconds < 60) return `${seconds}s ago`;
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes}m ago`;
-    return `${Math.floor(minutes / 60)}h ago`;
-  };
 
   const handleShareLink = () => {
     Clipboard.setString(inviteLink);
