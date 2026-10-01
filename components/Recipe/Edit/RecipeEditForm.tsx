@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { View, ScrollView, TextInput, KeyboardAvoidingView, Platform, Alert } from "react-native";
+import { View, ScrollView, TextInput, KeyboardAvoidingView, Platform } from "react-native";
 import { Button } from "~/components/ui/button";
 import { Text } from "~/components/ui/text";
 import { H2, H4, P } from "~/components/ui/typography";
@@ -9,9 +9,8 @@ import { cn } from "~/lib/utils";
 import EditIngredientItem from "./EditIngredientItem";
 import EditStepItem from "./EditStepItem";
 import VersionHistorySheet from "./VersionHistorySheet";
-import type { Recipe, RecipeIngredient, RecipeStep } from "~/types/Recipe";
+import type { Recipe } from "~/types/Recipe";
 import { useRecipeVersioning } from "~/hooks/useRecipeVersioning";
-import type { RecipeVersionMetadata } from "~/hooks/useRecipeVersioning";
 import { useRecipeFormHandlers } from "./useRecipeFormHandlers";
 
 type RecipeEditFormProps = {
