@@ -1,40 +1,73 @@
 import { areDimensionsCompatible, roundToReasonablePrecision } from "../unit-converter";
 
 describe("areDimensionsCompatible", () => {
-  it("should return true for compatible weight units", () => {
-    expect(areDimensionsCompatible("g", "kg")).toBe(true);
-    expect(areDimensionsCompatible("oz", "lb")).toBe(true);
-    expect(areDimensionsCompatible("g", "oz")).toBe(true);
-    expect(areDimensionsCompatible("kg", "lb")).toBe(true);
+  const WEIGHT_UNITS = ["g", "kg", "oz", "lb"];
+  const VOLUME_UNITS = [
+    "ml",
+    "l",
+    "fl_oz",
+    "qt",
+    "gal",
+    "gallon",
+    "cup",
+    "tbsp",
+    "tablespoon",
+    "tsp",
+    "teaspoon",
+    "pt",
+    "pint",
+  ];
+  const COUNT_UNITS = ["unit", "units", "piece", "pieces", "pcs", "count"];
+
+  it("should return true for compatible weight units exhaustively", () => {
+    for (const u1 of WEIGHT_UNITS) {
+      for (const u2 of WEIGHT_UNITS) {
+        expect(areDimensionsCompatible(u1, u2)).toBe(true);
+      }
+    }
   });
 
-  it("should return true for compatible volume units", () => {
-    expect(areDimensionsCompatible("ml", "l")).toBe(true);
-    expect(areDimensionsCompatible("fl_oz", "qt")).toBe(true);
-    expect(areDimensionsCompatible("ml", "cup")).toBe(true);
-    expect(areDimensionsCompatible("tbsp", "tsp")).toBe(true);
+  it("should return true for compatible volume units exhaustively", () => {
+    for (const u1 of VOLUME_UNITS) {
+      for (const u2 of VOLUME_UNITS) {
+        expect(areDimensionsCompatible(u1, u2)).toBe(true);
+      }
+    }
   });
 
-  it("should return true for compatible count units", () => {
-    expect(areDimensionsCompatible("unit", "pieces")).toBe(true);
-    expect(areDimensionsCompatible("count", "pcs")).toBe(true);
+  it("should return true for compatible count units exhaustively", () => {
+    for (const u1 of COUNT_UNITS) {
+      for (const u2 of COUNT_UNITS) {
+        expect(areDimensionsCompatible(u1, u2)).toBe(true);
+      }
+    }
   });
 
-  it("should return false for incompatible units (weight vs volume)", () => {
-    expect(areDimensionsCompatible("g", "ml")).toBe(false);
-    expect(areDimensionsCompatible("kg", "l")).toBe(false);
-    expect(areDimensionsCompatible("oz", "fl_oz")).toBe(false);
-    expect(areDimensionsCompatible("lb", "qt")).toBe(false);
+  it("should return false for incompatible units (weight vs volume) exhaustively", () => {
+    for (const w of WEIGHT_UNITS) {
+      for (const v of VOLUME_UNITS) {
+        expect(areDimensionsCompatible(w, v)).toBe(false);
+        expect(areDimensionsCompatible(v, w)).toBe(false);
+      }
+    }
   });
 
-  it("should return false for incompatible units (weight vs count)", () => {
-    expect(areDimensionsCompatible("g", "unit")).toBe(false);
-    expect(areDimensionsCompatible("oz", "pieces")).toBe(false);
+  it("should return false for incompatible units (weight vs count) exhaustively", () => {
+    for (const w of WEIGHT_UNITS) {
+      for (const c of COUNT_UNITS) {
+        expect(areDimensionsCompatible(w, c)).toBe(false);
+        expect(areDimensionsCompatible(c, w)).toBe(false);
+      }
+    }
   });
 
-  it("should return false for incompatible units (volume vs count)", () => {
-    expect(areDimensionsCompatible("ml", "unit")).toBe(false);
-    expect(areDimensionsCompatible("cup", "pieces")).toBe(false);
+  it("should return false for incompatible units (volume vs count) exhaustively", () => {
+    for (const v of VOLUME_UNITS) {
+      for (const c of COUNT_UNITS) {
+        expect(areDimensionsCompatible(v, c)).toBe(false);
+        expect(areDimensionsCompatible(c, v)).toBe(false);
+      }
+    }
   });
 
   it("should return false if either unit is unknown", () => {
