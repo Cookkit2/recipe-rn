@@ -54,81 +54,66 @@ describe("quickCookingCheck", () => {
 });
 
 describe("extractYouTubeVideoId", () => {
-  it("extracts standard watch URLs", () => {
-    expect(extractYouTubeVideoId("https://www.youtube.com/watch?v=dQw4w9WgXcQ")).toBe(
-      "dQw4w9WgXcQ"
-    );
-    expect(extractYouTubeVideoId("http://youtube.com/watch?v=dQw4w9WgXcQ")).toBe("dQw4w9WgXcQ");
+  it.each([
+    ["https://www.youtube.com/watch?v=dQw4w9WgXcQ", "dQw4w9WgXcQ", "standard watch URL"],
+    ["http://youtube.com/watch?v=dQw4w9WgXcQ", "dQw4w9WgXcQ", "standard http watch URL"],
+    ["https://youtu.be/dQw4w9WgXcQ", "dQw4w9WgXcQ", "youtu.be short URL"],
+    ["https://www.youtube.com/embed/dQw4w9WgXcQ", "dQw4w9WgXcQ", "embed URL"],
+    ["https://www.youtube.com/v/dQw4w9WgXcQ", "dQw4w9WgXcQ", "old v URL"],
+    ["https://www.youtube.com/shorts/dQw4w9WgXcQ", "dQw4w9WgXcQ", "shorts URL"],
+    ["https://www.youtube.com/live/dQw4w9WgXcQ", "dQw4w9WgXcQ", "live URL"],
+    ["https://m.youtube.com/watch?v=dQw4w9WgXcQ", "dQw4w9WgXcQ", "mobile URL"],
+    [
+      "https://www.youtube.com/watch?feature=player_embedded&v=dQw4w9WgXcQ",
+      "dQw4w9WgXcQ",
+      "extra query parameters before",
+    ],
+    [
+      "https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=42s",
+      "dQw4w9WgXcQ",
+      "extra query parameters after",
+    ],
+    ["https://youtu.be/dQw4w9WgXcQ?t=10", "dQw4w9WgXcQ", "short URL with query parameters"],
+    ["  https://www.youtube.com/watch?v=dQw4w9WgXcQ  ", "dQw4w9WgXcQ", "URL with whitespace"],
+  ])("extracts from %s (%s)", (url, expected) => {
+    expect(extractYouTubeVideoId(url)).toBe(expected);
   });
 
-  it("extracts youtu.be short URLs", () => {
-    expect(extractYouTubeVideoId("https://youtu.be/dQw4w9WgXcQ")).toBe("dQw4w9WgXcQ");
-  });
-
-  it("extracts embed URLs", () => {
-    expect(extractYouTubeVideoId("https://www.youtube.com/embed/dQw4w9WgXcQ")).toBe("dQw4w9WgXcQ");
-  });
-
-  it("extracts old v URLs", () => {
-    expect(extractYouTubeVideoId("https://www.youtube.com/v/dQw4w9WgXcQ")).toBe("dQw4w9WgXcQ");
-  });
-
-  it("extracts shorts URLs", () => {
-    expect(extractYouTubeVideoId("https://www.youtube.com/shorts/dQw4w9WgXcQ")).toBe("dQw4w9WgXcQ");
-  });
-
-  it("extracts live URLs", () => {
-    expect(extractYouTubeVideoId("https://www.youtube.com/live/dQw4w9WgXcQ")).toBe("dQw4w9WgXcQ");
-  });
-
-  it("handles URLs with extra query parameters", () => {
-    expect(
-      extractYouTubeVideoId("https://www.youtube.com/watch?feature=player_embedded&v=dQw4w9WgXcQ")
-    ).toBe("dQw4w9WgXcQ");
-    expect(extractYouTubeVideoId("https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=42s")).toBe(
-      "dQw4w9WgXcQ"
-    );
-    expect(extractYouTubeVideoId("https://youtu.be/dQw4w9WgXcQ?t=10")).toBe("dQw4w9WgXcQ");
-  });
-
-  it("handles URLs with whitespace", () => {
-    expect(extractYouTubeVideoId("  https://www.youtube.com/watch?v=dQw4w9WgXcQ  ")).toBe(
-      "dQw4w9WgXcQ"
-    );
-  });
-
-  it("returns null for invalid or non-YouTube URLs", () => {
-    expect(extractYouTubeVideoId("https://vimeo.com/123456")).toBeNull();
-    expect(extractYouTubeVideoId("https://www.youtube.com/watch?v=too_short")).toBeNull();
-    expect(extractYouTubeVideoId("https://www.youtube.com/watch?v=this_is_too_long")).toBeNull();
-    expect(extractYouTubeVideoId("not a url at all")).toBeNull();
-  });
-
-  it("returns null for invalid inputs", () => {
-    expect(extractYouTubeVideoId("")).toBeNull();
-    expect(extractYouTubeVideoId(null as any)).toBeNull();
-    expect(extractYouTubeVideoId(undefined as any)).toBeNull();
-    expect(extractYouTubeVideoId(123 as any)).toBeNull();
+  it.each([
+    ["https://vimeo.com/123456", "non-YouTube URL"],
+    ["https://www.youtube.com/watch?v=too_short", "too short ID"],
+    ["https://www.youtube.com/watch?v=this_is_too_long", "too long ID"],
+    ["not a url at all", "invalid string"],
+    ["", "empty string"],
+    [null as any, "null"],
+    [undefined as any, "undefined"],
+    [123 as any, "number"],
+  ])("returns null for %s", (url) => {
+    expect(extractYouTubeVideoId(url)).toBeNull();
   });
 });
 
 describe("isValidYouTubeUrl", () => {
-  it("should return true for valid YouTube URLs", () => {
-    expect(isValidYouTubeUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ")).toBe(true);
-    expect(isValidYouTubeUrl("https://youtube.com/watch?v=dQw4w9WgXcQ")).toBe(true);
-    expect(isValidYouTubeUrl("https://youtu.be/dQw4w9WgXcQ")).toBe(true);
-    expect(isValidYouTubeUrl("https://www.youtube.com/embed/dQw4w9WgXcQ")).toBe(true);
-    expect(isValidYouTubeUrl("https://www.youtube.com/v/dQw4w9WgXcQ")).toBe(true);
-    expect(isValidYouTubeUrl("https://www.youtube.com/shorts/dQw4w9WgXcQ")).toBe(true);
-    expect(isValidYouTubeUrl("https://m.youtube.com/watch?v=dQw4w9WgXcQ")).toBe(true);
+  it.each([
+    ["https://www.youtube.com/watch?v=dQw4w9WgXcQ", "standard watch URL"],
+    ["https://youtube.com/watch?v=dQw4w9WgXcQ", "watch URL without www"],
+    ["https://youtu.be/dQw4w9WgXcQ", "youtu.be short URL"],
+    ["https://www.youtube.com/embed/dQw4w9WgXcQ", "embed URL"],
+    ["https://www.youtube.com/v/dQw4w9WgXcQ", "old v URL"],
+    ["https://www.youtube.com/shorts/dQw4w9WgXcQ", "shorts URL"],
+    ["https://m.youtube.com/watch?v=dQw4w9WgXcQ", "mobile URL"],
+  ])("returns true for %s (%s)", (url) => {
+    expect(isValidYouTubeUrl(url)).toBe(true);
   });
 
-  it("should return false for invalid URLs", () => {
-    expect(isValidYouTubeUrl("https://www.google.com")).toBe(false);
-    expect(isValidYouTubeUrl("not a url")).toBe(false);
-    expect(isValidYouTubeUrl("https://youtube.com")).toBe(false);
-    expect(isValidYouTubeUrl("")).toBe(false);
-    expect(isValidYouTubeUrl(null as any)).toBe(false);
-    expect(isValidYouTubeUrl(undefined as any)).toBe(false);
+  it.each([
+    ["https://www.google.com", "non-YouTube URL"],
+    ["not a url", "invalid string"],
+    ["https://youtube.com", "YouTube domain without video"],
+    ["", "empty string"],
+    [null as any, "null"],
+    [undefined as any, "undefined"],
+  ])("returns false for %s (%s)", (url) => {
+    expect(isValidYouTubeUrl(url)).toBe(false);
   });
 });
