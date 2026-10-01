@@ -24,7 +24,7 @@ describe("RecipeStep", () => {
       relatedIngredientIds: [],
     };
     const rendered = await render(<RecipeStep step={step} />);
-    const checkbox = rendered.getByRole("checkbox");
+    const checkbox = rendered.getByTestId("recipe-step-checkbox");
     await act(async () => {
       fireEvent.press(checkbox);
     });
