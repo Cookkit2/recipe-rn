@@ -170,9 +170,9 @@ const Button = React.forwardRef<React.ComponentRef<typeof Pressable>, ButtonProp
             disabled={props.disabled || isLoading}
             {...props}
             accessibilityState={{
+              ...props.accessibilityState,
               disabled: !!props.disabled || isLoading,
               busy: !!isLoading,
-              ...props.accessibilityState,
             }}
             children={
               typeof props.children === "function" ? (
