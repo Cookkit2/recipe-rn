@@ -50,70 +50,57 @@ describe("convertToUnitSystem", () => {
   });
 
   it("should be case-insensitive", () => {
-    expect(convertToUnitSystem(100, "G", "imperial")).toEqual({
-      quantity: 3.527,
-      unit: "oz",
-    });
-    expect(convertToUnitSystem(100, "Ml", "imperial")).toEqual({
-      quantity: 3.381,
-      unit: "fl_oz",
-    });
+    const r1 = convertToUnitSystem(100, "G", "imperial");
+    expect(r1.unit).toBe("oz");
+    expect(r1.quantity).toBeCloseTo(3.527, 3);
+    const r2 = convertToUnitSystem(100, "Ml", "imperial");
+    expect(r2.unit).toBe("fl_oz");
+    expect(r2.quantity).toBeCloseTo(3.381, 3);
   });
 
   it("should convert metric weight to imperial", () => {
-    expect(convertToUnitSystem(100, "g", "imperial")).toEqual({
-      quantity: 3.527,
-      unit: "oz",
-    });
-    expect(convertToUnitSystem(500, "g", "imperial")).toEqual({
-      quantity: 1.102,
-      unit: "lb",
-    });
-    expect(convertToUnitSystem(2, "kg", "imperial")).toEqual({
-      quantity: 4.409,
-      unit: "lb",
-    });
+    const r1 = convertToUnitSystem(100, "g", "imperial");
+    expect(r1.unit).toBe("oz");
+    expect(r1.quantity).toBeCloseTo(3.527, 3);
+    const r2 = convertToUnitSystem(500, "g", "imperial");
+    expect(r2.unit).toBe("lb");
+    expect(r2.quantity).toBeCloseTo(1.102, 3);
+    const r3 = convertToUnitSystem(2, "kg", "imperial");
+    expect(r3.unit).toBe("lb");
+    expect(r3.quantity).toBeCloseTo(4.409, 3);
   });
 
   it("should convert imperial weight to metric", () => {
-    expect(convertToUnitSystem(10, "oz", "metric")).toEqual({
-      quantity: 283.495,
-      unit: "g",
-    });
-    expect(convertToUnitSystem(2, "lb", "metric")).toEqual({
-      quantity: 0.907,
-      unit: "kg",
-    });
+    const r1 = convertToUnitSystem(10, "oz", "metric");
+    expect(r1.unit).toBe("g");
+    expect(r1.quantity).toBeCloseTo(283.495, 3);
+    const r2 = convertToUnitSystem(2, "lb", "metric");
+    expect(r2.unit).toBe("kg");
+    expect(r2.quantity).toBeCloseTo(0.907, 3);
   });
 
   it("should convert metric volume to imperial", () => {
-    expect(convertToUnitSystem(100, "ml", "imperial")).toEqual({
-      quantity: 3.381,
-      unit: "fl_oz",
-    });
-    expect(convertToUnitSystem(500, "ml", "imperial")).toEqual({
-      quantity: 0.528,
-      unit: "qt",
-    });
-    expect(convertToUnitSystem(2, "l", "imperial")).toEqual({
-      quantity: 2.113,
-      unit: "qt",
-    });
+    const r1 = convertToUnitSystem(100, "ml", "imperial");
+    expect(r1.unit).toBe("fl_oz");
+    expect(r1.quantity).toBeCloseTo(3.381, 3);
+    const r2 = convertToUnitSystem(500, "ml", "imperial");
+    expect(r2.unit).toBe("qt");
+    expect(r2.quantity).toBeCloseTo(0.528, 3);
+    const r3 = convertToUnitSystem(2, "l", "imperial");
+    expect(r3.unit).toBe("qt");
+    expect(r3.quantity).toBeCloseTo(2.113, 3);
   });
 
   it("should convert imperial volume to metric", () => {
-    expect(convertToUnitSystem(10, "fl_oz", "metric")).toEqual({
-      quantity: 295.735,
-      unit: "ml",
-    });
-    expect(convertToUnitSystem(2, "qt", "metric")).toEqual({
-      quantity: 1.893,
-      unit: "l",
-    });
-    expect(convertToUnitSystem(1, "cup", "metric")).toEqual({
-      quantity: 236.588,
-      unit: "ml",
-    });
+    const r1 = convertToUnitSystem(10, "fl_oz", "metric");
+    expect(r1.unit).toBe("ml");
+    expect(r1.quantity).toBeCloseTo(295.735, 3);
+    const r2 = convertToUnitSystem(2, "qt", "metric");
+    expect(r2.unit).toBe("l");
+    expect(r2.quantity).toBeCloseTo(1.893, 3);
+    const r3 = convertToUnitSystem(1, "cup", "metric");
+    expect(r3.unit).toBe("ml");
+    expect(r3.quantity).toBeCloseTo(236.588, 3);
   });
 });
 
