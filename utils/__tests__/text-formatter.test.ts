@@ -29,6 +29,24 @@ describe("Text Formatter Utils - Capitalization", () => {
       expect(capitalize(" hello")).toBe(" hello");
     });
 
+    it("should only capitalize the first word in a sentence", () => {
+      expect(capitalize("hello world from jules")).toBe("Hello world from jules");
+      expect(capitalize("HELLO WORLD")).toBe("Hello world");
+    });
+
+    it("should handle whitespace correctly", () => {
+      expect(capitalize("  hello")).toBe("  hello");
+      expect(capitalize("\thello")).toBe("\thello");
+      expect(capitalize("\nhello")).toBe("\nhello");
+      expect(capitalize("hello  ")).toBe("Hello  ");
+    });
+
+    it("should handle unicode and accents", () => {
+      expect(capitalize("éternel")).toBe("Éternel");
+      expect(capitalize("éclair")).toBe("Éclair");
+      expect(capitalize("über")).toBe("Über");
+    });
+
     it("should return empty string for empty or null input", () => {
       expect(capitalize("")).toBe("");
       expect(capitalize(null as any)).toBe("");
