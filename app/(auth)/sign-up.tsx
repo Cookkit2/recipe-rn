@@ -11,6 +11,52 @@ import AuthScreenLayout, {
   validatePassword,
 } from "~/components/auth/AuthScreenLayout";
 
+const getPasswordStrength = (pwd: string) => {
+  let strength = 0;
+  if (pwd.length >= 12) strength++;
+  if (/[a-z]/.test(pwd)) strength++;
+  if (/[A-Z]/.test(pwd)) strength++;
+  if (/[0-9]/.test(pwd)) strength++;
+  if (/[^A-Za-z0-9]/.test(pwd)) strength++;
+  return strength;
+};
+
+const getPasswordStrengthText = (strength: number) => {
+  switch (strength) {
+    case 0:
+    case 1:
+      return "Very Weak";
+    case 2:
+      return "Weak";
+    case 3:
+      return "Fair";
+    case 4:
+      return "Good";
+    case 5:
+      return "Strong";
+    default:
+      return "";
+  }
+};
+
+const getPasswordStrengthColor = (strength: number) => {
+  switch (strength) {
+    case 0:
+    case 1:
+      return "text-red-500";
+    case 2:
+      return "text-orange-500";
+    case 3:
+      return "text-yellow-500";
+    case 4:
+      return "text-blue-500";
+    case 5:
+      return "text-green-500";
+    default:
+      return "text-gray-500";
+  }
+};
+
 export default function SignUpScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,52 +67,6 @@ export default function SignUpScreen() {
   const [isLoading, setIsLoading] = useState(false);
 
   const auth = useAuth();
-
-  const getPasswordStrength = (pwd: string) => {
-    let strength = 0;
-    if (pwd.length >= 12) strength++;
-    if (/[a-z]/.test(pwd)) strength++;
-    if (/[A-Z]/.test(pwd)) strength++;
-    if (/[0-9]/.test(pwd)) strength++;
-    if (/[^A-Za-z0-9]/.test(pwd)) strength++;
-    return strength;
-  };
-
-  const getPasswordStrengthText = (strength: number) => {
-    switch (strength) {
-      case 0:
-      case 1:
-        return "Very Weak";
-      case 2:
-        return "Weak";
-      case 3:
-        return "Fair";
-      case 4:
-        return "Good";
-      case 5:
-        return "Strong";
-      default:
-        return "";
-    }
-  };
-
-  const getPasswordStrengthColor = (strength: number) => {
-    switch (strength) {
-      case 0:
-      case 1:
-        return "text-red-500";
-      case 2:
-        return "text-orange-500";
-      case 3:
-        return "text-yellow-500";
-      case 4:
-        return "text-blue-500";
-      case 5:
-        return "text-green-500";
-      default:
-        return "text-gray-500";
-    }
-  };
 
   const validateForm = () => {
     const eErr = validateEmail(email);
