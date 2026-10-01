@@ -180,104 +180,95 @@ export default function MealPlanDragItem({
     zIndex: isDragGesture.value ? 1000 : 0,
   }));
 
-  if (showImage && mealPlan.recipe?.imageUrl) {
-    // Full card view with image
-    return (
-      <Animated.View style={[containerAnimatedStyle]}>
-        <GestureDetector gesture={dragGesture}>
-          <Animated.View style={[shadowStyle]}>
-            <Animated.View style={[animatedStyle]}>
-              <Pressable
-                onPress={handlePress}
-                className="bg-card rounded-xl overflow-hidden shadow-sm"
-                style={styles.container}
-                accessibilityRole="button"
-                accessibilityLabel={`Drag or view ${mealPlan.recipe?.title || "recipe"}`}
-              >
-                {/* Recipe Image */}
-                <View style={styles.imageContainer}>
-                  <Image
-                    source={{ uri: mealPlan.recipe.imageUrl }}
-                    contentFit="cover"
-                    style={styles.image}
-                  />
-                  {/* Drag Handle Indicator */}
-                  <View className="bg-black/20 px-2 py-1 rounded-full absolute top-2 right-2">
-                    <P className="text-white text-xs">⋮⋮</P>
-                  </View>
-                </View>
+  const CardComponent = showImage && mealPlan.recipe?.imageUrl ? FullCard : CompactCard;
 
-                {/* Recipe Info */}
-                <View className="p-3">
-                  <P
-                    className="text-foreground font-urbanist-semibold text-sm min-h-[36px]"
-                    numberOfLines={2}
-                  >
-                    {mealPlan.recipe?.title || "Recipe"}
-                  </P>
-                  {mealPlan.recipe?.description && (
-                    <P className="text-muted-foreground text-xs mt-1" numberOfLines={1}>
-                      {mealPlan.recipe.description}
-                    </P>
-                  )}
-                  <View className="flex flex-row items-center mt-2 gap-2">
-                    <View className="bg-primary/20 px-2 py-1 rounded-full">
-                      <P className="text-primary text-xs capitalize">{mealPlan.mealSlot}</P>
-                    </View>
-                    {mealPlan.servings > 1 && (
-                      <View className="bg-muted px-2 py-1 rounded-full">
-                        <P className="text-muted-foreground text-xs">
-                          {mealPlan.servings} servings
-                        </P>
-                      </View>
-                    )}
-                  </View>
-                </View>
-              </Pressable>
-            </Animated.View>
-          </Animated.View>
-        </GestureDetector>
-      </Animated.View>
-    );
-  }
-
-  // Compact view for calendar slots
   return (
     <Animated.View style={[containerAnimatedStyle]}>
       <GestureDetector gesture={dragGesture}>
         <Animated.View style={[shadowStyle]}>
           <Animated.View style={[animatedStyle]}>
-            <Pressable
-              onPress={handlePress}
-              className="bg-primary/10 rounded-lg p-2"
-              style={styles.compactContainer}
-              accessibilityRole="button"
-              accessibilityLabel={`Drag or view ${mealPlan.recipe?.title || "recipe"}`}
-            >
-              <View className="flex-row items-center gap-2">
-                {/* Drag Handle Indicator */}
-                <View className="bg-primary/20 px-1 py-1 rounded">
-                  <P className="text-primary text-xs">⋮⋮</P>
-                </View>
-                <View className="flex-1">
-                  <P className="text-xs font-urbanist-medium text-muted-foreground capitalize">
-                    {mealPlan.mealSlot}
-                  </P>
-                  <P className="text-sm font-urbanist-semibold text-foreground" numberOfLines={2}>
-                    {mealPlan.recipe?.title || "Recipe"}
-                  </P>
-                  {mealPlan.servings > 1 && (
-                    <P className="text-xs text-muted-foreground mt-1">
-                      {mealPlan.servings} servings
-                    </P>
-                  )}
-                </View>
-              </View>
-            </Pressable>
+            <CardComponent mealPlan={mealPlan} onPress={handlePress} />
           </Animated.View>
         </Animated.View>
       </GestureDetector>
     </Animated.View>
+  );
+}
+
+function FullCard({ mealPlan, onPress }: { mealPlan: CalendarMealPlan; onPress: () => void }) {
+  if (!mealPlan.recipe?.imageUrl) return null;
+  return (
+    <Pressable
+      onPress={onPress}
+      className="bg-card rounded-xl overflow-hidden shadow-sm"
+      style={styles.container}
+      accessibilityRole="button"
+      accessibilityLabel={`Drag or view ${mealPlan.recipe?.title || "recipe"}`}
+    >
+      {/* Recipe Image */}
+      <View style={styles.imageContainer}>
+        <Image source={{ uri: mealPlan.recipe.imageUrl }} contentFit="cover" style={styles.image} />
+        {/* Drag Handle Indicator */}
+        <View className="bg-black/20 px-2 py-1 rounded-full absolute top-2 right-2">
+          <P className="text-white text-xs">⋮⋮</P>
+        </View>
+      </View>
+
+      {/* Recipe Info */}
+      <View className="p-3">
+        <P
+          className="text-foreground font-urbanist-semibold text-sm min-h-[36px]"
+          numberOfLines={2}
+        >
+          {mealPlan.recipe?.title || "Recipe"}
+        </P>
+        {mealPlan.recipe?.description && (
+          <P className="text-muted-foreground text-xs mt-1" numberOfLines={1}>
+            {mealPlan.recipe.description}
+          </P>
+        )}
+        <View className="flex flex-row items-center mt-2 gap-2">
+          <View className="bg-primary/20 px-2 py-1 rounded-full">
+            <P className="text-primary text-xs capitalize">{mealPlan.mealSlot}</P>
+          </View>
+          {mealPlan.servings > 1 && (
+            <View className="bg-muted px-2 py-1 rounded-full">
+              <P className="text-muted-foreground text-xs">{mealPlan.servings} servings</P>
+            </View>
+          )}
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+function CompactCard({ mealPlan, onPress }: { mealPlan: CalendarMealPlan; onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      className="bg-primary/10 rounded-lg p-2"
+      style={styles.compactContainer}
+      accessibilityRole="button"
+      accessibilityLabel={`Drag or view ${mealPlan.recipe?.title || "recipe"}`}
+    >
+      <View className="flex-row items-center gap-2">
+        {/* Drag Handle Indicator */}
+        <View className="bg-primary/20 px-1 py-1 rounded">
+          <P className="text-primary text-xs">⋮⋮</P>
+        </View>
+        <View className="flex-1">
+          <P className="text-xs font-urbanist-medium text-muted-foreground capitalize">
+            {mealPlan.mealSlot}
+          </P>
+          <P className="text-sm font-urbanist-semibold text-foreground" numberOfLines={2}>
+            {mealPlan.recipe?.title || "Recipe"}
+          </P>
+          {mealPlan.servings > 1 && (
+            <P className="text-xs text-muted-foreground mt-1">{mealPlan.servings} servings</P>
+          )}
+        </View>
+      </View>
+    </Pressable>
   );
 }
 
