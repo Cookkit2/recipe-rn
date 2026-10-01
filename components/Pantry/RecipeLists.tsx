@@ -34,6 +34,109 @@ const SCROLL_PREFETCH_THROTTLE_MS = 200;
 const INITIAL_RECIPE_LIMIT = 30;
 const LOAD_MORE_THRESHOLD = 10; // Load more when 10 items from bottom
 
+// Helper to format selected categories text
+const getSelectedCategoriesText = (selectedRecipeTags: string[]) => {
+  if (selectedRecipeTags.length === 0) return "";
+
+  const categoryLabels = {
+    meal: "Meals",
+    drink: "Drinks",
+    dessert: "Desserts",
+  };
+
+  return selectedRecipeTags
+    .map((tag) => categoryLabels[tag as keyof typeof categoryLabels] || tag)
+    .join(", ");
+};
+
+// Extracted Empty State Component
+const EmptyState = ({
+  isLoading,
+  error,
+  selectedRecipeTags,
+}: {
+  isLoading: boolean;
+  error: Error | null;
+  selectedRecipeTags: string[];
+}) => {
+  const selectedCategoriesText = getSelectedCategoriesText(selectedRecipeTags);
+
+  if (isLoading) {
+    return (
+      <View className="py-16 items-center justify-center">
+        <ActivityIndicator size="small" />
+        <P className="mt-2 text-muted-foreground">
+          {selectedRecipeTags.length > 0
+            ? `Loading ${selectedCategoriesText.toLowerCase()}...`
+            : "Loading recipes..."}
+        </P>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View className="py-16 items-center justify-center">
+        <P className="text-destructive text-center">{error.message}</P>
+      </View>
+    );
+  }
+
+  return (
+    <View className="py-16 items-center justify-center">
+      <H4 className="text-muted-foreground font-urbanist-semibold text-center">
+        {selectedRecipeTags.length > 0
+          ? `No ${selectedCategoriesText.toLowerCase()} available`
+          : "No recipes available"}
+      </H4>
+      <P className="text-muted-foreground font-urbanist-regular text-center text-sm mt-1">
+        {selectedRecipeTags.length > 0
+          ? `Try adding more ingredients for ${selectedCategoriesText.toLowerCase()} or select different categories`
+          : "Try adding more ingredients to your pantry or adjust your dietary preferences"}
+      </P>
+    </View>
+  );
+};
+
+// Extracted Footer Component
+const ListFooterComponent = ({
+  isLoading,
+  isLoadingMore,
+  hasMoreToLoad,
+  recipesCount,
+}: {
+  isLoading: boolean;
+  isLoadingMore: boolean;
+  hasMoreToLoad: boolean;
+  recipesCount: number;
+}) => {
+  // Don't show footer if we're still loading initial data
+  if (isLoading) return null;
+
+  // Show all recipes loaded message if we have recipes but no more to load
+  if (!hasMoreToLoad && recipesCount > 0) {
+    return (
+      <View className="py-6 items-center justify-center">
+        <P className="text-muted-foreground text-sm">
+          You've seen all {recipesCount} recipe{recipesCount !== 1 ? "s" : ""}
+        </P>
+      </View>
+    );
+  }
+
+  // Show loading indicator
+  if (isLoadingMore) {
+    return (
+      <View className="py-4 items-center justify-center">
+        <ActivityIndicator size="small" />
+        <P className="mt-2 text-muted-foreground text-sm">Loading more recipes...</P>
+      </View>
+    );
+  }
+
+  return null;
+};
+
 export default function RecipeLists() {
   const { bottom } = useSafeAreaInsets();
   const { selectedRecipeTags } = useRecipeStore();
@@ -117,21 +220,6 @@ export default function RecipeLists() {
     setDisplayLimit(INITIAL_RECIPE_LIMIT);
   }, [selectedRecipeTags]);
 
-  // Create display text for selected categories
-  const selectedCategoriesText = useMemo(() => {
-    if (selectedRecipeTags.length === 0) return "";
-
-    const categoryLabels = {
-      meal: "Meals",
-      drink: "Drinks",
-      dessert: "Desserts",
-    };
-
-    return selectedRecipeTags
-      .map((tag) => categoryLabels[tag as keyof typeof categoryLabels] || tag)
-      .join(", ");
-  }, [selectedRecipeTags]);
-
   // Scroll offset more than 10 then show the bottom border
   const bottomBorderStyle = useAnimatedStyle(() => ({
     borderTopWidth: withTiming(scrollY.value > 10 ? 1 : 0, CURVES["expressive.fast.effects"]),
@@ -212,43 +300,12 @@ export default function RecipeLists() {
     ]
   );
 
-  const emptyState = () => {
-    if (isLoading) {
-      return (
-        <View className="py-16 items-center justify-center">
-          <ActivityIndicator size="small" />
-          <P className="mt-2 text-muted-foreground">
-            {selectedRecipeTags.length > 0
-              ? `Loading ${selectedCategoriesText.toLowerCase()}...`
-              : "Loading recipes..."}
-          </P>
-        </View>
-      );
-    }
-
-    if (error) {
-      return (
-        <View className="py-16 items-center justify-center">
-          <P className="text-destructive text-center">{error.message}</P>
-        </View>
-      );
-    }
-
-    return (
-      <View className="py-16 items-center justify-center">
-        <H4 className="text-muted-foreground font-urbanist-semibold text-center">
-          {selectedRecipeTags.length > 0
-            ? `No ${selectedCategoriesText.toLowerCase()} available`
-            : "No recipes available"}
-        </H4>
-        <P className="text-muted-foreground font-urbanist-regular text-center text-sm mt-1">
-          {selectedRecipeTags.length > 0
-            ? `Try adding more ingredients for ${selectedCategoriesText.toLowerCase()} or select different categories`
-            : "Try adding more ingredients to your pantry or adjust your dietary preferences"}
-        </P>
-      </View>
-    );
-  };
+  const emptyState = useCallback(
+    () => (
+      <EmptyState isLoading={isLoading} error={error} selectedRecipeTags={selectedRecipeTags} />
+    ),
+    [isLoading, error, selectedRecipeTags]
+  );
 
   // Memoized render item to prevent re-creation on each render
   const renderRecipeItem = useCallback(
@@ -266,33 +323,17 @@ export default function RecipeLists() {
   const ITEM_HEIGHT = 200;
 
   // Footer component for loading more indicator
-  const ListFooter = useCallback(() => {
-    // Don't show footer if we're still loading initial data
-    if (isLoading) return null;
-
-    // Show all recipes loaded message if we have recipes but no more to load
-    if (!hasMoreToLoad && recipes.length > 0) {
-      return (
-        <View className="py-6 items-center justify-center">
-          <P className="text-muted-foreground text-sm">
-            You've seen all {recipes.length} recipe{recipes.length !== 1 ? "s" : ""}
-          </P>
-        </View>
-      );
-    }
-
-    // Show loading indicator
-    if (isLoadingMore) {
-      return (
-        <View className="py-4 items-center justify-center">
-          <ActivityIndicator size="small" />
-          <P className="mt-2 text-muted-foreground text-sm">Loading more recipes...</P>
-        </View>
-      );
-    }
-
-    return null;
-  }, [isLoading, isLoadingMore, hasMoreToLoad, recipes.length]);
+  const renderListFooter = useCallback(
+    () => (
+      <ListFooterComponent
+        isLoading={isLoading}
+        isLoadingMore={isLoadingMore}
+        hasMoreToLoad={hasMoreToLoad}
+        recipesCount={recipes.length}
+      />
+    ),
+    [isLoading, isLoadingMore, hasMoreToLoad, recipes.length]
+  );
 
   return (
     <>
@@ -311,7 +352,7 @@ export default function RecipeLists() {
           data={listData}
           renderItem={renderRecipeItem}
           ListEmptyComponent={emptyState}
-          ListFooterComponent={ListFooter}
+          ListFooterComponent={renderListFooter}
           // LegendList performance optimizations
           recycleItems
           estimatedItemSize={ITEM_HEIGHT}
