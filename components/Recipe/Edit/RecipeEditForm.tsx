@@ -190,159 +190,48 @@ export default function RecipeEditForm({
         contentContainerClassName="gap-6 pb-24"
         keyboardShouldPersistTaps="handled"
       >
-        {/* Title Section */}
-        <View className="gap-2 px-4">
-          <View className="flex-row items-center justify-between">
-            <View className="flex-1 relative">
-              <TextInput
-                ref={titleInputRef}
-                value={recipe.title}
-                onChangeText={handleTitleChange}
-                placeholder="Recipe Title"
-                multiline
-                scrollEnabled={false}
-                textAlignVertical="center"
-                returnKeyType="done"
-                underlineColorAndroid="transparent"
-                className="text-3xl text-foreground font-bowlby-one bg-transparent pr-20"
-                style={titleInputStyle}
-              />
-            </View>
-            <Button
-              size="sm"
-              variant="secondary"
-              onPress={() => setShowVersionHistory(true)}
-              className="rounded-full mb-1"
-            >
-              <View className="flex-row items-center gap-1.5">
-                <HistoryIcon size={14} strokeWidth={2.5} />
-                <Text className="text-sm">History</Text>
-              </View>
-            </Button>
-          </View>
-        </View>
+        <FormTitleSection
+          title={recipe.title}
+          onChangeText={handleTitleChange}
+          onHistoryPress={() => setShowVersionHistory(true)}
+          titleInputRef={titleInputRef}
+          titleInputStyle={titleInputStyle}
+        />
 
-        {/* Description Section */}
-        <View className="gap-2 px-4">
-          <H4>Description</H4>
-          <View className="relative bg-muted rounded-xl px-4 py-3">
-            <TextInput
-              ref={descriptionInputRef}
-              value={recipe.description}
-              onChangeText={handleDescriptionChange}
-              placeholder="Add a description for your recipe..."
-              multiline
-              scrollEnabled={false}
-              textAlignVertical="top"
-              returnKeyType="done"
-              underlineColorAndroid="transparent"
-              className="flex-1 text-base text-foreground font-urbanist-regular bg-transparent leading-relaxed"
-              style={descriptionInputStyle}
-            />
-          </View>
-        </View>
+        <FormDescriptionSection
+          description={recipe.description}
+          onChangeText={handleDescriptionChange}
+          descriptionInputRef={descriptionInputRef}
+          descriptionInputStyle={descriptionInputStyle}
+        />
 
         <Separator className="mx-4" />
 
-        {/* Ingredients Section */}
-        <View className="gap-3 px-4">
-          <View className="flex-row items-center justify-between">
-            <H2>Ingredients</H2>
-            <Button
-              size="sm"
-              variant="secondary"
-              onPress={handleAddIngredient}
-              className="flex-row items-center gap-2"
-            >
-              <PlusIcon size={16} strokeWidth={2.5} />
-              <Text>Add Ingredient</Text>
-            </Button>
-          </View>
-
-          {recipe.ingredients.length === 0 ? (
-            <View className="py-8 items-center justify-center">
-              <P className="text-muted-foreground text-center">
-                No ingredients yet. Tap "Add Ingredient" to get started.
-              </P>
-            </View>
-          ) : (
-            <View className="gap-3">
-              {recipe.ingredients.map((ingredient, index) => (
-                <EditIngredientItem
-                  key={`ingredient-${index}-${ingredient.name}`}
-                  ingredient={ingredient}
-                  onChange={(updatedIngredient) => handleIngredientChange(index, updatedIngredient)}
-                  onDelete={() => handleRemoveIngredient(index)}
-                />
-              ))}
-            </View>
-          )}
-        </View>
+        <FormIngredientsSection
+          ingredients={recipe.ingredients}
+          onAdd={handleAddIngredient}
+          onChange={handleIngredientChange}
+          onRemove={handleRemoveIngredient}
+        />
 
         <Separator className="mx-4" />
 
-        {/* Steps Section */}
-        <View className="gap-3 px-4">
-          <View className="flex-row items-center justify-between">
-            <H2>Steps</H2>
-            <Button
-              size="sm"
-              variant="secondary"
-              onPress={handleAddStep}
-              className="flex-row items-center gap-2"
-            >
-              <PlusIcon size={16} strokeWidth={2.5} />
-              <Text>Add Step</Text>
-            </Button>
-          </View>
-
-          {recipe.instructions.length === 0 ? (
-            <View className="py-8 items-center justify-center">
-              <P className="text-muted-foreground text-center">
-                No steps yet. Tap "Add Step" to get started.
-              </P>
-            </View>
-          ) : (
-            <View className="gap-3">
-              {recipe.instructions.map((step, index) => (
-                <EditStepItem
-                  key={`step-${index}-${step.step}`}
-                  step={step}
-                  onChange={(updatedStep) => handleStepChange(index, updatedStep)}
-                  onDelete={() => handleRemoveStep(index)}
-                />
-              ))}
-            </View>
-          )}
-        </View>
+        <FormStepsSection
+          instructions={recipe.instructions}
+          onAdd={handleAddStep}
+          onChange={handleStepChange}
+          onRemove={handleRemoveStep}
+        />
       </ScrollView>
 
-      {/* Footer with Save/Cancel buttons */}
-      <View
-        className={cn(
-          "absolute bottom-0 left-0 right-0 bg-background border-t border-border px-4 py-3 gap-3",
-          className
-        )}
-      >
-        <View className="flex-row gap-3">
-          <Button variant="outline" onPress={onCancel} disabled={isSaving} className="flex-1">
-            <Text>Cancel</Text>
-          </Button>
-          {onSaveAsCopy && (
-            <Button
-              variant="secondary"
-              onPress={onSaveAsCopy}
-              disabled={isSaving || !recipe.title.trim()}
-              className="flex-1"
-            >
-              <Text>{isSaving ? "Saving..." : "Save as Copy"}</Text>
-            </Button>
-          )}
-          <Button onPress={onSave} disabled={isSaving || !recipe.title.trim()} className="flex-1">
-            <Text>{isSaving ? "Saving..." : "Save Changes"}</Text>
-          </Button>
-        </View>
-      </View>
+      <FormFooterSection
+        onCancel={onCancel}
+        onSaveAsCopy={onSaveAsCopy}
+        onSave={onSave}
+        isSaving={isSaving}
+        isSaveDisabled={!recipe.title.trim()}
+        className={className}
+      />
 
       {/* Version History Sheet */}
       {showVersionHistory && (
@@ -354,5 +243,230 @@ export default function RecipeEditForm({
         />
       )}
     </KeyboardAvoidingView>
+  );
+}
+
+type FormTitleSectionProps = {
+  title: string;
+  onChangeText: (text: string) => void;
+  onHistoryPress: () => void;
+  titleInputRef: React.RefObject<TextInput | null>;
+  titleInputStyle: import("react-native").StyleProp<import("react-native").TextStyle>;
+};
+
+function FormTitleSection({
+  title,
+  onChangeText,
+  onHistoryPress,
+  titleInputRef,
+  titleInputStyle,
+}: FormTitleSectionProps) {
+  return (
+    <View className="gap-2 px-4">
+      <View className="flex-row items-center justify-between">
+        <View className="flex-1 relative">
+          <TextInput
+            ref={titleInputRef}
+            value={title}
+            onChangeText={onChangeText}
+            placeholder="Recipe Title"
+            multiline
+            scrollEnabled={false}
+            textAlignVertical="center"
+            returnKeyType="done"
+            underlineColorAndroid="transparent"
+            className="text-3xl text-foreground font-bowlby-one bg-transparent pr-20"
+            style={titleInputStyle}
+          />
+        </View>
+        <Button
+          size="sm"
+          variant="secondary"
+          onPress={onHistoryPress}
+          className="rounded-full mb-1"
+        >
+          <View className="flex-row items-center gap-1.5">
+            <HistoryIcon size={14} strokeWidth={2.5} />
+            <Text className="text-sm">History</Text>
+          </View>
+        </Button>
+      </View>
+    </View>
+  );
+}
+
+type FormDescriptionSectionProps = {
+  description: string;
+  onChangeText: (text: string) => void;
+  descriptionInputRef: React.RefObject<TextInput | null>;
+  descriptionInputStyle: import("react-native").StyleProp<import("react-native").TextStyle>;
+};
+
+function FormDescriptionSection({
+  description,
+  onChangeText,
+  descriptionInputRef,
+  descriptionInputStyle,
+}: FormDescriptionSectionProps) {
+  return (
+    <View className="gap-2 px-4">
+      <H4>Description</H4>
+      <View className="relative bg-muted rounded-xl px-4 py-3">
+        <TextInput
+          ref={descriptionInputRef}
+          value={description}
+          onChangeText={onChangeText}
+          placeholder="Add a description for your recipe..."
+          multiline
+          scrollEnabled={false}
+          textAlignVertical="top"
+          returnKeyType="done"
+          underlineColorAndroid="transparent"
+          className="flex-1 text-base text-foreground font-urbanist-regular bg-transparent leading-relaxed"
+          style={descriptionInputStyle}
+        />
+      </View>
+    </View>
+  );
+}
+
+type FormIngredientsSectionProps = {
+  ingredients: RecipeIngredient[];
+  onAdd: () => void;
+  onChange: (index: number, updatedIngredient: RecipeIngredient) => void;
+  onRemove: (index: number) => void;
+};
+
+function FormIngredientsSection({
+  ingredients,
+  onAdd,
+  onChange,
+  onRemove,
+}: FormIngredientsSectionProps) {
+  return (
+    <View className="gap-3 px-4">
+      <View className="flex-row items-center justify-between">
+        <H2>Ingredients</H2>
+        <Button
+          size="sm"
+          variant="secondary"
+          onPress={onAdd}
+          className="flex-row items-center gap-2"
+        >
+          <PlusIcon size={16} strokeWidth={2.5} />
+          <Text>Add Ingredient</Text>
+        </Button>
+      </View>
+
+      {ingredients.length === 0 ? (
+        <View className="py-8 items-center justify-center">
+          <P className="text-muted-foreground text-center">
+            No ingredients yet. Tap "Add Ingredient" to get started.
+          </P>
+        </View>
+      ) : (
+        <View className="gap-3">
+          {ingredients.map((ingredient, index) => (
+            <EditIngredientItem
+              key={`ingredient-${index}-${ingredient.name}`}
+              ingredient={ingredient}
+              onChange={(updatedIngredient) => onChange(index, updatedIngredient)}
+              onDelete={() => onRemove(index)}
+            />
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
+type FormStepsSectionProps = {
+  instructions: RecipeStep[];
+  onAdd: () => void;
+  onChange: (index: number, updatedStep: RecipeStep) => void;
+  onRemove: (index: number) => void;
+};
+
+function FormStepsSection({ instructions, onAdd, onChange, onRemove }: FormStepsSectionProps) {
+  return (
+    <View className="gap-3 px-4">
+      <View className="flex-row items-center justify-between">
+        <H2>Steps</H2>
+        <Button
+          size="sm"
+          variant="secondary"
+          onPress={onAdd}
+          className="flex-row items-center gap-2"
+        >
+          <PlusIcon size={16} strokeWidth={2.5} />
+          <Text>Add Step</Text>
+        </Button>
+      </View>
+
+      {instructions.length === 0 ? (
+        <View className="py-8 items-center justify-center">
+          <P className="text-muted-foreground text-center">
+            No steps yet. Tap "Add Step" to get started.
+          </P>
+        </View>
+      ) : (
+        <View className="gap-3">
+          {instructions.map((step, index) => (
+            <EditStepItem
+              key={`step-${index}-${step.step}`}
+              step={step}
+              onChange={(updatedStep) => onChange(index, updatedStep)}
+              onDelete={() => onRemove(index)}
+            />
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
+type FormFooterSectionProps = {
+  onCancel: () => void;
+  onSaveAsCopy?: () => void;
+  onSave: () => void;
+  isSaving: boolean;
+  isSaveDisabled: boolean;
+  className?: string;
+};
+
+function FormFooterSection({
+  onCancel,
+  onSaveAsCopy,
+  onSave,
+  isSaving,
+  isSaveDisabled,
+  className,
+}: FormFooterSectionProps) {
+  return (
+    <View
+      className={cn(
+        "absolute bottom-0 left-0 right-0 bg-background border-t border-border px-4 py-3 gap-3",
+        className
+      )}
+    >
+      <View className="flex-row gap-3">
+        <Button variant="outline" onPress={onCancel} disabled={isSaving} className="flex-1">
+          <Text>Cancel</Text>
+        </Button>
+        {onSaveAsCopy && (
+          <Button
+            variant="secondary"
+            onPress={onSaveAsCopy}
+            disabled={isSaving || isSaveDisabled}
+            className="flex-1"
+          >
+            <Text>{isSaving ? "Saving..." : "Save as Copy"}</Text>
+          </Button>
+        )}
+        <Button onPress={onSave} disabled={isSaving || isSaveDisabled} className="flex-1">
+          <Text>{isSaving ? "Saving..." : "Save Changes"}</Text>
+        </Button>
+      </View>
+    </View>
   );
 }
