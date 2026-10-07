@@ -1,3 +1,4 @@
+import React, { useCallback } from "react";
 import { View, FlatList, ActivityIndicator, Pressable } from "react-native";
 import { H3, P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
@@ -21,6 +22,18 @@ export default function GroceryListPage() {
   } = useGroceryListActions();
 
   const allItems = sections.flatMap((section) => section.items);
+
+  const renderGroceryItem = useCallback(
+    ({ item }: { item: GroceryItem }) => (
+      <GroceryListItem
+        item={item}
+        isSelectionMode={isSelectionMode}
+        isSelected={selectedItemNames.has(item.normalizedName)}
+        onToggleSelect={() => toggleItemSelection(item.normalizedName)}
+      />
+    ),
+    [isSelectionMode, selectedItemNames, toggleItemSelection]
+  );
 
   // Loading state
   if (isLoading) {
@@ -142,14 +155,7 @@ export default function GroceryListPage() {
         contentContainerStyle={{ paddingBottom: 32 }}
         className="flex-1 bg-background"
         showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <GroceryListItem
-            item={item}
-            isSelectionMode={isSelectionMode}
-            isSelected={selectedItemNames.has(item.normalizedName)}
-            onToggleSelect={() => toggleItemSelection(item.normalizedName)}
-          />
-        )}
+        renderItem={renderGroceryItem}
       />
     </>
   );

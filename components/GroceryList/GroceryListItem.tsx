@@ -1,3 +1,4 @@
+import React from "react";
 import { View, Pressable } from "react-native";
 import { P } from "~/components/ui/typography";
 import {
@@ -27,7 +28,7 @@ interface GroceryListItemProps {
   onToggleSelect?: () => void;
 }
 
-export default function GroceryListItem({
+export default React.memo(function GroceryListItem({
   item,
   isSelectionMode = false,
   isSelected = false,
@@ -157,4 +158,4 @@ export default function GroceryListItem({
       </AnimatedPressable>
     </Swipeable>
   );
-}
+});
