@@ -53,7 +53,7 @@ const SCALE_INACTIVE = 1;
  * A draggable recipe card that can be dragged to meal slots in the calendar.
  * Uses react-native-gesture-handler Gesture.Drag for smooth drag-and-drop.
  */
-export default function RecipeDraggable({
+export default React.memo(function RecipeDraggable({
   recipe,
   servings,
   onPress,
@@ -288,7 +288,7 @@ export default function RecipeDraggable({
       </GestureDetector>
     </Animated.View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
