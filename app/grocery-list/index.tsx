@@ -3,7 +3,7 @@ import { View, FlatList, ActivityIndicator, Pressable } from "react-native";
 import { H3, P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
 import { TrashIcon, CheckCircleIcon, XIcon, Edit2Icon, ShoppingCartIcon } from "lucide-uniwind";
-import { useGroceryList } from "~/hooks/queries/useGroceryList";
+import { useGroceryList, type GroceryItem } from "~/hooks/queries/useGroceryList";
 import { useGroceryListActions } from "~/hooks/useGroceryListActions";
 import GroceryListItem from "~/components/GroceryList/GroceryListItem";
 import GroceryListHeader from "~/components/GroceryList/GroceryListHeader";
