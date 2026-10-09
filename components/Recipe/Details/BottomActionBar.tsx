@@ -110,6 +110,7 @@ const BottomActionBar = ({
           className="rounded-full px-4"
           onPress={onEdit}
           disabled={isTailoring}
+          accessibilityLabel="Edit recipe"
         >
           <H4 className="font-urbanist-semibold">Edit</H4>
           <Edit2Icon className="text-foreground" size={16} strokeWidth={2.5} />
@@ -122,6 +123,7 @@ const BottomActionBar = ({
           className="rounded-full px-5"
           onPress={onTailor}
           disabled={isTailoring}
+          accessibilityLabel={isTailoring ? "Tailoring recipe" : "Tailor recipe to ingredients"}
         >
           <H4 className="font-urbanist-semibold">{isTailoring ? "Tailoring..." : "Tailor"}</H4>
         </Button>
@@ -133,6 +135,7 @@ const BottomActionBar = ({
           className="rounded-full px-5"
           onPress={onToggleMode}
           disabled={isTailoring}
+          accessibilityLabel={toggleLabel}
         >
           <H4 className="font-urbanist-semibold">{toggleLabel}</H4>
         </Button>
@@ -141,6 +144,7 @@ const BottomActionBar = ({
         size="lg"
         className="rounded-2xl border-continuous bg-foreground"
         onPress={navigateToCookingSteps}
+        accessibilityLabel="Start cooking recipe"
       >
         <TextShimmer className="flex-row items-center gap-2 justify-center">
           <UtensilsCrossedIcon className="text-background" size={18} strokeWidth={3} />
