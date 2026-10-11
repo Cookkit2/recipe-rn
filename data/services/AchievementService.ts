@@ -88,20 +88,7 @@ export class AchievementService {
 
       // Pre-fetch metrics that might be needed by multiple achievements
       // This prevents running the same DB queries repeatedly in the loop below
-      const preFetchedMetrics = {
-        currentStreak: await this.streakService.calculateCurrentStreak(),
-        longestStreak: await this.streakService.calculateLongestStreak(),
-        cookingStats: await this.cookingHistoryRepo.getCookingStats(),
-        allCooks: await this.cookingHistoryRepo.getCookingHistory(),
-        stockCount: await this.stockRepo.count(),
-
-        // These will be fetched only if needed
-        spicesCategory: undefined as any,
-        ingredientsUsedBeforeExpiry: undefined as number | undefined,
-        achievementsShared: undefined as number | undefined,
-        breakfastRecipes: undefined as any[] | undefined,
-        dinnerRecipes: undefined as any[] | undefined,
-      };
+      const preFetchedMetrics: Record<string, any> = {};
 
       // Check each achievement
       for (const achievement of achievements) {
@@ -478,30 +465,38 @@ export class AchievementService {
     requirement: AchievementRequirement,
     preFetchedMetrics?: any
   ): Promise<number> {
+    preFetchedMetrics = preFetchedMetrics || {};
     try {
       switch (requirement.metric) {
         case "consecutive_days":
-          return (
-            preFetchedMetrics?.currentStreak ?? (await this.streakService.calculateCurrentStreak())
-          );
+          if (preFetchedMetrics?.currentStreak === undefined) {
+            preFetchedMetrics.currentStreak = await this.streakService.calculateCurrentStreak();
+          }
+          return preFetchedMetrics.currentStreak;
 
         case "longest_streak":
-          return (
-            preFetchedMetrics?.longestStreak ?? (await this.streakService.calculateLongestStreak())
-          );
+          if (preFetchedMetrics?.longestStreak === undefined) {
+            preFetchedMetrics.longestStreak = await this.streakService.calculateLongestStreak();
+          }
+          return preFetchedMetrics.longestStreak;
 
         case "recipes_cooked":
-          const stats =
-            preFetchedMetrics?.cookingStats ?? (await this.cookingHistoryRepo.getCookingStats());
-          return stats.uniqueRecipes;
+          if (preFetchedMetrics?.cookingStats === undefined) {
+            preFetchedMetrics.cookingStats = await this.cookingHistoryRepo.getCookingStats();
+          }
+          return preFetchedMetrics.cookingStats.uniqueRecipes;
 
         case "total_cooks":
-          const allCooks =
-            preFetchedMetrics?.allCooks ?? (await this.cookingHistoryRepo.getCookingHistory());
-          return allCooks.length;
+          if (preFetchedMetrics?.allCooks === undefined) {
+            preFetchedMetrics.allCooks = await this.cookingHistoryRepo.getCookingHistory();
+          }
+          return preFetchedMetrics.allCooks.length;
 
         case "ingredients_tracked":
-          return preFetchedMetrics?.stockCount ?? (await this.stockRepo.count());
+          if (preFetchedMetrics?.stockCount === undefined) {
+            preFetchedMetrics.stockCount = await this.stockRepo.count();
+          }
+          return preFetchedMetrics.stockCount;
 
         case "spices_tracked": {
           let spicesCategory = preFetchedMetrics?.spicesCategory;
@@ -546,9 +541,11 @@ export class AchievementService {
             if (preFetchedMetrics) preFetchedMetrics.breakfastRecipes = breakfastRecipes;
           }
           const breakfastRecipeIds = new Set(breakfastRecipes.map((r: any) => r.id));
-          const allBreakfastCooks =
-            preFetchedMetrics?.allCooks ?? (await this.cookingHistoryRepo.getCookingHistory());
-          return allBreakfastCooks.filter((c: any) => breakfastRecipeIds.has(c.recipeId)).length;
+          if (preFetchedMetrics?.allCooks === undefined) {
+            preFetchedMetrics.allCooks = await this.cookingHistoryRepo.getCookingHistory();
+          }
+          return preFetchedMetrics.allCooks.filter((c: any) => breakfastRecipeIds.has(c.recipeId))
+            .length;
         }
 
         case "dinner_recipes_cooked": {
@@ -558,9 +555,11 @@ export class AchievementService {
             if (preFetchedMetrics) preFetchedMetrics.dinnerRecipes = dinnerRecipes;
           }
           const dinnerRecipeIds = new Set(dinnerRecipes.map((r: any) => r.id));
-          const allDinnerCooks =
-            preFetchedMetrics?.allCooks ?? (await this.cookingHistoryRepo.getCookingHistory());
-          return allDinnerCooks.filter((c: any) => dinnerRecipeIds.has(c.recipeId)).length;
+          if (preFetchedMetrics?.allCooks === undefined) {
+            preFetchedMetrics.allCooks = await this.cookingHistoryRepo.getCookingHistory();
+          }
+          return preFetchedMetrics.allCooks.filter((c: any) => dinnerRecipeIds.has(c.recipeId))
+            .length;
         }
 
         default:
