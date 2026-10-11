@@ -1,3 +1,16 @@
+# Maintenance review — 2026-10-11
+
+The grocery-list plan below is historical. Its original unchecked subtasks are not the current backlog; the phase status board records completion. Current product work is tracked in `docs/ROADMAP.md` and the five open GitHub issues (#723, #724, #725, #731, #736).
+
+- Verified and corrected clean-install CI: TypeScript 7 was outside ts-jest's supported range; TypeScript is pinned to 6.0.3. A CI update pins Bun 1.4.3 and frozen installation; publishing workflow edits requires GitHub workflow permission.
+- Corrected timer ownership in Jest without force-exit: Node rate-limiter cleanup is unreferenced, queries cancel before disposal, and test mutation caches have no expiry timer.
+- Consolidated reviewed utility tests, numeric-overflow and accessibility fixes. Literal ingredient-name lookups use PostgreSQL regex exact matching; local substring search behavior is preserved.
+- Detox now has configuration, setup, screen objects and smoke scenarios. Native/device results are a separate verification gate.
+- Two unpatched upstream high advisories still block the dependency audit; see the current roadmap. No audit finding was ignored.
+- `SegmentedButtons` already uses a static basis-class map. The old auth-provider omission is also stale: the production root mounts `AuthProvider` with the Supabase strategy and E2E uses the mock strategy.
+
+---
+
 # Grocery List Feature Plan
 
 ## Background and Motivation
@@ -156,13 +169,13 @@ The core intelligence of this feature:
 - [x] Phase 5: Grocery List Page ✅
 - [x] Phase 6: Polish & UX ✅
 - [x] 2026-03-17: Fix failing Jest tests (update expectations for `safeJsonParse` + corrupted auth session handling). ✅
-- [ ] 2026-03-12: Fix `SegmentedButtons` column layout regression caused by dynamic NativeWind basis classes.
+- [x] 2026-03-12: Fix `SegmentedButtons` column layout regression caused by dynamic NativeWind basis classes (static map verified 2026-10-11).
 - [ ] 2026-03-12: Resolve iOS archive failure caused by building the CocoaPods app project without its workspace.
 - [x] 2026-05-03: Replace WatermelonDB `database.batch(...ops)` spread calls with array calls repo-wide to remove large-batch warnings.
 - [x] 2026-05-03: Move search filters from inline horizontal chips into a toolbar-triggered bottom sheet.
 - [x] 2026-05-03: Fix Reanimated `useScrollOffset` warning on recipe detail loading states.
 - [x] 2026-05-03: Triage PR #389 CI failures and choose a lean PR/merge CI policy.
-- [ ] 2026-05-03: Execute lean PR CI plan from `docs/superpowers/plans/2026-05-03-lean-pr-ci.md`.
+- [x] 2026-05-03: Execute lean PR CI plan from `docs/superpowers/plans/2026-05-03-lean-pr-ci.md` (Quality/Jest/one audit verified; dependency findings remain tracked separately).
 - [x] 2026-05-03: Remove noisy create-camera pipeline info/profiling logs while keeping warnings and errors.
 - [x] 2026-05-03: Create detailed Detox E2E implementation plan from approved design.
 - [x] 2026-05-03: Make voice cooking default to closed/off.

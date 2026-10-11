@@ -20,11 +20,12 @@
     "e2e:test:ios:release": "EXPO_PUBLIC_E2E=true detox test -c ios.sim.release",
     "e2e:ios:release": "bun run e2e:build:ios:release && bun run e2e:test:ios:release",
     "prepare": "husky",
-    "backfill:recipe-images": "bun run scripts/backfill-recipe-images.ts"
+    "backfill:recipe-images": "bun run scripts/backfill-recipe-images.ts",
+    "e2e:prepare:ios": "node scripts/prepare-e2e-ios.js"
   },
   "dependencies": {
     "@babel/plugin-proposal-decorators": "^7.28.6",
-    "@expo/ui": "~57.0.4",
+    "@expo/ui": "~56.0.21",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@legendapp/list": "^2.0.19",
     "@lucide/lab": "^0.1.2",
@@ -60,7 +61,7 @@
     "@supabase/supabase-js": "^2.110.0",
     "@tanstack/react-query": "^5.101.2",
     "babel-plugin-module-resolver": "^5.0.2",
-    "babel-preset-expo": "~57.0.2",
+    "babel-preset-expo": "~56.0.17",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
@@ -109,14 +110,14 @@
     "react-native-keyboard-controller": "1.22.0",
     "react-native-logs": "^5.6.0",
     "react-native-mmkv": "^4.3.2",
-    "react-native-nitro-modules": "^0.36.1",
+    "react-native-nitro-modules": "0.37.1",
     "react-native-purchases": "^10.4.2",
     "react-native-purchases-ui": "^10.4.2",
     "react-native-reanimated": "4.5.1",
     "react-native-reanimated-carousel": "^4.0.3",
     "react-native-safe-area-context": "~5.8.0",
     "react-native-screen-corner-radius": "^0.2.3",
-    "react-native-screens": "4.26.0",
+    "react-native-screens": "4.25.2",
     "react-native-svg": "15.15.5",
     "react-native-vision-camera": "^5.1.0",
     "react-native-web": "^0.21.0",
@@ -130,10 +131,10 @@
     "youtube-transcript": "^1.3.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.26.0",
+    "@babel/core": "^7.29.7",
     "@babel/plugin-proposal-class-properties": "^7.18.6",
     "@babel/plugin-transform-private-methods": "7.29.7",
-    "@babel/plugin-transform-private-property-in-object": "8.0.1",
+    "@babel/plugin-transform-private-property-in-object": "7.29.7",
     "@config-plugins/detox": "^11.0.0",
     "@testing-library/react-hooks": "^8.0.1",
     "@testing-library/react-native": "^14.0.1",
@@ -144,30 +145,40 @@
     "@types/ws": "^8.18.1",
     "babel-jest": "30.4.1",
     "detox": "^20.51.0",
-    "fast-uri": "4.1.0",
     "husky": "^9.1.7",
-    "jest-expo": "~57.0.1",
+    "jest-expo": "~56.0.5",
     "prettier": "^3.9.5",
     "prettier-plugin-tailwindcss": "^0.8.0",
     "react-test-renderer": "19.2.7",
-    "sharp": "^0.35.3",
+    "sharp": "^0.35.5",
     "ts-jest": "^29.4.11",
-    "typescript": "~7.0.2",
+    "typescript": "6.0.3",
     "ws": "^8.21.0",
     "zustand": "^5.0.12"
   },
-  "resolutions": {
-    "fast-uri": "^3.1.2"
-  },
   "overrides": {
     "form-data": "^4.0.6",
-    "fast-uri": "^3.1.2",
+    "fast-uri": "^3.1.8",
     "hermes-compiler": "250829098.0.4",
     "@babel/runtime": ">=7.26.10",
     "jest-environment-node": "30.4.1",
     "jest-mock": "30.4.1",
     "tmp": ">=0.2.6",
-    "react-native-screens": "4.25.2"
+    "browserslist": "^4.29.3",
+    "shell-quote": "^1.12.0",
+    "source-map-js": "^1.2.2",
+    "@xmldom/xmldom@^0.8": "^0.8.15",
+    "@xmldom/xmldom@^0.9": "^0.9.12",
+    "brace-expansion@^1": "^1.1.21",
+    "brace-expansion@^2": "^2.1.7",
+    "brace-expansion@^5": "^5.0.12",
+    "postcss": "^8.5.29",
+    "nanoid@^3": "^3.3.20",
+    "js-yaml@^3": "^3.15.2",
+    "js-yaml@^4": "^4.3.2",
+    "compression": "^1.8.2",
+    "handlebars": "^4.7.10",
+    "image-size": "^2.0.4"
   },
   "private": true,
   "reanimated": {
@@ -184,5 +195,6 @@
     "detox",
     "dtrace-provider",
     "unrs-resolver"
-  ]
+  ],
+  "packageManager": "bun@1.4.3"
 }

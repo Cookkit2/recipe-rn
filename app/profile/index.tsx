@@ -1,4 +1,5 @@
 import { useRouter } from "expo-router";
+import { TEST_IDS } from "~/constants/test-ids";
 import {
   BellIcon,
   CalendarIcon,
@@ -115,6 +116,7 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView
+      testID={TEST_IDS.profile.screen}
       contentInsetAdjustmentBehavior="automatic"
       className="flex-1 bg-background"
       showsVerticalScrollIndicator={false}

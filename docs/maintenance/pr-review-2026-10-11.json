@@ -1,0 +1,2414 @@
+{
+  "reviewDate": "2026-10-11",
+  "base": "16a66018",
+  "scope": "Read-only inventory plus explicitly selected consolidation changes. No originals closed or merged. Dispositions describe the reviewed snapshot, not automatic closure eligibility.",
+  "counts": {
+    "pending_review": 86,
+    "included": 12,
+    "dependency_review": 15,
+    "empty_or_journal_only": 7,
+    "alternative_fix": 71
+  },
+  "pullRequests": [
+    {
+      "number": 990,
+      "title": "fix: properly bump iOS deployment targets in Pods project",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/990",
+      "reviewedHead": "8e0b10068bc348d9e7ddf9db59142501124d47d8",
+      "files": [
+        "plugins/withIosDisableUserScriptSandbox.js"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 992,
+      "title": "⚡ Bolt: Evaluate achievements concurrently in AchievementService",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/992",
+      "reviewedHead": "e8d422a6821224998998feac4ffccc114eff6c29",
+      "files": [
+        "data/services/AchievementService.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 993,
+      "title": "🔒 Fix: Remove EXPO_PUBLIC MMKV encryption key fallback in production",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/993",
+      "reviewedHead": "33f54efe00eddddcc57b9b43421343d749aa302e",
+      "files": [
+        "data/storage/storage-config.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 994,
+      "title": "🧪 [Testing Improvement] Add tests for RateLimiter",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/994",
+      "reviewedHead": "c1aef234b643fdfea17204974b3acd06f12a805a",
+      "files": [
+        "utils/__tests__/rate-limiter.test.ts",
+        "utils/rate-limiter.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 995,
+      "title": "🧪 Add tests for fetchWithTimeout",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/995",
+      "reviewedHead": "d7d9048d65e229d7acd72ee7082180d60276278d",
+      "files": [
+        "app/meal-plan/components/MealPlanHeaderRight.tsx",
+        "app/meal-plan/components/RecipeSelectionSheet.tsx",
+        "app/meal-plan/components/WeekNavigationHeader.tsx",
+        "app/profile/household.tsx",
+        "app/recipes/[recipeId]/edit.tsx",
+        "auth/__tests__/authHelpers.test.ts",
+        "babel.config.js",
+        "components/Analytics/WasteChart.tsx",
+        "components/GroceryMap/StoreInfoCard.tsx",
+        "components/Ingredient/IngredientDeleteButton.tsx",
+        "components/Recipe/Details/ReviewsList.tsx",
+        "components/Recipe/Details/WriteReviewModal.tsx",
+        "components/Recipe/Details/WriteTipModal.tsx",
+        "components/Recipe/Step/IngredientContent.tsx",
+        "components/Shared/EditableTitle.tsx",
+        "components/Shared/GridButtons.tsx",
+        "components/navigation/ScreenGroupMisc.tsx",
+        "components/navigation/ScreenGroupProfile.tsx",
+        "components/ui/dialog.tsx",
+        "data/db/DatabaseFacade.ts",
+        "data/db/repositories/ConsumptionLogRepository.ts",
+        "data/db/repositories/CookingHistoryRepository.ts",
+        "data/db/repositories/UserChallengeRepository.ts",
+        "data/db/repositories/WasteLogRepository.ts",
+        "data/services/ChallengeService.ts",
+        "data/storage/__tests__/storage-types.test.ts",
+        "data/storage/storage-types.ts",
+        "hooks/recommendation/ranking/CompositeRankingStrategy.ts",
+        "hooks/useRecipeEdit.ts",
+        "store/RecipeStepsContext.tsx",
+        "utils/__tests__/fetch-with-timeout.test.ts",
+        "utils/__tests__/pantry-voice-parser.test.ts",
+        "utils/__tests__/store-hours.test.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 996,
+      "title": "⚡ Bolt: [performance improvement] Concurrent sync write queue drain",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/996",
+      "reviewedHead": "d9666fb6f3944e05ba9148dddeef3bb3b0685dbd",
+      "files": [
+        "data/services/SyncWriteQueue.ts",
+        "data/services/__tests__/SyncWriteQueue.test.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 997,
+      "title": "🔒 Fix: Secure raw SQL query with table name validation",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/997",
+      "reviewedHead": "da2919570b5643cd3f389316d95431c07250f59b",
+      "files": [
+        "app/meal-plan/components/MealPlanHeaderRight.tsx",
+        "app/meal-plan/components/RecipeSelectionSheet.tsx",
+        "app/meal-plan/components/WeekNavigationHeader.tsx",
+        "app/profile/household.tsx",
+        "app/recipes/[recipeId]/edit.tsx",
+        "auth/__tests__/authHelpers.test.ts",
+        "babel.config.js",
+        "components/Analytics/WasteChart.tsx",
+        "components/GroceryMap/StoreInfoCard.tsx",
+        "components/Ingredient/IngredientDeleteButton.tsx",
+        "components/Recipe/Details/ReviewsList.tsx",
+        "components/Recipe/Details/WriteReviewModal.tsx",
+        "components/Recipe/Details/WriteTipModal.tsx",
+        "components/Recipe/Step/IngredientContent.tsx",
+        "components/Shared/EditableTitle.tsx",
+        "components/Shared/GridButtons.tsx",
+        "components/navigation/ScreenGroupMisc.tsx",
+        "components/navigation/ScreenGroupProfile.tsx",
+        "components/ui/dialog.tsx",
+        "data/db/DatabaseFacade.ts",
+        "data/db/repositories/ConsumptionLogRepository.ts",
+        "data/db/repositories/CookingHistoryRepository.ts",
+        "data/db/repositories/UserChallengeRepository.ts",
+        "data/db/repositories/WasteLogRepository.ts",
+        "data/services/ChallengeService.ts",
+        "data/storage/__tests__/storage-types.test.ts",
+        "data/storage/storage-types.ts",
+        "hooks/recommendation/ranking/CompositeRankingStrategy.ts",
+        "hooks/useRecipeEdit.ts",
+        "store/RecipeStepsContext.tsx",
+        "utils/__tests__/pantry-voice-parser.test.ts",
+        "utils/__tests__/store-hours.test.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 998,
+      "title": "⚡ Bolt: [performance improvement] fix N+1 query issue in HouseholdSyncService",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/998",
+      "reviewedHead": "4986fcaf5e6691fee8c891950f77c6d0afc40819",
+      "files": [
+        "app/meal-plan/components/MealPlanHeaderRight.tsx",
+        "app/meal-plan/components/RecipeSelectionSheet.tsx",
+        "app/meal-plan/components/WeekNavigationHeader.tsx",
+        "app/profile/household.tsx",
+        "app/recipes/[recipeId]/edit.tsx",
+        "auth/__tests__/authHelpers.test.ts",
+        "babel.config.js",
+        "components/Analytics/WasteChart.tsx",
+        "components/GroceryMap/StoreInfoCard.tsx",
+        "components/Ingredient/IngredientDeleteButton.tsx",
+        "components/Recipe/Details/ReviewsList.tsx",
+        "components/Recipe/Details/WriteReviewModal.tsx",
+        "components/Recipe/Details/WriteTipModal.tsx",
+        "components/Recipe/Step/IngredientContent.tsx",
+        "components/Shared/EditableTitle.tsx",
+        "components/Shared/GridButtons.tsx",
+        "components/navigation/ScreenGroupMisc.tsx",
+        "components/navigation/ScreenGroupProfile.tsx",
+        "components/ui/dialog.tsx",
+        "data/db/DatabaseFacade.ts",
+        "data/db/repositories/ConsumptionLogRepository.ts",
+        "data/db/repositories/CookingHistoryRepository.ts",
+        "data/db/repositories/UserChallengeRepository.ts",
+        "data/db/repositories/WasteLogRepository.ts",
+        "data/services/ChallengeService.ts",
+        "data/services/HouseholdSyncService.ts",
+        "data/storage/__tests__/storage-types.test.ts",
+        "data/storage/storage-types.ts",
+        "hooks/recommendation/ranking/CompositeRankingStrategy.ts",
+        "hooks/useRecipeEdit.ts",
+        "store/RecipeStepsContext.tsx",
+        "utils/__tests__/pantry-voice-parser.test.ts",
+        "utils/__tests__/store-hours.test.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 999,
+      "title": "⚡ Bolt: [performance improvement] Parallelize challenge progress updates",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/999",
+      "reviewedHead": "a240560e23c6c26e3fe38c31cd6ab3f4c9a78b4a",
+      "files": [
+        "app/meal-plan/components/MealPlanHeaderRight.tsx",
+        "app/meal-plan/components/RecipeSelectionSheet.tsx",
+        "app/meal-plan/components/WeekNavigationHeader.tsx",
+        "app/profile/household.tsx",
+        "app/recipes/[recipeId]/edit.tsx",
+        "auth/__tests__/authHelpers.test.ts",
+        "babel.config.js",
+        "bun.lockb",
+        "components/Analytics/WasteChart.tsx",
+        "components/GroceryMap/StoreInfoCard.tsx",
+        "components/Ingredient/IngredientDeleteButton.tsx",
+        "components/Recipe/Details/ReviewsList.tsx",
+        "components/Recipe/Details/WriteReviewModal.tsx",
+        "components/Recipe/Details/WriteTipModal.tsx",
+        "components/Recipe/Step/IngredientContent.tsx",
+        "components/Shared/EditableTitle.tsx",
+        "components/Shared/GridButtons.tsx",
+        "components/navigation/ScreenGroupMisc.tsx",
+        "components/navigation/ScreenGroupProfile.tsx",
+        "components/ui/dialog.tsx",
+        "data/db/DatabaseFacade.ts",
+        "data/db/repositories/ConsumptionLogRepository.ts",
+        "data/db/repositories/CookingHistoryRepository.ts",
+        "data/db/repositories/UserChallengeRepository.ts",
+        "data/db/repositories/WasteLogRepository.ts",
+        "data/services/ChallengeService.ts",
+        "data/storage/__tests__/storage-types.test.ts",
+        "data/storage/storage-types.ts",
+        "hooks/recommendation/ranking/CompositeRankingStrategy.ts",
+        "hooks/useRecipeEdit.ts",
+        "store/RecipeStepsContext.tsx",
+        "utils/__tests__/pantry-voice-parser.test.ts",
+        "utils/__tests__/store-hours.test.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1000,
+      "title": "⚡ Bolt: Optimize recipe rating calculations",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1000",
+      "reviewedHead": "fdbaf3b59ff5c983fcacf6d361e9a58208dd08d3",
+      "files": [
+        "data/api/recipeApi.ts",
+        "data/db/DatabaseFacade.ts",
+        "data/db/repositories/CookingHistoryRepository.ts",
+        "hooks/queries/useRecipeQueries.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1001,
+      "title": "🔒 Security: Fix SSRF vulnerability in SocialRecipeService",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1001",
+      "reviewedHead": "5c3496997a4a174859ee441badeb76a7c9102cfe",
+      "files": [
+        "lib/recipe-scrapper/SocialRecipeService.ts",
+        "lib/recipe-scrapper/__tests__/SocialRecipeServiceSSRF.test.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1002,
+      "title": "🧪 Test VoiceCommandParser public behavior",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1002",
+      "reviewedHead": "e439157002be937f89bd6ce9f34cbfbd65dea364",
+      "files": [
+        "app/meal-plan/components/MealPlanHeaderRight.tsx",
+        "app/meal-plan/components/RecipeSelectionSheet.tsx",
+        "app/meal-plan/components/WeekNavigationHeader.tsx",
+        "app/profile/household.tsx",
+        "app/recipes/[recipeId]/edit.tsx",
+        "auth/__tests__/authHelpers.test.ts",
+        "babel.config.js",
+        "components/Analytics/WasteChart.tsx",
+        "components/GroceryMap/StoreInfoCard.tsx",
+        "components/Ingredient/IngredientDeleteButton.tsx",
+        "components/Recipe/Details/ReviewsList.tsx",
+        "components/Recipe/Details/WriteReviewModal.tsx",
+        "components/Recipe/Details/WriteTipModal.tsx",
+        "components/Recipe/Step/IngredientContent.tsx",
+        "components/Shared/EditableTitle.tsx",
+        "components/Shared/GridButtons.tsx",
+        "components/navigation/ScreenGroupMisc.tsx",
+        "components/navigation/ScreenGroupProfile.tsx",
+        "components/ui/dialog.tsx",
+        "data/db/DatabaseFacade.ts",
+        "data/db/repositories/ConsumptionLogRepository.ts",
+        "data/db/repositories/CookingHistoryRepository.ts",
+        "data/db/repositories/UserChallengeRepository.ts",
+        "data/db/repositories/WasteLogRepository.ts",
+        "data/services/ChallengeService.ts",
+        "data/storage/__tests__/storage-types.test.ts",
+        "data/storage/storage-types.ts",
+        "hooks/recommendation/ranking/CompositeRankingStrategy.ts",
+        "hooks/useRecipeEdit.ts",
+        "store/RecipeStepsContext.tsx",
+        "utils/__tests__/pantry-voice-parser.test.ts",
+        "utils/__tests__/store-hours.test.ts",
+        "utils/__tests__/voice-command-parser.test.ts",
+        "utils/voice-command-parser.ts"
+      ],
+      "disposition": "included",
+      "detail": "Reviewed source/test intent included in the consolidation; unrelated historical hunks and journals excluded."
+    },
+    {
+      "number": 1005,
+      "title": "chore(deps): bump github/codeql-action from 4 to 4.37.4",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1005",
+      "reviewedHead": "ff8df75d36e5917848cca93256c5b7824821c85a",
+      "files": [
+        ".github/workflows/security-scan.yml"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1006,
+      "title": "🛡️ Sentinel: [HIGH] Fix missing rate limiting on password reset",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1006",
+      "reviewedHead": "2e102cb65ed16daa65bee5ec2d3bb97b6eb50d67",
+      "files": [
+        "auth/SupabaseAuthStrategy.ts",
+        "bun.lockb",
+        "package.json"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1009,
+      "title": "chore(deps-dev): bump the testing-dependencies group with 2 updates",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1009",
+      "reviewedHead": "34d39d03ae40a0269102583e5996d99f489bf049",
+      "files": [
+        "package.json"
+      ],
+      "disposition": "dependency_review",
+      "detail": "Fresh compatibility/audit patches are included; do not assume this individual version proposal is accepted."
+    },
+    {
+      "number": 1011,
+      "title": "chore(deps): update @rn-primitives/popover requirement from ^1.4.0 to ^1.5.2",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1011",
+      "reviewedHead": "4d01481c37a67cede8f1869e4a60139a1ebd7594",
+      "files": [
+        "package.json"
+      ],
+      "disposition": "dependency_review",
+      "detail": "Fresh compatibility/audit patches are included; do not assume this individual version proposal is accepted."
+    },
+    {
+      "number": 1012,
+      "title": "chore(deps): update babel-plugin-module-resolver requirement from ^5.0.2 to ^5.0.3",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1012",
+      "reviewedHead": "3b91fdc7f239d285ec66942d398324365c44daae",
+      "files": [
+        "package.json"
+      ],
+      "disposition": "dependency_review",
+      "detail": "Fresh compatibility/audit patches are included; do not assume this individual version proposal is accepted."
+    },
+    {
+      "number": 1013,
+      "title": "chore(deps): update @rn-primitives/checkbox requirement from ^1.4.0 to ^1.5.2",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1013",
+      "reviewedHead": "7d00f0e233f60c5eceb2207448a1eaa2d205f135",
+      "files": [
+        "package.json"
+      ],
+      "disposition": "dependency_review",
+      "detail": "Fresh compatibility/audit patches are included; do not assume this individual version proposal is accepted."
+    },
+    {
+      "number": 1014,
+      "title": "chore(deps): update @rn-primitives/avatar requirement from ^1.2.0 to ^1.5.2",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1014",
+      "reviewedHead": "a0e8879f7b4eda1c8ef97f003ac3d84b1591b3cb",
+      "files": [
+        "package.json"
+      ],
+      "disposition": "dependency_review",
+      "detail": "Fresh compatibility/audit patches are included; do not assume this individual version proposal is accepted."
+    },
+    {
+      "number": 1015,
+      "title": "chore(deps): update @rn-primitives/slot requirement from ^1.2.0 to ^1.5.2",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1015",
+      "reviewedHead": "57835d0e721d97782b77d80084bb7cc464ab4608",
+      "files": [
+        "package.json"
+      ],
+      "disposition": "dependency_review",
+      "detail": "Fresh compatibility/audit patches are included; do not assume this individual version proposal is accepted."
+    },
+    {
+      "number": 1016,
+      "title": "chore(deps): bump @lucide/lab from 0.1.2 to 0.2.0",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1016",
+      "reviewedHead": "70fad190a5a24896c2deb30e033ea761d8d03eb8",
+      "files": [
+        "package.json"
+      ],
+      "disposition": "dependency_review",
+      "detail": "Fresh compatibility/audit patches are included; do not assume this individual version proposal is accepted."
+    },
+    {
+      "number": 1017,
+      "title": "🧪 Testing Improvement: Add tests for fetchWithTimeout utility",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1017",
+      "reviewedHead": "7aed8f4637a233f0601635d76db633072953298d",
+      "files": [
+        "utils/__tests__/fetch-with-timeout.test.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1018,
+      "title": "Fix Pods project deployment targets regex",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1018",
+      "reviewedHead": "8087231cc2653ab8f7dc17df2102565bb6d54459",
+      "files": [
+        "retry4.txt"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1019,
+      "title": "🧪 Add test file for type-prettier utility",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1019",
+      "reviewedHead": "fb9275a1b20e39397089b8c02bdb7d258e725079",
+      "files": [
+        "utils/__tests__/type-prettier.test.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1020,
+      "title": "🧪 [testing improvement] Add tests for utils/result.ts",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1020",
+      "reviewedHead": "271c48eb3355a96ed913fdf93425e9b0d9cf327c",
+      "files": [
+        "bun.lockb",
+        "package.json",
+        "utils/__tests__/result.test.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1021,
+      "title": "🧪 Add test coverage for VoiceCommandParser",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1021",
+      "reviewedHead": "c07aac3caa628a11126e1ae7c0c112340e221efd",
+      "files": [
+        "__tests__/utils/voice-command-parser.test.ts",
+        "bun.lockb",
+        "package.json",
+        "utils/voice-command-parser.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1022,
+      "title": "🧹 Fix unsafe React Hook dependency ignore in useSelectionRing",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1022",
+      "reviewedHead": "496c97126787cb2ff6536304a5d00adb1415c2bd",
+      "files": [
+        "hooks/animation/useSelectionRing.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1023,
+      "title": "🧹 [code health] Remove dead code in useSelectionRing",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1023",
+      "reviewedHead": "349360a2f0c3e0df9c2526249be7325f12104cd5",
+      "files": [
+        "hooks/animation/useSelectionRing.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1024,
+      "title": "🔒 Sentinel: [HIGH] Fix Insecure Local Storage Encryption Key Fallback",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1024",
+      "reviewedHead": "a0f192680ad4936d665f328514c3043ae7f29a40",
+      "files": [
+        ".env.example",
+        "bun.lockb",
+        "data/storage/storage-config.ts",
+        "package.json",
+        "patch.diff",
+        "patch_env.py",
+        "patch_storage.py",
+        "pr_description.md",
+        "pr_description2.md"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1025,
+      "title": "Track helpful votes in state",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1025",
+      "reviewedHead": "10eff2a986631f17519336b3972455dbc7a6fdb1",
+      "files": [],
+      "disposition": "empty_or_journal_only",
+      "detail": "No production/test/config diff after excluding bot journals."
+    },
+    {
+      "number": 1026,
+      "title": "🛡️ Sentinel: [CRITICAL] Fix Exposed YouTube API Key",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1026",
+      "reviewedHead": "9980bb2567be7a61a990be0d6769425a1f57e7b5",
+      "files": [
+        "bun.lockb",
+        "lib/recipe-scrapper/youtube/AuthYouTubeService.ts",
+        "lib/recipe-scrapper/youtube/YouTubeServiceFactory.ts",
+        "package.json",
+        "supabase/functions/youtube-proxy/index.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1027,
+      "title": "🧪 [testing improvement] Add tests for useDistanceCalculation hook",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1027",
+      "reviewedHead": "f9d4b2260258e204e6f57ccd1b64b7a17b494395",
+      "files": [
+        "bun.lockb",
+        "hooks/__tests__/useDistanceCalculation.test.ts",
+        "package.json"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1028,
+      "title": "⚡ Bolt: Optimize achievement checking concurrency",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1028",
+      "reviewedHead": "760f6f63420666cd5d570feae90ef52d81e21280",
+      "files": [
+        "data/services/AchievementService.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1029,
+      "title": "🎨 Palette: [UX improvement] Add UI affordance to confirm needs_review ingredients",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1029",
+      "reviewedHead": "44f224a8c0f525b9e9a83a92efb767520e0844e0",
+      "files": [
+        "bun.lockb",
+        "package.json"
+      ],
+      "disposition": "dependency_review",
+      "detail": "Fresh compatibility/audit patches are included; do not assume this individual version proposal is accepted."
+    },
+    {
+      "number": 1030,
+      "title": "🧪 Add tests for useFirstRunAha hook",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1030",
+      "reviewedHead": "e443de2e3b9b436d437bf440a75ff02c85718399",
+      "files": [
+        "bun.lockb",
+        "package.json"
+      ],
+      "disposition": "dependency_review",
+      "detail": "Fresh compatibility/audit patches are included; do not assume this individual version proposal is accepted."
+    },
+    {
+      "number": 1031,
+      "title": "🧪 [testing improvement] Add tests for useGroceryListActions hook",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1031",
+      "reviewedHead": "d86dac65e1b5abdef5ef279a5120f89f1e9c85c5",
+      "files": [
+        "hooks/__tests__/useGroceryListActions.test.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1032,
+      "title": "⚡ Bolt: Cache ingredients used achievement count in MMKV",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1032",
+      "reviewedHead": "65b2204a0ceaaf9b854688e8c381b3172feda890",
+      "files": [
+        "bun.lockb",
+        "package.json"
+      ],
+      "disposition": "dependency_review",
+      "detail": "Fresh compatibility/audit patches are included; do not assume this individual version proposal is accepted."
+    },
+    {
+      "number": 1033,
+      "title": "⚡ Bolt: [performance improvement]",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1033",
+      "reviewedHead": "f45a36276b7269c200debe56c8d54cf405113af9",
+      "files": [
+        "bun.lockb",
+        "data/services/HouseholdSyncService.ts",
+        "data/services/__tests__/HouseholdSyncService.test.ts",
+        "package.json"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1034,
+      "title": "🧹 Code Health: replace explicit 'any' with 'unknown' in Function Gemma module",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1034",
+      "reviewedHead": "f969e91236f00008f8c8b2532ff1a30981bbdc48",
+      "files": [
+        "bun.lockb",
+        "package.json"
+      ],
+      "disposition": "dependency_review",
+      "detail": "Fresh compatibility/audit patches are included; do not assume this individual version proposal is accepted."
+    },
+    {
+      "number": 1035,
+      "title": "Fix main app target ENABLE_USER_SCRIPT_SANDBOXING",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1035",
+      "reviewedHead": "2dc6c82001709b0ce81773ca8a9aa776431519da",
+      "files": [
+        "bun.lockb",
+        "package.json",
+        "plugins/withIosDisableUserScriptSandbox.js"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1036,
+      "title": "🧹 Code Health: Fix Unsafe React Hook Dependency Ignore in LocalStorage",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1036",
+      "reviewedHead": "708b41cae4f7bd1a35b6e867680d8b12d3b81fec",
+      "files": [
+        "components/Preferences/AllergySection.tsx",
+        "components/Preferences/AppliancesSection.tsx",
+        "components/Preferences/DietarySection.tsx",
+        "hooks/useLocalStorageState.ts",
+        "pr_description.md"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1037,
+      "title": "🧪 [testing improvement] Add useLocation tests",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1037",
+      "reviewedHead": "3355af046dc51644fb0762b72e8a85abbda9d285",
+      "files": [
+        "__mocks__/expo-location.ts",
+        "hooks/__tests__/useLocation.test.ts",
+        "hooks/useLocation.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1038,
+      "title": "🧪 [testing improvement description]",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1038",
+      "reviewedHead": "caa0cd3cbf3dab58ead40f5b1586f8ab898cc2a5",
+      "files": [
+        "utils/__tests__/rate-limiter.test.ts",
+        "utils/rate-limiter.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1039,
+      "title": "🛡️ Sentinel: [HIGH] Fix missing rate limiting on password reset endpoint",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1039",
+      "reviewedHead": "bffc345967697b56157474267159a7ec49991191",
+      "files": [
+        "bun.lockb",
+        "package.json"
+      ],
+      "disposition": "dependency_review",
+      "detail": "Fresh compatibility/audit patches are included; do not assume this individual version proposal is accepted."
+    },
+    {
+      "number": 1042,
+      "title": "🎨 Palette: Add accessibility labels to debug SectionHeader",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1042",
+      "reviewedHead": "9a537ba40cb174eb9f509c06a107e0e4d9412ac5",
+      "files": [
+        "app/(misc)/debug/SectionHeader.tsx"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1043,
+      "title": "🎨 Palette: Fix accessibility labels on DateSection and IngredientQuantity",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1043",
+      "reviewedHead": "6fee080ab1ba8019e469a034ff8966fb0db4cdcb",
+      "files": [
+        "components/Ingredient/DateSection.tsx",
+        "components/Ingredient/IngredientQuantity.tsx"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1044,
+      "title": "🎨 Palette: Fix accessibilityLabel masking nested text",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1044",
+      "reviewedHead": "087bfb16e8731d53e0262e9bc78e30f0df72bf70",
+      "files": [],
+      "disposition": "empty_or_journal_only",
+      "detail": "No production/test/config diff after excluding bot journals."
+    },
+    {
+      "number": 1045,
+      "title": "⚡ Bolt: [performance improvement] Use unsafeFetchRaw for CookingHistory stats",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1045",
+      "reviewedHead": "07cf6c3e66022795f83f0e7f84dc29477e06f0ad",
+      "files": [
+        "data/db/repositories/CookingHistoryRepository.ts",
+        "data/db/repositories/__tests__/repository-platform-fixes.test.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1046,
+      "title": "🎨 Palette: [UX] Improve accessibility for RecipeChip selection mode",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1046",
+      "reviewedHead": "3389f57f9f75f0dcded67b4d8ab1bcf839ab0d55",
+      "files": [
+        "bun.lockb",
+        "components/GroceryList/RecipeChip.tsx",
+        "package.json"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1047,
+      "title": "🛡️ Sentinel: [HIGH] Fix missing rate limit on password reset",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1047",
+      "reviewedHead": "67ed3aa6b5091cccea3d2642565f3765c898b65d",
+      "files": [
+        "auth/MockAuthStrategy.ts",
+        "auth/SupabaseAuthStrategy.ts",
+        "bun.lockb",
+        "package.json"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1048,
+      "title": "🎨 Palette: Fix accessibilityLabel silencing nested text in profile cards",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1048",
+      "reviewedHead": "48dad3c08414c631518162a31935f406b42fccfe",
+      "files": [
+        "bun.lockb",
+        "components/RecipeStep.tsx",
+        "package.json"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1049,
+      "title": "⚡ Bolt: Optimize Date object creation in WasteLogRepository",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1049",
+      "reviewedHead": "6fc81d47c10faa6860ba4c400f283621d8afb55b",
+      "files": [
+        "data/db/repositories/WasteLogRepository.ts",
+        "data/db/repositories/__tests__/repository-platform-fixes.test.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1050,
+      "title": "🛡️ Sentinel: [CRITICAL] Fix SQL injection in BaseIngredientApi",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1050",
+      "reviewedHead": "99d7cca933127dd676d714cfb64e504b42a1fc33",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1051,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in Supabase queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1051",
+      "reviewedHead": "3f5192eb6c1192a78badbbe86962b004aa7506f2",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1052,
+      "title": "🎨 Palette: Improve Log Waste Dialog UX",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1052",
+      "reviewedHead": "28fadda863fcffd7e46788fab2d17857f955e98e",
+      "files": [
+        "components/Analytics/LogWasteDialog.tsx",
+        "components/ui/button.tsx"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1053,
+      "title": "⚡ Bolt: Replace array methods with for loops to improve performance",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1053",
+      "reviewedHead": "c1b1baeb3c19a8cae094a388c3f45e1a9838c283",
+      "files": [
+        "app/profile/achievements.tsx",
+        "data/db/repositories/AchievementRepository.ts",
+        "data/db/repositories/ChallengeRepository.ts",
+        "data/db/repositories/UserChallengeRepository.ts",
+        "utils/achievement-share.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1054,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in Supabase ilike queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1054",
+      "reviewedHead": "844156fef8f3b1fbedcc240fcda55c6e5ce3cb02",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1055,
+      "title": "⚡ Bolt: Optimize search filter iteration",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1055",
+      "reviewedHead": "9812d3d468a198abe3aeace1b389f0a94c71c52c",
+      "files": [
+        "utils/filterRecipesForSearch.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1056,
+      "title": "🎨 Palette: Add accessibility labels to missing buttons",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1056",
+      "reviewedHead": "1881f2dd209e81096cedc6dc080a3739d2f35a4e",
+      "files": [
+        "components/Recipe/Details/WriteTipModal.tsx",
+        "components/Recipe/Step/RateRecipeModal.tsx",
+        "components/ui/input.tsx"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1057,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in ilike",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1057",
+      "reviewedHead": "4330ceb6d247f3ddb038dbd8d11162f89a6363cc",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1058,
+      "title": "🎨 Palette: Fix accessibility labeling for recipe steps",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1058",
+      "reviewedHead": "9b4b454095ded849be3b585d05e28973d77372fb",
+      "files": [
+        "components/RecipeStep.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Step identity, completion state and action hints covered by the consolidated change."
+    },
+    {
+      "number": 1059,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in Supabase ilike queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1059",
+      "reviewedHead": "ba8bd5aa05a7e314c0a05f272ccb85e84c094375",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts",
+        "pr-description.md"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1060,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in Supabase ilike queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1060",
+      "reviewedHead": "085ce52a366d9bbbfbfd21b6b07e8f72215ff920",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1061,
+      "title": "🎨 Palette: [UX improvement] Improve RecipeStep checkbox accessibility",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1061",
+      "reviewedHead": "580b837d0189aa0afeec2087de07c10f662bed3d",
+      "files": [
+        "components/RecipeStep.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Step identity, completion state and action hints covered by the consolidated change."
+    },
+    {
+      "number": 1063,
+      "title": "🎨 Palette: Improve accessibility for RecipeStep checkbox",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1063",
+      "reviewedHead": "ff15cd7b139057c1031f47e6c19802114a135189",
+      "files": [
+        "components/RecipeStep.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Step identity, completion state and action hints covered by the consolidated change."
+    },
+    {
+      "number": 1064,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in API",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1064",
+      "reviewedHead": "8cb30fa9079a30622fc5168831d6effab6d77a3b",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1065,
+      "title": "🎨 Palette: [UX improvement] Improve RecipeStep checkbox accessibility",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1065",
+      "reviewedHead": "699ddfaaa28010becbe63b6e7a886a0d34f33d31",
+      "files": [
+        "components/RecipeStep.tsx",
+        "components/__tests__/RecipeStep.test.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Step identity, completion state and action hints covered by the consolidated change."
+    },
+    {
+      "number": 1066,
+      "title": "🛡️ Sentinel: [CRITICAL] Fix wildcard injection in ilike queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1066",
+      "reviewedHead": "9317adc7970b5df012c21324f055ac2f4d3b536d",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1067,
+      "title": "🎨 Palette: Improve accessibility label and hint for RecipeStep",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1067",
+      "reviewedHead": "64b7826735c0aed6426f87c8f68de36cd60dd546",
+      "files": [
+        "components/RecipeStep.tsx",
+        "components/__tests__/RecipeStep.test.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Step identity, completion state and action hints covered by the consolidated change."
+    },
+    {
+      "number": 1068,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in ilike queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1068",
+      "reviewedHead": "9ca6993dc95e87d1c887e7655757c180b8eaecbe",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1069,
+      "title": "🎨 Palette: Improve accessibility of RecipeStep",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1069",
+      "reviewedHead": "04aa0948cac8f8e545ae8104d1cc511680209bd0",
+      "files": [
+        "components/RecipeStep.tsx",
+        "components/__tests__/RecipeStep.test.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Step identity, completion state and action hints covered by the consolidated change."
+    },
+    {
+      "number": 1070,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in Supabase ilike queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1070",
+      "reviewedHead": "369bfac077a89b1c37351510b36fff8df473722d",
+      "files": [
+        "bun.lockb",
+        "data/supabase-api/BaseIngredientApi.ts",
+        "package.json"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1071,
+      "title": "🎨 Palette: Add busy state to Button accessibilityState",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1071",
+      "reviewedHead": "2504c6129a8df422ea0a7903ee863b27e4742bb4",
+      "files": [
+        "components/ui/button.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Loading busy/disabled behavior covered by consolidated regression tests; original patch is not imported."
+    },
+    {
+      "number": 1072,
+      "title": "🎨 Palette: Improve RecipeStep checkbox accessibility",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1072",
+      "reviewedHead": "a04dc8e622a5ceac1905ecf5cc9e7eb72fea7d00",
+      "files": [],
+      "disposition": "empty_or_journal_only",
+      "detail": "No production/test/config diff after excluding bot journals."
+    },
+    {
+      "number": 1073,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in Supabase ilike queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1073",
+      "reviewedHead": "21c59fd669fc67ffc4a5c253d5491e6f1961bb90",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1074,
+      "title": "chore(deps): bump the expo-dependencies group across 1 directory with 20 updates",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1074",
+      "reviewedHead": "56860d6f749d0b7b2038952eb9155db97b304a12",
+      "files": [
+        "package.json"
+      ],
+      "disposition": "dependency_review",
+      "detail": "Fresh compatibility/audit patches are included; do not assume this individual version proposal is accepted."
+    },
+    {
+      "number": 1075,
+      "title": "🎨 Palette: [Accessibility improvement] Add busy state to buttons",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1075",
+      "reviewedHead": "8374a8dae3a2e9346c86f077a4ef1061f39c24db",
+      "files": [
+        "bun.lockb",
+        "components/auth/SocialAuthButton.tsx",
+        "components/ui/button.tsx",
+        "package.json"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1076,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in Supabase queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1076",
+      "reviewedHead": "6afe08bcdc857a1a8bc47622dcc3b010dd4feb50",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1077,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in ilike queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1077",
+      "reviewedHead": "dfd3eadaf80ba8ad9214e6cb8c894069f1ca4b95",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1078,
+      "title": "🎨 Palette: [UX improvement] Enhance Loading Buttons",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1078",
+      "reviewedHead": "aa1fe513082380e5caf5fe8e04c84928604808a6",
+      "files": [
+        "components/auth/SocialAuthButton.tsx",
+        "components/ui/button.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Loading busy/disabled behavior covered by consolidated regression tests; original patch is not imported."
+    },
+    {
+      "number": 1079,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in BaseIngredientApi",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1079",
+      "reviewedHead": "eaf8e896b3ca738df6bcff5fba7a3bdf51732c20",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1080,
+      "title": "🎨 Palette: [UX improvement] Improve RecipeStep screen reader accessibility",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1080",
+      "reviewedHead": "d6c3591c6924f7c181ceaf091008a112cd539637",
+      "files": [
+        "components/RecipeStep.tsx",
+        "components/__tests__/RecipeStep.test.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Step identity, completion state and action hints covered by the consolidated change."
+    },
+    {
+      "number": 1081,
+      "title": "🛡️ Sentinel: [HIGH] Sanitize ilike queries against wildcard injection",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1081",
+      "reviewedHead": "81968afaddd01723d597a8a9de002d894baa25a6",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1082,
+      "title": "⚡ Bolt: [performance improvement] optimize reduce to for loops",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1082",
+      "reviewedHead": "6c0839f713f3819307a0c737dfa1b4934ff42eb4",
+      "files": [
+        "app/profile/achievements.tsx",
+        "data/db/repositories/AchievementRepository.ts",
+        "data/db/repositories/ChallengeRepository.ts",
+        "data/db/repositories/StockRepository.ts",
+        "data/db/repositories/UserChallengeRepository.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1083,
+      "title": "🎨 Palette: Add busy state to loading buttons",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1083",
+      "reviewedHead": "726eb06080438957d56e4e03220e9908da83614e",
+      "files": [
+        "components/ui/button.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Loading busy/disabled behavior covered by consolidated regression tests; original patch is not imported."
+    },
+    {
+      "number": 1084,
+      "title": "🛡️ Sentinel: [CRITICAL] Fix wildcard injection in ilike queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1084",
+      "reviewedHead": "cc95b32bdf1ae56b51a6aadf7ce720e31015a0a8",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1085,
+      "title": "🎨 Palette: Fix accessibility label for recipe step checkbox",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1085",
+      "reviewedHead": "39733541021b4dd684e55d4ddbdf67f89a132ebd",
+      "files": [
+        "components/RecipeStep.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Step identity, completion state and action hints covered by the consolidated change."
+    },
+    {
+      "number": 1086,
+      "title": "🛡️ Sentinel: [CRITICAL] Fix SQL wildcard injection in BaseIngredientApi",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1086",
+      "reviewedHead": "c8ad934c16aed6ddd38f3c34078a9aeb3faefba9",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1087,
+      "title": "🎨 Palette: Add busy accessibility state to loading buttons",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1087",
+      "reviewedHead": "5560908ae2facf79bdbdec090e3c5f31f4e17a21",
+      "files": [
+        "components/auth/SocialAuthButton.tsx",
+        "components/ui/button.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Loading busy/disabled behavior covered by consolidated regression tests; original patch is not imported."
+    },
+    {
+      "number": 1088,
+      "title": "🛡️ Sentinel: [MEDIUM] Fix Wildcard Injection in Supabase Queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1088",
+      "reviewedHead": "85d11c3001a6d413ee3bf6784eb4eb6ead317df9",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1089,
+      "title": "chore(deps): bump the react-dependencies group across 1 directory with 16 updates",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1089",
+      "reviewedHead": "6f5ea526d82c22000e65bb871c55ce024a0c8cab",
+      "files": [
+        "package.json"
+      ],
+      "disposition": "dependency_review",
+      "detail": "Fresh compatibility/audit patches are included; do not assume this individual version proposal is accepted."
+    },
+    {
+      "number": 1090,
+      "title": "🎨 Palette: Fix screen reader silencing on recipe steps",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1090",
+      "reviewedHead": "a1a8213e54c96885392d1a1d544e6a2fa02692c4",
+      "files": [
+        "components/RecipeStep.tsx",
+        "components/__tests__/RecipeStep.test.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Step identity, completion state and action hints covered by the consolidated change."
+    },
+    {
+      "number": 1091,
+      "title": "⚡ Bolt: Optimize search filters to reduce closure allocation overhead",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1091",
+      "reviewedHead": "1d30d90a21da90d8b402d081e2086ed5ca046713",
+      "files": [
+        "data/db/repositories/RecipeRepository.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1092,
+      "title": "🛡️ Sentinel: [CRITICAL] Fix wildcard injection in ilike queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1092",
+      "reviewedHead": "8b4ebc2ddb4ad26509d29be92bd55f60b1a7e153",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1093,
+      "title": "⚡ Bolt: Optimize stock item syncing memory usage",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1093",
+      "reviewedHead": "52443677b0c165647af14c3cef977065fbab08aa",
+      "files": [
+        ".github/workflows/ci.yml",
+        "bun.lockb",
+        "data/services/ChallengeService.ts",
+        "data/supabase-api/BaseIngredientApi.ts",
+        "package.json"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1094,
+      "title": "🎨 Palette: Add busy state to Button",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1094",
+      "reviewedHead": "9617f3de679a9df8154ab7948676cd79998b2e05",
+      "files": [
+        "components/ui/button.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Loading busy/disabled behavior covered by consolidated regression tests; original patch is not imported."
+    },
+    {
+      "number": 1095,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in Supabase ILIKE queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1095",
+      "reviewedHead": "42edd098a9b1ed8fe78c29217f8653d5a9652d23",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1096,
+      "title": "🛡️ Sentinel: [CRITICAL] Fix PostgREST wildcard injection in BaseIngredientApi",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1096",
+      "reviewedHead": "62b1a2c61cff4bbd8825d8f93101a6976be53ce2",
+      "files": [],
+      "disposition": "empty_or_journal_only",
+      "detail": "No production/test/config diff after excluding bot journals."
+    },
+    {
+      "number": 1097,
+      "title": "🎨 Palette: Add accessibilityState to camera capture button",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1097",
+      "reviewedHead": "a7027c9020873024e122db99bf3ee2b77d0f2ec8",
+      "files": [
+        "components/Camera/CameraActionRow.tsx"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1098,
+      "title": "🎨 Palette: Add busy state to loading buttons",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1098",
+      "reviewedHead": "879d68262f11e668c536b5199b73b5f18a8717e4",
+      "files": [
+        "components/ui/__tests__/button.test.tsx",
+        "components/ui/button.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Loading busy/disabled behavior covered by consolidated regression tests; original patch is not imported."
+    },
+    {
+      "number": 1099,
+      "title": "🛡️ Sentinel: [HIGH] Fix PostgREST wildcard injection",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1099",
+      "reviewedHead": "4a6b6099a419f9c2d0b5456de187ed50a76b726c",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1100,
+      "title": "⚡ Bolt: Optimize base ingredient batch mapping",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1100",
+      "reviewedHead": "25cd528f2cb2031545af270a9d59d09666eb4e16",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1101,
+      "title": "⚡ Bolt: Use single batch query for recipe details in getAvailableRecipesCore",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1101",
+      "reviewedHead": "bd56cd3780288321fa8f09f11a72607a55ac8b8a",
+      "files": [
+        "data/api/recipeApi.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1102,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in ilike queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1102",
+      "reviewedHead": "fc226b127ae8fbfc54afe96a8347f2ca09ce542e",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1103,
+      "title": "🎨 Palette: Add busy state to loading buttons for screen readers",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1103",
+      "reviewedHead": "afb7f5e08f2c7ef51c6027c45359b548955d0387",
+      "files": [
+        "components/auth/SocialAuthButton.tsx",
+        "components/ui/button.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Loading busy/disabled behavior covered by consolidated regression tests; original patch is not imported."
+    },
+    {
+      "number": 1104,
+      "title": "⚡ Bolt: Optimize map-filter array allocation and fix N+1 query in getAvailableRecipes",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1104",
+      "reviewedHead": "416d581336385b73c3c95b3f3d6162d0268a8aee",
+      "files": [
+        "data/api/recipeApi.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1105,
+      "title": "🎨 Palette: Improve RecipeStep accessibility labels",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1105",
+      "reviewedHead": "eb786d6bfa2a6e2db0cffbc8d79c978e9d3c1ec2",
+      "files": [
+        "components/RecipeStep.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Step identity, completion state and action hints covered by the consolidated change."
+    },
+    {
+      "number": 1106,
+      "title": "🛡️ Sentinel: [MEDIUM] Fix wildcard injection in Supabase queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1106",
+      "reviewedHead": "f984825c3e09e065e867bd3115a03acaa208794e",
+      "files": [
+        "utils/__tests__/input-sanitization.test.ts",
+        "utils/input-sanitization.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1107,
+      "title": "🎨 Palette: Improve loading state accessibility for buttons",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1107",
+      "reviewedHead": "4374396e3f62cb40ee63e969ef1dd48b8e80ee5f",
+      "files": [
+        "components/auth/SocialAuthButton.tsx",
+        "components/ui/button.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Loading busy/disabled behavior covered by consolidated regression tests; original patch is not imported."
+    },
+    {
+      "number": 1108,
+      "title": "🎨 Palette: Improve accessibility of RecipeStep checkbox",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1108",
+      "reviewedHead": "91ab8eaea9936aee95928922ff550bd5b764dfd5",
+      "files": [
+        "components/RecipeStep.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Step identity, completion state and action hints covered by the consolidated change."
+    },
+    {
+      "number": 1109,
+      "title": "⚡ Bolt: Replace O(N*M) nested array.filter searches with O(N+M) hash map lookups",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1109",
+      "reviewedHead": "13f4def589925b3dbbc717e918b2889183d517b6",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1110,
+      "title": "🛡️ Sentinel: [MEDIUM] Fix wildcard injection in Supabase queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1110",
+      "reviewedHead": "251e94b1480f2a9a0c68214eba9f92c97e3074f4",
+      "files": [
+        "bun.lockb",
+        "data/supabase-api/BaseIngredientApi.ts",
+        "package.json",
+        "utils/input-sanitization.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1111,
+      "title": "🎨 Palette: Improve screen reader experience for recipe steps",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1111",
+      "reviewedHead": "22f80971ac6dd1afc0bcae53a2ec667ad9e20d99",
+      "files": [
+        "components/RecipeStep.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Step identity, completion state and action hints covered by the consolidated change."
+    },
+    {
+      "number": 1112,
+      "title": "🛡️ Sentinel: [CRITICAL] Fix SQL Wildcard Injection in Supabase ilike",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1112",
+      "reviewedHead": "0c8792cb3da427cafe7f1b8daee41fe7fb68c914",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts",
+        "utils/input-sanitization.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1113,
+      "title": "🛡️ Sentinel: [HIGH] Fix PostgREST Wildcard Injection",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1113",
+      "reviewedHead": "843e3fdc3625e2d8454257a9f1bf6471d6b35f4e",
+      "files": [],
+      "disposition": "empty_or_journal_only",
+      "detail": "No production/test/config diff after excluding bot journals."
+    },
+    {
+      "number": 1114,
+      "title": "🎨 Palette: Add busy state to Button when loading",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1114",
+      "reviewedHead": "68c9543f095e7ef2c611eeedb62139568b008ba0",
+      "files": [
+        "components/ui/__tests__/Button.test.tsx",
+        "components/ui/button.tsx"
+      ],
+      "disposition": "included",
+      "detail": "Reviewed source/test intent included in the consolidation; unrelated historical hunks and journals excluded."
+    },
+    {
+      "number": 1115,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in BaseIngredientApi",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1115",
+      "reviewedHead": "666ae012108e33dd6e3c51f26cb4ce17b3963f36",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1116,
+      "title": "🎨 Palette: [Remove redundant accessibilityLabels from Pressables]",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1116",
+      "reviewedHead": "ed21705187736a731cd5ef403e34552694f40334",
+      "files": [],
+      "disposition": "empty_or_journal_only",
+      "detail": "No production/test/config diff after excluding bot journals."
+    },
+    {
+      "number": 1117,
+      "title": "🎨 Palette: [UX improvement] Fix screen reader content masking on Pressables",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1117",
+      "reviewedHead": "a4ae79854a1edda4479168039809786332c8fa83",
+      "files": [
+        "app/profile/achievements.tsx",
+        "components/Ingredient/IngredientQuantity.tsx",
+        "components/Recipe/Details/ReviewCard.tsx",
+        "components/RecipeStep.tsx"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1118,
+      "title": "🛡️ Sentinel: [MEDIUM] Fix wildcard injection in Supabase queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1118",
+      "reviewedHead": "831eac934b1dc220dc3ca880b0bf6203c418bfc6",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1119,
+      "title": "⚡ Bolt: [performance improvement]",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1119",
+      "reviewedHead": "cee9e484f6884bf22ba58e5f3f0d88b64862eeee",
+      "files": [
+        "data/services/AchievementService.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1120,
+      "title": "🛡️ Sentinel: [MEDIUM] Fix PostgREST wildcard injection",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1120",
+      "reviewedHead": "eef8e76ba92dc0ab92e5d3b12200d99de1a5939a",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1121,
+      "title": "🛡️ Sentinel: [High] Fix PostgREST wildcard injection",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1121",
+      "reviewedHead": "60d55f6ed8c358c5c971092563eb83f07420704e",
+      "files": [
+        "utils/__tests__/input-sanitization.test.ts",
+        "utils/input-sanitization.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1122,
+      "title": "🎨 Palette: Add loading indicators to TemplateSheet buttons",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1122",
+      "reviewedHead": "af07e4bcbe4db5b487cb7adfa1e46ea399448913",
+      "files": [
+        "components/MealPlanCalendar/TemplateSheet.tsx"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1123,
+      "title": "🛡️ Sentinel: [HIGH] Fix Supabase PostgREST wildcard injection",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1123",
+      "reviewedHead": "24e214180666b97f0c8fd63b895c103947b6dc09",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1124,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1124",
+      "reviewedHead": "1560c0f0eaca8772077479f5ee2193610ebd2882",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1125,
+      "title": "⚡ Bolt: [performance improvement]",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1125",
+      "reviewedHead": "f0b6fd9cc1af8d372eff57d3be837f45a3e15897",
+      "files": [
+        "data/db/DatabaseFacade.ts",
+        "data/db/repositories/StockRepository.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1126,
+      "title": "🎨 Palette: Improve Recipe Step Accessibility",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1126",
+      "reviewedHead": "ae0b3046249447093d067a0db5647525fc38a152",
+      "files": [
+        "components/RecipeStep.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Step identity, completion state and action hints covered by the consolidated change."
+    },
+    {
+      "number": 1127,
+      "title": "⚡ Bolt: Optimize FlatList rendering performance",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1127",
+      "reviewedHead": "a6f593de0566fed4098dfd2a0ed11814a4299a69",
+      "files": [
+        "app/grocery-list/index.tsx",
+        "app/meal-plan/components/RecipeSelectionSheet.tsx",
+        "components/Pantry/IngredientLists.tsx"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1128,
+      "title": "🎨 Palette: Improve RecipeStep accessibility",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1128",
+      "reviewedHead": "573776528c656277d53085aec03a78e222459c9b",
+      "files": [
+        "components/RecipeStep.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Step identity, completion state and action hints covered by the consolidated change."
+    },
+    {
+      "number": 1129,
+      "title": "🛡️ Sentinel: [High] Fix PostgREST wildcard injection",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1129",
+      "reviewedHead": "75e50808a7cd6c5bcab8b7427c1c309be11ca419",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts",
+        "utils/input-sanitization.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1130,
+      "title": "⚡ Bolt: Optimize achievement grouping with for loop and useMemo",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1130",
+      "reviewedHead": "182bf0c54da89e77e19c906a436c3a7d40236296",
+      "files": [
+        "app/profile/achievements.tsx"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1131,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in ilike queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1131",
+      "reviewedHead": "0b0d3c9917e3dc80bd7363b644faf81d8f917606",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts",
+        "utils/__tests__/input-sanitization.test.ts",
+        "utils/input-sanitization.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1132,
+      "title": "🎨 Palette: Improve accessibility of RecipeStep checkbox",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1132",
+      "reviewedHead": "a98a4a16bafda55adb6261b3604892834633e2c2",
+      "files": [
+        "components/RecipeStep.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Step identity, completion state and action hints covered by the consolidated change."
+    },
+    {
+      "number": 1133,
+      "title": "🎨 Palette: [UX improvement]",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1133",
+      "reviewedHead": "87531c2a48172193bcd6b04e8c548a419d1ca778",
+      "files": [
+        "components/ui/button.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Loading busy/disabled behavior covered by consolidated regression tests; original patch is not imported."
+    },
+    {
+      "number": 1134,
+      "title": "🛡️ Sentinel: [CRITICAL] Fix SQL wildcard injection in BaseIngredientApi",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1134",
+      "reviewedHead": "ef4beab3d953a402b4ceff3c584fe8bf3b7fbfeb",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1135,
+      "title": "🎨 Palette: [UX improvement] Improve recipe step accessibility",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1135",
+      "reviewedHead": "d77ab3b120d3a7c5441c30882d7432bac95ca1d2",
+      "files": [
+        "components/RecipeStep.tsx",
+        "components/__tests__/RecipeStep.test.tsx"
+      ],
+      "disposition": "included",
+      "detail": "Reviewed source/test intent included in the consolidation; unrelated historical hunks and journals excluded."
+    },
+    {
+      "number": 1136,
+      "title": "⚡ Bolt: [performance improvement]",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1136",
+      "reviewedHead": "964917fd38680284bd394af18b1b426701ed8de5",
+      "files": [
+        "app/profile/achievements.tsx"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1137,
+      "title": "🛡️ Sentinel: [HIGH] Fix PostgREST wildcard injection",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1137",
+      "reviewedHead": "72e89d97176120d5637e3e6afcdc759cd350694f",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts",
+        "utils/__tests__/input-sanitization.test.ts",
+        "utils/input-sanitization.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1138,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1138",
+      "reviewedHead": "cd71d281a4a04f8fa09ba567e61277cafcea3a62",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1139,
+      "title": "🎨 Palette: Fix accessibility states for loading buttons",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1139",
+      "reviewedHead": "02f97195c69721201dba8316c6e2195306ff42bc",
+      "files": [
+        "components/auth/SocialAuthButton.tsx",
+        "components/ui/button.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Loading busy/disabled behavior covered by consolidated regression tests; original patch is not imported."
+    },
+    {
+      "number": 1140,
+      "title": "🛡️ Sentinel: [CRITICAL] Fix PostgREST wildcard injection",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1140",
+      "reviewedHead": "a3e2613d42aa687f05784269c6cfde8d38dac4da",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1141,
+      "title": "🎨 Palette: [UX improvement] Add busy state to Button accessibility",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1141",
+      "reviewedHead": "12c4990d8634c3ddf326a41f6b9bcb56274a8614",
+      "files": [
+        "components/ui/button.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Loading busy/disabled behavior covered by consolidated regression tests; original patch is not imported."
+    },
+    {
+      "number": 1142,
+      "title": "🧹 Code Health: replace deprecated experiment variant",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1142",
+      "reviewedHead": "9b9af85d3566cf7cbcfc07f099c9a5a25a56032a",
+      "files": [
+        "lib/experiments/__tests__/useExperiment.test.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1143,
+      "title": "🧹 [Refactor HouseholdSettingsScreen into smaller components]",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1143",
+      "reviewedHead": "882c7eba2912a576b652cd4b2a3b4c169eb6d616",
+      "files": [
+        "app/profile/household.tsx"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1144,
+      "title": "🧪 testing: Exhaustively test areDimensionsCompatible unit mappings",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1144",
+      "reviewedHead": "286d55946f47038deee204cb7496ba07bfb8ee95",
+      "files": [
+        "utils/__tests__/unit-converter.test.ts"
+      ],
+      "disposition": "included",
+      "detail": "Reviewed source/test intent included in the consolidation; unrelated historical hunks and journals excluded."
+    },
+    {
+      "number": 1145,
+      "title": "🧹 [code health improvement] Refactor RecipeLists.tsx to extract smaller components",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1145",
+      "reviewedHead": "f3c654b48470ff0604efd9d1be9207b684fee71a",
+      "files": [
+        "components/Pantry/RecipeLists.tsx"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1146,
+      "title": "🧹 [Extract Ingredients and Steps sections in RecipeEditForm]",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1146",
+      "reviewedHead": "5582df85bb4047b23c4c16993a4ef54be0904e17",
+      "files": [
+        "components/Recipe/Edit/EditIngredientsSection.tsx",
+        "components/Recipe/Edit/EditStepsSection.tsx",
+        "components/Recipe/Edit/RecipeEditForm.tsx"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1147,
+      "title": "🧪 Add test file for store-hours.ts",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1147",
+      "reviewedHead": "d0ff4161cae5ff96da0632f8858fda4e803fbd6b",
+      "files": [],
+      "disposition": "empty_or_journal_only",
+      "detail": "No production/test/config diff after excluding bot journals."
+    },
+    {
+      "number": 1148,
+      "title": "🧪 [testing improvement] Add tests for formatQuantity fraction formatting",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1148",
+      "reviewedHead": "c3abad240b3d34d99fc36eab7d4579f105107b32",
+      "files": [
+        "utils/__tests__/text-formatter.test.ts"
+      ],
+      "disposition": "included",
+      "detail": "Reviewed source/test intent included in the consolidation; unrelated historical hunks and journals excluded."
+    },
+    {
+      "number": 1149,
+      "title": "🧪 [testing improvement] Add case-insensitive tests for irregular plurals",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1149",
+      "reviewedHead": "a06298d9d9197ebe139b7d47f11e4e92ba58948f",
+      "files": [
+        "utils/__tests__/text-formatter.test.ts"
+      ],
+      "disposition": "included",
+      "detail": "Reviewed source/test intent included in the consolidation; unrelated historical hunks and journals excluded."
+    },
+    {
+      "number": 1150,
+      "title": "🛡️ Sentinel: [Low] Fix hardcoded mock API key",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1150",
+      "reviewedHead": "1876af7b35a7b8bcde411562e88b4a5fe7cbb6f1",
+      "files": [
+        "__mocks__/expo-constants.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1151,
+      "title": "🧪 [testing improvement] Enhance quickCookingCheck threshold coverage",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1151",
+      "reviewedHead": "98b50997dd1d4b9cfc6877c22f9596a9768254c3",
+      "files": [
+        "utils/__tests__/youtube-utils.test.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1152,
+      "title": "🧪 [Testing Improvement] Test roundToReasonablePrecision bounds",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1152",
+      "reviewedHead": "ec4798c40336c408727578ec17d066b37eddb1e3",
+      "files": [
+        "utils/__tests__/unit-converter.test.ts",
+        "utils/unit-converter.ts"
+      ],
+      "disposition": "included",
+      "detail": "Reviewed source/test intent included in the consolidation; unrelated historical hunks and journals excluded."
+    },
+    {
+      "number": 1153,
+      "title": "🧹 [Code Health] Replace console.log with console.info in scripts",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1153",
+      "reviewedHead": "bb8b640c9d990849ede2a7516f38bcb02a735b76",
+      "files": [
+        "scripts/backfill-recipe-images.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1154,
+      "title": "🧹 Refactor: Extract components in MealPlanDragItem",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1154",
+      "reviewedHead": "b1e08f4abafb66d98f61e713c51937173ad71198",
+      "files": [
+        "components/MealPlanCalendar/MealPlanDragItem.tsx"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1155,
+      "title": "🧪 [testing improvement] Add edge case tests for groupPricesByCategory",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1155",
+      "reviewedHead": "1ff8204d1e2955da7b6b9152aa0a7117dc4fe126",
+      "files": [
+        "utils/__tests__/price-calculator.test.ts"
+      ],
+      "disposition": "included",
+      "detail": "Reviewed source/test intent included in the consolidation; unrelated historical hunks and journals excluded."
+    },
+    {
+      "number": 1156,
+      "title": "feat: track user's helpful votes in state",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1156",
+      "reviewedHead": "bd20be2d9bddaf964c4d182180a84f7222b303bb",
+      "files": [
+        "docs/superpowers/plans/2026-05-23-recipe-ratings-reviews.md"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1157,
+      "title": "🧹 [Code Health] Extract recipe form handlers to a custom hook",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1157",
+      "reviewedHead": "103e0e00e6a92479a8a696fb49a44d84529ba590",
+      "files": [
+        "components/Recipe/Edit/RecipeEditForm.tsx",
+        "components/Recipe/Edit/useRecipeFormHandlers.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1158,
+      "title": "🧪 [testing improvement] Cover malformed JSON syntax errors in safeJsonParse",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1158",
+      "reviewedHead": "60c3be971a7add8033b1b808d1c752aa1adbf561",
+      "files": [
+        "utils/__tests__/json-parsing.test.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1159,
+      "title": "🧹 Code Health: Extract inner components from RecipeLists",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1159",
+      "reviewedHead": "bb1f0ea1d491d5a1d268cfa0e052d79bc216f72f",
+      "files": [
+        "components/Pantry/RecipeLists.tsx"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1160,
+      "title": "🧹 [Refactor] Move password strength functions out of component",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1160",
+      "reviewedHead": "ba4cec486e6cdc9c8c7ba9831ce00dd2706f8905",
+      "files": [
+        "app/(auth)/sign-up.tsx"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1161,
+      "title": "🧹 [code health improvement] Refactor RecipeEditForm into smaller sub-components",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1161",
+      "reviewedHead": "87e3b603735809ac44d5a6dd828163048c8f1ddb",
+      "files": [
+        "components/Recipe/Edit/DescriptionSection.tsx",
+        "components/Recipe/Edit/IngredientsSection.tsx",
+        "components/Recipe/Edit/RecipeEditForm.tsx",
+        "components/Recipe/Edit/StepsSection.tsx",
+        "components/Recipe/Edit/TitleSection.tsx"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1162,
+      "title": "🧹 [Code Health] Extract formatSyncTime for better maintainability",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1162",
+      "reviewedHead": "f27b4bd3c2119f853c1d8ef4fd5c1a7b7b246527",
+      "files": [
+        "app/profile/household.tsx",
+        "utils/__tests__/time-formatter.test.ts",
+        "utils/time-formatter.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1163,
+      "title": "🧹 [code health improvement] Refactor long function in RecipeEditForm",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1163",
+      "reviewedHead": "4ea05eb7b5ad789def94ed4bcacc131c5e564634",
+      "files": [
+        "components/Recipe/Edit/RecipeEditForm.tsx"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1164,
+      "title": "🧪 [testing improvement] Add missing test scenarios to toggleFromArray",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1164",
+      "reviewedHead": "01e9f2763e5688187a32e9e1f3a5f5088e868092",
+      "files": [
+        "utils/__tests__/array-helper.test.ts"
+      ],
+      "disposition": "included",
+      "detail": "Reviewed source/test intent included in the consolidation; unrelated historical hunks and journals excluded."
+    },
+    {
+      "number": 1165,
+      "title": "🧪 [Add tests for convertToUnitSystem]",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1165",
+      "reviewedHead": "ccc78064cf566ca787c1f78d7e730e0ac8e7d132",
+      "files": [
+        "utils/__tests__/unit-converter.test.ts"
+      ],
+      "disposition": "included",
+      "detail": "Reviewed source/test intent included in the consolidation; unrelated historical hunks and journals excluded."
+    },
+    {
+      "number": 1166,
+      "title": "🧪 [Refactor] Improve YouTube URL testing with table-driven tests",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1166",
+      "reviewedHead": "5d912074193f8444a140f79d7cda46a8b8b63f76",
+      "files": [
+        "utils/__tests__/youtube-utils.test.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1167,
+      "title": "🧹 Code Health: Extract loading and error components in GroceryMapPage",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1167",
+      "reviewedHead": "c22c63a5c8c0c185b109f10fa7bf4da233083cd0",
+      "files": [
+        "app/grocery-map/index.tsx",
+        "bun.lockb",
+        "package.json"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1168,
+      "title": "⚡ Bolt: [Performance optimization] Pre-fetch achievement metrics",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1168",
+      "reviewedHead": "4c59220f85b1c56158917b149a992fd1cdc45fda",
+      "files": [
+        "bun.lockb",
+        "data/services/AchievementService.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1169,
+      "title": "🧹 [Code Health] Refactor long function in RecipeLists",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1169",
+      "reviewedHead": "45adc74b04989b2b232f4ae6ed38366e3c21efd2",
+      "files": [
+        "components/Pantry/RecipeLists.tsx"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1170,
+      "title": "🧪 [Testing] Add capitalize edge case tests",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1170",
+      "reviewedHead": "326a65c14a22c193626885260ed8bc7cf6937e2f",
+      "files": [
+        "utils/__tests__/text-formatter.test.ts"
+      ],
+      "disposition": "included",
+      "detail": "Reviewed source/test intent included in the consolidation; unrelated historical hunks and journals excluded."
+    },
+    {
+      "number": 1171,
+      "title": "🧪 [testing improvement] Add edge cases for haversineDistance calculation",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1171",
+      "reviewedHead": "5cf9ed19680e2539b05b6b09ae532eadebe93559",
+      "files": [
+        "utils/__tests__/distance-calculation.test.ts"
+      ],
+      "disposition": "included",
+      "detail": "Reviewed source/test intent included in the consolidation; unrelated historical hunks and journals excluded."
+    },
+    {
+      "number": 1172,
+      "title": "🧹 [code health improvement] Refactor RecipeLists component",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1172",
+      "reviewedHead": "e800a4b3e6540cd3940b6a5856ecbe5fe08eed56",
+      "files": [
+        "components/Pantry/RecipeLists.tsx",
+        "components/Preferences/AllergySection.tsx",
+        "data/api/recipeImportApi.ts",
+        "hooks/useImagePreloader.ts",
+        "hooks/useRecipeEdit.ts",
+        "lib/supabase/supabase-types.ts",
+        "types/Allergen.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1173,
+      "title": "🧹 [code health improvement] Refactor long RecipeLists function",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1173",
+      "reviewedHead": "5abadbb6f569e9bb4b866f01edb3d04fd0cbb745",
+      "files": [
+        "components/Pantry/RecipeLists.tsx",
+        "components/Preferences/AllergySection.tsx",
+        "data/api/recipeImportApi.ts",
+        "hooks/useImagePreloader.ts",
+        "hooks/useRecipeEdit.ts",
+        "lib/supabase/supabase-types.ts",
+        "types/Allergen.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1174,
+      "title": "⚡ Optimize getCookingStats aggregation",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1174",
+      "reviewedHead": "b57d4595283c212329aad67a49bb037ed4dbc603",
+      "files": [
+        "data/db/repositories/CookingHistoryRepository.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1175,
+      "title": "🧹 Code Health: Refactor RecipeEditForm into smaller components",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1175",
+      "reviewedHead": "17dd843e8d9f70b5b04dba84c683bd54dc1941ad",
+      "files": [
+        "components/Recipe/Edit/RecipeEditForm.tsx",
+        "components/Recipe/Edit/RecipeEditIngredients.tsx",
+        "components/Recipe/Edit/RecipeEditSteps.tsx"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1176,
+      "title": "🎨 Palette: Announce busy state for loading buttons",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1176",
+      "reviewedHead": "2c95742e13fd07b1d01ee6680cecfe007be32171",
+      "files": [
+        "components/ui/button.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Loading busy/disabled behavior covered by consolidated regression tests; original patch is not imported."
+    },
+    {
+      "number": 1177,
+      "title": "🎨 Palette: Add accessibility loading states to buttons",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1177",
+      "reviewedHead": "49ba29d1caf899a8cf5379629e34425bfdf406cc",
+      "files": [
+        "components/auth/SocialAuthButton.tsx",
+        "components/ui/button.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Loading busy/disabled behavior covered by consolidated regression tests; original patch is not imported."
+    },
+    {
+      "number": 1178,
+      "title": "🛡️ Sentinel: [MEDIUM] Fix PostgREST wildcard injection in BaseIngredientApi",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1178",
+      "reviewedHead": "edadd67aa78e25fc03411bbbca7a326a108f1218",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts",
+        "utils/input-sanitization.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1179,
+      "title": "🎨 Palette: Add busy state to interactive components",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1179",
+      "reviewedHead": "e166780bb4246cc0a77afa1f6b2f8c80a19c09ed",
+      "files": [
+        "components/auth/SocialAuthButton.tsx",
+        "components/ui/button.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Loading busy/disabled behavior covered by consolidated regression tests; original patch is not imported."
+    },
+    {
+      "number": 1180,
+      "title": "chore(deps-dev): bump the dev-dependencies group across 1 directory with 2 updates",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1180",
+      "reviewedHead": "04c355e9254f739ad86edc86a1d27037e07541d4",
+      "files": [
+        "package.json"
+      ],
+      "disposition": "dependency_review",
+      "detail": "Fresh compatibility/audit patches are included; do not assume this individual version proposal is accepted."
+    },
+    {
+      "number": 1181,
+      "title": "🎨 Palette: [a11y improvement for Button loading state]",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1181",
+      "reviewedHead": "881123f9e523f2473fdb9433ed02848a2d65bed9",
+      "files": [
+        "components/ui/button.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Loading busy/disabled behavior covered by consolidated regression tests; original patch is not imported."
+    },
+    {
+      "number": 1182,
+      "title": "🛡️ Sentinel: [HIGH] Fix unescaped wildcard in database input sanitization",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1182",
+      "reviewedHead": "e7c61df611fbd0d676ae7d91d30fa5b4bd62b814",
+      "files": [
+        "utils/__tests__/input-sanitization.test.ts",
+        "utils/input-sanitization.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1183,
+      "title": "🎨 Palette: [UX improvement] Add busy state to Button when isLoading",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1183",
+      "reviewedHead": "a2574af18610acf0cbc2c1149a0b2a1580d2ffaa",
+      "files": [
+        "components/ui/button.tsx"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Loading busy/disabled behavior covered by consolidated regression tests; original patch is not imported."
+    },
+    {
+      "number": 1184,
+      "title": "🛡️ Sentinel: [HIGH] Fix Supabase wildcard injection via ilike",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1184",
+      "reviewedHead": "c4c3eaecaf053d485b136c5dbe8f5ddf74148ca6",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1185,
+      "title": "⚡ Bolt: Optimize FlatList re-renders with React.memo and useCallback",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1185",
+      "reviewedHead": "17b175d681e96b26eb27f080a3cd0a9ac40cc7d1",
+      "files": [
+        "app/grocery-list/index.tsx",
+        "app/meal-plan/components/RecipeSelectionSheet.tsx",
+        "components/GroceryList/GroceryListItem.tsx",
+        "components/MealPlanCalendar/RecipeDraggable.tsx"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1186,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in Supabase queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1186",
+      "reviewedHead": "b0417678e70068b0907602818215fcb71bf08c56",
+      "files": [
+        "utils/__tests__/input-sanitization.test.ts",
+        "utils/input-sanitization.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1187,
+      "title": "🎨 Palette: Add accessibility labels to recipe action buttons",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1187",
+      "reviewedHead": "a69dae6613473a7b364a671ebc04b57c572687bc",
+      "files": [
+        "components/Preferences/AllergySection.tsx",
+        "components/Recipe/Details/BottomActionBar.tsx",
+        "data/api/recipeImportApi.ts",
+        "hooks/useImagePreloader.ts",
+        "hooks/useRecipeEdit.ts",
+        "lib/supabase/supabase-types.ts",
+        "replace_createslug.diff",
+        "types/Allergen.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    },
+    {
+      "number": 1188,
+      "title": "🛡️ Sentinel: [CRITICAL] Fix SQL injection wildcard vulnerability",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1188",
+      "reviewedHead": "3e67bf6fbdcfe5149654f268dbe3d83813d0f785",
+      "files": [
+        "utils/input-sanitization.ts"
+      ],
+      "disposition": "alternative_fix",
+      "detail": "Reported exact-name wildcard path addressed by the independently reviewed literal-regex fix; original patch is not imported."
+    },
+    {
+      "number": 1189,
+      "title": "🎨 Palette: [Accessibility] Add busy state to accessibilityState for loading buttons",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1189",
+      "reviewedHead": "4d349b7978283b835f4a971d3284e0234d9d54af",
+      "files": [
+        "components/Preferences/AllergySection.tsx",
+        "components/ui/button.tsx",
+        "data/api/recipeImportApi.ts",
+        "hooks/useImagePreloader.ts",
+        "hooks/useRecipeEdit.ts",
+        "lib/supabase/supabase-types.ts",
+        "types/Allergen.ts"
+      ],
+      "disposition": "pending_review",
+      "detail": "Requires a focused review; source changes have not been imported."
+    }
+  ]
+}

@@ -1,6 +1,31 @@
 # Cookkit — Improvement Roadmap & GitHub Issue Breakdown
 
-**Generated:** 2026-06-20 · **Status:** v2.1 — 25 open issues (#717–#747; #738 research ✅ closed) under Now / Next / Later / Deferred milestones. Segment deep-dive added (`docs/research-segment-deepdive.md`). This doc is the source of truth.
+**Reviewed:** 2026-10-11. GitHub currently has **5 open roadmap issues**. The June roadmap and detailed proposals below are historical; consult the live issue state before treating them as unfinished work.
+
+## Current pending work
+
+| Track | Issue | Remaining work |
+| --- | --- | --- |
+| Now | [#723](https://github.com/Cookkit2/recipe-rn/issues/723) | Configure and sandbox-verify the annual default in RevenueCat. Dashboard state is unverified. |
+| Now | [#724](https://github.com/Cookkit2/recipe-rn/issues/724) | Run the longer-trial experiment with stable assignment, metrics and rollback. |
+| Next | [#725](https://github.com/Cookkit2/recipe-rn/issues/725) | Implement and measure the harder-paywall experiment after first-session value. |
+| Later | [#731](https://github.com/Cookkit2/recipe-rn/issues/731) | Run the navigation/home-surface experiment. |
+| Later | [#736](https://github.com/Cookkit2/recipe-rn/issues/736) | Wire the flag-gated on-device AI service to a consumer UI and test real hardware. The service is built. |
+
+The review began with 191 open PRs. Many overlap; a PR title does not establish a security finding or an independent task. Reviewed utility coverage, numeric-overflow, loading-button accessibility and recipe-step accessibility changes are being consolidated into the maintenance branch. The literal-name lookup fix replaces the repeated wildcard proposals because escaping `*` under PostgREST ILIKE changes it into a literal percent.
+
+Quality and Jest are verified locally on the maintenance branch. Expo UI, Babel and Jest packages are aligned to SDK 56; SDK 57 UI failed native compilation against SDK 56 core. Nitro Modules is aligned to 0.37.1 because Vision Camera 5.2 generated views require its `ReactProp.hpp` header. CI workflow edits are prepared locally, but the current GitHub credential cannot publish workflow changes without the `workflow` scope. The high/critical dependency audit remains blocking on two upstream packages without published fixes:
+
+- `braces@3.0.3`: [deep-pattern stack exhaustion](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm), reached through Metro's file-map tooling and micromatch.
+- `node-forge@1.4.0`: [RSA signature verification](https://github.com/advisories/GHSA-86w9-cpqp-85rv), reached through Expo CLI/code-signing tooling.
+
+All critical findings and the other high findings were removed by compatible dependency patches. No advisory is ignored and the audit threshold remains `high`. These paths are build tooling; that classification does not establish that they are harmless. Do not close them as fixed until an upstream patch or separately verified remediation exists.
+
+Detox configuration and three smoke scenarios now exist; test discovery and E2E TypeScript checks pass. Simulator execution must be verified separately from ordinary Jest. RevenueCat configuration, production RLS and deployed-backend behavior are not inferred from local tests.
+
+## Historical June roadmap
+
+**Generated:** 2026-06-20. The original research and proposals are retained below.
 
 ---
 

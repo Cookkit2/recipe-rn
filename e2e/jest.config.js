@@ -1,6 +1,8 @@
 /** @type {import("jest").Config} */
 module.exports = {
   rootDir: "..",
+  roots: ["<rootDir>/e2e"],
+  watchman: false,
   testRunner: "jest-circus/runner",
   testMatch: ["<rootDir>/e2e/scenarios/**/*.e2e.ts"],
   testTimeout: 120000,

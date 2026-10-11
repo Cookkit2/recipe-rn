@@ -1,3 +1,4 @@
+import { TEST_IDS } from "~/constants/test-ids";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { View, Keyboard, Pressable, TouchableOpacity, FlatList, StyleSheet } from "react-native";
 import BottomSheet, {
@@ -341,7 +342,12 @@ export default function SearchScreen() {
         onChangeText={(e) => setInput(e.nativeEvent.text)}
         placeholder="Search"
       />
-      <Pressable className="flex-1" onPress={handleDismiss}>
+      <Pressable
+        testID={TEST_IDS.search.screen}
+        collapsable={false}
+        className="flex-1"
+        onPress={handleDismiss}
+      >
         <FlatList
           className="flex-1 bg-background"
           keyboardShouldPersistTaps="handled"

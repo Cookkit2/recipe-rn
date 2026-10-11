@@ -86,5 +86,23 @@ describe("price-calculator", () => {
     it("should handle empty array", () => {
       expect(groupPricesByCategory([])).toEqual([]);
     });
+
+    it("should handle items with empty string category as 'other'", () => {
+      const items = [{ priceCents: 100, category: "" }];
+      expect(groupPricesByCategory(items)).toEqual([
+        { category: "other", totalCents: 100, itemCount: 1 },
+      ]);
+    });
+
+    it("should handle items with zero and negative prices", () => {
+      const items = [
+        { priceCents: 0, category: "produce" },
+        { priceCents: -50, category: "produce" },
+        { priceCents: 100, category: "produce" },
+      ];
+      expect(groupPricesByCategory(items)).toEqual([
+        { category: "produce", totalCents: 50, itemCount: 3 },
+      ]);
+    });
   });
 });

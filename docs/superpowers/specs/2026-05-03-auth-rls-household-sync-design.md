@@ -2,7 +2,9 @@
 
 **Date:** 2026-05-03  
 **Project:** recipe-rn (Cookkit)  
-**Status:** Draft (pending product decisions in §2)
+**Status:** Historical design snapshot (2026-05-03).
+
+> Current-code note (2026-10-11): `AuthProvider` is mounted in the root layout with `SupabaseAuthStrategy`; E2E uses `MockAuthStrategy`. Statements below about the provider being absent describe the original snapshot. They do not establish current deployment/RLS status. Check `docs/ROADMAP.md` for live pending work.
 
 ## 1. Overview
 

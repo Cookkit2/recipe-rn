@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from "@testing-library/react-native";
+import { cleanup, renderHook, waitFor } from "@testing-library/react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 
@@ -40,7 +40,10 @@ function makeRecipe(id: string, servings = 4): Recipe {
   } as Recipe;
 }
 
+const queryClients: QueryClient[] = [];
+
 function wrapper(client: QueryClient) {
+  queryClients.push(client);
   return ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={client}>{children}</QueryClientProvider>
   );
@@ -51,6 +54,12 @@ describe("useMealPlanGeneration", () => {
     jest.clearAllMocks();
   });
 
+  afterEach(async () => {
+    await cleanup();
+    for (const client of queryClients) client.clear();
+    queryClients.length = 0;
+  });
+
   it("writes one MealPlan row per assigned slot with correct date/slot mapping", async () => {
     // 3 candidates, 2 days x 2 slots (lunch/dinner) -> 3 meals (pool exhausts).
     const recipes = [makeRecipe("a"), makeRecipe("b"), makeRecipe("c")];
@@ -59,7 +68,7 @@ describe("useMealPlanGeneration", () => {
     });
 
     const client = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false, gcTime: Infinity } },
     });
     const invalidateSpy = jest.spyOn(client, "invalidateQueries");
 
@@ -97,7 +106,7 @@ describe("useMealPlanGeneration", () => {
     });
 
     const client = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false, gcTime: Infinity } },
     });
     const { result } = await renderHook(() => useMealPlanGeneration(), {
       wrapper: wrapper(client),
@@ -119,7 +128,7 @@ describe("useMealPlanGeneration", () => {
     getRecipeRecommendations.mockResolvedValue({ recipes: [] });
 
     const client = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false, gcTime: Infinity } },
     });
     const { result } = await renderHook(() => useMealPlanGeneration(), {
       wrapper: wrapper(client),
@@ -143,7 +152,7 @@ describe("useMealPlanGeneration", () => {
     });
 
     const client = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false, gcTime: Infinity } },
     });
     const invalidateSpy = jest.spyOn(client, "invalidateQueries");
 

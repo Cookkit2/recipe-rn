@@ -2,9 +2,11 @@
 
 ## Project snapshot
 
-Single-package **Expo SDK 55** app (React Native 0.83, React 19) with **expo-router**, **WatermelonDB** (offline), **Supabase** (auth/sync), **TanStack Query**, **Uniwind/Tailwind v4**. Product name in `package.json`: `cookkit`. **Nearest `AGENTS.md` wins**: when editing under a subfolder, read that folder’s `AGENTS.md` first.
+Single-package **Expo SDK 56** app (manifest: React Native 0.86, React 19.2) with **expo-router**, **WatermelonDB** (offline), **Supabase** (auth/sync), **TanStack Query**, **Uniwind/Tailwind v4**. Product name in `package.json`: `cookkit`. **Nearest `AGENTS.md` wins**: when editing under a subfolder, read that folder’s `AGENTS.md` first.
 
 ## Root setup commands
+
+Use **Bun 1.4.3**, pinned in `package.json` and the prepared CI workflow update. Older Bun versions do not support the version-scoped dependency overrides. Install with `bun install --frozen-lockfile`; refresh the lockfile deliberately when changing dependencies.
 
 ```bash
 bun install
@@ -95,7 +97,7 @@ rg -n "from \"~/" app/ components/ hooks/
 - Full-app Supabase ingredient sync must upsert or dedupe by stable IDs; duplicate pantry rows after cold start usually means merges on refetch are wrong.
 - Changing the meal plan should invalidate or refresh grocery-list aggregation so shopping items stay aligned with planned meals.
 - For targeted Jest runs use `bun run test -- …` (package script); plain `bun test -- …` invokes Bun’s native runner and fails on React Native Flow syntax in dependencies.
-- `AuthProvider` from `~/auth` is not mounted in the root layout today; first-run/main-shell entry follows onboarding flags, premium follows RevenueCat, not `ProtectedRoute` / `useAuth` guards—see auth spec in `docs/superpowers/specs/` when wiring sync.
+- `AuthProvider` from `~/auth` is mounted in the root layout with `SupabaseAuthStrategy` (or `MockAuthStrategy` for E2E). First-run/main-shell entry still follows onboarding flags, and premium follows RevenueCat. The May auth spec is a historical snapshot; verify deployed RLS separately.
 - **Xcode User Script Sandbox** (`ENABLE_USER_SCRIPT_SANDBOXING`) should stay **NO** for React Native “Bundle JS” and Sentry phases that read across `ios/`, Pods, and DerivedData; **`expo-build-properties` (SDK 55)** does not flip this flag, so **`./plugins/withIosDisableUserScriptSandbox.js`** reapplies it after **`expo prebuild`**.
 
 ## Agent skills

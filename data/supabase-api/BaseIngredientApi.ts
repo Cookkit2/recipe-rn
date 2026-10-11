@@ -1,4 +1,5 @@
 import { supabase } from "~/lib/supabase/supabase-client";
+import { exactPostgrestPattern } from "~/utils/input-sanitization";
 
 function guardSupabase() {
   return supabase != null;
@@ -23,7 +24,7 @@ export const baseIngredientApi = {
     const { data: baseIngredient, error: baseError } = await supabase!
       .from("base_ingredient")
       .select("*")
-      .ilike("name", name)
+      .regexIMatch("name", exactPostgrestPattern(name))
       .single();
 
     if (baseError && baseError.code !== "PGRST116") {
@@ -166,7 +167,7 @@ async function findIngredientBySynonym(name: string): Promise<BaseIngredientWith
   const { data: synonymData, error: synonymError } = await supabase!
     .from("ingredient_synonym")
     .select("base_ingredient_id")
-    .ilike("synonym", name)
+    .regexIMatch("synonym", exactPostgrestPattern(name))
     .single();
 
   if (synonymError && synonymError.code !== "PGRST116") {
