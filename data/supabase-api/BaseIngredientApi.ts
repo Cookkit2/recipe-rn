@@ -20,7 +20,7 @@ export const baseIngredientApi = {
    */
   getBaseIngredientByName: async (name: string): Promise<BaseIngredientWithRelations | null> => {
     if (!guardSupabase()) return null;
-    const sanitizedName = typeof name === 'string' ? name.replace(/[%_*\\]/g, "\\$&") : name;
+    const sanitizedName = typeof name === "string" ? name.replace(/[%_*\\]/g, "\\$&") : name;
     const { data: baseIngredient, error: baseError } = await supabase!
       .from("base_ingredient")
       .select("*")
@@ -164,7 +164,7 @@ async function fetchRelatedData(baseIngredientId: string): Promise<BaseIngredien
  * Try to find a base ingredient by synonym
  */
 async function findIngredientBySynonym(name: string): Promise<BaseIngredientWithRelations | null> {
-  const sanitizedName = typeof name === 'string' ? name.replace(/[%_*\\]/g, "\\$&") : name;
+  const sanitizedName = typeof name === "string" ? name.replace(/[%_*\\]/g, "\\$&") : name;
   const { data: synonymData, error: synonymError } = await supabase!
     .from("ingredient_synonym")
     .select("base_ingredient_id")
@@ -209,8 +209,11 @@ async function fetchIngredientsBySynonyms(missingNames: string[]) {
 
   // Execute parameterized queries concurrently
   const synonymPromises = sanitizedNames.map((n) => {
-    const sanitized = typeof n === 'string' ? n.replace(/[%_*\\]/g, "\\$&") : n;
-    return supabase!.from("ingredient_synonym").select("base_ingredient_id, synonym").ilike("synonym", sanitized);
+    const sanitized = typeof n === "string" ? n.replace(/[%_*\\]/g, "\\$&") : n;
+    return supabase!
+      .from("ingredient_synonym")
+      .select("base_ingredient_id, synonym")
+      .ilike("synonym", sanitized);
   });
 
   const synonymResults = await Promise.all(synonymPromises);
