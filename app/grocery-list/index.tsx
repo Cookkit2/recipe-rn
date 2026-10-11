@@ -29,7 +29,7 @@ export default function GroceryListPage() {
         item={item}
         isSelectionMode={isSelectionMode}
         isSelected={selectedItemNames.has(item.normalizedName)}
-        onToggleSelect={() => toggleItemSelection(item.normalizedName)}
+        onToggleSelect={toggleItemSelection}
       />
     ),
     [isSelectionMode, selectedItemNames, toggleItemSelection]

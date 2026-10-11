@@ -25,7 +25,7 @@ interface GroceryListItemProps {
   item: GroceryItem;
   isSelectionMode?: boolean;
   isSelected?: boolean;
-  onToggleSelect?: () => void;
+  onToggleSelect?: (normalizedName: string) => void;
 }
 
 export default React.memo(function GroceryListItem({
@@ -40,7 +40,7 @@ export default React.memo(function GroceryListItem({
 
   const handlePress = () => {
     if (isSelectionMode) {
-      onToggleSelect?.();
+      onToggleSelect?.(item.normalizedName);
     } else {
       // Toggle check state
       toggleCheck.mutate(item.normalizedName);
