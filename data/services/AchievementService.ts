@@ -499,6 +499,9 @@ export class AchievementService {
           return preFetchedMetrics.stockCount;
 
         case "spices_tracked": {
+          if (preFetchedMetrics?.spicesTrackedCount !== undefined) {
+            return preFetchedMetrics.spicesTrackedCount;
+          }
           let spicesCategory = preFetchedMetrics?.spicesCategory;
           if (!spicesCategory) {
             spicesCategory =
@@ -510,7 +513,9 @@ export class AchievementService {
           if (!spicesCategory) return 0;
 
           const spicesStock = await this.stockRepo.getStockByCategory(spicesCategory.id);
-          return spicesStock.length;
+          const count = spicesStock.length;
+          if (preFetchedMetrics) preFetchedMetrics.spicesTrackedCount = count;
+          return count;
         }
 
         case "ingredients_used_before_expiry":
@@ -535,6 +540,9 @@ export class AchievementService {
           return shares;
 
         case "breakfast_recipes_cooked": {
+          if (preFetchedMetrics?.breakfastRecipesCookedCount !== undefined) {
+            return preFetchedMetrics.breakfastRecipesCookedCount;
+          }
           let breakfastRecipes = preFetchedMetrics?.breakfastRecipes;
           if (!breakfastRecipes) {
             breakfastRecipes = await this.recipeRepo.getRecipesByTag("breakfast");
@@ -544,11 +552,17 @@ export class AchievementService {
           if (preFetchedMetrics?.allCooks === undefined) {
             preFetchedMetrics.allCooks = await this.cookingHistoryRepo.getCookingHistory();
           }
-          return preFetchedMetrics.allCooks.filter((c: any) => breakfastRecipeIds.has(c.recipeId))
-            .length;
+          const count = preFetchedMetrics.allCooks.filter((c: any) =>
+            breakfastRecipeIds.has(c.recipeId)
+          ).length;
+          if (preFetchedMetrics) preFetchedMetrics.breakfastRecipesCookedCount = count;
+          return count;
         }
 
         case "dinner_recipes_cooked": {
+          if (preFetchedMetrics?.dinnerRecipesCookedCount !== undefined) {
+            return preFetchedMetrics.dinnerRecipesCookedCount;
+          }
           let dinnerRecipes = preFetchedMetrics?.dinnerRecipes;
           if (!dinnerRecipes) {
             dinnerRecipes = await this.recipeRepo.getRecipesByTag("dinner");
@@ -558,8 +572,11 @@ export class AchievementService {
           if (preFetchedMetrics?.allCooks === undefined) {
             preFetchedMetrics.allCooks = await this.cookingHistoryRepo.getCookingHistory();
           }
-          return preFetchedMetrics.allCooks.filter((c: any) => dinnerRecipeIds.has(c.recipeId))
-            .length;
+          const count = preFetchedMetrics.allCooks.filter((c: any) =>
+            dinnerRecipeIds.has(c.recipeId)
+          ).length;
+          if (preFetchedMetrics) preFetchedMetrics.dinnerRecipesCookedCount = count;
+          return count;
         }
 
         default:
