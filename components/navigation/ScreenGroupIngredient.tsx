@@ -1,7 +1,7 @@
 import { Stack } from "expo-router";
 import IngredientDeleteButton from "~/components/Ingredient/IngredientDeleteButton";
 
-export function ScreenGroupIngredient() {
+export function getIngredientScreens() {
   return (
     <>
       <Stack.Screen

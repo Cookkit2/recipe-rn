@@ -2,7 +2,7 @@
 
 ## Project snapshot
 
-Single-package **Expo SDK 56** app (manifest: React Native 0.86, React 19.2) with **expo-router**, **WatermelonDB** (offline), **Supabase** (auth/sync), **TanStack Query**, **Uniwind/Tailwind v4**. Product name in `package.json`: `cookkit`. **Nearest `AGENTS.md` wins**: when editing under a subfolder, read that folder’s `AGENTS.md` first.
+Single-package **Expo SDK 56** app (manifest: React Native 0.85.3, React 19.2) with **expo-router**, **WatermelonDB** (offline), **Supabase** (auth/sync), **TanStack Query**, **Uniwind/Tailwind v4**. Product name in `package.json`: `cookkit`. **Nearest `AGENTS.md` wins**: when editing under a subfolder, read that folder’s `AGENTS.md` first.
 
 ## Root setup commands
 
@@ -86,6 +86,11 @@ rg -n "from \"~/" app/ components/ hooks/
 - After RevenueCat purchase or restore, invalidate subscription/entitlement queries (or use `Purchases.addCustomerInfoUpdateListener`) so Pro UI updates immediately; the app treats **`Cookkit Pro`** in `utils/subscription-utils.ts` as the active entitlement—keep that identifier aligned with the RevenueCat dashboard.
 
 ## Learned Workspace Facts
+
+- Screen-definition helpers must be plain functions (lowercase `get...Screens`), not compiled React components called directly. React Compiler can memoize those calls and skip their injected `useMemoCache` hooks on later renders, corrupting navigation state. Keep the compiled re-render regression in `components/__tests__/AnimatedStack-compiler.test.tsx`.
+
+- Expo SDK 56 precompiled modules require its supported native runtime (React Native 0.85.3 and the bundled animation versions). Remove stale `hermes-compiler` overrides when aligning SDKs; a mismatched Hermes/JSI ABI can compile successfully and crash at launch with a missing symbol.
+- Keep native modules such as `react-native-screens` as a single installed version. Expo Router’s peer resolution can install a nested copy; match its override to the direct version and verify resolution after lockfile changes. An obsolete nested install can register native views twice even after the lockfile is corrected.
 
 - `@shopify/react-native-skia` needs its postinstall binaries present before iOS prebuild/pod install; with Bun, trust the package so the Skia iOS `.xcframework` files are downloaded.
 - WatermelonDB `database.batch` should receive operation arrays directly instead of spread arguments to avoid large-batch runtime warnings.

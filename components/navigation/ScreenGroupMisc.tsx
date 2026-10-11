@@ -1,12 +1,13 @@
 import { Stack } from "expo-router";
 
-export function ScreenGroupMisc({
+export function getMiscScreens({
   commonHeaderOptions,
 }: {
   commonHeaderOptions: React.ComponentProps<typeof Stack.Screen>["options"];
 }) {
   return (
     <>
+      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       {/* ======== ONBOARDING ======== */}
       <Stack.Screen name="onboarding/index" options={{ headerShown: false }} />
       <Stack.Screen

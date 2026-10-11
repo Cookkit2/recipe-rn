@@ -7,7 +7,7 @@ Local end-to-end tests use [Detox](https://wix.github.io/Detox/).
 - Xcode and iOS Simulator (default device: **iPhone Air**, newest installed runtime — see `detox.config.js`)
 - [applesimutils](https://github.com/wix/AppleSimulatorUtils): `brew tap wix/brew && brew install applesimutils`
 
-Use Bun 1.4.3 and a modern Ruby/CocoaPods toolchain (CI uses macOS 26). System Ruby 2.6 cannot run the current Expo precompiled-module helpers. After changing native wiring, run `EXPO_PUBLIC_E2E=true bunx expo prebuild --platform ios --no-install`, then install the iOS pods.
+Use Bun 1.4.3 and a modern Ruby/CocoaPods toolchain (the prepared CI update targets macOS 26). System Ruby 2.6 cannot run the current Expo precompiled-module helpers. After changing native wiring, run `EXPO_PUBLIC_E2E=true bunx expo prebuild --platform ios --no-install`, then install the iOS pods.
 
 ## Commands
 
@@ -19,7 +19,7 @@ bun run e2e:test:ios
 
 Environment variable `EXPO_PUBLIC_E2E=true` is set by the scripts so the app can skip onboarding and use the mock auth strategy where configured.
 
-**Debug + embedded bundle:** Every Detox build runs `scripts/prepare-e2e-ios.js` after prebuild. It preserves local overrides and regenerates `ios/.xcode.env.updates`, which unsets `SKIP_BUNDLING` when `EXPO_PUBLIC_E2E=true`, so the Debug `.app` includes the JS bundle (with `EXPO_PUBLIC_E2E` inlined) and Detox does not need Metro. Normal Xcode Debug runs without that env still load from Metro.
+**Debug + embedded bundle:** Every Detox build runs `scripts/prepare-e2e-ios.js` after prebuild. It preserves local overrides and regenerates `ios/.xcode.env.updates`, which unsets `SKIP_BUNDLING` when `EXPO_PUBLIC_E2E=true`, and appends `--dev false` to the packager arguments, so the Debug `.app` embeds production JavaScript (with `EXPO_PUBLIC_E2E` inlined) and Detox does not need Metro. Expo development JavaScript requires its devtools server even when embedded. Normal Xcode Debug runs without that env still load from Metro.
 
 If `home-screen` (or other E2E IDs) time out, rebuild with `bun run e2e:build:ios` after changing `.xcode.env.updates`.
 
@@ -33,6 +33,6 @@ bunx detox clean-framework-cache && bunx detox build-framework-cache
 
 ## Coverage and verification
 
-The smoke scenarios cover offline pantry startup, opening search/profile and mock sign-in. They do not cover recipe import, camera, purchase, meal-plan writes or live-backend auth. Add deterministic fixtures before expanding those scenarios.
+The smoke scenarios cover offline pantry startup, opening search/profile and mock sign-in. All three passed locally on iPhone Air / iOS 26.2 on 2026-10-12. They do not cover recipe import, camera, purchase, meal-plan writes or live-backend auth. Add deterministic fixtures before expanding those scenarios.
 
-Choose an installed device/runtime with `DETOX_DEVICE_TYPE` and `DETOX_DEVICE_OS`. Both Debug and Release configurations build the CocoaPods workspace. `bun run test -- --config e2e/jest.config.js --listTests --runInBand` verifies discovery, and `bunx tsc --noEmit --project e2e/tsconfig.json` checks scenario types; neither proves simulator behavior.
+Choose an installed device/runtime with `DETOX_DEVICE_TYPE` and `DETOX_DEVICE_OS`. Both Debug and Release configurations build the CocoaPods workspace for the host simulator architecture. Simulator builds use ad hoc signing (`CODE_SIGN_IDENTITY=-`) so Keychain-backed Expo modules can initialize; disabling signing breaks those APIs. `bun run test -- --config e2e/jest.config.js --listTests --runInBand` verifies discovery, and `bunx tsc --noEmit --project e2e/tsconfig.json` checks scenario types; neither proves simulator behavior.

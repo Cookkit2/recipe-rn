@@ -2,11 +2,11 @@ import { Stack } from "expo-router";
 import useColors from "~/hooks/useColor";
 import { useNotificationHandlers } from "~/hooks/useNotificationHandlers";
 import { useOnboardingCheck } from "~/hooks/useOnboardingCheck";
-import { ScreenGroupPantry } from "~/components/navigation/ScreenGroupPantry";
-import { ScreenGroupIngredient } from "~/components/navigation/ScreenGroupIngredient";
-import { ScreenGroupRecipe } from "~/components/navigation/ScreenGroupRecipe";
-import { ScreenGroupProfile } from "~/components/navigation/ScreenGroupProfile";
-import { ScreenGroupMisc } from "~/components/navigation/ScreenGroupMisc";
+import { getPantryScreens } from "~/components/navigation/ScreenGroupPantry";
+import { getIngredientScreens } from "~/components/navigation/ScreenGroupIngredient";
+import { getRecipeScreens } from "~/components/navigation/ScreenGroupRecipe";
+import { getProfileScreens } from "~/components/navigation/ScreenGroupProfile";
+import { getMiscScreens } from "~/components/navigation/ScreenGroupMisc";
 
 export function AnimatedStack() {
   const colors = useColors();
@@ -33,22 +33,23 @@ export function AnimatedStack() {
   useNotificationHandlers();
   useOnboardingCheck();
 
+  // Expo Router requires direct Screen children; unwrap the grouping fragments.
   return (
     <Stack>
       {/* ======== PANTRY ======== */}
-      {ScreenGroupPantry()}
+      {getPantryScreens().props.children}
 
       {/* ======== INGREDIENT ======== */}
-      {ScreenGroupIngredient()}
+      {getIngredientScreens().props.children}
 
       {/* ======== RECIPE ======== */}
-      {ScreenGroupRecipe({ colors })}
+      {getRecipeScreens({ colors }).props.children}
 
       {/* ======== PROFILE ======== */}
-      {ScreenGroupProfile({ commonHeaderOptions })}
+      {getProfileScreens({ commonHeaderOptions }).props.children}
 
       {/* ======== MISCELLANOUS ======== */}
-      {ScreenGroupMisc({ commonHeaderOptions })}
+      {getMiscScreens({ commonHeaderOptions }).props.children}
     </Stack>
   );
 }

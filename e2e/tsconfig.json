@@ -2,7 +2,9 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "types": ["jest", "detox"],
-    "noEmit": true
+    "noEmit": true,
+    "rootDir": ".."
   },
-  "include": ["./**/*.ts", "../constants/test-ids.ts"]
+  "include": ["./**/*.ts", "../constants/test-ids.ts"],
+  "exclude": ["../node_modules"]
 }

@@ -1,7 +1,7 @@
 import { Stack } from "expo-router";
 import { H1 } from "~/components/ui/typography";
 
-export function ScreenGroupPantry() {
+export function getPantryScreens() {
   return (
     <>
       <Stack.Screen

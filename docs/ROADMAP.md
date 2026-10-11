@@ -1,6 +1,6 @@
 # Cookkit — Improvement Roadmap & GitHub Issue Breakdown
 
-**Reviewed:** 2026-10-11. GitHub currently has **5 open roadmap issues**. The June roadmap and detailed proposals below are historical; consult the live issue state before treating them as unfinished work.
+**Reviewed:** 2026-10-12. GitHub currently has **5 open roadmap issues**. The June roadmap and detailed proposals below are historical; consult the live issue state before treating them as unfinished work.
 
 ## Current pending work
 
@@ -12,16 +12,16 @@
 | Later | [#731](https://github.com/Cookkit2/recipe-rn/issues/731) | Run the navigation/home-surface experiment. |
 | Later | [#736](https://github.com/Cookkit2/recipe-rn/issues/736) | Wire the flag-gated on-device AI service to a consumer UI and test real hardware. The service is built. |
 
-The review began with 191 open PRs. Many overlap; a PR title does not establish a security finding or an independent task. Reviewed utility coverage, numeric-overflow, loading-button accessibility and recipe-step accessibility changes are being consolidated into the maintenance branch. The literal-name lookup fix replaces the repeated wildcard proposals because escaping `*` under PostgREST ILIKE changes it into a literal percent.
+The review began with 191 open PRs. Many overlap; a PR title does not establish a security finding or an independent task. Reviewed utility coverage, numeric-overflow, loading-button accessibility and recipe-step accessibility changes are consolidated in [draft PR #1190](https://github.com/Cookkit2/recipe-rn/pull/1190). The literal-name lookup fix replaces the repeated wildcard proposals because escaping `*` under PostgREST ILIKE changes it into a literal percent.
 
-Quality and Jest are verified locally on the maintenance branch. Expo UI, Babel and Jest packages are aligned to SDK 56; SDK 57 UI failed native compilation against SDK 56 core. Nitro Modules is aligned to 0.37.1 because Vision Camera 5.2 generated views require its `ReactProp.hpp` header. CI workflow edits are prepared locally, but the current GitHub credential cannot publish workflow changes without the `workflow` scope. The high/critical dependency audit remains blocking on two upstream packages without published fixes:
+Quality and Jest are verified locally on the maintenance branch. Expo UI, Babel, Jest and the native runtime/animation stack are aligned to SDK 56 (React Native 0.85.3); SDK 57 UI failed native compilation against SDK 56 core. Nitro Modules is aligned to 0.37.1 because Vision Camera 5.2 generated views require its `ReactProp.hpp` header. CI workflow edits are prepared locally, but the current GitHub credential cannot publish workflow changes without the `workflow` scope. The high/critical dependency audit remains blocking on two upstream packages without published fixes:
 
 - `braces@3.0.3`: [deep-pattern stack exhaustion](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm), reached through Metro's file-map tooling and micromatch.
 - `node-forge@1.4.0`: [RSA signature verification](https://github.com/advisories/GHSA-86w9-cpqp-85rv), reached through Expo CLI/code-signing tooling.
 
 The audit reports zero critical, two high and eight moderate findings after dependency updates. The image-size 2 update requires the locked Metro 0.84.4 patch in `patches/`: asset metadata reads bytes instead of passing a filename to the new parser. A regression exercises both Metro asset APIs. No advisory is ignored and the audit threshold remains `high`. These paths are build tooling; that classification does not establish that they are harmless. Do not close them as fixed until an upstream patch or separately verified remediation exists.
 
-Detox configuration and three smoke scenarios now exist; test discovery and E2E TypeScript checks pass. Simulator execution must be verified separately from ordinary Jest. RevenueCat configuration, production RLS and deployed-backend behavior are not inferred from local tests.
+Local verification passes: 91 Jest suites / 844 tests, typecheck/lint, the Debug simulator build, and all three Detox smoke cases on iPhone Air / iOS 26.2. Native verification also exposed and fixed first-access storage initialization and React Compiler cache corruption from calling screen-group components as ordinary functions. The groups are now plain helpers, direct Screen children reach Expo Router, and the auth group header is hidden. RevenueCat configuration, production RLS and deployed-backend behavior are not inferred from local tests.
 
 ## Historical June roadmap
 

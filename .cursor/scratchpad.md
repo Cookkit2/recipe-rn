@@ -1,11 +1,12 @@
-# Maintenance review — 2026-10-11
+# Maintenance review — 2026-10-12
 
 The grocery-list plan below is historical. Its original unchecked subtasks are not the current backlog; the phase status board records completion. Current product work is tracked in `docs/ROADMAP.md` and the five open GitHub issues (#723, #724, #725, #731, #736).
 
 - Verified and corrected clean-install CI: TypeScript 7 was outside ts-jest's supported range; TypeScript is pinned to 6.0.3. A CI update pins Bun 1.4.3 and frozen installation; publishing workflow edits requires GitHub workflow permission.
 - Corrected timer ownership in Jest without force-exit: Node rate-limiter cleanup is unreferenced, queries cancel before disposal, and test mutation caches have no expiry timer.
 - Consolidated reviewed utility tests, numeric-overflow and accessibility fixes. Literal ingredient-name lookups use PostgreSQL regex exact matching; local substring search behavior is preserved.
-- Detox now has configuration, setup, screen objects and smoke scenarios. Native/device results are a separate verification gate.
+- Verified 91 Jest suites / 844 tests, typecheck/lint, a signed offline Debug simulator build and all three Detox smoke cases on iPhone Air / iOS 26.2.
+- Aligned native dependencies to SDK 56, deduplicated screens, initialized MMKV on first access, and replaced directly invoked screen-group components with plain helpers to preserve React Compiler hook-cache order.
 - Two unpatched upstream high advisories still block the dependency audit; see the current roadmap. No audit finding was ignored.
 - `SegmentedButtons` already uses a static basis-class map. The old auth-provider omission is also stale: the production root mounts `AuthProvider` with the Supabase strategy and E2E uses the mock strategy.
 

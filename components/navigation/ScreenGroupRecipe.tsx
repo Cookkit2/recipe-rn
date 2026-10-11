@@ -1,7 +1,7 @@
 import { Stack } from "expo-router";
 import AddToPlanHeaderButton from "~/components/Recipe/Details/AddToPlanHeaderButton";
 
-export function ScreenGroupRecipe({ colors }: { colors: { foreground: string } }) {
+export function getRecipeScreens({ colors }: { colors: { foreground: string } }) {
   return (
     <>
       <Stack.Screen

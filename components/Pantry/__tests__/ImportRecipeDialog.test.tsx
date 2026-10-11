@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect, jest } from "@jest/globals";
-import { render, fireEvent, act, waitFor } from "@testing-library/react-native";
+import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import React from "react";
 
 const pushMock = jest.fn();
@@ -91,17 +91,13 @@ describe("ImportRecipeDialog routing (always-editable)", () => {
     );
 
     const input = getByTestId("import-recipe-url-input");
-    await act(async () => {
-      fireEvent.changeText(input, "https://example.com/r");
-    });
+    await fireEvent.changeText(input, "https://example.com/r");
 
     // The Import button is the second testID="btn" (Cancel is first).
     const buttons = getAllByTestId("btn");
     const importButton = buttons[buttons.length - 1];
     if (importButton) {
-      await act(async () => {
-        fireEvent.press(importButton);
-      });
+      await fireEvent.press(importButton);
     }
 
     await waitFor(() => expect(pushMock).toHaveBeenCalledTimes(1));
