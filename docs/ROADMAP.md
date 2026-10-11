@@ -19,7 +19,7 @@ Quality and Jest are verified locally on the maintenance branch. Expo UI, Babel 
 - `braces@3.0.3`: [deep-pattern stack exhaustion](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm), reached through Metro's file-map tooling and micromatch.
 - `node-forge@1.4.0`: [RSA signature verification](https://github.com/advisories/GHSA-86w9-cpqp-85rv), reached through Expo CLI/code-signing tooling.
 
-All critical findings and the other high findings were removed by compatible dependency patches. No advisory is ignored and the audit threshold remains `high`. These paths are build tooling; that classification does not establish that they are harmless. Do not close them as fixed until an upstream patch or separately verified remediation exists.
+The audit reports zero critical, two high and eight moderate findings after dependency updates. The image-size 2 update requires the locked Metro 0.84.4 patch in `patches/`: asset metadata reads bytes instead of passing a filename to the new parser. A regression exercises both Metro asset APIs. No advisory is ignored and the audit threshold remains `high`. These paths are build tooling; that classification does not establish that they are harmless. Do not close them as fixed until an upstream patch or separately verified remediation exists.
 
 Detox configuration and three smoke scenarios now exist; test discovery and E2E TypeScript checks pass. Simulator execution must be verified separately from ordinary Jest. RevenueCat configuration, production RLS and deployed-backend behavior are not inferred from local tests.
 

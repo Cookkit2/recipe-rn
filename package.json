@@ -196,5 +196,8 @@
     "dtrace-provider",
     "unrs-resolver"
   ],
-  "packageManager": "bun@1.4.3"
+  "packageManager": "bun@1.4.3",
+  "patchedDependencies": {
+    "metro@0.84.4": "patches/metro@0.84.4.patch"
+  }
 }
