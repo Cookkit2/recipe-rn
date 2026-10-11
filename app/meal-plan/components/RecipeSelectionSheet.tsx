@@ -70,6 +70,7 @@ export function RecipeSelectionSheet({
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 32 }}
             // Virtualization props to improve memory usage and rendering speed
+            removeClippedSubviews={true}
             initialNumToRender={10}
             maxToRenderPerBatch={5}
             windowSize={5}
