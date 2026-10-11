@@ -5,3 +5,7 @@
 ## 2026-07-13 - Pressable accessibilityLabel Overrides Nested Children
 **Learning:** In React Native, applying an `accessibilityLabel` to a container element like `Pressable` overrides the accessibility readout of its child elements. If there is text inside, screen readers will completely ignore it and only read the label. If the button has descriptive text, you don't need a label.
 **Action:** When working on making `Pressable` elements accessible, carefully consider if the contents should be read by a screen reader. If they should, avoid adding an `accessibilityLabel` directly to the `Pressable`, but you can still add an `accessibilityRole="button"` if appropriate.
+
+## 2026-10-11 - Accessible MealSlots
+**Learning:** In a calendar grid, interactive slots that allow users to drop items or tap to select need accessibility roles and labels to convey their state and purpose to screen reader users.
+**Action:** Added `accessibilityRole="button"` and a dynamic `accessibilityLabel` to the `MealSlot` Pressable to clearly state the slot type, its current contents (recipe name or "Empty"), and its actionable state.

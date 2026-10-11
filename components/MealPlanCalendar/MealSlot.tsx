@@ -231,6 +231,8 @@ export default function MealSlot({ date, mealSlot, mealPlan, onPress, onDrop }: 
         <Pressable
           onPress={handlePress}
           className="min-h-20 border-b border-border px-2 py-2 justify-center"
+          accessibilityRole="button"
+          accessibilityLabel={mealPlan ? undefined : `Empty ${mealSlot} slot, tap to select`}
         >
           <Animated.View style={[animatedStyle]}>
             {mealPlan ? (
