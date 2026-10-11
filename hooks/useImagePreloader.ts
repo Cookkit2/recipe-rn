@@ -6,7 +6,8 @@ const DEFAULT_DELAY_MS = 100;
 
 function scheduleIdleTask(task: () => void, delayMs?: number) {
   const idleCallback = (globalThis as any).requestIdleCallback as
-    ((cb: () => void) => number) | undefined;
+    | ((cb: () => void) => number)
+    | undefined;
 
   const runTask = () => {
     if (delayMs && delayMs > 0) {
