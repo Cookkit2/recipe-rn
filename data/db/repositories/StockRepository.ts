@@ -199,6 +199,7 @@ export class StockRepository extends BaseRepository<Stock> {
   // Check if ingredient is in stock by name or synonym
   async isIngredientInStock(ingredientName: string, minimumQuantity: number = 0): Promise<boolean> {
     const stockItems = await this.findByNameOrSynonym(ingredientName);
+    // ⚡ Bolt Performance Optimization: Replace O(N) array.reduce closure allocations with a standard loop
     let totalQuantity = 0;
     for (const item of stockItems) {
       if (item) totalQuantity += item.quantity;

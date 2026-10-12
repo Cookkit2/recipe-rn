@@ -352,6 +352,7 @@ export class UserChallengeRepository extends BaseRepository<UserChallenge> {
     // We cannot reliably access getters like isExpired directly on mock POJOs returned by the mocked database
     // in test environments without a proper mock instantiation or hydration step.
     // This allows the test mock objects to pass their `isExpired` property while also supporting WatermelonDB models.
+    // ⚡ Bolt Performance Optimization: Replace O(N) array.reduce closure allocations with a standard loop
     const expiredChallengeIds = new Set<string>();
     for (const c of challenges as any[]) {
       if (c && c.isExpired) {

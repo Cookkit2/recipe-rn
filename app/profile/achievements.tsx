@@ -173,6 +173,7 @@ export default function AchievementsScreen() {
   }, [fetchData]);
 
   // Group achievements by category
+  // ⚡ Bolt Performance Optimization: Replace O(N) array.reduce closure allocations with a standard loop
   const groupedAchievements: Record<string, AchievementProgress[]> = {};
   for (const achievement of achievements) {
     if (!achievement) continue;

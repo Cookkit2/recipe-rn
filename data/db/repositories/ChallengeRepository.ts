@@ -176,6 +176,7 @@ export class ChallengeRepository extends BaseRepository<Challenge> {
   // Get total XP available for all active challenges
   async getTotalXPAvailable(): Promise<number> {
     const activeChallenges = await this.getActiveChallenges();
+    // ⚡ Bolt Performance Optimization: Replace O(N) array.reduce closure allocations with a standard loop
     let total = 0;
     for (const challenge of activeChallenges) {
       if (challenge) total += challenge.xpValue;
@@ -186,6 +187,7 @@ export class ChallengeRepository extends BaseRepository<Challenge> {
   // Get XP available for daily challenges
   async getDailyXPAvailable(): Promise<number> {
     const dailyChallenges = await this.getActiveDailyChallenges();
+    // ⚡ Bolt Performance Optimization: Replace O(N) array.reduce closure allocations with a standard loop
     let total = 0;
     for (const challenge of dailyChallenges) {
       if (challenge) total += challenge.xpValue;
@@ -196,6 +198,7 @@ export class ChallengeRepository extends BaseRepository<Challenge> {
   // Get XP available for weekly challenges
   async getWeeklyXPAvailable(): Promise<number> {
     const weeklyChallenges = await this.getActiveWeeklyChallenges();
+    // ⚡ Bolt Performance Optimization: Replace O(N) array.reduce closure allocations with a standard loop
     let total = 0;
     for (const challenge of weeklyChallenges) {
       if (challenge) total += challenge.xpValue;
