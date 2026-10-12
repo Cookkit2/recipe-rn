@@ -17,12 +17,26 @@ export interface SanitizationOptions {
 }
 
 /**
+ * Safely escapes PostgREST wildcards specifically for .like() and .ilike() queries.
+ * PostgREST treats % and * as multi-character wildcards, and _ as a single-character wildcard.
+ *
+ * @param input - The raw user input string
+ * @returns Escaped string safe for literal exact matching in PostgREST
+ */
+export function escapePostgrestWildcards(input: string): string {
+  if (!input || typeof input !== "string") {
+    return "";
+  }
+  return input.replace(/[%_*\\]/g, "\\$&");
+}
+
+/**
  * Sanitizes user input for database queries
  * @param input - The raw user input
  * @param options - Sanitization options
  * @returns Sanitized string safe for database operations
  */
-export function sanitizeForDatabase(input: string, options: SanitizationOptions = {}): string {
+function sanitizeForDatabase(input: string, options: SanitizationOptions = {}): string {
   if (!input || typeof input !== "string") {
     return "";
   }
@@ -41,7 +55,7 @@ export function sanitizeForDatabase(input: string, options: SanitizationOptions 
   sanitized = sanitized.replace(/\s+/g, " ").trim();
 
   // 3. Escape SQL wildcards and backslashes AFTER removing dangerous patterns
-  sanitized = sanitized.replace(/[%_*\\]/g, "\\$&");
+  sanitized = sanitized.replace(/[%_\\]/g, "\\$&");
 
   // 4. Handle HTML if not allowed
   if (!allowHtml) {
