@@ -57,9 +57,12 @@ export function useToggleFavorite() {
 
       // Optimistically update individual recipe
       if (previousRecipe) {
-        queryClient.setQueryData<Recipe>(recipeQueryKeys.recipe(recipeId), {
-          ...previousRecipe,
-          isFavorite: !previousRecipe.isFavorite,
+        queryClient.setQueryData<Recipe>(recipeQueryKeys.recipe(recipeId), (old) => {
+          if (!old) return previousRecipe;
+          return {
+            ...previousRecipe,
+            isFavorite: !previousRecipe.isFavorite,
+          };
         });
       }
 

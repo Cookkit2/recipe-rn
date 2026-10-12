@@ -177,9 +177,9 @@ export default function AchievementsScreen() {
     (acc, achievement) => {
       const category = achievement.achievement.category;
       if (!acc[category]) {
-        acc[category] = [];
+        acc[category] = [] as AchievementProgress[];
       }
-      acc[category].push(achievement);
+      acc[category]!.push(achievement);
       return acc;
     },
     {} as Record<string, AchievementProgress[]>
