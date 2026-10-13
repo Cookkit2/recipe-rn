@@ -68,6 +68,8 @@ jobs:
         run: bun install
 
       - name: Run Jest
+        env:
+          EXPO_PUBLIC_GEMINI_API_KEY: "test-mock-api-key"
         run: bun run test
 
   dependency-audit:
