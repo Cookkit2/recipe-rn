@@ -1,1 +1,1 @@
-## Reflection\nFixed formatting warnings.
+## Reflection\nRan type checks again, and formatted.
