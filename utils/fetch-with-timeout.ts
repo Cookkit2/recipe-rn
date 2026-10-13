@@ -13,6 +13,10 @@ export async function fetchWithTimeout(
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   const externalSignal = options.signal;
 
+  if (externalSignal?.aborted) {
+    controller.abort();
+  }
+
   const onAbort = (): void => {
     controller.abort();
     clearTimeout(timeoutId);

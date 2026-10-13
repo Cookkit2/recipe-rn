@@ -107,4 +107,26 @@ describe("fetchWithTimeout", () => {
       })
     );
   });
+
+  it("aborts the request if the external signal is already aborted before fetch starts", async () => {
+    // If the external signal is already aborted, fetch should throw an AbortError immediately
+    jest.spyOn(global, "fetch").mockImplementationOnce((url, options) => {
+      return new Promise((resolve, reject) => {
+        if (options?.signal?.aborted) {
+          const error = new Error("The operation was aborted");
+          error.name = "AbortError";
+          reject(error);
+        } else {
+          resolve(new Response("ok"));
+        }
+      });
+    });
+
+    const controller = new AbortController();
+    controller.abort(); // abort before passing
+
+    const promise = fetchWithTimeout("https://example.com", { signal: controller.signal }, 1000);
+
+    await expect(promise).rejects.toThrow("The operation was aborted");
+  });
 });
