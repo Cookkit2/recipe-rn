@@ -11,3 +11,6 @@
 ## 2026-10-01 - Testing Library getByRole Override Issue
 **Learning:** When using `getByRole` to query a checkbox that has a descriptive `accessibilityLabel` applied to a parent element, it will not find the checkbox. We must explicitly query using `getByLabelText` that matches the label of the parent element.
 **Action:** When updating `accessibilityLabel` of a component in a test, always check to make sure the unit tests are updated to expect the new label or use alternative selection methods like `getByLabelText`.
+## 2026-10-01 - Testing Library getByRole Override Issue
+**Learning:** When using `getByRole` to query a checkbox that has a descriptive `accessibilityLabel` applied to a parent element, it will not find the checkbox. We must explicitly query using `getByLabelText` that matches the label of the parent element.
+**Action:** When updating `accessibilityLabel` of a component in a test, always check to make sure the unit tests are updated to expect the new label or use alternative selection methods like `getByLabelText`.
