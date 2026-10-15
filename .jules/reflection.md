@@ -1,1 +1,1 @@
-## Reflection\nRan type checks again, and formatted.
+## Reflection\nFixed formatting locally, checked typescript errors, running ok.
