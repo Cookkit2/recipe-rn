@@ -1,3 +1,4 @@
+import { toast } from "sonner-native";
 import React, { createContext, useContext, useCallback, useState, useRef, useMemo } from "react";
 import type { Model } from "@nozbe/watermelondb";
 import { useRouter } from "expo-router";
@@ -238,6 +239,16 @@ export function RecipeStepsProvider({
       // If no matches found, just navigate away
       if (matches.length === 0) {
         router.dismissTo("/");
+        toast("Meal finished", {
+          action: {
+            label: "Save leftovers",
+            onClick: () =>
+              router.push({
+                pathname: "/leftovers",
+                params: { add: "1", recipeId: baseRecipeId, recipeName: recipe.title },
+              }),
+          },
+        });
         return;
       }
 
@@ -337,10 +348,21 @@ export function RecipeStepsProvider({
 
       // Navigate away after processing
       router.dismissTo("/");
+      toast("Meal finished", {
+        action: {
+          label: "Save leftovers",
+          onClick: () =>
+            router.push({
+              pathname: "/leftovers",
+              params: { add: "1", recipeId: baseRecipeId, recipeName: recipe.title },
+            }),
+        },
+      });
     },
     [
       baseRecipeId,
       recipe.ingredients,
+      recipe.title,
       pantryItems,
       router,
       updatePantryItemMutation,

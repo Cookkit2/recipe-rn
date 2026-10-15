@@ -17,7 +17,10 @@ export type MealSlot = (typeof MEAL_SLOTS)[number];
 export interface CalendarMealPlan {
   id: string;
   recipeId: string;
-  recipe?: Recipe; // Populated when joined with recipe data
+  recipe?: Pick<Recipe, "id" | "title" | "imageUrl"> &
+    Partial<
+      Pick<Recipe, "description" | "servings" | "calories" | "protein" | "carbs" | "fat" | "fiber">
+    >;
   date: Date; // The date this meal is planned for
   mealSlot: MealSlot; // Which meal slot (breakfast, lunch, dinner, snack)
   servings: number;
@@ -32,10 +35,10 @@ export interface CalendarMealPlan {
 export interface DayMealPlan {
   date: Date;
   meals: {
-    breakfast?: CalendarMealPlan;
-    lunch?: CalendarMealPlan;
-    dinner?: CalendarMealPlan;
-    snack?: CalendarMealPlan;
+    breakfast?: CalendarMealPlan[];
+    lunch?: CalendarMealPlan[];
+    dinner?: CalendarMealPlan[];
+    snack?: CalendarMealPlan[];
   };
 }
 

@@ -46,6 +46,8 @@ export type { HouseholdMemberData } from "./HouseholdMember";
 
 // Model class array for database initialization
 import Recipe from "./Recipe";
+import Leftover from "./Leftover";
+export { default as Leftover } from "./Leftover";
 import RecipeStep from "./RecipeStep";
 import RecipeIngredient from "./RecipeIngredient";
 import RecipeVersion from "./RecipeVersion";
@@ -69,6 +71,7 @@ import Household from "./Household";
 import HouseholdMember from "./HouseholdMember";
 
 export const modelClasses = [
+  Leftover,
   Recipe,
   RecipeStep,
   RecipeIngredient,

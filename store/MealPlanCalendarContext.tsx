@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useState } from "react";
 import type { CalendarDropTarget, MealPlanDragData, RecipeDragData } from "~/types/MealPlan";
+import { startOfWeek } from "~/utils/meal-plan-calendar";
 
 /**
  * Drag state for the meal planning calendar
@@ -15,6 +16,12 @@ interface MealPlanCalendarContextType {
   // Currently selected week (start date of the week)
   selectedWeek: Date;
   changeSelectedWeek: (date: Date) => void;
+  selectedDate: Date;
+  selectDate: (date: Date) => void;
+  viewMode: "week" | "month";
+  setViewMode: (mode: "week" | "month") => void;
+  selectedSlot: CalendarDropTarget | null;
+  selectSlot: (target: CalendarDropTarget) => void;
 
   // Drag and drop state for moving recipes/meal plans
   dragState: MealPlanDragState;
@@ -28,21 +35,24 @@ interface MealPlanCalendarContextType {
 const MealPlanCalendarContext = createContext<MealPlanCalendarContextType | null>(null);
 
 export function MealPlanCalendarProvider({ children }: { children: React.ReactNode }) {
-  // Initialize with current week (Sunday as start of week)
-  const getWeekStart = (date: Date): Date => {
-    const d = new Date(date);
-    const day = d.getDay();
-    const diff = d.getDate() - day;
-    return new Date(d.setDate(diff));
-  };
-
-  const [selectedWeek, setSelectedWeek] = useState<Date>(getWeekStart(new Date()));
+  const [selectedWeek, setSelectedWeek] = useState<Date>(() => startOfWeek(new Date()));
+  const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
+  const [viewMode, setViewMode] = useState<"week" | "month">("week");
+  const [selectedSlot, setSelectedSlot] = useState<CalendarDropTarget | null>(null);
   const [dragState, setDragState] = useState<MealPlanDragState>({ isDragging: false });
   const [isRecipeSheetOpen, setIsRecipeSheetOpen] = useState<boolean>(false);
 
   // UI callbacks
   const changeSelectedWeek = useCallback((date: Date) => {
-    setSelectedWeek(getWeekStart(date));
+    setSelectedWeek(startOfWeek(date));
+    setSelectedDate(date);
+    setSelectedSlot(null);
+  }, []);
+
+  const selectSlot = useCallback((target: CalendarDropTarget) => {
+    setSelectedSlot(target);
+    setSelectedDate(target.date);
+    setSelectedWeek(startOfWeek(target.date));
   }, []);
 
   const updateDragState = useCallback((state: MealPlanDragState) => {
@@ -58,6 +68,12 @@ export function MealPlanCalendarProvider({ children }: { children: React.ReactNo
       value={{
         selectedWeek,
         changeSelectedWeek,
+        selectedDate,
+        selectDate: changeSelectedWeek,
+        viewMode,
+        setViewMode,
+        selectedSlot,
+        selectSlot,
         dragState,
         updateDragState,
         isRecipeSheetOpen,

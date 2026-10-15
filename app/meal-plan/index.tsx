@@ -12,6 +12,8 @@ import {
 } from "lucide-uniwind";
 import { Stack, useRouter } from "expo-router";
 import { useMealPlanCalendar } from "~/store/MealPlanCalendarContext";
+import MonthlyCalendar from "~/components/MealPlanCalendar/MonthlyCalendar";
+import type { Recipe } from "~/types/Recipe";
 import WeeklyCalendar from "~/components/MealPlanCalendar/WeeklyCalendar";
 import TemplateSheet from "~/components/MealPlanCalendar/TemplateSheet";
 import { MacroTargetPanel } from "~/components/MealPlanCalendar/MacroTargetPanel";
@@ -30,8 +32,19 @@ import { toast } from "sonner-native";
 
 export default function MealPlanPage() {
   const router = useRouter();
-  const { selectedWeek, changeSelectedWeek, isRecipeSheetOpen, updateRecipeSheetOpen, dragState } =
-    useMealPlanCalendar();
+  const {
+    selectedWeek,
+    changeSelectedWeek,
+    isRecipeSheetOpen,
+    updateRecipeSheetOpen,
+    dragState,
+    selectSlot,
+    selectedSlot,
+    selectedDate,
+    selectDate,
+    viewMode,
+    setViewMode,
+  } = useMealPlanCalendar();
   const { data: recipes = [], isLoading: isLoadingRecipes } = useRecipes();
   const addToMealPlan = useAddToMealPlan();
   const [isTemplateSheetOpen, setIsTemplateSheetOpen] = useState(false);
@@ -73,7 +86,23 @@ export default function MealPlanPage() {
 
   // Handle meal slot press to open recipe selection
   const handleMealSlotPress = (date: Date, mealSlot: MealSlot) => {
+    selectSlot({ date, mealSlot });
     updateRecipeSheetOpen(true);
+  };
+
+  const handleSelectRecipe = async (recipe: Recipe) => {
+    const target = selectedSlot ?? { date: selectedDate, mealSlot: "dinner" as const };
+    try {
+      await addToMealPlan.mutateAsync({
+        recipeId: recipe.id,
+        servings: recipe.servings ?? 2,
+        ...target,
+      });
+      updateRecipeSheetOpen(false);
+      toast.success("Recipe added to meal plan");
+    } catch {
+      toast.error("Couldn't add this recipe. Please try again.");
+    }
   };
 
   // Handle recipe drop on meal slot (from drag-and-drop)
@@ -126,8 +155,18 @@ export default function MealPlanPage() {
       <Stack.Screen
         options={{
           headerShown: true,
-          headerTransparent: true,
-          headerTitle: "",
+          headerTransparent: false,
+          headerTitle: "Meal Plan",
+          headerLeft: () => (
+            <Button
+              variant="ghost"
+              size="icon"
+              accessibilityLabel="Back"
+              onPress={() => router.back()}
+            >
+              <ChevronLeftIcon className="text-foreground" size={24} />
+            </Button>
+          ),
           headerRight: () => (
             <MealPlanHeaderRight
               aiMealPlanEnabled={aiMealPlanEnabled}
@@ -141,24 +180,60 @@ export default function MealPlanPage() {
         }}
       />
 
-      {/* Week Navigation Header */}
-      <WeekNavigationHeader
-        selectedWeek={selectedWeek}
-        onPreviousWeek={() => {
-          const newDate = new Date(selectedWeek);
-          newDate.setDate(newDate.getDate() - 7);
-          changeSelectedWeek(newDate);
-        }}
-        onNextWeek={() => {
-          const newDate = new Date(selectedWeek);
-          newDate.setDate(newDate.getDate() + 7);
-          changeSelectedWeek(newDate);
-        }}
-        onGoToToday={() => {
-          changeSelectedWeek(new Date());
-        }}
-      />
-
+      <View className="flex-row justify-center gap-2 pt-3">
+        {(["week", "month"] as const).map((mode) => (
+          <Button
+            key={mode}
+            variant={viewMode === mode ? "default" : "outline"}
+            size="sm"
+            onPress={() => setViewMode(mode)}
+          >
+            <P className="capitalize">{mode}</P>
+          </Button>
+        ))}
+      </View>
+      {viewMode === "month" ? (
+        <View className="flex-row items-center justify-between px-5 py-3">
+          <Button
+            variant="ghost"
+            accessibilityLabel="Previous month"
+            onPress={() =>
+              selectDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1))
+            }
+          >
+            <P>‹</P>
+          </Button>
+          <P className="font-urbanist-semibold">
+            {selectedDate.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
+          </P>
+          <Button
+            variant="ghost"
+            accessibilityLabel="Next month"
+            onPress={() =>
+              selectDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1))
+            }
+          >
+            <P>›</P>
+          </Button>
+        </View>
+      ) : (
+        <WeekNavigationHeader
+          selectedWeek={selectedWeek}
+          onPreviousWeek={() => {
+            const newDate = new Date(selectedWeek);
+            newDate.setDate(newDate.getDate() - 7);
+            changeSelectedWeek(newDate);
+          }}
+          onNextWeek={() => {
+            const newDate = new Date(selectedWeek);
+            newDate.setDate(newDate.getDate() + 7);
+            changeSelectedWeek(newDate);
+          }}
+          onGoToToday={() => {
+            changeSelectedWeek(new Date());
+          }}
+        />
+      )}
       {/* Macro target panel — dark-launched behind ai_meal_plan (#746). Placed
           above the calendar so the target input + projected readout stay
           visible while the flag is on. */}
@@ -171,7 +246,14 @@ export default function MealPlanPage() {
       )}
 
       {/* Weekly Calendar */}
-      <WeeklyCalendar onMealSlotPress={handleMealSlotPress} onMealSlotDrop={handleMealSlotDrop} />
+      {viewMode === "month" ? (
+        <MonthlyCalendar
+          onMealSlotPress={handleMealSlotPress}
+          onMealSlotDrop={handleMealSlotDrop}
+        />
+      ) : (
+        <WeeklyCalendar onMealSlotPress={handleMealSlotPress} onMealSlotDrop={handleMealSlotDrop} />
+      )}
 
       {/* Recipe Selection Panel (Bottom Sheet) */}
       <RecipeSelectionSheet
@@ -179,6 +261,8 @@ export default function MealPlanPage() {
         onClose={() => updateRecipeSheetOpen(false)}
         isLoading={isLoadingRecipes}
         recipes={recipes}
+        onSelect={handleSelectRecipe}
+        targetLabel={`${(selectedSlot?.date ?? selectedDate).toLocaleDateString()} · ${selectedSlot?.mealSlot ?? "dinner"}`}
       />
 
       {/* Template Sheet */}

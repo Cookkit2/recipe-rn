@@ -9,6 +9,8 @@ interface RecipeSelectionSheetProps {
   onClose: () => void;
   isLoading: boolean;
   recipes: Recipe[];
+  onSelect: (recipe: Recipe) => void;
+  targetLabel: string;
 }
 
 export function RecipeSelectionSheet({
@@ -16,6 +18,8 @@ export function RecipeSelectionSheet({
   onClose,
   isLoading,
   recipes,
+  onSelect,
+  targetLabel,
 }: RecipeSelectionSheetProps) {
   if (!isOpen) return null;
 
@@ -29,7 +33,10 @@ export function RecipeSelectionSheet({
 
         {/* Header */}
         <View className="flex-row items-center justify-between px-6 py-3 border-b border-border/10">
-          <H3 className="font-bowlby-one">Select Recipe</H3>
+          <View>
+            <H3 className="font-bowlby-one">Select Recipe</H3>
+            <P className="text-xs text-muted-foreground">{targetLabel}</P>
+          </View>
           <Pressable
             onPress={onClose}
             className="p-2 active:opacity-70"
@@ -56,7 +63,7 @@ export function RecipeSelectionSheet({
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
               <View className="mb-3">
-                <RecipeDraggable recipe={item} servings={4} />
+                <RecipeDraggable recipe={item} onPress={onSelect} />
               </View>
             )}
             className="flex-1 px-4 pt-4 pb-8"

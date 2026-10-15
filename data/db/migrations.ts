@@ -235,5 +235,27 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 8,
+      steps: [
+        addColumns({
+          table: "grocery_item_check",
+          columns: [{ name: "week_start", type: "string", isOptional: true, isIndexed: true }],
+        }),
+        createTable({
+          name: "leftover",
+          columns: [
+            { name: "name", type: "string" },
+            { name: "servings", type: "number" },
+            { name: "cooked_at", type: "number" },
+            { name: "recipe_id", type: "string", isOptional: true },
+            { name: "remind_at", type: "number", isOptional: true },
+            { name: "status", type: "string", isIndexed: true },
+            { name: "created_at", type: "number" },
+            { name: "updated_at", type: "number" },
+          ],
+        }),
+      ],
+    },
   ],
 });

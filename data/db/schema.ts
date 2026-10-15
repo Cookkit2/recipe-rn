@@ -1,8 +1,21 @@
 import { appSchema, tableSchema } from "@nozbe/watermelondb";
 
 export default appSchema({
-  version: 7,
+  version: 8,
   tables: [
+    tableSchema({
+      name: "leftover",
+      columns: [
+        { name: "name", type: "string" },
+        { name: "servings", type: "number" },
+        { name: "cooked_at", type: "number" },
+        { name: "recipe_id", type: "string", isOptional: true },
+        { name: "remind_at", type: "number", isOptional: true },
+        { name: "status", type: "string", isIndexed: true },
+        { name: "created_at", type: "number" },
+        { name: "updated_at", type: "number" },
+      ],
+    }),
     // ========================================
     // RECIPE CACHE (3 tables)
     // Synced from cloud for offline access
@@ -246,6 +259,7 @@ export default appSchema({
     tableSchema({
       name: "grocery_item_check",
       columns: [
+        { name: "week_start", type: "string", isOptional: true, isIndexed: true },
         { name: "ingredient_name", type: "string", isIndexed: true }, // Normalized ingredient name
         { name: "is_checked", type: "boolean" },
         { name: "is_deleted", type: "boolean", isOptional: true }, // NEW: User can remove items from list

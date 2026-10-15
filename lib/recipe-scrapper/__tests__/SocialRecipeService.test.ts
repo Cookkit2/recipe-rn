@@ -45,13 +45,13 @@ const GEMINI_RECIPE_RESPONSE = JSON.stringify({
   },
 });
 
-const generateContentMock = jest.fn(
+const mockGenerateContent = jest.fn(
   async (_model: string, _body: string) => GEMINI_RECIPE_RESPONSE
 );
 
 jest.mock("~/utils/gemini-api", () => ({
   GeminiAPI: jest.fn().mockImplementation(() => ({
-    generateContent: generateContentMock,
+    generateContent: mockGenerateContent,
   })),
   DEFAULT_GEMINI_MODEL: "gemini-2.5-flash-lite",
 }));
@@ -110,7 +110,7 @@ describe("SocialRecipeService.analyzeForRecipe", () => {
     expect(result.recipe?.sourceUrl).toBe("https://www.tiktok.com/@chef/video/7300000000000000000");
 
     // Gemini was called exactly once with a text-only body (no file/video data).
-    expect(generateContentMock).toHaveBeenCalledTimes(1);
+    expect(mockGenerateContent).toHaveBeenCalledTimes(1);
   });
 
   it("adds the instagram tag for instagram posts", async () => {
@@ -127,34 +127,56 @@ describe("SocialRecipeService.analyzeForRecipe", () => {
     expect(result.recipe?.tags).toContain("instagram");
   });
 
-  it("is resilient to a blocked fetch and still consults Gemini with empty metadata", async () => {
-    // Social platforms frequently reject our request or serve a login wall.
-    // The service catches the fetch failure internally and feeds empty metadata
-    // to Gemini rather than throwing, so the caller always gets a result. The
-    // graceful no-recipe fallback is then driven by Gemini's confidence (see the
-    // low-confidence test below) and by recipeImportApi's error mapping.
+  it("does not fabricate a recipe or call AI when a blocked page provides no text", async () => {
     globalThis.fetch = jest.fn(async () => {
       throw new Error("network blocked");
     }) as unknown as typeof fetch;
-
     const result = await service.analyzeForRecipe({
       platform: "tiktok",
       url: "https://www.tiktok.com/@chef/video/123",
     });
+    expect(result.isCookingVideo).toBe(false);
+    expect(result.recipe).toBeUndefined();
+    expect(mockGenerateContent).not.toHaveBeenCalled();
+  });
 
-    // Did not throw; Gemini was still consulted.
-    expect(generateContentMock).toHaveBeenCalledTimes(1);
-    // With the default confident mock, a recipe is returned (proving the blocked
-    // fetch was swallowed rather than aborting the whole flow).
-    expect(result.isCookingVideo).toBe(true);
+  it("uses the shared caption when the social page is blocked", async () => {
+    globalThis.fetch = jest.fn(async () => {
+      throw new Error("network blocked");
+    }) as unknown as typeof fetch;
+    const text =
+      "Bake 2 cups tomatoes and 1 block feta at 200C for 30 minutes. Stir in 200g cooked pasta.";
+    const result = await service.analyzeForRecipe({
+      platform: "instagram",
+      url: "https://www.instagram.com/p/abc/",
+      text,
+    });
     expect(result.recipe).toBeDefined();
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+    expect(mockGenerateContent).toHaveBeenCalledTimes(1);
+    expect(mockGenerateContent.mock.calls[0]?.[1]).toContain(text);
+  });
+
+  it("extracts a caption-only recipe without fetching any platform", async () => {
+    const fetchMock = jest.fn();
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+    expect(
+      (
+        await service.analyzeForRecipe({
+          platform: "text",
+          url: "",
+          text: "Boil 200g pasta, then stir in pesto.",
+        })
+      ).recipe
+    ).toBeDefined();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("returns a graceful fallback when Gemini detects no recipe", async () => {
     globalThis.fetch = jest.fn(
       async () => new Response(pageHtml({ title: "Dance video" }), { status: 200 })
     ) as unknown as typeof fetch;
-    generateContentMock.mockResolvedValueOnce(
+    mockGenerateContent.mockResolvedValueOnce(
       JSON.stringify({ isCookingVideo: false, confidence: 0.1 })
     );
 
@@ -174,7 +196,7 @@ describe("SocialRecipeService.analyzeForRecipe", () => {
     globalThis.fetch = jest.fn(
       async () => new Response(pageHtml({ title: "Ad" }), { status: 200 })
     ) as unknown as typeof fetch;
-    generateContentMock.mockResolvedValueOnce(
+    mockGenerateContent.mockResolvedValueOnce(
       JSON.stringify({
         isCookingVideo: true,
         confidence: 0.3,
@@ -220,7 +242,7 @@ describe("SocialRecipeService.analyzeForRecipe", () => {
       url: "https://www.instagram.com/p/Cxyz123/",
     });
 
-    const body = generateContentMock.mock.calls[0]?.[1];
+    const body = mockGenerateContent.mock.calls[0]?.[1];
     // The richer JSON-LD caption should be fed to the LLM.
     expect(body).toContain("Full recipe: 2 cups flour");
   });

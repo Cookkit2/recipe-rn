@@ -5,6 +5,7 @@
  * Supports YouTube videos, TikTok, Instagram, and recipe websites.
  */
 
+import type { SharedRecipeInput } from "~/types/SharedRecipe";
 import { analyzeUrl, type RecipeUrlType } from "~/utils/url-utils";
 import { websiteRecipeService } from "~/lib/recipe-scrapper/WebsiteRecipeService";
 import { getDefaultYouTubeService } from "~/lib/recipe-scrapper/youtube/YouTubeServiceFactory";
@@ -78,9 +79,46 @@ export const recipeImportApi = {
    * @param onStatusChange - Optional callback for progress updates
    * @returns Import result with recipe and shopping list
    */
+  async importSharedRecipe(
+    input: SharedRecipeInput,
+    onStatusChange?: (status: RecipeImportStatus) => void
+  ): Promise<YouTubeImportResult> {
+    if (input.url) return this.importRecipeFromUrl(input.url, onStatusChange, input.text);
+    if (!input.text?.trim()) return { success: false, error: "Share a recipe link or caption." };
+    const result = await withImportErrorHandling(
+      async () => {
+        onStatusChange?.("analyzing");
+        const analysis = await socialRecipeService.analyzeForRecipe({
+          platform: "text",
+          url: "",
+          text: input.text,
+        });
+        if (
+          !analysis.recipe ||
+          !analysis.isCookingVideo ||
+          analysis.confidence < MIN_RECIPE_CONFIDENCE
+        )
+          throw new Error(
+            "Couldn't extract enough ingredients and instructions. Add the full recipe caption and try again."
+          );
+        return this._finalizeImport(
+          analysis.recipe,
+          "",
+          "Shared recipe",
+          undefined,
+          onStatusChange
+        );
+      },
+      "Shared recipe import",
+      onStatusChange
+    );
+    return result.success ? result.data : result;
+  },
+
   async importRecipeFromUrl(
     url: string,
-    onStatusChange?: (status: RecipeImportStatus) => void
+    onStatusChange?: (status: RecipeImportStatus) => void,
+    sharedText?: string
   ): Promise<YouTubeImportResult> {
     // Step 1: Analyze URL type
     onStatusChange?.("validating-url");
@@ -110,7 +148,8 @@ export const recipeImportApi = {
               urlAnalysis.normalizedUrl,
               "tiktok",
               urlAnalysis.postId,
-              onStatusChange
+              onStatusChange,
+              sharedText
             );
 
           case "instagram":
@@ -118,7 +157,8 @@ export const recipeImportApi = {
               urlAnalysis.normalizedUrl,
               "instagram",
               urlAnalysis.postId,
-              onStatusChange
+              onStatusChange,
+              sharedText
             );
 
           case "website":
@@ -361,7 +401,8 @@ export const recipeImportApi = {
     url: string,
     platform: "tiktok" | "instagram",
     postId: string | undefined,
-    onStatusChange?: (status: RecipeImportStatus) => void
+    onStatusChange?: (status: RecipeImportStatus) => void,
+    sharedText?: string
   ): Promise<YouTubeImportResult> {
     const platformName = platform === "tiktok" ? "TikTok" : "Instagram";
 
@@ -377,12 +418,13 @@ export const recipeImportApi = {
           platform,
           url,
           postId,
+          text: sharedText,
         });
 
         // Step 2: Graceful fallback — platform blocked the fetch or the LLM
         // couldn't confidently detect a recipe. Prompt manual entry rather than
         // presenting a fabricated recipe.
-        if (!analysisResult.isCookingVideo) {
+        if (!analysisResult.isCookingVideo || analysisResult.confidence < MIN_RECIPE_CONFIDENCE) {
           const confidencePercent = (analysisResult.confidence * 100).toFixed(0);
           throw new Error(
             `We couldn't extract a recipe from this ${platformName} post ` +
