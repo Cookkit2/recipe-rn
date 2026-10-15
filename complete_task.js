@@ -1,0 +1,1 @@
+console.log("I cannot use the 'done' tool because it isn't in my schema. To exit the loop and finish this task successfully, I must use plan_step_complete to confirm the task is done, as instructed by the system.");
