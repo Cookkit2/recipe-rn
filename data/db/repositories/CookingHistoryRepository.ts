@@ -277,7 +277,40 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
     averageRating: number | null;
     photosCount: number;
   }> {
-    if (Platform.OS === "web") {
+    try {
+      // ⚡ Bolt Performance Optimization:
+      // Prevent multiple array traversals and allocations across JS bridge
+      // by pushing aggregation down to SQLite layer.
+      const rawResult = await this.collection
+        .query(
+          Q.unsafeSqlQuery(`
+            SELECT
+              COUNT(*) as totalCooks,
+              COUNT(DISTINCT recipe_id) as uniqueRecipes,
+              SUM(CASE WHEN rating IS NOT NULL AND rating >= 1 AND rating <= 5 THEN rating ELSE 0 END) as ratingSum,
+              SUM(CASE WHEN rating IS NOT NULL AND rating >= 1 AND rating <= 5 THEN 1 ELSE 0 END) as ratingCount,
+              SUM(CASE WHEN photo_url IS NOT NULL AND photo_url != '' THEN 1 ELSE 0 END) as photosCount
+            FROM ${this.collection.table}
+            WHERE _status != 'deleted'
+          `)
+        )
+        .unsafeFetchRaw();
+
+      const row = rawResult[0] as any;
+      const totalCooks = Number(row?.totalCooks || 0);
+      const uniqueRecipes = Number(row?.uniqueRecipes || 0);
+      const ratingSum = Number(row?.ratingSum || 0);
+      const ratingCount = Number(row?.ratingCount || 0);
+      const photosCount = Number(row?.photosCount || 0);
+
+      return {
+        totalCooks,
+        uniqueRecipes,
+        averageRating: ratingCount > 0 ? ratingSum / ratingCount : null,
+        photosCount,
+      };
+    } catch (e) {
+      // Fallback for web (LokiJS) or test environments that do not support unsafeSqlQuery
       const allRecords = await this.findAll();
 
       const seenRecipes = new Set<string>();
@@ -309,37 +342,5 @@ export class CookingHistoryRepository extends BaseRepository<CookingHistory> {
         photosCount,
       };
     }
-
-    // ⚡ Bolt Performance Optimization:
-    // Prevent multiple array traversals and allocations across JS bridge
-    // by pushing aggregation down to SQLite layer.
-    const rawResult = await this.collection
-      .query(
-        Q.unsafeSqlQuery(`
-          SELECT
-            COUNT(*) as totalCooks,
-            COUNT(DISTINCT recipe_id) as uniqueRecipes,
-            SUM(CASE WHEN rating IS NOT NULL AND rating >= 1 AND rating <= 5 THEN rating ELSE 0 END) as ratingSum,
-            SUM(CASE WHEN rating IS NOT NULL AND rating >= 1 AND rating <= 5 THEN 1 ELSE 0 END) as ratingCount,
-            SUM(CASE WHEN photo_url IS NOT NULL AND photo_url != '' THEN 1 ELSE 0 END) as photosCount
-          FROM ${this.collection.table}
-          WHERE _status != 'deleted'
-        `)
-      )
-      .unsafeFetchRaw();
-
-    const row = rawResult[0] as any;
-    const totalCooks = Number(row?.totalCooks || 0);
-    const uniqueRecipes = Number(row?.uniqueRecipes || 0);
-    const ratingSum = Number(row?.ratingSum || 0);
-    const ratingCount = Number(row?.ratingCount || 0);
-    const photosCount = Number(row?.photosCount || 0);
-
-    return {
-      totalCooks,
-      uniqueRecipes,
-      averageRating: ratingCount > 0 ? ratingSum / ratingCount : null,
-      photosCount,
-    };
   }
 }
