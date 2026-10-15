@@ -2,11 +2,11 @@ import { Stack } from "expo-router";
 import useColors from "~/hooks/useColor";
 import { useNotificationHandlers } from "~/hooks/useNotificationHandlers";
 import { useOnboardingCheck } from "~/hooks/useOnboardingCheck";
-import { ScreenGroupPantry } from "~/components/navigation/ScreenGroupPantry";
-import { ScreenGroupIngredient } from "~/components/navigation/ScreenGroupIngredient";
-import { ScreenGroupRecipe } from "~/components/navigation/ScreenGroupRecipe";
-import { ScreenGroupProfile } from "~/components/navigation/ScreenGroupProfile";
-import { ScreenGroupMisc } from "~/components/navigation/ScreenGroupMisc";
+import { getPantryScreens } from "~/components/navigation/ScreenGroupPantry";
+import { getIngredientScreens } from "~/components/navigation/ScreenGroupIngredient";
+import { getRecipeScreens } from "~/components/navigation/ScreenGroupRecipe";
+import { getProfileScreens } from "~/components/navigation/ScreenGroupProfile";
+import { getMiscScreens } from "~/components/navigation/ScreenGroupMisc";
 
 export function AnimatedStack() {
   const colors = useColors();
@@ -36,19 +36,19 @@ export function AnimatedStack() {
   return (
     <Stack>
       {/* ======== PANTRY ======== */}
-      {ScreenGroupPantry()}
+      {getPantryScreens()}
 
       {/* ======== INGREDIENT ======== */}
-      {ScreenGroupIngredient()}
+      {getIngredientScreens()}
 
       {/* ======== RECIPE ======== */}
-      {ScreenGroupRecipe({ colors })}
+      {getRecipeScreens({ colors })}
 
       {/* ======== PROFILE ======== */}
-      {ScreenGroupProfile({ commonHeaderOptions })}
+      {getProfileScreens({ commonHeaderOptions })}
 
       {/* ======== MISCELLANOUS ======== */}
-      {ScreenGroupMisc({ commonHeaderOptions })}
+      {getMiscScreens({ commonHeaderOptions })}
     </Stack>
   );
 }

@@ -1,11 +1,11 @@
 import React from "react";
 import { View, ScrollView, Dimensions, ActivityIndicator } from "react-native";
-import { H3, P } from "~/components/ui/typography";
+import { P } from "~/components/ui/typography";
 import { useMealPlanCalendar } from "~/store/MealPlanCalendarContext";
 import { useCalendarMealPlans } from "~/hooks/queries/useCalendarMealPlans";
 import type { DayMealPlan, MealSlot } from "~/types/MealPlan";
+import { groupMealsByDay } from "~/utils/meal-plan-calendar";
 import DayColumn from "./DayColumn";
-import { CalendarPlusIcon } from "lucide-uniwind";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -37,56 +37,14 @@ export default function WeeklyCalendar({ onMealSlotPress, onMealSlotDrop }: Week
   // Fetch meal plans for the current week
   const { data: mealPlans, isLoading, error } = useCalendarMealPlans(weekStartDate, weekEndDate);
 
-  // Group meal plans by day
-  const weekDays = React.useMemo(() => {
-    // Single pass to group meal plans by date string (O(N))
-    const mealPlansByDate = new Map<string, typeof mealPlans>();
-
-    const formatDateKey = (d: Date) =>
-      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-
-    if (mealPlans) {
-      for (const plan of mealPlans) {
-        if (plan && plan.date) {
-          const planDate = new Date(plan.date);
-          const dateString = formatDateKey(planDate);
-          if (!mealPlansByDate.has(dateString)) {
-            mealPlansByDate.set(dateString, []);
-          }
-          mealPlansByDate.get(dateString)!.push(plan);
-        }
-      }
-    }
-
-    const days: DayMealPlan[] = [];
-
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(weekStartDate);
-      date.setDate(date.getDate() + i);
-      const dateString = formatDateKey(date);
-
-      // O(1) lookup for meal plans for this day
-      const dayMealPlans = mealPlansByDate.get(dateString) || [];
-
-      // Group by meal slot directly without iterating MEAL_SLOTS or calling find()
-      const meals: Partial<Record<MealSlot, (typeof dayMealPlans)[0]>> = {};
-      if (dayMealPlans.length > 0) {
-        for (const plan of dayMealPlans) {
-          const slot = plan.mealSlot as MealSlot | null | undefined;
-          if (slot && !meals[slot]) {
-            meals[slot] = plan;
-          }
-        }
-      }
-
-      days.push({
-        date,
-        meals: meals as DayMealPlan["meals"],
-      });
-    }
-
-    return days;
-  }, [weekStartDate, mealPlans]);
+  const weekDays = groupMealsByDay(
+    Array.from(
+      { length: 7 },
+      (_, i) =>
+        new Date(selectedWeek.getFullYear(), selectedWeek.getMonth(), selectedWeek.getDate() + i)
+    ),
+    mealPlans ?? []
+  );
 
   const renderDayColumn = (dayMealPlan: DayMealPlan, index: number) => {
     const isFirstDay = index === 0;
@@ -96,7 +54,7 @@ export default function WeeklyCalendar({ onMealSlotPress, onMealSlotDrop }: Week
         key={index}
         dayMealPlan={dayMealPlan}
         isFirstDay={isFirstDay}
-        minWidth={SCREEN_WIDTH / 3}
+        width={SCREEN_WIDTH / 3}
         onMealSlotPress={onMealSlotPress}
         onMealSlotDrop={onMealSlotDrop}
       />
@@ -124,38 +82,21 @@ export default function WeeklyCalendar({ onMealSlotPress, onMealSlotDrop }: Week
     );
   }
 
-  // Empty state - no meal plans for this week
-  const hasMealPlans = mealPlans && mealPlans.length > 0;
-  if (!hasMealPlans) {
-    return (
-      <View className="flex-1 bg-background justify-center items-center px-6">
-        <View className="items-center">
-          <View className="w-24 h-24 rounded-full bg-primary/20 items-center justify-center mb-6">
-            <CalendarPlusIcon className="text-primary" size={48} strokeWidth={1.5} />
-          </View>
-
-          <H3 className="font-bowlby-one text-center mb-2">No meals planned</H3>
-          <P className="text-muted-foreground text-center max-w-xs mb-6">
-            Start planning your week by adding recipes to your meal calendar.
-          </P>
-        </View>
-      </View>
-    );
-  }
-
   return (
-    <View className="flex-1 bg-background">
+    <ScrollView
+      className="flex-1 bg-background"
+      contentContainerStyle={{ flexGrow: 1 }}
+      nestedScrollEnabled
+    >
       <ScrollView
         horizontal
+        nestedScrollEnabled
         showsHorizontalScrollIndicator={false}
         pagingEnabled={false}
-        contentContainerStyle={{
-          flexDirection: "row",
-          minHeight: "100%",
-        }}
+        contentContainerStyle={{ flexDirection: "row" }}
       >
         {weekDays.map((day, index) => renderDayColumn(day, index))}
       </ScrollView>
-    </View>
+    </ScrollView>
   );
 }

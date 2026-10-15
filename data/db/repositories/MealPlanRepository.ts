@@ -12,6 +12,60 @@ export class MealPlanRepository extends BaseRepository<MealPlan> {
     super("meal_plan");
   }
 
+  async upsertSlotRecipe(data: MealPlanData): Promise<MealPlan> {
+    if (!data.recipeId || !Number.isFinite(data.servings) || data.servings <= 0)
+      throw new Error("Choose a recipe and positive servings");
+    const date = data.date ?? new Date();
+    if (!Number.isFinite(date.getTime())) throw new Error("Invalid meal date");
+    const day = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const end = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+    const slot = data.mealSlot ?? "dinner";
+    return database.write(async () => {
+      const existing = await this.collection
+        .query(
+          Q.where("recipe_id", data.recipeId),
+          Q.where("date", Q.gte(day.getTime())),
+          Q.where("date", Q.lte(end.getTime())),
+          Q.where("meal_slot", slot),
+          Q.take(1)
+        )
+        .fetch();
+      if (existing[0])
+        return existing[0].update((record) => {
+          record.servings = data.servings;
+        });
+      return this.collection.create((record) => {
+        record.recipeId = data.recipeId;
+        record.date = day;
+        record.mealSlot = slot;
+        record.servings = data.servings;
+        if (data.templateId) record.templateId = data.templateId;
+      });
+    });
+  }
+
+  async updateEntry(
+    id: string,
+    data: Pick<MealPlanData, "servings" | "date" | "mealSlot">
+  ): Promise<void> {
+    if (
+      !Number.isFinite(data.servings) ||
+      data.servings <= 0 ||
+      !data.date ||
+      !Number.isFinite(data.date.getTime())
+    )
+      throw new Error("Choose a valid date and positive servings");
+    const record = await this.findById(id);
+    if (!record) throw new Error("Meal no longer exists");
+    await database.write(() =>
+      record.update((meal) => {
+        meal.servings = data.servings;
+        meal.date = new Date(data.date!.getFullYear(), data.date!.getMonth(), data.date!.getDate());
+        if (data.mealSlot) meal.mealSlot = data.mealSlot;
+      })
+    );
+  }
+
   // Add a recipe to the meal plan
   async addToPlan(data: MealPlanData): Promise<MealPlan> {
     if (!data.recipeId) {
@@ -77,7 +131,9 @@ export class MealPlanRepository extends BaseRepository<MealPlan> {
     if (!record) return null;
 
     await database.write(async () => {
-      await record.updateMealPlan({ servings });
+      await record.update((row) => {
+        row.servings = servings;
+      });
     });
 
     return record;
@@ -162,7 +218,10 @@ export class MealPlanRepository extends BaseRepository<MealPlan> {
     if (!record) return null;
 
     await database.write(async () => {
-      await (record as MealPlan).updateMealPlan({ date, mealSlot });
+      await record.update((row) => {
+        row.date = date;
+        row.mealSlot = mealSlot;
+      });
     });
 
     return record as MealPlan;

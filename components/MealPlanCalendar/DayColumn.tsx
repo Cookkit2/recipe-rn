@@ -16,9 +16,9 @@ interface DayColumnProps {
    */
   isFirstDay?: boolean;
   /**
-   * Minimum width for the column
+   * Fixed width for a week column; omitted in the full-width month agenda
    */
-  minWidth?: number;
+  width?: number;
   /**
    * Optional callback when a meal slot is pressed
    */
@@ -39,7 +39,7 @@ interface DayColumnProps {
 export default function DayColumn({
   dayMealPlan,
   isFirstDay = false,
-  minWidth,
+  width,
   onMealSlotPress,
   onMealSlotDrop,
 }: DayColumnProps) {
@@ -47,8 +47,8 @@ export default function DayColumn({
 
   return (
     <View
-      className={`flex-1 border-r border-border ${isFirstDay ? "border-l" : ""}`}
-      style={{ minWidth }}
+      className={`border-r border-border ${width ? "shrink-0" : "w-full"} ${isFirstDay ? "border-l" : ""}`}
+      style={{ width }}
     >
       {/* Day Header */}
       <View className={`px-3 py-2 ${isToday ? "bg-primary/10" : "bg-muted/30"}`}>
@@ -73,7 +73,7 @@ export default function DayColumn({
             key={slot}
             date={dayMealPlan.date}
             mealSlot={slot}
-            mealPlan={dayMealPlan.meals[slot]}
+            mealPlans={dayMealPlan.meals[slot]}
             onPress={onMealSlotPress}
             onDrop={onMealSlotDrop}
           />
@@ -83,6 +83,7 @@ export default function DayColumn({
       {/* Daily Nutrition Summary */}
       <DailyNutritionBar
         recipes={Object.values(dayMealPlan.meals)
+          .flat()
           .filter((m): m is NonNullable<typeof m> => m != null && m.recipe != null)
           .map((m) => ({
             calories: m.recipe!.calories,

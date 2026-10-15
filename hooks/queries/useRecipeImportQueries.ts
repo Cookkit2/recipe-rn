@@ -15,6 +15,7 @@ import {
 } from "~/data/api/recipeImportApi";
 import { recipeQueryKeys } from "./recipeQueryKeys";
 import { analyzeUrl, type UrlAnalysisResult, type RecipeUrlType } from "~/utils/url-utils";
+import type { SharedRecipeInput } from "~/types/SharedRecipe";
 import type { YouTubeImportResult } from "~/types/ScrappedRecipe";
 
 // Re-export for convenience
@@ -58,12 +59,15 @@ export function useImportRecipe() {
   const [urlAnalysis, setUrlAnalysis] = useState<UrlAnalysisResult | null>(null);
 
   const mutation = useMutation({
-    mutationFn: async (url: string): Promise<YouTubeImportResult> => {
+    mutationFn: async (input: string | SharedRecipeInput): Promise<YouTubeImportResult> => {
+      const url = typeof input === "string" ? input : input.url;
       // Analyze URL first
-      const analysis = analyzeUrl(url);
+      const analysis = url ? analyzeUrl(url) : null;
       setUrlAnalysis(analysis);
 
-      return recipeImportApi.importRecipeFromUrl(url, setImportStatus);
+      return typeof input === "string"
+        ? recipeImportApi.importRecipeFromUrl(input, setImportStatus)
+        : recipeImportApi.importSharedRecipe(input, setImportStatus);
     },
 
     onSuccess: (result) => {

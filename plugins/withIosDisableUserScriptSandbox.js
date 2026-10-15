@@ -19,6 +19,10 @@ function withIosDisableUserScriptSandbox(config) {
       const buildConfig = buildConfigs[key];
       if (buildConfig && buildConfig.buildSettings) {
         buildConfig.buildSettings.ENABLE_USER_SCRIPT_SANDBOXING = "NO";
+        if (config.ios?.supportsTablet === false) {
+          // Config plugins can add extension targets with an iPad default.
+          buildConfig.buildSettings.TARGETED_DEVICE_FAMILY = '"1"';
+        }
       }
     }
 

@@ -1,5 +1,8 @@
 import { normalizeRateLimitId } from "../authHelpers";
 
+// Email normalization does not use the rate limiter's background cleanup timer.
+jest.mock("~/utils/rate-limiter", () => ({ authRateLimiter: {} }));
+
 describe("normalizeRateLimitId", () => {
   it("should normalize a valid email", () => {
     expect(normalizeRateLimitId("Test@Example.com")).toBe("test@example.com");

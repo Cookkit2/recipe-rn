@@ -1,8 +1,10 @@
 import { View, ScrollView, Pressable } from "react-native";
 import { H3, H4, P } from "~/components/ui/typography";
-import { useMealPlanItems } from "~/hooks/queries/useMealPlanQueries";
+import { useCalendarMealPlans } from "~/hooks/queries/useMealPlanQueries";
 import { useRouter } from "expo-router";
 import { Separator } from "~/components/ui/separator";
+import { useMealPlanCalendar } from "~/store/MealPlanCalendarContext";
+import { endOfWeek } from "~/utils/meal-plan-calendar";
 import RecipeChip from "./RecipeChip";
 
 interface GroceryListHeaderProps {
@@ -16,7 +18,8 @@ export default function GroceryListHeader({
   selectedRecipeIds = new Set(),
   onToggleRecipe,
 }: GroceryListHeaderProps) {
-  const { data: mealPlanItems = [] } = useMealPlanItems();
+  const { selectedWeek } = useMealPlanCalendar();
+  const { data: mealPlanItems = [] } = useCalendarMealPlans(selectedWeek, endOfWeek(selectedWeek));
 
   // Get unique recipes
   const recipes = Array.from(

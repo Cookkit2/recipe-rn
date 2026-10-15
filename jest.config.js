@@ -13,6 +13,8 @@ module.exports = {
       {
         tsconfig: {
           jsx: "react-jsx",
+          // Match Metro's legacy decorator fields so Watermelon setters write to _raw.
+          useDefineForClassFields: false,
           esModuleInterop: true,
           allowSyntheticDefaultImports: true,
           skipLibCheck: true,

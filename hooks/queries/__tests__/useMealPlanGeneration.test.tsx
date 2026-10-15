@@ -59,7 +59,10 @@ describe("useMealPlanGeneration", () => {
     });
 
     const client = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      defaultOptions: {
+        queries: { retry: false, gcTime: Infinity },
+        mutations: { retry: false, gcTime: Infinity },
+      },
     });
     const invalidateSpy = jest.spyOn(client, "invalidateQueries");
 
@@ -97,7 +100,10 @@ describe("useMealPlanGeneration", () => {
     });
 
     const client = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      defaultOptions: {
+        queries: { retry: false, gcTime: Infinity },
+        mutations: { retry: false, gcTime: Infinity },
+      },
     });
     const { result } = await renderHook(() => useMealPlanGeneration(), {
       wrapper: wrapper(client),
@@ -119,7 +125,10 @@ describe("useMealPlanGeneration", () => {
     getRecipeRecommendations.mockResolvedValue({ recipes: [] });
 
     const client = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      defaultOptions: {
+        queries: { retry: false, gcTime: Infinity },
+        mutations: { retry: false, gcTime: Infinity },
+      },
     });
     const { result } = await renderHook(() => useMealPlanGeneration(), {
       wrapper: wrapper(client),
@@ -143,7 +152,10 @@ describe("useMealPlanGeneration", () => {
     });
 
     const client = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      defaultOptions: {
+        queries: { retry: false, gcTime: Infinity },
+        mutations: { retry: false, gcTime: Infinity },
+      },
     });
     const invalidateSpy = jest.spyOn(client, "invalidateQueries");
 

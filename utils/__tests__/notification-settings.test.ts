@@ -29,6 +29,7 @@ describe("NotificationSettingsService", () => {
       expect(settings).toEqual({
         enabled: true,
         ingredientExpiry: true,
+        leftoverReminders: true,
         achievements: true,
         challenges: true,
       });
@@ -42,6 +43,7 @@ describe("NotificationSettingsService", () => {
       expect(settings).toEqual({
         enabled: true,
         ingredientExpiry: false,
+        leftoverReminders: true,
         achievements: false,
         challenges: true,
       });
@@ -57,6 +59,7 @@ describe("NotificationSettingsService", () => {
       expect(settings).toEqual({
         enabled: true,
         ingredientExpiry: true,
+        leftoverReminders: true,
         achievements: true,
         challenges: true,
       });
@@ -73,6 +76,7 @@ describe("NotificationSettingsService", () => {
         JSON.stringify({
           enabled: true,
           ingredientExpiry: true,
+          leftoverReminders: true,
           achievements: true,
           challenges: false,
         })
@@ -80,6 +84,7 @@ describe("NotificationSettingsService", () => {
       expect(log.info).toHaveBeenCalledWith("Notification settings updated:", {
         enabled: true,
         ingredientExpiry: true,
+        leftoverReminders: true,
         achievements: true,
         challenges: false,
       });
@@ -91,7 +96,13 @@ describe("NotificationSettingsService", () => {
       expect(
         notificationSettingsService.isNotificationDataEnabled(
           { type: "ingredient_expiry" },
-          { enabled: false, ingredientExpiry: true, achievements: true, challenges: true }
+          {
+            enabled: false,
+            ingredientExpiry: true,
+            leftoverReminders: true,
+            achievements: true,
+            challenges: true,
+          }
         )
       ).toBe(false);
     });
@@ -111,14 +122,26 @@ describe("NotificationSettingsService", () => {
       expect(
         notificationSettingsService.isNotificationDataEnabled(
           { type: "ingredient_expiry" },
-          { enabled: true, ingredientExpiry: true, achievements: true, challenges: true }
+          {
+            enabled: true,
+            ingredientExpiry: true,
+            leftoverReminders: true,
+            achievements: true,
+            challenges: true,
+          }
         )
       ).toBe(true);
 
       expect(
         notificationSettingsService.isNotificationDataEnabled(
           { type: "ingredient_expiry" },
-          { enabled: true, ingredientExpiry: false, achievements: true, challenges: true }
+          {
+            enabled: true,
+            ingredientExpiry: false,
+            leftoverReminders: true,
+            achievements: true,
+            challenges: true,
+          }
         )
       ).toBe(false);
     });
@@ -136,14 +159,26 @@ describe("NotificationSettingsService", () => {
         expect(
           notificationSettingsService.isNotificationDataEnabled(
             { type },
-            { enabled: true, ingredientExpiry: true, achievements: true, challenges: true }
+            {
+              enabled: true,
+              ingredientExpiry: true,
+              leftoverReminders: true,
+              achievements: true,
+              challenges: true,
+            }
           )
         ).toBe(true);
 
         expect(
           notificationSettingsService.isNotificationDataEnabled(
             { type },
-            { enabled: true, ingredientExpiry: true, achievements: false, challenges: true }
+            {
+              enabled: true,
+              ingredientExpiry: true,
+              leftoverReminders: true,
+              achievements: false,
+              challenges: true,
+            }
           )
         ).toBe(false);
       });
@@ -163,14 +198,26 @@ describe("NotificationSettingsService", () => {
         expect(
           notificationSettingsService.isNotificationDataEnabled(
             { type },
-            { enabled: true, ingredientExpiry: true, achievements: true, challenges: true }
+            {
+              enabled: true,
+              ingredientExpiry: true,
+              leftoverReminders: true,
+              achievements: true,
+              challenges: true,
+            }
           )
         ).toBe(true);
 
         expect(
           notificationSettingsService.isNotificationDataEnabled(
             { type },
-            { enabled: true, ingredientExpiry: true, achievements: true, challenges: false }
+            {
+              enabled: true,
+              ingredientExpiry: true,
+              leftoverReminders: true,
+              achievements: true,
+              challenges: false,
+            }
           )
         ).toBe(false);
       });

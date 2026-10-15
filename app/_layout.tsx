@@ -40,6 +40,9 @@ import {
 } from "~/lib/analytics/funnel-events";
 import { reportBudgetBreach } from "~/utils/perf-budget-check";
 import { useDeepLinkShare } from "~/hooks/useDeepLinkShare";
+import LeftoverReminderCoordinator from "~/lib/notifications/LeftoverReminderCoordinator";
+import SocialRecipeShareHandler from "~/components/Recipe/SocialRecipeShareHandler";
+import { MealPlanCalendarProvider } from "~/store/MealPlanCalendarContext";
 
 /**
  * Approximate cold-start launch timestamp (issue #733). Captured at this
@@ -125,7 +128,11 @@ export default Sentry.wrap(function RootLayout() {
                 <NotificationProvider>
                   <KeyboardProvider>
                     <StatusBar style="auto" />
-                    <AnimatedStack />
+                    <LeftoverReminderCoordinator />
+                    <MealPlanCalendarProvider>
+                      <SocialRecipeShareHandler />
+                      <AnimatedStack />
+                    </MealPlanCalendarProvider>
                     <Toaster visibleToasts={2} position="bottom-center" offset={80} />
                     <PortalHost />
                   </KeyboardProvider>
