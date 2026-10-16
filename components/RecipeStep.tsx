@@ -21,8 +21,10 @@ export function RecipeStep({ step, isLast }: RecipeStepProps) {
       }}
       accessibilityRole="checkbox"
       accessibilityState={{ checked: isCompleted }}
+
       accessibilityLabel={`Step ${step.step}: ${step.title}`}
       accessibilityHint={isCompleted ? "Unmarks step as complete" : "Marks step as complete"}
+
       className={`py-4 ${!isLast ? "border-b border-border/40" : ""}`}
     >
       <View className="flex-row items-start gap-4">
