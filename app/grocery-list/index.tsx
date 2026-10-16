@@ -23,6 +23,8 @@ export default function GroceryListPage() {
 
   const allItems = sections.flatMap((section) => section.items);
 
+  // ⚡ Bolt: Memoized render function with useCallback to preserve function reference.
+  // This is required for React.memo in GroceryListItem to successfully skip re-renders.
   const renderGroceryItem = useCallback(
     ({ item }: { item: GroceryItem }) => (
       <GroceryListItem

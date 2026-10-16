@@ -28,6 +28,8 @@ interface GroceryListItemProps {
   onToggleSelect?: (normalizedName: string) => void;
 }
 
+// ⚡ Bolt: Wrapped in React.memo to prevent unnecessary re-renders of unmodified
+// list items when the parent FlatList's state (like selection mode) updates.
 export default React.memo(function GroceryListItem({
   item,
   isSelectionMode = false,

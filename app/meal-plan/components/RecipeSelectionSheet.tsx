@@ -17,6 +17,9 @@ export function RecipeSelectionSheet({
   isLoading,
   recipes,
 }: RecipeSelectionSheetProps) {
+  // ⚡ Bolt: Extracted inline render function to useCallback.
+  // Prevents the FlatList from unnecessarily re-rendering all items
+  // when the parent updates.
   const renderRecipeItem = useCallback(
     ({ item }: { item: Recipe }) => (
       <View className="mb-3">
