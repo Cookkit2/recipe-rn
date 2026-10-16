@@ -116,8 +116,3 @@
 
 **Learning:** When retrieving remote elements and inserting/updating them against an existing local database cache, querying the local cache with `.query().fetch()` without a filter creates an N+1 performance constraint.
 **Action:** When finding multiple relational entities inside a loop, always extract the database query outside the loop, use `Q.where('household_id', householdSupabaseId)` (or similar properties) to perform a single batched fetch, construct in-memory Maps keyed by foreign IDs, and iterate over the local maps for O(1) retrieval.
-
-## 2026-08-05 - Avoid O(N*M) loop performance regressions by caching queried datasets via Maps after querying
-
-**Learning:** When retrieving remote elements and inserting/updating them against an existing local database cache, querying the local cache with `.query().fetch()` without a filter creates an N+1 performance constraint.
-**Action:** When finding multiple relational entities inside a loop, always extract the database query outside the loop, use `Q.where('household_id', householdSupabaseId)` (or similar properties) to perform a single batched fetch, construct in-memory Maps keyed by foreign IDs, and iterate over the local maps for O(1) retrieval.
