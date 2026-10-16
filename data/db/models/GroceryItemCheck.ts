@@ -3,6 +3,7 @@ import { field, date, writer } from "@nozbe/watermelondb/decorators";
 
 export interface GroceryItemCheckData {
   ingredientName: string;
+  weekStart?: string;
   isChecked: boolean;
   isDeleted?: boolean;
 }
@@ -11,6 +12,7 @@ export default class GroceryItemCheck extends Model {
   static table = "grocery_item_check";
 
   @field("ingredient_name") ingredientName!: string;
+  @field("week_start") weekStart!: string | null;
   @field("is_checked") isChecked!: boolean;
   @field("is_deleted") isDeleted!: boolean;
 

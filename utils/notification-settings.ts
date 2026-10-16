@@ -6,6 +6,7 @@ import { log } from "~/utils/logger";
 export interface NotificationSettings {
   enabled: boolean;
   ingredientExpiry: boolean;
+  leftoverReminders: boolean;
   achievements: boolean;
   challenges: boolean;
 }
@@ -13,11 +14,12 @@ export interface NotificationSettings {
 const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   enabled: true,
   ingredientExpiry: true,
+  leftoverReminders: true,
   achievements: true,
   challenges: true,
 };
 
-type NotificationChannel = "ingredientExpiry" | "achievements" | "challenges";
+type NotificationChannel = "ingredientExpiry" | "achievements" | "challenges" | "leftoverReminders";
 
 class NotificationSettingsService {
   getSettings(): NotificationSettings {
@@ -78,6 +80,7 @@ class NotificationSettingsService {
    * String literals are used here to avoid circular dependencies.
    */
   private mapTypeToChannel(type: string): NotificationChannel | null {
+    if (type === "leftover_reminder") return "leftoverReminders";
     if (type === "ingredient_expiry") {
       return "ingredientExpiry";
     }

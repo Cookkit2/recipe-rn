@@ -1,4 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMealPlanCalendar } from "~/store/MealPlanCalendarContext";
+import { normalizeGroceryIngredientName } from "~/utils/grocery-ingredient-name";
+import { localDateKey } from "~/utils/meal-plan-calendar";
 import { mealPlanQueryKeys } from "./mealPlanQueryKeys";
 import { mealPlanApi, type MealPlanItemWithRecipe } from "~/data/api/mealPlanApi";
 
@@ -86,10 +89,11 @@ function usePlannedRecipeCount() {
  * staleTime: 30 seconds
  */
 export function useGroceryItemAttributes() {
+  const { selectedWeek } = useMealPlanCalendar();
   return useQuery({
-    queryKey: ["grocery_attributes"],
+    queryKey: ["grocery_attributes", localDateKey(selectedWeek)],
     queryFn: async () => {
-      const map = await mealPlanApi.getGroceryItemAttributes();
+      const map = await mealPlanApi.groceryForWeek(selectedWeek).getGroceryItemAttributes();
       return Object.fromEntries(map);
     },
     staleTime: 30 * 1000,
@@ -112,6 +116,7 @@ export function useGroceryItemAttributes() {
  */
 export function useAddToMealPlan() {
   const queryClient = useQueryClient();
+  const { selectedDate } = useMealPlanCalendar();
 
   return useMutation({
     mutationFn: ({
@@ -124,7 +129,7 @@ export function useAddToMealPlan() {
       servings: number;
       date?: Date;
       mealSlot?: string;
-    }) => mealPlanApi.addToPlan(recipeId, servings, date, mealSlot),
+    }) => mealPlanApi.addToPlan(recipeId, servings, date ?? selectedDate, mealSlot),
     onMutate: async ({ recipeId }) => {
       // Cancel outgoing queries for this specific recipe
       await queryClient.cancelQueries({
@@ -273,10 +278,13 @@ function useUpdateMealPlanServings() {
  */
 export function useClearMealPlan() {
   const queryClient = useQueryClient();
+  const { selectedWeek } = useMealPlanCalendar();
 
   return useMutation({
-    mutationFn: () => mealPlanApi.clearAllPlannedRecipes(),
+    mutationFn: () => mealPlanApi.clearWeek(selectedWeek),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [...mealPlanQueryKeys.all, "dateRange"] });
+      queryClient.invalidateQueries({ queryKey: ["grocery_attributes"] });
       // When clearing all, we need to reset all isInPlan queries
       // Use refetchType: 'all' to force refetch even if stale
       queryClient.invalidateQueries({
@@ -306,168 +314,69 @@ export function useClearMealPlan() {
  * - On error, rolls back to previous state
  * - On settled, refetches to ensure consistency
  */
-export function useToggleGroceryItemCheck() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (ingredientName: string) => mealPlanApi.toggleGroceryItemCheck(ingredientName),
-    onMutate: async (ingredientName) => {
-      // Cancel outgoing queries
-      await queryClient.cancelQueries({
-        queryKey: ["grocery_attributes"],
-      });
-
-      // Snapshot previous value
-      const previousAttributes = queryClient.getQueryData<
-        Record<string, { isChecked: boolean; isDeleted: boolean }>
-      >(["grocery_attributes"]);
-
-      const normalizedName = ingredientName.toLowerCase().trim();
-
-      // Optimistically update attributes
-      if (previousAttributes) {
-        const prev = previousAttributes[normalizedName] || { isChecked: false, isDeleted: false };
-        queryClient.setQueryData<Record<string, { isChecked: boolean; isDeleted: boolean }>>(
-          ["grocery_attributes"],
-          {
-            ...previousAttributes,
-            [normalizedName]: { ...prev, isChecked: !prev.isChecked },
-          }
-        );
+type GroceryAction = "toggle" | "delete" | "restore";
+function useGroceryItemMutation(action: GroceryAction) {
+  const client = useQueryClient();
+  const { selectedWeek } = useMealPlanCalendar();
+  const mutation = useMutation({
+    mutationFn: async ({ name, week }: { name: string; week: Date }) => {
+      const api = mealPlanApi.groceryForWeek(week);
+      if (action === "toggle") return api.toggleGroceryItemCheck(name);
+      return api.setGroceryItemDeleted(name, action === "delete");
+    },
+    onMutate: async ({ name, week }) => {
+      const key = ["grocery_attributes", localDateKey(week)];
+      await client.cancelQueries({ queryKey: key });
+      const previous =
+        client.getQueryData<Record<string, { isChecked: boolean; isDeleted: boolean }>>(key);
+      const normalized = normalizeGroceryIngredientName(name);
+      if (previous) {
+        const item = previous[normalized] ?? { isChecked: false, isDeleted: false };
+        client.setQueryData(key, {
+          ...previous,
+          [normalized]:
+            action === "toggle"
+              ? { ...item, isChecked: !item.isChecked }
+              : { ...item, isDeleted: action === "delete" },
+        });
       }
-
-      return { previousAttributes };
+      return { key, previous };
     },
     onError: (_, __, context) => {
-      // Rollback on error
-      if (context?.previousAttributes) {
-        queryClient.setQueryData(["grocery_attributes"], context.previousAttributes);
-      }
+      if (context?.previous) client.setQueryData(context.key, context.previous);
     },
-    onSettled: () => {
-      // Refetch after mutation
-      queryClient.invalidateQueries({
-        queryKey: ["grocery_attributes"],
-      });
-    },
+    onSettled: (_, __, { week }) =>
+      client.invalidateQueries({ queryKey: ["grocery_attributes", localDateKey(week)] }),
   });
+  return {
+    ...mutation,
+    mutate: (name: string, options?: Parameters<typeof mutation.mutate>[1]) =>
+      mutation.mutate({ name, week: selectedWeek }, options),
+    mutateAsync: (name: string) => mutation.mutateAsync({ name, week: selectedWeek }),
+  };
 }
-
-/**
- * Mutation hook to hide a grocery item from the list
- *
- * @returns React Query mutation for hiding a grocery item
- *
- * @remarks
- * This marks an item as deleted but doesn't remove it from storage.
- * The item can be restored with useRestoreGroceryItem.
- *
- * Cache invalidation strategy:
- * - Optimistically updates the grocery_attributes query
- * - On settled, refetches to ensure consistency
- */
+export function useToggleGroceryItemCheck() {
+  return useGroceryItemMutation("toggle");
+}
 export function useDeleteGroceryItem() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (ingredientName: string) => mealPlanApi.setGroceryItemDeleted(ingredientName, true),
-    onMutate: async (ingredientName) => {
-      await queryClient.cancelQueries({
-        queryKey: ["grocery_attributes"],
-      });
-
-      const previousAttributes = queryClient.getQueryData<
-        Record<string, { isChecked: boolean; isDeleted: boolean }>
-      >(["grocery_attributes"]);
-
-      if (previousAttributes) {
-        const normalizedName = ingredientName.toLowerCase().trim();
-        const prev = previousAttributes[normalizedName] || { isChecked: false, isDeleted: false };
-        queryClient.setQueryData<Record<string, { isChecked: boolean; isDeleted: boolean }>>(
-          ["grocery_attributes"],
-          {
-            ...previousAttributes,
-            [normalizedName]: { ...prev, isDeleted: true },
-          }
-        );
-      }
-
-      return { previousAttributes };
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["grocery_attributes"],
-      });
-    },
-  });
+  return useGroceryItemMutation("delete");
 }
-
-/**
- * Mutation hook to restore a previously hidden grocery item
- *
- * @returns React Query mutation for unhiding a grocery item
- *
- * @remarks
- * Restores an item that was previously hidden using useDeleteGroceryItem.
- *
- * Cache invalidation strategy:
- * - Optimistically updates the grocery_attributes query
- * - On settled, refetches to ensure consistency
- */
 export function useRestoreGroceryItem() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (ingredientName: string) =>
-      mealPlanApi.setGroceryItemDeleted(ingredientName, false),
-    onMutate: async (ingredientName) => {
-      await queryClient.cancelQueries({
-        queryKey: ["grocery_attributes"],
-      });
-
-      const previousAttributes = queryClient.getQueryData<
-        Record<string, { isChecked: boolean; isDeleted: boolean }>
-      >(["grocery_attributes"]);
-
-      if (previousAttributes) {
-        const normalizedName = ingredientName.toLowerCase().trim();
-        const prev = previousAttributes[normalizedName] || { isChecked: false, isDeleted: false };
-        queryClient.setQueryData<Record<string, { isChecked: boolean; isDeleted: boolean }>>(
-          ["grocery_attributes"],
-          {
-            ...previousAttributes,
-            [normalizedName]: { ...prev, isDeleted: false },
-          }
-        );
-      }
-
-      return { previousAttributes };
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["grocery_attributes"],
-      });
-    },
-  });
+  return useGroceryItemMutation("restore");
 }
 
-/**
- * Mutation hook to uncheck all grocery items
- *
- * @returns React Query mutation for clearing all check states
- *
- * @remarks
- * Cache invalidation strategy:
- * - Invalidates the grocery_checks query to refresh the list
- */
+/** Uncheck items in the currently selected week. */
 export function useClearGroceryChecks() {
   const queryClient = useQueryClient();
+  const { selectedWeek } = useMealPlanCalendar();
+  const attributesKey = ["grocery_attributes", localDateKey(selectedWeek)];
+  const groceryApi = mealPlanApi.groceryForWeek(selectedWeek);
 
   return useMutation({
-    mutationFn: () => mealPlanApi.uncheckAllGroceryItems(),
+    mutationFn: () => groceryApi.uncheckAllGroceryItems(),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["grocery_attributes"],
+        queryKey: attributesKey,
       });
     },
   });

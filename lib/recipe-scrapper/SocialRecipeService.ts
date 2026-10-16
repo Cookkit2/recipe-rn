@@ -1,8 +1,7 @@
 /**
  * Social Media Recipe Service
  *
- * Handles recipe extraction from TikTok and Instagram videos/posts.
- * Uses Gemini's video understanding capabilities.
+ * Extracts recipes from shared text and accessible TikTok/Instagram captions.
  */
 
 import { GeminiAPI, DEFAULT_GEMINI_MODEL } from "~/utils/gemini-api";
@@ -11,7 +10,8 @@ import type { RecipeAnalysisResult, GeneratedRecipe } from "~/types/ScrappedReci
 import { isValidRecipe } from "./validation-utils";
 
 export interface SocialMediaContent {
-  platform: "tiktok" | "instagram";
+  platform: "tiktok" | "instagram" | "text";
+  text?: string;
   url: string;
   postId?: string;
 }
@@ -36,8 +36,18 @@ export class SocialRecipeService {
     try {
       log.info(`SocialRecipeService: Analyzing ${content.platform} content...`);
 
-      // 1. Fetch page content to get metadata
-      const metadata = await this.fetchPageMetadata(content.url);
+      // Supplied captions can be extracted without waiting on a social login wall.
+      const suppliedText = content.text?.trim();
+      const metadata =
+        suppliedText || content.platform === "text"
+          ? { title: "Shared recipe", description: suppliedText ?? "" }
+          : await this.fetchPageMetadata(content.url);
+      if (!metadata.description.trim())
+        return {
+          isCookingVideo: false,
+          confidence: 0,
+          errorMessage: "Recipe text wasn't accessible. Paste the full caption to import it.",
+        };
       log.info("SocialRecipeService: Extracted metadata title:", metadata.title);
 
       // 2. Build prompt with metadata
@@ -160,7 +170,12 @@ export class SocialRecipeService {
     content: SocialMediaContent,
     metadata: { title: string; description: string }
   ): string {
-    const platformName = content.platform === "tiktok" ? "TikTok" : "Instagram";
+    const platformName =
+      content.platform === "tiktok"
+        ? "TikTok"
+        : content.platform === "instagram"
+          ? "Instagram"
+          : "shared text";
 
     return `
 You are a recipe extraction assistant. Analyze this ${platformName} post to extract the recipe.
@@ -172,7 +187,7 @@ POST DESCRIPTION: ${metadata.description}
 
 INSTRUCTIONS:
 1. Analyze the title and description to determine if this is a cooking/recipe post (isCookingVideo: true/false).
-   - NOTE: Since you cannot view the video, rely HEAVILY on the text. If it mentions food, cooking, or ingredients, assume it IS a recipe video.
+   - You cannot view the video. Require actual ingredients AND preparation instructions in the supplied text. Food names, hashtags, and titles alone are insufficient.
 
 2. Provide a confidence score (0-1).
    - If the description clearly contains ingredients and steps -> High confidence (0.8-1.0)
@@ -186,7 +201,7 @@ INSTRUCTIONS:
      - CAREFULLY PARSE the description for ingredients and instructions.
      - Instagram citations often put the full recipe in the caption/description.
      - If the full recipe is NOT in the text, do NOT make up "Unknown Ingredient" or generic steps.
-     - You may estimate quantities if the ingredient is named (e.g. "salt" -> "1 tsp salt"), but do not invent ingredients.
+     - Preserve stated quantities. Do not invent ingredients or preparation steps. If there is not enough information, return confidence 0 and no recipe.
 
 4. Fills:
    - Prep/Cook time: Estimate if not found (e.g. 15m prep, 15m cook)

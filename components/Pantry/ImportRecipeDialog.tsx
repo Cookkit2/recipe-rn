@@ -72,7 +72,7 @@ export default function ImportRecipeDialog({ open, onOpenChange }: ImportRecipeD
         <DialogHeader>
           <DialogTitle>Import Recipe from URL</DialogTitle>
           <DialogDescription>
-            Paste a YouTube video or any recipe website URL to automatically extract the recipe
+            Paste a YouTube, Instagram, TikTok, or recipe website link to extract the recipe
           </DialogDescription>
         </DialogHeader>
 
@@ -93,6 +93,15 @@ export default function ImportRecipeDialog({ open, onOpenChange }: ImportRecipeD
               editable={!isImporting}
             />
           </View>
+          <Button
+            variant="ghost"
+            onPress={() => {
+              onOpenChange(false);
+              router.push("/import-recipe");
+            }}
+          >
+            <Text>Import from caption or text</Text>
+          </Button>
         </View>
 
         <DialogFooter>

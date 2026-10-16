@@ -1,3 +1,6 @@
+import { leftoverApi } from "~/data/api/leftoverApi";
+import { syncLeftoverReminder } from "~/lib/notifications/leftover-reminders";
+import { log } from "~/utils/logger";
 import { useCallback, useEffect, useState } from "react";
 import { useFocusEffect } from "expo-router";
 import {
@@ -90,6 +93,10 @@ export function useNotificationSettings() {
     (updates: Partial<NotificationSettings>) => {
       notificationSettingsService.updateSettings(updates);
       refreshSettings();
+      void leftoverApi
+        .listActive()
+        .then((items) => Promise.all(items.map((item) => syncLeftoverReminder(item))))
+        .catch((error) => log.warn("Couldn't apply leftover reminder settings", error));
     },
     [refreshSettings]
   );
@@ -116,9 +123,8 @@ export function useNotificationSettings() {
       }
     }
 
-    notificationSettingsService.updateSettings({ enabled: nextEnabled });
-    refreshSettings();
-  }, [refreshSettings]);
+    updateSettings({ enabled: nextEnabled });
+  }, [refreshSettings, updateSettings]);
 
   const toggleIngredientExpiry = useCallback(() => {
     const current = notificationSettingsService.getSettings();
@@ -142,6 +148,10 @@ export function useNotificationSettings() {
     updateSettings,
     toggleEnabled,
     toggleIngredientExpiry,
+    toggleLeftoverReminders: () =>
+      updateSettings({
+        leftoverReminders: !notificationSettingsService.getSettings().leftoverReminders,
+      }),
     toggleAchievements,
     toggleChallenges,
     refreshPermissions,

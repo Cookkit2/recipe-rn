@@ -15,6 +15,8 @@ import type {
 } from "~/types/MealPlan";
 import { useMealPlanCalendar } from "~/store/MealPlanCalendarContext";
 import { log } from "~/utils/logger";
+import MealPlanEntryEditor from "./MealPlanEntryEditor";
+import { useState } from "react";
 import { useSelectionHaptic } from "~/hooks/useSelectionHaptic";
 
 // Debounce time for drop actions to prevent rapid-fire drops
@@ -32,7 +34,7 @@ interface MealSlotProps {
   /**
    * The meal plan data if a recipe is assigned to this slot
    */
-  mealPlan?: CalendarMealPlan;
+  mealPlans?: CalendarMealPlan[];
   /**
    * Optional callback when the slot is pressed
    */
@@ -52,9 +54,9 @@ interface MealSlotProps {
 function useMealSlotDrop({
   date,
   mealSlot,
-  mealPlan,
+  mealPlans = [],
   onDrop,
-}: Pick<MealSlotProps, "date" | "mealSlot" | "mealPlan" | "onDrop">) {
+}: Pick<MealSlotProps, "date" | "mealSlot" | "mealPlans" | "onDrop">) {
   const { dragState, updateDragState } = useMealPlanCalendar();
 
   // Animation values
@@ -81,20 +83,14 @@ function useMealSlotDrop({
       return false;
     }
 
-    // Check if this slot already has the same meal plan
-    if (mealPlan) {
-      const currentRecipeId = "recipeId" in mealPlan ? mealPlan.recipeId : undefined;
-
-      if (currentRecipeId && "recipeId" in dragState.data) {
-        if (currentRecipeId === dragState.data.recipeId) {
-          log.warn("Invalid drop: Recipe already assigned to this slot");
-          return false;
-        }
-      }
-    }
+    if (
+      "recipeId" in dragState.data &&
+      mealPlans.some((plan) => plan.recipeId === (dragState.data as { recipeId: string }).recipeId)
+    )
+      return false;
 
     return true;
-  }, [dragState.isDragging, dragState.data, mealPlan]);
+  }, [dragState.isDragging, dragState.data, mealPlans]);
 
   const handleDrop = useCallback(() => {
     // Debounce check: prevent rapid drops
@@ -130,6 +126,7 @@ function useMealSlotDrop({
 
   // Drop zone gesture - detects when something is being dragged over this slot
   const dropZoneGesture = Gesture.LongPress()
+    .enabled(dragState.isDragging)
     .minDuration(0)
     .onStart(() => {
       "worklet";
@@ -146,7 +143,7 @@ function useMealSlotDrop({
       if (dragState.isDragging && isHovered.value && !isProcessingDropRef.current) {
         // Update drag state with target
         const target: CalendarDropTarget = { date, mealSlot };
-        updateDragState({ ...dragState, target });
+        runOnJS(updateDragState)({ ...dragState, target });
         runOnJS(handleDrop)();
       }
       isHovered.value = false;
@@ -160,8 +157,7 @@ function useMealSlotDrop({
   }));
 
   const containerAnimatedStyle = useAnimatedStyle(() => ({
-    backgroundColor:
-      isHovered.value && dragState.isDragging ? "rgba(var(--primary), 0.1)" : "transparent",
+    opacity: isHovered.value && dragState.isDragging ? 0.95 : 1,
   }));
 
   return {
@@ -194,7 +190,7 @@ function PlannedMealContent({
 
 function EmptyMealContent({ mealSlot }: { mealSlot: MealSlotType }) {
   return (
-    <View className="h-full items-center justify-center">
+    <View className="items-center justify-center">
       <P className="text-xs text-muted-foreground/40 capitalize text-center">{mealSlot}</P>
     </View>
   );
@@ -206,11 +202,18 @@ function EmptyMealContent({ mealSlot }: { mealSlot: MealSlotType }) {
  * Displays an individual meal slot in the calendar.
  * Shows planned recipe or empty state with drop zone visual for drag-and-drop.
  */
-export default function MealSlot({ date, mealSlot, mealPlan, onPress, onDrop }: MealSlotProps) {
+export default function MealSlot({
+  date,
+  mealSlot,
+  mealPlans = [],
+  onPress,
+  onDrop,
+}: MealSlotProps) {
+  const [editing, setEditing] = useState<CalendarMealPlan | null>(null);
   const { isDragging, dropZoneGesture, animatedStyle, containerAnimatedStyle } = useMealSlotDrop({
     date,
     mealSlot,
-    mealPlan,
+    mealPlans,
     onDrop,
   });
 
@@ -230,16 +233,40 @@ export default function MealSlot({ date, mealSlot, mealPlan, onPress, onDrop }: 
       <Animated.View style={[containerAnimatedStyle]}>
         <Pressable
           onPress={handlePress}
+          accessible={mealPlans.length === 0}
+          accessibilityRole={mealPlans.length === 0 ? "button" : undefined}
+          accessibilityLabel={
+            mealPlans.length === 0 ? `Add ${mealSlot} on ${date.toLocaleDateString()}` : undefined
+          }
           className="min-h-20 border-b border-border px-2 py-2 justify-center"
         >
           <Animated.View style={[animatedStyle]}>
-            {mealPlan ? (
-              <PlannedMealContent mealSlot={mealSlot} mealPlan={mealPlan} />
+            {mealPlans.length > 0 ? (
+              <View className="gap-2">
+                {mealPlans.map((plan) => (
+                  <Pressable
+                    key={plan.id}
+                    onPress={() => setEditing(plan)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Edit ${plan.recipe?.title ?? "meal"}`}
+                  >
+                    <PlannedMealContent mealSlot={mealSlot} mealPlan={plan} />
+                  </Pressable>
+                ))}
+                <Pressable
+                  onPress={handlePress}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Add another dish to ${mealSlot}`}
+                >
+                  <P className="text-xs text-muted-foreground">+ Add dish</P>
+                </Pressable>
+              </View>
             ) : (
               <EmptyMealContent mealSlot={mealSlot} />
             )}
           </Animated.View>
         </Pressable>
+        {editing && <MealPlanEntryEditor meal={editing} onClose={() => setEditing(null)} />}
       </Animated.View>
     </GestureDetector>
   );

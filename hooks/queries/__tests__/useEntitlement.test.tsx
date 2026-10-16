@@ -1,5 +1,4 @@
-import { renderHook } from "@testing-library/react-hooks";
-import { waitFor } from "@testing-library/react-native";
+import { cleanup, renderHook, waitFor } from "@testing-library/react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import Purchases from "react-native-purchases";
@@ -80,7 +79,10 @@ describe("useEntitlement", () => {
     });
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // Flush React 19's deferred unmount before clearing query GC timers.
+    await cleanup();
+    await queryClient.cancelQueries();
     queryClient.clear();
   });
 
@@ -89,7 +91,9 @@ describe("useEntitlement", () => {
       entitlements: { active: { Pro: makeEntitlement() } },
     });
 
-    const { result } = renderHook(() => useEntitlement(), { wrapper: withClient(queryClient) });
+    const { result } = await renderHook(() => useEntitlement(), {
+      wrapper: withClient(queryClient),
+    });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -101,7 +105,9 @@ describe("useEntitlement", () => {
   it("reports isPro=false when no active entitlement exists", async () => {
     mockedGetCustomerInfo.mockResolvedValue({ entitlements: { active: {} } });
 
-    const { result } = renderHook(() => useEntitlement(), { wrapper: withClient(queryClient) });
+    const { result } = await renderHook(() => useEntitlement(), {
+      wrapper: withClient(queryClient),
+    });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -109,11 +115,13 @@ describe("useEntitlement", () => {
     expect(result.current.entitlement).toBeNull();
   });
 
-  it("exposes isLoading=true on the very first render before queryFn resolves", () => {
+  it("exposes isLoading=true on the very first render before queryFn resolves", async () => {
     // Never-resolving promise keeps the query in loading state.
     mockedGetCustomerInfo.mockReturnValue(new Promise(() => {}));
 
-    const { result } = renderHook(() => useEntitlement(), { wrapper: withClient(queryClient) });
+    const { result } = await renderHook(() => useEntitlement(), {
+      wrapper: withClient(queryClient),
+    });
 
     expect(result.current.isLoading).toBe(true);
     // Safe default while loading: not a definitive "Pro", but consumers gate on isLoading.
@@ -123,7 +131,7 @@ describe("useEntitlement", () => {
   it("is keyed on subscriptionQueryKeys.entitlements()", async () => {
     mockedGetCustomerInfo.mockResolvedValue({ entitlements: { active: {} } });
 
-    renderHook(() => useEntitlement(), { wrapper: withClient(queryClient) });
+    await renderHook(() => useEntitlement(), { wrapper: withClient(queryClient) });
 
     await waitFor(() =>
       expect(queryClient.getQueryData(subscriptionQueryKeys.entitlements())).toBeDefined()
@@ -135,7 +143,9 @@ describe("useEntitlement", () => {
   it("degrades gracefully (isPro=false, no throw) when getCustomerInfo rejects", async () => {
     mockedGetCustomerInfo.mockRejectedValue(new Error("RevenueCat not configured"));
 
-    const { result } = renderHook(() => useEntitlement(), { wrapper: withClient(queryClient) });
+    const { result } = await renderHook(() => useEntitlement(), {
+      wrapper: withClient(queryClient),
+    });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -153,7 +163,9 @@ describe("useEntitlement", () => {
     // First state: not Pro.
     mockedGetCustomerInfo.mockResolvedValue({ entitlements: { active: {} } });
 
-    const { result } = renderHook(() => useEntitlement(), { wrapper: withClient(queryClient) });
+    const { result } = await renderHook(() => useEntitlement(), {
+      wrapper: withClient(queryClient),
+    });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.isPro).toBe(false);
@@ -177,12 +189,12 @@ describe("useEntitlement", () => {
 
     // Prime the cache with a first hook, then mount a second consumer under the
     // same QueryClient. The fresh mount must not trigger another getCustomerInfo.
-    const first = renderHook(() => useEntitlement(), { wrapper: withClient(queryClient) });
+    const first = await renderHook(() => useEntitlement(), { wrapper: withClient(queryClient) });
     await waitFor(() => expect(first.result.current.isLoading).toBe(false));
 
     const callsBefore = mockedGetCustomerInfo.mock.calls.length;
 
-    const second = renderHook(() => useEntitlement(), { wrapper: withClient(queryClient) });
+    const second = await renderHook(() => useEntitlement(), { wrapper: withClient(queryClient) });
     await waitFor(() => expect(second.result.current.isLoading).toBe(false));
 
     expect(second.result.current.isPro).toBe(true);
