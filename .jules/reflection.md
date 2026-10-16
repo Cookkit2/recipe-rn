@@ -1,1 +1,1 @@
-## Reflection\nFixed formatting locally, ran unit tests and typechecks.
+## Reflection\nFixed formatting locally, checked typescript errors, running ok.
