@@ -21,10 +21,7 @@ export const baseIngredientApi = {
   getBaseIngredientByName: async (name: string): Promise<BaseIngredientWithRelations | null> => {
     if (!guardSupabase()) return null;
     // Escape PostgREST wildcards to prevent wildcard injection
-    const sanitizedName = name.replace(
-      /[%_*?\\]/g,
-      "\\$// Escape PostgREST wildcards to prevent wildcard injection"
-    );
+    const sanitizedName = name.replace(/[%_*?\\]/g, "\\$&");
 
     const { data: baseIngredient, error: baseError } = await supabase!
       .from("base_ingredient")
@@ -170,10 +167,7 @@ async function fetchRelatedData(baseIngredientId: string): Promise<BaseIngredien
  */
 async function findIngredientBySynonym(name: string): Promise<BaseIngredientWithRelations | null> {
   // Escape PostgREST wildcards to prevent wildcard injection
-  const sanitizedName = name.replace(
-    /[%_*?\\]/g,
-    "\\$// Escape PostgREST wildcards to prevent wildcard injection"
-  );
+  const sanitizedName = name.replace(/[%_*?\\]/g, "\\$&");
 
   const { data: synonymData, error: synonymError } = await supabase!
     .from("ingredient_synonym")
