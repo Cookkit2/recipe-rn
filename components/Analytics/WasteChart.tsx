@@ -89,9 +89,16 @@ function WasteChart({
       return { points: [], maxValue: 0, minValue: 0 };
     }
 
-    const values = data.map((d) => d[metric]);
-    const maxValue = Math.max(...values, 1);
-    const minValue = Math.min(...values, 0);
+    // ⚡ Bolt Performance Optimization: Use single loop to find min/max without intermediate arrays
+    let maxValue = 1;
+    let minValue = 0;
+    for (let i = 0; i < data.length; i++) {
+      const item = data[i];
+      if (!item) continue;
+      const val = item[metric];
+      if (val > maxValue) maxValue = val;
+      if (val < minValue) minValue = val;
+    }
 
     const innerWidth = CHART_WIDTH - CHART_PADDING * 2;
     const innerHeight = CHART_HEIGHT - CHART_PADDING * 2;

@@ -43,7 +43,7 @@ export function StoreInfoCard({ store, onPressViewPrices, onPressNavigate }: Sto
         <Pressable
           style={styles.outlineButton}
           onPress={onPressViewPrices}
-          role="button"
+          accessibilityRole="button"
           accessibilityLabel="View prices at this store"
           testID="viewPricesButton"
         >
@@ -52,7 +52,7 @@ export function StoreInfoCard({ store, onPressViewPrices, onPressNavigate }: Sto
         <Pressable
           style={styles.primaryButton}
           onPress={onPressNavigate}
-          role="button"
+          accessibilityRole="button"
           accessibilityLabel="Navigate to this store"
           testID="navigateButton"
         >

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useCallback, useState, useRef, useMemo } from "react";
+import type { Model } from "@nozbe/watermelondb";
 import { useRouter } from "expo-router";
 import { useAnimatedReaction, useSharedValue, type SharedValue } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
@@ -183,21 +184,29 @@ export function RecipeStepsProvider({
               })
             );
 
+            const batchOperations: Model[] = [];
+
             for (const { ingredient, exactMatch } of stockMatches) {
               if (exactMatch && exactMatch.quantity > 0 && exactMatch.expiryDate) {
                 // Only track if it hasn't expired yet
                 if (now <= exactMatch.expiryDate.getTime()) {
-                  await database.recordConsumption(
-                    exactMatch.id,
-                    Math.min(ingredient.quantity, exactMatch.quantity),
-                    {
-                      recipeId: baseRecipeId,
-                      consumedDate: now,
-                      isBeforeExpiry: true,
-                    }
+                  batchOperations.push(
+                    database.prepareRecordConsumption(
+                      exactMatch.id,
+                      Math.min(ingredient.quantity, exactMatch.quantity),
+                      {
+                        recipeId: baseRecipeId,
+                        consumedDate: now,
+                        isBeforeExpiry: true,
+                      }
+                    )
                   );
                 }
               }
+            }
+
+            if (batchOperations.length > 0) {
+              await database.batch(batchOperations);
             }
           }
         } catch (error) {

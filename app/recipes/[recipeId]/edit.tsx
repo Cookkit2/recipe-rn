@@ -126,6 +126,10 @@ export default function RecipeEdit() {
       // Manually update the database using the edit hook's approach
       const { database } = await import("~/data/db/database");
 
+      // ⚡ Bolt Performance Optimization: Fetch relations outside write transaction to minimize database lock duration
+      const existingIngredients = await dbRecipe.ingredients.fetch();
+      const existingSteps = await dbRecipe.steps.fetch();
+
       await database.write(async () => {
         const batchOperations: import("@nozbe/watermelondb").Model[] = [];
 
@@ -147,8 +151,6 @@ export default function RecipeEdit() {
         // Handle ingredients
         const ingredientsCollection =
           database.collections.get<RecipeIngredientModel>("recipe_ingredient");
-
-        const existingIngredients = await dbRecipe.ingredients.fetch();
         const existingIngredientsMap = new Map(
           existingIngredients.map((ing: RecipeIngredientModel) => [ing.id, ing])
         );
@@ -193,8 +195,6 @@ export default function RecipeEdit() {
 
         // Handle steps
         const stepsCollection = database.collections.get<RecipeStepModel>("recipe_step");
-
-        const existingSteps = await dbRecipe.steps.fetch();
         const existingStepsMap = new Map(
           existingSteps.map((step: RecipeStepModel) => [step.id, step])
         );
