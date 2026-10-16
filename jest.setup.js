@@ -207,5 +207,3 @@ jest.mock("react-native/Libraries/Linking/Linking", () => ({
     sendIntent: jest.fn(() => Promise.resolve()),
   },
 }));
-
-// Ensure a dummy API key is set for tests that depend on the Gemini API key
