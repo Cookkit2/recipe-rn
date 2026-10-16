@@ -13,6 +13,11 @@ import { emitExpiringNudgeEngaged } from "~/lib/analytics/funnel-events";
 export function useNotificationHandlers() {
   const router = useRouter();
 
+  useEffect(() => {
+    registerNotificationHandler("leftover_reminder", () => router.push("/leftovers"));
+    return () => unregisterNotificationHandler("leftover_reminder");
+  }, [router]);
+
   // Single handler for ingredient_expiry: deep link to first recipe or pantry
   useEffect(() => {
     registerNotificationHandler(INGREDIENT_EXPIRY_TYPE, (response) => {

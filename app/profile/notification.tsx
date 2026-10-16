@@ -11,6 +11,7 @@ export default function NotificationScreen() {
     permissionDenied,
     toggleEnabled,
     toggleIngredientExpiry,
+    toggleLeftoverReminders,
     toggleAchievements,
     toggleChallenges,
   } = useNotificationSettings();
@@ -58,6 +59,19 @@ export default function NotificationScreen() {
             <Switch
               value={settings.ingredientExpiry}
               onValueChange={toggleIngredientExpiry}
+              disabled={masterDisabled}
+            />
+          </SettingRow>
+
+          <SettingRow
+            title="Leftover reminders"
+            description="Remember the cooked food you've saved."
+            className="mt-4"
+            disabled={masterDisabled}
+          >
+            <Switch
+              value={settings.leftoverReminders}
+              onValueChange={toggleLeftoverReminders}
               disabled={masterDisabled}
             />
           </SettingRow>

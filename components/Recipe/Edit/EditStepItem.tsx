@@ -112,8 +112,10 @@ export default function EditStepItem({
 
       {/* Description Input - Aligned with title content */}
       <View className="flex-row gap-3">
-        <View className="w-6" /> {/* Spacer to align with drag handle */}
-        <View className="min-w-8" /> {/* Spacer to align with step badge */}
+        {/* Spacer to align with drag handle */}
+        <View className="w-6" />
+        {/* Spacer to align with step badge */}
+        <View className="min-w-8" />
         <View className="flex-1 relative">
           <TextInput
             ref={descriptionInputRef}

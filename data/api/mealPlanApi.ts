@@ -31,10 +31,7 @@ function getMealPlanRepository(): MealPlanRepository {
 }
 
 function getGroceryItemCheckRepository(): GroceryItemCheckRepository {
-  if (!_groceryItemCheckRepository) {
-    _groceryItemCheckRepository = new GroceryItemCheckRepository();
-  }
-  return _groceryItemCheckRepository;
+  return new GroceryItemCheckRepository();
 }
 
 // ---------------------------------------------------------------------------
@@ -134,23 +131,8 @@ async function addToPlanCore(
 
   const mealPlanRepo = getMealPlanRepository();
 
-  // Check if already in plan
-  const existing = await mealPlanRepo.getByRecipeId(recipeId);
-
-  if (existing) {
-    log.info("Recipe already in plan, updating servings");
-    await mealPlanRepo.updateServings(recipeId, servings);
-  } else {
-    const mealPlanItem = await mealPlanRepo.addToPlan({
-      recipeId,
-      servings,
-      date,
-      mealSlot,
-    });
-    log.info("✅ Added to meal plan:", mealPlanItem.id);
-  }
-
-  return null; // caller must fetch the result via the appropriate method
+  const item = await mealPlanRepo.upsertSlotRecipe({ recipeId, servings, date, mealSlot });
+  return buildMealPlanItem(item, await fetchRecipeDataForItem(item));
 }
 
 /**
@@ -262,11 +244,11 @@ const coreMealPlanApi = {
     mealSlot?: string
   ): Promise<MealPlanItemWithRecipe | null> {
     return withErrorLogging(async () => {
-      await addToPlanCore(recipeId, servings, date, mealSlot);
-
-      const result = await coreMealPlanApi.getMealPlanItemByRecipeId(recipeId);
+      const result = await addToPlanCore(recipeId, servings, date, mealSlot);
       await restoreGroceryItemsForRecipe(result, (items) =>
-        groceryMealPlanApi.setGroceryItemsDeletedBatch(items)
+        calendarMealPlanApi
+          .groceryForWeek(result?.date ?? new Date())
+          .setGroceryItemsDeletedBatch(items)
       );
       return result;
     }, "Error adding to meal plan");
@@ -280,11 +262,11 @@ const coreMealPlanApi = {
     servings: number
   ): Promise<AppResult<MealPlanItemWithRecipe | null, AppError>> {
     return logAndWrapResult(async () => {
-      await addToPlanCore(recipeId, servings);
-
-      const result = await coreMealPlanApi.getMealPlanItemByRecipeId(recipeId);
+      const result = await addToPlanCore(recipeId, servings);
       await restoreGroceryItemsForRecipe(result, (items) =>
-        groceryMealPlanApi.setGroceryItemsDeletedBatch(items)
+        calendarMealPlanApi
+          .groceryForWeek(result?.date ?? new Date())
+          .setGroceryItemsDeletedBatch(items)
       );
       return result;
     }, "Error adding to meal plan");
@@ -413,6 +395,47 @@ const coreMealPlanApi = {
 };
 
 const calendarMealPlanApi = {
+  groceryForWeek(week: Date) {
+    const repo = new GroceryItemCheckRepository(week);
+    return {
+      getGroceryItemAttributes: () => repo.getCheckAttributesMap(),
+      toggleGroceryItemCheck: (name: string) => repo.toggleChecked(name),
+      setGroceryItemDeleted: (name: string, value: boolean) => repo.setDeleted(name, value),
+      setGroceryItemsDeletedBatch: (items: { name: string; isDeleted: boolean }[]) =>
+        repo.setDeletedBatch(items),
+      uncheckAllGroceryItems: () => repo.uncheckAll(),
+      clearGroceryChecks: () => repo.clearAll(),
+    };
+  },
+  async clearWeek(week: Date): Promise<void> {
+    const repo = getMealPlanRepository();
+    const items = await repo.getByDateRange(
+      week,
+      new Date(week.getFullYear(), week.getMonth(), week.getDate() + 6)
+    );
+    await repo.deleteRecords(items);
+    await new GroceryItemCheckRepository(week).clearAll();
+  },
+  async updateEntry(
+    id: string,
+    data: { servings: number; date: Date; mealSlot: string }
+  ): Promise<void> {
+    const repo = getMealPlanRepository();
+    await repo.updateEntry(id, data);
+    const item = await repo.findById(id);
+    if (item) {
+      const recipe = await fetchRecipeDataForItem(item);
+      await new GroceryItemCheckRepository(data.date).setDeletedBatch(
+        (recipe?.ingredients ?? []).map((ingredient) => ({
+          name: ingredient.name,
+          isDeleted: false,
+        }))
+      );
+    }
+  },
+  async removeEntry(id: string): Promise<void> {
+    await getMealPlanRepository().delete(id);
+  },
   // ========================================
   // CALENDAR METHODS
   // ========================================
@@ -437,7 +460,7 @@ const calendarMealPlanApi = {
       return result;
     } catch (error) {
       log.error("❌ Error fetching meal plans for date range:", error);
-      return [];
+      throw error;
     }
   },
 
@@ -494,7 +517,8 @@ const calendarMealPlanApi = {
         return false;
       }
 
-      const success = await mealPlanRepo.removeFromPlan(mealPlan.recipeId);
+      await mealPlanRepo.delete(mealPlan.id);
+      const success = true;
       log.info("✅ Removed meal plan from date slot:", success);
       return success;
     } catch (error) {

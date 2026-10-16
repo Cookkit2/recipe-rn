@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useMealPlanCalendar } from "~/store/MealPlanCalendarContext";
+import { localDateKey } from "~/utils/meal-plan-calendar";
 import { Alert } from "react-native";
 import { toast } from "sonner-native";
 import {
@@ -14,6 +16,12 @@ export function useGroceryListActions() {
 
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedItemNames, setSelectedItemNames] = useState<Set<string>>(new Set());
+  const { selectedWeek } = useMealPlanCalendar();
+  const weekKey = localDateKey(selectedWeek);
+  useEffect(() => {
+    setIsSelectionMode(false);
+    setSelectedItemNames(new Set());
+  }, [weekKey]);
 
   const handleClearChecked = () => {
     clearChecks.mutate(undefined, {
@@ -24,7 +32,7 @@ export function useGroceryListActions() {
   };
 
   const handleClearAll = () => {
-    Alert.alert("Clear All", "Are you sure you want to clear your entire meal plan?", [
+    Alert.alert("Clear All", "Clear the meal plan for the selected week?", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Clear",
@@ -32,7 +40,7 @@ export function useGroceryListActions() {
         onPress: () => {
           clearMealPlan.mutate(undefined, {
             onSuccess: () => {
-              toast.success("Cleared all planned recipes");
+              toast.success("Cleared this week’s planned recipes");
             },
           });
         },

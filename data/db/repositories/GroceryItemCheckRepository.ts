@@ -1,237 +1,172 @@
 import { Q } from "@nozbe/watermelondb";
-import GroceryItemCheck, { type GroceryItemCheckData } from "../models/GroceryItemCheck";
+import GroceryItemCheck from "../models/GroceryItemCheck";
 import { BaseRepository } from "./BaseRepository";
 import { database } from "../database";
+import { normalizeGroceryIngredientName } from "~/utils/grocery-ingredient-name";
+import { localDateKey, startOfWeek } from "~/utils/meal-plan-calendar";
+
+let legacyMigration: Promise<void> | undefined;
+
+async function claimLegacyChecks(): Promise<void> {
+  legacyMigration ??= database
+    .write(async () => {
+      const rows = await database
+        .get<GroceryItemCheck>("grocery_item_check")
+        .query(Q.where("week_start", null))
+        .fetch();
+      const week = localDateKey(startOfWeek(new Date()));
+      const byName = new Map<string, GroceryItemCheck>();
+      const duplicates: GroceryItemCheck[] = [];
+      for (const row of rows.sort((a, b) => a.updatedAt.getTime() - b.updatedAt.getTime())) {
+        const name = normalizeGroceryIngredientName(row.ingredientName);
+        const previous = byName.get(name);
+        if (previous) duplicates.push(previous);
+        byName.set(name, row);
+      }
+      if (rows.length)
+        await database.batch([
+          ...[...byName].map(([name, row]) =>
+            row.prepareUpdate((record) => {
+              record.weekStart = week;
+              record.ingredientName = name;
+            })
+          ),
+          ...duplicates.map((row) => row.prepareDestroyPermanently()),
+        ]);
+    })
+    .catch((error) => {
+      legacyMigration = undefined;
+      throw error;
+    });
+  await legacyMigration;
+}
 
 export class GroceryItemCheckRepository extends BaseRepository<GroceryItemCheck> {
-  constructor() {
+  readonly weekStart: string;
+  constructor(week: Date = new Date()) {
     super("grocery_item_check");
+    this.weekStart = localDateKey(startOfWeek(week));
   }
 
-  /**
-   * Find an existing record by ingredient name.
-   * Shared lookup used by getOrCreate, isChecked, setChecked, toggleChecked, setDeleted.
-   */
-  private async findByIngredientName(ingredientName: string): Promise<GroceryItemCheck | null> {
-    const normalizedName = ingredientName.toLowerCase().trim();
-    const records = await this.collection
-      .query(Q.where("ingredient_name", normalizedName), Q.take(1))
+  private async findByIngredientName(name: string): Promise<GroceryItemCheck | null> {
+    const rows = await this.collection
+      .query(
+        Q.where("week_start", this.weekStart),
+        Q.where("ingredient_name", normalizeGroceryIngredientName(name)),
+        Q.take(1)
+      )
       .fetch();
-    return records.length > 0 && records[0] ? records[0] : null;
+    return rows[0] ?? null;
   }
 
-  /**
-   * Upsert a record: find existing by ingredient name, apply update if found,
-   * or create a new record with the given initialiser if not.
-   *
-   * Eliminates the duplicated find-then-update-or-create pattern in
-   * setChecked, setDeleted, and getOrCreate.
-   */
-  private async upsertRecord(
-    ingredientName: string,
-    updateFn: (record: GroceryItemCheck) => void,
-    createFn: (record: GroceryItemCheck, normalizedName: string) => void
+  private async upsert(
+    name: string,
+    changes: { isChecked?: boolean; isDeleted?: boolean },
+    toggle = false
   ): Promise<GroceryItemCheck> {
-    const normalizedName = ingredientName.toLowerCase().trim();
-
-    const existing = await this.findByIngredientName(ingredientName);
-    if (existing) {
-      await database.write(async () => {
-        await existing.update(updateFn);
-      });
-      return existing;
-    }
-
-    return await database.write(async () => {
-      return await this.collection.create((record) => {
-        createFn(record, normalizedName);
-      });
-    });
-  }
-
-  // Get or create a check record for an ingredient
-  async getOrCreate(ingredientName: string): Promise<GroceryItemCheck> {
-    const normalizedName = ingredientName.toLowerCase().trim();
-
-    const existing = await this.findByIngredientName(ingredientName);
-    if (existing) {
-      return existing;
-    }
-
-    return await database.write(async () => {
-      return await this.collection.create((record) => {
-        record.ingredientName = normalizedName;
-        record.isChecked = false;
-      });
-    });
-  }
-
-  // Check if an ingredient is checked
-  async isChecked(ingredientName: string): Promise<boolean> {
-    const records = await this.collection
-      .query(Q.where("ingredient_name", ingredientName.toLowerCase().trim()), Q.take(1))
-      .fetch();
-
-    return records.length > 0 && records[0] ? records[0].isChecked : false;
-  }
-
-  // Set checked state for an ingredient
-  async setChecked(ingredientName: string, isChecked: boolean): Promise<GroceryItemCheck> {
-    return this.upsertRecord(
-      ingredientName,
-      (r) => {
-        r.isChecked = isChecked;
-      },
-      (record, normalizedName) => {
-        record.ingredientName = normalizedName;
-        record.isChecked = isChecked;
-      }
-    );
-  }
-
-  // Toggle checked state for an ingredient
-  async toggleChecked(ingredientName: string): Promise<boolean> {
-    const normalizedName = ingredientName.toLowerCase().trim();
-
-    // Use a single write to getOrCreate + toggle to avoid nested writes.
-    // Never call @writer methods (e.g. record.toggleChecked) from inside database.write -
-    // that causes a deadlock. Use record.update() or prepareUpdate+batch instead.
-    let newState = false;
-    await database.write(async () => {
-      const existing = await this.findByIngredientName(ingredientName);
-
-      if (existing) {
-        const record = existing;
-        newState = !record.isChecked;
-        await database.batch(
-          record.prepareUpdate((r) => {
-            r.isChecked = newState;
-          })
-        );
-      } else {
-        // Create with final state directly - no create+update in same transaction
-        newState = true;
-        await this.collection.create((r) => {
-          r.ingredientName = normalizedName;
-          r.isChecked = true;
+    await claimLegacyChecks();
+    return database.write(async () => {
+      const existing = await this.findByIngredientName(name);
+      if (existing)
+        return existing.update((record) => {
+          if (toggle) record.isChecked = !record.isChecked;
+          else if (changes.isChecked !== undefined) record.isChecked = changes.isChecked;
+          if (changes.isDeleted !== undefined) record.isDeleted = changes.isDeleted;
         });
-      }
-    });
-
-    return newState;
-  }
-
-  // Get all checked items
-  async getAllCheckedItems(): Promise<GroceryItemCheck[]> {
-    return await this.collection.query(Q.where("is_checked", true)).fetch();
-  }
-
-  // Get all check states as a map
-  async getCheckAttributesMap(): Promise<Map<string, { isChecked: boolean; isDeleted: boolean }>> {
-    const allRecords = await this.findAll();
-    const map = new Map<string, { isChecked: boolean; isDeleted: boolean }>();
-
-    for (const record of allRecords) {
-      map.set(record.ingredientName, {
-        isChecked: record.isChecked,
-        isDeleted: record.isDeleted || false,
+      return this.collection.create((record) => {
+        record.ingredientName = normalizeGroceryIngredientName(name);
+        record.weekStart = this.weekStart;
+        record.isChecked = toggle || (changes.isChecked ?? false);
+        record.isDeleted = changes.isDeleted ?? false;
       });
-    }
-
-    return map;
+    });
   }
 
-  // Set deleted state for an ingredient
-  async setDeleted(ingredientName: string, isDeleted: boolean): Promise<GroceryItemCheck> {
-    return this.upsertRecord(
-      ingredientName,
-      (r) => {
-        r.isDeleted = isDeleted;
-      },
-      (record, normalizedName) => {
-        record.ingredientName = normalizedName;
-        record.isChecked = false;
-        record.isDeleted = isDeleted;
-      }
+  async getOrCreate(name: string): Promise<GroceryItemCheck> {
+    return this.upsert(name, {});
+  }
+  async isChecked(name: string): Promise<boolean> {
+    await claimLegacyChecks();
+    return (await this.findByIngredientName(name))?.isChecked ?? false;
+  }
+  async setChecked(name: string, value: boolean): Promise<GroceryItemCheck> {
+    return this.upsert(name, { isChecked: value });
+  }
+  async toggleChecked(name: string): Promise<boolean> {
+    return (await this.upsert(name, {}, true)).isChecked;
+  }
+  async setDeleted(name: string, value: boolean): Promise<GroceryItemCheck> {
+    return this.upsert(name, { isDeleted: value });
+  }
+
+  private async scopedRows(): Promise<GroceryItemCheck[]> {
+    await claimLegacyChecks();
+    return this.collection.query(Q.where("week_start", this.weekStart)).fetch();
+  }
+  async getAllCheckedItems(): Promise<GroceryItemCheck[]> {
+    return (await this.scopedRows()).filter((row) => row.isChecked);
+  }
+  async getCheckedCount(): Promise<number> {
+    return (await this.getAllCheckedItems()).length;
+  }
+  async getCheckAttributesMap(): Promise<Map<string, { isChecked: boolean; isDeleted: boolean }>> {
+    return new Map(
+      (await this.scopedRows()).map((row) => [
+        row.ingredientName,
+        { isChecked: row.isChecked, isDeleted: row.isDeleted || false },
+      ])
     );
   }
 
-  // Set deleted state for multiple ingredients in one batch
   async setDeletedBatch(items: { name: string; isDeleted: boolean }[]): Promise<void> {
-    if (items.length === 0) return;
-
-    // 1. Gather all names
-    const names = items.map((i) => i.name.toLowerCase().trim());
-
-    // 2. Fetch existing records
-    // Note: If names array is very large, Q.oneOf might fail on some SQLite limits (999 vars).
-    // Usually recipes have < 50 ingredients so this is safe.
-    const existingRecords = await this.collection
-      .query(Q.where("ingredient_name", Q.oneOf(names)))
-      .fetch();
-
-    const existingMap = new Map<string, GroceryItemCheck>();
-    existingRecords.forEach((r) => existingMap.set(r.ingredientName, r));
-
-    // 3. Perform write
+    if (!items.length) return;
+    await claimLegacyChecks();
     await database.write(async () => {
-      const batchOps = [];
-
-      for (const item of items) {
-        const normalizedName = item.name.toLowerCase().trim();
-        const existing = existingMap.get(normalizedName);
-
-        if (existing) {
-          if (existing.isDeleted !== item.isDeleted) {
-            batchOps.push(
-              existing.prepareUpdate((record) => {
-                record.isDeleted = item.isDeleted;
-              })
-            );
-          }
-        } else {
-          batchOps.push(
-            this.collection.prepareCreate((record) => {
-              record.ingredientName = normalizedName;
-              record.isChecked = false;
-              record.isDeleted = item.isDeleted;
+      const existing = await this.collection
+        .query(
+          Q.where("week_start", this.weekStart),
+          Q.where(
+            "ingredient_name",
+            Q.oneOf(items.map((item) => normalizeGroceryIngredientName(item.name)))
+          )
+        )
+        .fetch();
+      const byName = new Map(existing.map((row) => [row.ingredientName, row]));
+      const unique = new Map(
+        items.map((item) => [normalizeGroceryIngredientName(item.name), item.isDeleted])
+      );
+      const operations = [...unique].map(([name, isDeleted]) => {
+        const row = byName.get(name);
+        return row
+          ? row.prepareUpdate((record) => {
+              record.isDeleted = isDeleted;
+              // Adding or resizing a planned dish changes the quantity to buy.
+              if (!isDeleted) record.isChecked = false;
             })
-          );
-        }
-      }
-
-      if (batchOps.length > 0) {
-        await database.batch(batchOps);
-      }
+          : this.collection.prepareCreate((record) => {
+              record.ingredientName = name;
+              record.weekStart = this.weekStart;
+              record.isChecked = false;
+              record.isDeleted = isDeleted;
+            });
+      });
+      await database.batch(operations);
     });
   }
-
-  // Clear all checked items (uncheck all)
   async uncheckAll(): Promise<void> {
-    const checkedItems = await this.getAllCheckedItems();
-
-    await database.write(async () => {
-      await database.batch(
-        checkedItems.map((item) =>
-          item.prepareUpdate((record) => {
+    const rows = await this.getAllCheckedItems();
+    await database.write(() =>
+      database.batch(
+        rows.map((row) =>
+          row.prepareUpdate((record) => {
             record.isChecked = false;
           })
         )
-      );
-    });
+      )
+    );
   }
-
-  // Clear all check records (reset)
   async clearAll(): Promise<void> {
-    const allItems = await this.findAll();
-
-    await database.write(async () => {
-      await database.batch(allItems.map((item) => item.prepareDestroyPermanently()));
-    });
-  }
-
-  // Get count of checked items
-  async getCheckedCount(): Promise<number> {
-    return await this.collection.query(Q.where("is_checked", true)).fetchCount();
+    const rows = await this.scopedRows();
+    await database.write(() => database.batch(rows.map((row) => row.prepareDestroyPermanently())));
   }
 }

@@ -1,49 +1,52 @@
 import { Stack } from "expo-router";
 
-export function ScreenGroupMisc({
+export function getMiscScreens({
   commonHeaderOptions,
 }: {
   commonHeaderOptions: React.ComponentProps<typeof Stack.Screen>["options"];
 }) {
-  return (
-    <>
-      {/* ======== ONBOARDING ======== */}
-      <Stack.Screen name="onboarding/index" options={{ headerShown: false }} />
-      <Stack.Screen
-        name="onboarding/tutorial"
-        options={{
-          presentation: "card",
-          headerShown: true,
-          headerTransparent: true,
-          headerTitle: "",
-          headerBackButtonDisplayMode: "minimal",
-        }}
-      />
-      <Stack.Screen
-        name="preferences/index"
-        options={{ presentation: "modal", headerShown: false }}
-      />
-      {/* ======== GROCERY LIST ======== */}
-      <Stack.Screen
-        name="grocery-list/index"
-        options={{ ...commonHeaderOptions, headerTitle: "Grocery List" }}
-      />
-      {/* ======== SEARCH ======== */}
-      <Stack.Screen
-        name="(misc)/search"
-        options={{
-          headerShown: false,
-          headerTransparent: true,
-          headerTitle: "",
-          presentation: "card",
-          animation: "fade",
-          animationDuration: 100,
-          headerBackVisible: false,
-        }}
-      />
-      {/* ======== MISCELLANOUS ======== */}
-      <Stack.Screen name="(misc)/debug" options={{ headerShown: false }} />
-      <Stack.Screen name="+not-found" />
-    </>
-  );
+  return [
+    <Stack.Screen
+      key="onboarding/index"
+      name="onboarding/index"
+      options={{ headerShown: false }}
+    />,
+    <Stack.Screen
+      key="onboarding/tutorial"
+      name="onboarding/tutorial"
+      options={{
+        presentation: "card",
+        headerShown: true,
+        headerTransparent: true,
+        headerTitle: "",
+        headerBackButtonDisplayMode: "minimal",
+      }}
+    />,
+    <Stack.Screen
+      key="preferences/index"
+      name="preferences/index"
+      options={{ presentation: "modal", headerShown: false }}
+    />,
+    <Stack.Screen key="meal-plan" name="meal-plan" options={{ headerShown: false }} />,
+    <Stack.Screen
+      key="grocery-list/index"
+      name="grocery-list/index"
+      options={{ ...commonHeaderOptions, headerTitle: "Grocery List" }}
+    />,
+    <Stack.Screen
+      key="(misc)/search"
+      name="(misc)/search"
+      options={{
+        headerShown: false,
+        headerTransparent: true,
+        headerTitle: "",
+        presentation: "card",
+        animation: "fade",
+        animationDuration: 100,
+        headerBackVisible: false,
+      }}
+    />,
+    <Stack.Screen key="(misc)/debug" name="(misc)/debug" options={{ headerShown: false }} />,
+    <Stack.Screen key="+not-found" name="+not-found" />,
+  ];
 }
