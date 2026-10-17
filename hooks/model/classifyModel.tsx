@@ -4,7 +4,7 @@ import { DEFAULT_MISSING_CONFIDENCE, UNIDENTIFIABLE_CONFIDENCE } from "~/constan
 import { storage } from "~/data";
 import { titleCase } from "~/utils/text-formatter";
 import { convertToUnitSystem } from "~/utils/unit-converter";
-import { generateGeminiContent } from "~/utils/gemini-api";
+import { generateAIContent } from "~/lib/ai/client";
 import { log } from "~/utils/logger";
 
 export interface ClassifiedIngredient {
@@ -20,7 +20,7 @@ export interface ClassifiedIngredient {
 }
 
 /**
- * Response schema wired through Gemini structured output. Asking the model to
+ * Response schema validated by the server after Nebius generation. Asking the model to
  * self-report a confidence isolates the recognition layer (the accuracy
  * bottleneck per [F4]) so hallucinations can be surfaced for review instead of
  * entering the pantry silently. The schema makes the primary path
@@ -29,13 +29,15 @@ export interface ClassifiedIngredient {
  * hard failure.
  */
 const INGREDIENT_RESPONSE_SCHEMA = {
-  type: "OBJECT",
+  type: "object",
   properties: {
-    name: { type: "STRING", description: "Name of the food item, or 'unknown' if unidentifiable" },
-    quantity: { type: "NUMBER", description: "Numeric quantity (e.g. 1, 250)" },
-    unit: { type: "STRING", description: "Unit of measure (e.g. kg, ml, L, unit, oz)" },
+    name: { type: "string", description: "Name of the food item, or 'unknown' if unidentifiable" },
+    quantity: { type: "number", minimum: 0, description: "Numeric quantity (e.g. 1, 250)" },
+    unit: { type: "string", description: "Unit of measure (e.g. kg, ml, L, unit, oz)" },
     confidence: {
-      type: "NUMBER",
+      type: "number",
+      minimum: 0,
+      maximum: 1,
       description:
         "Your confidence that the recognized name is correct, from 0.0 (a guess) to 1.0 (certain). Be honest: hallucinated or uncertain guesses must score below 0.6.",
     },
@@ -64,7 +66,7 @@ Rules:
 `;
 };
 
-const GEMINI_MODEL_INPUT_SIZE = 256; // Reduced from 400 for faster API calls
+const MODEL_INPUT_SIZE = 256; // Reduced from 400 for faster API calls
 
 export const classifyStaticImage = async (skImage: SkImage): Promise<ClassifiedIngredient> => {
   // Get user's preferred unit system for prompt guidance
@@ -73,33 +75,15 @@ export const classifyStaticImage = async (skImage: SkImage): Promise<ClassifiedI
   const preferredUnit = storedUnit === "imperial" ? "imperial" : "metric";
   const prompt = buildVegePrompt(preferredUnit);
 
-  const imageCompressed = compressImage(skImage, GEMINI_MODEL_INPUT_SIZE);
+  const imageCompressed = compressImage(skImage, MODEL_INPUT_SIZE);
 
-  const geminiResponse = await generateGeminiContent(
-    JSON.stringify({
-      contents: [
-        {
-          parts: [
-            {
-              inline_data: {
-                mime_type: "image/jpeg",
-                data: imageCompressed,
-              },
-            },
-            { text: prompt },
-          ],
-        },
-      ],
-      // Structured output: schema-validated primary path. Keeps the model's
-      // self-reported confidence so hallucinations can be flagged for review.
-      generationConfig: {
-        responseMimeType: "application/json",
-        responseSchema: INGREDIENT_RESPONSE_SCHEMA,
-      },
-    })
-  );
-
-  const ingredient = postProcessResponse(geminiResponse);
+  if (!imageCompressed) throw new Error("Couldn't prepare the ingredient photo. Please try again.");
+  const response = await generateAIContent({
+    prompt,
+    image: { mimeType: "image/jpeg", data: imageCompressed },
+    responseSchema: INGREDIENT_RESPONSE_SCHEMA,
+  });
+  const ingredient = postProcessResponse(response);
 
   // Observability: log the confidence distribution so the threshold can be
   // tuned from real accept/correct data.
@@ -139,7 +123,7 @@ const compressImage = (image: SkImage, imageSize: number) => {
 };
 
 /**
- * Parse the Gemini response into a ClassifiedIngredient.
+ * Parse the Nebius response into a ClassifiedIngredient.
  *
  * Primary path: schema-validated JSON `{ name, quantity, unit, confidence }`.
  * Defensive fallback: if the JSON is malformed or missing fields, parse what we

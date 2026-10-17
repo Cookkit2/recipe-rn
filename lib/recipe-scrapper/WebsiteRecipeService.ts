@@ -17,7 +17,8 @@
  */
 
 import { log } from "~/utils/logger";
-import { GeminiAPI, DEFAULT_GEMINI_MODEL } from "~/utils/gemini-api";
+import { generateAIContent } from "~/lib/ai/client";
+import { getRecipeResponseSchema } from "./shared/recipe-ai-utils";
 import { fetchWithTimeout } from "~/utils/fetch-with-timeout";
 import { isValidRecipe } from "./validation-utils";
 import type { GeneratedRecipe } from "~/types/ScrappedRecipe";
@@ -813,14 +814,14 @@ export const websiteRecipeService = {
   },
 
   /**
-   * Clean and normalize recipe data using Gemini Flash
+   * Clean and normalize recipe data using Nebius Nemotron Nano
    * This improves the quality of structured data from websites by:
    * - Normalizing ingredient names to singular, standardized forms
    * - Improving step titles and descriptions
    * - Estimating missing values
    * - Adding relevant tags
    */
-  async cleanRecipeWithGemini(recipe: {
+  async cleanRecipeWithAI(recipe: {
     title: string;
     description: string;
     prepMinutes: number;
@@ -846,9 +847,7 @@ export const websiteRecipeService = {
     calories?: number;
   }> {
     try {
-      log.info("WebsiteRecipeService: Cleaning recipe with Gemini...");
-
-      const gemini = new GeminiAPI();
+      log.info("WebsiteRecipeService: Cleaning recipe with Nebius...");
 
       const prompt = `
 You are a recipe data cleaning assistant. Clean and normalize the following recipe data.
@@ -888,81 +887,21 @@ CLEANING INSTRUCTIONS:
 Return the cleaned recipe as valid JSON with the exact same structure as the input.
       `.trim();
 
-      const requestBody = JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: prompt }],
-          },
-        ],
-        generationConfig: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: "object",
-            properties: {
-              title: { type: "string" },
-              description: { type: "string" },
-              prepMinutes: { type: "integer" },
-              cookMinutes: { type: "integer" },
-              servings: { type: "integer" },
-              difficultyStars: { type: "integer" },
-              calories: { type: "integer" },
-              tags: {
-                type: "array",
-                items: { type: "string" },
-              },
-              ingredients: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    name: { type: "string" },
-                    quantity: { type: "number" },
-                    unit: { type: "string" },
-                  },
-                  required: ["name", "quantity", "unit"],
-                },
-              },
-              steps: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    step: { type: "integer" },
-                    title: { type: "string" },
-                    description: { type: "string" },
-                  },
-                  required: ["step", "title", "description"],
-                },
-              },
-            },
-            required: [
-              "title",
-              "description",
-              "prepMinutes",
-              "cookMinutes",
-              "servings",
-              "difficultyStars",
-              "ingredients",
-              "steps",
-              "tags",
-            ],
-          },
-          temperature: 0.2,
-        },
+      const response = await generateAIContent({
+        prompt,
+        responseSchema: getRecipeResponseSchema(),
       });
-
-      const response = await gemini.generateContent(DEFAULT_GEMINI_MODEL, requestBody);
       let cleanedRecipe;
       try {
         cleanedRecipe = JSON.parse(response);
       } catch (parseError) {
-        log.warn("WebsiteRecipeService: Failed to parse Gemini response as JSON", parseError);
+        log.warn("WebsiteRecipeService: Failed to parse Nebius response as JSON", parseError);
         return recipe;
       }
 
       // Validate cleaned recipe
       if (!isValidRecipe(cleanedRecipe)) {
-        log.warn("WebsiteRecipeService: Gemini produced invalid recipe, falling back to original");
+        log.warn("WebsiteRecipeService: Nebius produced invalid recipe, falling back to original");
         return recipe;
       }
 
@@ -970,11 +909,12 @@ Return the cleaned recipe as valid JSON with the exact same structure as the inp
 
       return {
         ...cleanedRecipe,
+        calories: cleanedRecipe.calories ?? undefined,
         sourceUrl: recipe.sourceUrl, // Preserve original source URL
       };
     } catch (error) {
       log.warn(
-        "WebsiteRecipeService: Failed to clean recipe with Gemini, using original data",
+        "WebsiteRecipeService: Failed to clean recipe with Nebius, using original data",
         error
       );
       // Return original recipe if cleaning fails
@@ -986,7 +926,7 @@ Return the cleaned recipe as valid JSON with the exact same structure as the inp
    * AI fallback for pages with NO structured data of any kind.
    *
    * Feeds the readable HTML content (already stripped of nav/footer/scripts and
-   * capped at MAX_CONTENT_LENGTH by extractReadableContent) to Gemini via the
+   * capped at MAX_CONTENT_LENGTH by extractReadableContent) to Nebius via the
    * existing RecipeAnalyzer.analyzeWebsiteForRecipe path, which produces a
    * confidence-scored RecipeAnalysisResult. The recipe is validated through the
    * shared isValidRecipe gate before being returned.

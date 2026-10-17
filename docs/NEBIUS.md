@@ -1,0 +1,52 @@
+# Cookkit AI on Nebius
+
+All cloud AI now runs through Nebius Token Factory. There is no Gemini fallback.
+
+| Task | Model |
+| --- | --- |
+| Recipe captions, transcripts, website extraction/cleanup and pantry recipe tailoring | `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B` |
+| Ingredient photos | `nvidia/Nemotron-3.5-Super-VL` |
+
+The app calls the `nebius-ai` Supabase Edge Function with a user session. The function verifies the session with Supabase Auth, applies a persistent daily request quota, and chooses the model based on whether an image is present. The app cannot override the model or provider endpoint.
+
+The Nebius key is server-only `NEBIUS_API_KEY`. Never use `EXPO_PUBLIC_NEBIUS_API_KEY`: Expo public variables can be included in shipped app bundles. The existing Supabase URL and public anon key remain app configuration.
+
+## Local simulator testing
+
+1. Put `NEBIUS_API_KEY` in ignored `.env.local`.
+2. Add `EXPO_PUBLIC_AI_PROXY_URL=http://127.0.0.1:8787/ai` to `.env.local` for the iOS simulator.
+3. Run `bun run ai:dev` in one terminal and `bun run dev` in another. Restart Metro after changing environment variables.
+4. Run `bun run ai:smoke` for one small live caption extraction. This makes a paid Nebius request. Normal Jest tests mock all inference calls.
+
+The development proxy binds only to loopback and bypasses Supabase authentication for local testing. It is not a production server. Android emulators can use `http://10.0.2.2:8787/ai`. A physical phone needs the deployed Supabase function.
+
+## Supabase deployment
+
+1. Sign in with `bunx supabase login` and identify the existing Cookkit project.
+2. Apply `supabase/migrations/202610170001_ai_request_quota.sql` to that project. Review pending migrations before using `db push`; do not apply unrelated historical migrations blindly. The quota table has RLS enabled and is accessible only through the service-role function.
+3. In the Supabase dashboard, add `NEBIUS_API_KEY` under Edge Function secrets. Do not paste it into a command, PR, source file or chat. `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` are supplied by the Edge Functions runtime.
+4. Enable **Authentication → Sign In / Providers → Anonymous Sign-Ins** to preserve guest AI access. Signed-in users reuse their existing session. The app creates a persisted guest session only when its first AI request needs one; offline pantry use does not depend on authentication.
+5. Run `bunx supabase functions deploy nebius-ai --project-ref <cookkit-project-ref>`. The function's `deno.json` maps AJV to its pinned npm version.
+6. Remove the local `EXPO_PUBLIC_AI_PROXY_URL` override and restart/rebuild the app. It defaults to `${EXPO_PUBLIC_SUPABASE_URL}/functions/v1/nebius-ai`.
+
+Gateway JWT verification stays enabled in `supabase/config.toml`, and the handler also verifies the user through Auth. Requests without a valid user session are rejected before any provider call. A public project key alone does not grant AI access.
+
+The default quota is 200 requests per user per UTC database day, including attempted requests; set the server secret `AI_REQUESTS_PER_DAY` to a value from 1 to 1000 to change it. Model output budgets, prompt/image size limits, bounded provider retries and one JSON repair attempt also bound individual requests. Anonymous-account creation still needs the project's normal signup abuse controls.
+
+## Response and import behavior
+
+These Nemotron endpoints do not advertise schema-constrained generation. Cookkit places the JSON schema in the prompt, validates output with AJV, and permits one repair attempt for malformed, truncated or schema-invalid answers. Reasoning is disabled for extraction. Usage estimates include tokens from repair attempts and are diagnostics, not invoices.
+
+YouTube extraction uses available captions/transcripts or recipe text in the description. A URL and title alone are not video input to Nebius. When recipe text is unavailable, the app asks the user to paste a caption or transcript instead of pretending to watch the video.
+
+For the hackathon, demonstrate actual Nemotron inference through Token Factory and document the changes made to the existing app during the submission period. Whole-app hosting on Nebius is not required for the Best Apps and Agents track.
+
+## Checks
+
+```sh
+bun run typecheck
+bun run lint
+bun run test -- --runInBand --watchman=false
+```
+
+Reference: [Nebius inference](https://docs.tokenfactory.nebius.com/ai-models-inference/overview), [NVIDIA Nemotron models](https://nebius.com/services/token-factory/models/nvidia-nemotron-models-inference), and [hackathon rules](https://nebiusglobalaihackathon.devpost.com/rules).

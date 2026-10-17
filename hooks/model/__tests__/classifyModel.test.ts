@@ -3,9 +3,12 @@
 // unit-test the pure postProcessResponse confidence/fallback logic.
 jest.mock("@shopify/react-native-skia", () => ({
   ImageFormat: { JPEG: "jpeg" },
-  Skia: {},
+  Skia: {
+    Surface: { MakeOffscreen: jest.fn() },
+    Paint: () => ({ setAntiAlias: jest.fn() }),
+  },
 }));
-jest.mock("~/utils/gemini-api", () => ({ generateGeminiContent: jest.fn() }));
+jest.mock("~/lib/ai/client", () => ({ generateAIContent: jest.fn() }));
 jest.mock("~/utils/logger", () => ({ log: { info: jest.fn(), error: jest.fn() } }));
 
 // Mock storage so postProcessResponse's unit-system lookup does not blow up.
@@ -22,8 +25,32 @@ jest.mock("~/utils/unit-converter", () => ({
   convertToUnitSystem: (quantity: number, unit: string) => ({ quantity, unit }),
 }));
 
-import { postProcessResponse } from "../classifyModel";
+import { classifyStaticImage, postProcessResponse } from "../classifyModel";
+import { Skia, type SkImage } from "@shopify/react-native-skia";
+import { generateAIContent } from "~/lib/ai/client";
 import { storage } from "~/data";
+
+describe("photo recognition request", () => {
+  it("sends compressed image data through the vision request contract", async () => {
+    jest.mocked(Skia.Surface.MakeOffscreen).mockReturnValue({
+      getCanvas: () => ({ drawImageRect: jest.fn() }),
+      makeImageSnapshot: () => ({ encodeToBase64: () => "YWJj" }),
+    } as unknown as ReturnType<typeof Skia.Surface.MakeOffscreen>);
+    jest
+      .mocked(generateAIContent)
+      .mockResolvedValue('{"name":"rice","quantity":1,"unit":"kg","confidence":0.9}');
+    const image = { width: () => 100, height: () => 100 } as unknown as SkImage;
+    expect((await classifyStaticImage(image)).name).toBe("Rice");
+    expect(generateAIContent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        image: { mimeType: "image/jpeg", data: "YWJj" },
+        responseSchema: expect.objectContaining({
+          required: ["name", "quantity", "unit", "confidence"],
+        }),
+      })
+    );
+  });
+});
 
 describe("classifyModel.postProcessResponse (confidence handling)", () => {
   beforeEach(() => {

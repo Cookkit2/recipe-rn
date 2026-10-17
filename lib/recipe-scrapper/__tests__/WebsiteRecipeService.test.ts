@@ -9,15 +9,14 @@ jest.mock("~/utils/logger", () => ({
   },
 }));
 
-// fetchWithTimeout / GeminiAPI are imported at module load but only used by the
+// fetchWithTimeout / NebiusAPI are imported at module load but only used by the
 // service methods (not the pure extractors). Stub them so importing the module
 // pulls in no native/Expo code.
 jest.mock("~/utils/fetch-with-timeout", () => ({
   fetchWithTimeout: jest.fn(),
 }));
-jest.mock("~/utils/gemini-api", () => ({
-  GeminiAPI: jest.fn(),
-  DEFAULT_GEMINI_MODEL: "test-model",
+jest.mock("~/lib/ai/client", () => ({
+  generateAIContent: jest.fn(),
 }));
 
 import { extractMicrodata, extractRdfa, websiteRecipeService } from "../WebsiteRecipeService";
