@@ -176,34 +176,25 @@ export class ChallengeRepository extends BaseRepository<Challenge> {
   // Get total XP available for all active challenges
   async getTotalXPAvailable(): Promise<number> {
     const activeChallenges = await this.getActiveChallenges();
-    // ⚡ Bolt Performance Optimization: Replaced .reduce() with a standard for loop to avoid intermediate closure allocations
-    let total = 0;
-    for (let i = 0; i < activeChallenges.length; i++) {
-      total += activeChallenges[i]?.xpValue ?? 0;
-    }
-    return total;
+    return activeChallenges.reduce((total, challenge) => {
+      return total + challenge.xpValue;
+    }, 0);
   }
 
   // Get XP available for daily challenges
   async getDailyXPAvailable(): Promise<number> {
     const dailyChallenges = await this.getActiveDailyChallenges();
-    // ⚡ Bolt Performance Optimization: Replaced .reduce() with a standard for loop to avoid intermediate closure allocations
-    let total = 0;
-    for (let i = 0; i < dailyChallenges.length; i++) {
-      total += dailyChallenges[i]?.xpValue ?? 0;
-    }
-    return total;
+    return dailyChallenges.reduce((total, challenge) => {
+      return total + challenge.xpValue;
+    }, 0);
   }
 
   // Get XP available for weekly challenges
   async getWeeklyXPAvailable(): Promise<number> {
     const weeklyChallenges = await this.getActiveWeeklyChallenges();
-    // ⚡ Bolt Performance Optimization: Replaced .reduce() with a standard for loop to avoid intermediate closure allocations
-    let total = 0;
-    for (let i = 0; i < weeklyChallenges.length; i++) {
-      total += weeklyChallenges[i]?.xpValue ?? 0;
-    }
-    return total;
+    return weeklyChallenges.reduce((total, challenge) => {
+      return total + challenge.xpValue;
+    }, 0);
   }
 
   // Get challenges expiring soon (within 24 hours)
