@@ -126,5 +126,13 @@
 			</array>
 		</dict>
 	</dict>
+	<key>ExpoWidgetsAppGroupIdentifier</key>
+	<string>group.app.cookkit.cookkit</string>
+	<key>ExpoWidgets_EnablePushNotifications</key>
+	<false/>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<key>NSSupportsLiveActivitiesFrequentUpdates</key>
+	<false/>
 </dict>
 </plist>

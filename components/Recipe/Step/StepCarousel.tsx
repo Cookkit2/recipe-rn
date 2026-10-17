@@ -1,9 +1,8 @@
 import React, { useCallback } from "react";
 import { Carousel } from "react-native-reanimated-carousel";
 import StepCard from "~/components/Recipe/Step/StepCard";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, useWindowDimensions } from "react-native";
 import { useRecipeSteps } from "~/store/RecipeStepsContext";
-import { window } from "~/constants/sizes";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Extrapolation, interpolate } from "react-native-reanimated";
 
@@ -14,33 +13,37 @@ interface StepCarouselProps {
 
 export default function StepCarousel({ recipeId, onOpenAddTimerDialog }: StepCarouselProps) {
   const { top, bottom } = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
   const { setCurrentStep, stepPages, carouselRef, progress, currentStep } = useRecipeSteps();
 
-  const PAGE_WIDTH = window.width;
-  const PAGE_HEIGHT = window.height - top - bottom;
+  const PAGE_WIDTH = width;
+  const PAGE_HEIGHT = height - top - bottom;
 
-  const animationStyle = useCallback((value: number, index: number) => {
-    "worklet";
-    const translateY = interpolate(value, [0, 1], [0, -18]);
+  const animationStyle = useCallback(
+    (value: number, index: number) => {
+      "worklet";
+      const translateY = interpolate(value, [0, 1], [0, -18]);
 
-    const translateX = interpolate(
-      value,
-      [-1, 0, 1],
-      [-PAGE_WIDTH * 1.5, 0, 6],
-      Extrapolation.CLAMP
-    );
+      const translateX = interpolate(
+        value,
+        [-1, 0, 1],
+        [-PAGE_WIDTH * 1.5, 0, 6],
+        Extrapolation.CLAMP
+      );
 
-    const rotateZ = interpolate(value, [-1, 0, 1], [-2, 0, 2], Extrapolation.CLAMP);
+      const rotateZ = interpolate(value, [-1, 0, 1], [-2, 0, 2], Extrapolation.CLAMP);
 
-    const zIndex = -10 * index;
+      const zIndex = -10 * index;
 
-    const scale = interpolate(value, [0, 1], [1, 0.95]);
+      const scale = interpolate(value, [0, 1], [1, 0.95]);
 
-    return {
-      transform: [{ translateY }, { translateX }, { rotateZ: `${rotateZ}deg` }, { scale }],
-      zIndex,
-    };
-  }, []);
+      return {
+        transform: [{ translateY }, { translateX }, { rotateZ: `${rotateZ}deg` }, { scale }],
+        zIndex,
+      };
+    },
+    [PAGE_WIDTH]
+  );
 
   return (
     <View className="flex-1">

@@ -15,7 +15,11 @@ export function useNotificationHandlers() {
 
   useEffect(() => {
     registerNotificationHandler("leftover_reminder", () => router.push("/leftovers"));
-    return () => unregisterNotificationHandler("leftover_reminder");
+    registerNotificationHandler("cooking_timer", () => router.push("/timers"));
+    return () => {
+      unregisterNotificationHandler("leftover_reminder");
+      unregisterNotificationHandler("cooking_timer");
+    };
   }, [router]);
 
   // Single handler for ingredient_expiry: deep link to first recipe or pantry

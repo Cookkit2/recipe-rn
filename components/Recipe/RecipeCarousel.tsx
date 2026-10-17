@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef } from "react";
-import { Dimensions, Pressable, StyleSheet } from "react-native";
+import { useWindowDimensions, Pressable, StyleSheet } from "react-native";
 import { Image } from "expo-image";
 import type { Recipe } from "~/types/Recipe";
 import RecyclingList from "~/components/Shared/RecyclingList";
@@ -11,10 +11,7 @@ interface RecipeCarouselProps {
   onPressItem?: (recipe: Recipe, index: number) => void;
 }
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const ITEM_SPACING = 16;
-const ITEM_WIDTH = Math.round(SCREEN_WIDTH * 0.78);
-const IMAGE_HEIGHT = Math.round(SCREEN_WIDTH * 0.9);
 const PRELOAD_RADIUS = 2;
 
 export default function RecipeCarousel({
@@ -22,6 +19,9 @@ export default function RecipeCarousel({
   onIndexChange,
   onPressItem,
 }: RecipeCarouselProps) {
+  const { width } = useWindowDimensions();
+  const itemWidth = Math.round(width * 0.78);
+  const imageHeight = Math.round(width * 0.9);
   const { prefetch } = useImagePreloader({ priority: "low", delay: 50 });
   const dataRef = useRef({ recipes, prefetch, onIndexChange });
   dataRef.current = { recipes, prefetch, onIndexChange };
@@ -41,17 +41,17 @@ export default function RecipeCarousel({
         accessibilityRole="button"
         accessibilityLabel={item.title}
         onPress={() => onPressItem?.(item, index)}
-        style={{ width: ITEM_WIDTH }}
+        style={{ width: itemWidth }}
       >
         <Image
           source={{ uri: item.imageUrl }}
-          style={styles.image}
+          style={[styles.image, { height: imageHeight }]}
           contentFit="cover"
-          transition={200}
+          transition={{ duration: 200, skipOnCacheHit: "all" }}
         />
       </Pressable>
     ),
-    [onPressItem]
+    [onPressItem, itemWidth, imageHeight]
   );
 
   useEffect(() => {
@@ -67,10 +67,10 @@ export default function RecipeCarousel({
       keyExtractor={(item) => item.id}
       data={recipes}
       horizontal
-      itemSize={ITEM_WIDTH}
+      itemSize={itemWidth}
       itemSpacing={ITEM_SPACING}
       snapToItems
-      style={{ height: IMAGE_HEIGHT }}
+      style={{ height: imageHeight }}
       contentPadding={{ left: ITEM_SPACING, right: ITEM_SPACING }}
       onActiveItemChange={onActiveItemChange}
       renderItem={renderRecipe}
@@ -81,7 +81,6 @@ export default function RecipeCarousel({
 const styles = StyleSheet.create({
   image: {
     width: "100%",
-    height: IMAGE_HEIGHT,
     borderRadius: 24,
     borderCurve: "continuous",
   },

@@ -11,10 +11,7 @@ import { Line, Text } from "react-native-svg";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { P } from "~/components/ui/typography";
 import { cn } from "~/lib/utils";
-import { Dimensions } from "react-native";
 
-export const { width: SCREEN_WIDTH } = Dimensions.get("window");
-export const CHART_WIDTH = SCREEN_WIDTH - 48;
 export const CHART_HEIGHT = 200;
 export const CHART_PADDING = 40;
 
@@ -50,6 +47,7 @@ export function buildGridLines(
  */
 export function renderGridLines(
   gridLines: GridLineEntry[],
+  chartWidth: number,
   formatValue: (v: number) => string = (v) => String(v)
 ): React.ReactNode {
   return gridLines.map((line, index) => (
@@ -57,7 +55,7 @@ export function renderGridLines(
       <Line
         x1={CHART_PADDING}
         y1={line.y}
-        x2={CHART_WIDTH - CHART_PADDING}
+        x2={chartWidth - CHART_PADDING}
         y2={line.y}
         stroke="#e5e7eb"
         strokeWidth={1}

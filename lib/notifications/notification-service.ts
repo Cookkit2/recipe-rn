@@ -8,6 +8,20 @@ import type {
 } from "./notification-types";
 import { notificationSettingsService } from "~/utils/notification-settings";
 
+const NOTIFICATION_THREADS: Record<string, string> = {
+  cooking_timer: "cookkit.cooking",
+  ingredient_expiry: "cookkit.expiry",
+  leftover_reminder: "cookkit.leftovers",
+  achievement_unlocked: "cookkit.achievements",
+  challenge_completed: "cookkit.achievements",
+  daily_challenge_available: "cookkit.achievements",
+  weekly_challenge_available: "cookkit.achievements",
+  level_up: "cookkit.achievements",
+  streak_milestone: "cookkit.achievements",
+  streak_reminder: "cookkit.achievements",
+  challenge_expiry_reminder: "cookkit.achievements",
+};
+
 // ============================================
 // Notification Channel (Android)
 // ============================================
@@ -89,6 +103,8 @@ export async function scheduleNotification(options: ScheduleNotificationOptions)
       data: data ?? {},
       sound: sound ? "default" : undefined,
       badge,
+      threadIdentifier:
+        options.threadIdentifier ?? (data ? NOTIFICATION_THREADS[data.type] : undefined),
     },
     trigger: triggerInput,
   });

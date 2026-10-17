@@ -1,4 +1,4 @@
-import { Pressable, View, Dimensions } from "react-native";
+import { Pressable, View, useWindowDimensions } from "react-native";
 import { TEST_IDS } from "~/constants/test-ids";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import RecipeButton from "~/components/Pantry/RecipeButton";
@@ -14,14 +14,13 @@ import { CURVES } from "~/constants/curves";
 import useDeviceCornerRadius from "~/hooks/useDeviceCornerRadius";
 import RecipeCategoryButtonGroup from "~/components/Pantry/RecipeCategoryButtonGroup";
 import RecipeLists from "~/components/Pantry/RecipeLists";
-import { EXPANDED_HEIGHT, SNAP_THRESHOLD } from "~/constants/pantry";
+import { SNAP_THRESHOLD } from "~/constants/pantry";
 import { usePantryStore } from "~/store/PantryContext";
 import IngredientLists from "~/components/Pantry/IngredientLists";
 import { useCallback, useEffect } from "react";
 import { setStatusBarStyle } from "expo-status-bar";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 const SPRING_CONFIG = {
   damping: 30,
@@ -31,10 +30,18 @@ const SPRING_CONFIG = {
 
 export default function PantryWrapper() {
   const borderRadius = useDeviceCornerRadius();
+  const { height: screenHeight } = useWindowDimensions();
   const { top } = useSafeAreaInsets();
 
-  const { isRecipeOpen, updateRecipeOpen, translateY, context, isGestureActive, collapsedHeight } =
-    usePantryStore();
+  const {
+    isRecipeOpen,
+    updateRecipeOpen,
+    translateY,
+    context,
+    isGestureActive,
+    collapsedHeight,
+    expandedHeight,
+  } = usePantryStore();
 
   const entranceOffset = useDerivedValue(
     () => withSpring(isRecipeOpen ? 1 : 0, SPRING_CONFIG),
@@ -55,7 +62,7 @@ export default function PantryWrapper() {
     .onUpdate((event) => {
       // Only allow dragging up (negative values)
       const newTranslateY = context.value.y + event.translationY;
-      translateY.value = Math.min(0, Math.max(-EXPANDED_HEIGHT + collapsedHeight, newTranslateY));
+      translateY.value = Math.min(0, Math.max(-expandedHeight + collapsedHeight, newTranslateY));
     })
     .onEnd((event) => {
       isGestureActive.value = false;
@@ -67,14 +74,14 @@ export default function PantryWrapper() {
 
       if (velocity < -500) {
         // Fast upward swipe - expand
-        snapTarget = -EXPANDED_HEIGHT + collapsedHeight;
+        snapTarget = -expandedHeight + collapsedHeight;
       } else if (velocity > 500) {
         // Fast downward swipe - collapse
         snapTarget = 0;
       } else {
         // Slow drag - snap to nearest
         if (Math.abs(currentPosition) > SNAP_THRESHOLD) {
-          snapTarget = -EXPANDED_HEIGHT + collapsedHeight;
+          snapTarget = -expandedHeight + collapsedHeight;
         } else {
           snapTarget = 0;
         }
@@ -123,11 +130,11 @@ export default function PantryWrapper() {
     const visibleHeight = collapsedHeight - 8 - translateY.value;
     return {
       opacity: entranceOffset.value,
-      top: SCREEN_HEIGHT - entranceOffset.value * visibleHeight,
+      top: Math.max(0, screenHeight - entranceOffset.value * visibleHeight),
       // Bound the list to the visible drawer instead of extending it offscreen.
       bottom: 0,
     };
-  }, [collapsedHeight]);
+  }, [collapsedHeight, screenHeight]);
 
   return (
     <View testID={TEST_IDS.home.screen} collapsable={false} style={{ flex: 1 }}>

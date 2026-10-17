@@ -6,7 +6,7 @@
  */
 
 import React, { useState } from "react";
-import { View, TextInput } from "react-native";
+import { View, TextInput, Platform } from "react-native";
 import { ClockIcon } from "lucide-uniwind";
 import { toast } from "sonner-native";
 import { Button } from "~/components/ui/button";
@@ -23,13 +23,19 @@ import {
   DialogTitle,
 } from "~/components/ui/dialog";
 import { useTimer } from "~/store/TimerContext";
-import { cn } from "~/lib/utils";
+import { notificationSettingsService } from "~/utils/notification-settings";
+import { log } from "~/utils/logger";
+import {
+  getNotificationPermissions,
+  requestNotificationPermissions,
+} from "~/lib/notifications/notification-service";
 
 interface AddTimerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   recipeId?: string;
   stepNumber?: number;
+  portalHost?: string;
 }
 
 export default function AddTimerDialog({
@@ -37,8 +43,9 @@ export default function AddTimerDialog({
   onOpenChange,
   recipeId,
   stepNumber,
+  portalHost,
 }: AddTimerDialogProps) {
-  const { createTimer } = useTimer();
+  const { createTimer, startTimer } = useTimer();
   const [timerName, setTimerName] = useState("");
   const [hours, setHours] = useState("");
   const [minutes, setMinutes] = useState("");
@@ -74,14 +81,23 @@ export default function AddTimerDialog({
 
     setIsCreating(true);
     try {
-      await createTimer({
+      if (Platform.OS !== "web" && notificationSettingsService.getSettings().enabled) {
+        try {
+          const permission = await getNotificationPermissions();
+          if (permission.status === "undetermined") await requestNotificationPermissions();
+        } catch (error) {
+          log.warn("Could not request timer notifications:", error);
+        }
+      }
+      const timer = await createTimer({
         name: timerName.trim(),
         durationSeconds: totalSeconds,
         recipeId,
         stepNumber,
       });
+      await startTimer(timer.id);
 
-      toast.success("Timer created!");
+      toast.success("Timer started");
       onOpenChange(false);
       resetForm();
     } catch (error) {
@@ -117,7 +133,7 @@ export default function AddTimerDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent portalHost={portalHost} className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add Cooking Timer</DialogTitle>
           <DialogDescription>
@@ -135,6 +151,7 @@ export default function AddTimerDialog({
                 className="flex-1 text-foreground"
                 placeholder="e.g., Pasta, Sauce, Oven..."
                 value={timerName}
+                maxLength={80}
                 onChangeText={setTimerName}
                 autoCapitalize="words"
                 autoCorrect={false}
@@ -241,7 +258,7 @@ export default function AddTimerDialog({
             disabled={!isValidName || !hasValidDuration}
             isLoading={isCreating}
           >
-            <Text>Add Timer</Text>
+            <Text>Start Timer</Text>
           </Button>
         </DialogFooter>
       </DialogContent>

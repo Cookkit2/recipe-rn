@@ -43,6 +43,7 @@ import { useDeepLinkShare } from "~/hooks/useDeepLinkShare";
 import LeftoverReminderCoordinator from "~/lib/notifications/LeftoverReminderCoordinator";
 import SocialRecipeShareHandler from "~/components/Recipe/SocialRecipeShareHandler";
 import { MealPlanCalendarProvider } from "~/store/MealPlanCalendarContext";
+import { TimerProvider } from "~/store/TimerContext";
 
 /**
  * Approximate cold-start launch timestamp (issue #733). Captured at this
@@ -129,8 +130,10 @@ export default Sentry.wrap(function RootLayout() {
                   <StatusBar style="auto" />
                   <LeftoverReminderCoordinator />
                   <MealPlanCalendarProvider>
-                    <SocialRecipeShareHandler />
-                    <AnimatedStack />
+                    <TimerProvider>
+                      <SocialRecipeShareHandler />
+                      <AnimatedStack />
+                    </TimerProvider>
                   </MealPlanCalendarProvider>
                   <Toaster visibleToasts={2} position="bottom-center" offset={80} />
                   <PortalHost />

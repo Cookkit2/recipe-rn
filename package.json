@@ -80,6 +80,7 @@
     "expo-updates": "~58.0.17",
     "expo-video": "~58.0.11",
     "expo-web-browser": "~58.0.6",
+    "expo-widgets": "~58.0.20",
     "lucide-react-native": "^1.59.0",
     "lucide-uniwind": "^1.59.0",
     "neverthrow": "^8.2.0",

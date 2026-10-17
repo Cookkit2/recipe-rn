@@ -1,13 +1,11 @@
 import React from "react";
-import { View, ScrollView, Dimensions, ActivityIndicator } from "react-native";
+import { View, ScrollView, useWindowDimensions, ActivityIndicator } from "react-native";
 import { P } from "~/components/ui/typography";
 import { useMealPlanCalendar } from "~/store/MealPlanCalendarContext";
 import { useCalendarMealPlans } from "~/hooks/queries/useCalendarMealPlans";
 import type { DayMealPlan, MealSlot } from "~/types/MealPlan";
 import { groupMealsByDay } from "~/utils/meal-plan-calendar";
 import DayColumn from "./DayColumn";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 interface WeeklyCalendarProps {
   /**
@@ -27,6 +25,7 @@ interface WeeklyCalendarProps {
  * Each day column shows meal slots (breakfast, lunch, dinner, snack).
  */
 export default function WeeklyCalendar({ onMealSlotPress, onMealSlotDrop }: WeeklyCalendarProps) {
+  const { width } = useWindowDimensions();
   const { selectedWeek } = useMealPlanCalendar();
 
   // Calculate week start and end dates
@@ -54,7 +53,7 @@ export default function WeeklyCalendar({ onMealSlotPress, onMealSlotDrop }: Week
         key={index}
         dayMealPlan={dayMealPlan}
         isFirstDay={isFirstDay}
-        width={SCREEN_WIDTH / 3}
+        width={width / 3}
         onMealSlotPress={onMealSlotPress}
         onMealSlotDrop={onMealSlotDrop}
       />

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from "react";
-import { View, Dimensions } from "react-native";
+import { View, useWindowDimensions } from "react-native";
 import Animated, {
   Easing,
   type SharedValue,
@@ -12,8 +12,6 @@ import { dummyPantryItems } from "~/data/dummy/dummy-data";
 import OutlinedImage from "~/components/ui/outlined-image";
 import RotationCard from "~/components/Shared/RotationCard";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-
 const innerImages = dummyPantryItems.slice(0, 4).map(({ image_url }, i) => ({
   id: `inner-${i.toString()}`,
   url: image_url,
@@ -23,20 +21,6 @@ const outerImages = dummyPantryItems.slice(5, 10).map(({ image_url }, i) => ({
   id: `outer-${i.toString()}`,
   url: image_url,
 }));
-
-const size = SCREEN_WIDTH * 0.9;
-
-const center = size / 2;
-
-const centerRingRadius = size * 0.15;
-const ring1Radius = size * 0.3;
-const ring2Radius = size * 0.45;
-
-const outerRadius = size * 0.48;
-const avatarSizeOuter = size * 0.16;
-
-const innerRadius = size * 0.27;
-const avatarSizeInner = size * 0.12;
 
 export function usePlacements(
   images: Array<{ id: string; url: any }>,
@@ -116,6 +100,21 @@ export function OrbitingAvatars({
 }
 
 export default function DisplayCards() {
+  const { width } = useWindowDimensions();
+  const size = width * 0.9;
+
+  const center = size / 2;
+
+  const centerRingRadius = size * 0.15;
+  const ring1Radius = size * 0.3;
+  const ring2Radius = size * 0.45;
+
+  const outerRadius = size * 0.48;
+  const avatarSizeOuter = size * 0.16;
+
+  const innerRadius = size * 0.27;
+  const avatarSizeInner = size * 0.12;
+
   const rotate = useSharedValue(0);
   const pulse = useSharedValue(1);
   const rotationDegrees = useSharedValue(0);

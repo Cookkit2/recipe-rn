@@ -1,7 +1,8 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from "react";
-import type { FlatList } from "react-native";
+import { useWindowDimensions, type FlatList } from "react-native";
 import {
   useAnimatedRef,
+  useAnimatedReaction,
   useScrollOffset,
   useSharedValue,
   withTiming,
@@ -10,7 +11,7 @@ import {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CURVES } from "~/constants/curves";
-import { EXPANDED_HEIGHT } from "~/constants/pantry";
+import { EXPANDED_HEIGHT_RATIO } from "~/constants/pantry";
 import type { ItemType } from "~/types/PantryItem";
 
 interface PantryContextType {
@@ -27,6 +28,7 @@ interface PantryContextType {
   context: SharedValue<{ y: number }>;
   isGestureActive: SharedValue<boolean>;
   collapsedHeight: number;
+  expandedHeight: number;
 
   // Use to manually snap the bottom recipe page to expanded state
   snapToExpanded: () => void;
@@ -39,6 +41,8 @@ const PantryContext = createContext<PantryContextType | null>(null);
 
 export function PantryProvider({ children }: { children: React.ReactNode }) {
   const { bottom } = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
+  const expandedHeight = height * EXPANDED_HEIGHT_RATIO;
 
   // UI State
   const [selectedItemType, setSelectedItemType] = useState<ItemType>("all");
@@ -55,6 +59,18 @@ export function PantryProvider({ children }: { children: React.ReactNode }) {
   // Height when collapsed
   const collapsedHeight = useMemo(() => bottom + 8 + 44, [bottom]);
 
+  // Preserve the drawer's expansion fraction when the window or safe area changes.
+  useAnimatedReaction(
+    () => Math.max(0, expandedHeight - collapsedHeight),
+    (travel, previousTravel) => {
+      if (previousTravel && previousTravel !== travel) {
+        translateY.value = -Math.min(1, Math.max(0, -translateY.value / previousTravel)) * travel;
+        context.value = { y: translateY.value };
+      }
+    },
+    [expandedHeight, collapsedHeight]
+  );
+
   // UI callbacks
   const changeItemType = useCallback((type: ItemType) => {
     setSelectedItemType(type);
@@ -67,10 +83,10 @@ export function PantryProvider({ children }: { children: React.ReactNode }) {
   const snapToExpanded = useCallback(() => {
     "worklet";
     translateY.value = withTiming(
-      -EXPANDED_HEIGHT + collapsedHeight,
+      -expandedHeight + collapsedHeight,
       CURVES["expressive.default.spatial"]
     );
-  }, [translateY, collapsedHeight]);
+  }, [translateY, expandedHeight, collapsedHeight]);
 
   return (
     <PantryContext.Provider
@@ -83,6 +99,7 @@ export function PantryProvider({ children }: { children: React.ReactNode }) {
         context,
         isGestureActive,
         collapsedHeight,
+        expandedHeight,
         snapToExpanded,
         ingredientScrollRef,
         ingredientScrollY,

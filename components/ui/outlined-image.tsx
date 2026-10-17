@@ -78,7 +78,7 @@ export const OutlinedImage: FC<OutlinedImageProps> = ({
           ]}
           contentFit="contain"
           cachePolicy={cachePolicy}
-          transition={150}
+          transition={{ duration: 150, skipOnCacheHit: "all" }}
         />
       ))}
       <Image
@@ -86,7 +86,7 @@ export const OutlinedImage: FC<OutlinedImageProps> = ({
         style={[styles.abs, { width: size, height: size }, imageStyle]}
         contentFit="contain"
         cachePolicy={cachePolicy}
-        transition={150}
+        transition={{ duration: 150, skipOnCacheHit: "all" }}
       />
     </View>
   );
