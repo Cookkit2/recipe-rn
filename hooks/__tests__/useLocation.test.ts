@@ -95,7 +95,6 @@ describe("useLocation", () => {
     });
 
     // We must ensure the `permissionGranted` state was updated to true before throwing the error.
-    // React state updates happen in the next tick, so we might need more flushes.
     for (let i = 0; i < 5; i++) {
       await act(async () => {
         await Promise.resolve();
@@ -119,7 +118,8 @@ describe("useLocation", () => {
     expect(result.current.error).toBe("Location timeout");
     expect(result.current.loading).toBe(false);
     expect(result.current.location).toBeNull();
-    // The bug is that `state.permissionGranted` is stale in the `catch` block. Let's fix the bug AND test it!
+    // Verify our regression fix for the stale closure
+    expect(result.current.permissionGranted).toBe(true);
   });
 
   it("handles get position errors", async () => {
