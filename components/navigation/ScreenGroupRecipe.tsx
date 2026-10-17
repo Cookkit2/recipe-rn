@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
-import AddToPlanHeaderButton from "~/components/Recipe/Details/AddToPlanHeaderButton";
+import RecipeHeaderActions from "~/components/Recipe/Details/RecipeHeaderActions";
 
 export function getRecipeScreens({ colors }: { colors: { foreground: string } }) {
   return [
@@ -35,7 +35,7 @@ export function getRecipeScreens({ colors }: { colors: { foreground: string } })
         headerTitle: "",
         headerBackButtonDisplayMode: "minimal",
         headerTintColor: "#fff",
-        headerRight: () => <AddToPlanHeaderButton />,
+        headerRight: () => <RecipeHeaderActions />,
       }}
     />,
     <Stack.Screen

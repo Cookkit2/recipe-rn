@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { View, FlatList, ActivityIndicator, Alert } from "react-native";
 import { Stack, useLocalSearchParams } from "expo-router";
+import { PlusIcon } from "lucide-uniwind";
 import { toast } from "sonner-native";
 import { Button } from "~/components/ui/button";
 import { Text } from "~/components/ui/text";
-import { H3, P } from "~/components/ui/typography";
+import { H4, P } from "~/components/ui/typography";
 import { useLeftovers, useLeftoverActions } from "~/hooks/queries/useLeftovers";
 import LeftoverForm from "~/components/Leftovers/LeftoverForm";
 import type { Leftover, LeftoverStatus } from "~/types/Leftover";
@@ -30,13 +31,14 @@ export default function LeftoversPage() {
           headerRight: () => (
             <Button
               variant="ghost"
+              size="icon"
               accessibilityLabel="Add leftovers"
               onPress={() => {
                 setEditing(undefined);
                 setFormOpen(true);
               }}
             >
-              <Text>Add</Text>
+              <PlusIcon className="text-foreground" size={20} strokeWidth={2.618} />
             </Button>
           ),
         }}
@@ -45,9 +47,9 @@ export default function LeftoversPage() {
         <ActivityIndicator className="mt-8" />
       ) : error ? (
         <View className="p-6">
-          <P>Couldn't load leftovers.</P>
+          <P className="font-urbanist-regular">Couldn't load leftovers.</P>
           <Button variant="outline" onPress={() => refetch()}>
-            <Text>Try again</Text>
+            <Text className="font-urbanist-semibold">Try again</Text>
           </Button>
         </View>
       ) : (
@@ -58,21 +60,25 @@ export default function LeftoversPage() {
           contentContainerStyle={{ padding: 20, gap: 12 }}
           ListEmptyComponent={
             <View className="items-center py-12 gap-3">
-              <H3>No leftovers saved</H3>
-              <P className="text-muted-foreground">Save a dish and choose when to be reminded.</P>
-              <Button onPress={() => setFormOpen(true)}>
-                <Text>Add leftovers</Text>
+              <H4 className="font-urbanist-semibold text-center text-muted-foreground">
+                No leftovers saved
+              </H4>
+              <P className="font-urbanist-regular text-center text-sm text-muted-foreground">
+                Save a dish and choose when to be reminded.
+              </P>
+              <Button variant="secondary" onPress={() => setFormOpen(true)}>
+                <Text className="font-urbanist-semibold">Add leftovers</Text>
               </Button>
             </View>
           }
           renderItem={({ item }) => (
             <View className="rounded-xl bg-muted/50 p-4 gap-2">
               <P className="font-urbanist-semibold">{item.name}</P>
-              <P className="text-xs text-muted-foreground">
+              <P className="font-urbanist-regular text-xs text-muted-foreground">
                 {item.servings} servings · Prepared {item.cookedAt.toLocaleDateString()}
               </P>
               {item.remindAt && (
-                <P className="text-xs text-muted-foreground">
+                <P className="font-urbanist-regular text-xs text-muted-foreground">
                   Reminder:{" "}
                   {item.remindAt.toLocaleString(undefined, {
                     month: "short",
@@ -88,7 +94,7 @@ export default function LeftoversPage() {
                   disabled={setStatus.isPending}
                   onPress={() => complete(item, "eaten")}
                 >
-                  <Text>Eaten</Text>
+                  <Text className="font-urbanist-semibold">Eaten</Text>
                 </Button>
                 <Button
                   size="sm"
@@ -98,7 +104,7 @@ export default function LeftoversPage() {
                     setFormOpen(true);
                   }}
                 >
-                  <Text>Edit</Text>
+                  <Text className="font-urbanist-semibold">Edit</Text>
                 </Button>
                 <Button
                   size="sm"
@@ -115,7 +121,7 @@ export default function LeftoversPage() {
                     ])
                   }
                 >
-                  <Text className="text-destructive">Discard</Text>
+                  <Text className="font-urbanist-semibold text-destructive">Discard</Text>
                 </Button>
               </View>
             </View>

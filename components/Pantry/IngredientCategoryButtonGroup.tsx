@@ -52,14 +52,13 @@ export default function IngredientCategoryButtonGroup() {
       </ScrollView>
       <Button
         size="sm"
-        variant="outline"
         containerClassName="shrink-0"
-        className="flex-row items-center gap-1 rounded-full border-continuous"
+        className="flex-row items-center gap-1 rounded-full border-continuous bg-background border border-border"
         accessibilityLabel="Leftovers"
         onPress={() => router.push("/leftovers")}
       >
         <CookingPotIcon className="text-foreground" size={18} />
-        <P className="text-sm font-urbanist-medium tracking-wider">Leftovers</P>
+        <P className="text-sm font-urbanist-medium tracking-wider text-foreground">Leftovers</P>
       </Button>
     </View>
   );

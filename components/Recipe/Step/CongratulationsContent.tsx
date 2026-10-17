@@ -1,13 +1,13 @@
 import React, { useState } from "react";
-import { View, StyleSheet, Alert } from "react-native";
-import { H2, P, Small } from "~/components/ui/typography";
+import { View, StyleSheet, Alert, ScrollView } from "react-native";
+import { H2, P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
+import { Text } from "~/components/ui/text";
 import { useRecipeSteps } from "~/store/RecipeStepsContext";
 import { Image } from "expo-image";
 import MaskedView from "@expo/ui/community/masked-view";
 import ShapeContainer from "~/components/Shared/Shapes/ShapeContainer";
 import { formatDuration } from "~/utils/time-formatter";
-import { cn } from "~/lib/utils";
 import RateRecipeModal from "./RateRecipeModal";
 import { useFeatureFlag } from "~/hooks/queries/useFeatureFlags";
 import { useCreateReview } from "~/hooks/queries/useReviewQueries";
@@ -71,35 +71,43 @@ const CongratulationsContent = () => {
 
   return (
     <>
-      <View
-        className={cn(
-          "flex-1 flex bg-black rounded-3xl border-continuous p-4 justify-center items-center border-2 border-foreground"
-        )}
-      >
-        <P className="text-lg text-center text-white/90 font-urbanist-medium mb-2">
-          You've completed
-        </P>
-        <H2 className="text-primary font-bowlby-one px-6 text-center">{recipe.title}</H2>
+      <View className="flex-1 bg-black rounded-3xl border-continuous overflow-hidden border-2 border-foreground">
+        <ScrollView className="flex-1" contentContainerStyle={styles.content}>
+          <View className="w-full items-center gap-2">
+            <P className="text-center text-white/90 font-urbanist-medium">You've completed</P>
+            <H2 className="text-2xl leading-8 text-primary font-bowlby-one text-center pb-0">
+              {recipe.title}
+            </H2>
+          </View>
 
-        <View className="w-[80%] aspect-square mb-4">
-          <MaskedView
-            style={styles.fill}
-            maskElement={<ShapeContainer index={12} text="" width="100%" height="100%" />}
-          >
-            <Image source={{ uri: recipe.imageUrl }} style={styles.fill} contentFit="cover" />
-          </MaskedView>
-        </View>
-        <P className="text-lg text-center text-white/80 font-urbanist-extrabold mb-1">
-          Completed in <P className="text-primary">{duration ? formatDuration(duration) : "..."}</P>
-          !
-        </P>
-        <P className="text-center text-white/80 font-urbanist-semibold mb-4">
-          Great job following and enjoy your dishes!
-        </P>
+          <View style={styles.image}>
+            <MaskedView
+              style={styles.fill}
+              maskElement={<ShapeContainer index={12} text="" width="100%" height="100%" />}
+            >
+              <Image source={{ uri: recipe.imageUrl }} style={styles.fill} contentFit="cover" />
+            </MaskedView>
+          </View>
 
-        <Button className="rounded-2xl bg-primary" onPress={() => setRateModalVisible(true)}>
-          <Small className="font-urbanist-semibold text-primary-foreground">Rate This Recipe</Small>
-        </Button>
+          <View className="items-center gap-2">
+            <P className="text-center text-white/90 font-urbanist-semibold">
+              Completed in{" "}
+              <P className="text-primary font-urbanist-semibold">
+                {duration ? formatDuration(duration) : "..."}
+              </P>
+              !
+            </P>
+            <P className="text-sm text-center text-white/70 font-urbanist-regular">
+              Great job following and enjoy your dishes!
+            </P>
+          </View>
+
+          <Button variant="link" size="sm" onPress={() => setRateModalVisible(true)}>
+            <Text className="text-sm font-urbanist-semibold text-white/70 underline">
+              Rate this recipe
+            </Text>
+          </Button>
+        </ScrollView>
       </View>
 
       <RateRecipeModal
@@ -127,6 +135,19 @@ const CongratulationsContent = () => {
 export default CongratulationsContent;
 
 const styles = StyleSheet.create({
+  content: {
+    flexGrow: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+    gap: 20,
+  },
+  image: {
+    width: "70%",
+    maxWidth: 200,
+    aspectRatio: 1,
+    flexShrink: 0,
+  },
   fill: {
     width: "100%",
     height: "100%",
