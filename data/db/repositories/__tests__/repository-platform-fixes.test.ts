@@ -87,55 +87,55 @@ describe("repository platform-safe aggregations", () => {
       process.env.TZ = previousTimezone;
     }
   });
-});
 
-it("groups monthly waste data with local date arithmetic accurately for different times in the same month", async () => {
-  const previousTimezone = process.env.TZ;
-  process.env.TZ = "America/New_York";
+  it("groups monthly waste data with local date arithmetic accurately for different times in the same month", async () => {
+    const previousTimezone = process.env.TZ;
+    process.env.TZ = "America/New_York";
 
-  try {
-    // Create two dates in the same month but at different times
-    // May 15, 2025, 08:30:00
-    const date1 = new Date(2025, 4, 15, 8, 30, 0).getTime();
-    // May 22, 2025, 14:45:00
-    const date2 = new Date(2025, 4, 22, 14, 45, 0).getTime();
+    try {
+      // Create two dates in the same month but at different times
+      // May 15, 2025, 08:30:00
+      const date1 = new Date(2025, 4, 15, 8, 30, 0).getTime();
+      // May 22, 2025, 14:45:00
+      const date2 = new Date(2025, 4, 22, 14, 45, 0).getTime();
 
-    const queryResult = {
-      extend: jest.fn(),
-      fetch: jest.fn(async () => [
-        {
-          wasteDate: date1,
-          quantityWasted: 2,
-          estimatedCost: 5,
-        },
-        {
-          wasteDate: date2,
-          quantityWasted: 3,
-          estimatedCost: 10,
-        },
-      ]),
-    };
-    queryResult.extend = jest.fn().mockReturnValue(queryResult);
-    mockCollections.waste_log = {
-      query: jest.fn(() => queryResult),
-    };
+      const queryResult = {
+        extend: jest.fn(),
+        fetch: jest.fn(async () => [
+          {
+            wasteDate: date1,
+            quantityWasted: 2,
+            estimatedCost: 5,
+          },
+          {
+            wasteDate: date2,
+            quantityWasted: 3,
+            estimatedCost: 10,
+          },
+        ]),
+      };
+      queryResult.extend = jest.fn().mockReturnValue(queryResult);
+      mockCollections.waste_log = {
+        query: jest.fn(() => queryResult),
+      };
 
-    const repo = new WasteLogRepository();
-    const result = await repo.getWasteOverTime(undefined, undefined, "month");
+      const repo = new WasteLogRepository();
+      const result = await repo.getWasteOverTime(undefined, undefined, "month");
 
-    // Should be grouped into a single month (May 2025)
-    expect(result.length).toBe(1);
+      // Should be grouped into a single month (May 2025)
+      expect(result.length).toBe(1);
 
-    // Expected date is May 1, 2025, 00:00:00
-    const expectedDate = new Date(2025, 4, 1).getTime();
-    expect(result[0]?.date).toBe(expectedDate);
-    expect(new Date(result[0]!.date).toString()).toContain("Thu May 01 2025 00:00:00");
+      // Expected date is May 1, 2025, 00:00:00
+      const expectedDate = new Date(2025, 4, 1).getTime();
+      expect(result[0]?.date).toBe(expectedDate);
+      expect(new Date(result[0]!.date).toString()).toContain("Thu May 01 2025 00:00:00");
 
-    // Sums should match
-    expect(result[0]?.quantity).toBe(5);
-    expect(result[0]?.cost).toBe(15);
-    expect(result[0]?.count).toBe(2);
-  } finally {
-    process.env.TZ = previousTimezone;
-  }
+      // Sums should match
+      expect(result[0]?.quantity).toBe(5);
+      expect(result[0]?.cost).toBe(15);
+      expect(result[0]?.count).toBe(2);
+    } finally {
+      process.env.TZ = previousTimezone;
+    }
+  });
 });
