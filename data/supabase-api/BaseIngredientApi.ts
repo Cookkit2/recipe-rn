@@ -20,14 +20,10 @@ export const baseIngredientApi = {
    */
   getBaseIngredientByName: async (name: string): Promise<BaseIngredientWithRelations | null> => {
     if (!guardSupabase()) return null;
-
-    // Sanitize user input to prevent wildcard injection in ILIKE queries
-    const escapedName = name.replace(/[%_*\\]/g, "\\$&");
-
     const { data: baseIngredient, error: baseError } = await supabase!
       .from("base_ingredient")
       .select("*")
-      .ilike("name", escapedName)
+      .ilike("name", name)
       .single();
 
     if (baseError && baseError.code !== "PGRST116") {
@@ -167,13 +163,10 @@ async function fetchRelatedData(baseIngredientId: string): Promise<BaseIngredien
  * Try to find a base ingredient by synonym
  */
 async function findIngredientBySynonym(name: string): Promise<BaseIngredientWithRelations | null> {
-  // Sanitize user input to prevent wildcard injection in ILIKE queries
-  const escapedName = name.replace(/[%_*\\]/g, "\\$&");
-
   const { data: synonymData, error: synonymError } = await supabase!
     .from("ingredient_synonym")
     .select("base_ingredient_id")
-    .ilike("synonym", escapedName)
+    .ilike("synonym", name)
     .single();
 
   if (synonymError && synonymError.code !== "PGRST116") {
@@ -213,14 +206,9 @@ async function fetchIngredientsBySynonyms(missingNames: string[]) {
   }
 
   // Execute parameterized queries concurrently
-  const synonymPromises = sanitizedNames.map((n) => {
-    // Sanitize user input to prevent wildcard injection in ILIKE queries (defense in depth)
-    const escapedName = n.replace(/[%_*\\]/g, "\\$&");
-    return supabase!
-      .from("ingredient_synonym")
-      .select("base_ingredient_id, synonym")
-      .ilike("synonym", escapedName);
-  });
+  const synonymPromises = sanitizedNames.map((n) =>
+    supabase!.from("ingredient_synonym").select("base_ingredient_id, synonym").ilike("synonym", n)
+  );
 
   const synonymResults = await Promise.all(synonymPromises);
 
