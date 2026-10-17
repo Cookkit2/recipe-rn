@@ -18,7 +18,7 @@ const Input = React.forwardRef<TextInput, InputProps>(
           className
         )}
         placeholder={placeholder}
-        accessibilityLabel={accessibilityLabel || placeholder || "Input field"}
+        accessibilityLabel={accessibilityLabel}
         {...props}
       />
     );
