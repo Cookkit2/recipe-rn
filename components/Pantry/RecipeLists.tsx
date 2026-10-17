@@ -132,14 +132,10 @@ export default function RecipeLists() {
       .join(", ");
   }, [selectedRecipeTags]);
 
-  // Scroll offset more than 10 then show the bottom border
-  const bottomBorderStyle = useAnimatedStyle(() => ({
-    borderTopWidth: withTiming(scrollY.value > 10 ? 1 : 0, CURVES["expressive.fast.effects"]),
-  }));
-
-  // Animate handle bar height when scrolling
-  const handleBarStyle = useAnimatedStyle(() => ({
-    height: scrollY.value > 10 ? 1 : 0,
+  // Keep the viewport fixed while the scroll indicator fades in. Changing its
+  // height or the list's border width here causes layout changes during a drag.
+  const separatorStyle = useAnimatedStyle(() => ({
+    opacity: withTiming(scrollY.value > 10 ? 1 : 0, CURVES["expressive.fast.effects"]),
   }));
 
   const listData = isLoading || error ? [] : displayedRecipes;
@@ -297,16 +293,17 @@ export default function RecipeLists() {
   return (
     <>
       <Animated.View
-        className="bg-border/50 w-full rounded-full self-center mt-4 z-2"
-        style={handleBarStyle}
+        testID="recipe-scroll-separator"
+        className="bg-border/50 w-full h-px rounded-full self-center mt-4 z-2"
+        style={separatorStyle}
       />
-      <Animated.View className="flex-1" style={bottomBorderStyle}>
+      <View testID="recipe-list-frame" className="flex-1">
         <ExpiringRecipesSection />
         <LegendList
           keyExtractor={(item) => item.recipe.id.toString()}
           numColumns={2}
           style={{ paddingHorizontal: 12, paddingTop: 8 }}
-          contentContainerStyle={{ paddingBottom: bottom + 200 }}
+          contentContainerStyle={{ paddingBottom: bottom + 16 }}
           showsVerticalScrollIndicator={false}
           data={listData}
           renderItem={renderRecipeItem}
@@ -317,7 +314,7 @@ export default function RecipeLists() {
           estimatedItemSize={ITEM_HEIGHT}
           onScroll={handleScrollWithPrefetch}
         />
-      </Animated.View>
+      </View>
     </>
   );
 }

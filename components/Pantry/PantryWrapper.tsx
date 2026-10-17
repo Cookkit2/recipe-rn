@@ -123,6 +123,8 @@ export default function PantryWrapper() {
     return {
       opacity: entranceOffset.value,
       top: SCREEN_HEIGHT - entranceOffset.value * visibleHeight,
+      // Bound the list to the visible drawer instead of extending it offscreen.
+      bottom: 0,
     };
   }, [collapsedHeight]);
 
@@ -141,7 +143,8 @@ export default function PantryWrapper() {
 
         <GestureDetector gesture={panGesture}>
           <Animated.View
-            className="absolute left-0 right-0 h-full"
+            testID={TEST_IDS.home.recipeSheet}
+            className="absolute left-0 right-0 overflow-hidden"
             pointerEvents={isRecipeOpen ? "auto" : "none"}
             style={[recipeGroupStyle]}
           >
