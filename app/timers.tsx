@@ -37,7 +37,10 @@ export default function CookingTimersScreen() {
           ),
         }}
       />
-      <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: bottom + 24, gap: 16 }}>
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={{ padding: 24, paddingBottom: bottom + 24, gap: 16 }}
+      >
         {timers.length === 0 && (
           <P className="text-muted-foreground">Your cooking timers will appear here.</P>
         )}
