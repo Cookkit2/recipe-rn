@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { View, TextInput, Alert } from "react-native";
+import { View, TextInput, Alert, type TextInputInstance } from "react-native";
 import { Button } from "~/components/ui/button";
 import { P } from "~/components/ui/typography";
 import { Trash2Icon, GripVerticalIcon } from "lucide-uniwind";
@@ -23,8 +23,8 @@ export default function EditStepItem({
 }: EditStepItemProps) {
   const [titleHeight, setTitleHeight] = useState<number | undefined>(undefined);
   const [descriptionHeight, setDescriptionHeight] = useState<number | undefined>(undefined);
-  const titleInputRef = useRef<TextInput>(null);
-  const descriptionInputRef = useRef<TextInput>(null);
+  const titleInputRef = useRef<TextInputInstance>(null);
+  const descriptionInputRef = useRef<TextInputInstance>(null);
 
   const titleInputStyle = React.useMemo(
     () => ({

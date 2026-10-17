@@ -1,0 +1,18 @@
+diff --git a/core.js b/core.js
+index d653e66a4056c27cca777d4e25222acae3b2ec85..c142f0ade10dac2ea6eff7dd4c961c040633c296 100644
+--- a/core.js
++++ b/core.js
+@@ -1075,9 +1075,13 @@ async function _fromTokenizer(tokenizer) {
+ 		// Search for header should be in first 1KB of file.
+ 		while (tokenizer.position + 24 < tokenizer.fileInfo.size) {
+ 			const header = await readHeader();
++			if (!Number.isSafeInteger(header.size) || header.size < 24) {
++				throw new RangeError('Invalid ASF object size');
++			}
+ 			let payload = header.size - 24;
+ 			if (_check(header.id, [0x91, 0x07, 0xDC, 0xB7, 0xB7, 0xA9, 0xCF, 0x11, 0x8E, 0xE6, 0x00, 0xC0, 0x0C, 0x20, 0x53, 0x65])) {
+ 				// Sync on Stream-Properties-Object (B7DC0791-A9B7-11CF-8EE6-00C00C205365)
++				if (payload < 16) throw new RangeError('Invalid ASF stream object size');
+ 				const typeId = Buffer.alloc(16);
+ 				payload -= await tokenizer.readBuffer(typeId);
+ 

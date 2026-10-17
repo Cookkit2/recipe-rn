@@ -228,7 +228,7 @@ describe("shareRecipe", () => {
   });
 
   it("emits share_link_created before opening the sheet", async () => {
-    mockedShare.mockResolvedValue({ action: Share.sharedAction as "sharedAction" });
+    mockedShare.mockResolvedValue({ action: Share.sharedAction, activityType: undefined });
     await shareRecipe(baseRecipe);
     const createdCall = (emitFunnelEvent as jest.Mock).mock.calls.find(
       ([type]) => type === "share_link_created"
@@ -238,7 +238,7 @@ describe("shareRecipe", () => {
   });
 
   it("emits share_exported when the user completes a share", async () => {
-    mockedShare.mockResolvedValue({ action: Share.sharedAction as "sharedAction" });
+    mockedShare.mockResolvedValue({ action: Share.sharedAction, activityType: undefined });
     await shareRecipe(baseRecipe);
     const exportedCall = (emitFunnelEvent as jest.Mock).mock.calls.find(
       ([type]) => type === "share_exported"
@@ -248,7 +248,7 @@ describe("shareRecipe", () => {
   });
 
   it("passes the text export + deep link as the share message", async () => {
-    mockedShare.mockResolvedValue({ action: Share.sharedAction as "sharedAction" });
+    mockedShare.mockResolvedValue({ action: Share.sharedAction, activityType: undefined });
     await shareRecipe(baseRecipe);
     const arg = mockedShare.mock.calls[0]![0];
     expect(arg.message).toContain("Spaghetti Carbonara");
@@ -257,12 +257,12 @@ describe("shareRecipe", () => {
   });
 
   it("returns { action: shared } on a completed share", async () => {
-    mockedShare.mockResolvedValue({ action: Share.sharedAction as "sharedAction" });
+    mockedShare.mockResolvedValue({ action: Share.sharedAction, activityType: undefined });
     await expect(shareRecipe(baseRecipe)).resolves.toEqual({ action: "shared" });
   });
 
   it("returns { action: dismissed } and does NOT emit share_exported when dismissed", async () => {
-    mockedShare.mockResolvedValue({ action: Share.dismissedAction as "dismissedAction" });
+    mockedShare.mockResolvedValue({ action: Share.dismissedAction, activityType: undefined });
     const result = await shareRecipe(baseRecipe);
     expect(result).toEqual({ action: "dismissed" });
     const exportedCall = (emitFunnelEvent as jest.Mock).mock.calls.find(

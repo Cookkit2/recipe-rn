@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import Carousel from "react-native-reanimated-carousel";
+import { Carousel } from "react-native-reanimated-carousel";
 import StepCard from "~/components/Recipe/Step/StepCard";
 import { StyleSheet, View } from "react-native";
 import { useRecipeSteps } from "~/store/RecipeStepsContext";
@@ -48,20 +48,17 @@ export default function StepCarousel({ recipeId, onOpenAddTimerDialog }: StepCar
         <Carousel
           ref={carouselRef}
           data={stepPages}
-          width={PAGE_WIDTH}
-          height={PAGE_HEIGHT - 120} // Account for progress bar, navigation, and timer section
+          itemSize={PAGE_WIDTH}
           loop={false}
-          style={styles.carousel}
-          customAnimation={animationStyle}
+          style={[styles.carousel, { height: PAGE_HEIGHT - 120 }]}
+          itemAnimation={animationStyle}
           onSnapToItem={(index) => {
             setCurrentStep(index);
           }}
-          onProgressChange={(_, absoluteProgress) => {
-            progress.value = absoluteProgress;
-          }}
-          windowSize={stepPages.length}
-          renderItem={({ item, animationValue, index }) => (
-            <StepCard key={item.step} index={index} data={item} animationValue={animationValue} />
+          progress={progress}
+          renderWindowSize={stepPages.length}
+          renderItem={({ item, relativeProgress, index }) => (
+            <StepCard key={item.step} index={index} data={item} animationValue={relativeProgress} />
           )}
         />
       </View>

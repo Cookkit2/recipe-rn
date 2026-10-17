@@ -8,7 +8,7 @@ import { EXPIRING_RECIPES_DISMISSED_AT_KEY } from "~/constants/storage-keys";
 import { XIcon, AlertCircleIcon, RefreshCwIcon } from "lucide-uniwind";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { Button } from "~/components/ui/button";
-import { LegendList } from "@legendapp/list";
+import { LegendList } from "@legendapp/list/react-native";
 import {
   emitExpiringNudgeShown,
   emitExpiringNudgeEngaged,

@@ -1,0 +1,76 @@
+[
+  {
+    "package": "braces",
+    "version": "3.0.3",
+    "advisories": ["GHSA-vfj7-8cjw-p6xm"],
+    "reason": "Bound parser nesting and validate direct/cyclic AST input at every recursive consumer.",
+    "patch": "patches/braces@3.0.3.patch",
+    "patchSha256": "be4120354ab575bb45bb1988ef59b556d3f0644abbefcd283e889ff7fc2463ea",
+    "files": {
+      "package.json": "56f08b888a4f30dc7cf8a7dbb36ffe92b737912ba36abe9d069d32167c957ac7",
+      "index.js": "332ea07c7b006361aad12aa994ca75dc1db8e8382b884909e2f38f10b85c88a4",
+      "lib/parse.js": "102f6306cd0c06a3d364d99d18d0759940767f7485244bc926a1b2398f868366",
+      "lib/compile.js": "32f143f9f786b7505df050d6e036821259445b8df6d9f5919e88821cbe324be4",
+      "lib/expand.js": "3842143c6612c0b299387329bc9b260be4ad56b857bc1ce3660598476d7c3114",
+      "lib/stringify.js": "f8354e0106f903bc8945b4990b984941f12339b4c956a1705551d12820573b8a",
+      "lib/check-depth.js": "ff637a1779f26128c26f5b29f468f9e480f791a171056bd34bdc38916618015f"
+    }
+  },
+  {
+    "package": "file-type",
+    "version": "16.5.4",
+    "advisories": ["GHSA-5v7r-6r5c-r473"],
+    "reason": "Reject non-advancing/unsafe ASF object sizes and truncated stream-property objects.",
+    "patch": "patches/file-type@16.5.4.patch",
+    "patchSha256": "00a0283a32b413cdc9f3a409eb240f26686340c4805e67da579ca4029c1b4a21",
+    "files": {
+      "package.json": "812c4de8a1af4058d6a1f7e38b2687a545d7273a9103058e8cf1177b5c95803c",
+      "index.js": "ee2123a53df3d336d129bf7cb7cedfadd172fc9981d39b56f19a2c31a16d86d4",
+      "core.js": "7e2b087d008c3e7ecc541ac4b2202fa7bd6057cd287186a0e11b6013f79c0f23"
+    }
+  },
+  {
+    "package": "node-forge",
+    "version": "1.4.0",
+    "advisories": ["GHSA-86w9-cpqp-85rv"],
+    "reason": "Require exactly one OID and optional empty primitive NULL in the nested DigestAlgorithm sequence.",
+    "patch": "patches/node-forge@1.4.0.patch",
+    "patchSha256": "ed291e22844c1feb80cbfa5ce0f0e48e9c15726bd0859eba5e9067b069d8b95a",
+    "files": {
+      "package.json": "a907bca8a62d97478062f2bd8ed5cd47d00b79385d3f08a8cad1c3bd7e3eb5bf",
+      "lib/rsa.js": "4bfba9a21256ecda994bd8da2a3163bd82b04190060503a5165b126c8aa79e7e",
+      "lib/asn1.js": "271047be6eab614060ef361cce2c8a92abf066c40fb329f44cfac3269214b912"
+    }
+  },
+  {
+    "package": "sprintf-js",
+    "version": "1.0.3",
+    "advisories": ["GHSA-hp3w-g68c-fv3c"],
+    "reason": "Bound width and precision in the shared format entry, including direct AST calls.",
+    "patch": "patches/sprintf-js@1.0.3.patch",
+    "patchSha256": "050cefac062c9df6fc6f55d08661c9cef0b05d80dadc73de312ac7d154e41d40",
+    "files": {
+      "package.json": "f7ed5a0dc9b4c939e92be6acdf3bd83abc3d7e5def9c1307f3c9f53bd7cb2f8c",
+      "src/sprintf.js": "3648ebaf3bfb696fbc693abe02593627b7e377f4a3aa7648b61278aa8c2ad17c"
+    }
+  },
+  {
+    "package": "stream-json",
+    "version": "1.9.1",
+    "advisories": ["GHSA-hqr4-qq8f-hg3x", "GHSA-mjw6-4jj6-33hc", "GHSA-528h-pc64-c93x"],
+    "reason": "Preserve __proto__ as an own data property, bound parser and direct-filter nesting. JSONC advisory is not applicable: version 1.x has no JSONC support; parser/verifier reject comments.",
+    "patch": "patches/stream-json@1.9.1.patch",
+    "patchSha256": "39c9da7da9cac1725d3412c25183184542b4f805a0cc3c16d293f9a29c8a9699",
+    "files": {
+      "package.json": "d83a7ff5f26b3cad3b3fe4a6858a55e7065209674fd4ffc6c7a2524a013e0f33",
+      "Parser.js": "c8871a5924f3a2536a80943a1a75721cfd28d7595de72f965dfa51f3ae7b6c38",
+      "Assembler.js": "9e5eb4664ad98118b9b63a0595eacbb353fe6967f31f03f1e0e9ac9496477478",
+      "filters/FilterBase.js": "f84cdbc504a5f8bb60292c1dfe30edcef5bbdb57bd5a7a902c9e9a4b3964a65a",
+      "filters/Filter.js": "46c3a7d9416b534061ac77dd517268fe874abb6c7e23c39e40931e5ae0a89a52",
+      "filters/Pick.js": "57b201bb7ef95683b69e4616f3227cc8da60a7dd6e843d2d2e8507bf55781477",
+      "filters/Ignore.js": "a9f3146d5983b5a6428e072881dc81e5c90ca40e7f08bf36b135255e49d062ed",
+      "filters/Replace.js": "9558273c734deed31c323648c3f144e961d5f45a6058184c03abb9afa2f90511",
+      "utils/Verifier.js": "bc97b64fe774869613759dd1354b2883a6c71167465991d37b9f7b75fb5a859b"
+    }
+  }
+]

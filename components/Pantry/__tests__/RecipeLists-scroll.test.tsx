@@ -45,7 +45,7 @@ jest.mock("react-native-reanimated", () => ({
   useAnimatedStyle: (callback: () => unknown) => callback(),
   withTiming: (value: number) => value,
 }));
-jest.mock("@legendapp/list", () => ({
+jest.mock("@legendapp/list/react-native", () => ({
   LegendList: (props: object) =>
     require("react").createElement(require("react-native").View, { ...props, testID: "recipes" }),
 }));

@@ -1,0 +1,15 @@
+diff --git a/src/sprintf.js b/src/sprintf.js
+index c0fc7c08b2e6fe38de2883034b8d28c8f34e9866..e80774e9c48858d6a5bc41dccdf7b19667c497d1 100644
+--- a/src/sprintf.js
++++ b/src/sprintf.js
+@@ -30,6 +30,10 @@
+             }
+             else if (node_type === "array") {
+                 match = parse_tree[i] // convenience purposes only
++                // Validate here so direct callers of format() cannot bypass the bound.
++                if (Number(match[6]) > 10000 || Number(match[7]) > 10000) {
++                    throw new RangeError('[sprintf] maximum format field (10000) exceeded')
++                }
+                 if (match[2]) { // keyword argument
+                     arg = argv[cursor]
+                     for (k = 0; k < match[2].length; k++) {

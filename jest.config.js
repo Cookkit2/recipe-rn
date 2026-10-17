@@ -28,6 +28,8 @@ module.exports = {
     "node_modules/(?!(react-native-purchases|react-native-purchases-ui|react-native|@react-native|@nozbe|@expo|expo|expo-modules-core|expo-constants|expo-secure-store|expo-crypto|expo-auth-session|expo-linking|react-navigation|react-native-reanimated|react-native-worklets|@rn-primitives|expo-file-system|expo-maps|lucide-react-native|@testing-library)/)",
   ],
   moduleNameMapper: {
+    // Test-only native mocks target RN internals that 0.88 no longer exports.
+    "^react-native/src/(.*)$": "<rootDir>/node_modules/react-native/src/$1",
     "^expo-constants$": "<rootDir>/__mocks__/expo-constants.ts",
     "^expo-secure-store$": "<rootDir>/__mocks__/expo-secure-store.ts",
     "^expo-crypto$": "<rootDir>/__mocks__/expo-crypto.ts",

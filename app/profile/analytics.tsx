@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { View, ActivityIndicator, ScrollView } from "react-native";
-import { LegendList } from "@legendapp/list";
+import { LegendList } from "@legendapp/list/react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useWasteStats,

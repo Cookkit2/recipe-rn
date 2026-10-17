@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { Pressable, TextInput, View, Text } from "react-native";
+import { Pressable, TextInput, View, Text, type TextInputInstance } from "react-native";
 import { cn } from "~/lib/utils";
 
 type EditableTitleProps = {
@@ -39,7 +39,7 @@ export default function EditableTitle({
 }: EditableTitleProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [textHeight, setTextHeight] = useState<number | undefined>(undefined);
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<TextInputInstance>(null);
 
   const inputStyle = React.useMemo(
     () => ({

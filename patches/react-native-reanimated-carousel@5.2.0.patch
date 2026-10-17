@@ -1,0 +1,12 @@
+diff --git a/package.json b/package.json
+index fe03dd003ff8904d207e9b9d7274dae20b209e51..3a8482c778c67d62c3c57b5125551eba7ff37c8d 100644
+--- a/package.json
++++ b/package.json
+@@ -28,6 +28,7 @@
+ 	},
+ 	"exports": {
+ 		".": {
++			"types": "./lib/typescript/module/index.d.ts",
+ 			"react-native": "./src/index.tsx",
+ 			"import": {
+ 				"types": "./lib/typescript/module/index.d.ts",

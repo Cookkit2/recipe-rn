@@ -1,6 +1,6 @@
 import React from "react";
 import { View, ActivityIndicator } from "react-native";
-import { LegendList } from "@legendapp/list";
+import { LegendList } from "@legendapp/list/react-native";
 import { useRecentlyCookedRecipes } from "~/hooks/queries/useCookingHistoryQueries";
 import { H4, P } from "~/components/ui/typography";
 import { ChefHatIcon } from "lucide-uniwind";

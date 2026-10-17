@@ -1,0 +1,56 @@
+diff --git a/Assembler.js b/Assembler.js
+index 95e04e4cfa22f3ed594c21ad98a551bb9a299335..cbafda8cda141f4fb0983cf4576f0530cf24f737 100644
+--- a/Assembler.js
++++ b/Assembler.js
+@@ -120,7 +120,7 @@ class Assembler extends EventEmitter {
+       if (this.current instanceof Array) {
+         this.current.push(value);
+       } else {
+-        this.current[this.key] = value;
++        Object.defineProperty(this.current, this.key, {value, writable: true, enumerable: true, configurable: true});
+         this.key = null;
+       }
+     }
+@@ -138,7 +138,7 @@ class Assembler extends EventEmitter {
+       } else {
+         value = this.reviver(this.key, value);
+         if (value !== undefined) {
+-          this.current[this.key] = value;
++          Object.defineProperty(this.current, this.key, {value, writable: true, enumerable: true, configurable: true});
+         }
+         this.key = null;
+       }
+diff --git a/Parser.js b/Parser.js
+index 3e24c904d340ba049ccb97eb921215771f71f9b9..532b18d9201d9890cc00e3afcac100422ffe8701 100644
+--- a/Parser.js
++++ b/Parser.js
+@@ -120,12 +120,14 @@ class Parser extends Utf8Stream {
+               this._expect = 'string';
+               break;
+             case '{':
++              if (this._stack.length >= 256) return callback(new RangeError('Maximum JSON nesting depth (256) exceeded'));
+               this.push({name: 'startObject'});
+               this._stack.push(this._parent);
+               this._parent = 'object';
+               this._expect = 'key1';
+               break;
+             case '[':
++              if (this._stack.length >= 256) return callback(new RangeError('Maximum JSON nesting depth (256) exceeded'));
+               this.push({name: 'startArray'});
+               this._stack.push(this._parent);
+               this._parent = 'array';
+diff --git a/filters/FilterBase.js b/filters/FilterBase.js
+index 2e96d1581e8ca67ca600ab9228ec7a4a1c84d4af..5f3270eae584d68dd6597807da00f5859334bab3 100644
+--- a/filters/FilterBase.js
++++ b/filters/FilterBase.js
+@@ -55,6 +55,10 @@ class FilterBase extends Transform {
+   }
+ 
+   _check(chunk, _, callback) {
++    // Also enforce this for filters fed tokens directly, without Parser.
++    if ((chunk.name === 'startObject' || chunk.name === 'startArray') && this._stack.length >= 256) {
++      return callback(new RangeError('Maximum JSON nesting depth (256) exceeded'));
++    }
+     // update the last stack key
+     switch (chunk.name) {
+       case 'startObject':

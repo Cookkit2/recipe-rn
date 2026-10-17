@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef } from "react";
 import { Dimensions, Pressable, StyleSheet, View } from "react-native";
 import { Image } from "expo-image";
 import type { Recipe } from "~/types/Recipe";
-import { LegendList } from "@legendapp/list";
+import { LegendList } from "@legendapp/list/react-native";
 import { useImagePreloader } from "~/hooks/useImagePreloader";
 
 interface RecipeCarouselProps {

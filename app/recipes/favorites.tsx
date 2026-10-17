@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { View, ActivityIndicator, RefreshControl, TextInput } from "react-native";
-import { LegendList } from "@legendapp/list";
+import { LegendList } from "@legendapp/list/react-native";
 import { useFavorites } from "~/hooks/queries/useFavorites";
 import { H4, P } from "~/components/ui/typography";
 import { HeartIcon, SearchIcon } from "lucide-uniwind";
