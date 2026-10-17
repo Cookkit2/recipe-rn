@@ -1,16 +1,8 @@
 import { supabase } from "~/lib/supabase/supabase-client";
+import { exactPostgrestPattern } from "~/utils/input-sanitization";
 
 function guardSupabase() {
   return supabase != null;
-}
-
-/**
- * Escapes characters that PostgREST treats as wildcards (*, %, _)
- * and backslashes to prevent SQL injection in .ilike() queries.
- */
-function sanitizeForILike(str: string): string {
-  if (typeof str !== "string") return str;
-  return str.replace(/[%_*\\]/g, "\\$&");
 }
 
 export interface BaseIngredientWithRelations {
@@ -32,7 +24,7 @@ export const baseIngredientApi = {
     const { data: baseIngredient, error: baseError } = await supabase!
       .from("base_ingredient")
       .select("*")
-      .ilike("name", sanitizeForILike(name))
+      .filter("name", "imatch", exactPostgrestPattern(name))
       .single();
 
     if (baseError && baseError.code !== "PGRST116") {
@@ -175,7 +167,7 @@ async function findIngredientBySynonym(name: string): Promise<BaseIngredientWith
   const { data: synonymData, error: synonymError } = await supabase!
     .from("ingredient_synonym")
     .select("base_ingredient_id")
-    .ilike("synonym", sanitizeForILike(name))
+    .filter("synonym", "imatch", exactPostgrestPattern(name))
     .single();
 
   if (synonymError && synonymError.code !== "PGRST116") {
@@ -216,10 +208,7 @@ async function fetchIngredientsBySynonyms(missingNames: string[]) {
 
   // Execute parameterized queries concurrently
   const synonymPromises = sanitizedNames.map((n) =>
-    supabase!
-      .from("ingredient_synonym")
-      .select("base_ingredient_id, synonym")
-      .ilike("synonym", sanitizeForILike(n))
+    supabase!.from("ingredient_synonym").select("base_ingredient_id, synonym").ilike("synonym", n)
   );
 
   const synonymResults = await Promise.all(synonymPromises);
