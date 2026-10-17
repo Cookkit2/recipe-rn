@@ -1,0 +1,3 @@
+## 2023-10-27 - [React Native Checkbox Accessibility Labeling]
+**Learning:** In React Native, setting `accessibilityLabel` on a parent `Pressable` completely overrides nested child text for screen readers. Using an action-oriented phrase like "Mark step complete" in the `accessibilityLabel` hides the actual content (e.g., the step title).
+**Action:** Set the `accessibilityLabel` to describe the item's identity (e.g., "Step 1: Title") and delegate the interaction instructions to a dynamic `accessibilityHint` (e.g., "Marks/Unmarks step as complete") to provide full context without conflating the action into the label.
