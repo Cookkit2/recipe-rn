@@ -1,13 +1,5 @@
 import { supabase } from "~/lib/supabase/supabase-client";
 
-/**
- * Escapes characters that have special meaning in LIKE/ILIKE queries
- * Note: PostgREST also treats * as a wildcard character.
- */
-function escapeIlike(str: string): string {
-  return str.replace(/[%_\\*]/g, "\\$&");
-}
-
 function guardSupabase() {
   return supabase != null;
 }
@@ -28,10 +20,13 @@ export const baseIngredientApi = {
    */
   getBaseIngredientByName: async (name: string): Promise<BaseIngredientWithRelations | null> => {
     if (!guardSupabase()) return null;
+    // Escape regex special characters to prevent wildcard injection when using filter with imatch
+    const escapeRegex = (str: string) => str.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+
     const { data: baseIngredient, error: baseError } = await supabase!
       .from("base_ingredient")
       .select("*")
-      .ilike("name", escapeIlike(name))
+      .filter("name", "imatch", `^${escapeRegex(name)}$`)
       .single();
 
     if (baseError && baseError.code !== "PGRST116") {
@@ -171,10 +166,13 @@ async function fetchRelatedData(baseIngredientId: string): Promise<BaseIngredien
  * Try to find a base ingredient by synonym
  */
 async function findIngredientBySynonym(name: string): Promise<BaseIngredientWithRelations | null> {
+  // Escape regex special characters to prevent wildcard injection when using filter with imatch
+  const escapeRegex = (str: string) => str.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+
   const { data: synonymData, error: synonymError } = await supabase!
     .from("ingredient_synonym")
     .select("base_ingredient_id")
-    .ilike("synonym", escapeIlike(name))
+    .filter("synonym", "imatch", `^${escapeRegex(name)}$`)
     .single();
 
   if (synonymError && synonymError.code !== "PGRST116") {
@@ -214,8 +212,14 @@ async function fetchIngredientsBySynonyms(missingNames: string[]) {
   }
 
   // Execute parameterized queries concurrently
+  // Escape regex special characters to prevent wildcard injection when using filter with imatch
+  const escapeRegex = (str: string) => str.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+
   const synonymPromises = sanitizedNames.map((n) =>
-    supabase!.from("ingredient_synonym").select("base_ingredient_id, synonym").ilike("synonym", escapeIlike(n))
+    supabase!
+      .from("ingredient_synonym")
+      .select("base_ingredient_id, synonym")
+      .filter("synonym", "imatch", `^${escapeRegex(n)}$`)
   );
 
   const synonymResults = await Promise.all(synonymPromises);
