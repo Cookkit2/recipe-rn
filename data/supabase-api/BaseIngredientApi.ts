@@ -6,7 +6,7 @@ function guardSupabase() {
 
 function escapeWildcards(str: string): string {
   if (typeof str !== "string") return str;
-  return str.replace(/[%_\\*]/g, "\\$&");
+  return str.replace(/[%_\\*?]/g, "\\$&");
 }
 
 export interface BaseIngredientWithRelations {
