@@ -224,10 +224,9 @@ const getAvailableRecipesCore = async (): Promise<{
       recipe: uiRecipeMap.get(item.recipe.id),
       completionPercentage: item.completionPercentage,
     }))
-    .filter((item) => item.recipe !== undefined && item.recipe !== null) as Array<{
-    recipe: Recipe;
-    completionPercentage: number;
-  }>;
+    .filter(
+      (item): item is { recipe: Recipe; completionPercentage: number } => item.recipe !== undefined
+    );
 
   return { canMake, partiallyCanMake };
 };
