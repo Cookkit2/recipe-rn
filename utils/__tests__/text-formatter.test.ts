@@ -8,6 +8,7 @@ import {
   sanitizeText,
   pluralize,
   formatOrdinal,
+  formatQuantity,
 } from "../text-formatter";
 
 describe("Text Formatter Utils - Capitalization", () => {
@@ -27,6 +28,24 @@ describe("Text Formatter Utils - Capitalization", () => {
       expect(capitalize("1hello")).toBe("1hello");
       expect(capitalize("!hello")).toBe("!hello");
       expect(capitalize(" hello")).toBe(" hello");
+    });
+
+    it("should only capitalize the first word in a sentence", () => {
+      expect(capitalize("hello world from jules")).toBe("Hello world from jules");
+      expect(capitalize("HELLO WORLD")).toBe("Hello world");
+    });
+
+    it("should handle whitespace correctly", () => {
+      expect(capitalize("  hello")).toBe("  hello");
+      expect(capitalize("\thello")).toBe("\thello");
+      expect(capitalize("\nhello")).toBe("\nhello");
+      expect(capitalize("hello  ")).toBe("Hello  ");
+    });
+
+    it("should handle unicode and accents", () => {
+      expect(capitalize("éternel")).toBe("Éternel");
+      expect(capitalize("éclair")).toBe("Éclair");
+      expect(capitalize("über")).toBe("Über");
     });
 
     it("should return empty string for empty or null input", () => {
@@ -213,6 +232,12 @@ describe("Text Formatter Utils - Pluralization", () => {
     it("should handle irregular plurals regardless of case", () => {
       expect(pluralize("CHILD", 2)).toBe("children");
       expect(pluralize("Person", 5)).toBe("people");
+      expect(pluralize("MAN", 0)).toBe("men");
+      expect(pluralize("wOman", 3)).toBe("women");
+      expect(pluralize("TOOTH", 10)).toBe("teeth");
+      expect(pluralize("fOoT", 2)).toBe("feet");
+      expect(pluralize("MOUSE", 4)).toBe("mice");
+      expect(pluralize("GoosE", 6)).toBe("geese");
     });
 
     it("should handle words ending in 'y' preceded by a consonant", () => {
@@ -293,6 +318,45 @@ describe("Text Formatter Utils - Pluralization", () => {
 
     it("should handle 0", () => {
       expect(formatOrdinal(0)).toBe("0th");
+    });
+  });
+});
+
+describe("Text Formatter Utils - Recipe-Specific Utilities", () => {
+  describe("formatQuantity", () => {
+    it("should return '0' for 0", () => {
+      expect(formatQuantity(0)).toBe("0");
+    });
+
+    it("should return whole numbers as strings", () => {
+      expect(formatQuantity(1)).toBe("1");
+      expect(formatQuantity(5)).toBe("5");
+      expect(formatQuantity(10)).toBe("10");
+    });
+
+    it("should convert exact decimals to fraction strings", () => {
+      expect(formatQuantity(0.5)).toBe("½");
+      expect(formatQuantity(0.25)).toBe("¼");
+      expect(formatQuantity(0.75)).toBe("¾");
+      expect(formatQuantity(0.33)).toBe("⅓");
+      expect(formatQuantity(0.333)).toBe("⅓");
+      expect(formatQuantity(0.66)).toBe("⅔");
+      expect(formatQuantity(0.667)).toBe("⅔");
+      expect(formatQuantity(0.125)).toBe("⅛");
+      expect(formatQuantity(0.875)).toBe("⅞");
+    });
+
+    it("should format whole number with decimal as mixed fractions", () => {
+      expect(formatQuantity(1.5)).toBe("1 ½");
+      expect(formatQuantity(2.25)).toBe("2 ¼");
+      expect(formatQuantity(3.75)).toBe("3 ¾");
+      expect(formatQuantity(1.333)).toBe("1 ⅓");
+    });
+
+    it("should return unmodified decimal as string if there is no matching fraction", () => {
+      expect(formatQuantity(0.1)).toBe("0.1");
+      expect(formatQuantity(1.1)).toBe("1.1");
+      expect(formatQuantity(2.555)).toBe("2.555");
     });
   });
 });

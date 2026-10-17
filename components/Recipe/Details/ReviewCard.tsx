@@ -72,7 +72,7 @@ export default function ReviewCard({
         onPress={toggleExpand}
         disabled={!review.body}
         accessibilityRole="button"
-        accessibilityLabel={expanded ? "Collapse review" : "Expand review"}
+        accessibilityHint={expanded ? "Collapse review" : "Expand review"}
         accessibilityState={{ expanded }}
       >
         <P

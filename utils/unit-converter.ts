@@ -251,6 +251,7 @@ function choosePreferredUnit(baseValue: number, base: string, targetSystem: Unit
 
 export function roundToReasonablePrecision(value: number): number {
   if (!isFinite(value)) return value;
+  if (!isFinite(value * 1000)) return value;
   // Round to 3 decimal places, then trim trailing zeros when formatted elsewhere
   return Math.round(value * 1000) / 1000;
 }
