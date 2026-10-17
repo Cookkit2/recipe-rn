@@ -1,0 +1,63 @@
+diff --git a/android/src/main/java/expo/modules/ui/LazyRowView.kt b/android/src/main/java/expo/modules/ui/LazyRowView.kt
+index 3db48d87fd5f10e2f297e8ace9f448b31bd2db44..38f5cbadce3e7ecb40541202806f4e7f24031c57 100644
+--- a/android/src/main/java/expo/modules/ui/LazyRowView.kt
++++ b/android/src/main/java/expo/modules/ui/LazyRowView.kt
+@@ -5,6 +5,10 @@ import android.content.Context
+ import androidx.compose.foundation.layout.Arrangement
+ import androidx.compose.foundation.layout.PaddingValues
+ import androidx.compose.foundation.lazy.LazyRow
++import androidx.compose.foundation.lazy.rememberLazyListState
++import androidx.compose.foundation.gestures.ScrollableDefaults
++import androidx.compose.foundation.gestures.snapping.SnapPosition
++import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
+ import android.view.View
+ import androidx.compose.runtime.Composable
+ import androidx.compose.runtime.MutableIntState
+@@ -25,6 +29,7 @@ import expo.modules.kotlin.views.OptimizedComposeProps
+ 
+ @OptimizedComposeProps
+ data class LazyRowProps(
++  val snapToItems: MutableState<Boolean> = mutableStateOf(false),
+   val horizontalArrangement: MutableState<HorizontalArrangement?> = mutableStateOf(null),
+   val verticalAlignment: MutableState<VerticalAlignment?> = mutableStateOf(null),
+   val contentPadding: MutableState<ContentPadding?> = mutableStateOf(null),
+@@ -56,8 +61,13 @@ class LazyRowView(context: Context, appContext: AppContext) :
+     val verticalAlignment = props.verticalAlignment.value?.toComposeAlignment() ?: Alignment.Top
+ 
+     val padding = props.contentPadding.value
++    val listState = rememberLazyListState()
++    val snapFling = rememberSnapFlingBehavior(listState, snapPosition = SnapPosition.Start)
++    val defaultFling = ScrollableDefaults.flingBehavior()
+ 
+     LazyRow(
++      state = listState,
++      flingBehavior = if (props.snapToItems.value) snapFling else defaultFling,
+       modifier = ModifierRegistry.applyModifiers(props.modifiers.value, appContext, this@Content, globalEventDispatcher)
+         .lazyRecycledItemsCrossAxis(this@LazyRowView, isVertical = false),
+       horizontalArrangement = horizontalArrangement,
+diff --git a/build/jetpack-compose/LazyRow/index.d.ts b/build/jetpack-compose/LazyRow/index.d.ts
+index 58b065e713e1e9c1d86004e8fd9736d059ad57a0..264c8fad714c0c974c403a0ee7e534b49678935b 100644
+--- a/build/jetpack-compose/LazyRow/index.d.ts
++++ b/build/jetpack-compose/LazyRow/index.d.ts
+@@ -2,6 +2,8 @@ import type { ExpoModifier } from '../../types';
+ import { type ContentPadding } from '../LazyColumn';
+ export { LazyItems, type LazyItemsProps } from '../LazyItems';
+ export interface LazyRowProps {
++    /** Snap recycled cards to their leading edge after a fling. */
++    snapToItems?: boolean;
+     /**
+      * The content to display inside the lazy row.
+      */
+diff --git a/src/jetpack-compose/LazyRow/index.tsx b/src/jetpack-compose/LazyRow/index.tsx
+index d08e461bb3161746fd8e3d272a584b5c560bd45c..ef78649f7b3771b595cd40c0b760735d1fcfab2a 100644
+--- a/src/jetpack-compose/LazyRow/index.tsx
++++ b/src/jetpack-compose/LazyRow/index.tsx
+@@ -8,6 +8,8 @@ import { createViewModifierEventListener } from '../modifiers/utils';
+ export { LazyItems, type LazyItemsProps } from '../LazyItems';
+ 
+ export interface LazyRowProps {
++  /** Snap recycled cards to their leading edge after a fling. */
++  snapToItems?: boolean;
+   /**
+    * The content to display inside the lazy row.
+    */

@@ -1,6 +1,8 @@
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useHeaderHeight } from "expo-router/react-navigation";
 import React, { useMemo, useState } from "react";
-import { View, ActivityIndicator, ScrollView } from "react-native";
-import { LegendList } from "@legendapp/list/react-native";
+import { View, ActivityIndicator } from "react-native";
+import RecyclingList from "~/components/Shared/RecyclingList";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useWasteStats,
@@ -17,12 +19,12 @@ import { H4, P } from "~/components/ui/typography";
 import { LeafIcon, TrendingUpIcon } from "lucide-uniwind";
 import WasteMetricsCard from "~/components/Analytics/WasteMetricsCard";
 import WasteChart from "~/components/Analytics/WasteChart";
-import type { WasteStats } from "~/data/db/repositories/WasteLogRepository";
-import { AchievementBadge, type Achievement } from "~/components/Analytics/AchievementBadge";
+import { AchievementBadge } from "~/components/Analytics/AchievementBadge";
 import WasteLogItem from "~/components/Analytics/WasteLogItem";
 import LogWasteDialog from "~/components/Analytics/LogWasteDialog";
 import AchievementConfetti from "~/components/Analytics/AchievementConfetti";
 import { Card, CardContent } from "~/components/ui/card";
+import { useAchievements, CO2_CONVERSION_FACTOR } from "~/hooks/analytics/useAchievements";
 
 // Helper function to get date range for time period
 function getDateRangeForPeriod(period: TimePeriod): { start?: number; end?: number } {
@@ -46,10 +48,9 @@ function getDateRangeForPeriod(period: TimePeriod): { start?: number; end?: numb
   }
 }
 
-// Helper function to calculate achievements from stats
-import { useAchievements, CO2_CONVERSION_FACTOR } from "~/hooks/analytics/useAchievements";
-
 function AnalyticsContent() {
+  const headerHeight = useHeaderHeight();
+  const { bottom } = useSafeAreaInsets();
   const { selectedTimePeriod, selectedMetric } = useWasteAnalyticsStore();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -101,6 +102,16 @@ function AnalyticsContent() {
     });
   };
 
+  type WasteEntry = NonNullable<typeof wasteHistory>[number];
+  const renderWaste = React.useCallback(
+    ({ item }: { item: WasteEntry }) => (
+      <View className="px-6">
+        <WasteLogItem wasteLog={item} />
+      </View>
+    ),
+    []
+  );
+
   // Loading state
   if (isLoadingStats) {
     return (
@@ -121,106 +132,95 @@ function AnalyticsContent() {
   }
 
   return (
-    <ScrollView
-      contentInsetAdjustmentBehavior="automatic"
+    <RecyclingList
       className="bg-background"
-      showsVerticalScrollIndicator={false}
-    >
-      {/* Metrics Card */}
-      <WasteMetricsCard
-        itemsWasted={itemsWasted}
-        moneyWasted={moneyWasted}
-        co2FromWaste={co2FromWaste}
-      />
+      data={wasteHistory ?? []}
+      keyExtractor={(item) => item.id}
+      renderItem={renderWaste}
+      estimatedItemSize={120}
+      contentPadding={{ top: headerHeight, bottom: bottom + 24 }}
+      header={
+        <View>
+          {/* Metrics Card */}
+          <WasteMetricsCard
+            itemsWasted={itemsWasted}
+            moneyWasted={moneyWasted}
+            co2FromWaste={co2FromWaste}
+          />
 
-      {/* Waste Trends Chart */}
-      <WasteChart
-        data={wasteOverTime || []}
-        metric={selectedMetric}
-        title="Waste Trends"
-        description={selectedTimePeriod === "all" ? "All time" : `Last ${selectedTimePeriod}`}
-        groupBy={
-          selectedTimePeriod === "all" ? "month" : selectedTimePeriod === "year" ? "month" : "day"
-        }
-      />
-
-      {/* Achievements Section */}
-      <View className="mt-6 mx-6">
-        <View className="flex-row items-center gap-2 mb-3">
-          <LeafIcon size={20} className="text-primary" />
-          <H4 className="font-urbanist-bold text-lg">Achievements</H4>
-        </View>
-
-        {unlockedAchievements.length === 0 && lockedAchievements.length === 0 ? (
-          <Card className="rounded-2xl border-none">
-            <CardContent className="p-6 items-center justify-center">
-              <P className="text-muted-foreground text-center">
-                Start tracking your waste to unlock achievements!
-              </P>
-            </CardContent>
-          </Card>
-        ) : (
-          <>
-            {/* Unlocked Achievements */}
-            {unlockedAchievements.length > 0 && (
-              <View className="gap-3 mb-3">
-                {unlockedAchievements.map((achievement) => (
-                  <AchievementBadge key={achievement.id} achievement={achievement} />
-                ))}
-              </View>
-            )}
-
-            {/* Locked Achievements */}
-            {lockedAchievements.length > 0 && (
-              <View className="gap-3">
-                {lockedAchievements.map((achievement) => (
-                  <AchievementBadge key={achievement.id} achievement={achievement} />
-                ))}
-              </View>
-            )}
-          </>
-        )}
-      </View>
-
-      {/* Waste History Section */}
-      <View className="mt-6 mb-6">
-        <View className="flex-row items-center gap-2 mb-3 mx-6">
-          <TrendingUpIcon size={20} className="text-secondary" />
-          <H4 className="font-urbanist-bold text-lg flex-1">Recent Waste Log</H4>
-          <LogWasteDialog onSuccess={handleWasteLogSuccess} />
-        </View>
-
-        {!wasteHistory || wasteHistory.length === 0 ? (
-          <Card className="mx-6 rounded-2xl border-none">
-            <CardContent className="p-6 items-center justify-center">
-              <P className="text-muted-foreground text-center">
-                No waste entries yet. Start tracking to see your impact!
-              </P>
-            </CardContent>
-          </Card>
-        ) : (
-          <LegendList
-            contentInsetAdjustmentBehavior="automatic"
-            keyExtractor={(item) => item.id}
-            className="bg-background"
-            showsVerticalScrollIndicator={false}
-            data={wasteHistory}
-            renderItem={({ item }) => (
-              <View className="px-6">
-                <WasteLogItem key={item.id} wasteLog={item} />
-              </View>
-            )}
-            ListEmptyComponent={
-              <View className="py-8 items-center justify-center px-6">
-                <P className="text-muted-foreground text-center">
-                  No waste entries for this period
-                </P>
-              </View>
+          {/* Waste Trends Chart */}
+          <WasteChart
+            data={wasteOverTime || []}
+            metric={selectedMetric}
+            title="Waste Trends"
+            description={selectedTimePeriod === "all" ? "All time" : `Last ${selectedTimePeriod}`}
+            groupBy={
+              selectedTimePeriod === "all"
+                ? "month"
+                : selectedTimePeriod === "year"
+                  ? "month"
+                  : "day"
             }
           />
-        )}
-      </View>
-    </ScrollView>
+
+          {/* Achievements Section */}
+          <View className="mt-6 mx-6">
+            <View className="flex-row items-center gap-2 mb-3">
+              <LeafIcon size={20} className="text-primary" />
+              <H4 className="font-urbanist-bold text-lg">Achievements</H4>
+            </View>
+
+            {unlockedAchievements.length === 0 && lockedAchievements.length === 0 ? (
+              <Card className="rounded-2xl border-none">
+                <CardContent className="p-6 items-center justify-center">
+                  <P className="text-muted-foreground text-center">
+                    Start tracking your waste to unlock achievements!
+                  </P>
+                </CardContent>
+              </Card>
+            ) : (
+              <>
+                {/* Unlocked Achievements */}
+                {unlockedAchievements.length > 0 && (
+                  <View className="gap-3 mb-3">
+                    {unlockedAchievements.map((achievement) => (
+                      <AchievementBadge key={achievement.id} achievement={achievement} />
+                    ))}
+                  </View>
+                )}
+
+                {/* Locked Achievements */}
+                {lockedAchievements.length > 0 && (
+                  <View className="gap-3">
+                    {lockedAchievements.map((achievement) => (
+                      <AchievementBadge key={achievement.id} achievement={achievement} />
+                    ))}
+                  </View>
+                )}
+              </>
+            )}
+          </View>
+
+          {/* Waste History Section */}
+          <View className="mt-6 mb-6">
+            <View className="flex-row items-center gap-2 mb-3 mx-6">
+              <TrendingUpIcon size={20} className="text-secondary" />
+              <H4 className="font-urbanist-bold text-lg flex-1">Recent Waste Log</H4>
+              <LogWasteDialog onSuccess={handleWasteLogSuccess} />
+            </View>
+          </View>
+        </View>
+      }
+      empty={
+        <Card className="mx-6 rounded-2xl border-none">
+          <CardContent className="p-6 items-center justify-center">
+            <P className="text-muted-foreground text-center">
+              No waste entries yet. Start tracking to see your impact!
+            </P>
+          </CardContent>
+        </Card>
+      }
+    />
   );
 }
 

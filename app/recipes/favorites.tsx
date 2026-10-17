@@ -1,6 +1,8 @@
+import { useHeaderHeight } from "expo-router/react-navigation";
 import React, { useState, useMemo } from "react";
-import { View, ActivityIndicator, RefreshControl, TextInput } from "react-native";
-import { LegendList } from "@legendapp/list/react-native";
+import { View, ActivityIndicator, TextInput } from "react-native";
+import RecyclingList from "~/components/Shared/RecyclingList";
+import type { Recipe } from "~/types/Recipe";
 import { useFavorites } from "~/hooks/queries/useFavorites";
 import { H4, P } from "~/components/ui/typography";
 import { HeartIcon, SearchIcon } from "lucide-uniwind";
@@ -11,13 +13,22 @@ export default function FavoritesScreen() {
   const { data: favoriteRecipes, isLoading, error, refetch } = useFavorites();
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const { top } = useSafeAreaInsets();
+  const headerHeight = useHeaderHeight();
+  const { bottom } = useSafeAreaInsets();
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
-    await refetch();
-    setRefreshing(false);
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
   }, [refetch]);
+
+  const renderRecipe = React.useCallback(
+    ({ item }: { item: Recipe }) => <RecipeItemCard recipe={item} />,
+    []
+  );
 
   const filteredRecipes = useMemo(() => {
     if (!favoriteRecipes) return [];
@@ -49,7 +60,7 @@ export default function FavoritesScreen() {
   }
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: top + 10 }}>
+    <View className="flex-1 bg-background" style={{ paddingTop: headerHeight + 10 }}>
       {/* Search Bar */}
       {favoriteRecipes && favoriteRecipes.length > 0 && (
         <View className="px-4 mb-4">
@@ -68,18 +79,16 @@ export default function FavoritesScreen() {
         </View>
       )}
 
-      <LegendList
-        contentInsetAdjustmentBehavior="automatic"
+      <RecyclingList
         keyExtractor={(item) => item.id}
         numColumns={2}
-        className="px-3 bg-background"
-        showsVerticalScrollIndicator={false}
+        className="bg-background"
+        contentPadding={{ left: 12, right: 12, bottom: bottom + 16 }}
+        estimatedItemSize={270}
         data={filteredRecipes}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#A1A1AA" />
-        }
-        renderItem={({ item }) => <RecipeItemCard key={item.id} recipe={item} />}
-        ListEmptyComponent={
+        onRefresh={onRefresh}
+        renderItem={renderRecipe}
+        empty={
           <View className="py-16 items-center justify-center">
             <HeartIcon size={64} className="text-muted-foreground mb-4" />
             <H4 className="text-muted-foreground font-urbanist-semibold text-center">

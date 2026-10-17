@@ -26,7 +26,12 @@ jest.mock("react-native-gesture-handler", () => ({
   GestureDetector: ({ children }: { children: React.ReactNode }) => children,
   Gesture: {
     Pan: () => {
-      const gesture = { onStart: jest.fn(), onUpdate: jest.fn(), onEnd: jest.fn() };
+      const gesture = {
+        activeOffsetY: jest.fn(),
+        onStart: jest.fn(),
+        onUpdate: jest.fn(),
+        onEnd: jest.fn(),
+      };
       Object.values(gesture).forEach((handler) => handler.mockReturnValue(gesture));
       return gesture;
     },

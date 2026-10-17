@@ -47,6 +47,7 @@ export default function PantryWrapper() {
 
   // Pan gesture handler - memoized to avoid recreation on every render
   const panGesture = Gesture.Pan()
+    .activeOffsetY([-10, 10])
     .onStart(() => {
       isGestureActive.value = true;
       context.value = { y: translateY.value };
@@ -141,20 +142,20 @@ export default function PantryWrapper() {
 
         <RecipeButton />
 
-        <GestureDetector gesture={panGesture}>
-          <Animated.View
-            testID={TEST_IDS.home.recipeSheet}
-            className="absolute left-0 right-0 overflow-hidden"
-            pointerEvents={isRecipeOpen ? "auto" : "none"}
-            style={[recipeGroupStyle]}
-          >
-            <View className="bg-muted/80 h-1 w-16 rounded-full self-center mb-2" />
-            {/* Invisible touch area overlay for easier grabbing */}
-            <View className="absolute top-0 left-0 right-0 h-12" />
-            <RecipeCategoryButtonGroup />
-            <RecipeLists />
-          </Animated.View>
-        </GestureDetector>
+        <Animated.View
+          testID={TEST_IDS.home.recipeSheet}
+          className="absolute left-0 right-0 overflow-hidden"
+          pointerEvents={isRecipeOpen ? "auto" : "none"}
+          style={[recipeGroupStyle]}
+        >
+          <GestureDetector gesture={panGesture}>
+            <View testID="recipe-sheet-drag-handle">
+              <View className="bg-muted/80 h-1 w-16 rounded-full self-center mb-2" />
+              <RecipeCategoryButtonGroup />
+            </View>
+          </GestureDetector>
+          <RecipeLists />
+        </Animated.View>
       </Animated.View>
     </View>
   );
