@@ -86,14 +86,23 @@ export class AchievementService {
         userAchievementsMap = new Map(userAchievements.map((ua: any) => [ua.achievementId, ua]));
       }
 
-      // Check each achievement concurrently
-      const evaluationPromises = achievements.map(async (achievement) => {
-        const userAchievement = userAchievementsMap.get(achievement.id);
-        const checkResult = await this._evaluateAchievement(achievement, userAchievement);
-        return { achievement, checkResult };
-      });
+      // Check achievements concurrently in chunks to prevent overwhelming the DB
+      // and to maintain deterministic notification firing order.
+      const CHUNK_SIZE = 5;
+      const evaluatedAchievements = [];
 
-      const evaluatedAchievements = await Promise.all(evaluationPromises);
+      for (let i = 0; i < achievements.length; i += CHUNK_SIZE) {
+        const chunk = achievements.slice(i, i + CHUNK_SIZE);
+
+        const evaluationPromises = chunk.map(async (achievement) => {
+          const userAchievement = userAchievementsMap.get(achievement.id);
+          const checkResult = await this._evaluateAchievement(achievement, userAchievement);
+          return { achievement, checkResult };
+        });
+
+        const chunkResults = await Promise.all(evaluationPromises);
+        evaluatedAchievements.push(...chunkResults);
+      }
 
       for (const { achievement, checkResult } of evaluatedAchievements) {
         if (checkResult.newlyUnlocked) {
