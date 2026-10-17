@@ -14,7 +14,7 @@
 //   1. greedy slot assignment (spike Unknown C), and
 //   2. household-serving scaling (spike Unknown B, via utils/recipe-scaling).
 //
-// The Gemini tailored-recipe layer (spike Unknown D) is intentionally NOT
+// The Nebius tailored-recipe layer (spike Unknown D) is intentionally NOT
 // invoked here — the MVP plans base recipes only. See PR description /
 // deferredFollowups.
 // =============================================================================

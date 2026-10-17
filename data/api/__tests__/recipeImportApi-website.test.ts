@@ -10,7 +10,7 @@ import { jest } from "@jest/globals";
  *  - importRecipeFromWebsite no longer hard-throws on the no-structured-data case.
  *  - Status callback sequence on the happy path.
  *
- * All network/Gemini/DB access is mocked — no real network.
+ * All network/Nebius/DB access is mocked — no real network.
  */
 
 jest.mock("~/utils/logger", () => ({
@@ -25,7 +25,7 @@ jest.mock("~/utils/logger", () => ({
 // Service is fully stubbed; individual tests configure the methods.
 const fetchWebsiteContent = jest.fn<(url: string) => Promise<any>>();
 const convertStructuredDataToRecipe = jest.fn<(data: any, url: string) => any>();
-const cleanRecipeWithGemini = jest.fn<(recipe: any) => Promise<any>>();
+const cleanRecipeWithAI = jest.fn<(recipe: any) => Promise<any>>();
 const extractRecipeFromHtml =
   jest.fn<(websiteContent: any, url: string) => Promise<{ recipe: any; confidence: number }>>();
 
@@ -33,7 +33,7 @@ jest.mock("~/lib/recipe-scrapper/WebsiteRecipeService", () => ({
   websiteRecipeService: {
     fetchWebsiteContent,
     convertStructuredDataToRecipe,
-    cleanRecipeWithGemini,
+    cleanRecipeWithAI,
     extractRecipeFromHtml,
   },
 }));
@@ -124,7 +124,7 @@ describe("recipeImportApi.importRecipeFromWebsite layered fallback chain", () =>
       },
     });
     convertStructuredDataToRecipe.mockReturnValue(rawRecipe);
-    cleanRecipeWithGemini.mockResolvedValue(VALID_GENERATED);
+    cleanRecipeWithAI.mockResolvedValue(VALID_GENERATED);
 
     const statuses: string[] = [];
     const result = await recipeImportApi.importRecipeFromWebsite(URL, (s) =>
@@ -133,8 +133,8 @@ describe("recipeImportApi.importRecipeFromWebsite layered fallback chain", () =>
 
     expect(result.success).toBe(true);
     expect(convertStructuredDataToRecipe).toHaveBeenCalledTimes(1);
-    expect(cleanRecipeWithGemini).toHaveBeenCalledTimes(1);
-    // The AI fallback must NOT run on the structured-data path (no double Gemini).
+    expect(cleanRecipeWithAI).toHaveBeenCalledTimes(1);
+    // The AI fallback must NOT run on the structured-data path (no double Nebius).
     expect(extractRecipeFromHtml).not.toHaveBeenCalled();
     // Status sequence ends at complete.
     expect(statuses[statuses.length - 1]).toBe("complete");

@@ -231,8 +231,8 @@ export const recipeImportApi = {
           );
         }
 
-        // Step 4: Analyze with Gemini AI
-        // When no transcript is available, Gemini will use its video understanding capability
+        // Step 4: Analyze with Nebius AI
+        // Uses available transcripts/descriptions; URL-only video input is not supported.
         onStatusChange?.("analyzing");
         log.info("YouTube Import: Analyzing video with AI...");
 
@@ -243,6 +243,7 @@ export const recipeImportApi = {
         );
 
         if (!analysisResult.isCookingVideo) {
+          if (analysisResult.errorMessage) throw new Error(analysisResult.errorMessage);
           const confidencePercent = (analysisResult.confidence * 100).toFixed(0);
           throw new Error(
             `This video does not appear to be a cooking/recipe video. ` +
@@ -305,9 +306,9 @@ export const recipeImportApi = {
         //   (1) JSON-LD structured data
         //   (2) Microdata
         //   (3) RDFa
-        //   (4) Gemini extraction from readable HTML (confidence-gated)
+        //   (4) Nebius extraction from readable HTML (confidence-gated)
         // Each structured-data branch routes through the same clean path so
-        // all results are validated by isValidRecipe inside cleanRecipeWithGemini.
+        // all results are validated by isValidRecipe inside cleanRecipeWithAI.
         onStatusChange?.("parsing-content" as RecipeImportStatus);
 
         let generatedRecipe: GeneratedRecipe;
@@ -325,10 +326,10 @@ export const recipeImportApi = {
             url
           ) as GeneratedRecipe;
 
-          // Clean the recipe data with Gemini
+          // Clean the recipe data with Nebius
           onStatusChange?.("analyzing");
           log.info("Website Import: Cleaning recipe data with AI...");
-          generatedRecipe = (await websiteRecipeService.cleanRecipeWithGemini(
+          generatedRecipe = (await websiteRecipeService.cleanRecipeWithAI(
             rawRecipe
           )) as GeneratedRecipe;
         } else {
@@ -394,7 +395,7 @@ export const recipeImportApi = {
    *
    * Social platforms often block direct scraping or serve login walls, so this
    * flow fetches page metadata (og:title/og:description, JSON-LD), then asks
-   * Gemini to extract the recipe from that text. If the platform blocks us or no
+   * Nebius to extract the recipe from that text. If the platform blocks us or no
    * recipe is detected, we surface a clear error pointing the user to manual entry.
    */
   async importRecipeFromSocialMedia(
@@ -408,7 +409,7 @@ export const recipeImportApi = {
 
     const result = await withImportErrorHandling(
       async () => {
-        // Step 1: Fetch page metadata + analyze with Gemini in one call.
+        // Step 1: Fetch page metadata + analyze with Nebius in one call.
         // SocialRecipeService handles the fetch internally and falls back to
         // empty metadata if the platform blocks scraping.
         onStatusChange?.("fetching-social");

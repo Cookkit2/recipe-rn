@@ -18,13 +18,14 @@ import type { Allergen } from "~/types/Allergen";
 import type { Diet } from "~/types/Diet";
 import type { PantryItem } from "~/types/PantryItem";
 import { log } from "~/utils/logger";
-import { generateGeminiContent } from "~/utils/gemini-api";
+import { generateAIContent } from "~/lib/ai/client";
 import { SYSTEM_PROMPT } from "~/lib/tailored-recipe/systemPrompt";
 import {
   buildPantryHash,
   buildTailoredPrompt,
   parseTailoredRecipeResponse,
   convertDbTailoredRecipeToUIRecipe,
+  TAILORED_RECIPE_RESPONSE_SCHEMA,
 } from "~/lib/tailored-recipe/helpers";
 import {
   convertDbRecipesToUIRecipesBatch,
@@ -769,13 +770,11 @@ export const recipeApi = {
       const dietaryInfo = recipeApi.getUserDietaryInfo();
       const inputPrompt = buildTailoredPrompt(recipe, pantryItems, dietaryInfo);
 
-      const body = JSON.stringify({
-        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-        contents: [{ role: "user", parts: [{ text: inputPrompt }] }],
-        generationConfig: { responseMimeType: "application/json" },
+      const responseText = await generateAIContent({
+        systemPrompt: SYSTEM_PROMPT,
+        prompt: inputPrompt,
+        responseSchema: TAILORED_RECIPE_RESPONSE_SCHEMA,
       });
-
-      const responseText = await generateGeminiContent(body);
       const tailored = parseTailoredRecipeResponse(responseText, recipe);
 
       // Delete any existing tailored recipes for this base recipe before saving the new one

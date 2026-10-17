@@ -1,49 +1,52 @@
 /**
- * Shared Gemini recipe utilities.
+ * Shared Nebius recipe utilities.
  *
  * Provides the common JSON schema for recipe generation, ingredient normalisation,
  * and step normalisation used by both WebsiteRecipeService and RecipeAnalyzer.
  */
 
+import type { AIRequest } from "~/lib/ai/types";
 import type { GeneratedRecipe } from "~/types/ScrappedRecipe";
 
-// ─── Recipe JSON Schema for Gemini ───────────────────────────────────
+// ─── Recipe JSON Schema for Nebius ───────────────────────────────────
 
 /**
- * The response schema used when asking Gemini to return structured recipe data.
- * Both WebsiteRecipeService (cleanRecipeWithGemini) and RecipeAnalyzer (analyzeForRecipe)
+ * The response schema used when asking Nebius to return structured recipe data.
+ * Both WebsiteRecipeService (cleanRecipeWithAI) and RecipeAnalyzer (analyzeForRecipe)
  * use this same shape.
  */
 export function getRecipeResponseSchema() {
   return {
     type: "object" as const,
     properties: {
-      title: { type: "string" as const },
+      title: { type: "string" as const, minLength: 1 },
       description: { type: "string" as const },
-      prepMinutes: { type: "integer" as const },
-      cookMinutes: { type: "integer" as const },
-      servings: { type: "integer" as const },
-      difficultyStars: { type: "integer" as const },
-      calories: { type: "integer" as const },
+      prepMinutes: { type: "integer" as const, minimum: 0 },
+      cookMinutes: { type: "integer" as const, minimum: 0 },
+      servings: { type: "integer" as const, minimum: 1 },
+      difficultyStars: { type: "integer" as const, minimum: 1, maximum: 5 },
+      calories: { type: ["integer", "null"], minimum: 0 },
       tags: {
         type: "array" as const,
         items: { type: "string" as const },
       },
       ingredients: {
         type: "array" as const,
+        minItems: 1,
         items: {
           type: "object" as const,
           properties: {
-            name: { type: "string" as const },
-            quantity: { type: "number" as const },
-            unit: { type: "string" as const },
-            notes: { type: "string" as const },
+            name: { type: "string" as const, minLength: 1 },
+            quantity: { type: "number" as const, minimum: 0 },
+            unit: { type: "string" as const, minLength: 1 },
+            notes: { type: ["string", "null"] },
           },
           required: ["name", "quantity", "unit"],
         },
       },
       steps: {
         type: "array" as const,
+        minItems: 1,
         items: {
           type: "object" as const,
           properties: {
@@ -75,8 +78,12 @@ export function getAnalysisResponseSchema() {
   return {
     type: "object" as const,
     properties: {
-      isCookingVideo: { type: "boolean" as const },
-      confidence: { type: "number" as const },
+      isCookingVideo: {
+        type: "boolean" as const,
+        description:
+          "True if the supplied content contains a recipe, including plain text or captions. This legacy field does not require video input.",
+      },
+      confidence: { type: "number" as const, minimum: 0, maximum: 1 },
       errorMessage: { type: "string" as const },
       recipe: {
         type: "object" as const,
@@ -85,6 +92,9 @@ export function getAnalysisResponseSchema() {
       },
     },
     required: ["isCookingVideo", "confidence"],
+    if: { properties: { isCookingVideo: { const: true } } },
+    then: { required: ["recipe"] },
+    else: { not: { required: ["recipe"] } },
   };
 }
 
@@ -125,27 +135,12 @@ export function normalizeSteps(
   }));
 }
 
-/**
- * Shared Gemini generation config for structured recipe responses.
- */
-export function getRecipeGenerationConfig(temperature: number = 0.3) {
+/** Build the shared text-only recipe analysis request. The server selects Nano. */
+export function buildTextRecipeRequest(prompt: string): AIRequest {
   return {
-    responseMimeType: "application/json",
+    prompt,
+    systemPrompt:
+      "Extract recipes only from the supplied content. isCookingVideo is a legacy field: set it true when captions, transcripts, descriptions, website content or plain text contain ingredients and preparation instructions. Set it false and omit recipe when actual recipe content is absent. Do not claim to watch videos or open links yourself.",
     responseSchema: getAnalysisResponseSchema(),
-    temperature,
   };
-}
-
-/**
- * Build a text-only Gemini request body for recipe analysis.
- */
-export function buildTextRecipeRequestBody(prompt: string, temperature: number = 0.3) {
-  return JSON.stringify({
-    contents: [
-      {
-        parts: [{ text: prompt }],
-      },
-    ],
-    generationConfig: getRecipeGenerationConfig(temperature),
-  });
 }

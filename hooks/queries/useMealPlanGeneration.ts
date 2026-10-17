@@ -8,7 +8,7 @@
 // pure planner to assign them to a week's slots with a no-repeat constraint,
 // and writes the resulting rows via MealPlanRepository.batchUpsert.
 //
-// MVP boundary (spike #739 v1a): base recipes ONLY. The tailored-recipe Gemini
+// MVP boundary (spike #739 v1a): base recipes ONLY. The tailored-recipe Nebius
 // layer is intentionally NOT invoked per slot — see PR deferredFollowups.
 // =============================================================================
 

@@ -4,6 +4,46 @@ import type { Allergen } from "~/types/Allergen";
 import type { Diet } from "~/types/Diet";
 import type { Recipe as DbRecipe } from "~/data/db/models";
 
+export const TAILORED_RECIPE_RESPONSE_SCHEMA = {
+  type: "object",
+  properties: {
+    title: { type: "string", minLength: 1 },
+    description: { type: "string" },
+    prepMinutes: { type: "integer", minimum: 0 },
+    cookMinutes: { type: "integer", minimum: 0 },
+    servings: { type: "integer", minimum: 1 },
+    difficultyStars: { type: "integer", minimum: 1, maximum: 5 },
+    tags: { type: "array", items: { type: "string" } },
+    ingredients: {
+      type: "array",
+      minItems: 1,
+      items: {
+        type: "object",
+        properties: {
+          name: { type: "string", minLength: 1 },
+          quantity: { type: "number", minimum: 0 },
+          unit: { type: "string", minLength: 1 },
+        },
+        required: ["name", "quantity", "unit"],
+      },
+    },
+    instructions: {
+      type: "array",
+      minItems: 1,
+      items: {
+        type: "object",
+        properties: {
+          step: { type: "integer", minimum: 1 },
+          title: { type: "string" },
+          description: { type: "string", minLength: 1 },
+        },
+        required: ["step", "title", "description"],
+      },
+    },
+  },
+  required: ["title", "ingredients", "instructions", "servings"],
+};
+
 export const buildPantryHash = (pantryItems: PantryItem[]): string => {
   const normalized = pantryItems
     .map((item) => `${item.name.toLowerCase().trim()}|${item.quantity}|${item.unit}`)

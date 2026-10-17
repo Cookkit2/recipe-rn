@@ -1,10 +1,10 @@
 /**
- * SocialRecipeService — Gemini extraction mapping for TikTok/Instagram.
+ * SocialRecipeService — Nebius extraction mapping for TikTok/Instagram.
  *
- * Per issue #747: social-video import reuses the existing Gemini extraction
+ * Per issue #747: social-video import reuses the existing Nebius extraction
  * pipeline. These tests mock globalThis.fetch (so we never hit real TikTok/IG)
- * and the GeminiAPI, then assert that:
- *   - a confident Gemini response is mapped into a GeneratedRecipe with the
+ * and the NebiusAPI, then assert that:
+ *   - a confident Nebius response is mapped into a GeneratedRecipe with the
  *     correct platform tags, and
  *   - when the platform blocks the scrape OR the LLM returns low confidence,
  *     the service surfaces a graceful fallback (no fabricated recipe).
@@ -20,8 +20,8 @@ jest.mock("~/utils/logger", () => ({
   },
 }));
 
-// The Gemini response the service should map into a recipe.
-const GEMINI_RECIPE_RESPONSE = JSON.stringify({
+// The Nebius response the service should map into a recipe.
+const NEBIUS_RECIPE_RESPONSE = JSON.stringify({
   isCookingVideo: true,
   confidence: 0.9,
   recipe: {
@@ -45,15 +45,10 @@ const GEMINI_RECIPE_RESPONSE = JSON.stringify({
   },
 });
 
-const mockGenerateContent = jest.fn(
-  async (_model: string, _body: string) => GEMINI_RECIPE_RESPONSE
-);
+const mockGenerateContent = jest.fn(async (_request: { prompt: string }) => NEBIUS_RECIPE_RESPONSE);
 
-jest.mock("~/utils/gemini-api", () => ({
-  GeminiAPI: jest.fn().mockImplementation(() => ({
-    generateContent: mockGenerateContent,
-  })),
-  DEFAULT_GEMINI_MODEL: "gemini-2.5-flash-lite",
+jest.mock("~/lib/ai/client", () => ({
+  generateAIContent: mockGenerateContent,
 }));
 
 import { SocialRecipeService } from "../SocialRecipeService";
@@ -84,7 +79,7 @@ describe("SocialRecipeService.analyzeForRecipe", () => {
     ].join("");
   }
 
-  it("maps a confident Gemini response into a recipe with platform tags", async () => {
+  it("maps a confident Nebius response into a recipe with platform tags", async () => {
     globalThis.fetch = jest.fn(
       async () => new Response(pageHtml({ title: "Viral TikTok Pasta" }), { status: 200 })
     ) as unknown as typeof fetch;
@@ -109,7 +104,7 @@ describe("SocialRecipeService.analyzeForRecipe", () => {
     // Source URL is carried through for the edit/save flow.
     expect(result.recipe?.sourceUrl).toBe("https://www.tiktok.com/@chef/video/7300000000000000000");
 
-    // Gemini was called exactly once with a text-only body (no file/video data).
+    // Nebius was called exactly once with a text-only body (no file/video data).
     expect(mockGenerateContent).toHaveBeenCalledTimes(1);
   });
 
@@ -154,7 +149,7 @@ describe("SocialRecipeService.analyzeForRecipe", () => {
     expect(result.recipe).toBeDefined();
     expect(globalThis.fetch).not.toHaveBeenCalled();
     expect(mockGenerateContent).toHaveBeenCalledTimes(1);
-    expect(mockGenerateContent.mock.calls[0]?.[1]).toContain(text);
+    expect(mockGenerateContent.mock.calls[0]?.[0].prompt).toContain(text);
   });
 
   it("extracts a caption-only recipe without fetching any platform", async () => {
@@ -172,7 +167,7 @@ describe("SocialRecipeService.analyzeForRecipe", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("returns a graceful fallback when Gemini detects no recipe", async () => {
+  it("returns a graceful fallback when Nebius detects no recipe", async () => {
     globalThis.fetch = jest.fn(
       async () => new Response(pageHtml({ title: "Dance video" }), { status: 200 })
     ) as unknown as typeof fetch;
@@ -189,8 +184,8 @@ describe("SocialRecipeService.analyzeForRecipe", () => {
     expect(result.recipe).toBeUndefined();
   });
 
-  it("returns a graceful fallback when Gemini returns a low-confidence/garbage recipe", async () => {
-    // If Gemini fabricates a recipe with no real ingredients/steps, the
+  it("returns a graceful fallback when Nebius returns a low-confidence/garbage recipe", async () => {
+    // If Nebius fabricates a recipe with no real ingredients/steps, the
     // validation step should force confidence to 0 so the UI prompts manual
     // entry instead of saving a fake recipe.
     globalThis.fetch = jest.fn(
@@ -242,7 +237,7 @@ describe("SocialRecipeService.analyzeForRecipe", () => {
       url: "https://www.instagram.com/p/Cxyz123/",
     });
 
-    const body = mockGenerateContent.mock.calls[0]?.[1];
+    const body = mockGenerateContent.mock.calls[0]?.[0].prompt;
     // The richer JSON-LD caption should be fed to the LLM.
     expect(body).toContain("Full recipe: 2 cups flour");
   });
