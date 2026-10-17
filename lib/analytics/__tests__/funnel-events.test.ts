@@ -1,6 +1,9 @@
 import * as Sentry from "@sentry/react-native";
 import type { CustomerInfo } from "react-native-purchases";
 import { PAYWALL_RESULT } from "react-native-purchases-ui";
+import { arePaywallsEnabled } from "~/utils/paywall-flags";
+
+jest.mock("~/utils/paywall-flags", () => ({ arePaywallsEnabled: jest.fn(() => true) }));
 
 import {
   buildFunnelEvent,
@@ -266,6 +269,7 @@ describe("funnel-events: buildFunnelEvent", () => {
 describe("funnel-events: emitFunnelEvent (fan-out + safety)", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.mocked(arePaywallsEnabled).mockReturnValue(true);
     resetFunnelEventStateForTesting();
   });
 
@@ -297,6 +301,17 @@ describe("funnel-events: emitFunnelEvent (fan-out + safety)", () => {
     expect(setAttributesMock).toHaveBeenCalled();
     const attrs = setAttributesMock.mock.calls[setAttributesMock.mock.calls.length - 1]![0];
     expect(attrs["funnel_trial_started_ts"]).toBeDefined();
+  });
+
+  it("skips the RevenueCat sink when paywalls are disabled", async () => {
+    jest.mocked(arePaywallsEnabled).mockReturnValue(false);
+
+    emitFunnelEvent("session_start");
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(addBreadcrumbSpy).toHaveBeenCalledTimes(1);
+    expect(setAttributesMock).not.toHaveBeenCalled();
   });
 
   it("is idempotent for terminal events (paid_converted fires once)", () => {

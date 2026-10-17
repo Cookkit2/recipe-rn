@@ -9,6 +9,7 @@ import {
 } from "~/lib/analytics/funnel-events";
 import { invalidateSubscriptionEntitlementsQuery } from "~/lib/subscription-query-sync";
 import { log } from "./logger";
+import { arePaywallsEnabled } from "./paywall-flags";
 
 // Must match RevenueCat dashboard entitlement identifier (see customerInfo.entitlements.active)
 const ENTITLEMENT_IDENTIFIER = "Pro";
@@ -23,6 +24,8 @@ const ENTITLEMENT_IDENTIFIER = "Pro";
  * `presentPaywallIfNeeded` below.
  */
 export async function readEntitlement(): Promise<PurchasesEntitlementInfo | null> {
+  if (!arePaywallsEnabled()) return null;
+
   try {
     const customerInfo = await Purchases.getCustomerInfo();
     log.info("Customer Info:", customerInfo);
@@ -35,6 +38,8 @@ export async function readEntitlement(): Promise<PurchasesEntitlementInfo | null
 }
 
 export async function presentPaywall(): Promise<boolean> {
+  if (!arePaywallsEnabled()) return true;
+
   // Present paywall for current offering:
   const paywallResult: PAYWALL_RESULT = await RevenueCatUI.presentPaywall();
 
@@ -66,6 +71,8 @@ export interface PresentPaywallOptions {
 export async function presentPaywallIfNeeded(
   options: PresentPaywallOptions = {}
 ): Promise<boolean> {
+  if (!arePaywallsEnabled()) return true;
+
   const triggerSource: FunnelTriggerSource = options.triggerSource ?? "unknown";
   try {
     // Get fresh customer info from RevenueCat

@@ -5,6 +5,9 @@ import Purchases from "react-native-purchases";
 
 import { subscriptionQueryKeys } from "~/hooks/queries/subscriptionQueryKeys";
 import { useEntitlement } from "~/hooks/queries/useEntitlement";
+import { arePaywallsEnabled } from "~/utils/paywall-flags";
+
+jest.mock("~/utils/paywall-flags", () => ({ arePaywallsEnabled: jest.fn(() => true) }));
 
 // Mock react-native-purchases. We control getCustomerInfo() return per test.
 jest.mock("react-native-purchases", () => ({
@@ -72,6 +75,7 @@ function withClient(client: QueryClient) {
 describe("useEntitlement", () => {
   beforeEach(() => {
     mockedGetCustomerInfo.mockReset();
+    jest.mocked(arePaywallsEnabled).mockReturnValue(true);
     queryClient = new QueryClient({
       defaultOptions: {
         queries: { retry: false, staleTime: 0, gcTime: 0, refetchOnWindowFocus: false },
@@ -84,6 +88,18 @@ describe("useEntitlement", () => {
     await cleanup();
     await queryClient.cancelQueries();
     queryClient.clear();
+  });
+
+  it("allows Pro features immediately without querying RevenueCat when paywalls are disabled", async () => {
+    jest.mocked(arePaywallsEnabled).mockReturnValue(false);
+    mockedGetCustomerInfo.mockResolvedValue({ entitlements: { active: {} } });
+
+    const { result } = await renderHook(() => useEntitlement(), {
+      wrapper: withClient(queryClient),
+    });
+
+    expect(result.current).toEqual({ isPro: true, entitlement: null, isLoading: false });
+    expect(mockedGetCustomerInfo).not.toHaveBeenCalled();
   });
 
   it("reports isPro=true when an active Pro entitlement is cached", async () => {

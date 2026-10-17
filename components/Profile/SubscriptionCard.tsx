@@ -5,9 +5,12 @@ import { presentPaywallIfNeeded } from "~/utils/subscription-utils";
 import { Card, CardContent } from "~/components/ui/card";
 import { H4, P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
+import { arePaywallsEnabled } from "~/utils/paywall-flags";
 
 export default function SubscriptionCard() {
   const { entitlement: currentEntitlements, isLoading } = useEntitlement();
+
+  if (!arePaywallsEnabled()) return null;
 
   const currentDate = new Date();
   const expiredDate = new Date(currentEntitlements?.expirationDateMillis ?? 0);

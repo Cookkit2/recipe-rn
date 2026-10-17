@@ -2,9 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import type { PurchasesEntitlementInfo } from "react-native-purchases";
 import { subscriptionQueryKeys } from "~/hooks/queries/subscriptionQueryKeys";
 import { readEntitlement } from "~/utils/subscription-utils";
+import { arePaywallsEnabled } from "~/utils/paywall-flags";
 
 export interface UseEntitlementResult {
-  /** True only when an active Pro entitlement exists. */
+  /** True for an active Pro entitlement or the local development bypass. */
   isPro: boolean;
   /** The active Pro entitlement, or null when none/loading. */
   entitlement: PurchasesEntitlementInfo | null;
@@ -27,18 +28,20 @@ export interface UseEntitlementResult {
  * treat `isPro === false` while `isLoading === true` as a definitive "not Pro".
  */
 export function useEntitlement(): UseEntitlementResult {
+  const paywallsEnabled = arePaywallsEnabled();
   const { data, isLoading } = useQuery({
     queryKey: subscriptionQueryKeys.entitlements(),
     queryFn: readEntitlement,
+    enabled: paywallsEnabled,
     staleTime: 5 * 60 * 1000, // 5 minutes — mirrors the previous SubscriptionCard cache
     gcTime: 30 * 60 * 1000,
   });
 
-  const entitlement = data ?? null;
+  const entitlement = paywallsEnabled ? (data ?? null) : null;
 
   return {
-    isPro: !!entitlement,
+    isPro: !paywallsEnabled || !!entitlement,
     entitlement,
-    isLoading,
+    isLoading: paywallsEnabled && isLoading,
   };
 }

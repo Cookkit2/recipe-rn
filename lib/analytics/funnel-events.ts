@@ -22,6 +22,7 @@ import * as Sentry from "@sentry/react-native";
 import type { CustomerInfo, PurchasesEntitlementInfo } from "react-native-purchases";
 import { PAYWALL_RESULT } from "react-native-purchases-ui";
 import { getInstallAnchor, type InstallAnchor } from "~/lib/install-anchor";
+import { arePaywallsEnabled } from "~/utils/paywall-flags";
 
 /** Must match RevenueCat dashboard entitlement id + ENTITLEMENT_IDENTIFIER in subscription-utils. */
 export const FUNNEL_ENTITLEMENT_ID = "Pro";
@@ -398,6 +399,8 @@ function serializeForSentry(event: FunnelEvent): Record<string, unknown> {
  * matches the dynamic-import-for-circular-deps pattern used elsewhere).
  */
 async function sendToRevenueCat(event: FunnelEvent): Promise<void> {
+  if (!arePaywallsEnabled()) return;
+
   const Purchases = (await import("react-native-purchases")).default;
   // setAttributes may be absent when RevenueCat is unconfigured (E2E / dev) —
   // treat a missing method as a no-op rather than throwing.
