@@ -3,6 +3,7 @@ import { View, FlatList, ActivityIndicator, Alert } from "react-native";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { toast } from "sonner-native";
 import { Button } from "~/components/ui/button";
+import { Text } from "~/components/ui/text";
 import { H3, P } from "~/components/ui/typography";
 import { useLeftovers, useLeftoverActions } from "~/hooks/queries/useLeftovers";
 import LeftoverForm from "~/components/Leftovers/LeftoverForm";
@@ -29,12 +30,13 @@ export default function LeftoversPage() {
           headerRight: () => (
             <Button
               variant="ghost"
+              accessibilityLabel="Add leftovers"
               onPress={() => {
                 setEditing(undefined);
                 setFormOpen(true);
               }}
             >
-              <P>Add</P>
+              <Text>Add</Text>
             </Button>
           ),
         }}
@@ -45,7 +47,7 @@ export default function LeftoversPage() {
         <View className="p-6">
           <P>Couldn't load leftovers.</P>
           <Button variant="outline" onPress={() => refetch()}>
-            <P>Try again</P>
+            <Text>Try again</Text>
           </Button>
         </View>
       ) : (
@@ -59,7 +61,7 @@ export default function LeftoversPage() {
               <H3>No leftovers saved</H3>
               <P className="text-muted-foreground">Save a dish and choose when to be reminded.</P>
               <Button onPress={() => setFormOpen(true)}>
-                <P>Add leftovers</P>
+                <Text>Add leftovers</Text>
               </Button>
             </View>
           }
@@ -86,7 +88,7 @@ export default function LeftoversPage() {
                   disabled={setStatus.isPending}
                   onPress={() => complete(item, "eaten")}
                 >
-                  <P>Eaten</P>
+                  <Text>Eaten</Text>
                 </Button>
                 <Button
                   size="sm"
@@ -96,7 +98,7 @@ export default function LeftoversPage() {
                     setFormOpen(true);
                   }}
                 >
-                  <P>Edit</P>
+                  <Text>Edit</Text>
                 </Button>
                 <Button
                   size="sm"
@@ -113,7 +115,7 @@ export default function LeftoversPage() {
                     ])
                   }
                 >
-                  <P className="text-destructive">Discard</P>
+                  <Text className="text-destructive">Discard</Text>
                 </Button>
               </View>
             </View>
