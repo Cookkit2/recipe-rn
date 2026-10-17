@@ -4,6 +4,7 @@ import { AlertCircleIcon, HelpCircleIcon } from "lucide-uniwind";
 import { Image } from "expo-image";
 import { useCreateIngredientStore, type CreatePantryItem } from "~/store/CreateIngredientContext";
 import { P } from "../ui/typography";
+import { toExpoImageSource } from "~/utils/image-source";
 
 const size = 28;
 
@@ -45,7 +46,7 @@ export default function IngredientThumbnail({ item }: IngredientThumbnailProps) 
         return (
           <View className="relative items-center justify-center">
             <Image
-              source={image_url}
+              source={toExpoImageSource(image_url)}
               style={{ width: size, height: size, opacity: 0.6 }}
               contentFit="contain"
               contentPosition="center"
@@ -58,7 +59,7 @@ export default function IngredientThumbnail({ item }: IngredientThumbnailProps) 
       default:
         return (
           <Image
-            source={image_url}
+            source={toExpoImageSource(image_url)}
             style={{ width: size, height: size }}
             contentFit="contain"
             contentPosition="center"

@@ -1,14 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { View, useWindowDimensions } from "react-native";
+import { View } from "react-native";
 import { H4, P } from "~/components/ui/typography";
 import RecipeItemCard from "./RecipeItemCard";
-import { useExpiringRecipes, type RecipeWithCompletion } from "~/hooks/queries/useRecipeQueries";
+import { useExpiringRecipes } from "~/hooks/queries/useRecipeQueries";
 import { storage } from "~/data";
 import { EXPIRING_RECIPES_DISMISSED_AT_KEY } from "~/constants/storage-keys";
 import { XIcon, AlertCircleIcon, RefreshCwIcon } from "lucide-uniwind";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { Button } from "~/components/ui/button";
-import { LegendList } from "@legendapp/list";
 import {
   emitExpiringNudgeShown,
   emitExpiringNudgeEngaged,
@@ -20,11 +19,6 @@ const MAX_RECIPES_TO_SHOW = 4;
 
 // Loading skeleton component
 function LoadingSkeleton() {
-  const { width } = useWindowDimensions();
-  const paddingHorizontal = 12 * 2; // px-3
-  const gap = 8; // gap-2
-  const cardWidth = (width - paddingHorizontal - gap) / 2;
-
   return (
     <Animated.View entering={FadeIn.duration(300)}>
       {/* Header skeleton */}
@@ -42,9 +36,9 @@ function LoadingSkeleton() {
       </View>
 
       {/* Recipe cards skeleton */}
-      <View className="flex-row flex-wrap px-3 pt-2 gap-2">
+      <View className="flex-row flex-wrap pt-2">
         {[1, 2, 3, 4].map((key) => (
-          <View key={key} style={{ width: cardWidth }}>
+          <View key={key} style={{ width: "50%", padding: 4 }}>
             <View className="bg-card rounded-lg overflow-hidden">
               <View className="aspect-square bg-muted/50 animate-pulse" />
               <View className="p-2 gap-1">
@@ -140,6 +134,12 @@ export default function ExpiringRecipesSection() {
     refetch?.();
   }, [refetch]);
 
+  const handleDismiss = useCallback(async () => {
+    await storage.set(EXPIRING_RECIPES_DISMISSED_AT_KEY, Date.now(), true);
+    setIsDismissed(true);
+    emitExpiringNudgeDismissed("in_app_section");
+  }, []);
+
   // Show loading state
   if (isLoading) {
     return <LoadingSkeleton />;
@@ -154,29 +154,6 @@ export default function ExpiringRecipesSection() {
   if (isDismissed || recipes.length === 0 || expiringCount === 0) {
     return null;
   }
-
-  const handleDismiss = useCallback(async () => {
-    await storage.set(EXPIRING_RECIPES_DISMISSED_AT_KEY, Date.now(), true);
-    setIsDismissed(true);
-    // Instrument the dismiss so opt-out rates are visible per surface (#726
-    // risk: push fatigue / opt-out spiral).
-    emitExpiringNudgeDismissed("in_app_section");
-  }, []);
-
-  // Memoized render item to prevent re-creation on each render
-  const renderRecipeItem = useCallback(
-    ({ item }: { item: RecipeWithCompletion }) => (
-      <RecipeItemCard
-        recipe={item.recipe}
-        completionPercentage={item.completionPercentage}
-        onEngage={(recipeId) => emitExpiringNudgeEngaged("in_app_section", { recipeId })}
-      />
-    ),
-    []
-  );
-
-  // Approximate item height for estimatedItemSize (image is square + text below)
-  const ITEM_HEIGHT = 200;
 
   return (
     <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)}>
@@ -207,17 +184,17 @@ export default function ExpiringRecipesSection() {
       </View>
 
       {/* Recipe list */}
-      <LegendList
-        keyExtractor={(item) => item.recipe.id.toString()}
-        numColumns={2}
-        style={{ paddingHorizontal: 12, paddingTop: 8, maxHeight: ITEM_HEIGHT * 2 }}
-        showsVerticalScrollIndicator={false}
-        data={recipes}
-        renderItem={renderRecipeItem}
-        recycleItems
-        estimatedItemSize={ITEM_HEIGHT}
-        horizontal={false}
-      />
+      <View style={{ flexDirection: "row", flexWrap: "wrap", paddingTop: 8 }}>
+        {recipes.slice(0, MAX_RECIPES_TO_SHOW).map((item) => (
+          <View key={item.recipe.id} style={{ width: "50%" }}>
+            <RecipeItemCard
+              recipe={item.recipe}
+              completionPercentage={item.completionPercentage}
+              onEngage={(recipeId) => emitExpiringNudgeEngaged("in_app_section", { recipeId })}
+            />
+          </View>
+        ))}
+      </View>
     </Animated.View>
   );
 }

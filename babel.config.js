@@ -51,7 +51,7 @@ module.exports = function (api) {
           !!fileName && !fileName.includes("/node_modules/") && /\.tsx?$/.test(fileName),
         plugins: [
           ["@babel/plugin-proposal-decorators", { version: "legacy" }],
-          ["@babel/plugin-proposal-class-properties", { loose: true }],
+          ["@babel/plugin-transform-class-properties", { loose: true }],
         ],
       },
       {

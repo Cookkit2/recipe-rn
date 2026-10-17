@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo, useRef } from "react";
-import { Dimensions, Pressable, StyleSheet, View } from "react-native";
+import React, { useCallback, useEffect, useRef } from "react";
+import { Dimensions, Pressable, StyleSheet } from "react-native";
 import { Image } from "expo-image";
 import type { Recipe } from "~/types/Recipe";
-import { LegendList } from "@legendapp/list";
+import RecyclingList from "~/components/Shared/RecyclingList";
 import { useImagePreloader } from "~/hooks/useImagePreloader";
 
 interface RecipeCarouselProps {
@@ -14,7 +14,7 @@ interface RecipeCarouselProps {
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const ITEM_SPACING = 16;
 const ITEM_WIDTH = Math.round(SCREEN_WIDTH * 0.78);
-const SNAP_INTERVAL = ITEM_WIDTH + ITEM_SPACING;
+const IMAGE_HEIGHT = Math.round(SCREEN_WIDTH * 0.9);
 const PRELOAD_RADIUS = 2;
 
 export default function RecipeCarousel({
@@ -23,26 +23,35 @@ export default function RecipeCarousel({
   onPressItem,
 }: RecipeCarouselProps) {
   const { prefetch } = useImagePreloader({ priority: "low", delay: 50 });
-  const dataRef = useRef({ recipes, prefetch });
-  dataRef.current = { recipes, prefetch };
+  const dataRef = useRef({ recipes, prefetch, onIndexChange });
+  dataRef.current = { recipes, prefetch, onIndexChange };
+  const onActiveItemChange = useCallback((index: number) => {
+    const current = dataRef.current;
+    current.onIndexChange?.(index);
+    const urls = current.recipes
+      .slice(Math.max(0, index - PRELOAD_RADIUS), index + PRELOAD_RADIUS + 1)
+      .map((recipe) => recipe.imageUrl)
+      .filter(Boolean);
+    if (urls.length > 0) current.prefetch(urls);
+  }, []);
 
-  const viewabilityConfig = useMemo(() => ({ viewAreaCoveragePercentThreshold: 60 }), []);
-  const onViewableItemsChanged = useRef(
-    ({ viewableItems }: { viewableItems: Array<{ index: number | null }> }) => {
-      const first = viewableItems.find((v) => v.index != null);
-      if (first?.index != null) {
-        onIndexChange?.(first.index);
-        const { recipes: r, prefetch: p } = dataRef.current;
-        const current = first.index;
-        const start = Math.max(0, current - PRELOAD_RADIUS);
-        const end = Math.min(r.length, current + PRELOAD_RADIUS + 1);
-        const urls = r
-          .slice(start, end)
-          .map((recipe) => recipe.imageUrl)
-          .filter(Boolean);
-        if (urls.length > 0) p(urls);
-      }
-    }
+  const renderRecipe = useCallback(
+    ({ item, index }: { item: Recipe; index: number }) => (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={item.title}
+        onPress={() => onPressItem?.(item, index)}
+        style={{ width: ITEM_WIDTH }}
+      >
+        <Image
+          source={{ uri: item.imageUrl }}
+          style={styles.image}
+          contentFit="cover"
+          transition={200}
+        />
+      </Pressable>
+    ),
+    [onPressItem]
   );
 
   useEffect(() => {
@@ -54,32 +63,17 @@ export default function RecipeCarousel({
   }, [recipes, prefetch]);
 
   return (
-    <LegendList
+    <RecyclingList
       keyExtractor={(item) => item.id}
       data={recipes}
       horizontal
-      showsHorizontalScrollIndicator={false}
-      snapToInterval={SNAP_INTERVAL}
-      decelerationRate="fast"
-      contentContainerStyle={{ paddingHorizontal: ITEM_SPACING }}
-      ItemSeparatorComponent={() => <View style={{ width: ITEM_SPACING }} />}
-      onViewableItemsChanged={onViewableItemsChanged.current}
-      viewabilityConfig={viewabilityConfig}
-      renderItem={({ item, index }) => (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={item.title}
-          onPress={() => onPressItem?.(item, index)}
-          style={{ width: ITEM_WIDTH }}
-        >
-          <Image
-            source={{ uri: item.imageUrl }}
-            style={styles.image}
-            contentFit="cover"
-            transition={200}
-          />
-        </Pressable>
-      )}
+      itemSize={ITEM_WIDTH}
+      itemSpacing={ITEM_SPACING}
+      snapToItems
+      style={{ height: IMAGE_HEIGHT }}
+      contentPadding={{ left: ITEM_SPACING, right: ITEM_SPACING }}
+      onActiveItemChange={onActiveItemChange}
+      renderItem={renderRecipe}
     />
   );
 }
@@ -87,7 +81,7 @@ export default function RecipeCarousel({
 const styles = StyleSheet.create({
   image: {
     width: "100%",
-    height: Math.round(SCREEN_WIDTH * 0.9),
+    height: IMAGE_HEIGHT,
     borderRadius: 24,
     borderCurve: "continuous",
   },

@@ -1,5 +1,13 @@
 import React, { useRef, useState } from "react";
-import { View, ScrollView, TextInput, KeyboardAvoidingView, Platform, Alert } from "react-native";
+import {
+  View,
+  ScrollView,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
+  type TextInputInstance,
+} from "react-native";
 import { Button } from "~/components/ui/button";
 import { Text } from "~/components/ui/text";
 import { H2, H4, P } from "~/components/ui/typography";
@@ -37,8 +45,8 @@ export default function RecipeEditForm({
   const [titleHeight, setTitleHeight] = useState<number | undefined>(undefined);
   const [descriptionHeight, setDescriptionHeight] = useState<number | undefined>(undefined);
   const [showVersionHistory, setShowVersionHistory] = useState(false);
-  const titleInputRef = useRef<TextInput>(null);
-  const descriptionInputRef = useRef<TextInput>(null);
+  const titleInputRef = useRef<TextInputInstance>(null);
+  const descriptionInputRef = useRef<TextInputInstance>(null);
 
   // Get version history
   const { versions, isLoadingVersions } = useRecipeVersioning({ recipeId });
