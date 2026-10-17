@@ -1,40 +1,77 @@
-import { areDimensionsCompatible, roundToReasonablePrecision } from "../unit-converter";
+import {
+  areDimensionsCompatible,
+  roundToReasonablePrecision,
+  convertToUnitSystem,
+} from "../unit-converter";
 
 describe("areDimensionsCompatible", () => {
-  it("should return true for compatible weight units", () => {
-    expect(areDimensionsCompatible("g", "kg")).toBe(true);
-    expect(areDimensionsCompatible("oz", "lb")).toBe(true);
-    expect(areDimensionsCompatible("g", "oz")).toBe(true);
-    expect(areDimensionsCompatible("kg", "lb")).toBe(true);
+  const WEIGHT_UNITS = ["g", "kg", "oz", "lb"];
+  const VOLUME_UNITS = [
+    "ml",
+    "l",
+    "fl_oz",
+    "qt",
+    "gal",
+    "gallon",
+    "cup",
+    "tbsp",
+    "tablespoon",
+    "tsp",
+    "teaspoon",
+    "pt",
+    "pint",
+  ];
+  const COUNT_UNITS = ["unit", "units", "piece", "pieces", "pcs", "count"];
+
+  it("should return true for compatible weight units exhaustively", () => {
+    for (const u1 of WEIGHT_UNITS) {
+      for (const u2 of WEIGHT_UNITS) {
+        expect(areDimensionsCompatible(u1, u2)).toBe(true);
+      }
+    }
   });
 
-  it("should return true for compatible volume units", () => {
-    expect(areDimensionsCompatible("ml", "l")).toBe(true);
-    expect(areDimensionsCompatible("fl_oz", "qt")).toBe(true);
-    expect(areDimensionsCompatible("ml", "cup")).toBe(true);
-    expect(areDimensionsCompatible("tbsp", "tsp")).toBe(true);
+  it("should return true for compatible volume units exhaustively", () => {
+    for (const u1 of VOLUME_UNITS) {
+      for (const u2 of VOLUME_UNITS) {
+        expect(areDimensionsCompatible(u1, u2)).toBe(true);
+      }
+    }
   });
 
-  it("should return true for compatible count units", () => {
-    expect(areDimensionsCompatible("unit", "pieces")).toBe(true);
-    expect(areDimensionsCompatible("count", "pcs")).toBe(true);
+  it("should return true for compatible count units exhaustively", () => {
+    for (const u1 of COUNT_UNITS) {
+      for (const u2 of COUNT_UNITS) {
+        expect(areDimensionsCompatible(u1, u2)).toBe(true);
+      }
+    }
   });
 
-  it("should return false for incompatible units (weight vs volume)", () => {
-    expect(areDimensionsCompatible("g", "ml")).toBe(false);
-    expect(areDimensionsCompatible("kg", "l")).toBe(false);
-    expect(areDimensionsCompatible("oz", "fl_oz")).toBe(false);
-    expect(areDimensionsCompatible("lb", "qt")).toBe(false);
+  it("should return false for incompatible units (weight vs volume) exhaustively", () => {
+    for (const w of WEIGHT_UNITS) {
+      for (const v of VOLUME_UNITS) {
+        expect(areDimensionsCompatible(w, v)).toBe(false);
+        expect(areDimensionsCompatible(v, w)).toBe(false);
+      }
+    }
   });
 
-  it("should return false for incompatible units (weight vs count)", () => {
-    expect(areDimensionsCompatible("g", "unit")).toBe(false);
-    expect(areDimensionsCompatible("oz", "pieces")).toBe(false);
+  it("should return false for incompatible units (weight vs count) exhaustively", () => {
+    for (const w of WEIGHT_UNITS) {
+      for (const c of COUNT_UNITS) {
+        expect(areDimensionsCompatible(w, c)).toBe(false);
+        expect(areDimensionsCompatible(c, w)).toBe(false);
+      }
+    }
   });
 
-  it("should return false for incompatible units (volume vs count)", () => {
-    expect(areDimensionsCompatible("ml", "unit")).toBe(false);
-    expect(areDimensionsCompatible("cup", "pieces")).toBe(false);
+  it("should return false for incompatible units (volume vs count) exhaustively", () => {
+    for (const v of VOLUME_UNITS) {
+      for (const c of COUNT_UNITS) {
+        expect(areDimensionsCompatible(v, c)).toBe(false);
+        expect(areDimensionsCompatible(c, v)).toBe(false);
+      }
+    }
   });
 
   it("should return false if either unit is unknown", () => {
@@ -93,5 +130,113 @@ describe("roundToReasonablePrecision", () => {
     expect(roundToReasonablePrecision(0)).toBe(0);
     // Object.is helps distinguish between 0 and -0
     expect(Object.is(roundToReasonablePrecision(-0), -0)).toBe(true);
+  });
+
+  it("handles extreme bounds correctly without overflowing to Infinity", () => {
+    expect(roundToReasonablePrecision(Number.MAX_VALUE)).toBe(Number.MAX_VALUE);
+    expect(roundToReasonablePrecision(-Number.MAX_VALUE)).toBe(-Number.MAX_VALUE);
+    expect(roundToReasonablePrecision(Number.MAX_SAFE_INTEGER)).toBe(Number.MAX_SAFE_INTEGER);
+    expect(roundToReasonablePrecision(Number.MIN_SAFE_INTEGER)).toBe(Number.MIN_SAFE_INTEGER);
+    expect(roundToReasonablePrecision(Number.MIN_VALUE)).toBe(0);
+  });
+});
+
+describe("convertToUnitSystem", () => {
+  it("should return the original quantity and unit for invalid inputs", () => {
+    expect(convertToUnitSystem(null as any, "g", "imperial")).toEqual({
+      quantity: null,
+      unit: "g",
+    });
+    expect(convertToUnitSystem(NaN, "g", "imperial")).toEqual({
+      quantity: NaN,
+      unit: "g",
+    });
+    expect(convertToUnitSystem(100, "", "imperial")).toEqual({
+      quantity: 100,
+      unit: "",
+    });
+  });
+
+  it("should return the original quantity and unit for unknown units", () => {
+    expect(convertToUnitSystem(100, "unknown", "imperial")).toEqual({
+      quantity: 100,
+      unit: "unknown",
+    });
+  });
+
+  it("should not convert if target system is the same as the unit's system", () => {
+    expect(convertToUnitSystem(100, "g", "metric")).toEqual({
+      quantity: 100,
+      unit: "g",
+    });
+    expect(convertToUnitSystem(100, "oz", "imperial")).toEqual({
+      quantity: 100,
+      unit: "oz",
+    });
+  });
+
+  it("should not convert count dimensions", () => {
+    expect(convertToUnitSystem(100, "piece", "imperial")).toEqual({
+      quantity: 100,
+      unit: "piece",
+    });
+    expect(convertToUnitSystem(100, "units", "imperial")).toEqual({
+      quantity: 100,
+      unit: "units",
+    });
+  });
+
+  it("should be case-insensitive", () => {
+    const r1 = convertToUnitSystem(100, "G", "imperial");
+    expect(r1.unit).toBe("oz");
+    expect(r1.quantity).toBeCloseTo(3.527, 3);
+    const r2 = convertToUnitSystem(100, "Ml", "imperial");
+    expect(r2.unit).toBe("fl_oz");
+    expect(r2.quantity).toBeCloseTo(3.381, 3);
+  });
+
+  it("should convert metric weight to imperial", () => {
+    const r1 = convertToUnitSystem(100, "g", "imperial");
+    expect(r1.unit).toBe("oz");
+    expect(r1.quantity).toBeCloseTo(3.527, 3);
+    const r2 = convertToUnitSystem(500, "g", "imperial");
+    expect(r2.unit).toBe("lb");
+    expect(r2.quantity).toBeCloseTo(1.102, 3);
+    const r3 = convertToUnitSystem(2, "kg", "imperial");
+    expect(r3.unit).toBe("lb");
+    expect(r3.quantity).toBeCloseTo(4.409, 3);
+  });
+
+  it("should convert imperial weight to metric", () => {
+    const r1 = convertToUnitSystem(10, "oz", "metric");
+    expect(r1.unit).toBe("g");
+    expect(r1.quantity).toBeCloseTo(283.495, 3);
+    const r2 = convertToUnitSystem(2, "lb", "metric");
+    expect(r2.unit).toBe("kg");
+    expect(r2.quantity).toBeCloseTo(0.907, 3);
+  });
+
+  it("should convert metric volume to imperial", () => {
+    const r1 = convertToUnitSystem(100, "ml", "imperial");
+    expect(r1.unit).toBe("fl_oz");
+    expect(r1.quantity).toBeCloseTo(3.381, 3);
+    const r2 = convertToUnitSystem(500, "ml", "imperial");
+    expect(r2.unit).toBe("qt");
+    expect(r2.quantity).toBeCloseTo(0.528, 3);
+    const r3 = convertToUnitSystem(2, "l", "imperial");
+    expect(r3.unit).toBe("qt");
+    expect(r3.quantity).toBeCloseTo(2.113, 3);
+  });
+
+  it("should convert imperial volume to metric", () => {
+    const r1 = convertToUnitSystem(10, "fl_oz", "metric");
+    expect(r1.unit).toBe("ml");
+    expect(r1.quantity).toBeCloseTo(295.735, 3);
+    const r2 = convertToUnitSystem(2, "qt", "metric");
+    expect(r2.unit).toBe("l");
+    expect(r2.quantity).toBeCloseTo(1.893, 3);
+    const r3 = convertToUnitSystem(1, "cup", "metric");
+    expect(r3.unit).toBe("ml");
+    expect(r3.quantity).toBeCloseTo(236.588, 3);
   });
 });

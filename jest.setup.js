@@ -183,10 +183,10 @@ jest.mock("react-native/src/private/animated/NativeAnimatedHelper", () => {
 });
 
 // Mock ActivityIndicator for testing
-jest.mock(
-  "react-native/Libraries/Components/ActivityIndicator/ActivityIndicator",
-  () => "ActivityIndicator"
-);
+jest.mock("react-native/Libraries/Components/ActivityIndicator/ActivityIndicator", () => ({
+  __esModule: true,
+  default: "ActivityIndicator",
+}));
 
 // RN 0.83 DebuggingOverlayRegistry references `window` (React DevTools hook)
 // which doesn't exist in the Node test environment. Stub it out.

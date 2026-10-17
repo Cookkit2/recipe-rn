@@ -25,7 +25,8 @@ export class StorageFactory {
    */
   static getInstance(): IStorage {
     if (!this.instance) {
-      throw new StorageError("Storage not initialized", "mmkv");
+      // Preferences can be read during first render, before startup effects run.
+      return this.initialize(this.currentConfig ?? { type: "mmkv" });
     }
     return this.instance;
   }

@@ -166,10 +166,14 @@ const Button = React.forwardRef<React.ComponentRef<typeof Pressable>, ButtonProp
             ref={ref}
             role="button"
             accessibilityRole={accessibilityRole}
-            accessibilityState={{ disabled: !!props.disabled || isLoading }}
             style={[props.style, roundedStyle]}
-            disabled={props.disabled || isLoading}
             {...props}
+            disabled={!!props.disabled || isLoading}
+            accessibilityState={{
+              ...props.accessibilityState,
+              disabled: !!props.disabled || isLoading,
+              busy: !!props.accessibilityState?.busy || isLoading,
+            }}
             children={
               typeof props.children === "function" ? (
                 props.children

@@ -148,8 +148,14 @@ const apiRateLimiter = new RateLimiter({
 
 // Clean up expired entries every 10 minutes
 if (typeof setInterval !== "undefined") {
-  setInterval(() => {
+  const cleanupTimer = setInterval(() => {
     authRateLimiter.cleanup();
     apiRateLimiter.cleanup();
   }, 600000); // 10 minutes
+
+  // Node tools and tests must be able to exit when cleanup is the only work left.
+  // React Native returns a numeric timer id and has no unref method.
+  if (typeof cleanupTimer !== "number") {
+    cleanupTimer.unref();
+  }
 }

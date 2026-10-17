@@ -24,7 +24,7 @@ export default function GridButtons<T>({
             selected={value.includes(item.value)}
             onPress={() => onValueChange(item.value)}
             className={cn(
-              "w-full h-full rounded-2xl border-continuous py-3 items-center justify-center gap-2 border-2",
+              "w-full rounded-2xl border-continuous py-3 items-center justify-center gap-2 border-2",
               value.includes(item.value) ? "border-muted-foreground/40" : "border-transparent"
             )}
           />
