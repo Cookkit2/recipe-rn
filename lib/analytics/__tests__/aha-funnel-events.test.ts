@@ -14,6 +14,8 @@ import { emitAhaShown, emitAhaRecipeOpened, emitFirstCookStarted } from "../funn
 
 // --- Mocks (same shape as the sibling funnel-events suite) ----------------
 
+jest.mock("~/utils/paywall-flags", () => ({ arePaywallsEnabled: () => true }));
+
 jest.mock("~/lib/install-anchor", () => ({
   getInstallAnchor: () => ({ installId: "install-aha", installAnchorTs: 2_000_000 }),
 }));

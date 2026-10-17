@@ -2,6 +2,8 @@
 
 All cloud AI now runs through Nebius Token Factory. There is no Gemini fallback.
 
+The legacy `utils/gemini-api.ts` implementation is retained for future reference. Its `GEMINI_ENABLED` flag is fixed to `false`; generation and model-list calls fail before reading credentials or making network requests. Current app features use `lib/ai/client.ts`. Re-enabling Gemini later requires a server proxy for its credentials.
+
 | Task | Model |
 | --- | --- |
 | Recipe captions, transcripts, website extraction/cleanup and pantry recipe tailoring | `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B` |

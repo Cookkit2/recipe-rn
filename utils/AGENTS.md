@@ -24,6 +24,7 @@ bun run typecheck
 - API errors: `utils/api-error-handler.ts` (+ tests `utils/__tests__/api-error-handler.test.ts`)
 - Scaling math: `utils/recipe-scaling.ts`
 - AI provider integration lives in `lib/ai/` (app client) and `server/` (private Nebius adapter).
+- `gemini-api.ts` is retained but disabled with `GEMINI_ENABLED = false`; do not route app calls to it while Nemotron is active.
 
 ## JIT index hints
 

@@ -27,6 +27,7 @@ import { initImageCache, resolveImageCacheConfig } from "~/lib/image-cache";
 import { AuthProvider, MockAuthStrategy, SupabaseAuthStrategy } from "~/auth";
 import { TEST_IDS } from "~/constants/test-ids";
 import { IS_E2E } from "~/utils/e2e-flags";
+import { arePaywallsEnabled } from "~/utils/paywall-flags";
 import { invalidateSubscriptionEntitlementsQuery } from "~/lib/subscription-query-sync";
 import { AnimatedStack } from "~/components/AnimatedStack";
 import { NotificationProvider } from "~/lib/notifications";
@@ -245,6 +246,8 @@ function useCoreStartupTasks(ref: any) {
 function useRevenueCatSetup() {
   // Defer RevenueCat initialization until the JS thread is idle
   useEffect(() => {
+    if (!arePaywallsEnabled()) return;
+
     let customerInfoListener: CustomerInfoUpdateListener | undefined;
 
     const handle = requestIdleCallback(() => {

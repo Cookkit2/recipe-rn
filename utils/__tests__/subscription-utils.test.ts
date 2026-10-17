@@ -1,9 +1,12 @@
-import { presentPaywall, presentPaywallIfNeeded } from "../subscription-utils";
+import { presentPaywall, presentPaywallIfNeeded, readEntitlement } from "../subscription-utils";
+import { arePaywallsEnabled } from "../paywall-flags";
 import { log } from "../logger";
 import { setStatusBarStyle } from "expo-status-bar";
 import { invalidateSubscriptionEntitlementsQuery } from "~/lib/subscription-query-sync";
 import Purchases from "react-native-purchases";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
+
+jest.mock("../paywall-flags", () => ({ arePaywallsEnabled: jest.fn(() => true) }));
 
 jest.mock("react-native-purchases", () => {
   return {
@@ -48,9 +51,25 @@ jest.mock("expo-status-bar", () => ({
 describe("subscription-utils", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.mocked(arePaywallsEnabled).mockReturnValue(true);
+  });
+
+  it("does not read RevenueCat entitlements when paywalls are disabled", async () => {
+    jest.mocked(arePaywallsEnabled).mockReturnValue(false);
+
+    expect(await readEntitlement()).toBeNull();
+    expect(Purchases.getCustomerInfo).not.toHaveBeenCalled();
   });
 
   describe("presentPaywall", () => {
+    it("allows the action without presenting or recording a purchase when disabled", async () => {
+      jest.mocked(arePaywallsEnabled).mockReturnValue(false);
+
+      expect(await presentPaywall()).toBe(true);
+      expect(RevenueCatUI.presentPaywall).not.toHaveBeenCalled();
+      expect(invalidateSubscriptionEntitlementsQuery).not.toHaveBeenCalled();
+    });
+
     it("should return false when NOT_PRESENTED", async () => {
       (RevenueCatUI.presentPaywall as jest.Mock).mockResolvedValueOnce(
         PAYWALL_RESULT.NOT_PRESENTED
@@ -96,6 +115,15 @@ describe("subscription-utils", () => {
   });
 
   describe("presentPaywallIfNeeded", () => {
+    it("allows the action without accessing RevenueCat when disabled", async () => {
+      jest.mocked(arePaywallsEnabled).mockReturnValue(false);
+
+      expect(await presentPaywallIfNeeded()).toBe(true);
+      expect(Purchases.getCustomerInfo).not.toHaveBeenCalled();
+      expect(RevenueCatUI.presentPaywallIfNeeded).not.toHaveBeenCalled();
+      expect(setStatusBarStyle).not.toHaveBeenCalled();
+    });
+
     it("should return true when customer already has active subscription", async () => {
       const mockCustomerInfo = {
         entitlements: {
