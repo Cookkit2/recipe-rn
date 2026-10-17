@@ -8,4 +8,4 @@
 
 ## 2026-10-11 - Accessible MealSlots
 **Learning:** In a calendar grid, interactive slots that allow users to drop items or tap to select need accessibility roles and labels to convey their state and purpose to screen reader users.
-**Action:** Added `accessibilityRole="button"` and a dynamic `accessibilityLabel` to the `MealSlot` Pressable to clearly state the slot type, its current contents (recipe name or "Empty"), and its actionable state.
+**Action:** Added `accessibilityRole="button"` and a dynamic `accessibilityLabel` to the `MealSlot` Pressable. The label clearly states the empty slot type, but is deliberately set to `undefined` when a meal is planned so the screen reader can naturally read the nested recipe details.
