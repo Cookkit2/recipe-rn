@@ -21,8 +21,8 @@ export const baseIngredientApi = {
   getBaseIngredientByName: async (name: string): Promise<BaseIngredientWithRelations | null> => {
     if (!guardSupabase()) return null;
 
-    // Sanitize input for ILIKE query
-    const escapedName = name.replace(/[%_*\\]/g, "\\$&");
+    // Sanitize input for ILIKE query (do not escape * or ?)
+    const escapedName = name.replace(/[%_\\]/g, "\\$&");
 
     const { data: baseIngredient, error: baseError } = await supabase!
       .from("base_ingredient")
@@ -167,8 +167,8 @@ async function fetchRelatedData(baseIngredientId: string): Promise<BaseIngredien
  * Try to find a base ingredient by synonym
  */
 async function findIngredientBySynonym(name: string): Promise<BaseIngredientWithRelations | null> {
-  // Sanitize input for ILIKE query
-  const escapedName = name.replace(/[%_*\\]/g, "\\$&");
+  // Sanitize input for ILIKE query (do not escape * or ?)
+  const escapedName = name.replace(/[%_\\]/g, "\\$&");
 
   const { data: synonymData, error: synonymError } = await supabase!
     .from("ingredient_synonym")
@@ -214,8 +214,8 @@ async function fetchIngredientsBySynonyms(missingNames: string[]) {
 
   // Execute parameterized queries concurrently
   const synonymPromises = sanitizedNames.map((n) => {
-    // Sanitize input for ILIKE query
-    const escapedName = n.replace(/[%_*\\]/g, "\\$&");
+    // Sanitize input for ILIKE query (do not escape * or ?)
+    const escapedName = n.replace(/[%_\\]/g, "\\$&");
     return supabase!
       .from("ingredient_synonym")
       .select("base_ingredient_id, synonym")
