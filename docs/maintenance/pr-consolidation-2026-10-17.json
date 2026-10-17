@@ -1,0 +1,2983 @@
+{
+  "reviewDate": "2026-10-17",
+  "baseCommit": "a6dbfbd9",
+  "scope": "194 open PRs in the initial GitHub snapshot. Retain focused changes on current master, publish one replacement PR, then close the originals without merging or deleting branches. Concurrently created PRs are outside this snapshot.",
+  "selectionCriteria": [
+    "Current behavior fix or meaningful regression coverage",
+    "Focused changes compatible with current master",
+    "Reject unproven concurrency, raw SQL, storage migration and dependency changes",
+    "Exclude bot journals, retry artifacts, unrelated historical hunks and duplicate implementations"
+  ],
+  "counts": {
+    "retained": 27,
+    "discarded": 88,
+    "superseded": 79
+  },
+  "pullRequests": [
+    {
+      "number": 1194,
+      "title": "Fix preference grids and pin pantry Leftovers shortcut",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1194",
+      "reviewedHead": "d719ec051fdbe54e6766262cf853e4b6a7b60ca2",
+      "decision": "retained",
+      "reason": "Retain the appliance grid height fix and the pinned Leftovers shortcut with horizontally scrolling pantry filters.",
+      "files": [
+        "components/Leftovers/LeftoversSummary.tsx",
+        "components/Pantry/IngredientCategoryButtonGroup.tsx",
+        "components/Pantry/IngredientLists.tsx",
+        "components/Shared/GridButtons.tsx"
+      ],
+      "retainedFiles": [
+        "components/Leftovers/LeftoversSummary.tsx",
+        "components/Pantry/IngredientCategoryButtonGroup.tsx",
+        "components/Pantry/IngredientLists.tsx",
+        "components/Shared/GridButtons.tsx"
+      ]
+    },
+    {
+      "number": 1192,
+      "title": "chore(deps-dev): bump the testing-dependencies group across 1 directory with 3 updates",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1192",
+      "reviewedHead": "c8b3e92cdba173f57cbfadc0868e34b184386b6f",
+      "decision": "discarded",
+      "reason": "Dependency-only proposal is not required for the selected fixes; it lacks a matching frozen-lockfile/native compatibility validation for this cleanup. Preserve the currently tested Expo/React Native dependency set.",
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "number": 1191,
+      "title": "🛡️ Sentinel: [CRITICAL] Fix SQL injection in user query",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1191",
+      "reviewedHead": "ba7af7a160fa7a29d6fa4b751f8a3ecffb10a629",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1190,
+      "title": "Restore Jest, ingredient lookup safety, and Expo native startup",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1190",
+      "reviewedHead": "158b37a9d5c91e180572bd0e3903e74956ec8d0b",
+      "decision": "retained",
+      "reason": "Retain focused exact lookup, loading accessibility, startup storage, timer lifecycle, numeric bounds and voice-parser changes with tests. Omit stale dependency, native-build and E2E configuration changes.",
+      "files": [
+        ".cursor/scratchpad.md",
+        ".gitignore",
+        "AGENTS.md",
+        "app/(misc)/search.tsx",
+        "app/profile/index.tsx",
+        "bun.lockb",
+        "components/AnimatedStack.tsx",
+        "components/Pantry/__tests__/ImportRecipeDialog.test.tsx",
+        "components/RecipeStep.tsx",
+        "components/__tests__/AnimatedStack-compiler.test.tsx",
+        "components/__tests__/AnimatedStack.test.tsx",
+        "components/__tests__/RecipeStep.test.tsx",
+        "components/auth/SocialAuthButton.tsx",
+        "components/navigation/ScreenGroupIngredient.tsx",
+        "components/navigation/ScreenGroupMisc.tsx",
+        "components/navigation/ScreenGroupPantry.tsx",
+        "components/navigation/ScreenGroupProfile.tsx",
+        "components/navigation/ScreenGroupRecipe.tsx",
+        "components/ui/__tests__/button-accessibility.test.tsx",
+        "components/ui/button.tsx",
+        "data/storage/__tests__/storage-factory-startup.test.ts",
+        "data/storage/storage-factory.ts",
+        "data/supabase-api/BaseIngredientApi.ts",
+        "data/supabase-api/__tests__/BaseIngredientApi.test.ts",
+        "detox.config.js",
+        "docs/ROADMAP.md",
+        "docs/maintenance/pr-review-2026-10-11.json",
+        "docs/superpowers/specs/2026-05-03-auth-rls-household-sync-design.md",
+        "e2e/README.md",
+        "e2e/jest.config.js",
+        "e2e/scenarios/auth.e2e.ts",
+        "e2e/scenarios/navigation.e2e.ts",
+        "e2e/screens/AuthScreen.ts",
+        "e2e/screens/HomeScreen.ts",
+        "e2e/setup.js",
+        "e2e/tsconfig.json",
+        "hooks/queries/__tests__/useEntitlement.test.tsx",
+        "hooks/queries/__tests__/useMealPlanGeneration.test.tsx",
+        "ios/Cookkit.xcodeproj/project.pbxproj",
+        "ios/Podfile.lock",
+        "ios/Podfile.properties.json",
+        "jest.config.js",
+        "jest.setup.js",
+        "package.json",
+        "patches/metro@0.84.4.patch",
+        "scripts/__tests__/metro-assets.test.js",
+        "scripts/__tests__/native-singletons.test.js",
+        "scripts/__tests__/prepare-e2e-ios.test.js",
+        "scripts/prepare-e2e-ios.js",
+        "utils/__tests__/array-helper.test.ts",
+        "utils/__tests__/distance-calculation.test.ts",
+        "utils/__tests__/price-calculator.test.ts",
+        "utils/__tests__/rate-limiter-lifecycle.test.ts",
+        "utils/__tests__/text-formatter.test.ts",
+        "utils/__tests__/unit-converter.test.ts",
+        "utils/__tests__/voice-command-parser.test.ts",
+        "utils/input-sanitization.ts",
+        "utils/rate-limiter.ts",
+        "utils/unit-converter.ts",
+        "utils/voice-command-parser.ts"
+      ],
+      "retainedFiles": [
+        "components/RecipeStep.tsx",
+        "components/__tests__/RecipeStep.test.tsx",
+        "components/auth/SocialAuthButton.tsx",
+        "components/ui/button.tsx",
+        "components/ui/__tests__/button-accessibility.test.tsx",
+        "data/storage/storage-factory.ts",
+        "data/storage/__tests__/storage-factory-startup.test.ts",
+        "data/supabase-api/BaseIngredientApi.ts",
+        "data/supabase-api/__tests__/BaseIngredientApi.test.ts",
+        "utils/input-sanitization.ts",
+        "utils/rate-limiter.ts",
+        "utils/unit-converter.ts",
+        "utils/voice-command-parser.ts",
+        "utils/__tests__/array-helper.test.ts",
+        "utils/__tests__/distance-calculation.test.ts",
+        "utils/__tests__/price-calculator.test.ts",
+        "utils/__tests__/rate-limiter-lifecycle.test.ts",
+        "utils/__tests__/text-formatter.test.ts",
+        "utils/__tests__/unit-converter.test.ts",
+        "utils/__tests__/voice-command-parser.test.ts"
+      ]
+    },
+    {
+      "number": 1189,
+      "title": "🎨 Palette: [Accessibility] Add busy state to accessibilityState for loading buttons",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1189",
+      "reviewedHead": "934134e2fb7ace648243e29e0eb0b1f333e8d363",
+      "decision": "superseded",
+      "reason": "Loading/busy state is covered by the canonical Button/SocialAuthButton fix with tests for caller-state preservation and disabled precedence; omit duplicate, dependency and historical hunks.",
+      "files": [
+        ".Jules/palette.md",
+        "components/Preferences/AllergySection.tsx",
+        "components/ui/button.tsx",
+        "data/api/recipeImportApi.ts",
+        "hooks/useImagePreloader.ts",
+        "hooks/useRecipeEdit.ts",
+        "lib/supabase/supabase-types.ts",
+        "types/Allergen.ts"
+      ]
+    },
+    {
+      "number": 1188,
+      "title": "🛡️ Sentinel: [CRITICAL] Fix SQL injection wildcard vulnerability",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1188",
+      "reviewedHead": "3e67bf6fbdcfe5149654f268dbe3d83813d0f785",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "utils/input-sanitization.ts"
+      ]
+    },
+    {
+      "number": 1187,
+      "title": "🎨 Palette: Add accessibility labels to recipe action buttons",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1187",
+      "reviewedHead": "a69dae6613473a7b364a671ebc04b57c572687bc",
+      "decision": "retained",
+      "reason": "Retain recipe action labels only. Omit unrelated formatting and patch-artifact deletion.",
+      "files": [
+        "components/Preferences/AllergySection.tsx",
+        "components/Recipe/Details/BottomActionBar.tsx",
+        "data/api/recipeImportApi.ts",
+        "hooks/useImagePreloader.ts",
+        "hooks/useRecipeEdit.ts",
+        "lib/supabase/supabase-types.ts",
+        "replace_createslug.diff",
+        "types/Allergen.ts"
+      ],
+      "retainedFiles": [
+        "components/Recipe/Details/BottomActionBar.tsx"
+      ]
+    },
+    {
+      "number": 1186,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in Supabase queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1186",
+      "reviewedHead": "1a042932ce97d197d95da3798cbf5264af174d60",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "utils/__tests__/input-sanitization.test.ts",
+        "utils/input-sanitization.ts"
+      ]
+    },
+    {
+      "number": 1185,
+      "title": "⚡ Bolt: Optimize FlatList re-renders with React.memo and useCallback",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1185",
+      "reviewedHead": "69677346e2740dfd72ac3d343c2a50eeca01d47c",
+      "decision": "discarded",
+      "reason": "Memoization touches feature lists that have changed on current master; no measured render reduction or regression tests establish value.",
+      "files": [
+        "app/grocery-list/index.tsx",
+        "app/meal-plan/components/RecipeSelectionSheet.tsx",
+        "components/GroceryList/GroceryListItem.tsx",
+        "components/MealPlanCalendar/RecipeDraggable.tsx"
+      ]
+    },
+    {
+      "number": 1184,
+      "title": "🛡️ Sentinel: [HIGH] Fix Supabase wildcard injection via ilike",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1184",
+      "reviewedHead": "c4c3eaecaf053d485b136c5dbe8f5ddf74148ca6",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1183,
+      "title": "🎨 Palette: [UX improvement] Add busy state to Button when isLoading",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1183",
+      "reviewedHead": "afe1db6ae791f927c5537ac0f773806edd847331",
+      "decision": "superseded",
+      "reason": "Loading/busy state is covered by the canonical Button/SocialAuthButton fix with tests for caller-state preservation and disabled precedence; omit duplicate, dependency and historical hunks.",
+      "files": [
+        ".Jules/palette.md",
+        "components/ui/button.tsx"
+      ]
+    },
+    {
+      "number": 1182,
+      "title": "🛡️ Sentinel: [HIGH] Fix unescaped wildcard in database input sanitization",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1182",
+      "reviewedHead": "e7c61df611fbd0d676ae7d91d30fa5b4bd62b814",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "utils/__tests__/input-sanitization.test.ts",
+        "utils/input-sanitization.ts"
+      ]
+    },
+    {
+      "number": 1181,
+      "title": "🎨 Palette: [a11y improvement for Button loading state]",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1181",
+      "reviewedHead": "881123f9e523f2473fdb9433ed02848a2d65bed9",
+      "decision": "superseded",
+      "reason": "Loading/busy state is covered by the canonical Button/SocialAuthButton fix with tests for caller-state preservation and disabled precedence; omit duplicate, dependency and historical hunks.",
+      "files": [
+        ".jules/palette.md",
+        "components/ui/button.tsx"
+      ]
+    },
+    {
+      "number": 1180,
+      "title": "chore(deps-dev): bump the dev-dependencies group across 1 directory with 2 updates",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1180",
+      "reviewedHead": "04c355e9254f739ad86edc86a1d27037e07541d4",
+      "decision": "discarded",
+      "reason": "Dependency-only proposal is not required for the selected fixes; it lacks a matching frozen-lockfile/native compatibility validation for this cleanup. Preserve the currently tested Expo/React Native dependency set.",
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "number": 1179,
+      "title": "🎨 Palette: Add busy state to interactive components",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1179",
+      "reviewedHead": "ecf98dfa973e1281904259033ba4ff0a9d141dda",
+      "decision": "superseded",
+      "reason": "Loading/busy state is covered by the canonical Button/SocialAuthButton fix with tests for caller-state preservation and disabled precedence; omit duplicate, dependency and historical hunks.",
+      "files": [
+        ".jules/palette.md",
+        "bun.lockb",
+        "components/auth/SocialAuthButton.tsx",
+        "components/ui/button.tsx",
+        "package.json"
+      ]
+    },
+    {
+      "number": 1178,
+      "title": "🛡️ Sentinel: [MEDIUM] Fix PostgREST wildcard injection in BaseIngredientApi",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1178",
+      "reviewedHead": "831c76d2dc75faa9e838fc2fce4b65745417dbfd",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts",
+        "utils/input-sanitization.ts"
+      ]
+    },
+    {
+      "number": 1177,
+      "title": "🎨 Palette: Add accessibility loading states to buttons",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1177",
+      "reviewedHead": "bd04df70ffc1f59c5c5b288a6cbd4ef522321f8a",
+      "decision": "superseded",
+      "reason": "Loading/busy state is covered by the canonical Button/SocialAuthButton fix with tests for caller-state preservation and disabled precedence; omit duplicate, dependency and historical hunks.",
+      "files": [
+        ".Jules/palette.md",
+        "components/auth/SocialAuthButton.tsx",
+        "components/ui/button.tsx"
+      ]
+    },
+    {
+      "number": 1176,
+      "title": "🎨 Palette: Announce busy state for loading buttons",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1176",
+      "reviewedHead": "7a2f74d402f3a430860bf3f2e8ae683d083e8278",
+      "decision": "superseded",
+      "reason": "Loading/busy state is covered by the canonical Button/SocialAuthButton fix with tests for caller-state preservation and disabled precedence; omit duplicate, dependency and historical hunks.",
+      "files": [
+        "components/ui/button.tsx"
+      ]
+    },
+    {
+      "number": 1175,
+      "title": "🧹 Code Health: Refactor RecipeEditForm into smaller components",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1175",
+      "reviewedHead": "17dd843e8d9f70b5b04dba84c683bd54dc1941ad",
+      "decision": "discarded",
+      "reason": "Behavior-preserving component/helper extraction or script churn with no demonstrated bug or performance regression to fix. Omit unrelated artifacts/dependency changes.",
+      "files": [
+        "components/Recipe/Edit/RecipeEditForm.tsx",
+        "components/Recipe/Edit/RecipeEditIngredients.tsx",
+        "components/Recipe/Edit/RecipeEditSteps.tsx"
+      ]
+    },
+    {
+      "number": 1174,
+      "title": "⚡ Optimize getCookingStats aggregation",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1174",
+      "reviewedHead": "a6a95225399392c24afcebef4d164ecf3780c219",
+      "decision": "discarded",
+      "reason": "Native aggregation changes lack regression coverage establishing the same results on both SQLite and web fallback.",
+      "files": [
+        "data/db/repositories/CookingHistoryRepository.ts"
+      ]
+    },
+    {
+      "number": 1173,
+      "title": "🧹 [code health improvement] Refactor long RecipeLists function",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1173",
+      "reviewedHead": "a0cb0ae0f581c9f795b77dc1aca1c22b37d85457",
+      "decision": "discarded",
+      "reason": "Behavior-preserving component/helper extraction or script churn with no demonstrated bug or performance regression to fix. Omit unrelated artifacts/dependency changes.",
+      "files": [
+        "components/Pantry/RecipeLists.tsx",
+        "components/Preferences/AllergySection.tsx",
+        "data/api/recipeImportApi.ts",
+        "hooks/useImagePreloader.ts",
+        "hooks/useRecipeEdit.ts",
+        "lib/supabase/supabase-types.ts",
+        "types/Allergen.ts"
+      ]
+    },
+    {
+      "number": 1172,
+      "title": "🧹 [code health improvement] Refactor RecipeLists component",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1172",
+      "reviewedHead": "ca70e7497a145466b1a3e55454fdd2868048e4f3",
+      "decision": "discarded",
+      "reason": "Behavior-preserving component/helper extraction or script churn with no demonstrated bug or performance regression to fix. Omit unrelated artifacts/dependency changes.",
+      "files": [
+        "components/Pantry/RecipeLists.tsx",
+        "components/Preferences/AllergySection.tsx",
+        "data/api/recipeImportApi.ts",
+        "hooks/useImagePreloader.ts",
+        "hooks/useRecipeEdit.ts",
+        "lib/supabase/supabase-types.ts",
+        "types/Allergen.ts"
+      ]
+    },
+    {
+      "number": 1171,
+      "title": "🧪 [testing improvement] Add edge cases for haversineDistance calculation",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1171",
+      "reviewedHead": "f0afdbbf481b5069bd5e6eabdc0ac832d90bbaa6",
+      "decision": "retained",
+      "reason": "Retain focused utility regression coverage from the curated maintenance change; omit unrelated historical and dependency edits.",
+      "files": [
+        "utils/__tests__/distance-calculation.test.ts"
+      ],
+      "retainedFiles": [
+        "utils/__tests__/distance-calculation.test.ts"
+      ]
+    },
+    {
+      "number": 1170,
+      "title": "🧪 [Testing] Add capitalize edge case tests",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1170",
+      "reviewedHead": "6d0296c12c6f73975d0b4fd2548b7243fa9676bd",
+      "decision": "retained",
+      "reason": "Retain focused utility regression coverage from the curated maintenance change; omit unrelated historical and dependency edits.",
+      "files": [
+        "bun.lockb",
+        "package.json",
+        "utils/__tests__/text-formatter.test.ts"
+      ],
+      "retainedFiles": [
+        "utils/__tests__/text-formatter.test.ts"
+      ]
+    },
+    {
+      "number": 1169,
+      "title": "🧹 [Code Health] Refactor long function in RecipeLists",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1169",
+      "reviewedHead": "c73b1bfdfbc79a98101125e667c7536448087652",
+      "decision": "discarded",
+      "reason": "Behavior-preserving component/helper extraction or script churn with no demonstrated bug or performance regression to fix. Omit unrelated artifacts/dependency changes.",
+      "files": [
+        "components/Pantry/RecipeLists.tsx"
+      ]
+    },
+    {
+      "number": 1168,
+      "title": "⚡ Bolt: [Performance optimization] Pre-fetch achievement metrics",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1168",
+      "reviewedHead": "7664bb68074564b9595e129258ae14aec0afe038",
+      "decision": "discarded",
+      "reason": "Introduces a broad metrics cache and many any-typed values without behavioral or cache-lifetime regression tests.",
+      "files": [
+        "bun.lockb",
+        "data/services/AchievementService.ts"
+      ]
+    },
+    {
+      "number": 1167,
+      "title": "🧹 Code Health: Extract loading and error components in GroceryMapPage",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1167",
+      "reviewedHead": "7216e68cfd79c2c3364f896f985cdd2dc32da75b",
+      "decision": "discarded",
+      "reason": "Behavior-preserving component/helper extraction or script churn with no demonstrated bug or performance regression to fix. Omit unrelated artifacts/dependency changes.",
+      "files": [
+        "app/grocery-map/index.tsx",
+        "bun.lockb",
+        "package.json"
+      ]
+    },
+    {
+      "number": 1166,
+      "title": "🧪 [Refactor] Improve YouTube URL testing with table-driven tests",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1166",
+      "reviewedHead": "5d912074193f8444a140f79d7cda46a8b8b63f76",
+      "decision": "discarded",
+      "reason": "Table-driven rewrite mostly repeats existing URL cases. Preserve current tests; no product fix requires this test churn.",
+      "files": [
+        "utils/__tests__/youtube-utils.test.ts"
+      ]
+    },
+    {
+      "number": 1165,
+      "title": "🧪 [Add tests for convertToUnitSystem]",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1165",
+      "reviewedHead": "0bcbd607b46f455caddffdfa7133a5c895c41720",
+      "decision": "retained",
+      "reason": "Retain focused utility regression coverage from the curated maintenance change; omit unrelated historical and dependency edits.",
+      "files": [
+        "utils/__tests__/unit-converter.test.ts"
+      ],
+      "retainedFiles": [
+        "utils/__tests__/unit-converter.test.ts"
+      ]
+    },
+    {
+      "number": 1164,
+      "title": "🧪 [testing improvement] Add missing test scenarios to toggleFromArray",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1164",
+      "reviewedHead": "1a5942c537ad95f413f3b02012eb4fca9e18cc05",
+      "decision": "retained",
+      "reason": "Retain focused utility regression coverage from the curated maintenance change; omit unrelated historical and dependency edits.",
+      "files": [
+        "utils/__tests__/array-helper.test.ts"
+      ],
+      "retainedFiles": [
+        "utils/__tests__/array-helper.test.ts"
+      ]
+    },
+    {
+      "number": 1163,
+      "title": "🧹 [code health improvement] Refactor long function in RecipeEditForm",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1163",
+      "reviewedHead": "f31a60972dccad9b7bb46450c64a0cec5ec143f6",
+      "decision": "discarded",
+      "reason": "Behavior-preserving component/helper extraction or script churn with no demonstrated bug or performance regression to fix. Omit unrelated artifacts/dependency changes.",
+      "files": [
+        "components/Recipe/Edit/RecipeEditForm.tsx"
+      ]
+    },
+    {
+      "number": 1162,
+      "title": "🧹 [Code Health] Extract formatSyncTime for better maintainability",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1162",
+      "reviewedHead": "0c362d3e4795dfee1646563a81a608ac0336fd7d",
+      "decision": "discarded",
+      "reason": "Helper extraction preserves behavior and does not resolve a current bug. Omitted to keep the consolidation focused.",
+      "files": [
+        "app/profile/household.tsx",
+        "utils/__tests__/time-formatter.test.ts",
+        "utils/time-formatter.ts"
+      ]
+    },
+    {
+      "number": 1161,
+      "title": "🧹 [code health improvement] Refactor RecipeEditForm into smaller sub-components",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1161",
+      "reviewedHead": "4d776b9bb8829380342e7d980ad9fae5151c7f91",
+      "decision": "discarded",
+      "reason": "Behavior-preserving component/helper extraction or script churn with no demonstrated bug or performance regression to fix. Omit unrelated artifacts/dependency changes.",
+      "files": [
+        "components/Recipe/Edit/DescriptionSection.tsx",
+        "components/Recipe/Edit/IngredientsSection.tsx",
+        "components/Recipe/Edit/RecipeEditForm.tsx",
+        "components/Recipe/Edit/StepsSection.tsx",
+        "components/Recipe/Edit/TitleSection.tsx"
+      ]
+    },
+    {
+      "number": 1160,
+      "title": "🧹 [Refactor] Move password strength functions out of component",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1160",
+      "reviewedHead": "9f1fd9e04f675d27b8efa68d127989543576c004",
+      "decision": "discarded",
+      "reason": "Behavior-preserving component/helper extraction or script churn with no demonstrated bug or performance regression to fix. Omit unrelated artifacts/dependency changes.",
+      "files": [
+        "app/(auth)/sign-up.tsx"
+      ]
+    },
+    {
+      "number": 1159,
+      "title": "🧹 Code Health: Extract inner components from RecipeLists",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1159",
+      "reviewedHead": "bb1f0ea1d491d5a1d268cfa0e052d79bc216f72f",
+      "decision": "discarded",
+      "reason": "Behavior-preserving component/helper extraction or script churn with no demonstrated bug or performance regression to fix. Omit unrelated artifacts/dependency changes.",
+      "files": [
+        "components/Pantry/RecipeLists.tsx"
+      ]
+    },
+    {
+      "number": 1158,
+      "title": "🧪 [testing improvement] Cover malformed JSON syntax errors in safeJsonParse",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1158",
+      "reviewedHead": "84f4acc1a522e0f29639bd048c579634017cfc23",
+      "decision": "discarded",
+      "reason": "The existing malformed-JSON test already covers the same failure path; changing the malformed string adds no coverage.",
+      "files": [
+        "utils/__tests__/json-parsing.test.ts"
+      ]
+    },
+    {
+      "number": 1157,
+      "title": "🧹 [Code Health] Extract recipe form handlers to a custom hook",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1157",
+      "reviewedHead": "103e0e00e6a92479a8a696fb49a44d84529ba590",
+      "decision": "discarded",
+      "reason": "Behavior-preserving component/helper extraction or script churn with no demonstrated bug or performance regression to fix. Omit unrelated artifacts/dependency changes.",
+      "files": [
+        "components/Recipe/Edit/RecipeEditForm.tsx",
+        "components/Recipe/Edit/useRecipeFormHandlers.ts"
+      ]
+    },
+    {
+      "number": 1156,
+      "title": "feat: track user's helpful votes in state",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1156",
+      "reviewedHead": "a8e2ad335dba8ca4610ca4c9ceb85a1739a18cbe",
+      "decision": "discarded",
+      "reason": "Edits an implementation example in a planning document rather than runtime code; the current ReviewCard already tracks votes.",
+      "files": [
+        "docs/superpowers/plans/2026-05-23-recipe-ratings-reviews.md"
+      ]
+    },
+    {
+      "number": 1155,
+      "title": "🧪 [testing improvement] Add edge case tests for groupPricesByCategory",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1155",
+      "reviewedHead": "1ff8204d1e2955da7b6b9152aa0a7117dc4fe126",
+      "decision": "retained",
+      "reason": "Retain focused utility regression coverage from the curated maintenance change; omit unrelated historical and dependency edits.",
+      "files": [
+        "utils/__tests__/price-calculator.test.ts"
+      ],
+      "retainedFiles": [
+        "utils/__tests__/price-calculator.test.ts"
+      ]
+    },
+    {
+      "number": 1154,
+      "title": "🧹 Refactor: Extract components in MealPlanDragItem",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1154",
+      "reviewedHead": "b1e08f4abafb66d98f61e713c51937173ad71198",
+      "decision": "discarded",
+      "reason": "Behavior-preserving component/helper extraction or script churn with no demonstrated bug or performance regression to fix. Omit unrelated artifacts/dependency changes.",
+      "files": [
+        "components/MealPlanCalendar/MealPlanDragItem.tsx"
+      ]
+    },
+    {
+      "number": 1153,
+      "title": "🧹 [Code Health] Replace console.log with console.info in scripts",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1153",
+      "reviewedHead": "bb8b640c9d990849ede2a7516f38bcb02a735b76",
+      "decision": "discarded",
+      "reason": "Behavior-preserving component/helper extraction or script churn with no demonstrated bug or performance regression to fix. Omit unrelated artifacts/dependency changes.",
+      "files": [
+        "scripts/backfill-recipe-images.ts"
+      ]
+    },
+    {
+      "number": 1152,
+      "title": "🧪 [Testing Improvement] Test roundToReasonablePrecision bounds",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1152",
+      "reviewedHead": "ec4798c40336c408727578ec17d066b37eddb1e3",
+      "decision": "retained",
+      "reason": "Retain focused utility regression coverage from the curated maintenance change; omit unrelated historical and dependency edits.",
+      "files": [
+        "utils/__tests__/unit-converter.test.ts",
+        "utils/unit-converter.ts"
+      ],
+      "retainedFiles": [
+        "utils/unit-converter.ts",
+        "utils/__tests__/unit-converter.test.ts"
+      ]
+    },
+    {
+      "number": 1151,
+      "title": "🧪 [testing improvement] Enhance quickCookingCheck threshold coverage",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1151",
+      "reviewedHead": "98b50997dd1d4b9cfc6877c22f9596a9768254c3",
+      "decision": "retained",
+      "reason": "Retain distinct keyword-count and confidence-cap coverage.",
+      "files": [
+        "utils/__tests__/youtube-utils.test.ts"
+      ],
+      "retainedFiles": [
+        "utils/__tests__/youtube-utils.test.ts"
+      ]
+    },
+    {
+      "number": 1150,
+      "title": "🛡️ Sentinel: [Low] Fix hardcoded mock API key",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1150",
+      "reviewedHead": "fc9b086f77e6384fcbe61ca13e5d3ff8cfa5d4d8",
+      "decision": "discarded",
+      "reason": "A clearly fake test key is not a live secret. This adds environment coupling and unrelated CI changes without fixing production key handling.",
+      "files": [
+        ".github/workflows/ci.yml",
+        "__mocks__/expo-constants.ts"
+      ]
+    },
+    {
+      "number": 1149,
+      "title": "🧪 [testing improvement] Add case-insensitive tests for irregular plurals",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1149",
+      "reviewedHead": "a06298d9d9197ebe139b7d47f11e4e92ba58948f",
+      "decision": "retained",
+      "reason": "Retain focused utility regression coverage from the curated maintenance change; omit unrelated historical and dependency edits.",
+      "files": [
+        "utils/__tests__/text-formatter.test.ts"
+      ],
+      "retainedFiles": [
+        "utils/__tests__/text-formatter.test.ts"
+      ]
+    },
+    {
+      "number": 1148,
+      "title": "🧪 [testing improvement] Add tests for formatQuantity fraction formatting",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1148",
+      "reviewedHead": "c3abad240b3d34d99fc36eab7d4579f105107b32",
+      "decision": "retained",
+      "reason": "Retain focused utility regression coverage from the curated maintenance change; omit unrelated historical and dependency edits.",
+      "files": [
+        "utils/__tests__/text-formatter.test.ts"
+      ],
+      "retainedFiles": [
+        "utils/__tests__/text-formatter.test.ts"
+      ]
+    },
+    {
+      "number": 1147,
+      "title": "🧪 Add test file for store-hours.ts",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1147",
+      "reviewedHead": "d0ff4161cae5ff96da0632f8858fda4e803fbd6b",
+      "decision": "discarded",
+      "reason": "The reviewed diff is empty or contains only bot journal notes; no application change to retain.",
+      "files": []
+    },
+    {
+      "number": 1146,
+      "title": "🧹 [Extract Ingredients and Steps sections in RecipeEditForm]",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1146",
+      "reviewedHead": "3419ad285fca02d2fe3fb8aba2e4cf3d7d447ce4",
+      "decision": "discarded",
+      "reason": "Behavior-preserving component/helper extraction or script churn with no demonstrated bug or performance regression to fix. Omit unrelated artifacts/dependency changes.",
+      "files": [
+        "complete.py",
+        "complete_task.js",
+        "components/Recipe/Edit/EditIngredientsSection.tsx",
+        "components/Recipe/Edit/EditStepsSection.tsx",
+        "components/Recipe/Edit/RecipeEditForm.tsx",
+        "done.json",
+        "exit.sh",
+        "fake_done.py",
+        "finish.js",
+        "finish_for_real.js",
+        "finish_task.py",
+        "force_done.sh",
+        "payload.json",
+        "run_done.sh",
+        "use_done.js",
+        "use_done.sh",
+        "use_done_tool.py"
+      ]
+    },
+    {
+      "number": 1145,
+      "title": "🧹 [code health improvement] Refactor RecipeLists.tsx to extract smaller components",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1145",
+      "reviewedHead": "65797533d8f1779966319b421a5a72acecf433a1",
+      "decision": "discarded",
+      "reason": "Behavior-preserving component/helper extraction or script churn with no demonstrated bug or performance regression to fix. Omit unrelated artifacts/dependency changes.",
+      "files": [
+        "components/Pantry/RecipeLists.tsx"
+      ]
+    },
+    {
+      "number": 1144,
+      "title": "🧪 testing: Exhaustively test areDimensionsCompatible unit mappings",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1144",
+      "reviewedHead": "d7b1414565187b06aaf311dd09f3db2aec656d6f",
+      "decision": "retained",
+      "reason": "Retain focused utility regression coverage from the curated maintenance change; omit unrelated historical and dependency edits.",
+      "files": [
+        "utils/__tests__/unit-converter.test.ts"
+      ],
+      "retainedFiles": [
+        "utils/__tests__/unit-converter.test.ts"
+      ]
+    },
+    {
+      "number": 1143,
+      "title": "🧹 [Refactor HouseholdSettingsScreen into smaller components]",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1143",
+      "reviewedHead": "882c7eba2912a576b652cd4b2a3b4c169eb6d616",
+      "decision": "discarded",
+      "reason": "Behavior-preserving component/helper extraction or script churn with no demonstrated bug or performance regression to fix. Omit unrelated artifacts/dependency changes.",
+      "files": [
+        "app/profile/household.tsx"
+      ]
+    },
+    {
+      "number": 1142,
+      "title": "🧹 Code Health: replace deprecated experiment variant",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1142",
+      "reviewedHead": "8e0661a6df50c3ab8a5713ff757b8334553b1396",
+      "decision": "discarded",
+      "reason": "Renames a test fixture from deprecated_variant to removed_variant without changing tested behavior.",
+      "files": [
+        "lib/experiments/__tests__/useExperiment.test.ts"
+      ]
+    },
+    {
+      "number": 1141,
+      "title": "🎨 Palette: [UX improvement] Add busy state to Button accessibility",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1141",
+      "reviewedHead": "3f9b201901415db73d887cd206cd5a3cc80bf4d1",
+      "decision": "superseded",
+      "reason": "Loading/busy state is covered by the canonical Button/SocialAuthButton fix with tests for caller-state preservation and disabled precedence; omit duplicate, dependency and historical hunks.",
+      "files": [
+        ".jules/palette.md",
+        "components/ui/button.tsx"
+      ]
+    },
+    {
+      "number": 1140,
+      "title": "🛡️ Sentinel: [CRITICAL] Fix PostgREST wildcard injection",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1140",
+      "reviewedHead": "264dd43e46264677585fe2bd943d95b889305842",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1139,
+      "title": "🎨 Palette: Fix accessibility states for loading buttons",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1139",
+      "reviewedHead": "765528ed223fc93d44ac95ed28f0ec5806e399c6",
+      "decision": "superseded",
+      "reason": "Loading/busy state is covered by the canonical Button/SocialAuthButton fix with tests for caller-state preservation and disabled precedence; omit duplicate, dependency and historical hunks.",
+      "files": [
+        ".jules/palette.md",
+        "components/auth/SocialAuthButton.tsx",
+        "components/ui/button.tsx"
+      ]
+    },
+    {
+      "number": 1138,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1138",
+      "reviewedHead": "9d77d4b4c96e115ace829dec0d267588a9a0dbd3",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1137,
+      "title": "🛡️ Sentinel: [HIGH] Fix PostgREST wildcard injection",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1137",
+      "reviewedHead": "72e89d97176120d5637e3e6afcdc759cd350694f",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts",
+        "utils/__tests__/input-sanitization.test.ts",
+        "utils/input-sanitization.ts"
+      ]
+    },
+    {
+      "number": 1136,
+      "title": "⚡ Bolt: [performance improvement]",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1136",
+      "reviewedHead": "3a4550d18c275be1f1289354dae4d7d83da568dd",
+      "decision": "discarded",
+      "reason": "Loop/grouping micro-optimization lacks measured product benefit and targeted behavior regression evidence; preserve the current implementation.",
+      "files": [
+        ".jules/bolt.md",
+        "app/profile/achievements.tsx"
+      ]
+    },
+    {
+      "number": 1135,
+      "title": "🎨 Palette: [UX improvement] Improve recipe step accessibility",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1135",
+      "reviewedHead": "ffbcf93159ae2e1e800c5eb5eeea56851505a129",
+      "decision": "retained",
+      "reason": "Retain focused utility regression coverage from the curated maintenance change; omit unrelated historical and dependency edits.",
+      "files": [
+        ".jules/palette.md",
+        "components/RecipeStep.tsx",
+        "components/__tests__/RecipeStep.test.tsx"
+      ],
+      "retainedFiles": [
+        "components/RecipeStep.tsx",
+        "components/__tests__/RecipeStep.test.tsx"
+      ]
+    },
+    {
+      "number": 1134,
+      "title": "🛡️ Sentinel: [CRITICAL] Fix SQL wildcard injection in BaseIngredientApi",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1134",
+      "reviewedHead": "e7c31606a6d9de33ac44a5b28d479836ef56d376",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1133,
+      "title": "🎨 Palette: [UX improvement]",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1133",
+      "reviewedHead": "87531c2a48172193bcd6b04e8c548a419d1ca778",
+      "decision": "superseded",
+      "reason": "Loading/busy state is covered by the canonical tested Button fix; omit this duplicate implementation.",
+      "files": [
+        ".jules/palette.md",
+        "components/ui/button.tsx"
+      ]
+    },
+    {
+      "number": 1132,
+      "title": "🎨 Palette: Improve accessibility of RecipeStep checkbox",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1132",
+      "reviewedHead": "0b0f64420ebbe506501ddea92225a36a2a03f5a6",
+      "decision": "superseded",
+      "reason": "Recipe-step narration is covered by the canonical descriptive label and completion hint with regression assertions; omit duplicate and unrelated hunks.",
+      "files": [
+        ".jules/palette.md",
+        "components/RecipeStep.tsx"
+      ]
+    },
+    {
+      "number": 1131,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in ilike queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1131",
+      "reviewedHead": "47a92521e626af28d83ca551dbd69472bdada368",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts",
+        "utils/__tests__/input-sanitization.test.ts",
+        "utils/input-sanitization.ts"
+      ]
+    },
+    {
+      "number": 1130,
+      "title": "⚡ Bolt: Optimize achievement grouping with for loop and useMemo",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1130",
+      "reviewedHead": "25849ef445daa20419971319f4d9bfc418503d67",
+      "decision": "discarded",
+      "reason": "Loop/grouping micro-optimization lacks measured product benefit and targeted behavior regression evidence; preserve the current implementation.",
+      "files": [
+        ".jules/bolt.md",
+        "app/profile/achievements.tsx"
+      ]
+    },
+    {
+      "number": 1129,
+      "title": "🛡️ Sentinel: [High] Fix PostgREST wildcard injection",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1129",
+      "reviewedHead": "33252f5571523a06ac2dcfdf1fc3c2f61f6114dd",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts",
+        "utils/input-sanitization.ts"
+      ]
+    },
+    {
+      "number": 1128,
+      "title": "🎨 Palette: Improve RecipeStep accessibility",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1128",
+      "reviewedHead": "3800d70d72c6ed36b8c78b11ca72f589f8102007",
+      "decision": "superseded",
+      "reason": "Recipe-step narration is covered by the canonical descriptive label and completion hint with regression assertions; omit duplicate and unrelated hunks.",
+      "files": [
+        "components/RecipeStep.tsx"
+      ]
+    },
+    {
+      "number": 1127,
+      "title": "⚡ Bolt: Optimize FlatList rendering performance",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1127",
+      "reviewedHead": "288b5f0222213d158c9a60ed5a40bc7a7a3e8a6d",
+      "decision": "discarded",
+      "reason": "Aggressive clipping/virtualization can hide animated list content; no measured benefit or native visual regression evidence.",
+      "files": [
+        "app/grocery-list/index.tsx",
+        "app/meal-plan/components/RecipeSelectionSheet.tsx",
+        "components/Pantry/IngredientLists.tsx"
+      ]
+    },
+    {
+      "number": 1126,
+      "title": "🎨 Palette: Improve Recipe Step Accessibility",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1126",
+      "reviewedHead": "2f855b8280dee4aa104a0b08aedc2df313513fdc",
+      "decision": "superseded",
+      "reason": "Recipe-step narration is covered by the canonical descriptive label and completion hint with regression assertions; omit duplicate and unrelated hunks.",
+      "files": [
+        ".jules/palette.md",
+        "components/RecipeStep.tsx"
+      ]
+    },
+    {
+      "number": 1125,
+      "title": "⚡ Bolt: [performance improvement]",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1125",
+      "reviewedHead": "81b2acb9e1e829e52d23f68e535850579b37c6ad",
+      "decision": "discarded",
+      "reason": "Additional stock-query path has no demonstrated performance evidence or repository parity tests for this cleanup.",
+      "files": [
+        ".jules/bolt.md",
+        "data/db/DatabaseFacade.ts",
+        "data/db/repositories/StockRepository.ts"
+      ]
+    },
+    {
+      "number": 1124,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1124",
+      "reviewedHead": "25091544330d6f5cb1e6692a3633ecb7d21cd3c2",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1123,
+      "title": "🛡️ Sentinel: [HIGH] Fix Supabase PostgREST wildcard injection",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1123",
+      "reviewedHead": "97bb071048ffd1647f569bccf84421a8fb915f46",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1122,
+      "title": "🎨 Palette: Add loading indicators to TemplateSheet buttons",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1122",
+      "reviewedHead": "73833f9976481daa4603b0a0db069487cd466a87",
+      "decision": "retained",
+      "reason": "Retain pending/loading indicators for template save, apply, delete, import and export actions.",
+      "files": [
+        ".jules/palette.md",
+        "components/MealPlanCalendar/TemplateSheet.tsx"
+      ],
+      "retainedFiles": [
+        "components/MealPlanCalendar/TemplateSheet.tsx"
+      ]
+    },
+    {
+      "number": 1121,
+      "title": "🛡️ Sentinel: [High] Fix PostgREST wildcard injection",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1121",
+      "reviewedHead": "5365b850f15e0fc7ba7492c402c24a5f3c5c35f9",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "bun.lockb",
+        "package.json",
+        "utils/__tests__/input-sanitization.test.ts",
+        "utils/input-sanitization.ts"
+      ]
+    },
+    {
+      "number": 1120,
+      "title": "🛡️ Sentinel: [MEDIUM] Fix PostgREST wildcard injection",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1120",
+      "reviewedHead": "0a2a99344668f890353e377f1bf39961dc661680",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1119,
+      "title": "⚡ Bolt: [performance improvement]",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1119",
+      "reviewedHead": "f151ea1936168aa49fa42a6f00fc3646820b4e5d",
+      "decision": "discarded",
+      "reason": "Unbounded concurrent achievement evaluation changes write and notification ordering without concurrency regression tests.",
+      "files": [
+        ".jules/bolt.md",
+        "data/services/AchievementService.ts"
+      ]
+    },
+    {
+      "number": 1118,
+      "title": "🛡️ Sentinel: [MEDIUM] Fix wildcard injection in Supabase queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1118",
+      "reviewedHead": "3cf681b3dbb124d199726ede1740782479629fca",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1117,
+      "title": "🎨 Palette: [UX improvement] Fix screen reader content masking on Pressables",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1117",
+      "reviewedHead": "9cdcd869637fac1a96496f4cc987aa9533978073",
+      "decision": "retained",
+      "reason": "Retain review-text exposure to screen readers; recipe-step content is covered by the canonical tested fix. Omit the redundant tab-label change.",
+      "files": [
+        "app/profile/achievements.tsx",
+        "components/Ingredient/IngredientQuantity.tsx",
+        "components/Recipe/Details/ReviewCard.tsx",
+        "components/RecipeStep.tsx"
+      ],
+      "retainedFiles": [
+        "components/Recipe/Details/ReviewCard.tsx"
+      ]
+    },
+    {
+      "number": 1116,
+      "title": "🎨 Palette: [Remove redundant accessibilityLabels from Pressables]",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1116",
+      "reviewedHead": "3e584b5cad3940e5b9c2c49ccec3501463cdd11d",
+      "decision": "discarded",
+      "reason": "Targets an earlier MealSlot implementation and provides no regression coverage for current multi-entry slots.",
+      "files": [
+        ".jules/palette.md",
+        "components/MealPlanCalendar/MealSlot.tsx"
+      ]
+    },
+    {
+      "number": 1115,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in BaseIngredientApi",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1115",
+      "reviewedHead": "741cf35404aabb96621a312d1540bcdcb6f615b7",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1114,
+      "title": "🎨 Palette: Add busy state to Button when loading",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1114",
+      "reviewedHead": "593a652fd5baafa0707051f941e80f4d12e958b8",
+      "decision": "retained",
+      "reason": "Retain focused utility regression coverage from the curated maintenance change; omit unrelated historical and dependency edits.",
+      "files": [
+        ".jules/palette.md",
+        "components/ui/__tests__/Button.test.tsx",
+        "components/ui/button.tsx"
+      ],
+      "retainedFiles": [
+        "components/ui/button.tsx"
+      ]
+    },
+    {
+      "number": 1113,
+      "title": "🛡️ Sentinel: [HIGH] Fix PostgREST Wildcard Injection",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1113",
+      "reviewedHead": "843e3fdc3625e2d8454257a9f1bf6471d6b35f4e",
+      "decision": "discarded",
+      "reason": "The reviewed diff is empty or contains only bot journal notes; no application change to retain.",
+      "files": []
+    },
+    {
+      "number": 1112,
+      "title": "🛡️ Sentinel: [CRITICAL] Fix SQL Wildcard Injection in Supabase ilike",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1112",
+      "reviewedHead": "fea28de0d55a5d3fb144f5a2fd25e1e91e54c6fa",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts",
+        "utils/input-sanitization.ts"
+      ]
+    },
+    {
+      "number": 1111,
+      "title": "🎨 Palette: Improve screen reader experience for recipe steps",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1111",
+      "reviewedHead": "816119df287ce69c4053255267f709994e822512",
+      "decision": "superseded",
+      "reason": "Recipe-step narration is covered by the canonical descriptive label and completion hint with regression assertions; omit duplicate and unrelated hunks.",
+      "files": [
+        ".jules/palette.md",
+        "components/RecipeStep.tsx"
+      ]
+    },
+    {
+      "number": 1110,
+      "title": "🛡️ Sentinel: [MEDIUM] Fix wildcard injection in Supabase queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1110",
+      "reviewedHead": "98edea704d1c2f0e55ab4803061353eca8e087c4",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "bun.lockb",
+        "data/supabase-api/BaseIngredientApi.ts",
+        "package.json",
+        "utils/input-sanitization.ts"
+      ]
+    },
+    {
+      "number": 1109,
+      "title": "⚡ Bolt: Replace O(N*M) nested array.filter searches with O(N+M) hash map lookups",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1109",
+      "reviewedHead": "bc6530e9b8c0e75b9aa5d90d7635837cb0f0322b",
+      "decision": "retained",
+      "reason": "Retain linear-time grouping of ingredient relations. Add regression coverage for separate relations, aliases, null categories and empty relations through the real Supabase client.",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ],
+      "retainedFiles": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1108,
+      "title": "🎨 Palette: Improve accessibility of RecipeStep checkbox",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1108",
+      "reviewedHead": "19cbd21005e2cbdced838ccf040e881131ba4d4b",
+      "decision": "superseded",
+      "reason": "Recipe-step narration is covered by the canonical descriptive label and completion hint with regression assertions; omit duplicate and unrelated hunks.",
+      "files": [
+        "components/RecipeStep.tsx"
+      ]
+    },
+    {
+      "number": 1107,
+      "title": "🎨 Palette: Improve loading state accessibility for buttons",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1107",
+      "reviewedHead": "f1269b17bdc6f37cf99eca2226598b1b3b24442f",
+      "decision": "superseded",
+      "reason": "Loading/busy state is covered by the canonical Button/SocialAuthButton fix with tests for caller-state preservation and disabled precedence; omit duplicate, dependency and historical hunks.",
+      "files": [
+        "components/auth/SocialAuthButton.tsx",
+        "components/ui/button.tsx"
+      ]
+    },
+    {
+      "number": 1106,
+      "title": "🛡️ Sentinel: [MEDIUM] Fix wildcard injection in Supabase queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1106",
+      "reviewedHead": "bf799c19a39b5dfe703c3477a0f1f59e6e633086",
+      "decision": "discarded",
+      "reason": "The reviewed diff is empty or contains only bot journal notes; no application change to retain.",
+      "files": []
+    },
+    {
+      "number": 1105,
+      "title": "🎨 Palette: Improve RecipeStep accessibility labels",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1105",
+      "reviewedHead": "727306b15f33c6638726f928ae7fc6482c631b87",
+      "decision": "superseded",
+      "reason": "Recipe-step narration is covered by the canonical descriptive label and completion hint with regression assertions; omit duplicate and unrelated hunks.",
+      "files": [
+        ".jules/palette.md",
+        "components/RecipeStep.tsx"
+      ]
+    },
+    {
+      "number": 1104,
+      "title": "⚡ Bolt: Optimize map-filter array allocation and fix N+1 query in getAvailableRecipes",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1104",
+      "reviewedHead": "4b785d55248f3ba60ff0ac0f0aae25a11b01e656",
+      "decision": "discarded",
+      "reason": "The alleged N+1 conversion is already using an in-memory details map; the added batching has no measured benefit or regression coverage.",
+      "files": [
+        "data/api/recipeApi.ts"
+      ]
+    },
+    {
+      "number": 1103,
+      "title": "🎨 Palette: Add busy state to loading buttons for screen readers",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1103",
+      "reviewedHead": "583e88dbfdcb02019e8330a6dbb63eaa0858b69d",
+      "decision": "superseded",
+      "reason": "Loading/busy state is covered by the canonical Button/SocialAuthButton fix with tests for caller-state preservation and disabled precedence; omit duplicate, dependency and historical hunks.",
+      "files": [
+        ".jules/palette.md",
+        "components/auth/SocialAuthButton.tsx",
+        "components/ui/button.tsx"
+      ]
+    },
+    {
+      "number": 1102,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in ilike queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1102",
+      "reviewedHead": "fd7a0a47de894fc6d6a44b22edbf21c868524492",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1101,
+      "title": "⚡ Bolt: Use single batch query for recipe details in getAvailableRecipesCore",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1101",
+      "reviewedHead": "de11d2c342320bc56ffc9890cde904f6ad239767",
+      "decision": "discarded",
+      "reason": "The conversion path already receives fetched details; new mapping/casts add complexity without a demonstrated query reduction.",
+      "files": [
+        ".jules/bolt.md",
+        "data/api/recipeApi.ts"
+      ]
+    },
+    {
+      "number": 1100,
+      "title": "⚡ Bolt: Optimize base ingredient batch mapping",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1100",
+      "reviewedHead": "afa5bc11e844ecdc1d327e1d37c9e97ce5e8f4ff",
+      "decision": "superseded",
+      "reason": "Use #1109 relation grouping with typed buckets and added result-parity tests.",
+      "files": [
+        ".jules/bolt.md",
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1099,
+      "title": "🛡️ Sentinel: [HIGH] Fix PostgREST wildcard injection",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1099",
+      "reviewedHead": "4a6b6099a419f9c2d0b5456de187ed50a76b726c",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1098,
+      "title": "🎨 Palette: Add busy state to loading buttons",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1098",
+      "reviewedHead": "c2e97209dea9cec801fb1cc190be3205821a342e",
+      "decision": "superseded",
+      "reason": "Loading/busy state is covered by the canonical Button/SocialAuthButton fix with tests for caller-state preservation and disabled precedence; omit duplicate, dependency and historical hunks.",
+      "files": [
+        ".jules/palette.md",
+        "components/ui/__tests__/button.test.tsx",
+        "components/ui/button.tsx"
+      ]
+    },
+    {
+      "number": 1097,
+      "title": "🎨 Palette: Add accessibilityState to camera capture button",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1097",
+      "reviewedHead": "0d2d8727c09d174612777c2966abd4be60f70628",
+      "decision": "retained",
+      "reason": "Retain explicit disabled accessibility state for camera capture.",
+      "files": [
+        ".jules/palette.md",
+        "components/Camera/CameraActionRow.tsx"
+      ],
+      "retainedFiles": [
+        "components/Camera/CameraActionRow.tsx"
+      ]
+    },
+    {
+      "number": 1096,
+      "title": "🛡️ Sentinel: [CRITICAL] Fix PostgREST wildcard injection in BaseIngredientApi",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1096",
+      "reviewedHead": "371080f3454fd3285ac8c4eb45b1704288dc4e43",
+      "decision": "discarded",
+      "reason": "The reviewed diff is empty or contains only bot journal notes; no application change to retain.",
+      "files": []
+    },
+    {
+      "number": 1095,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in Supabase ILIKE queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1095",
+      "reviewedHead": "3d6ad0cd8d906b9fd38ef05a7cbdf7e334a968e1",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1094,
+      "title": "🎨 Palette: Add busy state to Button",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1094",
+      "reviewedHead": "c44bb83e4b74a5f192298f9cdcc42b4c9399c1cd",
+      "decision": "superseded",
+      "reason": "Loading/busy state is covered by the canonical Button/SocialAuthButton fix with tests for caller-state preservation and disabled precedence; omit duplicate, dependency and historical hunks.",
+      "files": [
+        ".jules/palette.md",
+        "components/ui/button.tsx"
+      ]
+    },
+    {
+      "number": 1093,
+      "title": "⚡ Bolt: Optimize stock item syncing memory usage",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1093",
+      "reviewedHead": "3bc96bd4316cd739b18d136bf089ec7842583e21",
+      "decision": "discarded",
+      "reason": "Broad multi-area optimization plus dependency/CI churn; no focused tested behavior improvement to retain.",
+      "files": [
+        ".github/workflows/ci.yml",
+        ".jules/bolt.md",
+        "app/profile/achievements.tsx",
+        "bun.lockb",
+        "data/db/repositories/WasteLogRepository.ts",
+        "data/db/seed.ts",
+        "data/services/ChallengeService.ts",
+        "data/supabase-api/BaseIngredientApi.ts",
+        "hooks/model/yolo-function.tsx",
+        "hooks/queries/useFavorites.ts",
+        "package.json",
+        "utils/text-formatter.ts",
+        "utils/voice-answer-generator.ts",
+        "utils/voice-command-parser.ts"
+      ]
+    },
+    {
+      "number": 1092,
+      "title": "🛡️ Sentinel: [CRITICAL] Fix wildcard injection in ilike queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1092",
+      "reviewedHead": "dc6d39e287718ea74dca2277784b1a28ab6b411c",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1091,
+      "title": "⚡ Bolt: Optimize search filters to reduce closure allocation overhead",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1091",
+      "reviewedHead": "d5ab262b30f7b16dbfb1d3c50f5049fa482e50a2",
+      "decision": "discarded",
+      "reason": "Introduces raw-SQL search filtering without regression coverage for platform fallback and invalid numeric limits.",
+      "files": [
+        ".jules/bolt.md",
+        "data/db/repositories/RecipeRepository.ts"
+      ]
+    },
+    {
+      "number": 1090,
+      "title": "🎨 Palette: Fix screen reader silencing on recipe steps",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1090",
+      "reviewedHead": "5d0cd292c9ec0efc805402497408565589c18710",
+      "decision": "superseded",
+      "reason": "Recipe-step narration is covered by the canonical descriptive label and completion hint with regression assertions; omit duplicate and unrelated hunks.",
+      "files": [
+        "components/RecipeStep.tsx"
+      ]
+    },
+    {
+      "number": 1089,
+      "title": "chore(deps): bump the react-dependencies group across 1 directory with 16 updates",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1089",
+      "reviewedHead": "6f5ea526d82c22000e65bb871c55ce024a0c8cab",
+      "decision": "discarded",
+      "reason": "Dependency-only proposal is not required for the selected fixes; it lacks a matching frozen-lockfile/native compatibility validation for this cleanup. Preserve the currently tested Expo/React Native dependency set.",
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "number": 1088,
+      "title": "🛡️ Sentinel: [MEDIUM] Fix Wildcard Injection in Supabase Queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1088",
+      "reviewedHead": "f9e5b6c5c0ad1952a555411b106d4db6231a58e2",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1087,
+      "title": "🎨 Palette: Add busy accessibility state to loading buttons",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1087",
+      "reviewedHead": "7b0ae473b433f78a9b388dc86eb80f3de9f2c03a",
+      "decision": "superseded",
+      "reason": "Loading/busy state is covered by the canonical Button/SocialAuthButton fix with tests for caller-state preservation and disabled precedence; omit duplicate, dependency and historical hunks.",
+      "files": [
+        ".jules/palette.md",
+        "components/auth/SocialAuthButton.tsx",
+        "components/ui/button.tsx"
+      ]
+    },
+    {
+      "number": 1086,
+      "title": "🛡️ Sentinel: [CRITICAL] Fix SQL wildcard injection in BaseIngredientApi",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1086",
+      "reviewedHead": "684777f3384cc370562c2a539019df92659537af",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1085,
+      "title": "🎨 Palette: Fix accessibility label for recipe step checkbox",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1085",
+      "reviewedHead": "36d03aa6d576227eafd5580fcd01acb4f2b83857",
+      "decision": "superseded",
+      "reason": "Recipe-step narration is covered by the canonical descriptive label and completion hint with regression assertions; omit duplicate and unrelated hunks.",
+      "files": [
+        "components/RecipeStep.tsx"
+      ]
+    },
+    {
+      "number": 1084,
+      "title": "🛡️ Sentinel: [CRITICAL] Fix wildcard injection in ilike queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1084",
+      "reviewedHead": "7272b741300c12913331165323ccec4280f2e824",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1083,
+      "title": "🎨 Palette: Add busy state to loading buttons",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1083",
+      "reviewedHead": "949120c935374d8e8d1de98e6dd15a7469db7216",
+      "decision": "superseded",
+      "reason": "Loading/busy state is covered by the canonical Button/SocialAuthButton fix with tests for caller-state preservation and disabled precedence; omit duplicate, dependency and historical hunks.",
+      "files": [
+        "components/ui/button.tsx"
+      ]
+    },
+    {
+      "number": 1082,
+      "title": "⚡ Bolt: [performance improvement] optimize reduce to for loops",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1082",
+      "reviewedHead": "dfafb1e2ec3666417f2876441b375ac25e943d2d",
+      "decision": "discarded",
+      "reason": "Loop/grouping micro-optimization lacks measured product benefit and targeted behavior regression evidence; preserve the current implementation.",
+      "files": [
+        "app/profile/achievements.tsx",
+        "data/db/repositories/AchievementRepository.ts",
+        "data/db/repositories/ChallengeRepository.ts",
+        "data/db/repositories/StockRepository.ts",
+        "data/db/repositories/UserChallengeRepository.ts"
+      ]
+    },
+    {
+      "number": 1081,
+      "title": "🛡️ Sentinel: [HIGH] Sanitize ilike queries against wildcard injection",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1081",
+      "reviewedHead": "c1a7020448de2b825abcca3acee054dd4830ec76",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1080,
+      "title": "🎨 Palette: [UX improvement] Improve RecipeStep screen reader accessibility",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1080",
+      "reviewedHead": "a05fd1554b84205ce79cf97ddbdd35cbcf8b1775",
+      "decision": "superseded",
+      "reason": "Recipe-step narration is covered by the canonical descriptive label and completion hint with regression assertions; omit duplicate and unrelated hunks.",
+      "files": [
+        "components/RecipeStep.tsx",
+        "components/__tests__/RecipeStep.test.tsx"
+      ]
+    },
+    {
+      "number": 1079,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in BaseIngredientApi",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1079",
+      "reviewedHead": "4fb339afc2224b1cf6094ac3541139b1e825ca42",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1078,
+      "title": "🎨 Palette: [UX improvement] Enhance Loading Buttons",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1078",
+      "reviewedHead": "aa1fe513082380e5caf5fe8e04c84928604808a6",
+      "decision": "superseded",
+      "reason": "Loading/busy state is covered by the canonical Button/SocialAuthButton fix with tests for caller-state preservation and disabled precedence; omit duplicate, dependency and historical hunks.",
+      "files": [
+        "components/auth/SocialAuthButton.tsx",
+        "components/ui/button.tsx"
+      ]
+    },
+    {
+      "number": 1077,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in ilike queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1077",
+      "reviewedHead": "017fca46b33153768fe7565a7b5da3829dfe6693",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1076,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in Supabase queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1076",
+      "reviewedHead": "464222ff8086d44258f1f9297335787116747f69",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1075,
+      "title": "🎨 Palette: [Accessibility improvement] Add busy state to buttons",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1075",
+      "reviewedHead": "c70f880ff7abd5a76a23614f3161d5f764e0cdfe",
+      "decision": "superseded",
+      "reason": "Loading/busy state is covered by the canonical Button/SocialAuthButton fix with tests for caller-state preservation and disabled precedence; omit duplicate, dependency and historical hunks.",
+      "files": [
+        "app.json",
+        "app/+native-intent.ts",
+        "app/_layout.tsx",
+        "app/grocery-list/index.tsx",
+        "app/import-recipe.tsx",
+        "app/leftovers/index.tsx",
+        "app/meal-plan/_layout.tsx",
+        "app/meal-plan/components/RecipeSelectionSheet.tsx",
+        "app/meal-plan/index.tsx",
+        "app/profile/notification.tsx",
+        "auth/__tests__/authHelpers.test.ts",
+        "babel.config.js",
+        "bun.lockb",
+        "components/AnimatedStack.tsx",
+        "components/GroceryList/GroceryListHeader.tsx",
+        "components/Leftovers/LeftoverForm.tsx",
+        "components/Leftovers/LeftoversSummary.tsx",
+        "components/MealPlanCalendar/DayColumn.tsx",
+        "components/MealPlanCalendar/MealPlanEntryEditor.tsx",
+        "components/MealPlanCalendar/MealSlot.tsx",
+        "components/MealPlanCalendar/MonthlyCalendar.tsx",
+        "components/MealPlanCalendar/WeeklyCalendar.tsx",
+        "components/Pantry/ImportRecipeDialog.tsx",
+        "components/Pantry/IngredientLists.tsx",
+        "components/Recipe/Edit/EditStepItem.tsx",
+        "components/Recipe/Edit/__tests__/EditStepItem.test.tsx",
+        "components/Recipe/SocialRecipeShareHandler.ios.tsx",
+        "components/Recipe/SocialRecipeShareHandler.tsx",
+        "components/__tests__/AnimatedStack.test.tsx",
+        "components/navigation/ScreenGroupIngredient.tsx",
+        "components/navigation/ScreenGroupMisc.tsx",
+        "components/navigation/ScreenGroupPantry.tsx",
+        "components/navigation/ScreenGroupProfile.tsx",
+        "components/navigation/ScreenGroupRecipe.tsx",
+        "data/api/leftoverApi.ts",
+        "data/api/mealPlanApi.ts",
+        "data/api/recipeImportApi.ts",
+        "data/db/migrations.ts",
+        "data/db/models/GroceryItemCheck.ts",
+        "data/db/models/Leftover.ts",
+        "data/db/models/index.ts",
+        "data/db/repositories/GroceryItemCheckRepository.ts",
+        "data/db/repositories/LeftoverRepository.ts",
+        "data/db/repositories/MealPlanRepository.ts",
+        "data/db/repositories/__tests__/meal-shopping-leftovers.test.ts",
+        "data/db/schema.ts",
+        "hooks/queries/__tests__/grocery-week-actions.test.tsx",
+        "hooks/queries/__tests__/useEntitlement.test.tsx",
+        "hooks/queries/__tests__/useMealPlanGeneration.test.tsx",
+        "hooks/queries/useGroceryList.ts",
+        "hooks/queries/useLeftovers.ts",
+        "hooks/queries/useMealPlanEntry.ts",
+        "hooks/queries/useMealPlanQueries.ts",
+        "hooks/queries/useRecipeImportQueries.ts",
+        "hooks/useGroceryListActions.ts",
+        "hooks/useNotificationHandlers.ts",
+        "hooks/useNotificationSettings.ts",
+        "ios/Cookkit.xcodeproj/project.pbxproj",
+        "ios/Cookkit/Cookkit.entitlements",
+        "ios/Cookkit/Info.plist",
+        "ios/CookkitImport/MainInterface.storyboard",
+        "ios/CookkitImport/PrivacyInfo.xcprivacy",
+        "ios/CookkitImport/ShareExtension-Info.plist",
+        "ios/CookkitImport/ShareExtension.entitlements",
+        "ios/CookkitImport/ShareExtensionPreprocessor.js",
+        "ios/CookkitImport/ShareViewController.swift",
+        "ios/Podfile.lock",
+        "ios/Podfile.properties.json",
+        "jest.config.js",
+        "lib/__tests__/grabmart.test.ts",
+        "lib/__tests__/ingredient-shopping.test.ts",
+        "lib/__tests__/recipe-share-inbox.test.ts",
+        "lib/grabmart.ts",
+        "lib/grabmart.web.ts",
+        "lib/ingredient-shopping.ts",
+        "lib/ingredient-shopping.web.ts",
+        "lib/notifications/LeftoverReminderCoordinator.tsx",
+        "lib/notifications/__tests__/leftover-reminders.test.ts",
+        "lib/notifications/leftover-reminders.ts",
+        "lib/recipe-scrapper/SocialRecipeService.ts",
+        "lib/recipe-scrapper/__tests__/SocialRecipeService.test.ts",
+        "lib/recipe-share-inbox.ts",
+        "package.json",
+        "plugins/__tests__/babel-config.test.js",
+        "plugins/__tests__/withIosDisableUserScriptSandbox.test.js",
+        "plugins/__tests__/withRecipeSharing.test.js",
+        "plugins/withIosDisableUserScriptSandbox.js",
+        "plugins/withRecipeSharing.js",
+        "store/MealPlanCalendarContext.tsx",
+        "store/RecipeStepsContext.tsx",
+        "types/Leftover.ts",
+        "types/MealPlan.ts",
+        "types/SharedRecipe.ts",
+        "utils/__tests__/grocery-list.test.ts",
+        "utils/__tests__/leftovers.test.ts",
+        "utils/__tests__/meal-plan-calendar.test.ts",
+        "utils/__tests__/native-share-route.test.ts",
+        "utils/__tests__/notification-settings.test.ts",
+        "utils/__tests__/shared-recipe.test.ts",
+        "utils/grabmart-shopping.ts",
+        "utils/grocery-ingredient-name.ts",
+        "utils/grocery-list.ts",
+        "utils/leftovers.ts",
+        "utils/meal-plan-calendar.ts",
+        "utils/native-share-route.ts",
+        "utils/notification-settings.ts",
+        "utils/shared-recipe.ts"
+      ]
+    },
+    {
+      "number": 1074,
+      "title": "chore(deps): bump the expo-dependencies group across 1 directory with 20 updates",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1074",
+      "reviewedHead": "56860d6f749d0b7b2038952eb9155db97b304a12",
+      "decision": "discarded",
+      "reason": "Dependency-only proposal is not required for the selected fixes; it lacks a matching frozen-lockfile/native compatibility validation for this cleanup. Preserve the currently tested Expo/React Native dependency set.",
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "number": 1073,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in Supabase ilike queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1073",
+      "reviewedHead": "0b00b5a1d431a3dcd49b9cd20098a6235437d1b1",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1072,
+      "title": "🎨 Palette: Improve RecipeStep checkbox accessibility",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1072",
+      "reviewedHead": "d53aa7470a53b844748ed7870c29237fc83a30a4",
+      "decision": "superseded",
+      "reason": "Recipe-step narration is covered by the canonical descriptive label and completion hint with regression assertions; omit duplicate and unrelated hunks.",
+      "files": [
+        "components/RecipeStep.tsx"
+      ]
+    },
+    {
+      "number": 1071,
+      "title": "🎨 Palette: Add busy state to Button accessibilityState",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1071",
+      "reviewedHead": "e44dd94925532dbddd94e90f6bf644af34773ebb",
+      "decision": "superseded",
+      "reason": "Loading/busy state is covered by the canonical Button/SocialAuthButton fix with tests for caller-state preservation and disabled precedence; omit duplicate, dependency and historical hunks.",
+      "files": [
+        ".jules/palette.md",
+        "components/ui/button.tsx"
+      ]
+    },
+    {
+      "number": 1070,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in Supabase ilike queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1070",
+      "reviewedHead": "8dc5bb27176efda536a65684e6e00b8a451c85d3",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1069,
+      "title": "🎨 Palette: Improve accessibility of RecipeStep",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1069",
+      "reviewedHead": "b25ea989bef5ef9c21777147f38e2211f4e93020",
+      "decision": "superseded",
+      "reason": "Recipe-step narration is covered by the canonical descriptive label and completion hint with regression assertions; omit duplicate and unrelated hunks.",
+      "files": [
+        ".jules/palette.md",
+        "bun.lockb",
+        "components/RecipeStep.tsx",
+        "components/__tests__/RecipeStep.test.tsx",
+        "package.json"
+      ]
+    },
+    {
+      "number": 1068,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in ilike queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1068",
+      "reviewedHead": "4bce2d9f28b62f8a6de16e0b887018395391341c",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1067,
+      "title": "🎨 Palette: Improve accessibility label and hint for RecipeStep",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1067",
+      "reviewedHead": "f85e0476c35eb84142e4b76e7e49834bab0f75d8",
+      "decision": "superseded",
+      "reason": "Recipe-step narration is covered by the canonical descriptive label and completion hint with regression assertions; omit duplicate and unrelated hunks.",
+      "files": [
+        ".jules/palette.md",
+        "components/RecipeStep.tsx",
+        "components/__tests__/RecipeStep.test.tsx"
+      ]
+    },
+    {
+      "number": 1066,
+      "title": "🛡️ Sentinel: [CRITICAL] Fix wildcard injection in ilike queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1066",
+      "reviewedHead": "a88ec9bf26c90859477f65316268caacb11f44c6",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1065,
+      "title": "🎨 Palette: [UX improvement] Improve RecipeStep checkbox accessibility",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1065",
+      "reviewedHead": "2fb35938c7d1e75bd471a626306a1f173f63ea42",
+      "decision": "superseded",
+      "reason": "Recipe-step narration is covered by the canonical descriptive label and completion hint with regression assertions; omit duplicate and unrelated hunks.",
+      "files": [
+        "components/RecipeStep.tsx",
+        "components/__tests__/RecipeStep.test.tsx"
+      ]
+    },
+    {
+      "number": 1064,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in API",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1064",
+      "reviewedHead": "f455b48fc0a3c17dd0e19f92facfaf3aa048d4e5",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1063,
+      "title": "🎨 Palette: Improve accessibility for RecipeStep checkbox",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1063",
+      "reviewedHead": "ff15cd7b139057c1031f47e6c19802114a135189",
+      "decision": "superseded",
+      "reason": "Recipe-step narration is covered by the canonical descriptive label and completion hint with regression assertions; omit duplicate and unrelated hunks.",
+      "files": [
+        ".jules/palette.md",
+        "components/RecipeStep.tsx"
+      ]
+    },
+    {
+      "number": 1061,
+      "title": "🎨 Palette: [UX improvement] Improve RecipeStep checkbox accessibility",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1061",
+      "reviewedHead": "eada31822eac864d03811e58a16911bff3fb4c79",
+      "decision": "superseded",
+      "reason": "Recipe-step narration is covered by the canonical descriptive label and completion hint with regression assertions; omit duplicate and unrelated hunks.",
+      "files": [
+        ".jules/palette.md",
+        "components/RecipeStep.tsx"
+      ]
+    },
+    {
+      "number": 1060,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in Supabase ilike queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1060",
+      "reviewedHead": "ecfc1375e70278b4e4d0ce8ab7886592c8798f12",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1059,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in Supabase ilike queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1059",
+      "reviewedHead": "6877785c6ac6dcb34408b0cd19a9232bcb12900f",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts",
+        "pr-description.md"
+      ]
+    },
+    {
+      "number": 1058,
+      "title": "🎨 Palette: Fix accessibility labeling for recipe steps",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1058",
+      "reviewedHead": "9b4b454095ded849be3b585d05e28973d77372fb",
+      "decision": "superseded",
+      "reason": "Recipe-step narration is covered by the canonical descriptive label and completion hint with regression assertions; omit duplicate and unrelated hunks.",
+      "files": [
+        "components/RecipeStep.tsx"
+      ]
+    },
+    {
+      "number": 1057,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in ilike",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1057",
+      "reviewedHead": "54b194fa27e3f62431d24e250445ff22f2033dd2",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1056,
+      "title": "🎨 Palette: Add accessibility labels to missing buttons",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1056",
+      "reviewedHead": "064976d3a494555155b3d724fb9ebd905552b2d1",
+      "decision": "discarded",
+      "reason": "Uses a generic Input field fallback that can mask semantics and changes shared input behavior without tests; the remaining labels are outside the selected fixes.",
+      "files": [
+        ".jules/palette.md",
+        "components/Recipe/Details/WriteTipModal.tsx",
+        "components/Recipe/Step/RateRecipeModal.tsx",
+        "components/ui/input.tsx"
+      ]
+    },
+    {
+      "number": 1055,
+      "title": "⚡ Bolt: Optimize search filter iteration",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1055",
+      "reviewedHead": "ba2694c3e82804c8ac7a68279bf000dbb7f2fce1",
+      "decision": "discarded",
+      "reason": "Loop/grouping micro-optimization lacks measured product benefit and targeted behavior regression evidence; preserve the current implementation.",
+      "files": [
+        ".jules/bolt.md",
+        "utils/filterRecipesForSearch.ts"
+      ]
+    },
+    {
+      "number": 1054,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in Supabase ilike queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1054",
+      "reviewedHead": "bd8c598b1262c52b8a77f2957f9a850e9d09167f",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1053,
+      "title": "⚡ Bolt: Replace array methods with for loops to improve performance",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1053",
+      "reviewedHead": "21dbda888dd63c55752c566ad149b13c13cef239",
+      "decision": "discarded",
+      "reason": "Loop/grouping micro-optimization lacks measured product benefit and targeted behavior regression evidence; preserve the current implementation.",
+      "files": [
+        "app/profile/achievements.tsx",
+        "data/db/repositories/AchievementRepository.ts",
+        "data/db/repositories/ChallengeRepository.ts",
+        "data/db/repositories/UserChallengeRepository.ts",
+        "utils/achievement-share.ts"
+      ]
+    },
+    {
+      "number": 1052,
+      "title": "🎨 Palette: Improve Log Waste Dialog UX",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1052",
+      "reviewedHead": "6ba3b29a9f0e45af62c14ffa0880f6a0a0d58482",
+      "decision": "retained",
+      "reason": "Retain selected radio semantics for waste reasons and the saving indicator. Shared Button behavior uses the canonical tested fix.",
+      "files": [
+        ".jules/palette.md",
+        "components/Analytics/LogWasteDialog.tsx",
+        "components/ui/button.tsx"
+      ],
+      "retainedFiles": [
+        "components/Analytics/LogWasteDialog.tsx"
+      ]
+    },
+    {
+      "number": 1051,
+      "title": "🛡️ Sentinel: [HIGH] Fix wildcard injection in Supabase queries",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1051",
+      "reviewedHead": "5ecba9504cf5e250884f2addca313ecd6c1d5efa",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1050,
+      "title": "🛡️ Sentinel: [CRITICAL] Fix SQL injection in BaseIngredientApi",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1050",
+      "reviewedHead": "7fe020670b4d43eca7b3f01dd99ebdf81086ee0b",
+      "decision": "superseded",
+      "reason": "Use the canonical tested literal regex lookup from #1190. ILIKE escaping alone does not preserve literal stars through PostgREST, and general SQL/HTML sanitization can alter valid names.",
+      "files": [
+        ".jules/sentinel.md",
+        "data/supabase-api/BaseIngredientApi.ts"
+      ]
+    },
+    {
+      "number": 1049,
+      "title": "⚡ Bolt: Optimize Date object creation in WasteLogRepository",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1049",
+      "reviewedHead": "f9c2a4cd351c3d8441f5f2b1a02c651dc7e52777",
+      "decision": "discarded",
+      "reason": "Date-allocation micro-optimization does not fix a demonstrated behavior bug; the added grouping test also passes the current implementation.",
+      "files": [
+        ".jules/bolt.md",
+        "bun.lockb",
+        "data/db/repositories/WasteLogRepository.ts",
+        "data/db/repositories/__tests__/repository-platform-fixes.test.ts",
+        "package.json"
+      ]
+    },
+    {
+      "number": 1048,
+      "title": "🎨 Palette: Fix accessibilityLabel silencing nested text in profile cards",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1048",
+      "reviewedHead": "ca6b6cd1eaa627056a2e3b1afaeaf95373bdb889",
+      "decision": "discarded",
+      "reason": "Broad historical feature diff with overlapping accessibility changes; selected current UI fixes are retained separately.",
+      "files": [
+        "app.json",
+        "app/+native-intent.ts",
+        "app/_layout.tsx",
+        "app/grocery-list/index.tsx",
+        "app/import-recipe.tsx",
+        "app/leftovers/index.tsx",
+        "app/meal-plan/_layout.tsx",
+        "app/meal-plan/components/RecipeSelectionSheet.tsx",
+        "app/meal-plan/index.tsx",
+        "app/profile/notification.tsx",
+        "auth/__tests__/authHelpers.test.ts",
+        "babel.config.js",
+        "bun.lockb",
+        "components/AnimatedStack.tsx",
+        "components/GroceryList/GroceryListHeader.tsx",
+        "components/Leftovers/LeftoverForm.tsx",
+        "components/Leftovers/LeftoversSummary.tsx",
+        "components/MealPlanCalendar/DayColumn.tsx",
+        "components/MealPlanCalendar/MealPlanEntryEditor.tsx",
+        "components/MealPlanCalendar/MealSlot.tsx",
+        "components/MealPlanCalendar/MonthlyCalendar.tsx",
+        "components/MealPlanCalendar/WeeklyCalendar.tsx",
+        "components/Pantry/ImportRecipeDialog.tsx",
+        "components/Pantry/IngredientLists.tsx",
+        "components/Recipe/Edit/EditStepItem.tsx",
+        "components/Recipe/Edit/__tests__/EditStepItem.test.tsx",
+        "components/Recipe/SocialRecipeShareHandler.ios.tsx",
+        "components/Recipe/SocialRecipeShareHandler.tsx",
+        "components/__tests__/AnimatedStack.test.tsx",
+        "components/navigation/ScreenGroupIngredient.tsx",
+        "components/navigation/ScreenGroupMisc.tsx",
+        "components/navigation/ScreenGroupPantry.tsx",
+        "components/navigation/ScreenGroupProfile.tsx",
+        "components/navigation/ScreenGroupRecipe.tsx",
+        "data/api/leftoverApi.ts",
+        "data/api/mealPlanApi.ts",
+        "data/api/recipeImportApi.ts",
+        "data/db/migrations.ts",
+        "data/db/models/GroceryItemCheck.ts",
+        "data/db/models/Leftover.ts",
+        "data/db/models/index.ts",
+        "data/db/repositories/GroceryItemCheckRepository.ts",
+        "data/db/repositories/LeftoverRepository.ts",
+        "data/db/repositories/MealPlanRepository.ts",
+        "data/db/repositories/__tests__/meal-shopping-leftovers.test.ts",
+        "data/db/schema.ts",
+        "hooks/queries/__tests__/grocery-week-actions.test.tsx",
+        "hooks/queries/__tests__/useEntitlement.test.tsx",
+        "hooks/queries/__tests__/useMealPlanGeneration.test.tsx",
+        "hooks/queries/useGroceryList.ts",
+        "hooks/queries/useLeftovers.ts",
+        "hooks/queries/useMealPlanEntry.ts",
+        "hooks/queries/useMealPlanQueries.ts",
+        "hooks/queries/useRecipeImportQueries.ts",
+        "hooks/useGroceryListActions.ts",
+        "hooks/useNotificationHandlers.ts",
+        "hooks/useNotificationSettings.ts",
+        "ios/Cookkit.xcodeproj/project.pbxproj",
+        "ios/Cookkit/Cookkit.entitlements",
+        "ios/Cookkit/Info.plist",
+        "ios/CookkitImport/MainInterface.storyboard",
+        "ios/CookkitImport/PrivacyInfo.xcprivacy",
+        "ios/CookkitImport/ShareExtension-Info.plist",
+        "ios/CookkitImport/ShareExtension.entitlements",
+        "ios/CookkitImport/ShareExtensionPreprocessor.js",
+        "ios/CookkitImport/ShareViewController.swift",
+        "ios/Podfile.lock",
+        "ios/Podfile.properties.json",
+        "jest.config.js",
+        "lib/__tests__/grabmart.test.ts",
+        "lib/__tests__/ingredient-shopping.test.ts",
+        "lib/__tests__/recipe-share-inbox.test.ts",
+        "lib/grabmart.ts",
+        "lib/grabmart.web.ts",
+        "lib/ingredient-shopping.ts",
+        "lib/ingredient-shopping.web.ts",
+        "lib/notifications/LeftoverReminderCoordinator.tsx",
+        "lib/notifications/__tests__/leftover-reminders.test.ts",
+        "lib/notifications/leftover-reminders.ts",
+        "lib/recipe-scrapper/SocialRecipeService.ts",
+        "lib/recipe-scrapper/__tests__/SocialRecipeService.test.ts",
+        "lib/recipe-share-inbox.ts",
+        "package.json",
+        "plugins/__tests__/babel-config.test.js",
+        "plugins/__tests__/withIosDisableUserScriptSandbox.test.js",
+        "plugins/__tests__/withRecipeSharing.test.js",
+        "plugins/withIosDisableUserScriptSandbox.js",
+        "plugins/withRecipeSharing.js",
+        "store/MealPlanCalendarContext.tsx",
+        "store/RecipeStepsContext.tsx",
+        "types/Leftover.ts",
+        "types/MealPlan.ts",
+        "types/SharedRecipe.ts",
+        "utils/__tests__/grocery-list.test.ts",
+        "utils/__tests__/leftovers.test.ts",
+        "utils/__tests__/meal-plan-calendar.test.ts",
+        "utils/__tests__/native-share-route.test.ts",
+        "utils/__tests__/notification-settings.test.ts",
+        "utils/__tests__/shared-recipe.test.ts",
+        "utils/grabmart-shopping.ts",
+        "utils/grocery-ingredient-name.ts",
+        "utils/grocery-list.ts",
+        "utils/leftovers.ts",
+        "utils/meal-plan-calendar.ts",
+        "utils/native-share-route.ts",
+        "utils/notification-settings.ts",
+        "utils/shared-recipe.ts"
+      ]
+    },
+    {
+      "number": 1047,
+      "title": "🛡️ Sentinel: [HIGH] Fix missing rate limit on password reset",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1047",
+      "reviewedHead": "41e59d3151dcf7a8b4711557c7f705841be933e1",
+      "decision": "discarded",
+      "reason": "Client-only rate limiting is bypassable and this PR mixes dependency/CI changes without password-reset behavior tests.",
+      "files": [
+        ".github/workflows/ci.yml",
+        ".jules/sentinel.md",
+        "auth/MockAuthStrategy.ts",
+        "auth/SupabaseAuthStrategy.ts",
+        "bun.lockb",
+        "package.json"
+      ]
+    },
+    {
+      "number": 1046,
+      "title": "🎨 Palette: [UX] Improve accessibility for RecipeChip selection mode",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1046",
+      "reviewedHead": "57b0ce0e4a05882458f25f932c3cc94854f9b763",
+      "decision": "retained",
+      "reason": "Retain selection-mode labels and selected state for recipe chips; omit dependency edits.",
+      "files": [
+        "bun.lockb",
+        "components/GroceryList/RecipeChip.tsx",
+        "package.json"
+      ],
+      "retainedFiles": [
+        "components/GroceryList/RecipeChip.tsx"
+      ]
+    },
+    {
+      "number": 1045,
+      "title": "⚡ Bolt: [performance improvement] Use unsafeFetchRaw for CookingHistory stats",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1045",
+      "reviewedHead": "9ffb29aae1408497f36fdcb008fad8b53fb70358",
+      "decision": "discarded",
+      "reason": "SQL count(photo_url) counts empty strings differently from the existing hasPhoto semantics; the fallback test does not validate native aggregation parity.",
+      "files": [
+        "data/db/repositories/CookingHistoryRepository.ts",
+        "data/db/repositories/__tests__/repository-platform-fixes.test.ts"
+      ]
+    },
+    {
+      "number": 1044,
+      "title": "🎨 Palette: Fix accessibilityLabel masking nested text",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1044",
+      "reviewedHead": "27dbeb38e31844802f33097f3a8dae6ca9bbca7e",
+      "decision": "retained",
+      "reason": "Retain pantry card/filter text exposure. Date changes are covered by the canonical DateSection change.",
+      "files": [
+        "components/Ingredient/DateSection.tsx",
+        "components/Pantry/IngredientItemCard.tsx",
+        "components/Pantry/RecipeCategoryButtonGroup.tsx",
+        "components/Pantry/RecipeItemCard.tsx"
+      ],
+      "retainedFiles": [
+        "components/Pantry/IngredientItemCard.tsx",
+        "components/Pantry/RecipeItemCard.tsx",
+        "components/Pantry/RecipeCategoryButtonGroup.tsx"
+      ]
+    },
+    {
+      "number": 1043,
+      "title": "🎨 Palette: Fix accessibility labels on DateSection and IngredientQuantity",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1043",
+      "reviewedHead": "6fee080ab1ba8019e469a034ff8966fb0db4cdcb",
+      "decision": "retained",
+      "reason": "Retain readable date content and the current unit in the unit-picker label.",
+      "files": [
+        "components/Ingredient/DateSection.tsx",
+        "components/Ingredient/IngredientQuantity.tsx"
+      ],
+      "retainedFiles": [
+        "components/Ingredient/DateSection.tsx",
+        "components/Ingredient/IngredientQuantity.tsx"
+      ]
+    },
+    {
+      "number": 1042,
+      "title": "🎨 Palette: Add accessibility labels to debug SectionHeader",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1042",
+      "reviewedHead": "c5af7bc6ab758b82ecb4b7bf22d3c481f3d882bc",
+      "decision": "discarded",
+      "reason": "Debug-screen-only label additions do not address a demonstrated user-facing accessibility problem.",
+      "files": [
+        ".jules/palette.md",
+        "app/(misc)/debug/SectionHeader.tsx"
+      ]
+    },
+    {
+      "number": 1039,
+      "title": "🛡️ Sentinel: [HIGH] Fix missing rate limiting on password reset endpoint",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1039",
+      "reviewedHead": "0df325db796e2d3da204e9b26f44522d4b04ac07",
+      "decision": "discarded",
+      "reason": "The actual application diff only changes dependencies/lockfile, not the fix described in the title. Preserve the tested dependency set.",
+      "files": [
+        "bun.lockb",
+        "package.json"
+      ]
+    },
+    {
+      "number": 1038,
+      "title": "🧪 [testing improvement description]",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1038",
+      "reviewedHead": "30c1631fd22944f26df3bc402caf69176b1e936d",
+      "decision": "discarded",
+      "reason": "Adds a new public class export solely to test implementation state. Keep the limiter API stable and retain the focused process-exit regression test.",
+      "files": [
+        "utils/__tests__/rate-limiter.test.ts",
+        "utils/rate-limiter.ts"
+      ]
+    },
+    {
+      "number": 1037,
+      "title": "🧪 [testing improvement] Add useLocation tests",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1037",
+      "reviewedHead": "7d5f8bc0c6d0e8df2c7702d85bc49f30559009b8",
+      "decision": "retained",
+      "reason": "Retain the functional state update so location errors/timeouts preserve granted permission. Use current React Native Testing Library and assert the actual regression.",
+      "files": [
+        "__mocks__/expo-location.ts",
+        "hooks/__tests__/useLocation.test.ts",
+        "hooks/useLocation.ts"
+      ],
+      "retainedFiles": [
+        "hooks/useLocation.ts"
+      ]
+    },
+    {
+      "number": 1036,
+      "title": "🧹 Code Health: Fix Unsafe React Hook Dependency Ignore in LocalStorage",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1036",
+      "reviewedHead": "64d0886ea153f469d693002fc5567cc96a8ddc01",
+      "decision": "discarded",
+      "reason": "Effect dependencies include unstable defaultValue arrays; applying the patch can repeatedly reload state. No regression coverage proves render stability.",
+      "files": [
+        "components/Preferences/AllergySection.tsx",
+        "components/Preferences/AppliancesSection.tsx",
+        "components/Preferences/DietarySection.tsx",
+        "hooks/useLocalStorageState.ts",
+        "pr_description.md"
+      ]
+    },
+    {
+      "number": 1035,
+      "title": "Fix main app target ENABLE_USER_SCRIPT_SANDBOXING",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1035",
+      "reviewedHead": "be133547683cdc0a09d30e545195e3a1cf36c06c",
+      "decision": "discarded",
+      "reason": "Narrows sandbox handling to the main app and omits generated extensions; current master intentionally configures all generated build targets.",
+      "files": [
+        "bun.lockb",
+        "package.json",
+        "plugins/withIosDisableUserScriptSandbox.js"
+      ]
+    },
+    {
+      "number": 1034,
+      "title": "🧹 Code Health: replace explicit 'any' with 'unknown' in Function Gemma module",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1034",
+      "reviewedHead": "079b4eb12b533c05a5acb28e7dd9dac898a05251",
+      "decision": "discarded",
+      "reason": "The actual application diff only changes dependencies/lockfile, not the fix described in the title. Preserve the tested dependency set.",
+      "files": [
+        ".jules/reflection.md",
+        "bun.lockb",
+        "package.json"
+      ]
+    },
+    {
+      "number": 1033,
+      "title": "⚡ Bolt: [performance improvement]",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1033",
+      "reviewedHead": "a6247c376bcabc3949c925790d54dd3084eb402b",
+      "decision": "discarded",
+      "reason": "Changes household stock lookup scope and includes unrelated dependencies. The query-shape test does not prove pending/local row merge parity.",
+      "files": [
+        ".jules/bolt.md",
+        "bun.lockb",
+        "data/services/HouseholdSyncService.ts",
+        "data/services/__tests__/HouseholdSyncService.test.ts",
+        "package.json"
+      ]
+    },
+    {
+      "number": 1032,
+      "title": "⚡ Bolt: Cache ingredients used achievement count in MMKV",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1032",
+      "reviewedHead": "84f8d0cae1a294505c63de54b10cb1d3ac620225",
+      "decision": "discarded",
+      "reason": "The actual application diff only changes dependencies/lockfile, not the fix described in the title. Preserve the tested dependency set.",
+      "files": [
+        "bun.lockb",
+        "package.json"
+      ]
+    },
+    {
+      "number": 1031,
+      "title": "🧪 [testing improvement] Add tests for useGroceryListActions hook",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1031",
+      "reviewedHead": "705ebe005a54229ead22aa92a8a63fd78a5c40a1",
+      "decision": "discarded",
+      "reason": "Targets grocery-list actions predating the selected-week behavior now on master; no demonstrated current regression.",
+      "files": [
+        "hooks/__tests__/useGroceryListActions.test.ts"
+      ]
+    },
+    {
+      "number": 1030,
+      "title": "🧪 Add tests for useFirstRunAha hook",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1030",
+      "reviewedHead": "6b15d8b6d6eb135de6bcbde01f0db728019c7b56",
+      "decision": "discarded",
+      "reason": "The actual application diff only changes dependencies/lockfile, not the fix described in the title. Preserve the tested dependency set.",
+      "files": [
+        "bun.lockb",
+        "package.json"
+      ]
+    },
+    {
+      "number": 1029,
+      "title": "🎨 Palette: [UX improvement] Add UI affordance to confirm needs_review ingredients",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1029",
+      "reviewedHead": "205840e019785a845a03e50f16d4bd8162c13dac",
+      "decision": "discarded",
+      "reason": "The actual application diff only changes dependencies/lockfile, not the fix described in the title. Preserve the tested dependency set.",
+      "files": [
+        "bun.lockb",
+        "package.json"
+      ]
+    },
+    {
+      "number": 1028,
+      "title": "⚡ Bolt: Optimize achievement checking concurrency",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1028",
+      "reviewedHead": "8ae38b1ad91c8f7dbf9f7f8366ebc76ffb84bf5a",
+      "decision": "discarded",
+      "reason": "Unbounded concurrent achievement evaluation changes write and notification ordering without concurrency regression tests.",
+      "files": [
+        "data/services/AchievementService.ts"
+      ]
+    },
+    {
+      "number": 1027,
+      "title": "🧪 [testing improvement] Add tests for useDistanceCalculation hook",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1027",
+      "reviewedHead": "177b859a984344a17f358650f941830a8b9616f3",
+      "decision": "discarded",
+      "reason": "Uses the legacy hook renderer synchronously against the current asynchronous testing setup and mixes dependency edits; no current bug fix.",
+      "files": [
+        "bun.lockb",
+        "hooks/__tests__/useDistanceCalculation.test.ts",
+        "package.json"
+      ]
+    },
+    {
+      "number": 1026,
+      "title": "🛡️ Sentinel: [CRITICAL] Fix Exposed YouTube API Key",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1026",
+      "reviewedHead": "deb4723a638b1dab3a1dedc2ab8c5987728fe0a6",
+      "decision": "discarded",
+      "reason": "Introduces a new YouTube backend/auth handoff without deployment and end-to-end evidence. Keep this cleanup independent of the active AI-provider migration.",
+      "files": [
+        ".jules/sentinel.md",
+        "bun.lockb",
+        "lib/recipe-scrapper/youtube/AuthYouTubeService.ts",
+        "lib/recipe-scrapper/youtube/YouTubeServiceFactory.ts",
+        "package.json",
+        "supabase/functions/youtube-proxy/index.ts"
+      ]
+    },
+    {
+      "number": 1025,
+      "title": "Track helpful votes in state",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1025",
+      "reviewedHead": "67e296f81886289c95f7a5dc761a34f32ce1dbbe",
+      "decision": "discarded",
+      "reason": "The reviewed diff is empty or contains only bot journal notes; no application change to retain.",
+      "files": []
+    },
+    {
+      "number": 1024,
+      "title": "🔒 Sentinel: [HIGH] Fix Insecure Local Storage Encryption Key Fallback",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1024",
+      "reviewedHead": "af5c1419d6709f71b6d409c8bf5b9fafa433aa89",
+      "decision": "discarded",
+      "reason": "Removes storage key fallback without a production encrypted-data migration or recovery test; also carries temporary patch files.",
+      "files": [
+        ".env.example",
+        ".jules/sentinel.md",
+        "bun.lockb",
+        "data/storage/storage-config.ts",
+        "package.json",
+        "patch.diff",
+        "patch_env.py",
+        "patch_storage.py",
+        "pr_description.md",
+        "pr_description2.md"
+      ]
+    },
+    {
+      "number": 1023,
+      "title": "🧹 [code health] Remove dead code in useSelectionRing",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1023",
+      "reviewedHead": "056e44b0ebbe100e5f5c22e51228e46d5ebb3f78",
+      "decision": "discarded",
+      "reason": "Deletes one commented-out line without changing behavior.",
+      "files": [
+        "hooks/animation/useSelectionRing.ts"
+      ]
+    },
+    {
+      "number": 1022,
+      "title": "🧹 Fix unsafe React Hook dependency ignore in useSelectionRing",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1022",
+      "reviewedHead": "07eb0dff43a96111867cfad1fb0dcf289e464d12",
+      "decision": "discarded",
+      "reason": "Only retry/evaluator-trigger comments remain in the reviewed diff; no implementation fix.",
+      "files": [
+        "hooks/animation/useSelectionRing.ts"
+      ]
+    },
+    {
+      "number": 1021,
+      "title": "🧪 Add test coverage for VoiceCommandParser",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1021",
+      "reviewedHead": "851624662a6e7bfac7b8d28da4bbc6fefeef7b11",
+      "decision": "superseded",
+      "reason": "Voice parser behavior and plural regression are covered by the current public behavior suite; omit dependency edits and private-method tests.",
+      "files": [
+        "__tests__/utils/voice-command-parser.test.ts",
+        "bun.lockb",
+        "package.json",
+        "utils/voice-command-parser.ts"
+      ]
+    },
+    {
+      "number": 1020,
+      "title": "🧪 [testing improvement] Add tests for utils/result.ts",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1020",
+      "reviewedHead": "015050a60d0cdf6dca080351f8625dd5f912515d",
+      "decision": "discarded",
+      "reason": "Tests the third-party neverthrow re-exports and type aliases rather than Cookkit behavior.",
+      "files": [
+        "utils/__tests__/result.test.ts"
+      ]
+    },
+    {
+      "number": 1019,
+      "title": "🧪 Add test file for type-prettier utility",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1019",
+      "reviewedHead": "0e9d54e94cd232112fa2a18cc3f5aa728052ae45",
+      "decision": "discarded",
+      "reason": "A runtime suite for a compile-time type helper does not establish a product behavior contract.",
+      "files": [
+        "utils/__tests__/type-prettier.test.ts"
+      ]
+    },
+    {
+      "number": 1018,
+      "title": "Fix Pods project deployment targets regex",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1018",
+      "reviewedHead": "f7f1a2d6f696d318cb4be78380dfc2e0fdfaade1",
+      "decision": "discarded",
+      "reason": "Only a temporary retry text artifact remains; no plugin fix.",
+      "files": [
+        "retry11.txt"
+      ]
+    },
+    {
+      "number": 1017,
+      "title": "🧪 Testing Improvement: Add tests for fetchWithTimeout utility",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1017",
+      "reviewedHead": "0749431724f1289fd91749f475827f3908c7df2c",
+      "decision": "retained",
+      "reason": "Retain pre-aborted signal handling. Replace the original hanging/pending-promise test with deterministic abort and resource cleanup tests.",
+      "files": [
+        "utils/__tests__/fetch-with-timeout.test.ts",
+        "utils/fetch-with-timeout.ts"
+      ],
+      "retainedFiles": [
+        "utils/fetch-with-timeout.ts"
+      ]
+    },
+    {
+      "number": 1016,
+      "title": "chore(deps): bump @lucide/lab from 0.1.2 to 0.2.0",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1016",
+      "reviewedHead": "70fad190a5a24896c2deb30e033ea761d8d03eb8",
+      "decision": "discarded",
+      "reason": "Dependency-only proposal is not required for the selected fixes; it lacks a matching frozen-lockfile/native compatibility validation for this cleanup. Preserve the currently tested Expo/React Native dependency set.",
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "number": 1015,
+      "title": "chore(deps): update @rn-primitives/slot requirement from ^1.2.0 to ^1.5.2",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1015",
+      "reviewedHead": "57835d0e721d97782b77d80084bb7cc464ab4608",
+      "decision": "discarded",
+      "reason": "Dependency-only proposal is not required for the selected fixes; it lacks a matching frozen-lockfile/native compatibility validation for this cleanup. Preserve the currently tested Expo/React Native dependency set.",
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "number": 1014,
+      "title": "chore(deps): update @rn-primitives/avatar requirement from ^1.2.0 to ^1.5.2",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1014",
+      "reviewedHead": "a0e8879f7b4eda1c8ef97f003ac3d84b1591b3cb",
+      "decision": "discarded",
+      "reason": "Dependency-only proposal is not required for the selected fixes; it lacks a matching frozen-lockfile/native compatibility validation for this cleanup. Preserve the currently tested Expo/React Native dependency set.",
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "number": 1013,
+      "title": "chore(deps): update @rn-primitives/checkbox requirement from ^1.4.0 to ^1.5.2",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1013",
+      "reviewedHead": "7d00f0e233f60c5eceb2207448a1eaa2d205f135",
+      "decision": "discarded",
+      "reason": "Dependency-only proposal is not required for the selected fixes; it lacks a matching frozen-lockfile/native compatibility validation for this cleanup. Preserve the currently tested Expo/React Native dependency set.",
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "number": 1012,
+      "title": "chore(deps): update babel-plugin-module-resolver requirement from ^5.0.2 to ^5.0.3",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1012",
+      "reviewedHead": "3b91fdc7f239d285ec66942d398324365c44daae",
+      "decision": "discarded",
+      "reason": "Dependency-only proposal is not required for the selected fixes; it lacks a matching frozen-lockfile/native compatibility validation for this cleanup. Preserve the currently tested Expo/React Native dependency set.",
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "number": 1011,
+      "title": "chore(deps): update @rn-primitives/popover requirement from ^1.4.0 to ^1.5.2",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1011",
+      "reviewedHead": "4d01481c37a67cede8f1869e4a60139a1ebd7594",
+      "decision": "discarded",
+      "reason": "Dependency-only proposal is not required for the selected fixes; it lacks a matching frozen-lockfile/native compatibility validation for this cleanup. Preserve the currently tested Expo/React Native dependency set.",
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "number": 1006,
+      "title": "🛡️ Sentinel: [HIGH] Fix missing rate limiting on password reset",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1006",
+      "reviewedHead": "2e102cb65ed16daa65bee5ec2d3bb97b6eb50d67",
+      "decision": "discarded",
+      "reason": "Client-only rate limiting is bypassable and lacks regression tests; no server-enforced password-reset protection is provided.",
+      "files": [
+        ".jules/overrides.json",
+        ".jules/sentinel.md",
+        "auth/SupabaseAuthStrategy.ts",
+        "bun.lockb",
+        "package.json"
+      ]
+    },
+    {
+      "number": 1005,
+      "title": "chore(deps): bump github/codeql-action from 4 to 4.37.4",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1005",
+      "reviewedHead": "ff8df75d36e5917848cca93256c5b7824821c85a",
+      "decision": "discarded",
+      "reason": "The existing CodeQL v4 reference already tracks compatible v4 updates. Pinning one minor version alone adds no verified security fix.",
+      "files": [
+        ".github/workflows/security-scan.yml"
+      ]
+    },
+    {
+      "number": 1002,
+      "title": "🧪 Test VoiceCommandParser public behavior",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1002",
+      "reviewedHead": "5a8d7ca7940ef9b5ba0a036c624bf2832a24a661",
+      "decision": "retained",
+      "reason": "Retain focused utility regression coverage from the curated maintenance change; omit unrelated historical and dependency edits.",
+      "files": [
+        "app/meal-plan/components/MealPlanHeaderRight.tsx",
+        "app/meal-plan/components/RecipeSelectionSheet.tsx",
+        "app/meal-plan/components/WeekNavigationHeader.tsx",
+        "app/profile/household.tsx",
+        "app/recipes/[recipeId]/edit.tsx",
+        "auth/__tests__/authHelpers.test.ts",
+        "babel.config.js",
+        "components/Analytics/WasteChart.tsx",
+        "components/GroceryMap/StoreInfoCard.tsx",
+        "components/Ingredient/IngredientDeleteButton.tsx",
+        "components/Recipe/Details/ReviewsList.tsx",
+        "components/Recipe/Details/WriteReviewModal.tsx",
+        "components/Recipe/Details/WriteTipModal.tsx",
+        "components/Recipe/Step/IngredientContent.tsx",
+        "components/Shared/EditableTitle.tsx",
+        "components/Shared/GridButtons.tsx",
+        "components/navigation/ScreenGroupMisc.tsx",
+        "components/navigation/ScreenGroupProfile.tsx",
+        "components/ui/dialog.tsx",
+        "data/db/DatabaseFacade.ts",
+        "data/db/repositories/ConsumptionLogRepository.ts",
+        "data/db/repositories/CookingHistoryRepository.ts",
+        "data/db/repositories/UserChallengeRepository.ts",
+        "data/db/repositories/WasteLogRepository.ts",
+        "data/services/ChallengeService.ts",
+        "data/storage/__tests__/storage-types.test.ts",
+        "data/storage/storage-types.ts",
+        "hooks/recommendation/ranking/CompositeRankingStrategy.ts",
+        "hooks/useRecipeEdit.ts",
+        "store/RecipeStepsContext.tsx",
+        "utils/__tests__/pantry-voice-parser.test.ts",
+        "utils/__tests__/store-hours.test.ts",
+        "utils/__tests__/voice-command-parser.test.ts",
+        "utils/voice-command-parser.ts"
+      ],
+      "retainedFiles": [
+        "utils/voice-command-parser.ts",
+        "utils/__tests__/voice-command-parser.test.ts"
+      ]
+    },
+    {
+      "number": 1001,
+      "title": "🔒 Security: Fix SSRF vulnerability in SocialRecipeService",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1001",
+      "reviewedHead": "a9c870bb0862315cca2b873c89102beb79130bee",
+      "decision": "discarded",
+      "reason": "Rejects caption-only/text imports supported on current master and follows redirects recursively without a bound; not suitable as the consolidated URL-validation fix.",
+      "files": [
+        "lib/recipe-scrapper/SocialRecipeService.ts",
+        "lib/recipe-scrapper/__tests__/SocialRecipeServiceSSRF.test.ts"
+      ]
+    },
+    {
+      "number": 1000,
+      "title": "⚡ Bolt: Optimize recipe rating calculations",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/1000",
+      "reviewedHead": "c4c2a5dfe8071a463fb968d2be4086dbb75d4a9e",
+      "decision": "discarded",
+      "reason": "Changes rating aggregation/history scope through raw SQL without proving web/native parity or preserving the existing history window.",
+      "files": [
+        ".jules/bolt.md",
+        "data/api/recipeApi.ts",
+        "data/db/DatabaseFacade.ts",
+        "data/db/repositories/CookingHistoryRepository.ts",
+        "hooks/queries/useRecipeQueries.ts"
+      ]
+    },
+    {
+      "number": 999,
+      "title": "⚡ Bolt: [performance improvement] Parallelize challenge progress updates",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/999",
+      "reviewedHead": "3f4fb4ff76e987c9792b91674af5833a7b5a80a1",
+      "decision": "discarded",
+      "reason": "Carries a large historical feature diff and changes challenge completion batching without isolated regression evidence.",
+      "files": [
+        "app/meal-plan/components/MealPlanHeaderRight.tsx",
+        "app/meal-plan/components/RecipeSelectionSheet.tsx",
+        "app/meal-plan/components/WeekNavigationHeader.tsx",
+        "app/profile/household.tsx",
+        "app/recipes/[recipeId]/edit.tsx",
+        "auth/__tests__/authHelpers.test.ts",
+        "babel.config.js",
+        "components/Analytics/WasteChart.tsx",
+        "components/GroceryMap/StoreInfoCard.tsx",
+        "components/Ingredient/IngredientDeleteButton.tsx",
+        "components/Recipe/Details/ReviewsList.tsx",
+        "components/Recipe/Details/WriteReviewModal.tsx",
+        "components/Recipe/Details/WriteTipModal.tsx",
+        "components/Recipe/Step/IngredientContent.tsx",
+        "components/Shared/EditableTitle.tsx",
+        "components/Shared/GridButtons.tsx",
+        "components/navigation/ScreenGroupMisc.tsx",
+        "components/navigation/ScreenGroupProfile.tsx",
+        "components/ui/dialog.tsx",
+        "data/db/DatabaseFacade.ts",
+        "data/db/repositories/ConsumptionLogRepository.ts",
+        "data/db/repositories/CookingHistoryRepository.ts",
+        "data/db/repositories/UserChallengeRepository.ts",
+        "data/db/repositories/WasteLogRepository.ts",
+        "data/services/ChallengeService.ts",
+        "data/storage/__tests__/storage-types.test.ts",
+        "data/storage/storage-types.ts",
+        "hooks/recommendation/ranking/CompositeRankingStrategy.ts",
+        "hooks/useRecipeEdit.ts",
+        "store/RecipeStepsContext.tsx",
+        "utils/__tests__/pantry-voice-parser.test.ts",
+        "utils/__tests__/store-hours.test.ts"
+      ]
+    },
+    {
+      "number": 998,
+      "title": "⚡ Bolt: [performance improvement] fix N+1 query issue in HouseholdSyncService",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/998",
+      "reviewedHead": "0294b2d20dd90099e81e300759dba2640cce953c",
+      "decision": "discarded",
+      "reason": "Carries a large historical feature diff plus a sync lookup change without targeted merge/identity regression coverage.",
+      "files": [
+        "app/meal-plan/components/MealPlanHeaderRight.tsx",
+        "app/meal-plan/components/RecipeSelectionSheet.tsx",
+        "app/meal-plan/components/WeekNavigationHeader.tsx",
+        "app/profile/household.tsx",
+        "app/recipes/[recipeId]/edit.tsx",
+        "auth/__tests__/authHelpers.test.ts",
+        "babel.config.js",
+        "components/Analytics/WasteChart.tsx",
+        "components/GroceryMap/StoreInfoCard.tsx",
+        "components/Ingredient/IngredientDeleteButton.tsx",
+        "components/Recipe/Details/ReviewsList.tsx",
+        "components/Recipe/Details/WriteReviewModal.tsx",
+        "components/Recipe/Details/WriteTipModal.tsx",
+        "components/Recipe/Step/IngredientContent.tsx",
+        "components/Shared/EditableTitle.tsx",
+        "components/Shared/GridButtons.tsx",
+        "components/navigation/ScreenGroupMisc.tsx",
+        "components/navigation/ScreenGroupProfile.tsx",
+        "components/ui/dialog.tsx",
+        "data/db/DatabaseFacade.ts",
+        "data/db/repositories/ConsumptionLogRepository.ts",
+        "data/db/repositories/CookingHistoryRepository.ts",
+        "data/db/repositories/UserChallengeRepository.ts",
+        "data/db/repositories/WasteLogRepository.ts",
+        "data/services/ChallengeService.ts",
+        "data/services/HouseholdSyncService.ts",
+        "data/storage/__tests__/storage-types.test.ts",
+        "data/storage/storage-types.ts",
+        "hooks/recommendation/ranking/CompositeRankingStrategy.ts",
+        "hooks/useRecipeEdit.ts",
+        "store/RecipeStepsContext.tsx",
+        "utils/__tests__/pantry-voice-parser.test.ts",
+        "utils/__tests__/store-hours.test.ts"
+      ]
+    },
+    {
+      "number": 997,
+      "title": "🔒 Fix: Secure raw SQL query with table name validation",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/997",
+      "reviewedHead": "d1d155deae394dcf50bf05a25f3c52aa0569105a",
+      "decision": "discarded",
+      "reason": "The reviewed diff carries broad historical feature changes; it does not provide an isolated, tested table-name validation change.",
+      "files": [
+        "app/meal-plan/components/MealPlanHeaderRight.tsx",
+        "app/meal-plan/components/RecipeSelectionSheet.tsx",
+        "app/meal-plan/components/WeekNavigationHeader.tsx",
+        "app/profile/household.tsx",
+        "app/recipes/[recipeId]/edit.tsx",
+        "auth/__tests__/authHelpers.test.ts",
+        "babel.config.js",
+        "components/Analytics/WasteChart.tsx",
+        "components/GroceryMap/StoreInfoCard.tsx",
+        "components/Ingredient/IngredientDeleteButton.tsx",
+        "components/Recipe/Details/ReviewsList.tsx",
+        "components/Recipe/Details/WriteReviewModal.tsx",
+        "components/Recipe/Details/WriteTipModal.tsx",
+        "components/Recipe/Step/IngredientContent.tsx",
+        "components/Shared/EditableTitle.tsx",
+        "components/Shared/GridButtons.tsx",
+        "components/navigation/ScreenGroupMisc.tsx",
+        "components/navigation/ScreenGroupProfile.tsx",
+        "components/ui/dialog.tsx",
+        "data/db/DatabaseFacade.ts",
+        "data/db/repositories/ConsumptionLogRepository.ts",
+        "data/db/repositories/CookingHistoryRepository.ts",
+        "data/db/repositories/UserChallengeRepository.ts",
+        "data/db/repositories/WasteLogRepository.ts",
+        "data/services/ChallengeService.ts",
+        "data/storage/__tests__/storage-types.test.ts",
+        "data/storage/storage-types.ts",
+        "hooks/recommendation/ranking/CompositeRankingStrategy.ts",
+        "hooks/useRecipeEdit.ts",
+        "store/RecipeStepsContext.tsx",
+        "utils/__tests__/pantry-voice-parser.test.ts",
+        "utils/__tests__/store-hours.test.ts"
+      ]
+    },
+    {
+      "number": 996,
+      "title": "⚡ Bolt: [performance improvement] Concurrent sync write queue drain",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/996",
+      "reviewedHead": "a27e7a3c556c068c282cb3dc1f00f2b033e4bf26",
+      "decision": "discarded",
+      "reason": "Parallel queue draining can reorder updates to the same row. The concurrency test does not prove last-write ordering or retries remain correct.",
+      "files": [
+        "data/services/SyncWriteQueue.ts",
+        "data/services/__tests__/SyncWriteQueue.test.ts"
+      ]
+    },
+    {
+      "number": 995,
+      "title": "🧪 Add tests for fetchWithTimeout",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/995",
+      "reviewedHead": "5d546823d1d48d7e66456973891aae7f8fb477d2",
+      "decision": "superseded",
+      "reason": "Request cancellation and cleanup are covered by the adapted #1017 regression suite; omit the broad historical diff.",
+      "files": [
+        ".jules/bolt.md",
+        "app/meal-plan/components/MealPlanHeaderRight.tsx",
+        "app/meal-plan/components/RecipeSelectionSheet.tsx",
+        "app/meal-plan/components/WeekNavigationHeader.tsx",
+        "app/profile/household.tsx",
+        "app/recipes/[recipeId]/edit.tsx",
+        "auth/__tests__/authHelpers.test.ts",
+        "babel.config.js",
+        "components/Analytics/WasteChart.tsx",
+        "components/GroceryMap/StoreInfoCard.tsx",
+        "components/Ingredient/IngredientDeleteButton.tsx",
+        "components/Recipe/Details/ReviewsList.tsx",
+        "components/Recipe/Details/WriteReviewModal.tsx",
+        "components/Recipe/Details/WriteTipModal.tsx",
+        "components/Recipe/Step/IngredientContent.tsx",
+        "components/Shared/EditableTitle.tsx",
+        "components/Shared/GridButtons.tsx",
+        "components/navigation/ScreenGroupMisc.tsx",
+        "components/navigation/ScreenGroupProfile.tsx",
+        "components/ui/dialog.tsx",
+        "data/db/DatabaseFacade.ts",
+        "data/db/repositories/ConsumptionLogRepository.ts",
+        "data/db/repositories/CookingHistoryRepository.ts",
+        "data/db/repositories/UserChallengeRepository.ts",
+        "data/db/repositories/WasteLogRepository.ts",
+        "data/services/ChallengeService.ts",
+        "data/storage/__tests__/storage-types.test.ts",
+        "data/storage/storage-types.ts",
+        "hooks/recommendation/ranking/CompositeRankingStrategy.ts",
+        "hooks/useRecipeEdit.ts",
+        "store/RecipeStepsContext.tsx",
+        "utils/__tests__/fetch-with-timeout.test.ts",
+        "utils/__tests__/pantry-voice-parser.test.ts",
+        "utils/__tests__/store-hours.test.ts"
+      ]
+    },
+    {
+      "number": 994,
+      "title": "🧪 [Testing Improvement] Add tests for RateLimiter",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/994",
+      "reviewedHead": "d057560a1236cf9afd95a43239411442274e559d",
+      "decision": "discarded",
+      "reason": "Carries a broad historical diff plus limiter implementation tests. Keep current behavior and the focused timer lifecycle regression test.",
+      "files": [
+        "app/meal-plan/components/MealPlanHeaderRight.tsx",
+        "app/meal-plan/components/RecipeSelectionSheet.tsx",
+        "app/meal-plan/components/WeekNavigationHeader.tsx",
+        "app/profile/household.tsx",
+        "app/recipes/[recipeId]/edit.tsx",
+        "auth/__tests__/authHelpers.test.ts",
+        "babel.config.js",
+        "bun.lockb",
+        "components/Analytics/WasteChart.tsx",
+        "components/GroceryMap/StoreInfoCard.tsx",
+        "components/Ingredient/IngredientDeleteButton.tsx",
+        "components/Recipe/Details/ReviewsList.tsx",
+        "components/Recipe/Details/WriteReviewModal.tsx",
+        "components/Recipe/Details/WriteTipModal.tsx",
+        "components/Recipe/Step/IngredientContent.tsx",
+        "components/Shared/EditableTitle.tsx",
+        "components/Shared/GridButtons.tsx",
+        "components/navigation/ScreenGroupMisc.tsx",
+        "components/navigation/ScreenGroupProfile.tsx",
+        "components/ui/dialog.tsx",
+        "data/db/DatabaseFacade.ts",
+        "data/db/repositories/ConsumptionLogRepository.ts",
+        "data/db/repositories/CookingHistoryRepository.ts",
+        "data/db/repositories/UserChallengeRepository.ts",
+        "data/db/repositories/WasteLogRepository.ts",
+        "data/services/ChallengeService.ts",
+        "data/storage/__tests__/storage-types.test.ts",
+        "data/storage/storage-types.ts",
+        "hooks/recommendation/ranking/CompositeRankingStrategy.ts",
+        "hooks/useRecipeEdit.ts",
+        "package.json",
+        "store/RecipeStepsContext.tsx",
+        "utils/__tests__/pantry-voice-parser.test.ts",
+        "utils/__tests__/rate-limiter.test.ts",
+        "utils/__tests__/store-hours.test.ts",
+        "utils/rate-limiter.ts"
+      ]
+    },
+    {
+      "number": 993,
+      "title": "🔒 Fix: Remove EXPO_PUBLIC MMKV encryption key fallback in production",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/993",
+      "reviewedHead": "722e686bd55c81a2c3540cd059d666c682606bb8",
+      "decision": "discarded",
+      "reason": "Changes production encryption fallback semantics without proving compatibility with existing encrypted data or SecureStore failure recovery.",
+      "files": [
+        "data/storage/storage-config.ts"
+      ]
+    },
+    {
+      "number": 992,
+      "title": "⚡ Bolt: Evaluate achievements concurrently in AchievementService",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/992",
+      "reviewedHead": "dd36927582c8352ce665a72f8898113b18df3350",
+      "decision": "discarded",
+      "reason": "Unbounded concurrent achievement evaluation changes write and notification ordering without concurrency regression tests.",
+      "files": [
+        "data/services/AchievementService.ts"
+      ]
+    },
+    {
+      "number": 990,
+      "title": "fix: properly bump iOS deployment targets in Pods project",
+      "url": "https://github.com/Cookkit2/recipe-rn/pull/990",
+      "reviewedHead": "d02abf0e0c5c44aa581a91ed77aaca7297ea447e",
+      "decision": "retained",
+      "reason": "Retain support for quoted/integer deployment targets. Add fixture coverage preserving quoting and newer targets.",
+      "files": [
+        "plugins/withIosDisableUserScriptSandbox.js"
+      ],
+      "retainedFiles": [
+        "plugins/withIosDisableUserScriptSandbox.js"
+      ]
+    }
+  ]
+}

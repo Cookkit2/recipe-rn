@@ -35,7 +35,11 @@ export default function RecipeChip({
         onPressIn={onPressIn}
         onPressOut={onPressOut}
         accessibilityRole="button"
-        accessibilityLabel={`View recipe for ${recipe.title}`}
+        accessibilityLabel={
+          isSelectionMode ? `Select ${recipe.title}` : `View recipe for ${recipe.title}`
+        }
+        accessibilityHint={isSelectionMode ? "Double tap to toggle selection" : undefined}
+        accessibilityState={isSelectionMode ? { selected: isSelected } : undefined}
       >
         <Animated.View
           className="w-24 h-24 overflow-hidden mb-2 shadow-sm bg-card border border-border/10 relative"

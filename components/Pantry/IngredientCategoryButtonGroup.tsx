@@ -1,67 +1,66 @@
 import React from "react";
+import { ScrollView, View } from "react-native";
+import { useRouter } from "expo-router";
+import { CookingPotIcon } from "lucide-uniwind";
 import { Button } from "~/components/ui/button";
 import { P } from "~/components/ui/typography";
-import Animated, { useAnimatedStyle, withTiming } from "react-native-reanimated";
-import { CURVES } from "~/constants/curves";
 import { usePantryStore } from "~/store/PantryContext";
 import { PANTRY_ITEM_TYPES } from "~/constants/pantry-item-type";
-import useColors from "~/hooks/useColor";
 import { cn } from "~/lib/utils";
-import { Link } from "expo-router";
 
 export default function IngredientCategoryButtonGroup() {
-  const colors = useColors();
-  const { selectedItemType, changeItemType, ingredientScrollY, isRecipeOpen } = usePantryStore();
-
-  const borderAnimatedStyle = useAnimatedStyle(() => {
-    const borderColor = withTiming(
-      ingredientScrollY.value > 16 ? colors.border : colors.background,
-      CURVES["expressive.fast.effects"]
-    );
-    return { borderBottomColor: borderColor, borderBottomWidth: 1 };
-  }, [colors.border, colors.background]);
+  const router = useRouter();
+  const { selectedItemType, changeItemType } = usePantryStore();
 
   return (
-    <Animated.View
-      className="flex flex-row gap-x-2 overflow-x-auto pb-3 px-3"
-      // style={[borderAnimatedStyle]}
-    >
-      {PANTRY_ITEM_TYPES.map(({ type, label, icon }) => {
-        const isSelected = selectedItemType === type;
-        return (
-          <Button
-            key={type}
-            size="sm"
-            className={cn(
-              "flex-row items-center gap-1 rounded-full border-continuous",
-              isSelected ? "bg-foreground/80" : "bg-background border border-border"
-            )}
-            onPress={() => changeItemType(type)}
-          >
-            {React.cloneElement(icon, {
-              className: cn(isSelected ? "text-background" : "text-foreground"),
-            })}
-            <P
+    <View className="flex-row items-center gap-x-2 pb-3 px-3">
+      <ScrollView
+        horizontal
+        className="flex-1 min-w-0"
+        contentContainerClassName="flex-row gap-x-2"
+        showsHorizontalScrollIndicator={false}
+        alwaysBounceHorizontal={false}
+      >
+        {PANTRY_ITEM_TYPES.map(({ type, label, icon }) => {
+          const isSelected = selectedItemType === type;
+          return (
+            <Button
+              key={type}
+              size="sm"
               className={cn(
-                "text-sm font-urbanist-medium tracking-wider",
-                isSelected ? "text-background" : "text-foreground"
+                "flex-row items-center gap-1 rounded-full border-continuous",
+                isSelected ? "bg-foreground/80" : "bg-background border border-border"
               )}
+              onPress={() => changeItemType(type)}
+              accessibilityLabel={label}
+              accessibilityState={{ selected: isSelected }}
             >
-              {label}
-            </P>
-          </Button>
-        );
-      })}
-      {/* {__DEV__ && (
-        <Link href={"/debug"} asChild>
-          <Button
-            size="sm"
-            className={"flex-row items-center gap-1 rounded-full border-continuous"}
-          >
-            <P className={cn("text-sm font-urbanist-medium tracking-wider")}>Debug</P>
-          </Button>
-        </Link>
-      )} */}
-    </Animated.View>
+              {React.cloneElement(icon, {
+                className: cn(isSelected ? "text-background" : "text-foreground"),
+              })}
+              <P
+                className={cn(
+                  "text-sm font-urbanist-medium tracking-wider",
+                  isSelected ? "text-background" : "text-foreground"
+                )}
+              >
+                {label}
+              </P>
+            </Button>
+          );
+        })}
+      </ScrollView>
+      <Button
+        size="sm"
+        variant="outline"
+        containerClassName="shrink-0"
+        className="flex-row items-center gap-1 rounded-full border-continuous"
+        accessibilityLabel="Leftovers"
+        onPress={() => router.push("/leftovers")}
+      >
+        <CookingPotIcon className="text-foreground" size={18} />
+        <P className="text-sm font-urbanist-medium tracking-wider">Leftovers</P>
+      </Button>
+    </View>
   );
 }

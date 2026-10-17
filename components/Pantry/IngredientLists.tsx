@@ -1,5 +1,4 @@
 import React from "react";
-import LeftoversSummary from "~/components/Leftovers/LeftoversSummary";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePantryStore } from "~/store/PantryContext";
 import IngredientItemCard from "./IngredientItemCard";
@@ -67,7 +66,6 @@ export default function IngredientLists() {
       ListHeaderComponent={
         <View className="bg-background pt-2">
           <IngredientCategoryButtonGroup />
-          <LeftoversSummary />
         </View>
       }
       renderItem={({ item, index }) => (

@@ -25,6 +25,8 @@ describe("RecipeStep", () => {
     };
     const rendered = await render(<RecipeStep step={step} />);
     const checkbox = rendered.getByRole("checkbox");
+    rendered.getByLabelText("Step 1: Test. Test description");
+    expect(checkbox.props.accessibilityHint).toBe("Marks step as complete");
     await act(async () => {
       fireEvent.press(checkbox);
     });

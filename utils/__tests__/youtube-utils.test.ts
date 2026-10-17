@@ -1,22 +1,35 @@
 import { extractYouTubeVideoId, isValidYouTubeUrl, quickCookingCheck } from "../youtube-utils";
 
 describe("quickCookingCheck", () => {
-  it("identifies strong cooking-related titles", () => {
-    // 3 unique matches = confidence 1.0 (isCooking: true)
-    const result = quickCookingCheck("How to Cook a Perfect Steak Recipe for Dinner");
+  it("identifies strong cooking-related titles (3 matches)", () => {
+    // cook, recipe, dinner = 3 unique matches = confidence 1.0
+    const result = quickCookingCheck("How to Cook a Perfect Recipe for Dinner");
     expect(result.isCooking).toBe(true);
     expect(result.confidence).toBe(1.0);
   });
 
-  it("identifies moderate cooking-related titles", () => {
-    // 1 match = confidence ~0.33 (isCooking: true)
-    const result = quickCookingCheck("My Favorite Chicken");
+  it("identifies titles with more than 3 matches (capped at 1.0)", () => {
+    // cook, recipe, dinner, chicken = 4 unique matches
+    const result = quickCookingCheck("How to Cook a Perfect Chicken Recipe for Dinner");
     expect(result.isCooking).toBe(true);
-    expect(result.confidence).toBeGreaterThan(0.33);
-    expect(result.confidence).toBeLessThan(0.34);
+    expect(result.confidence).toBe(1.0);
   });
 
-  it("rejects non-cooking titles", () => {
+  it("identifies moderate cooking-related titles (1 match)", () => {
+    // chicken = 1 match = confidence 1/3 (isCooking: true because > 0.3)
+    const result = quickCookingCheck("My Favorite Chicken");
+    expect(result.isCooking).toBe(true);
+    expect(result.confidence).toBeCloseTo(1 / 3, 5);
+  });
+
+  it("identifies moderate cooking-related titles (2 matches)", () => {
+    // chicken, recipe = 2 matches = confidence 2/3 (isCooking: true)
+    const result = quickCookingCheck("My Favorite Chicken Recipe");
+    expect(result.isCooking).toBe(true);
+    expect(result.confidence).toBeCloseTo(2 / 3, 5);
+  });
+
+  it("rejects non-cooking titles (0 matches)", () => {
     // 0 matches = confidence 0 (isCooking: false)
     const result = quickCookingCheck("Latest Tech Review 2024");
     expect(result.isCooking).toBe(false);
@@ -31,19 +44,16 @@ describe("quickCookingCheck", () => {
 
   it("counts unique keywords only", () => {
     // "chicken" appears 3 times, but only counts as 1 unique match
-    // confidence should be ~0.33
     const result = quickCookingCheck("Chicken chicken CHICKEN");
     expect(result.isCooking).toBe(true);
-    expect(result.confidence).toBeGreaterThan(0.33);
-    expect(result.confidence).toBeLessThan(0.34);
+    expect(result.confidence).toBeCloseTo(1 / 3, 5);
   });
 
   it("is case insensitive", () => {
-    // 2 unique matches = confidence ~0.66
+    // recipe, homemade = 2 unique matches
     const result = quickCookingCheck("RECIPE for HOMEMADE bread");
     expect(result.isCooking).toBe(true);
-    expect(result.confidence).toBeGreaterThan(0.66);
-    expect(result.confidence).toBeLessThan(0.67);
+    expect(result.confidence).toBeCloseTo(2 / 3, 5);
   });
 
   it("handles partial word boundaries correctly", () => {

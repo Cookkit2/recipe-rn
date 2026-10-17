@@ -95,6 +95,7 @@ const TemplateSheetMemo = function TemplateSheet({
                   <Button
                     onPress={handleSaveAsTemplate}
                     disabled={isSaving || !templateName.trim() || isSavePending}
+                    isLoading={isSaving || isSavePending}
                     variant="default"
                     className="mt-2"
                   >
@@ -143,6 +144,7 @@ const TemplateSheetMemo = function TemplateSheet({
                                 variant="outline"
                                 onPress={() => handleApplyTemplate(template.id)}
                                 disabled={isApplyPending}
+                                isLoading={isApplyPending}
                                 className="flex-1"
                               >
                                 <P className="text-foreground text-sm font-urbanist-medium">
@@ -154,6 +156,7 @@ const TemplateSheetMemo = function TemplateSheet({
                                 variant="ghost"
                                 onPress={() => handleDeleteTemplate(template)}
                                 disabled={isDeletePending}
+                                isLoading={isDeletePending}
                                 accessibilityLabel="Delete template"
                               >
                                 <Trash2Icon size={16} className="text-destructive" />
@@ -183,6 +186,7 @@ const TemplateSheetMemo = function TemplateSheet({
                     <Button
                       onPress={handleExportMealPlan}
                       disabled={isExporting || !currentWeekMeals || currentWeekMeals.length === 0}
+                      isLoading={isExporting}
                       variant="default"
                       className="flex-1"
                     >
@@ -194,6 +198,7 @@ const TemplateSheetMemo = function TemplateSheet({
                     <Button
                       onPress={handleImportMealPlan}
                       disabled={isImporting}
+                      isLoading={isImporting}
                       variant="outline"
                       className="flex-1"
                     >

@@ -67,6 +67,15 @@ function sanitizeForDatabase(input: string, options: SanitizationOptions = {}): 
 }
 
 /**
+ * Literal, case-insensitive exact lookup for PostgREST's regex operator.
+ * ILIKE rewrites every '*' to '%' on the server, including escaped stars.
+ * PostgreSQL absolute anchors also preserve exact matching around newlines.
+ */
+export function exactPostgrestPattern(input: string): string {
+  return `\\A${input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\Z`;
+}
+
+/**
  * Sanitizes search terms specifically for LIKE queries
  * @param searchTerm - The search term to sanitize
  * @param options - Sanitization options
