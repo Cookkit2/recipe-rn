@@ -33,25 +33,25 @@ UI Components → TanStack Query Hooks → Data Layer (Repositories) → Waterme
 
 ### Key Directories
 
-| Directory     | Purpose                                        | Key Files                                                     |
-| ------------- | ---------------------------------------------- | ------------------------------------------------------------- |
-| `app/`        | Expo Router file-based routes & layouts        | `_layout.tsx`, `(auth)/`, `recipes/[recipeId]/`               |
-| `auth/`       | Auth module: context, store, strategies        | `AuthContext.tsx`, `AuthStore.ts`, `SupabaseAuthStrategy.ts`  |
-| `components/` | React UI components (primitives + features)    | `ui/`, `Recipe/`, `Pantry/`, `auth/` (auth screens)           |
-| `data/`       | Offline-first DB layer, repositories, APIs     | `db/DatabaseFacade.ts`, `db/repositories/`, `supabase-api/`   |
-| `hooks/`      | TanStack Query hooks & custom React hooks      | `queries/useRecipeQueries.ts`, `queries/recipeQueryKeys.ts`   |
-| `lib/`        | Native integrations & platform glue            | `function-gemma/`, `image-cache.ts`, `notifications/`         |
-| `store/`      | React Context providers (domain state) + Query | `QueryProvider.tsx`, `PantryContext.tsx`, `RecipeContext.tsx` |
-| `constants/`  | App constants (storage keys, sizes, units)     | `storage-keys.ts`, `sizes.ts`, `notifications.ts`             |
-| `types/`      | Shared domain types                            | `AuthTypes.ts`, `Recipe.ts`, `PantryItem.ts`, `MealPlan.ts`   |
-| `supabase/`   | Cloud DB SQL migrations                        | `migrations/`                                                 |
-| `utils/`      | Pure helper functions & parsers                | `subscription-utils.ts`, voice cooking utilities              |
+| Directory     | Purpose                                        | Key Files                                                       |
+| ------------- | ---------------------------------------------- | --------------------------------------------------------------- |
+| `app/`        | Expo Router file-based routes & layouts        | `_layout.tsx`, `(auth)/`, `recipes/[recipeId]/`                 |
+| `auth/`       | Auth module: context, store, strategies        | `AuthContext.tsx`, `AuthStore.ts`, `SupabaseAuthStrategy.ts`    |
+| `components/` | React UI components (primitives + features)    | `ui/`, `Recipe/`, `Pantry/`, `auth/` (auth screens)             |
+| `data/`       | Offline-first DB layer, repositories, APIs     | `db/DatabaseFacade.ts`, `db/repositories/`, `supabase-api/`     |
+| `hooks/`      | TanStack Query hooks & custom React hooks      | `queries/useRecipeQueries.ts`, `queries/recipeQueryKeys.ts`     |
+| `lib/`        | Native integrations & platform glue            | `image-cache.ts`, `notifications/`, `android-navigation-bar.ts` |
+| `store/`      | React Context providers (domain state) + Query | `QueryProvider.tsx`, `PantryContext.tsx`, `RecipeContext.tsx`   |
+| `constants/`  | App constants (storage keys, sizes, units)     | `storage-keys.ts`, `sizes.ts`, `notifications.ts`               |
+| `types/`      | Shared domain types                            | `AuthTypes.ts`, `Recipe.ts`, `PantryItem.ts`, `MealPlan.ts`     |
+| `supabase/`   | Cloud DB SQL migrations                        | `migrations/`                                                   |
+| `utils/`      | Pure helper functions & parsers                | `subscription-utils.ts`, voice cooking utilities                |
 
 ### Important Patterns
 
 - **Repository Pattern**: Data access goes through `data/db/repositories/BaseRepository.ts` extensions
 - **Query Keys**: Centralize in `hooks/queries/*.ts` files (e.g., `recipeQueryKeys.ts`)
-- **Dynamic Imports**: Use `await import()` for heavy native deps (see `lib/function-gemma/`)
+- **Dynamic Imports**: Use `await import()` for heavy native deps (see the DB warm-up in `app/_layout.tsx`)
 - **Exhaustive Switches**: TypeScript unions/enums must handle all cases
 - **Immutability**: Use spread operator; avoid direct mutation
 

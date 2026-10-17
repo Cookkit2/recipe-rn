@@ -4,7 +4,8 @@
  * Extracts recipes from shared text and accessible TikTok/Instagram captions.
  */
 
-import { GeminiAPI, DEFAULT_GEMINI_MODEL } from "~/utils/gemini-api";
+import { generateAIContent } from "~/lib/ai/client";
+import { buildTextRecipeRequest } from "./shared/recipe-ai-utils";
 import { log } from "~/utils/logger";
 import type { RecipeAnalysisResult, GeneratedRecipe } from "~/types/ScrappedRecipe";
 import { isValidRecipe } from "./validation-utils";
@@ -17,20 +18,14 @@ export interface SocialMediaContent {
 }
 
 export class SocialRecipeService {
-  private gemini: GeminiAPI;
-
-  constructor() {
-    this.gemini = new GeminiAPI();
-  }
-
   /**
    * Analyze a TikTok or Instagram video for recipe content
    *
    * strategy:
    * 1. Fetch the page HTML
    * 2. Extract metadata (title, description, etc.)
-   * 3. Send metadata to Gemini for analysis
-   * (We don't send the video file directly because Gemini often can't access social URLs)
+   * 3. Send metadata to Nebius for analysis
+   * (Recipe extraction uses the supplied caption or accessible page text.)
    */
   async analyzeForRecipe(content: SocialMediaContent): Promise<RecipeAnalysisResult> {
     try {
@@ -53,24 +48,7 @@ export class SocialRecipeService {
       // 2. Build prompt with metadata
       const prompt = this.buildAnalysisPrompt(content, metadata);
 
-      // 3. Send to Gemini (Text-only analysis based on metadata)
-      // Note: We are NOT sending fileData anymore because typical social URLs
-      // are not direct video files and Gemini fails to access them.
-      // We rely on the metadata/description extracted from the page.
-      const requestBody = JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: prompt }],
-          },
-        ],
-        generationConfig: {
-          responseMimeType: "application/json",
-          responseSchema: this.getRecipeSchema(),
-          temperature: 0.4, // Slightly higher creativity for inferring from text
-        },
-      });
-
-      const response = await this.gemini.generateContent(DEFAULT_GEMINI_MODEL, requestBody);
+      const response = await generateAIContent(buildTextRecipeRequest(prompt));
 
       const result = this.parseResponse(response, content.url);
       return result;
@@ -218,73 +196,7 @@ Return a valid JSON response matching the schema.
   }
 
   /**
-   * JSON Schema for Gemini response
-   */
-  private getRecipeSchema() {
-    return {
-      type: "object",
-      properties: {
-        isCookingVideo: { type: "boolean" },
-        confidence: { type: "number" },
-        errorMessage: { type: "string" },
-        recipe: {
-          type: "object",
-          properties: {
-            title: { type: "string" },
-            description: { type: "string" },
-            prepMinutes: { type: "integer" },
-            cookMinutes: { type: "integer" },
-            servings: { type: "integer" },
-            difficultyStars: { type: "integer" },
-            calories: { type: "integer" },
-            tags: {
-              type: "array",
-              items: { type: "string" },
-            },
-            ingredients: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  name: { type: "string" },
-                  quantity: { type: "number" },
-                  unit: { type: "string" },
-                  notes: { type: "string" },
-                },
-                required: ["name", "quantity", "unit"],
-              },
-            },
-            steps: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  step: { type: "integer" },
-                  title: { type: "string" },
-                  description: { type: "string" },
-                },
-                required: ["step", "title", "description"],
-              },
-            },
-          },
-          required: [
-            "title",
-            "description",
-            "prepMinutes",
-            "cookMinutes",
-            "servings",
-            "difficultyStars",
-            "ingredients",
-            "steps",
-          ],
-        },
-      },
-      required: ["isCookingVideo", "confidence"],
-    };
-  }
-
-  /**
-   * Parse Gemini response into RecipeAnalysisResult
+   * Parse Nebius response into RecipeAnalysisResult
    */
   private parseResponse(response: string, sourceUrl: string): RecipeAnalysisResult {
     try {
@@ -333,13 +245,13 @@ Return a valid JSON response matching the schema.
           steps: steps,
           tags: this.addPlatformTags(parsed.recipe.tags || [], sourceUrl),
           sourceUrl,
-          calories: parsed.recipe.calories,
+          calories: parsed.recipe.calories ?? undefined,
         };
       }
 
       return result;
     } catch (error) {
-      log.error("Error parsing Gemini response:", error, response);
+      log.error("Error parsing Nebius response:", error, response);
 
       return {
         isCookingVideo: false,

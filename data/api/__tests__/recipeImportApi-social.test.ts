@@ -2,10 +2,10 @@
  * recipeImportApi.importRecipeFromSocialMedia — the social-video import flow.
  *
  * Per issue #747: TikTok/Instagram URLs must flow through the same
- * fetch -> Gemini extract -> save -> shopping-list pipeline as YouTube, with a
+ * fetch -> Nebius extract -> save -> shopping-list pipeline as YouTube, with a
  * graceful fallback when the platform blocks scraping or no recipe is detected.
  *
- * These tests mock socialRecipeService + databaseFacade (no real fetch/Gemini/DB)
+ * These tests mock socialRecipeService + databaseFacade (no real fetch/Nebius/DB)
  * and drive the REAL importRecipeFromSocialMedia implementation.
  */
 import { jest } from "@jest/globals";
@@ -38,9 +38,8 @@ jest.mock("~/lib/recipe-scrapper/youtube/RecipeAnalyzer", () => ({
   RecipeAnalyzer: jest.fn(),
 }));
 
-jest.mock("~/utils/gemini-api", () => ({
-  GeminiAPI: jest.fn(),
-  DEFAULT_GEMINI_MODEL: "gemini-2.5-flash-lite",
+jest.mock("~/lib/ai/client", () => ({
+  generateAIContent: jest.fn(),
 }));
 
 const analyzeForRecipe = jest.fn(async (_content: unknown) => ({}) as RecipeAnalysisResult);
@@ -104,7 +103,7 @@ describe("recipeImportApi.importRecipeFromSocialMedia", () => {
     });
   });
 
-  it("saves the recipe and returns a shopping list when Gemini is confident", async () => {
+  it("saves the recipe and returns a shopping list when Nebius is confident", async () => {
     analyzeForRecipe.mockResolvedValue({
       isCookingVideo: true,
       confidence: 0.9,
@@ -165,9 +164,9 @@ describe("recipeImportApi.importRecipeFromSocialMedia", () => {
     expect(createRecipe).not.toHaveBeenCalled();
   });
 
-  it("handles the platform blocking the fetch (Gemini returns confidence 0 with a message)", async () => {
+  it("handles the platform blocking the fetch (Nebius returns confidence 0 with a message)", async () => {
     // When the platform blocks scraping, SocialRecipeService feeds empty metadata
-    // to Gemini, which returns low confidence / an error message. The import API
+    // to Nebius, which returns low confidence / an error message. The import API
     // must translate that into a clear user-facing error, not a crash.
     analyzeForRecipe.mockResolvedValue({
       isCookingVideo: false,

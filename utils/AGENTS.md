@@ -23,7 +23,7 @@ bun run typecheck
 - Logging: `utils/logger.ts` (used across `data/db/database.ts` and services)
 - API errors: `utils/api-error-handler.ts` (+ tests `utils/__tests__/api-error-handler.test.ts`)
 - Scaling math: `utils/recipe-scaling.ts`
-- Gemini client helpers: `utils/gemini-api.ts` (+ tests)
+- AI provider integration lives in `lib/ai/` (app client) and `server/` (private Nebius adapter).
 
 ## JIT index hints
 

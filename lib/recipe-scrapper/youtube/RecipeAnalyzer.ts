@@ -1,11 +1,11 @@
 /**
  * Recipe Analyzer
  *
- * Uses Gemini AI to analyze content and extract recipe information.
+ * Uses Nebius AI to analyze content and extract recipe information.
  * Supports both YouTube videos and website content.
  */
 
-import { GeminiAPI, DEFAULT_GEMINI_MODEL } from "~/utils/gemini-api";
+import { generateAIContent } from "~/lib/ai/client";
 import { log } from "~/utils/logger";
 import type { YouTubeVideoInfo, YouTubeTranscript } from "./types";
 import type { RecipeAnalysisResult } from "~/types/ScrappedRecipe";
@@ -13,23 +13,16 @@ import type { WebsiteContent } from "~/lib/recipe-scrapper/WebsiteRecipeService"
 import {
   normalizeIngredients,
   normalizeSteps,
-  buildTextRecipeRequestBody,
-  getRecipeGenerationConfig,
-  getAnalysisResponseSchema,
-} from "../shared/recipe-gemini-utils";
+  buildTextRecipeRequest,
+} from "../shared/recipe-ai-utils";
 
 export class RecipeAnalyzer {
-  private gemini: GeminiAPI;
-
-  constructor() {
-    this.gemini = new GeminiAPI();
-  }
-
   /**
    * Analyze video content to determine if it's cooking-related
    * and extract recipe information.
    *
-   * Uses Gemini's native YouTube video understanding when no transcript is available.
+   * Uses transcripts or recipe text from the description; a YouTube URL alone
+   * is not video input to the Nebius chat API.
    */
   async analyzeForRecipe(
     videoInfo: YouTubeVideoInfo,
@@ -37,54 +30,16 @@ export class RecipeAnalyzer {
     sourceUrl?: string
   ): Promise<RecipeAnalysisResult> {
     try {
-      let requestBody: string;
-
-      if (transcript?.text && transcript.text.length > 100) {
-        // Use transcript-based analysis
-        log.debug("RecipeAnalyzer: Using transcript-based analysis");
-        const prompt = this.buildAnalysisPrompt(videoInfo, transcript);
-        requestBody = JSON.stringify({
-          contents: [
-            {
-              parts: [{ text: prompt }],
-            },
-          ],
-          generationConfig: {
-            responseMimeType: "application/json",
-            responseSchema: getAnalysisResponseSchema(),
-            temperature: 0.3,
-          },
-        });
-      } else {
-        // Use Gemini's YouTube video understanding (no transcript needed)
-        log.debug("RecipeAnalyzer: Using Gemini video understanding for YouTube URL");
-        const prompt = this.buildVideoAnalysisPrompt(
-          videoInfo,
-          sourceUrl || `https://www.youtube.com/watch?v=${videoInfo.videoId}`
-        );
-        requestBody = JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  fileData: {
-                    mimeType: "video/mp4",
-                    fileUri: sourceUrl || `https://www.youtube.com/watch?v=${videoInfo.videoId}`,
-                  },
-                },
-                { text: prompt },
-              ],
-            },
-          ],
-          generationConfig: {
-            responseMimeType: "application/json",
-            responseSchema: getAnalysisResponseSchema(),
-            temperature: 0.3,
-          },
-        });
+      if (!transcript?.text.trim() && !videoInfo.description?.trim()) {
+        return {
+          isCookingVideo: false,
+          confidence: 0,
+          errorMessage:
+            "Recipe text wasn't available for this video. Paste its caption or transcript to import it.",
+        };
       }
-
-      const response = await this.gemini.generateContent(DEFAULT_GEMINI_MODEL, requestBody);
+      const prompt = this.buildAnalysisPrompt(videoInfo, transcript);
+      const response = await generateAIContent(buildTextRecipeRequest(prompt));
 
       const result = this.parseResponse(response, sourceUrl);
       return result;
@@ -111,9 +66,7 @@ export class RecipeAnalyzer {
       log.debug("RecipeAnalyzer: Analyzing website content for recipe");
 
       const prompt = this.buildWebsiteAnalysisPrompt(websiteContent);
-      const requestBody = buildTextRecipeRequestBody(prompt, 0.3);
-
-      const response = await this.gemini.generateContent(DEFAULT_GEMINI_MODEL, requestBody);
+      const response = await generateAIContent(buildTextRecipeRequest(prompt));
       const result = this.parseResponse(response, sourceUrl);
       return result;
     } catch (error) {
@@ -174,6 +127,8 @@ INSTRUCTIONS:
    - Estimated calories per serving if mentioned
 
 IMPORTANT GUIDELINES:
+- Only extract ingredients and steps supported by the supplied transcript or description. Never infer a recipe from the video title or URL.
+- If the supplied text does not contain recipe ingredients and steps, return isCookingVideo: false, confidence: 0 and an explanatory errorMessage.
 - If quantities are vague (e.g., "some salt", "a pinch"), estimate reasonable amounts
 - Normalize units to standard cooking measurements (cups, tablespoons, teaspoons, grams, oz, etc.)
 - Ensure ingredient names are singular and standardized
@@ -186,48 +141,10 @@ Return a valid JSON response matching the schema provided.
   }
 
   /**
-   * Build prompt for direct video analysis (when no transcript available)
-   */
-  private buildVideoAnalysisPrompt(videoInfo: YouTubeVideoInfo, videoUrl: string): string {
-    return `
-You are a recipe extraction assistant. Watch and analyze this YouTube cooking video to extract the recipe.
-
-VIDEO TITLE: ${videoInfo.title}
-CHANNEL: ${videoInfo.channelName}
-VIDEO URL: ${videoUrl}
-
-INSTRUCTIONS:
-1. Watch the video and determine if this is a cooking/recipe video (isCookingVideo: true/false)
-2. Provide a confidence score (0-1) for your determination
-3. If it IS a cooking video, extract the complete recipe by watching the video:
-   - Title: Clean, formatted recipe name
-   - Description: Brief 1-2 sentence summary of the dish
-   - Prep time and cook time in minutes
-   - Number of servings (default to 4 if not clear)
-   - Difficulty (1-5 stars based on technique complexity)
-   - Complete ingredient list with quantities and units (watch carefully for measurements)
-   - Step-by-step instructions with clear titles and descriptions
-   - Relevant tags (cuisine type, dietary info, meal type, etc.)
-   - Estimated calories per serving if mentioned
-
-IMPORTANT GUIDELINES:
-- Pay close attention to ingredient quantities shown or mentioned in the video
-- If quantities are vague, estimate reasonable amounts
-- Normalize units to standard cooking measurements
-- Ensure ingredient names are singular and standardized
-- For steps, create clear actionable titles
-- Include cooking temperatures and times from the video
-- If this is NOT a cooking video, set isCookingVideo to false
-
-Return a valid JSON response matching the schema provided.
-    `.trim();
-  }
-
-  /**
-   * Build the prompt for Gemini to analyze the video
+   * Build the prompt for Nebius to analyze the video
    */
   private buildAnalysisPrompt(videoInfo: YouTubeVideoInfo, transcript?: YouTubeTranscript): string {
-    // Truncate transcript if too long (Gemini has context limits)
+    // Truncate transcript if too long (Nebius has context limits)
     const maxTranscriptLength = 15000;
     const transcriptText = transcript?.text
       ? transcript.text.length > maxTranscriptLength
@@ -262,6 +179,8 @@ INSTRUCTIONS:
    - Estimated calories per serving if mentioned or can be reasonably estimated
 
 IMPORTANT GUIDELINES:
+- Only extract ingredients and steps supported by the supplied transcript or description. Never infer a recipe from the video title or URL.
+- If the supplied text does not contain recipe ingredients and steps, return isCookingVideo: false, confidence: 0 and an explanatory errorMessage.
 - If quantities are vague (e.g., "some salt", "a pinch"), estimate reasonable amounts
 - If prep/cook times aren't mentioned, estimate based on the recipe complexity
 - Normalize units to standard cooking measurements (cups, tablespoons, teaspoons, grams, oz, etc.)
@@ -275,7 +194,7 @@ Return a valid JSON response matching the schema provided.
   }
 
   /**
-   * Parse Gemini response into RecipeAnalysisResult
+   * Parse Nebius response into RecipeAnalysisResult
    */
   private parseResponse(response: string, sourceUrl?: string): RecipeAnalysisResult {
     try {
@@ -305,13 +224,13 @@ Return a valid JSON response matching the schema provided.
           steps: normalizeSteps(parsed.recipe.steps),
           tags: parsed.recipe.tags || [],
           sourceUrl: sourceUrl || "",
-          calories: parsed.recipe.calories,
+          calories: parsed.recipe.calories ?? undefined,
         };
       }
 
       return result;
     } catch (error) {
-      log.error("Error parsing Gemini response:", error, response);
+      log.error("Error parsing Nebius response:", error, response);
 
       return {
         isCookingVideo: false,
