@@ -177,12 +177,6 @@
         }
       ]
     ],
-    "extra": {
-      "llama": {
-        "modelName": "functiongemma-270m-it-Q4_K_M.gguf",
-        "modelUrl": "https://huggingface.co/unsloth/functiongemma-270m-it-GGUF/resolve/main/functiongemma-270m-it-Q4_K_M.gguf"
-      }
-    },
     "experiments": {
       "reactCompiler": true,
       "typedRoutes": true

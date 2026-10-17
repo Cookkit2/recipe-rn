@@ -121,8 +121,6 @@ PODS:
     - ExpoModulesCore
   - ExpoSplashScreen (56.0.12):
     - ExpoModulesCore
-  - ExpoSQLite (56.0.5):
-    - ExpoModulesCore
   - ExpoStoreReview (56.0.3):
     - ExpoModulesCore
   - ExpoSymbols (56.0.6):
@@ -192,30 +190,6 @@ PODS:
   - libwebp/sharpyuv (1.6.0)
   - libwebp/webp (1.6.0):
     - libwebp/sharpyuv
-  - llama-rn (0.11.5):
-    - hermes-engine
-    - RCTRequired
-    - RCTTypeSafety
-    - React
-    - React-callinvoker
-    - React-Core
-    - React-Core-prebuilt
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - ReactNativeDependencies
-    - Yoga
   - MMKVCore (2.4.0)
   - NitroImage (0.15.2):
     - hermes-engine
@@ -2749,7 +2723,6 @@ DEPENDENCIES:
   - ExpoSpeech (from `../node_modules/expo-speech/ios`)
   - ExpoSpeechRecognition (from `../node_modules/expo-speech-recognition/ios`)
   - ExpoSplashScreen (from `../node_modules/expo-splash-screen/ios`)
-  - ExpoSQLite (from `../node_modules/expo-sqlite/ios`)
   - ExpoStoreReview (from `../node_modules/expo-store-review/ios`)
   - ExpoSymbols (from `../node_modules/expo-symbols/ios`)
   - ExpoSystemUI (from `../node_modules/expo-system-ui/ios`)
@@ -2762,7 +2735,6 @@ DEPENDENCIES:
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
   - ImageColors (from `../node_modules/react-native-image-colors/ios`)
-  - llama-rn (from `../node_modules/llama.rn`)
   - NitroImage (from `../node_modules/react-native-nitro-image`)
   - NitroMmkv (from `../node_modules/react-native-mmkv`)
   - NitroModules (from `../node_modules/react-native-nitro-modules`)
@@ -2947,8 +2919,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-speech-recognition/ios"
   ExpoSplashScreen:
     :path: "../node_modules/expo-splash-screen/ios"
-  ExpoSQLite:
-    :path: "../node_modules/expo-sqlite/ios"
   ExpoStoreReview:
     :path: "../node_modules/expo-store-review/ios"
   ExpoSymbols:
@@ -2974,8 +2944,6 @@ EXTERNAL SOURCES:
     :tag: hermes-v250829098.0.14
   ImageColors:
     :path: "../node_modules/react-native-image-colors/ios"
-  llama-rn:
-    :path: "../node_modules/llama.rn"
   NitroImage:
     :path: "../node_modules/react-native-nitro-image"
   NitroMmkv:
@@ -3201,7 +3169,6 @@ SPEC CHECKSUMS:
   ExpoSpeech: fe3706df8653ab8c16ff88251e33fab79b07a420
   ExpoSpeechRecognition: 119acf84448579e53f841d040aad76982f945e2d
   ExpoSplashScreen: db432721a17dc8a718d5e2562f8edebe310e524f
-  ExpoSQLite: eba0f88d7c17165f4af12fb311b30d5a6a34b00e
   ExpoStoreReview: f785057aececd9c63a113c69a82b491e5f90694e
   ExpoSymbols: 377747de25bcb1ab68ec68f23d81fb81d43eae83
   ExpoSystemUI: 8f4fb641c6a6ebe2a01dda0fbd3fdd952ab5823a
@@ -3217,7 +3184,6 @@ SPEC CHECKSUMS:
   libavif: 5f8e715bea24debec477006f21ef9e95432e254d
   libdav1d: 23581a4d8ec811ff171ed5e2e05cd27bad64c39f
   libwebp: af5937a13536ef73f3784d69cc342b98961acf33
-  llama-rn: 9af22f477453011ba8f3e82ad96dd5bf4ec07f01
   MMKVCore: 3d16ce9f7d411e135020915fde98a056859a1efa
   NitroImage: 5daf897d2f37ed419186278d6b0fcdd8aab313b0
   NitroMmkv: 85a251e15c39d7c95fe58cf40786fa126b8d143c

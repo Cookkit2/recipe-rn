@@ -1,4 +1,4 @@
-import { renderHook } from "@testing-library/react-hooks";
+import { renderHook } from "@testing-library/react-native";
 
 import {
   useExperiment,
@@ -41,7 +41,7 @@ jest.mock("~/lib/analytics/funnel-events", () => ({
 
 function resetAll() {
   store.clear();
-  emitFunnelEventMock.mockClear();
+  emitFunnelEventMock.mockReset();
 }
 
 // --- getExperimentAssignment (pure-ish, non-hook) ------------------------
@@ -84,14 +84,16 @@ describe("getExperimentAssignment", () => {
 describe("useExperiment", () => {
   beforeEach(() => resetAll());
 
-  it("returns a stable variant", () => {
-    const { result, unmount } = renderHook(() => useExperiment("exp", ["control", "treatment"]));
+  it("returns a stable variant", async () => {
+    const { result, unmount } = await renderHook(() =>
+      useExperiment("exp", ["control", "treatment"])
+    );
     expect(["control", "treatment"]).toContain(result.current.variant);
-    unmount();
+    await unmount();
   });
 
-  it("emits exactly one exposure event on mount (experiment key + variant)", () => {
-    const { result, unmount } = renderHook(() =>
+  it("emits exactly one exposure event on mount (experiment key + variant)", async () => {
+    const { result, unmount } = await renderHook(() =>
       useExperiment("trial_length_724", ["control", "long_trial"])
     );
     expect(emitFunnelEventMock).toHaveBeenCalledTimes(1);
@@ -99,65 +101,69 @@ describe("useExperiment", () => {
       detail: { experimentKey: "trial_length_724", variant: result.current.variant },
     });
     expect(result.current.isExposureLogged).toBe(true);
-    unmount();
+    await unmount();
   });
 
-  it("does not re-emit exposure across re-renders", () => {
-    const { rerender, unmount } = renderHook(() => useExperiment("exp", ["control", "treatment"]));
-    rerender();
-    rerender();
+  it("does not re-emit exposure across re-renders", async () => {
+    const { rerender, unmount } = await renderHook(() =>
+      useExperiment("exp", ["control", "treatment"])
+    );
+    await rerender(undefined);
+    await rerender(undefined);
     expect(emitFunnelEventMock).toHaveBeenCalledTimes(1);
-    unmount();
+    await unmount();
   });
 
-  it("suppresses exposure when trackExposure:false", () => {
-    const { result, unmount } = renderHook(() =>
+  it("suppresses exposure when trackExposure:false", async () => {
+    const { result, unmount } = await renderHook(() =>
       useExperiment("exp", ["control", "treatment"], { trackExposure: false })
     );
     expect(emitFunnelEventMock).not.toHaveBeenCalled();
     expect(result.current.isExposureLogged).toBe(false);
-    unmount();
+    await unmount();
   });
 
-  it("keeps the same bucket across hook remounts (persistence)", () => {
+  it("keeps the same bucket across hook remounts (persistence)", async () => {
     const variants = ["control", "treatment"];
-    const { result: first, unmount: unmountFirst } = renderHook(() =>
+    const { result: first, unmount: unmountFirst } = await renderHook(() =>
       useExperiment("exp", variants)
     );
     const firstVariant = first.current.variant;
-    unmountFirst();
+    await unmountFirst();
 
     // Clear the in-memory hook state by remounting; the persisted assignment
     // must drive the same bucket.
-    const { result: second, unmount: unmountSecond } = renderHook(() =>
+    const { result: second, unmount: unmountSecond } = await renderHook(() =>
       useExperiment("exp", variants)
     );
     expect(second.current.variant).toBe(firstVariant);
-    unmountSecond();
+    await unmountSecond();
   });
 
-  it("does not throw if emitFunnelEvent throws (best-effort analytics)", () => {
+  it("does not throw if emitFunnelEvent throws (best-effort analytics)", async () => {
     emitFunnelEventMock.mockImplementation(() => {
       throw new Error("boom");
     });
-    const { result, unmount } = renderHook(() => useExperiment("exp", ["control", "treatment"]));
+    const { result, unmount } = await renderHook(() =>
+      useExperiment("exp", ["control", "treatment"])
+    );
     expect(result.current.variant).toBeDefined();
     expect(result.current.isExposureLogged).toBe(false);
-    unmount();
+    await unmount();
   });
 
-  it("different experiment keys bucket independently for the same install", () => {
+  it("different experiment keys bucket independently for the same install", async () => {
     const variants = ["control", "treatment"];
-    const { result: a, unmount: ua } = renderHook(() =>
+    const { result: a, unmount: ua } = await renderHook(() =>
       useExperiment("trial_length_724", variants)
     );
-    const { result: b, unmount: ub } = renderHook(() =>
+    const { result: b, unmount: ub } = await renderHook(() =>
       useExperiment("paywall_hardness_725", variants)
     );
     // Both are valid variants (cannot assert they differ — collision possible).
     expect(variants).toContain(a.current.variant);
     expect(variants).toContain(b.current.variant);
-    ua();
-    ub();
+    await ua();
+    await ub();
   });
 });
