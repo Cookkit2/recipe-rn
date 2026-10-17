@@ -27,7 +27,7 @@ export default function AddToPlanHeaderButton() {
     <Pressable
       onPress={handlePlanPress}
       disabled={isDisabled}
-      hitSlop={8}
+      className="h-11 w-11 items-center justify-center"
       style={{ opacity: isDisabled ? 0.5 : 1 }}
       accessibilityRole="button"
       accessibilityLabel={isInPlan ? "Remove from meal plan" : "Add to meal plan"}

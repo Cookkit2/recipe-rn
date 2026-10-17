@@ -34,6 +34,11 @@ export function getMiscScreens({
       options={{ ...commonHeaderOptions, headerTitle: "Grocery List" }}
     />,
     <Stack.Screen
+      key="leftovers/index"
+      name="leftovers/index"
+      options={{ ...commonHeaderOptions, headerTitle: "Leftovers" }}
+    />,
+    <Stack.Screen
       key="(misc)/search"
       name="(misc)/search"
       options={{

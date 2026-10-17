@@ -64,7 +64,7 @@ export default function TopBar({
 
   return (
     <Animated.View
-      className="absolute top-0 left-0 right-0 flex-row items-center justify-center px-6 py-2 z-1"
+      className="absolute top-0 left-0 right-0 flex-row items-center justify-center pl-16 pr-32 py-2 z-1"
       style={[{ paddingTop: top + 8 }]}
       pointerEvents="box-none"
     >
@@ -75,7 +75,7 @@ export default function TopBar({
       />
 
       {/* Center title */}
-      <View className="overflow-hidden h-8 justify-center max-w-[70%]">
+      <View className="overflow-hidden h-8 justify-center max-w-full">
         <AnimatedH4
           style={titleAnimatedStyle}
           className="font-bowlby-one text-center"

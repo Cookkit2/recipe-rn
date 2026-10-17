@@ -151,6 +151,40 @@ export function RecipeStepsProvider({
     storage.set(RECIPE_COOKED_KEY, true);
   }, []);
 
+  const showCompletionToast = useCallback(() => {
+    const toastId = toast.success("Meal finished", {
+      duration: 6000,
+      styles: {
+        toast: { paddingVertical: 8 },
+        textContainer: {
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          columnGap: 8,
+        },
+        buttons: { marginTop: 0 },
+      },
+      actionButtonStyle: {
+        backgroundColor: "transparent",
+        borderWidth: 0,
+        paddingHorizontal: 4,
+        minHeight: 44,
+        justifyContent: "center",
+      },
+      action: {
+        label: "Save leftovers",
+        onClick: () => {
+          toast.dismiss(toastId);
+          router.push({
+            pathname: "/leftovers",
+            params: { add: "1", recipeId: baseRecipeId, recipeName: recipe.title },
+          });
+        },
+      },
+    });
+  }, [baseRecipeId, recipe.title, router]);
+
   const handleRecipeCompletion = useCallback(
     async (servings: number, rating?: number, notes?: string) => {
       // Record the cooking in the database
@@ -239,16 +273,7 @@ export function RecipeStepsProvider({
       // If no matches found, just navigate away
       if (matches.length === 0) {
         router.dismissTo("/");
-        toast("Meal finished", {
-          action: {
-            label: "Save leftovers",
-            onClick: () =>
-              router.push({
-                pathname: "/leftovers",
-                params: { add: "1", recipeId: baseRecipeId, recipeName: recipe.title },
-              }),
-          },
-        });
+        showCompletionToast();
         return;
       }
 
@@ -348,23 +373,14 @@ export function RecipeStepsProvider({
 
       // Navigate away after processing
       router.dismissTo("/");
-      toast("Meal finished", {
-        action: {
-          label: "Save leftovers",
-          onClick: () =>
-            router.push({
-              pathname: "/leftovers",
-              params: { add: "1", recipeId: baseRecipeId, recipeName: recipe.title },
-            }),
-        },
-      });
+      showCompletionToast();
     },
     [
       baseRecipeId,
       recipe.ingredients,
-      recipe.title,
       pantryItems,
       router,
+      showCompletionToast,
       updatePantryItemMutation,
       deletePantryItemMutation,
     ]
