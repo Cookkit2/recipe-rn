@@ -3,7 +3,8 @@
  *
  * Calls `createCookingAgent({ kind: "nebius" })`, which runs real `streamText`,
  * `@ai-sdk/openai-compatible`, and `createCookingTools`. The data client is
- * `createSupabaseCookingDataClient` around a real supabase-js client.
+ * the app's `withLocalPantry` adapter over an in-memory pantry API boundary,
+ * with a real supabase-js client for cloud diet preferences and recipe reads.
  *
  * Nebius and Supabase are local HTTP fixtures. `fetch` is Node's global fetch,
  * passed as the agent override so this file does not load `expo/fetch`.
@@ -19,9 +20,9 @@ import {
   createFixtureSupabaseClient,
   startPostgrestFixture,
   TEST_HOUSEHOLD_ID,
-  TEST_USER_ID,
   type PostgrestFixture,
   type PostgrestFixtureSeed,
+  type StockRow,
 } from "../testing/postgrest-fixture";
 import {
   startOpenAICompatibleServer,
@@ -29,6 +30,8 @@ import {
   type OpenAITurnScript,
 } from "../testing/openai-compatible-server";
 import { createSupabaseCookingDataClient } from "../tools/supabase-cooking-data";
+import { withLocalPantry } from "../tools/local-pantry";
+import type { PantryItem } from "~/types/PantryItem";
 import type { AgentEvent } from "../types";
 import type { Database } from "~/lib/supabase/supabase-types";
 
@@ -41,6 +44,51 @@ interface ScenarioResult {
   events: AgentEvent[];
   database: PostgrestFixture;
   model: OpenAICompatibleServer;
+  pantry: ReturnType<typeof createLocalPantryFixture>;
+}
+
+/** Native persistence is the boundary in this Node tier; device coverage checks SQLite/UI. */
+function createLocalPantryFixture(stock: StockRow[]) {
+  const items: PantryItem[] = stock.map((row) => ({
+    id: row.id,
+    name: row.name,
+    quantity: row.quantity ?? 1,
+    unit: row.unit ?? "count",
+    expiry_date: row.expiry_date ? new Date(row.expiry_date) : undefined,
+    type: "fridge",
+    category: "other",
+    image_url: undefined,
+    background_color: undefined,
+    created_at: new Date(),
+    updated_at: new Date(),
+    steps_to_store: [],
+  }));
+  let nextId = 0;
+  const fixture = {
+    items,
+    changes: 0,
+    api: {
+      async fetchAllPantryItems() {
+        return [...items];
+      },
+      async addPantryItem(input: Omit<PantryItem, "id" | "created_at" | "updated_at">) {
+        const item = {
+          ...input,
+          id: `local-added-${++nextId}`,
+          created_at: new Date(),
+          updated_at: new Date(),
+        };
+        items.push(item);
+        return item;
+      },
+      async deletePantryItem(id: string) {
+        const index = items.findIndex((item) => item.id === id);
+        if (index < 0) throw new Error(`No local pantry row ${id}`);
+        items.splice(index, 1);
+      },
+    },
+  };
+  return fixture;
 }
 
 async function runScenario(
@@ -48,14 +96,21 @@ async function runScenario(
   script: OpenAITurnScript,
   seed: PostgrestFixtureSeed = {}
 ): Promise<ScenarioResult> {
-  const database = await startPostgrestFixture(seed);
+  const pantry = createLocalPantryFixture(seed.stock ?? []);
+  const database = await startPostgrestFixture({ ...seed, stock: [] });
   const model = await startOpenAICompatibleServer({ script });
   let client: SupabaseClient<Database> | undefined;
   try {
     client = createFixtureSupabaseClient(database);
     const agent = createCookingAgent({
       kind: "nebius",
-      data: createSupabaseCookingDataClient(client, () => null),
+      data: withLocalPantry(
+        createSupabaseCookingDataClient(client, () => null),
+        pantry.api,
+        () => {
+          pantry.changes += 1;
+        }
+      ),
       config: {
         apiKey: DUMMY_NEBIUS_KEY,
         model: DUMMY_MODEL,
@@ -70,7 +125,7 @@ async function runScenario(
     })) {
       events.push(event);
     }
-    return { events, database, model };
+    return { events, database, model, pantry };
   } catch (error) {
     await database.close();
     await model.close();
@@ -134,7 +189,7 @@ const cake = {
   cook_minutes: 40,
 };
 
-it("adds an ingredient through supabase-js", async () => {
+it("adds an ingredient to the app local pantry", async () => {
   const result = await runScenario(
     "Add 6 eggs to my pantry.",
     ({ body }) => {
@@ -158,23 +213,21 @@ it("adds an ingredient through supabase-js", async () => {
     assertClean(result.events);
     expect(toolOutput(result.events, "manage_ingredients")).toMatchObject({
       ok: true,
-      item: { name: "eggs", quantity: 6, unit: "count", addedByUserId: TEST_USER_ID },
+      item: { name: "eggs", quantity: 6, unit: "count", addedByUserId: null },
     });
     expect(textDeltas(result.events).join("")).toBe("Added eggs to your pantry.");
     expect(result.model.requests).toHaveLength(2);
     expect(
       result.model.requests[1]?.body.messages?.some((message) => message.role === "tool")
     ).toBe(true);
-    expect(paths(result, "/household_members")).toContain("GET");
-    expect(paths(result, "/stock")).toContain("POST");
-    expect(result.database.state.stock).toEqual([
+    expect(paths(result, "/stock")).toEqual([]);
+    expect(result.pantry.changes).toBe(1);
+    expect(result.pantry.items).toEqual([
       expect.objectContaining({
         name: "eggs",
         quantity: 6,
         unit: "count",
-        added_by_user_id: TEST_USER_ID,
-        household_id: TEST_HOUSEHOLD_ID,
-        base_ingredient_id: "base-eggs",
+        id: "local-added-1",
       }),
     ]);
   } finally {
@@ -182,7 +235,7 @@ it("adds an ingredient through supabase-js", async () => {
   }
 });
 
-it("removes an ingredient through supabase-js", async () => {
+it("removes an ingredient from the app local pantry", async () => {
   const result = await runScenario(
     "Remove eggs from my pantry.",
     ({ body }) => {
@@ -209,7 +262,7 @@ it("removes an ingredient through supabase-js", async () => {
           unit: "count",
           expiry_date: null,
           household_id: TEST_HOUSEHOLD_ID,
-          added_by_user_id: TEST_USER_ID,
+          added_by_user_id: null,
         },
       ],
     }
@@ -221,8 +274,9 @@ it("removes an ingredient through supabase-js", async () => {
       removed: [{ id: "stock-eggs", name: "eggs" }],
     });
     expect(textDeltas(result.events).join("")).toBe("Removed eggs from your pantry.");
-    expect(paths(result, "/stock")).toContain("DELETE");
-    expect(result.database.state.stock).toEqual([]);
+    expect(paths(result, "/stock")).toEqual([]);
+    expect(result.pantry.items).toEqual([]);
+    expect(result.pantry.changes).toBe(1);
   } finally {
     await finish(result);
   }
@@ -252,7 +306,7 @@ it("analyzes the pantry against the saved diet", async () => {
           unit: "lb",
           expiry_date: null,
           household_id: TEST_HOUSEHOLD_ID,
-          added_by_user_id: TEST_USER_ID,
+          added_by_user_id: null,
         },
         {
           id: "stock-milk",
@@ -261,7 +315,7 @@ it("analyzes the pantry against the saved diet", async () => {
           unit: "liter",
           expiry_date: null,
           household_id: TEST_HOUSEHOLD_ID,
-          added_by_user_id: TEST_USER_ID,
+          added_by_user_id: null,
         },
       ],
     }
@@ -309,7 +363,7 @@ it("suggests a meal plan without saving it", async () => {
           unit: "count",
           expiry_date: null,
           household_id: TEST_HOUSEHOLD_ID,
-          added_by_user_id: TEST_USER_ID,
+          added_by_user_id: null,
         },
       ],
       recipes: [
@@ -363,7 +417,7 @@ it("suggests recipes that overlap the fridge", async () => {
           unit: "count",
           expiry_date: null,
           household_id: TEST_HOUSEHOLD_ID,
-          added_by_user_id: TEST_USER_ID,
+          added_by_user_id: null,
         },
         {
           id: "stock-spinach",
@@ -372,7 +426,7 @@ it("suggests recipes that overlap the fridge", async () => {
           unit: "bag",
           expiry_date: null,
           household_id: TEST_HOUSEHOLD_ID,
-          added_by_user_id: TEST_USER_ID,
+          added_by_user_id: null,
         },
       ],
       recipes: [omelette, cake],
@@ -415,6 +469,60 @@ it("forwards incremental text deltas and the full answer", async () => {
   }
 });
 
+it("excludes plural allergens found past the first ingredient page", async () => {
+  const result = await runScenario(
+    "Suggest recipes without my allergens.",
+    ({ body }) =>
+      body.messages?.some((message) => message.role === "tool")
+        ? { textDeltas: ["The peanut recipe is excluded."] }
+        : { toolCalls: [{ id: "call_paged_recipes", name: "suggest_recipes", arguments: {} }] },
+    {
+      preferences: { allergens: ["peanuts"] },
+      stock: [
+        {
+          id: "local-eggs",
+          name: "eggs",
+          quantity: 6,
+          unit: "count",
+          expiry_date: null,
+          household_id: null,
+          added_by_user_id: null,
+        },
+      ],
+      recipes: [{ ...omelette, id: "large", title: "Peanut eggs" }, omelette],
+      pivots: [
+        ...Array.from({ length: 1001 }, (_, i) => ({
+          recipe_id: "large",
+          name: i === 1000 ? "peanuts" : "eggs",
+          quantity: 1,
+          unit: "count",
+        })),
+        { recipe_id: omelette.id, name: "eggs", quantity: 2, unit: "count" },
+      ],
+    }
+  );
+  try {
+    assertClean(result.events);
+    expect(toolOutput(result.events, "suggest_recipes")).toMatchObject({
+      recipes: [{ title: omelette.title, coverage: 1 }],
+      truncated: false,
+    });
+    const output = toolOutput(result.events, "suggest_recipes") as { recipes: { title: string }[] };
+    expect(output.recipes.map((recipe) => recipe.title)).toEqual([omelette.title]);
+    const pages = result.database.requests.filter((request) =>
+      request.path.endsWith("/pivot_recipe_ingredient")
+    );
+    expect(pages.map((request) => new URLSearchParams(request.search).get("offset"))).toEqual([
+      "0",
+      "500",
+      "1000",
+    ]);
+    expect(paths(result, "/stock")).toEqual([]);
+  } finally {
+    await finish(result);
+  }
+});
+
 it("stops the tool loop after 5 model calls", async () => {
   const result = await runScenario("Keep adding eggs.", ({ requestIndex }) => ({
     toolCalls: [
@@ -438,7 +546,9 @@ it("stops the tool loop after 5 model calls", async () => {
     expect(completions).toHaveLength(5);
     expect(result.events.filter((event) => event.type === "tool-result")).toHaveLength(5);
     expect(result.events.some((event) => event.type === "finish")).toBe(true);
-    expect(result.database.state.stock).toHaveLength(5);
+    expect(result.pantry.items).toHaveLength(5);
+    expect(result.pantry.changes).toBe(5);
+    expect(paths(result, "/stock")).toEqual([]);
   } finally {
     await finish(result);
   }
