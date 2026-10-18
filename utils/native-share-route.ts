@@ -11,5 +11,7 @@ export function isSharedRecipeIntent(path: string): boolean {
 }
 
 export function redirectSharedRecipeIntent(path: string): string {
-  return isSharedRecipeIntent(path) ? "/" : path;
+  // Keep native navigation on the receiving screen; redirecting to Pantry races
+  // with a warm share updating that screen's parameters.
+  return isSharedRecipeIntent(path) ? "/import-recipe" : path;
 }

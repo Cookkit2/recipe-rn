@@ -1,6 +1,5 @@
 import { Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ScreenCornerRadius } from "react-native-screen-corner-radius";
 
 /**
  * Custom hook for getting the device's screen corner radius.
@@ -8,7 +7,7 @@ import { ScreenCornerRadius } from "react-native-screen-corner-radius";
  * This hook returns the appropriate corner radius value based on the platform:
  * - **Android**: Returns the top safe area inset, which typically corresponds to
  *   the device's notch/camera cutout area
- * - **iOS**: Returns the actual screen corner radius using `react-native-screen-corner-radius`
+ * - **iOS**: The platform-specific implementation reads the native screen radius.
  * - **Other platforms**: Returns 0 as a fallback
  *
  * This is useful for creating UI elements that need to match or respect the device's
@@ -55,10 +54,6 @@ const useDeviceCornerRadius = () => {
   const insets = useSafeAreaInsets();
   if (Platform.OS === "android") {
     return insets.top;
-  }
-
-  if (Platform.OS === "ios") {
-    return ScreenCornerRadius || 0;
   }
 
   // Default fallback for other platforms

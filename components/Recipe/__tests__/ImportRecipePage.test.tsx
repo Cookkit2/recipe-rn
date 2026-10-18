@@ -17,6 +17,8 @@ jest.mock("expo-router", () => ({
   useRouter: () => mockRouter,
   useLocalSearchParams: () => ({ shareId: mockShareId }),
 }));
+jest.mock("expo-router/react-navigation", () => ({ useHeaderHeight: () => 100 }));
+jest.mock("react-native-safe-area-context", () => ({ useSafeAreaInsets: () => ({ bottom: 34 }) }));
 jest.mock("~/lib/recipe-share-inbox", () => ({
   readPendingRecipeShare: () => mockPending,
   clearPendingRecipeShare: (id: string) => mockClear(id),
@@ -90,6 +92,16 @@ it("keeps a newer share open if the previous extraction finishes late", async ()
   expect(mockRouter.replace).not.toHaveBeenCalled();
   expect(mockClear).not.toHaveBeenCalled();
   expect(mockPending?.id).toBe("second");
+});
+
+it("keeps the newest payload if native linking restores an older share parameter", async () => {
+  const screen = await render(<ImportRecipePage />);
+  mockPending = { id: "second", text: "Boil pasta with pesto." };
+  mockShareId = "second";
+  await screen.rerender(<ImportRecipePage />);
+  mockShareId = "first";
+  await screen.rerender(<ImportRecipePage />);
+  expect(screen.getByLabelText("Recipe caption").props.value).toBe("Boil pasta with pesto.");
 });
 
 it("opens a successful extraction for editing and consumes only that share", async () => {

@@ -12,6 +12,15 @@ const mockRouter = { push: jest.fn(), setParams: jest.fn() };
 const mockClear = jest.fn();
 const mockNative = jest.fn((): object | null => ({}));
 const mockToast = jest.fn();
+let mockReady = true;
+let mockNavigationChanged: (() => void) | undefined;
+const mockNavigation = {
+  isReady: () => mockReady,
+  addListener: (_event: "state", callback: () => void) => {
+    mockNavigationChanged = callback;
+    return jest.fn();
+  },
+};
 const save = (input: SharedRecipeInput): PendingRecipeShare => {
   mockPending = { ...input, id: `share-${++nextId}` };
   return mockPending;
@@ -28,6 +37,7 @@ jest.mock("react-native/Libraries/Linking/Linking", () => ({
 }));
 
 jest.mock("expo", () => ({ requireOptionalNativeModule: () => mockNative() }));
+jest.mock("~/utils/logger", () => ({ log: { debug: jest.fn() } }));
 jest.mock("expo-sharing", () => ({
   getSharedPayloads: () => mockPayloads,
   clearSharedPayloads: () => {
@@ -36,6 +46,7 @@ jest.mock("expo-sharing", () => ({
   },
 }));
 jest.mock("expo-router", () => ({
+  useNavigationContainerRef: () => mockNavigation,
   useRootNavigationState: () => ({ key: "root" }),
   useRouter: () => mockRouter,
   useSegments: () => mockSegments,
@@ -60,6 +71,8 @@ beforeEach(() => {
   mockPending = null;
   mockOnboarded = true;
   mockSegments = [];
+  mockReady = true;
+  mockNavigationChanged = undefined;
   mockNative.mockReturnValue({});
   mockSave.mockImplementation(save);
   active = undefined;
@@ -101,6 +114,18 @@ it("accepts the same caption again after a previous import was cancelled", async
   await act(async () => active?.("active"));
   await waitFor(() => expect(mockRouter.push).toHaveBeenCalledTimes(2));
   expect(mockSave).toHaveBeenCalledTimes(2);
+});
+
+it("waits for the navigator to mount even when a cold-start root key already exists", async () => {
+  mockReady = false;
+  mockPayloads = caption;
+  mockSegments = ["import-recipe"];
+  await render(<SocialRecipeShareHandler />);
+  await waitFor(() => expect(mockClear).toHaveBeenCalledTimes(1));
+  expect(mockRouter.setParams).not.toHaveBeenCalled();
+  mockReady = true;
+  await act(async () => mockNavigationChanged?.());
+  await waitFor(() => expect(mockRouter.setParams).toHaveBeenCalledWith({ shareId: "share-1" }));
 });
 
 it("persists a share through onboarding before opening the import screen", async () => {

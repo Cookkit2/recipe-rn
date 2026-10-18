@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ScrollView } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { useHeaderHeight } from "expo-router/react-navigation";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { P } from "~/components/ui/typography";
@@ -10,14 +12,15 @@ import type { PendingRecipeShare } from "~/types/SharedRecipe";
 
 export default function ImportRecipePage() {
   const { shareId } = useLocalSearchParams<{ shareId?: string }>();
-  const pending = useMemo(() => {
-    const incoming = readPendingRecipeShare();
-    return incoming && (!shareId || incoming.id === shareId) ? incoming : null;
-  }, [shareId]);
+  // Native linking can restore older route parameters after the receiver updates
+  // them. The single persisted inbox always contains the newest share.
+  const pending = useMemo(readPendingRecipeShare, [shareId]);
   return <ImportRecipeForm key={pending?.id ?? "manual"} pending={pending} />;
 }
 
 function ImportRecipeForm({ pending }: { pending: PendingRecipeShare | null }) {
+  const headerHeight = useHeaderHeight();
+  const { bottom } = useSafeAreaInsets();
   const [url, setUrl] = useState(pending?.url ?? "");
   const [text, setText] = useState(pending?.text ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -56,12 +59,17 @@ function ImportRecipeForm({ pending }: { pending: PendingRecipeShare | null }) {
   return (
     <ScrollView
       className="flex-1 bg-background"
-      contentInsetAdjustmentBehavior="automatic"
+      contentInsetAdjustmentBehavior="never"
       keyboardShouldPersistTaps="handled"
       automaticallyAdjustKeyboardInsets
-      contentContainerStyle={{ padding: 24, gap: 16 }}
+      contentContainerStyle={{
+        paddingHorizontal: 24,
+        paddingTop: headerHeight + 24,
+        paddingBottom: bottom + 24,
+        gap: 16,
+      }}
     >
-      <Stack.Screen options={{ headerTitle: "Import recipe" }} />
+      <Stack.Screen options={{ headerTitle: "Import recipe", headerLargeTitleEnabled: false }} />
       <P>Import from a recipe link or caption, then review the ingredients and steps.</P>
       <Input
         accessibilityLabel="Recipe URL"
