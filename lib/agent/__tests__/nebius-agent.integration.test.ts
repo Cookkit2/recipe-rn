@@ -1,0 +1,445 @@
+/**
+ * Tier A: Jest integration through the production cooking agent.
+ *
+ * Calls `createCookingAgent({ kind: "nebius" })`, which runs real `streamText`,
+ * `@ai-sdk/openai-compatible`, and `createCookingTools`. The data client is
+ * `createSupabaseCookingDataClient` around a real supabase-js client.
+ *
+ * Nebius and Supabase are local HTTP fixtures. `fetch` is Node's global fetch,
+ * passed as the agent override so this file does not load `expo/fetch`.
+ * Passing the override is a test seam the screen does not use. This tier does
+ * not prove Hermes or `expo/fetch` streaming.
+ *
+ * Jest picks this file up with the rest of the unit tests, so the Ubuntu job
+ * in .github/workflows/ci.yml runs it inside the existing `bun run test` step.
+ */
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { createCookingAgent } from "../factory";
+import {
+  createFixtureSupabaseClient,
+  startPostgrestFixture,
+  TEST_HOUSEHOLD_ID,
+  TEST_USER_ID,
+  type PostgrestFixture,
+  type PostgrestFixtureSeed,
+} from "../testing/postgrest-fixture";
+import {
+  startOpenAICompatibleServer,
+  type OpenAICompatibleServer,
+  type OpenAITurnScript,
+} from "../testing/openai-compatible-server";
+import { createSupabaseCookingDataClient } from "../tools/supabase-cooking-data";
+import type { AgentEvent } from "../types";
+import type { Database } from "~/lib/supabase/supabase-types";
+
+jest.setTimeout(60_000);
+
+const DUMMY_NEBIUS_KEY = "test-nebius-key";
+const DUMMY_MODEL = "mock-tool-model";
+
+interface ScenarioResult {
+  events: AgentEvent[];
+  database: PostgrestFixture;
+  model: OpenAICompatibleServer;
+}
+
+async function runScenario(
+  prompt: string,
+  script: OpenAITurnScript,
+  seed: PostgrestFixtureSeed = {}
+): Promise<ScenarioResult> {
+  const database = await startPostgrestFixture(seed);
+  const model = await startOpenAICompatibleServer({ script });
+  let client: SupabaseClient<Database> | undefined;
+  try {
+    client = createFixtureSupabaseClient(database);
+    const agent = createCookingAgent({
+      kind: "nebius",
+      data: createSupabaseCookingDataClient(client, () => null),
+      config: {
+        apiKey: DUMMY_NEBIUS_KEY,
+        model: DUMMY_MODEL,
+        baseURL: model.baseURL,
+      },
+      // Node fetch. The device tier is what exercises expo/fetch on Hermes.
+      fetch: globalThis.fetch,
+    });
+    const events: AgentEvent[] = [];
+    for await (const event of agent.stream({
+      messages: [{ id: "user-1", role: "user", content: prompt }],
+    })) {
+      events.push(event);
+    }
+    return { events, database, model };
+  } catch (error) {
+    await database.close();
+    await model.close();
+    throw error;
+  }
+}
+
+async function finish(result: ScenarioResult): Promise<void> {
+  await result.model.close();
+  await result.database.close();
+}
+
+function assertClean(events: AgentEvent[]): void {
+  const failure = events.find((event) => event.type === "error" || event.type === "tool-error");
+  expect(failure).toBeUndefined();
+}
+
+function textDeltas(events: AgentEvent[]): string[] {
+  return events.flatMap((event) => (event.type === "text-delta" ? [event.text] : []));
+}
+
+function toolOutput(events: AgentEvent[], toolName: string): unknown {
+  const match = events.find((event) => event.type === "tool-result" && event.toolName === toolName);
+  if (!match || match.type !== "tool-result") {
+    throw new Error(`Missing ${toolName} result. Events: ${JSON.stringify(events)}`);
+  }
+  return match.output;
+}
+
+function paths(result: ScenarioResult, suffix: string): string[] {
+  return result.database.requests
+    .filter((request) => request.path.endsWith(suffix))
+    .map((request) => request.method);
+}
+
+const omelette = {
+  id: "recipe-omelette",
+  title: "Spinach omelette",
+  tags: ["vegetarian"],
+  allergens: [] as string[],
+  calories: 420,
+  protein: 24,
+  carbs: 8,
+  fat: 28,
+  fiber: 3,
+  servings: 1,
+  cook_minutes: 15,
+};
+
+const cake = {
+  id: "recipe-cake",
+  title: "Flour cake",
+  tags: ["vegetarian"],
+  allergens: [] as string[],
+  calories: 500,
+  protein: 6,
+  carbs: 70,
+  fat: 20,
+  fiber: 1,
+  servings: 8,
+  cook_minutes: 40,
+};
+
+it("adds an ingredient through supabase-js", async () => {
+  const result = await runScenario(
+    "Add 6 eggs to my pantry.",
+    ({ body }) => {
+      const hasToolResult = body.messages?.some((message) => message.role === "tool");
+      if (!hasToolResult) {
+        return {
+          toolCalls: [
+            {
+              id: "call_add_eggs",
+              name: "manage_ingredients",
+              arguments: { action: "add", name: "eggs", quantity: 6, unit: "count" },
+            },
+          ],
+        };
+      }
+      return { textDeltas: ["Added eggs to your pantry."] };
+    },
+    { baseIngredients: [{ id: "base-eggs", name: "eggs" }] }
+  );
+  try {
+    assertClean(result.events);
+    expect(toolOutput(result.events, "manage_ingredients")).toMatchObject({
+      ok: true,
+      item: { name: "eggs", quantity: 6, unit: "count", addedByUserId: TEST_USER_ID },
+    });
+    expect(textDeltas(result.events).join("")).toBe("Added eggs to your pantry.");
+    expect(result.model.requests).toHaveLength(2);
+    expect(
+      result.model.requests[1]?.body.messages?.some((message) => message.role === "tool")
+    ).toBe(true);
+    expect(paths(result, "/household_members")).toContain("GET");
+    expect(paths(result, "/stock")).toContain("POST");
+    expect(result.database.state.stock).toEqual([
+      expect.objectContaining({
+        name: "eggs",
+        quantity: 6,
+        unit: "count",
+        added_by_user_id: TEST_USER_ID,
+        household_id: TEST_HOUSEHOLD_ID,
+        base_ingredient_id: "base-eggs",
+      }),
+    ]);
+  } finally {
+    await finish(result);
+  }
+});
+
+it("removes an ingredient through supabase-js", async () => {
+  const result = await runScenario(
+    "Remove eggs from my pantry.",
+    ({ body }) => {
+      const hasToolResult = body.messages?.some((message) => message.role === "tool");
+      if (!hasToolResult) {
+        return {
+          toolCalls: [
+            {
+              id: "call_remove_eggs",
+              name: "manage_ingredients",
+              arguments: { action: "remove", name: "eggs" },
+            },
+          ],
+        };
+      }
+      return { textDeltas: ["Removed eggs from your pantry."] };
+    },
+    {
+      stock: [
+        {
+          id: "stock-eggs",
+          name: "eggs",
+          quantity: 6,
+          unit: "count",
+          expiry_date: null,
+          household_id: TEST_HOUSEHOLD_ID,
+          added_by_user_id: TEST_USER_ID,
+        },
+      ],
+    }
+  );
+  try {
+    assertClean(result.events);
+    expect(toolOutput(result.events, "manage_ingredients")).toMatchObject({
+      ok: true,
+      removed: [{ id: "stock-eggs", name: "eggs" }],
+    });
+    expect(textDeltas(result.events).join("")).toBe("Removed eggs from your pantry.");
+    expect(paths(result, "/stock")).toContain("DELETE");
+    expect(result.database.state.stock).toEqual([]);
+  } finally {
+    await finish(result);
+  }
+});
+
+it("analyzes the pantry against the saved diet", async () => {
+  const result = await runScenario(
+    "Does my pantry fit my diet?",
+    ({ body }) => {
+      const hasToolResult = body.messages?.some((message) => message.role === "tool");
+      if (!hasToolResult) {
+        return {
+          toolCalls: [{ id: "call_diet", name: "analyze_diet", arguments: {} }],
+        };
+      }
+      return {
+        textDeltas: ["Chicken conflicts with vegetarian. Milk matches your milk allergen."],
+      };
+    },
+    {
+      preferences: { diet: "vegetarian", allergens: ["milk"] },
+      stock: [
+        {
+          id: "stock-chicken",
+          name: "chicken",
+          quantity: 1,
+          unit: "lb",
+          expiry_date: null,
+          household_id: TEST_HOUSEHOLD_ID,
+          added_by_user_id: TEST_USER_ID,
+        },
+        {
+          id: "stock-milk",
+          name: "milk",
+          quantity: 1,
+          unit: "liter",
+          expiry_date: null,
+          household_id: TEST_HOUSEHOLD_ID,
+          added_by_user_id: TEST_USER_ID,
+        },
+      ],
+    }
+  );
+  try {
+    assertClean(result.events);
+    const output = toolOutput(result.events, "analyze_diet") as {
+      conflicts: { name: string; reasons: string[] }[];
+      profile: { diet: string | null; source: string };
+    };
+    expect(output.profile).toMatchObject({ diet: "vegetarian", source: "supabase" });
+    expect(output.conflicts.map((conflict) => conflict.name).sort()).toEqual(["chicken", "milk"]);
+    expect(textDeltas(result.events).join("")).toContain("Chicken");
+    expect(paths(result, "/users")).toContain("GET");
+  } finally {
+    await finish(result);
+  }
+});
+
+it("suggests a meal plan without saving it", async () => {
+  const result = await runScenario(
+    "Plan one lunch from what I have.",
+    ({ body }) => {
+      const hasToolResult = body.messages?.some((message) => message.role === "tool");
+      if (!hasToolResult) {
+        return {
+          toolCalls: [
+            {
+              id: "call_plan",
+              name: "suggest_meal_plan",
+              arguments: { days: 1, slots: ["lunch"] },
+            },
+          ],
+        };
+      }
+      return { textDeltas: ["Lunch: Spinach omelette. The plan was not saved."] };
+    },
+    {
+      preferences: { diet: "vegetarian", allergens: [] },
+      stock: [
+        {
+          id: "stock-eggs",
+          name: "eggs",
+          quantity: 6,
+          unit: "count",
+          expiry_date: null,
+          household_id: TEST_HOUSEHOLD_ID,
+          added_by_user_id: TEST_USER_ID,
+        },
+      ],
+      recipes: [
+        omelette,
+        {
+          ...cake,
+          id: "recipe-steak",
+          title: "Steak and eggs",
+          tags: [],
+        },
+      ],
+      pivots: [
+        { recipe_id: "recipe-omelette", name: "eggs", quantity: 2, unit: "count" },
+        { recipe_id: "recipe-omelette", name: "spinach", quantity: 1, unit: "cup" },
+        { recipe_id: "recipe-steak", name: "eggs", quantity: 2, unit: "count" },
+      ],
+    }
+  );
+  try {
+    assertClean(result.events);
+    expect(toolOutput(result.events, "suggest_meal_plan")).toMatchObject({
+      persisted: false,
+      meals: [{ day: 1, slot: "lunch", title: "Spinach omelette", recipeId: "recipe-omelette" }],
+    });
+    expect(textDeltas(result.events).join("")).toContain("not saved");
+    expect(paths(result, "/pivot_recipe_ingredient")).toContain("GET");
+    expect(paths(result, "/recipe")).toContain("GET");
+  } finally {
+    await finish(result);
+  }
+});
+
+it("suggests recipes that overlap the fridge", async () => {
+  const result = await runScenario(
+    "What can I cook from the fridge?",
+    ({ body }) => {
+      const hasToolResult = body.messages?.some((message) => message.role === "tool");
+      if (!hasToolResult) {
+        return {
+          toolCalls: [{ id: "call_recipes", name: "suggest_recipes", arguments: { limit: 5 } }],
+        };
+      }
+      return { textDeltas: ["You can cook Spinach omelette."] };
+    },
+    {
+      stock: [
+        {
+          id: "stock-eggs",
+          name: "eggs",
+          quantity: 6,
+          unit: "count",
+          expiry_date: null,
+          household_id: TEST_HOUSEHOLD_ID,
+          added_by_user_id: TEST_USER_ID,
+        },
+        {
+          id: "stock-spinach",
+          name: "spinach",
+          quantity: 1,
+          unit: "bag",
+          expiry_date: null,
+          household_id: TEST_HOUSEHOLD_ID,
+          added_by_user_id: TEST_USER_ID,
+        },
+      ],
+      recipes: [omelette, cake],
+      pivots: [
+        { recipe_id: "recipe-omelette", name: "eggs", quantity: 2, unit: "count" },
+        { recipe_id: "recipe-omelette", name: "spinach", quantity: 1, unit: "cup" },
+        { recipe_id: "recipe-cake", name: "flour", quantity: 2, unit: "cup" },
+        { recipe_id: "recipe-cake", name: "sugar", quantity: 1, unit: "cup" },
+      ],
+    }
+  );
+  try {
+    assertClean(result.events);
+    const output = toolOutput(result.events, "suggest_recipes") as {
+      recipes: { title: string; coverage: number }[];
+    };
+    expect(output.recipes.map((recipe) => recipe.title)).toEqual(["Spinach omelette"]);
+    expect(output.recipes[0]?.coverage).toBe(1);
+    expect(textDeltas(result.events).join("")).toBe("You can cook Spinach omelette.");
+  } finally {
+    await finish(result);
+  }
+});
+
+it("forwards incremental text deltas and the full answer", async () => {
+  const result = await runScenario("How should I boil eggs?", () => ({
+    textDeltas: ["Boil ", "the ", "eggs."],
+  }));
+  try {
+    assertClean(result.events);
+    expect(textDeltas(result.events)).toEqual(["Boil ", "the ", "eggs."]);
+    expect(textDeltas(result.events).join("")).toBe("Boil the eggs.");
+    expect(result.events.some((event) => event.type === "tool-call")).toBe(false);
+    expect(result.events.some((event) => event.type === "finish")).toBe(true);
+    expect(
+      result.model.requests.filter((request) => request.path.endsWith("/chat/completions"))
+    ).toHaveLength(1);
+  } finally {
+    await finish(result);
+  }
+});
+
+it("stops the tool loop after 5 model calls", async () => {
+  const result = await runScenario("Keep adding eggs.", ({ requestIndex }) => ({
+    toolCalls: [
+      {
+        id: `call_step_${requestIndex}`,
+        name: "manage_ingredients",
+        arguments: {
+          action: "add",
+          name: "eggs",
+          quantity: requestIndex + 1,
+          unit: "count",
+        },
+      },
+    ],
+  }));
+  try {
+    assertClean(result.events);
+    const completions = result.model.requests.filter((request) =>
+      request.path.endsWith("/chat/completions")
+    );
+    expect(completions).toHaveLength(5);
+    expect(result.events.filter((event) => event.type === "tool-result")).toHaveLength(5);
+    expect(result.events.some((event) => event.type === "finish")).toBe(true);
+    expect(result.database.state.stock).toHaveLength(5);
+  } finally {
+    await finish(result);
+  }
+});
