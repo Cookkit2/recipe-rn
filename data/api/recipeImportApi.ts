@@ -83,7 +83,15 @@ export const recipeImportApi = {
     input: SharedRecipeInput,
     onStatusChange?: (status: RecipeImportStatus) => void
   ): Promise<YouTubeImportResult> {
-    if (input.url) return this.importRecipeFromUrl(input.url, onStatusChange, input.text);
+    const source = input.url ? analyzeUrl(input.url) : null;
+    if (
+      input.url &&
+      (!source?.isValid ||
+        !input.text?.trim() ||
+        source.type === "tiktok" ||
+        source.type === "instagram")
+    )
+      return this.importRecipeFromUrl(input.url, onStatusChange, input.text);
     if (!input.text?.trim()) return { success: false, error: "Share a recipe link or caption." };
     const result = await withImportErrorHandling(
       async () => {
@@ -97,13 +105,16 @@ export const recipeImportApi = {
           !analysis.recipe ||
           !analysis.isCookingVideo ||
           analysis.confidence < MIN_RECIPE_CONFIDENCE
-        )
+        ) {
+          if (source?.isValid)
+            return this.importRecipeFromUrl(source.normalizedUrl, onStatusChange);
           throw new Error(
             "Couldn't extract enough ingredients and instructions. Add the full recipe caption and try again."
           );
+        }
         return this._finalizeImport(
           analysis.recipe,
-          "",
+          source?.normalizedUrl ?? "",
           "Shared recipe",
           undefined,
           onStatusChange
@@ -431,7 +442,7 @@ export const recipeImportApi = {
             `We couldn't extract a recipe from this ${platformName} post ` +
               `(confidence: ${confidencePercent}%). The post may not be a recipe, ` +
               `or ${platformName} may have blocked access. ` +
-              `Try a different link or enter the recipe manually.`
+              `Paste the full recipe caption, try a different link, or enter the recipe manually.`
           );
         }
 
@@ -631,7 +642,7 @@ export const IMPORT_STATUS_MESSAGES: Record<RecipeImportStatus, string> = {
   "fetching-metadata": "Fetching video information...",
   "fetching-transcript": "Extracting video transcript...",
   "fetching-website": "Fetching website content...",
-  "fetching-social": "Fetching social media video...",
+  "fetching-social": "Reading social post...",
   "parsing-content": "Parsing recipe content...",
   analyzing: "Analyzing with AI...",
   "generating-recipe": "Generating recipe...",

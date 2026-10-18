@@ -114,7 +114,7 @@ PODS:
     - RNScreens
   - ExpoSecureStore (58.0.2):
     - ExpoModulesCore
-  - ExpoShareIntentModule (8.0.1):
+  - ExpoSharing (58.0.19):
     - ExpoModulesCore
   - ExpoSpeech (58.0.3):
     - ExpoModulesCore
@@ -2665,7 +2665,7 @@ DEPENDENCIES:
   - ExpoNotifications (from `../node_modules/expo-notifications/ios`)
   - ExpoRouter (from `../node_modules/expo-router/ios`)
   - ExpoSecureStore (from `../node_modules/expo-secure-store/ios`)
-  - ExpoShareIntentModule (from `../node_modules/expo-share-intent/ios`)
+  - ExpoSharing (from `../node_modules/expo-sharing/ios`)
   - ExpoSpeech (from `../node_modules/expo-speech/ios`)
   - ExpoSpeechRecognition (from `../node_modules/expo-speech-recognition/ios`)
   - ExpoSplashScreen (from `../node_modules/expo-splash-screen/ios`)
@@ -2867,8 +2867,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-router/ios"
   ExpoSecureStore:
     :path: "../node_modules/expo-secure-store/ios"
-  ExpoShareIntentModule:
-    :path: "../node_modules/expo-share-intent/ios"
+  ExpoSharing:
+    :path: "../node_modules/expo-sharing/ios"
   ExpoSpeech:
     :path: "../node_modules/expo-speech/ios"
   ExpoSpeechRecognition:
@@ -3140,7 +3140,7 @@ SPEC CHECKSUMS:
   ExpoNotifications: cf9c6c2d03c3cf801be923091eb06b07e792be2f
   ExpoRouter: 0158cd137b6dce3a12fc5ca54709f8f750ea48e8
   ExpoSecureStore: fe38b7c23d08d3fc293b7301f4068c35ba26a9ae
-  ExpoShareIntentModule: c31041fd3678b0e38818dbc75345afd3571bc646
+  ExpoSharing: 98c4a4e7e12b23ef44ce45cb8452d1d50be8e5ec
   ExpoSpeech: f9b6078e35b17819532a6fb2d057b346638c4667
   ExpoSpeechRecognition: 00717a213796d5423295f80964155d71bc2d32be
   ExpoSplashScreen: 800429a79899872e7485812d9b89746014c97d45

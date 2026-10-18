@@ -67,6 +67,7 @@ jest.mock("~/utils/url-utils", () => ({
 }));
 
 import { recipeImportApi } from "../recipeImportApi";
+import { analyzeUrl } from "~/utils/url-utils";
 import type { RecipeAnalysisResult } from "~/types/ScrappedRecipe";
 
 const SAMPLE_RECIPE = {
@@ -204,5 +205,61 @@ describe("recipeImportApi.importRecipeFromSocialMedia", () => {
     expect(statuses).toContain("generating-recipe");
     expect(statuses).toContain("comparing-pantry");
     expect(statuses).toContain("complete");
+  });
+
+  it("extracts a supplied caption without needing the linked YouTube video", async () => {
+    const url = "https://www.youtube.com/watch?v=abcdef12345";
+    jest
+      .mocked(analyzeUrl)
+      .mockReturnValue({ isValid: true, type: "youtube", url, normalizedUrl: url });
+    analyzeForRecipe.mockResolvedValue({
+      isCookingVideo: true,
+      confidence: 0.9,
+      recipe: SAMPLE_RECIPE,
+    });
+    const result = await recipeImportApi.importSharedRecipe({
+      url,
+      text: "Bake 1 block feta with pasta.",
+    });
+    expect(result.success).toBe(true);
+    expect(analyzeForRecipe).toHaveBeenCalledWith({
+      platform: "text",
+      url: "",
+      text: "Bake 1 block feta with pasta.",
+    });
+    expect(createRecipe).toHaveBeenCalledWith(expect.objectContaining({ sourceUrl: url }));
+  });
+
+  it("falls back to the linked page when the shared text is only a generic message", async () => {
+    const url = "https://example.com/pasta";
+    jest
+      .mocked(analyzeUrl)
+      .mockReturnValue({ isValid: true, type: "website", url, normalizedUrl: url });
+    analyzeForRecipe.mockResolvedValue({ isCookingVideo: false, confidence: 0.1 });
+    const fallback = jest
+      .spyOn(recipeImportApi, "importRecipeFromWebsite")
+      .mockResolvedValue({ success: false, error: "Page blocked" });
+    try {
+      const result = await recipeImportApi.importSharedRecipe({
+        url,
+        text: "Check out this recipe!",
+      });
+      expect(fallback).toHaveBeenCalledWith(url, undefined);
+      expect(result.error).toBe("Page blocked");
+      expect(createRecipe).not.toHaveBeenCalled();
+    } finally {
+      fallback.mockRestore();
+    }
+  });
+
+  it("rejects invalid source links before analyzing a caption", async () => {
+    const url = "file:///private/recipe.txt";
+    jest
+      .mocked(analyzeUrl)
+      .mockReturnValue({ isValid: false, type: "unknown", url, normalizedUrl: url });
+    const result = await recipeImportApi.importSharedRecipe({ url, text: "Bake feta." });
+    expect(result.success).toBe(false);
+    expect(analyzeForRecipe).not.toHaveBeenCalled();
+    expect(createRecipe).not.toHaveBeenCalled();
   });
 });

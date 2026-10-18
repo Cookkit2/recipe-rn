@@ -1,24 +1,16 @@
-let mockDeduplicate;
 jest.mock("expo/config-plugins", () => ({
-  withEntitlementsPlist: (config, action) => {
-    mockDeduplicate = action;
-    return config;
-  },
+  withXcodeProject: jest.fn((config) => config),
 }));
-jest.mock("expo-share-intent/app.plugin", () => ({ default: jest.fn((config) => config) }));
+jest.mock("expo-sharing/app.plugin", () => ({ default: jest.fn((config) => config) }));
+const withSharing = require("expo-sharing/app.plugin").default;
 const plugin = require("../withRecipeSharing");
 
-it("deduplicates the recipe app group on repeated prebuilds and preserves other groups", () => {
-  plugin({}, {});
-  const config = {
-    modResults: {
-      "com.apple.security.application-groups": ["group.cookkit", "group.other", "group.cookkit"],
-    },
+it("forwards incoming-sharing configuration to the SDK 58 plugin", () => {
+  const config = { ios: { supportsTablet: false } };
+  const options = {
+    ios: { enabled: true, appGroupId: "group.app.cookkit.cookkit" },
+    android: { enabled: true, singleShareMimeTypes: ["text/plain"] },
   };
-  mockDeduplicate(config);
-  mockDeduplicate(config);
-  expect(config.modResults["com.apple.security.application-groups"]).toEqual([
-    "group.cookkit",
-    "group.other",
-  ]);
+  expect(plugin(config, options)).toBe(config);
+  expect(withSharing).toHaveBeenCalledWith(config, options);
 });

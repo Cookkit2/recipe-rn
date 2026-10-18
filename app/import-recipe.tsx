@@ -1,19 +1,35 @@
-import { useState } from "react";
-import { View, ScrollView } from "react-native";
-import { Stack, useRouter } from "expo-router";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ScrollView } from "react-native";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { P } from "~/components/ui/typography";
 import { useImportRecipe, getImportStatusMessage } from "~/hooks/queries/useRecipeImportQueries";
 import { readPendingRecipeShare, clearPendingRecipeShare } from "~/lib/recipe-share-inbox";
+import type { PendingRecipeShare } from "~/types/SharedRecipe";
 
 export default function ImportRecipePage() {
-  const [pending] = useState(readPendingRecipeShare);
+  const { shareId } = useLocalSearchParams<{ shareId?: string }>();
+  const pending = useMemo(() => {
+    const incoming = readPendingRecipeShare();
+    return incoming && (!shareId || incoming.id === shareId) ? incoming : null;
+  }, [shareId]);
+  return <ImportRecipeForm key={pending?.id ?? "manual"} pending={pending} />;
+}
+
+function ImportRecipeForm({ pending }: { pending: PendingRecipeShare | null }) {
   const [url, setUrl] = useState(pending?.url ?? "");
   const [text, setText] = useState(pending?.text ?? "");
   const [error, setError] = useState<string | null>(null);
   const { importRecipeAsync, importStatus, isPending } = useImportRecipe();
   const router = useRouter();
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   const submit = async () => {
     if (isPending) return;
     setError(null);
@@ -22,6 +38,8 @@ export default function ImportRecipePage() {
         url: url.trim() || undefined,
         text: text.trim() || undefined,
       });
+      // A second share can replace this form while the first extraction finishes.
+      if (!mounted.current || (pending && readPendingRecipeShare()?.id !== pending.id)) return;
       if (!result.success || !result.recipe?.id) {
         setError(result.error ?? "Couldn't extract a recipe. Add the caption or try another link.");
         return;
@@ -29,7 +47,10 @@ export default function ImportRecipePage() {
       if (pending) clearPendingRecipeShare(pending.id);
       router.replace(`/recipes/${result.recipe.id}/edit`);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Couldn't import this recipe. Try again.");
+      if (mounted.current)
+        setError(
+          cause instanceof Error ? cause.message : "Couldn't import this recipe. Try again."
+        );
     }
   };
   return (
@@ -59,6 +80,7 @@ export default function ImportRecipePage() {
         onChangeText={setText}
         editable={!isPending}
         multiline
+        maxLength={32000}
         className="min-h-36"
         textAlignVertical="top"
       />
@@ -76,7 +98,8 @@ export default function ImportRecipePage() {
         disabled={isPending}
         onPress={() => {
           if (pending) clearPendingRecipeShare(pending.id);
-          router.back();
+          if (router.canGoBack()) router.back();
+          else router.replace("/");
         }}
       >
         <P>Cancel</P>
