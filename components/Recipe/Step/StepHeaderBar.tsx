@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { ClockIcon, XIcon } from "lucide-uniwind";
+import { HelpCircleIcon, XIcon } from "lucide-uniwind";
 import { useState } from "react";
 import { View, Alert } from "react-native";
 import { useDerivedValue } from "react-native-reanimated";
@@ -11,7 +11,7 @@ import { VoiceHelpSheet } from "~/components/VoiceCooking/VoiceHelpSheet";
 
 export default function StepHeaderBar() {
   const { top } = useSafeAreaInsets();
-  const { progress, stepPages, recipe } = useRecipeSteps();
+  const { progress, stepPages } = useRecipeSteps();
   const router = useRouter();
   const [helpOpen, setHelpOpen] = useState(false);
 
@@ -35,15 +35,6 @@ export default function StepHeaderBar() {
     <>
       <View className="flex flex-row items-center gap-4 px-4" style={{ paddingTop: top + 8 }}>
         <Progress animatedValue={progressPercentage} className="flex-1 h-6" />
-        <Button
-          size="icon"
-          variant="ghost"
-          className="rounded-full"
-          accessibilityLabel="Cooking timers"
-          onPress={() => router.push({ pathname: "/timers", params: { recipeId: recipe.id } })}
-        >
-          <ClockIcon className="text-foreground" />
-        </Button>
         {/* <Button
           size="icon"
           variant="ghost"
