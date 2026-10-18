@@ -59,6 +59,14 @@ function createMemorySupabase(): CookingSupabase & { tables: Record<string, Row[
         working = working.slice(0, count);
         return api;
       },
+      order(column: string) {
+        working.sort((a, b) => String(a[column]).localeCompare(String(b[column])));
+        return api;
+      },
+      range(from: number, to: number) {
+        working = working.slice(from, to + 1);
+        return api;
+      },
       insert(row: Row) {
         mode = "insert";
         inserted = { id: `id-${(tables[table] ?? []).length + 1}`, ...row };
@@ -160,4 +168,38 @@ it("reads the merged diet profile from the users table", async () => {
     allergens: ["milk", "peanuts"],
     source: "merged",
   });
+});
+
+it("loads every ingredient across pages before returning a recipe", async () => {
+  const supabase = createMemorySupabase();
+  supabase.tables.recipe = [{ id: "r1", title: "Complete recipe" }];
+  supabase.tables.pivot_recipe_ingredient = Array.from({ length: 1001 }, (_, i) => ({
+    id: String(i).padStart(4, "0"),
+    recipe_id: "r1",
+    name: i === 1000 ? "peanuts" : `ingredient-${i}`,
+  }));
+  const catalog = await createSupabaseCookingDataClient(supabase).listRecipes();
+  expect(catalog.recipes[0]?.ingredients).toHaveLength(1001);
+  expect(catalog.recipes[0]?.ingredients.at(-1)?.name).toBe("peanuts");
+  expect(catalog.truncated).toBe(false);
+});
+
+it("bounds parent recipes while keeping their ingredient lists complete", async () => {
+  const supabase = createMemorySupabase();
+  supabase.tables.recipe = Array.from({ length: 101 }, (_, i) => ({
+    id: String(i).padStart(3, "0"),
+    title: `Recipe ${i}`,
+  }));
+  supabase.tables.pivot_recipe_ingredient = supabase.tables.recipe.flatMap((recipe) =>
+    Array.from({ length: 10 }, (_, i) => ({
+      id: `${recipe.id}-${i}`,
+      recipe_id: recipe.id,
+      name: `ingredient-${i}`,
+    }))
+  );
+  const catalog = await createSupabaseCookingDataClient(supabase).listRecipes();
+  expect(catalog.recipes).toHaveLength(100);
+  expect(catalog.truncated).toBe(true);
+  expect(catalog.recipes.every((recipe) => recipe.ingredients.length === 10)).toBe(true);
+  expect(catalog.recipes.some((recipe) => recipe.id === "100")).toBe(false);
 });

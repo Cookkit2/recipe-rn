@@ -12,7 +12,9 @@ import { EMPTY_DIET_PROFILE } from "./planning";
 const STOCK_COLUMNS = "id, name, quantity, unit, expiry_date, household_id, added_by_user_id";
 const RECIPE_COLUMNS =
   "id, title, tags, allergens, calories, protein, carbs, fat, fiber, servings, cook_minutes";
-const PIVOT_LIMIT = 800;
+const RECIPE_LIMIT = 100;
+// Stay below PostgREST's default 1,000-row response cap on every page.
+const INGREDIENT_PAGE_SIZE = 500;
 
 interface QueryError {
   message: string;
@@ -29,6 +31,8 @@ interface FilterBuilder<T> extends PromiseLike<QueryResult<T[]>> {
   ilike(column: string, value: string): FilterBuilder<T>;
   in(column: string, values: readonly string[]): FilterBuilder<T>;
   limit(count: number): FilterBuilder<T>;
+  order(column: string): FilterBuilder<T>;
+  range(from: number, to: number): FilterBuilder<T>;
   insert(row: Record<string, unknown>): FilterBuilder<T>;
   delete(): FilterBuilder<T>;
   single(): PromiseLike<QueryResult<T>>;
@@ -251,30 +255,42 @@ export function createSupabaseCookingDataClient(
     },
 
     async listRecipes() {
-      const { rows, error } = await rowsOf(
-        supabase
-          .from("pivot_recipe_ingredient")
-          .select("recipe_id, name, quantity, unit")
-          .limit(PIVOT_LIMIT)
-      );
-      if (error) throw new Error(error);
-      const ingredientsByRecipe = new Map<string, CatalogIngredient[]>();
-      for (const row of rows) {
-        const recipeId = asString(row.recipe_id);
-        const name = asString(row.name);
-        if (!recipeId || !name) continue;
-        const list = ingredientsByRecipe.get(recipeId) ?? [];
-        list.push({ name, quantity: asNumber(row.quantity), unit: asString(row.unit) });
-        ingredientsByRecipe.set(recipeId, list);
-      }
-      const ids = [...ingredientsByRecipe.keys()];
-      if (ids.length === 0) return { recipes: [], truncated: false };
       const recipesResult = await rowsOf(
-        supabase.from("recipe").select(RECIPE_COLUMNS).in("id", ids).limit(ids.length)
+        supabase
+          .from("recipe")
+          .select(RECIPE_COLUMNS)
+          .order("id")
+          .limit(RECIPE_LIMIT + 1)
       );
       if (recipesResult.error) throw new Error(recipesResult.error);
+      const recipeRows = recipesResult.rows.slice(0, RECIPE_LIMIT);
+      const ids = recipeRows
+        .map((row) => asString(row.id))
+        .filter((id): id is string => id !== null);
+      if (ids.length === 0) return { recipes: [], truncated: false };
+      const ingredientsByRecipe = new Map<string, CatalogIngredient[]>();
+      for (let offset = 0; ; offset += INGREDIENT_PAGE_SIZE) {
+        const { rows, error } = await rowsOf(
+          supabase
+            .from("pivot_recipe_ingredient")
+            .select("id, recipe_id, name, quantity, unit")
+            .in("recipe_id", ids)
+            .order("id")
+            .range(offset, offset + INGREDIENT_PAGE_SIZE - 1)
+        );
+        if (error) throw new Error(error);
+        for (const row of rows) {
+          const recipeId = asString(row.recipe_id);
+          const name = asString(row.name);
+          if (!recipeId || !name) continue;
+          const list = ingredientsByRecipe.get(recipeId) ?? [];
+          list.push({ name, quantity: asNumber(row.quantity), unit: asString(row.unit) });
+          ingredientsByRecipe.set(recipeId, list);
+        }
+        if (rows.length < INGREDIENT_PAGE_SIZE) break;
+      }
       const recipes: CatalogRecipe[] = [];
-      for (const row of recipesResult.rows) {
+      for (const row of recipeRows) {
         const id = asString(row.id);
         const title = asString(row.title);
         if (!id || !title) continue;
@@ -293,7 +309,7 @@ export function createSupabaseCookingDataClient(
           ingredients: ingredientsByRecipe.get(id) ?? [],
         });
       }
-      return { recipes, truncated: rows.length >= PIVOT_LIMIT };
+      return { recipes, truncated: recipesResult.rows.length > RECIPE_LIMIT };
     },
   };
 }

@@ -14,7 +14,7 @@ export function createCookingTools(data: CookingDataClient) {
   return {
     manage_ingredients: tool({
       description:
-        "Add or remove one ingredient in the signed-in user's pantry. Use action add or remove. Match removals by name or stockId.",
+        "Add or remove one ingredient in the user's on-device pantry. Use action add or remove. Match removals by name or stockId.",
       inputSchema: z.object({
         action: z.enum(["add", "remove"]),
         name: z.string().min(1).optional().describe("Ingredient name, such as eggs"),

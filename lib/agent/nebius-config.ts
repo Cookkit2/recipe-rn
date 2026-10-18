@@ -16,7 +16,11 @@ export interface NebiusAgentConfig {
 }
 
 export function readNebiusAgentConfig(
-  env: Record<string, string | undefined> = process.env
+  env: Record<string, string | undefined> = {
+    EXPO_PUBLIC_NEBIUS_API_KEY: process.env.EXPO_PUBLIC_NEBIUS_API_KEY,
+    EXPO_PUBLIC_NEBIUS_MODEL: process.env.EXPO_PUBLIC_NEBIUS_MODEL,
+    EXPO_PUBLIC_NEBIUS_BASE_URL: process.env.EXPO_PUBLIC_NEBIUS_BASE_URL,
+  }
 ): NebiusAgentConfig {
   const apiKey = env.EXPO_PUBLIC_NEBIUS_API_KEY?.trim() ?? "";
   const model = env.EXPO_PUBLIC_NEBIUS_MODEL?.trim() ?? "";
