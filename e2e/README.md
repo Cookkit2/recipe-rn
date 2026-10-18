@@ -24,7 +24,9 @@ bun run e2e:test:ios
 
 Environment variable `EXPO_PUBLIC_E2E=true` is set by the scripts so the app can skip onboarding, use the mock auth strategy, and seed a supabase-js session for the assistant tools.
 
-**Debug + embedded bundle:** `ios/.xcode.env.updates` unsets `SKIP_BUNDLING` when `EXPO_PUBLIC_E2E=true`, so the Debug `.app` includes the JS bundle (with `EXPO_PUBLIC_E2E` inlined) and Detox does not need Metro. Normal Xcode Debug runs without that env still load from Metro.
+The assistant scenario exercises the real local pantry API and WatermelonDB. After the streamed reply it returns to Home and checks `eggs` / `6 count` in the pantry, then relaunches without deleting app data and checks the item again. The HTTP fixtures provide model responses and cloud metadata; pantry mutations stay on device. Tier A also covers plural allergens and complete ingredient pagination.
+
+**Debug + embedded bundle:** `scripts/e2e-ios-env.sh` forces bundling and restores `ios/.xcode.env.updates` if CocoaPods removed it. That override unsets `SKIP_BUNDLING` when `EXPO_PUBLIC_E2E=true`, so the Debug `.app` includes the JS bundle (with `EXPO_PUBLIC_E2E` inlined) and Detox does not need Metro. Normal Xcode Debug runs without that env still load from Metro.
 
 If `home-screen` (or other E2E IDs) time out, rebuild with `bun run e2e:build:ios` after changing `.xcode.env.updates`.
 
