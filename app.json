@@ -156,14 +156,6 @@
       "expo-web-browser",
       "expo-video",
       "expo-notifications",
-      [
-        "expo-widgets",
-        {
-          "bundleIdentifier": "app.cookkit.cookkit.widgets",
-          "groupIdentifier": "group.app.cookkit.cookkit",
-          "widgets": []
-        }
-      ],
       "@react-native-community/datetimepicker",
       [
         "@config-plugins/detox",

@@ -13,7 +13,6 @@ import { storage } from "~/data";
 import { COOKING_TIMERS_KEY } from "~/constants/storage-keys";
 import type { Timer, TimerCreateInput, TimerUpdateInput } from "~/types/Timer";
 import { scheduleNotification, cancelNotification } from "~/lib/notifications/notification-service";
-import { syncCookingLiveActivity } from "~/lib/timers/cooking-live-activity";
 
 // Interval for updating timers (in milliseconds)
 const TICK_INTERVAL = 1000;
@@ -67,7 +66,7 @@ function isTimerCompleted(timer: Timer): boolean {
 /**
  * Format seconds to MM:SS or HH:MM:SS
  */
-export function formatTimerDuration(seconds: number): string {
+function formatTimerDuration(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = seconds % 60;
@@ -151,7 +150,6 @@ class TimerService {
   async initialize(): Promise<void> {
     try {
       await this.restoreTimers();
-      await syncCookingLiveActivity(this.getAllTimers());
       this.setupAppStateListener();
       log.info(`Timer service initialized with ${this.timers.size} timer(s)`);
     } catch (error) {
@@ -183,8 +181,8 @@ class TimerService {
             restoredTimer.completedAt = new Date();
           }
 
-          // Paused timers keep their remaining time without a ticking interval.
-          if (restoredTimer.status === "running") {
+          // Resume tick interval for running/paused timers
+          if (restoredTimer.status === "running" || restoredTimer.status === "paused") {
             this.startTickInterval(restoredTimer);
           }
 
@@ -368,7 +366,6 @@ class TimerService {
     this.notifyTimerUpdate();
 
     log.info(`Timer started: ${timer.name}`);
-    await syncCookingLiveActivity(this.getAllTimers());
   }
 
   /**
@@ -400,7 +397,6 @@ class TimerService {
     this.notifyTimerUpdate();
 
     log.info(`Timer paused: ${timer.name}`);
-    await syncCookingLiveActivity(this.getAllTimers());
   }
 
   /**
@@ -443,7 +439,6 @@ class TimerService {
     this.notifyTimerUpdate();
 
     log.info(`Timer cancelled: ${timer.name}`);
-    await syncCookingLiveActivity(this.getAllTimers());
   }
 
   /**
@@ -465,7 +460,6 @@ class TimerService {
     await this.persistTimers();
     this.notifyTimerUpdate();
     this.notifyTimerComplete(timer);
-    await syncCookingLiveActivity(this.getAllTimers(), timer);
 
     log.info(`Timer completed: ${timer.name}`);
   }
@@ -489,24 +483,18 @@ class TimerService {
     this.notifyTimerUpdate();
 
     log.info(`Timer updated: ${timer.name}`);
-    await syncCookingLiveActivity(this.getAllTimers());
   }
 
   /**
    * Get all timers
    */
   getAllTimers(): Timer[] {
-    return Array.from(this.timers.values())
-      .map((timer) => ({
-        ...timer,
-        remainingSeconds: calculateRemainingSeconds(timer),
-      }))
-      .sort((a, b) => {
-        // Sort by: running first, then by created time
-        if (a.status === "running" && b.status !== "running") return -1;
-        if (a.status !== "running" && b.status === "running") return 1;
-        return b.createdAt.getTime() - a.createdAt.getTime();
-      });
+    return Array.from(this.timers.values()).sort((a, b) => {
+      // Sort by: running first, then by created time
+      if (a.status === "running" && b.status !== "running") return -1;
+      if (a.status !== "running" && b.status === "running") return 1;
+      return b.createdAt.getTime() - a.createdAt.getTime();
+    });
   }
 
   /**
@@ -557,7 +545,6 @@ class TimerService {
         id: `timer_${timer.id}`,
         title: "Timer Complete!",
         body: `${timer.name} is done.`,
-        data: { type: "cooking_timer", screen: "/timers", timerId: timer.id },
         trigger: {
           seconds: remainingSeconds,
         },
@@ -636,8 +623,6 @@ class TimerService {
    */
   async onAppForeground(): Promise<void> {
     await this.restoreTimers();
-    await syncCookingLiveActivity(this.getAllTimers());
-    this.notifyTimerUpdate();
     log.debug("Timer service restored on foreground");
   }
 
