@@ -1,9 +1,6 @@
-const mockStorageGet = jest.fn<string | null, [string]>();
-
 jest.mock("expo-notifications", () => ({
   scheduleNotificationAsync: jest.fn(),
   cancelScheduledNotificationAsync: jest.fn(),
-  getAllScheduledNotificationsAsync: jest.fn().mockResolvedValue([]),
 }));
 
 jest.mock("expo-crypto", () => ({
@@ -18,7 +15,7 @@ jest.mock("react-native", () => ({
 
 jest.mock("~/data", () => ({
   storage: {
-    get: (key: string) => mockStorageGet(key),
+    get: jest.fn(),
     set: jest.fn(),
     remove: jest.fn(),
   },
@@ -28,13 +25,8 @@ jest.mock("~/lib/notifications/notification-service", () => ({
   scheduleNotification: jest.fn(),
   cancelNotification: jest.fn(),
 }));
-jest.mock("~/lib/timers/cooking-live-activity", () => ({
-  syncCookingLiveActivity: jest.fn().mockResolvedValue(undefined),
-}));
 
 import { timerService } from "../timer-service";
-import { syncCookingLiveActivity } from "~/lib/timers/cooking-live-activity";
-import { scheduleNotification } from "~/lib/notifications/notification-service";
 
 describe("TimerService", () => {
   beforeEach(async () => {
@@ -45,7 +37,6 @@ describe("TimerService", () => {
 
   afterEach(async () => {
     await timerService.cancelAllTimers();
-    timerService.cleanup();
     jest.useRealTimers();
   });
 
@@ -69,14 +60,6 @@ describe("TimerService", () => {
     expect(updatedTimer?.status).toBe("running");
     expect(updatedTimer?.startedAt).toEqual(new Date("2023-01-01T00:00:00.000Z"));
     expect(updatedTimer?.pausedAt).toBeUndefined();
-    expect(syncCookingLiveActivity).toHaveBeenLastCalledWith(
-      expect.arrayContaining([expect.objectContaining({ id: timer.id, status: "running" })])
-    );
-    expect(scheduleNotification).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        data: { type: "cooking_timer", screen: "/timers", timerId: timer.id },
-      })
-    );
   });
 
   it("should calculate remaining seconds when running", async () => {
@@ -88,7 +71,6 @@ describe("TimerService", () => {
 
     const updatedTimer = timerService.getTimer(timer.id);
     expect(updatedTimer?.remainingSeconds).toBe(50);
-    expect(timerService.getAllTimers()[0]?.remainingSeconds).toBe(50);
   });
 
   it("should pause a timer", async () => {
@@ -197,48 +179,5 @@ describe("TimerService", () => {
     expect(activeIds).toContain(timer1.id);
     expect(activeIds).toContain(timer2.id);
     expect(activeIds).not.toContain(timer3.id); // Completed is not active
-  });
-
-  it("restores the correct countdown before recovering the Live Activity", async () => {
-    mockStorageGet.mockReturnValueOnce(
-      JSON.stringify([
-        {
-          id: "restored",
-          name: "Oven",
-          durationSeconds: 120,
-          remainingSeconds: 120,
-          status: "running",
-          createdAt: new Date("2023-01-01T00:00:00Z"),
-          startedAt: new Date("2023-01-01T00:00:00Z"),
-        },
-      ])
-    );
-    jest.setSystemTime(new Date("2023-01-01T00:00:30Z"));
-    await timerService.initialize();
-    expect(syncCookingLiveActivity).toHaveBeenLastCalledWith([
-      expect.objectContaining({ id: "restored", remainingSeconds: 90, status: "running" }),
-    ]);
-  });
-
-  it("marks timers that expired while closed as completed before syncing the activity", async () => {
-    mockStorageGet.mockReturnValueOnce(
-      JSON.stringify([
-        {
-          id: "expired",
-          name: "Pasta",
-          durationSeconds: 10,
-          remainingSeconds: 10,
-          status: "running",
-          createdAt: new Date("2023-01-01T00:00:00Z"),
-          startedAt: new Date("2023-01-01T00:00:00Z"),
-        },
-      ])
-    );
-    jest.setSystemTime(new Date("2023-01-01T00:00:30Z"));
-    await timerService.initialize();
-    expect(timerService.getActiveTimers()).toEqual([]);
-    expect(syncCookingLiveActivity).toHaveBeenLastCalledWith([
-      expect.objectContaining({ id: "expired", remainingSeconds: 0, status: "completed" }),
-    ]);
   });
 });

@@ -136,9 +136,6 @@ PODS:
     - ExpoModulesCore
   - ExpoWebBrowser (58.0.6):
     - ExpoModulesCore
-  - ExpoWidgets (58.0.20):
-    - ExpoModulesCore
-    - ExpoUI
   - EXStructuredHeaders (58.0.1)
   - EXUpdates (58.0.17):
     - EASClient
@@ -2678,7 +2675,6 @@ DEPENDENCIES:
   - "ExpoUI (from `../node_modules/@expo/ui/ios`)"
   - ExpoVideo (from `../node_modules/expo-video/ios`)
   - ExpoWebBrowser (from `../node_modules/expo-web-browser/ios`)
-  - ExpoWidgets (from `../node_modules/expo-widgets/ios`)
   - EXStructuredHeaders (from `../node_modules/expo-structured-headers/ios`)
   - EXUpdates (from `../node_modules/expo-updates/ios`)
   - EXUpdatesInterface (from `../node_modules/expo-updates-interface/ios`)
@@ -2891,8 +2887,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-video/ios"
   ExpoWebBrowser:
     :path: "../node_modules/expo-web-browser/ios"
-  ExpoWidgets:
-    :path: "../node_modules/expo-widgets/ios"
   EXStructuredHeaders:
     :path: "../node_modules/expo-structured-headers/ios"
   EXUpdates:
@@ -3156,7 +3150,6 @@ SPEC CHECKSUMS:
   ExpoUI: 37d770439e97526aee84a61188e5e54f6625539a
   ExpoVideo: 9bf1792d7509e90617e513770786df786b902f27
   ExpoWebBrowser: c1455dbe22ad3396275bb3343931fb328b3d17c4
-  ExpoWidgets: 7d68ce2ed23159e8782febb135314150c409f1d8
   EXStructuredHeaders: d38b81fb2ff838c15bf28135deb247e76293d2b9
   EXUpdates: 9513d88c4b6f5e4dd8ed55de767e55a5aeb7b5d8
   EXUpdatesInterface: c917c2087e6a9c0bf4d701fc073f2279efc79fd9
@@ -3284,6 +3277,6 @@ SPEC CHECKSUMS:
   WatermelonDB: 8dafe8b8a23dc6d8e033e1086449b8e2638d9453
   Yoga: 58b502c52b14ad3c4468805d461fc37d275c2a42
 
-PODFILE CHECKSUM: dead21ac2bd970cd8b97108918677467713ffc43
+PODFILE CHECKSUM: 459feb1d573337af6bf74aad160ae1085f931a95
 
 COCOAPODS: 1.16.2
