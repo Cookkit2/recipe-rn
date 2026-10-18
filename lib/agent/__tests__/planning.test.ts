@@ -1,5 +1,6 @@
 import {
   analyzePantryDiet,
+  dietConflicts,
   rankRecipes,
   suggestMeals,
   type CatalogRecipe,
@@ -97,4 +98,23 @@ it("fills meal slots without repeating a recipe", () => {
   expect(plan.meals).toHaveLength(2);
   expect(new Set(plan.meals.map((meal) => meal.recipeId)).size).toBe(2);
   expect(plan.unfilled).toBe(0);
+});
+
+it.each(["eggs", "almonds", "peanuts"])("flags plural allergen ingredient %s", (name) => {
+  const profile = { ...vegan, diet: null, allergens: ["eggs", "nuts", "peanuts"] };
+  expect(dietConflicts(name, profile)).not.toEqual([]);
+  expect(
+    rankRecipes(
+      [{ ...pasta, ingredients: [{ name, quantity: 1, unit: null }] }],
+      [name],
+      profile,
+      5
+    )
+  ).toEqual([]);
+});
+
+it("does not match allergen keywords inside unrelated words", () => {
+  expect(
+    dietConflicts("eggplant and nutmeg", { ...vegan, diet: null, allergens: ["eggs", "nuts"] })
+  ).toEqual([]);
 });

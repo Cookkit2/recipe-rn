@@ -103,9 +103,17 @@ const ALLERGEN_WORDS: Record<string, string[]> = {
   sesame: ["sesame", "tahini"],
 };
 
+function normalizeDietWords(value: string): string {
+  return value.toLowerCase().replace(/\b([a-z]+)s\b/g, (word, stem: string) => {
+    if (word.endsWith("ss")) return word;
+    if (word.endsWith("ies")) return `${word.slice(0, -3)}y`;
+    return stem;
+  });
+}
+
 function includesWord(haystack: string, needle: string): boolean {
-  const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return new RegExp(`\\b${escaped}\\b`, "i").test(haystack);
+  const escaped = normalizeDietWords(needle).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`\\b${escaped}\\b`, "i").test(normalizeDietWords(haystack));
 }
 
 export function dietConflicts(name: string, profile: DietProfile): string[] {

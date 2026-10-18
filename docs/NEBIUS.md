@@ -25,6 +25,8 @@ The Nebius key for recipe extraction is server-only `NEBIUS_API_KEY`. The extrac
 
 Do not ship a store build with a real `EXPO_PUBLIC_NEBIUS_API_KEY`. Move the agent loop and the key to a backend before any real release. `bun run agent:smoke` exercises `streamText` and tools against a local mock of the OpenAI-compatible stream. It does not call Nebius.
 
+The app's assistant reads and changes pantry items through the same local `pantryApi` as the pantry screen, including when Supabase is unavailable. Mutations invalidate pantry and recipe queries. Diet preferences merge device values with cloud values when available; recipe suggestions read a bounded cloud catalog with complete, paginated ingredient lists.
+
 ## Local simulator testing
 
 1. Put `NEBIUS_API_KEY` in ignored `.env.local`.

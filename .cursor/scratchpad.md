@@ -434,3 +434,16 @@ _(To be updated during implementation)_
 - Created `docs/superpowers/plans/2026-05-03-detox-e2e-testing.md` from the approved design.
 - Plan covers worktree setup, Detox dependencies/config, E2E boot flags, centralized test IDs, Page Object Model scaffolding, smoke/auth/core scenarios, and final local verification.
 - Execution note: `.worktrees/` is not currently ignored, so implementation should add it to `.gitignore` before creating the selected project-local worktree.
+
+
+## 2026-10-18 — PR #1201 cooking assistant review fixes
+
+Plan (authorized by user for later self-review):
+- [x] Post four inline findings on PR #1201.
+- [x] Add failing regressions for Expo config substitution, local pantry reads/writes and invalidation, plural allergens, and complete catalog ingredients.
+- [x] Use direct Expo public env reads, wrap existing pantryApi for app tools, normalize plural words, and page ingredients for bounded parent recipes.
+- [x] Run affected Jest suites, smoke script, typecheck, and formatting; prepare focused fixes for the existing PR.
+
+Design: preserve the agent contract and cloud recipe/profile reads; route app pantry operations through the existing local API and invalidate pantry/recipe queries after mutations. Use stable pagination so no partial ingredient lists reach ranking.
+
+Verification: 8 affected Jest suites / 31 tests passed; typecheck passed after refreshing ignored Expo route declarations; loopback agent smoke passed. Root lint fails only on pre-existing untracked `.github/copilot-instructions.md` and `youtube-transcript-tools-analysis.md`; formatting passes with those two files excluded. No dependency or lockfile changes.
