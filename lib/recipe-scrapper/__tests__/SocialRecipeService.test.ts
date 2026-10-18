@@ -122,6 +122,63 @@ describe("SocialRecipeService.analyzeForRecipe", () => {
     expect(result.recipe?.tags).toContain("instagram");
   });
 
+  it("reads caption meta attributes in either order and preserves quotes and entities", async () => {
+    globalThis.fetch = jest.fn(
+      async () =>
+        new Response(
+          `<meta content="Chef's &quot;eggs&quot;: whisk 2 eggs &amp; fry." name="description">`,
+          { status: 200 }
+        )
+    ) as unknown as typeof fetch;
+    expect(
+      (
+        await service.analyzeForRecipe({
+          platform: "instagram",
+          url: "https://www.instagram.com/p/abc/",
+        })
+      ).recipe
+    ).toBeDefined();
+    expect(mockGenerateContent.mock.calls[0]?.[0].prompt).toContain(
+      `Chef's "eggs": whisk 2 eggs & fry.`
+    );
+  });
+
+  it("extracts captions from JSON-LD arrays and graph entries", async () => {
+    const caption = "Whisk 2 eggs with a pinch of salt. Fry in 1 tsp oil for 3 minutes.";
+    globalThis.fetch = jest.fn(
+      async () =>
+        new Response(
+          `<script type='application/ld+json'>${JSON.stringify([{ "@graph": [{ articleBody: caption }] }])}</script>`,
+          { status: 200 }
+        )
+    ) as unknown as typeof fetch;
+    await service.analyzeForRecipe({
+      platform: "instagram",
+      url: "https://www.instagram.com/p/abc/",
+    });
+    expect(mockGenerateContent.mock.calls[0]?.[0].prompt).toContain(caption);
+  });
+
+  it("tries accessible post text when a generic share message contains no recipe", async () => {
+    mockGenerateContent.mockResolvedValueOnce(
+      JSON.stringify({ isCookingVideo: false, confidence: 0 })
+    );
+    globalThis.fetch = jest.fn(
+      async () =>
+        new Response(pageHtml({ description: "Boil 200g pasta and stir in 2 tbsp pesto." }), {
+          status: 200,
+        })
+    ) as unknown as typeof fetch;
+    const result = await service.analyzeForRecipe({
+      platform: "tiktok",
+      url: "https://www.tiktok.com/@chef/video/123",
+      text: "Watch this post!",
+    });
+    expect(result.recipe).toBeDefined();
+    expect(mockGenerateContent).toHaveBeenCalledTimes(2);
+    expect(mockGenerateContent.mock.calls[1]?.[0].prompt).toContain("Boil 200g pasta");
+  });
+
   it("does not fabricate a recipe or call AI when a blocked page provides no text", async () => {
     globalThis.fetch = jest.fn(async () => {
       throw new Error("network blocked");

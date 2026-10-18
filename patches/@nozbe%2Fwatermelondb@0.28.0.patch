@@ -1,3 +1,13 @@
+diff --git a/native/android/build.gradle b/native/android/build.gradle
+index a45cfe0b6735e699ebc19cb0a3b255260011ffdf..0b7e936cc90000339ece6ffac459e0dcb0384d57 100644
+--- a/native/android/build.gradle
++++ b/native/android/build.gradle
+@@ -27 +27,5 @@ android {
+     namespace "com.nozbe.watermelondb"
++
++    buildFeatures {
++        buildConfig true
++    }
 diff --git a/native/ios/WatermelonDB/JSIInstaller.h b/native/ios/WatermelonDB/JSIInstaller.h
 index c1b7efb0fb33d56bf7a2f1b3a5f16644ad855e9b..6e520c4d0dedc74c332312060fb31805af5782eb 100644
 --- a/native/ios/WatermelonDB/JSIInstaller.h

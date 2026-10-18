@@ -9,6 +9,8 @@ import { buildTextRecipeRequest } from "./shared/recipe-ai-utils";
 import { log } from "~/utils/logger";
 import type { RecipeAnalysisResult, GeneratedRecipe } from "~/types/ScrappedRecipe";
 import { isValidRecipe } from "./validation-utils";
+import { fetchWithTimeout } from "~/utils/fetch-with-timeout";
+import { extractSocialMetadata } from "./shared/social-metadata";
 
 export interface SocialMediaContent {
   platform: "tiktok" | "instagram" | "text";
@@ -33,25 +35,40 @@ export class SocialRecipeService {
 
       // Supplied captions can be extracted without waiting on a social login wall.
       const suppliedText = content.text?.trim();
-      const metadata =
-        suppliedText || content.platform === "text"
-          ? { title: "Shared recipe", description: suppliedText ?? "" }
-          : await this.fetchPageMetadata(content.url);
+      const analyze = async (metadata: { title: string; description: string }) => {
+        const response = await generateAIContent(
+          buildTextRecipeRequest(this.buildAnalysisPrompt(content, metadata))
+        );
+        return this.parseResponse(response, content.url);
+      };
+      let suppliedResult: RecipeAnalysisResult | undefined;
+      if (suppliedText) {
+        suppliedResult = await analyze({ title: "Shared recipe", description: suppliedText });
+        if (
+          (suppliedResult.recipe &&
+            suppliedResult.isCookingVideo &&
+            suppliedResult.confidence >= 0.6) ||
+          !content.url ||
+          content.platform === "text"
+        )
+          return suppliedResult;
+      }
+      const metadata = content.url
+        ? await this.fetchPageMetadata(content.url)
+        : { title: "", description: "" };
       if (!metadata.description.trim())
-        return {
-          isCookingVideo: false,
-          confidence: 0,
-          errorMessage: "Recipe text wasn't accessible. Paste the full caption to import it.",
-        };
+        return (
+          suppliedResult ?? {
+            isCookingVideo: false,
+            confidence: 0,
+            errorMessage: "Recipe text wasn't accessible. Paste the full caption to import it.",
+          }
+        );
       log.info("SocialRecipeService: Extracted metadata title:", metadata.title);
 
       // 2. Build prompt with metadata
-      const prompt = this.buildAnalysisPrompt(content, metadata);
-
-      const response = await generateAIContent(buildTextRecipeRequest(prompt));
-
-      const result = this.parseResponse(response, content.url);
-      return result;
+      if (suppliedResult && metadata.description.trim() === suppliedText) return suppliedResult;
+      return await analyze(metadata);
     } catch (error) {
       log.error(`Error analyzing ${content.platform} content:`, error);
 
@@ -73,68 +90,19 @@ export class SocialRecipeService {
     image?: string;
   }> {
     try {
-      const response = await fetch(url, {
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1",
-          Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      const response = await fetchWithTimeout(
+        url,
+        {
+          headers: {
+            "User-Agent":
+              "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1",
+            Accept: "text/html,application/xhtml+xml",
+          },
         },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch URL: ${response.status}`);
-      }
-
-      const html = await response.text();
-
-      // Helper to extract meta tags
-      const getMeta = (property: string) => {
-        const match = html.match(
-          new RegExp(`<meta[^>]*property=["']${property}["'][^>]*content=["']([^"']+)["']`, "i")
-        );
-        return match ? match[1] : "";
-      };
-
-      let title = getMeta("og:title") || getMeta("twitter:title") || "";
-      let description =
-        getMeta("og:description") || getMeta("twitter:description") || getMeta("description") || "";
-      const image = getMeta("og:image") || getMeta("twitter:image");
-
-      // Instagram-specific scraping to get the full caption
-      // Often hidden in <script type="application/ld+json">
-      if (url.includes("instagram.com")) {
-        // Try Schema.org JSON-LD which often contains the caption
-        const jsonLdMatch = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
-        if (jsonLdMatch && jsonLdMatch[1]) {
-          try {
-            const data = JSON.parse(jsonLdMatch[1]);
-            // Schema.org/SocialMediaPosting often stores caption in 'articleBody' or 'headline' or 'text'
-            // Sometimes it's a generic object with 'name' or 'description'
-
-            // Helper to recursively find relevant text in JSON structure
-            const findText = (obj: any): string => {
-              if (!obj) return "";
-              if (obj.articleBody) return obj.articleBody;
-              if (obj.text) return obj.text;
-              if (obj.headline) return obj.headline;
-              if (obj.description && obj.description.length > description.length)
-                return obj.description;
-              return "";
-            };
-
-            const extractedText = findText(data);
-            if (extractedText) {
-              description = extractedText;
-            }
-
-            if (data.name) title = data.name;
-          } catch (e) {
-            // Ignore parse errors
-          }
-        }
-      }
-
-      return { title, description, image };
+        20_000
+      );
+      if (!response.ok) throw new Error(`Failed to fetch URL: ${response.status}`);
+      return extractSocialMetadata(await response.text());
     } catch (error) {
       log.warn("SocialRecipeService: Failed to fetch metadata", error);
       return { title: "", description: "" };

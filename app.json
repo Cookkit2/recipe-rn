@@ -166,13 +166,20 @@
       [
         "./plugins/withRecipeSharing.js",
         {
-          "disableAndroid": true,
-          "iosShareExtensionName": "Cookkit Import",
-          "iosAppGroupIdentifier": "group.app.cookkit.cookkit",
-          "iosActivationRules": {
-            "NSExtensionActivationSupportsText": true,
-            "NSExtensionActivationSupportsWebURLWithMaxCount": 1,
-            "NSExtensionActivationSupportsWebPageWithMaxCount": 1
+          "ios": {
+            "enabled": true,
+            "extensionBundleIdentifier": "app.cookkit.cookkit.share-extension",
+            "appGroupId": "group.app.cookkit.cookkit",
+            "activationRule": {
+              "supportsText": true,
+              "supportsWebUrlWithMaxCount": 1,
+              "supportsWebPageWithMaxCount": 1
+            }
+          },
+          "android": {
+            "enabled": true,
+            "singleShareMimeTypes": ["text/plain", "text/html"],
+            "multipleShareMimeTypes": ["text/plain", "text/html"]
           }
         }
       ]

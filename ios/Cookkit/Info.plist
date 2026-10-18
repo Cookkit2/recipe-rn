@@ -126,5 +126,7 @@
 			</array>
 		</dict>
 	</dict>
+	<key>ExpoShareIntoAppGroupId</key>
+	<string>group.app.cookkit.cookkit</string>
 </dict>
 </plist>

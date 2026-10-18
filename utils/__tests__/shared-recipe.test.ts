@@ -1,4 +1,24 @@
-import { normalizeSharedRecipe } from "../shared-recipe";
+import { normalizeIncomingRecipeShare, normalizeSharedRecipe } from "../shared-recipe";
+
+it("combines SDK 58 URL and caption payloads without importing attachments", () => {
+  expect(
+    normalizeIncomingRecipeShare([
+      { shareType: "url", value: "https://www.instagram.com/p/abc/" },
+      { shareType: "text", value: "Whisk 2 eggs and fry." },
+      { shareType: "text", value: "Whisk 2 eggs and fry." },
+      { shareType: "image", value: "file:///private/photo.jpg" },
+    ])
+  ).toEqual({ url: "https://www.instagram.com/p/abc/", text: "Whisk 2 eggs and fry." });
+});
+it("handles Android's text-only URL shares and rejects media-only shares", () => {
+  expect(normalizeIncomingRecipeShare([{ value: "Try https://youtu.be/abc" }])).toEqual({
+    url: "https://youtu.be/abc",
+    text: "Try",
+  });
+  expect(
+    normalizeIncomingRecipeShare([{ shareType: "video", value: "content://video/1" }])
+  ).toBeNull();
+});
 it("accepts a shared social URL and separates the caption", () => {
   expect(
     normalizeSharedRecipe({

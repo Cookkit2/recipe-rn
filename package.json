@@ -69,7 +69,7 @@
     "expo-notifications": "~58.1.5",
     "expo-router": "~58.0.23",
     "expo-secure-store": "~58.0.2",
-    "expo-share-intent": "^8.0.1",
+    "expo-sharing": "~58.0.19",
     "expo-speech": "~58.0.3",
     "expo-speech-recognition": "58.0.0",
     "expo-splash-screen": "~58.0.10",

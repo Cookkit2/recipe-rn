@@ -1,5 +1,7 @@
 jest.mock("expo-notifications", () => ({
   scheduleNotificationAsync: jest.fn().mockResolvedValue("scheduled"),
+  setNotificationChannelAsync: jest.fn().mockResolvedValue(undefined),
+  AndroidImportance: { HIGH: 4 },
   SchedulableTriggerInputTypes: { TIME_INTERVAL: "timeInterval", DATE: "date" },
 }));
 jest.mock("react-native", () => ({ Platform: { OS: "ios" } }));
@@ -10,8 +12,24 @@ jest.mock("~/utils/notification-settings", () => ({
   },
 }));
 import * as Notifications from "expo-notifications";
+import { Platform } from "react-native";
 import { notificationSettingsService } from "~/utils/notification-settings";
-import { scheduleNotification } from "../notification-service";
+import { initializeNotifications, scheduleNotification } from "../notification-service";
+
+it("uses Android's default channel sound without naming a nonexistent custom sound file", async () => {
+  const platform = jest.replaceProperty(Platform, "OS", "android");
+  try {
+    await initializeNotifications();
+    expect(Notifications.setNotificationChannelAsync).toHaveBeenCalledWith("default", {
+      name: "Default",
+      importance: Notifications.AndroidImportance.HIGH,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: "#FF231F7C",
+    });
+  } finally {
+    platform.restore();
+  }
+});
 
 describe("notification grouping", () => {
   beforeEach(() => jest.clearAllMocks());

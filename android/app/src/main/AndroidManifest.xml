@@ -31,6 +31,18 @@
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="cookkit"/>
       </intent-filter>
+      <intent-filter android:autoVerify="false" expo-sharing-intent-filters="true">
+        <action android:name="android.intent.action.SEND"/>
+        <data android:mimeType="text/plain"/>
+        <data android:mimeType="text/html"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+      </intent-filter>
+      <intent-filter android:autoVerify="false" expo-sharing-intent-filters="true">
+        <action android:name="android.intent.action.SEND_MULTIPLE"/>
+        <data android:mimeType="text/plain"/>
+        <data android:mimeType="text/html"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+      </intent-filter>
     </activity>
   </application>
 </manifest>
