@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet } from "react-native";
-import { fireEvent, render } from "@testing-library/react-native";
+import { act, fireEvent, render } from "@testing-library/react-native";
 import RecipeLists from "../RecipeLists";
 
 const recommendations = {
@@ -45,8 +45,9 @@ jest.mock("react-native-reanimated", () => ({
   useAnimatedStyle: (callback: () => unknown) => callback(),
   withTiming: (value: number) => value,
 }));
-jest.mock("@legendapp/list", () => ({
-  LegendList: (props: object) =>
+jest.mock("~/components/Shared/RecyclingList", () => ({
+  __esModule: true,
+  default: (props: object) =>
     require("react").createElement(require("react-native").View, { ...props, testID: "recipes" }),
 }));
 jest.mock("../RecipeItemCard", () => ({ __esModule: true, default: () => null }));
@@ -66,13 +67,7 @@ it("keeps the list viewport stable while crossing the scroll decoration threshol
   };
   const initialGeometry = geometry();
   for (const y of [9, 11, 50, 9, 0]) {
-    await fireEvent.scroll(screen.getByTestId("recipes"), {
-      nativeEvent: {
-        contentOffset: { x: 0, y },
-        layoutMeasurement: { width: 400, height: 600 },
-        contentSize: { width: 400, height: 650 },
-      },
-    });
+    await fireEvent(screen.getByTestId("recipes"), "scrolledChange", y > 10);
     await screen.rerender(<RecipeLists />);
     expect(geometry()).toEqual(initialGeometry);
   }
@@ -80,7 +75,36 @@ it("keeps the list viewport stable while crossing the scroll decoration threshol
 
 it("uses safe-area spacing rather than padding that compensates for an offscreen viewport", async () => {
   const screen = await render(<RecipeLists />);
-  const padding = screen.getByTestId("recipes").props.contentContainerStyle.paddingBottom;
+  const padding = screen.getByTestId("recipes").props.contentPadding.bottom;
   expect(padding).toBeGreaterThanOrEqual(34);
   expect(padding).toBeLessThanOrEqual(34 + 32);
+});
+
+it("loads more and prefetches from visible item indices rather than estimated scroll pixels", async () => {
+  jest.useFakeTimers();
+  const original = recommendations.recipes;
+  recommendations.recipes = Array.from({ length: 75 }, (_, id) => ({
+    recipe: { id, title: `Recipe ${id}`, imageUrl: `https://example.com/${id}.jpg` },
+  }));
+  try {
+    const screen = await render(<RecipeLists />);
+    expect(screen.getByTestId("recipes").props.data).toHaveLength(30);
+    await fireEvent(screen.getByTestId("recipes"), "visibleRangeChange", { first: 4, last: 9 });
+    await act(async () => {
+      jest.advanceTimersByTime(200);
+    });
+    expect(screen.getByTestId("recipes").props.data).toHaveLength(30);
+    expect(prefetch).toHaveBeenLastCalledWith(
+      Array.from({ length: 6 }, (_, index) => `https://example.com/${index + 4}.jpg`)
+    );
+    await fireEvent(screen.getByTestId("recipes"), "visibleRangeChange", { first: 20, last: 25 });
+    await act(async () => {
+      jest.advanceTimersByTime(200);
+    });
+    expect(screen.getByTestId("recipes").props.data).toHaveLength(60);
+    await screen.unmount();
+  } finally {
+    recommendations.recipes = original;
+    jest.useRealTimers();
+  }
 });

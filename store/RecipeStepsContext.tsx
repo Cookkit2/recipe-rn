@@ -4,7 +4,7 @@ import type { Model } from "@nozbe/watermelondb";
 import { useRouter } from "expo-router";
 import { useAnimatedReaction, useSharedValue, type SharedValue } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
-import type { ICarouselInstance } from "react-native-reanimated-carousel";
+import type { CarouselRef } from "react-native-reanimated-carousel";
 import type { TextLoopRef } from "~/components/ui/TextLoop";
 import type { Recipe, RecipeIngredient } from "~/types/Recipe";
 import type { PantryItem } from "~/types/PantryItem";
@@ -37,7 +37,7 @@ interface RecipeStepsContextType {
   setCurrentStep: (value: number) => void;
   goToNextStep: (servings: number) => void;
   goToPreviousStep: () => void;
-  carouselRef: React.RefObject<ICarouselInstance | null>;
+  carouselRef: React.RefObject<CarouselRef | null>;
   stepPages: StepPageData[];
   progress: SharedValue<number>;
   recipe: Recipe;
@@ -71,7 +71,7 @@ export function RecipeStepsProvider({
 
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState<number>(0);
-  const carouselRef = useRef<ICarouselInstance | null>(null);
+  const carouselRef = useRef<CarouselRef | null>(null);
   const progress = useSharedValue<number>(0);
 
   // Get pantry items and mutations for ingredient removal

@@ -2,7 +2,6 @@ import React from "react";
 import { Dimensions, StyleSheet } from "react-native";
 import { render } from "@testing-library/react-native";
 import PantryWrapper from "../PantryWrapper";
-import { EXPANDED_HEIGHT } from "~/constants/pantry";
 import { TEST_IDS } from "~/constants/test-ids";
 
 const pantry = {
@@ -12,6 +11,7 @@ const pantry = {
   context: { value: { y: 0 } },
   isGestureActive: { value: false },
   collapsedHeight: 86,
+  expandedHeight: Dimensions.get("window").height * 0.75,
 };
 
 jest.mock("~/store/PantryContext", () => ({ usePantryStore: () => pantry }));
@@ -26,7 +26,12 @@ jest.mock("react-native-gesture-handler", () => ({
   GestureDetector: ({ children }: { children: React.ReactNode }) => children,
   Gesture: {
     Pan: () => {
-      const gesture = { onStart: jest.fn(), onUpdate: jest.fn(), onEnd: jest.fn() };
+      const gesture = {
+        activeOffsetY: jest.fn(),
+        onStart: jest.fn(),
+        onUpdate: jest.fn(),
+        onEnd: jest.fn(),
+      };
       Object.values(gesture).forEach((handler) => handler.mockReturnValue(gesture));
       return gesture;
     },
@@ -53,7 +58,7 @@ describe("recipe drawer viewport", () => {
     ["collapsed", false, 0],
     ["peek", true, 0],
     ["partially expanded", true, -150],
-    ["expanded", true, -EXPANDED_HEIGHT + pantry.collapsedHeight],
+    ["expanded", true, -pantry.expandedHeight + pantry.collapsedHeight],
   ] as const)("keeps its bottom inside the screen when %s", async (_, open, translation) => {
     pantry.isRecipeOpen = open;
     pantry.translateY.value = translation;
@@ -66,5 +71,20 @@ describe("recipe drawer viewport", () => {
     expect(style.bottom).toBe(0);
     expect(style.height).toBeUndefined();
     expect(drawer.props.className.split(/\s+/)).not.toContain("h-full");
+  });
+
+  it("recalculates the drawer viewport after the window is resized", async () => {
+    const dimensions = jest.spyOn(require("react-native"), "useWindowDimensions");
+    dimensions.mockReturnValue({ width: 430, height: 900, scale: 1, fontScale: 1 });
+    pantry.isRecipeOpen = true;
+    pantry.translateY.value = -200;
+    const screen = await render(<PantryWrapper />);
+    const top = () =>
+      StyleSheet.flatten(screen.getByTestId(TEST_IDS.home.recipeSheet).props.style).top;
+    expect(top()).toBe(900 - 278);
+    dimensions.mockReturnValue({ width: 390, height: 600, scale: 1, fontScale: 1 });
+    await screen.rerender(<PantryWrapper />);
+    expect(top()).toBe(600 - 278);
+    dimensions.mockRestore();
   });
 });

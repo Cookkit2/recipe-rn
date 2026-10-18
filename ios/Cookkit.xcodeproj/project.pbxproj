@@ -7,101 +7,141 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		108F3FB39C10402883D8E80D /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 3895E0AF532941C0AAD9639C /* PrivacyInfo.xcprivacy */; };
+		02542B2261F145D0BA3E9705 /* Urbanist-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 82E229C1EE2F4546A03D86F4 /* Urbanist-Black.ttf */; };
+		0C61BC87CDF542ED88354F19 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB4FE4A1EB2F4FA7A449CCDD /* ShareViewController.swift */; };
+		0C9FA7ABD5564BE082B9E91C /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C6901AD46E3442FBE0C068C /* CoreML.framework */; };
+		0EA622C2EB894B1BBE821B99 /* ExpoWidgetsTarget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 3BD3FC7EF8DD438FB84855DD /* ExpoWidgetsTarget.appex */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		1C53758F7D9F492881137BBB /* ShareExtensionPreprocessor.js in Resources */ = {isa = PBXBuildFile; fileRef = 11F8728303284F8D81BAA5E1 /* ShareExtensionPreprocessor.js */; };
-		2C8E5774092AB56D517AA056 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E4F08FD69B53F86975553B40 /* PrivacyInfo.xcprivacy */; };
-		2E901F1741E71D22E70754DD /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FAA9BA2F9EE94E8DDE1F2BB /* ExpoModulesProvider.swift */; };
-		31F62B129FD8428E8DD28451 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 482367F2397641139EBC5571 /* ShareViewController.swift */; };
-		36DA43DCA0DC40D699FC9ABD /* Urbanist-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B39509CBFC694E8FB45D2EB0 /* Urbanist-SemiBold.ttf */; };
+		280BD1EC3C504B67AC7615E9 /* index.swift in Sources */ = {isa = PBXBuildFile; fileRef = B680E8977A334B04A40EB461 /* index.swift */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		423EDA1A605D404CB358BF9E /* Urbanist-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 228E08E0BEA843CAAA5F90B9 /* Urbanist-Regular.ttf */; };
-		4533FA4004E54C75A626BB96 /* Urbanist-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A55C37613FFE489FA8CD42D0 /* Urbanist-Bold.ttf */; };
-		7183CD28078047F9966D5A44 /* Urbanist-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1346B27EF3FC434694DAC0AC /* Urbanist-ExtraBold.ttf */; };
-		83540C43D4BC4AF4B8D7403D /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F3D0E1BB58574193BDAAFB38 /* CoreML.framework */; };
-		95A236C726BC43CBB7852F81 /* Urbanist-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A549ECB25B4A44429842B260 /* Urbanist-Light.ttf */; };
-		A44FA367E3FC4AE2BA79C127 /* Urbanist-ExtraLight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 97B9E2E2876D48D1B648170A /* Urbanist-ExtraLight.ttf */; };
-		B05AF2A9505D46939B3623EA /* Urbanist-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0C59B3840C614F5998BF04CA /* Urbanist-Medium.ttf */; };
-		B5DC7A25C41F42AAB67409E6 /* BowlbyOne-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 202C4643BC344B68AFFB7BD3 /* BowlbyOne-Regular.ttf */; };
+		4BA044AB8D6F45128F55417E /* Urbanist-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DEEB84047B64491AA951CC7A /* Urbanist-SemiBold.ttf */; };
+		5407BAEA94C0729BF8783FA0 /* libPods-Cookkit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 08C2C499463105A75D810F9F /* libPods-Cookkit.a */; };
+		67B6891F4FD6F4189829DD30 /* libPods-ExpoWidgetsTarget.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C5F36C32002F01D3F5FF0691 /* libPods-ExpoWidgetsTarget.a */; };
+		82B80F169A004D07B3BAD57F /* Urbanist-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F32B93C3E5C94E619956F238 /* Urbanist-Bold.ttf */; };
+		8B1BD001B3E34844A6005B82 /* Urbanist-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = CF9F543FB66E4371BECC18DC /* Urbanist-Regular.ttf */; };
+		8DBB6424A1FF41ADBEEE261C /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = CAE6ACFBCA5C412694B3C3B6 /* PrivacyInfo.xcprivacy */; };
+		8E77BCB04AA34E32A20AEFCC /* CookkitImport.appex in Copy Files */ = {isa = PBXBuildFile; fileRef = E12C5D5D97C149CDA7D5CD7E /* CookkitImport.appex */; };
+		9A22C5929EE8572FCD16723C /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF42308420323F2705A91E53 /* ExpoModulesProvider.swift */; };
+		9AECD3D1D1344E1B9DDA327F /* Urbanist-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = ED8BF65DA9F542E1B4B1FBE0 /* Urbanist-Medium.ttf */; };
+		B3B685FA3CC1C847D3F6239A /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 289FA345CEE82DD393CF2D9A /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		C1B7492DCCF24B5EA1374D5B /* CookkitImport.appex in Copy Files */ = {isa = PBXBuildFile; fileRef = 3187D2B33A7B415185E43B46 /* CookkitImport.appex */; };
-		C43DA716C4674DE8A5D3908C /* MainInterface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = DEB0B9D38277496195977EF7 /* MainInterface.storyboard */; };
-		CE63F7AFA25241FDBAF3D739 /* Urbanist-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3B6ACB5DFE184249AA8A3738 /* Urbanist-Black.ttf */; };
+		C6039CD4A4604701B6623F2C /* BowlbyOne-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 652B8620637E471B8F020182 /* BowlbyOne-Regular.ttf */; };
+		C99B7F052A614ED1AD4E63B6 /* MainInterface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E601F4DABDF24F3C83BCDB82 /* MainInterface.storyboard */; };
+		E0B9BCD0B09B45A99DA620B9 /* Urbanist-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5FF18AC08A5C4DFA9EB10D0A /* Urbanist-ExtraBold.ttf */; };
+		E1256181C5934889A37AFE85 /* Urbanist-ExtraLight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 146F91030FA7456087F9907F /* Urbanist-ExtraLight.ttf */; };
+		E241031DBFCDE75884299079 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = CAE6ACFBCA5C412694B3C3B6 /* PrivacyInfo.xcprivacy */; };
+		EFD714A7C1554673B1BB7906 /* Urbanist-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6FF0ECCE2B8944ADA418033A /* Urbanist-Light.ttf */; };
+		F0DD918F303B4412859860B2 /* ShareExtensionPreprocessor.js in Resources */ = {isa = PBXBuildFile; fileRef = CF8CCE7FB98940AA99E4938D /* ShareExtensionPreprocessor.js */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
-		F84B57EB40A687B9D64AE5E3 /* libPods-Cookkit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 918E27EAAB102E2AC0AD801A /* libPods-Cookkit.a */; };
+		F11748442D0307B40044C1D9 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748432D0307B40044C1D9 /* SceneDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		18A85983BD5849B0AF5D30E9 /* PBXContainerItemProxy */ = {
+		81D3BB87E3F64C3A8FF8AB14 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 50BD7CD29226440E96F43765;
+			remoteGlobalIDString = 1A6B1834C46B45BD8A5108AD;
 			remoteInfo = CookkitImport;
+		};
+		F74026579B9E4E0D9F19E00C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4B49058B30884AAF9A8333C5;
+			remoteInfo = ExpoWidgetsTarget;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		927999B46D534807B6F2E9D3 /* Copy Files */ = {
+		2847363018514E8497C938C7 /* Copy Files */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				C1B7492DCCF24B5EA1374D5B /* CookkitImport.appex in Copy Files */,
+				8E77BCB04AA34E32A20AEFCC /* CookkitImport.appex in Copy Files */,
 			);
 			name = "Copy Files";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E2D6E6466BD3408984F5AAAF /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				0EA622C2EB894B1BBE821B99 /* ExpoWidgetsTarget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		0C59B3840C614F5998BF04CA /* Urbanist-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Urbanist-Medium.ttf"; path = "../assets/fonts/Urbanist-Medium.ttf"; sourceTree = "<group>"; };
-		11F8728303284F8D81BAA5E1 /* ShareExtensionPreprocessor.js */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = ShareExtensionPreprocessor.js; path = ShareExtensionPreprocessor.js; sourceTree = "<group>"; };
-		1346B27EF3FC434694DAC0AC /* Urbanist-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Urbanist-ExtraBold.ttf"; path = "../assets/fonts/Urbanist-ExtraBold.ttf"; sourceTree = "<group>"; };
+		08C2C499463105A75D810F9F /* libPods-Cookkit.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Cookkit.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07F961A680F5B00A75B9A /* Cookkit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Cookkit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Cookkit/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Cookkit/Info.plist; sourceTree = "<group>"; };
-		202C4643BC344B68AFFB7BD3 /* BowlbyOne-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "BowlbyOne-Regular.ttf"; path = "../assets/fonts/BowlbyOne-Regular.ttf"; sourceTree = "<group>"; };
-		228E08E0BEA843CAAA5F90B9 /* Urbanist-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Urbanist-Regular.ttf"; path = "../assets/fonts/Urbanist-Regular.ttf"; sourceTree = "<group>"; };
-		2609E593E7414BB19FDD407F /* ShareExtension-Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = "ShareExtension-Info.plist"; path = "ShareExtension-Info.plist"; sourceTree = "<group>"; };
-		3187D2B33A7B415185E43B46 /* CookkitImport.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = undefined; name = CookkitImport.appex; path = CookkitImport.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		3895E0AF532941C0AAD9639C /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = PrivacyInfo.xcprivacy; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		3B6ACB5DFE184249AA8A3738 /* Urbanist-Black.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Urbanist-Black.ttf"; path = "../assets/fonts/Urbanist-Black.ttf"; sourceTree = "<group>"; };
-		482367F2397641139EBC5571 /* ShareViewController.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = ShareViewController.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
-		53AD85B051AB4072B2AB0F9A /* ShareExtension.entitlements */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = ShareExtension.entitlements; path = ShareExtension.entitlements; sourceTree = "<group>"; };
-		6FAA9BA2F9EE94E8DDE1F2BB /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Cookkit/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		918E27EAAB102E2AC0AD801A /* libPods-Cookkit.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Cookkit.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		93C34C836B10A223DBE74D2E /* Pods-Cookkit.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Cookkit.release.xcconfig"; path = "Target Support Files/Pods-Cookkit/Pods-Cookkit.release.xcconfig"; sourceTree = "<group>"; };
-		97B9E2E2876D48D1B648170A /* Urbanist-ExtraLight.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Urbanist-ExtraLight.ttf"; path = "../assets/fonts/Urbanist-ExtraLight.ttf"; sourceTree = "<group>"; };
-		A549ECB25B4A44429842B260 /* Urbanist-Light.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Urbanist-Light.ttf"; path = "../assets/fonts/Urbanist-Light.ttf"; sourceTree = "<group>"; };
-		A55C37613FFE489FA8CD42D0 /* Urbanist-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Urbanist-Bold.ttf"; path = "../assets/fonts/Urbanist-Bold.ttf"; sourceTree = "<group>"; };
+		146F91030FA7456087F9907F /* Urbanist-ExtraLight.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Urbanist-ExtraLight.ttf"; path = "../assets/fonts/Urbanist-ExtraLight.ttf"; sourceTree = "<group>"; };
+		289FA345CEE82DD393CF2D9A /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-ExpoWidgetsTarget/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		3BD3FC7EF8DD438FB84855DD /* ExpoWidgetsTarget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = undefined; name = ExpoWidgetsTarget.appex; path = ExpoWidgetsTarget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		5BE20A6BD68C42579B467BBB /* ExpoWidgetsTarget.entitlements */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = ExpoWidgetsTarget.entitlements; path = ExpoWidgetsTarget.entitlements; sourceTree = "<group>"; };
+		5FF18AC08A5C4DFA9EB10D0A /* Urbanist-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Urbanist-ExtraBold.ttf"; path = "../assets/fonts/Urbanist-ExtraBold.ttf"; sourceTree = "<group>"; };
+		61891FEAF7373CCFEE50321E /* Pods-Cookkit.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Cookkit.debug.xcconfig"; path = "Target Support Files/Pods-Cookkit/Pods-Cookkit.debug.xcconfig"; sourceTree = "<group>"; };
+		652B8620637E471B8F020182 /* BowlbyOne-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "BowlbyOne-Regular.ttf"; path = "../assets/fonts/BowlbyOne-Regular.ttf"; sourceTree = "<group>"; };
+		69E1511DB3A445779859349A /* ExpoWidgetsLayoutRegistry.config.json */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = ExpoWidgetsLayoutRegistry.config.json; path = ExpoWidgetsLayoutRegistry.config.json; sourceTree = "<group>"; };
+		6FF0ECCE2B8944ADA418033A /* Urbanist-Light.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Urbanist-Light.ttf"; path = "../assets/fonts/Urbanist-Light.ttf"; sourceTree = "<group>"; };
+		75A5522F5A6DA2266F4C3EEE /* Pods-ExpoWidgetsTarget.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ExpoWidgetsTarget.debug.xcconfig"; path = "Target Support Files/Pods-ExpoWidgetsTarget/Pods-ExpoWidgetsTarget.debug.xcconfig"; sourceTree = "<group>"; };
+		82E229C1EE2F4546A03D86F4 /* Urbanist-Black.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Urbanist-Black.ttf"; path = "../assets/fonts/Urbanist-Black.ttf"; sourceTree = "<group>"; };
+		9C6901AD46E3442FBE0C068C /* CoreML.framework */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = wrapper.framework; name = CoreML.framework; path = System/Library/Frameworks/CoreML.framework; sourceTree = SDKROOT; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = Cookkit/SplashScreen.storyboard; sourceTree = "<group>"; };
-		B39509CBFC694E8FB45D2EB0 /* Urbanist-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Urbanist-SemiBold.ttf"; path = "../assets/fonts/Urbanist-SemiBold.ttf"; sourceTree = "<group>"; };
+		B56AEB59B818E7F07369B409 /* Pods-ExpoWidgetsTarget.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ExpoWidgetsTarget.release.xcconfig"; path = "Target Support Files/Pods-ExpoWidgetsTarget/Pods-ExpoWidgetsTarget.release.xcconfig"; sourceTree = "<group>"; };
+		B680E8977A334B04A40EB461 /* index.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = index.swift; path = index.swift; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		C2680D8FD916FCCA6BB59A98 /* Pods-Cookkit.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Cookkit.debug.xcconfig"; path = "Target Support Files/Pods-Cookkit/Pods-Cookkit.debug.xcconfig"; sourceTree = "<group>"; };
-		DEB0B9D38277496195977EF7 /* MainInterface.storyboard */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = MainInterface.storyboard; path = MainInterface.storyboard; sourceTree = "<group>"; };
-		E4F08FD69B53F86975553B40 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Cookkit/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		C5F36C32002F01D3F5FF0691 /* libPods-ExpoWidgetsTarget.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ExpoWidgetsTarget.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C6C545143AF46E610E74A823 /* Pods-Cookkit.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Cookkit.release.xcconfig"; path = "Target Support Files/Pods-Cookkit/Pods-Cookkit.release.xcconfig"; sourceTree = "<group>"; };
+		CAE6ACFBCA5C412694B3C3B6 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = PrivacyInfo.xcprivacy; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		CF42308420323F2705A91E53 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Cookkit/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		CF8CCE7FB98940AA99E4938D /* ShareExtensionPreprocessor.js */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = ShareExtensionPreprocessor.js; path = ShareExtensionPreprocessor.js; sourceTree = "<group>"; };
+		CF9F543FB66E4371BECC18DC /* Urbanist-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Urbanist-Regular.ttf"; path = "../assets/fonts/Urbanist-Regular.ttf"; sourceTree = "<group>"; };
+		DB4FE4A1EB2F4FA7A449CCDD /* ShareViewController.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = ShareViewController.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
+		DD00A2F3B4A24E20A83E658E /* Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = Info.plist; path = Info.plist; sourceTree = "<group>"; };
+		DEEB84047B64491AA951CC7A /* Urbanist-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Urbanist-SemiBold.ttf"; path = "../assets/fonts/Urbanist-SemiBold.ttf"; sourceTree = "<group>"; };
+		E12C5D5D97C149CDA7D5CD7E /* CookkitImport.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = undefined; name = CookkitImport.appex; path = CookkitImport.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		E601F4DABDF24F3C83BCDB82 /* MainInterface.storyboard */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = MainInterface.storyboard; path = MainInterface.storyboard; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		ED8BF65DA9F542E1B4B1FBE0 /* Urbanist-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Urbanist-Medium.ttf"; path = "../assets/fonts/Urbanist-Medium.ttf"; sourceTree = "<group>"; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Cookkit/AppDelegate.swift; sourceTree = "<group>"; };
+		F11748432D0307B40044C1D9 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SceneDelegate.swift; path = Cookkit/SceneDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* Cookkit-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "Cookkit-Bridging-Header.h"; path = "Cookkit/Cookkit-Bridging-Header.h"; sourceTree = "<group>"; };
-		F3D0E1BB58574193BDAAFB38 /* CoreML.framework */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = wrapper.framework; name = CoreML.framework; path = System/Library/Frameworks/CoreML.framework; sourceTree = SDKROOT; };
+		F32B93C3E5C94E619956F238 /* Urbanist-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Urbanist-Bold.ttf"; path = "../assets/fonts/Urbanist-Bold.ttf"; sourceTree = "<group>"; };
+		F5CA9A3B05914B91986CAAEE /* ShareExtension.entitlements */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = ShareExtension.entitlements; path = ShareExtension.entitlements; sourceTree = "<group>"; };
+		F79541EB625947F4B762FAC4 /* ShareExtension-Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = "ShareExtension-Info.plist"; path = "ShareExtension-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		09AB7B961B524359B69E9A22 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		13B07F8C1A680F5B00A75B9A /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				83540C43D4BC4AF4B8D7403D /* CoreML.framework in Frameworks */,
-				F84B57EB40A687B9D64AE5E3 /* libPods-Cookkit.a in Frameworks */,
+				0C9FA7ABD5564BE082B9E91C /* CoreML.framework in Frameworks */,
+				5407BAEA94C0729BF8783FA0 /* libPods-Cookkit.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F1E0CE3194124218ACC1ED3E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				67B6891F4FD6F4189829DD30 /* libPods-ExpoWidgetsTarget.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F77341C5B4554ACA9E6B4EBF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,54 +152,69 @@
 			isa = PBXGroup;
 			children = (
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
+				F11748432D0307B40044C1D9 /* SceneDelegate.swift */,
 				F11748442D0722820044C1D9 /* Cookkit-Bridging-Header.h */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				E4F08FD69B53F86975553B40 /* PrivacyInfo.xcprivacy */,
 			);
 			name = Cookkit;
-			sourceTree = "<group>";
-		};
-		14F73471AB9E4B549C2B3C1D /* CookkitImport */ = {
-			isa = PBXGroup;
-			children = (
-				482367F2397641139EBC5571 /* ShareViewController.swift */,
-				DEB0B9D38277496195977EF7 /* MainInterface.storyboard */,
-				11F8728303284F8D81BAA5E1 /* ShareExtensionPreprocessor.js */,
-				3895E0AF532941C0AAD9639C /* PrivacyInfo.xcprivacy */,
-				2609E593E7414BB19FDD407F /* ShareExtension-Info.plist */,
-				53AD85B051AB4072B2AB0F9A /* ShareExtension.entitlements */,
-			);
-			name = CookkitImport;
-			path = CookkitImport;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				F3D0E1BB58574193BDAAFB38 /* CoreML.framework */,
-				918E27EAAB102E2AC0AD801A /* libPods-Cookkit.a */,
+				9C6901AD46E3442FBE0C068C /* CoreML.framework */,
+				08C2C499463105A75D810F9F /* libPods-Cookkit.a */,
+				C5F36C32002F01D3F5FF0691 /* libPods-ExpoWidgetsTarget.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		4A8C5E28958649320869D80B /* Pods */ = {
+		4422C3A41FFD404B893A69EB /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				C2680D8FD916FCCA6BB59A98 /* Pods-Cookkit.debug.xcconfig */,
-				93C34C836B10A223DBE74D2E /* Pods-Cookkit.release.xcconfig */,
+				652B8620637E471B8F020182 /* BowlbyOne-Regular.ttf */,
+				146F91030FA7456087F9907F /* Urbanist-ExtraLight.ttf */,
+				6FF0ECCE2B8944ADA418033A /* Urbanist-Light.ttf */,
+				CF9F543FB66E4371BECC18DC /* Urbanist-Regular.ttf */,
+				ED8BF65DA9F542E1B4B1FBE0 /* Urbanist-Medium.ttf */,
+				DEEB84047B64491AA951CC7A /* Urbanist-SemiBold.ttf */,
+				F32B93C3E5C94E619956F238 /* Urbanist-Bold.ttf */,
+				5FF18AC08A5C4DFA9EB10D0A /* Urbanist-ExtraBold.ttf */,
+				82E229C1EE2F4546A03D86F4 /* Urbanist-Black.ttf */,
 			);
-			name = Pods;
-			path = Pods;
+			name = Resources;
+			path = "";
 			sourceTree = "<group>";
 		};
-		72C6F3A9AA96EDC31BFFA4F6 /* ExpoModulesProviders */ = {
+		4479FA85FC6B488E81ECAB6D /* ExpoWidgetsTarget */ = {
 			isa = PBXGroup;
 			children = (
-				A05C7021A32382EBBCD2AAB3 /* Cookkit */,
+				5BE20A6BD68C42579B467BBB /* ExpoWidgetsTarget.entitlements */,
+				DD00A2F3B4A24E20A83E658E /* Info.plist */,
+				69E1511DB3A445779859349A /* ExpoWidgetsLayoutRegistry.config.json */,
+				B680E8977A334B04A40EB461 /* index.swift */,
+			);
+			name = ExpoWidgetsTarget;
+			path = ExpoWidgetsTarget;
+			sourceTree = "<group>";
+		};
+		4E3EB0666379007AE5D8A8F7 /* ExpoWidgetsTarget */ = {
+			isa = PBXGroup;
+			children = (
+				289FA345CEE82DD393CF2D9A /* ExpoModulesProvider.swift */,
+			);
+			name = ExpoWidgetsTarget;
+			sourceTree = "<group>";
+		};
+		7C503B2B4EF784821663304A /* ExpoModulesProviders */ = {
+			isa = PBXGroup;
+			children = (
+				CB850A879FDE6F118938188E /* Cookkit */,
+				4E3EB0666379007AE5D8A8F7 /* ExpoWidgetsTarget */,
 			);
 			name = ExpoModulesProviders;
 			sourceTree = "<group>";
@@ -178,10 +233,11 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				EEF7079DB69842E3889C96CF /* Resources */,
-				4A8C5E28958649320869D80B /* Pods */,
-				72C6F3A9AA96EDC31BFFA4F6 /* ExpoModulesProviders */,
-				14F73471AB9E4B549C2B3C1D /* CookkitImport */,
+				F52DBCAC7F9B451AB107A743 /* CookkitImport */,
+				4479FA85FC6B488E81ECAB6D /* ExpoWidgetsTarget */,
+				4422C3A41FFD404B893A69EB /* Resources */,
+				C2DC059296EA93A57D1BDE62 /* Pods */,
+				7C503B2B4EF784821663304A /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -192,17 +248,10 @@
 			isa = PBXGroup;
 			children = (
 				13B07F961A680F5B00A75B9A /* Cookkit.app */,
-				3187D2B33A7B415185E43B46 /* CookkitImport.appex */,
+				E12C5D5D97C149CDA7D5CD7E /* CookkitImport.appex */,
+				3BD3FC7EF8DD438FB84855DD /* ExpoWidgetsTarget.appex */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		A05C7021A32382EBBCD2AAB3 /* Cookkit */ = {
-			isa = PBXGroup;
-			children = (
-				6FAA9BA2F9EE94E8DDE1F2BB /* ExpoModulesProvider.swift */,
-			);
-			name = Cookkit;
 			sourceTree = "<group>";
 		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
@@ -214,21 +263,38 @@
 			path = Cookkit/Supporting;
 			sourceTree = "<group>";
 		};
-		EEF7079DB69842E3889C96CF /* Resources */ = {
+		C2DC059296EA93A57D1BDE62 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				202C4643BC344B68AFFB7BD3 /* BowlbyOne-Regular.ttf */,
-				97B9E2E2876D48D1B648170A /* Urbanist-ExtraLight.ttf */,
-				A549ECB25B4A44429842B260 /* Urbanist-Light.ttf */,
-				228E08E0BEA843CAAA5F90B9 /* Urbanist-Regular.ttf */,
-				0C59B3840C614F5998BF04CA /* Urbanist-Medium.ttf */,
-				B39509CBFC694E8FB45D2EB0 /* Urbanist-SemiBold.ttf */,
-				A55C37613FFE489FA8CD42D0 /* Urbanist-Bold.ttf */,
-				1346B27EF3FC434694DAC0AC /* Urbanist-ExtraBold.ttf */,
-				3B6ACB5DFE184249AA8A3738 /* Urbanist-Black.ttf */,
+				61891FEAF7373CCFEE50321E /* Pods-Cookkit.debug.xcconfig */,
+				C6C545143AF46E610E74A823 /* Pods-Cookkit.release.xcconfig */,
+				75A5522F5A6DA2266F4C3EEE /* Pods-ExpoWidgetsTarget.debug.xcconfig */,
+				B56AEB59B818E7F07369B409 /* Pods-ExpoWidgetsTarget.release.xcconfig */,
 			);
-			name = Resources;
-			path = "";
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		CB850A879FDE6F118938188E /* Cookkit */ = {
+			isa = PBXGroup;
+			children = (
+				CF42308420323F2705A91E53 /* ExpoModulesProvider.swift */,
+			);
+			name = Cookkit;
+			sourceTree = "<group>";
+		};
+		F52DBCAC7F9B451AB107A743 /* CookkitImport */ = {
+			isa = PBXGroup;
+			children = (
+				DB4FE4A1EB2F4FA7A449CCDD /* ShareViewController.swift */,
+				E601F4DABDF24F3C83BCDB82 /* MainInterface.storyboard */,
+				CF8CCE7FB98940AA99E4938D /* ShareExtensionPreprocessor.js */,
+				CAE6ACFBCA5C412694B3C3B6 /* PrivacyInfo.xcprivacy */,
+				F79541EB625947F4B762FAC4 /* ShareExtension-Info.plist */,
+				F5CA9A3B05914B91986CAAEE /* ShareExtension.entitlements */,
+			);
+			name = CookkitImport;
+			path = CookkitImport;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -239,33 +305,35 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Cookkit" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				19283E808E524131105BC97C /* [Expo] Configure project */,
+				E122E1FFEAEEBB2EA3C58770 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				E54109E419B64889A5D62740 /* Upload Debug Symbols to Sentry */,
-				4B5238833C95B3FB6ED869CA /* [CP] Embed Pods Frameworks */,
-				927999B46D534807B6F2E9D3 /* Copy Files */,
+				2847363018514E8497C938C7 /* Copy Files */,
+				E2D6E6466BD3408984F5AAAF /* Embed Foundation Extensions */,
+				ACC6BBE0ABFE4E98A4001A3E /* Upload Debug Symbols to Sentry */,
+				65DC74F82E0A209FBDE1EADB /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				BEF2F8718B7C47D7B28AC25A /* PBXTargetDependency */,
+				795A699F7F61492FA6BA2A84 /* PBXTargetDependency */,
+				5775D020AA0540909D890991 /* PBXTargetDependency */,
 			);
 			name = Cookkit;
 			productName = Cookkit;
 			productReference = 13B07F961A680F5B00A75B9A /* Cookkit.app */;
 			productType = "com.apple.product-type.application";
 		};
-		50BD7CD29226440E96F43765 /* CookkitImport */ = {
+		1A6B1834C46B45BD8A5108AD /* CookkitImport */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 37191AB30DF1472E9EFB7D9E /* Build configuration list for PBXNativeTarget "CookkitImport" */;
+			buildConfigurationList = 8D7AE950AE6D4FF3BC1EC665 /* Build configuration list for PBXNativeTarget "CookkitImport" */;
 			buildPhases = (
-				C463ED5E1CB543589F6F1CF2 /* Sources */,
-				4EAA3487BC8C4EF6A22B0432 /* Resources */,
-				09AB7B961B524359B69E9A22 /* Frameworks */,
+				243E5773CFC04F19A5C1D2D8 /* Sources */,
+				242677AC769E48AF92B5D3DE /* Resources */,
+				F77341C5B4554ACA9E6B4EBF /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -273,7 +341,26 @@
 			);
 			name = CookkitImport;
 			productName = CookkitImport;
-			productReference = 3187D2B33A7B415185E43B46 /* CookkitImport.appex */;
+			productReference = E12C5D5D97C149CDA7D5CD7E /* CookkitImport.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		4B49058B30884AAF9A8333C5 /* ExpoWidgetsTarget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E0FFB9AA8603498098CC8C3C /* Build configuration list for PBXNativeTarget "ExpoWidgetsTarget" */;
+			buildPhases = (
+				2E19C1A424992BF2C215B82A /* [CP] Check Pods Manifest.lock */,
+				CF2B9A742E498B314786AA01 /* [Expo] Configure project */,
+				DA6B11C35124445097F7F69E /* Sources */,
+				F1E0CE3194124218ACC1ED3E /* Frameworks */,
+				04E2C637F261EC4FFFC3DEDB /* [CP] Copy Pods Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ExpoWidgetsTarget;
+			productName = ExpoWidgetsTarget;
+			productReference = 3BD3FC7EF8DD438FB84855DD /* ExpoWidgetsTarget.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
@@ -285,6 +372,9 @@
 				LastUpgradeCheck = 1130;
 				TargetAttributes = {
 					13B07F861A680F5B00A75B9A = {
+						LastSwiftMigration = 1250;
+					};
+					4B49058B30884AAF9A8333C5 = {
 						LastSwiftMigration = 1250;
 					};
 				};
@@ -303,7 +393,8 @@
 			projectRoot = "";
 			targets = (
 				13B07F861A680F5B00A75B9A /* Cookkit */,
-				50BD7CD29226440E96F43765 /* CookkitImport */,
+				1A6B1834C46B45BD8A5108AD /* CookkitImport */,
+				4B49058B30884AAF9A8333C5 /* ExpoWidgetsTarget */,
 			);
 		};
 /* End PBXProject section */
@@ -316,26 +407,26 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				B5DC7A25C41F42AAB67409E6 /* BowlbyOne-Regular.ttf in Resources */,
-				A44FA367E3FC4AE2BA79C127 /* Urbanist-ExtraLight.ttf in Resources */,
-				95A236C726BC43CBB7852F81 /* Urbanist-Light.ttf in Resources */,
-				423EDA1A605D404CB358BF9E /* Urbanist-Regular.ttf in Resources */,
-				B05AF2A9505D46939B3623EA /* Urbanist-Medium.ttf in Resources */,
-				36DA43DCA0DC40D699FC9ABD /* Urbanist-SemiBold.ttf in Resources */,
-				4533FA4004E54C75A626BB96 /* Urbanist-Bold.ttf in Resources */,
-				7183CD28078047F9966D5A44 /* Urbanist-ExtraBold.ttf in Resources */,
-				CE63F7AFA25241FDBAF3D739 /* Urbanist-Black.ttf in Resources */,
-				2C8E5774092AB56D517AA056 /* PrivacyInfo.xcprivacy in Resources */,
+				C6039CD4A4604701B6623F2C /* BowlbyOne-Regular.ttf in Resources */,
+				E1256181C5934889A37AFE85 /* Urbanist-ExtraLight.ttf in Resources */,
+				EFD714A7C1554673B1BB7906 /* Urbanist-Light.ttf in Resources */,
+				8B1BD001B3E34844A6005B82 /* Urbanist-Regular.ttf in Resources */,
+				9AECD3D1D1344E1B9DDA327F /* Urbanist-Medium.ttf in Resources */,
+				4BA044AB8D6F45128F55417E /* Urbanist-SemiBold.ttf in Resources */,
+				82B80F169A004D07B3BAD57F /* Urbanist-Bold.ttf in Resources */,
+				E0B9BCD0B09B45A99DA620B9 /* Urbanist-ExtraBold.ttf in Resources */,
+				02542B2261F145D0BA3E9705 /* Urbanist-Black.ttf in Resources */,
+				E241031DBFCDE75884299079 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		4EAA3487BC8C4EF6A22B0432 /* Resources */ = {
+		242677AC769E48AF92B5D3DE /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C43DA716C4674DE8A5D3908C /* MainInterface.storyboard in Resources */,
-				1C53758F7D9F492881137BBB /* ShareExtensionPreprocessor.js in Resources */,
-				108F3FB39C10402883D8E80D /* PrivacyInfo.xcprivacy in Resources */,
+				C99B7F052A614ED1AD4E63B6 /* MainInterface.storyboard in Resources */,
+				F0DD918F303B4412859860B2 /* ShareExtensionPreprocessor.js in Resources */,
+				8DBB6424A1FF41ADBEEE261C /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -357,7 +448,29 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [[ -f \"$PODS_ROOT/../.xcode.env\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env\"\nfi\nif [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.local\"\nfi\n\n# The project root by default is one level up from the ios directory\nexport PROJECT_ROOT=\"$PROJECT_DIR\"/..\n\nif [[ \"$CONFIGURATION\" = *Debug* ]]; then\n  export SKIP_BUNDLING=1\nfi\nif [[ -z \"$ENTRY_FILE\" ]]; then\n  # Set the entry JS file using the bundler's entry resolution.\n  export ENTRY_FILE=\"$(\"$NODE_BINARY\" -e \"require('expo/scripts/resolveAppEntry')\" \"$PROJECT_ROOT\" ios absolute | tail -n 1)\"\nfi\n\nif [[ -z \"$CLI_PATH\" ]]; then\n  # Use Expo CLI\n  export CLI_PATH=\"$(\"$NODE_BINARY\" --print \"require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })\")\"\nfi\nif [[ -z \"$BUNDLE_COMMAND\" ]]; then\n  # Default Expo CLI command for bundling\n  export BUNDLE_COMMAND=\"export:embed\"\nfi\n\n# Source .xcode.env.updates if it exists to allow\n# SKIP_BUNDLING to be unset if needed\nif [[ -f \"$PODS_ROOT/../.xcode.env.updates\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.updates\"\nfi\n# Source local changes to allow overrides\n# if needed\nif [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.local\"\nfi\n\n/bin/sh `\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('@sentry/react-native/package.json')) + '/scripts/sentry-xcode.sh'\"` `\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'\"`\n\n";
+			shellScript = "if [[ -f \"$SRCROOT/.xcode.env\" ]]; then\n  source \"$SRCROOT/.xcode.env\"\nfi\nif [[ -f \"$SRCROOT/.xcode.env.local\" ]]; then\n  source \"$SRCROOT/.xcode.env.local\"\nfi\n\n# The project root by default is one level up from the ios directory\nexport PROJECT_ROOT=\"$PROJECT_DIR\"/..\n\nif [[ \"$CONFIGURATION\" = *Debug* ]]; then\n  export SKIP_BUNDLING=1\nfi\nif [[ -z \"$ENTRY_FILE\" ]]; then\n  # Set the entry JS file using the bundler's entry resolution.\n  export ENTRY_FILE=\"$(\"$NODE_BINARY\" -e \"require('expo/scripts/resolveAppEntry')\" \"$PROJECT_ROOT\" ios absolute | tail -n 1)\"\nfi\n\nif [[ -z \"$CLI_PATH\" ]]; then\n  # Use Expo CLI\n  export CLI_PATH=\"$(\"$NODE_BINARY\" --print \"require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })\")\"\nfi\nif [[ -z \"$BUNDLE_COMMAND\" ]]; then\n  # Default Expo CLI command for bundling\n  export BUNDLE_COMMAND=\"export:embed\"\nfi\n\n# Source .xcode.env.updates if it exists to allow\n# SKIP_BUNDLING to be unset if needed\nif [[ -f \"$SRCROOT/.xcode.env.updates\" ]]; then\n  source \"$SRCROOT/.xcode.env.updates\"\nfi\n# Source local changes to allow overrides\n# if needed\nif [[ -f \"$SRCROOT/.xcode.env.local\" ]]; then\n  source \"$SRCROOT/.xcode.env.local\"\nfi\n\n/bin/sh \"`\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('@sentry/react-native/package.json')) + '/scripts/sentry-xcode.sh'\"`\" \"\"`\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'\"`\"\"\n\n";
+		};
+		04E2C637F261EC4FFFC3DEDB /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-ExpoWidgetsTarget/Pods-ExpoWidgetsTarget-resources.sh",
+				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoWidgets/ExpoWidgets.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/React-cxxreact/React-cxxreact_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/React-timing/React-timing_privacy.bundle",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoWidgets.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-cxxreact_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-timing_privacy.bundle",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ExpoWidgetsTarget/Pods-ExpoWidgetsTarget-resources.sh\"\n";
+			showEnvVarsInLog = 0;
 		};
 		08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -381,31 +494,29 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		19283E808E524131105BC97C /* [Expo] Configure project */ = {
+		2E19C1A424992BF2C215B82A /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputFileListPaths = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/.xcode.env",
-				"$(SRCROOT)/.xcode.env.local",
-				"$(SRCROOT)/Cookkit/Cookkit.entitlements",
-				"$(SRCROOT)/Pods/Target Support Files/Pods-Cookkit/expo-configure-project.sh",
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
 			);
-			name = "[Expo] Configure project";
+			name = "[CP] Check Pods Manifest.lock";
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(SRCROOT)/Pods/Target Support Files/Pods-Cookkit/ExpoModulesProvider.swift",
+				"$(DERIVED_FILE_DIR)/Pods-ExpoWidgetsTarget-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-Cookkit/expo-configure-project.sh\"\n";
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
 		};
-		4B5238833C95B3FB6ED869CA /* [CP] Embed Pods Frameworks */ = {
+		65DC74F82E0A209FBDE1EADB /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -436,45 +547,45 @@
 			);
 			inputPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Cookkit/Pods-Cookkit-resources.sh",
-				"${PODS_CONFIGURATION_BUILD_DIR}/EXApplication/ExpoApplication_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/EASClient/EASClient_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/ExpoConstants_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXUpdates/EXUpdates.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoApplication/ExpoApplication_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoFileSystem/ExpoFileSystem_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoNotifications/ExpoNotifications_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoSystemUI/ExpoSystemUI_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoWidgets/ExpoWidgets.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/PurchasesHybridCommon/PurchasesHybridCommon.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/RNSVG/RNSVGFilters.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/ReachabilitySwift/ReachabilitySwift.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/React-Core/React-Core_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/React-cxxreact/React-cxxreact_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/React-timing/React-timing_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/RevenueCat/RevenueCat.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/RevenueCatUI/RevenueCat_RevenueCatUI.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/SDWebImage/SDWebImage.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/Sentry/Sentry.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/TensorFlowLiteC/TensorFlowLiteC.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/TensorFlowLiteC/TensorFlowLiteCCoreML.bundle",
 			);
 			name = "[CP] Copy Pods Resources";
 			outputPaths = (
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoApplication_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EASClient_privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXConstants.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoConstants_privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXUpdates.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoApplication_privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoFileSystem_privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoNotifications_privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoSystemUI_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoWidgets.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/PurchasesHybridCommon.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/RNSVGFilters.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ReachabilitySwift.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-Core_privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-cxxreact_privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-timing_privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/RevenueCat.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/RevenueCat_RevenueCatUI.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/SDWebImage.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/Sentry.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/TensorFlowLiteC.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/TensorFlowLiteCCoreML.bundle",
 			);
@@ -483,7 +594,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Cookkit/Pods-Cookkit-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		E54109E419B64889A5D62740 /* Upload Debug Symbols to Sentry */ = {
+		ACC6BBE0ABFE4E98A4001A3E /* Upload Debug Symbols to Sentry */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -495,7 +606,55 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "/bin/sh `${NODE_BINARY:-node} --print \"require('path').dirname(require.resolve('@sentry/react-native/package.json')) + '/scripts/sentry-xcode-debug-files.sh'\"`";
+			shellScript = "/bin/sh \"`${NODE_BINARY:-node} --print \"require('path').dirname(require.resolve('@sentry/react-native/package.json')) + '/scripts/sentry-xcode-debug-files.sh'\"`\"";
+		};
+		CF2B9A742E498B314786AA01 /* [Expo] Configure project */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/.xcode.env",
+				"$(SRCROOT)/.xcode.env.local",
+				"$(SRCROOT)/ExpoWidgetsTarget/ExpoWidgetsTarget.entitlements",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-ExpoWidgetsTarget/expo-configure-project.sh",
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/Pods/Target Support Files/Pods-ExpoWidgetsTarget/ExpoModulesProvider.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-ExpoWidgetsTarget/expo-configure-project.sh\"\n";
+		};
+		E122E1FFEAEEBB2EA3C58770 /* [Expo] Configure project */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/.xcode.env",
+				"$(SRCROOT)/.xcode.env.local",
+				"$(SRCROOT)/Cookkit/Cookkit.entitlements",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-Cookkit/expo-configure-project.sh",
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/Pods/Target Support Files/Pods-Cookkit/ExpoModulesProvider.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-Cookkit/expo-configure-project.sh\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -505,32 +664,47 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				2E901F1741E71D22E70754DD /* ExpoModulesProvider.swift in Sources */,
+				F11748442D0307B40044C1D9 /* SceneDelegate.swift in Sources */,
+				9A22C5929EE8572FCD16723C /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		C463ED5E1CB543589F6F1CF2 /* Sources */ = {
+		243E5773CFC04F19A5C1D2D8 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				31F62B129FD8428E8DD28451 /* ShareViewController.swift in Sources */,
+				0C61BC87CDF542ED88354F19 /* ShareViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DA6B11C35124445097F7F69E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				280BD1EC3C504B67AC7615E9 /* index.swift in Sources */,
+				B3B685FA3CC1C847D3F6239A /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		BEF2F8718B7C47D7B28AC25A /* PBXTargetDependency */ = {
+		5775D020AA0540909D890991 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 50BD7CD29226440E96F43765 /* CookkitImport */;
-			targetProxy = 18A85983BD5849B0AF5D30E9 /* PBXContainerItemProxy */;
+			target = 4B49058B30884AAF9A8333C5 /* ExpoWidgetsTarget */;
+			targetProxy = F74026579B9E4E0D9F19E00C /* PBXContainerItemProxy */;
+		};
+		795A699F7F61492FA6BA2A84 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1A6B1834C46B45BD8A5108AD /* CookkitImport */;
+			targetProxy = 81D3BB87E3F64C3A8FF8AB14 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = C2680D8FD916FCCA6BB59A98 /* Pods-Cookkit.debug.xcconfig */;
+			baseConfigurationReference = 61891FEAF7373CCFEE50321E /* Pods-Cookkit.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -568,7 +742,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 93C34C836B10A223DBE74D2E /* Pods-Cookkit.release.xcconfig */;
+			baseConfigurationReference = C6C545143AF46E610E74A823 /* Pods-Cookkit.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -598,7 +772,7 @@
 			};
 			name = Release;
 		};
-		78F5CCD8F2614E59AF91DF18 /* Debug */ = {
+		17FCA87A266646059FFC99BE /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
@@ -627,6 +801,32 @@
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
+		};
+		617C0EAE47A34D5C86C11BAF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = CookkitImport/ShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 10;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "CookkitImport/ShareExtension-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.1.0;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
+				PRODUCT_BUNDLE_IDENTIFIER = "app.cookkit.cookkit.share-extension";
+				PRODUCT_NAME = CookkitImport;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
 		};
 		83CBBA201A601CBA00E9B192 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -696,7 +896,6 @@
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
-				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
 				TARGETED_DEVICE_FAMILY = 1;
 				USE_HERMES = true;
 			};
@@ -761,34 +960,53 @@
 				PODFILE_DIR = "$(SRCROOT)";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
-				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
 				TARGETED_DEVICE_FAMILY = 1;
 				USE_HERMES = true;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
 		};
-		A90E9E19A1614AE89450A618 /* Release */ = {
+		902D3FA757334872B6830187 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 75A5522F5A6DA2266F4C3EEE /* Pods-ExpoWidgetsTarget.debug.xcconfig */;
 			buildSettings = {
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = CookkitImport/ShareExtension.entitlements;
-				CODE_SIGN_STYLE = Automatic;
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = ExpoWidgetsTarget/ExpoWidgetsTarget.entitlements;
 				CURRENT_PROJECT_VERSION = 10;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "CookkitImport/ShareExtension-Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
+				INFOPLIST_FILE = ExpoWidgetsTarget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ExpoWidgetsTarget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
+				MARKETING_VERSION = 1.1.0;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
+				PRODUCT_BUNDLE_IDENTIFIER = app.cookkit.cookkit.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		B6FAC66130064C5A8CCB5F56 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = B56AEB59B818E7F07369B409 /* Pods-ExpoWidgetsTarget.release.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = ExpoWidgetsTarget/ExpoWidgetsTarget.entitlements;
+				CURRENT_PROJECT_VERSION = 10;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ExpoWidgetsTarget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ExpoWidgetsTarget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
 				MARKETING_VERSION = 1.1.0;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
-				PRODUCT_BUNDLE_IDENTIFIER = "app.cookkit.cookkit.share-extension";
-				PRODUCT_NAME = CookkitImport;
-				SKIP_INSTALL = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = app.cookkit.cookkit.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
@@ -806,20 +1024,29 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		37191AB30DF1472E9EFB7D9E /* Build configuration list for PBXNativeTarget "CookkitImport" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				78F5CCD8F2614E59AF91DF18 /* Debug */,
-				A90E9E19A1614AE89450A618 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "Cookkit" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				83CBBA201A601CBA00E9B192 /* Debug */,
 				83CBBA211A601CBA00E9B192 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		8D7AE950AE6D4FF3BC1EC665 /* Build configuration list for PBXNativeTarget "CookkitImport" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				17FCA87A266646059FFC99BE /* Debug */,
+				617C0EAE47A34D5C86C11BAF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E0FFB9AA8603498098CC8C3C /* Build configuration list for PBXNativeTarget "ExpoWidgetsTarget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				902D3FA757334872B6830187 /* Debug */,
+				B6FAC66130064C5A8CCB5F56 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

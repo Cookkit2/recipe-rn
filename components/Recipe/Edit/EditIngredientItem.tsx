@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { View, Pressable, TextInput, Alert } from "react-native";
+import { View, Pressable, TextInput, Alert, type TextInputInstance } from "react-native";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import { P } from "~/components/ui/typography";
@@ -24,7 +24,7 @@ export default function EditIngredientItem({
   className,
 }: EditIngredientItemProps) {
   const [nameHeight, setNameHeight] = useState<number | undefined>(undefined);
-  const nameInputRef = useRef<TextInput>(null);
+  const nameInputRef = useRef<TextInputInstance>(null);
 
   // Handle legacy "si" value - treat as "metric"
   const storedValue = storage.get(PREF_UNIT_SYSTEM_KEY) as string | undefined;

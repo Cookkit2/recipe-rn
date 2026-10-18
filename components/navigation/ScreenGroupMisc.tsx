@@ -29,6 +29,11 @@ export function getMiscScreens({
     />,
     <Stack.Screen key="meal-plan" name="meal-plan" options={{ headerShown: false }} />,
     <Stack.Screen
+      key="timers"
+      name="timers"
+      options={{ presentation: "modal", headerShown: true, headerTitle: "Cooking timers" }}
+    />,
+    <Stack.Screen
       key="grocery-list/index"
       name="grocery-list/index"
       options={{ ...commonHeaderOptions, headerTitle: "Grocery List" }}

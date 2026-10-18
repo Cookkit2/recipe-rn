@@ -51,6 +51,7 @@ export interface ScheduleNotificationOptions {
   trigger: NotificationTrigger;
   sound?: boolean;
   badge?: number;
+  threadIdentifier?: string;
 }
 
 // ============================================

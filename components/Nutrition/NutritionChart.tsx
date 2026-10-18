@@ -1,8 +1,7 @@
 import * as React from "react";
-import { View } from "react-native";
+import { View, useWindowDimensions } from "react-native";
 import Svg, { Line, Rect, Text as SvgText } from "react-native-svg";
 import {
-  CHART_WIDTH,
   CHART_HEIGHT,
   CHART_PADDING,
   ChartEmptyState,
@@ -34,20 +33,20 @@ function getDayAbbreviation(dateString: string): string {
   return date.toLocaleDateString("en-US", { weekday: "short" });
 }
 
-function AverageCalorieLine({ avgY }: { avgY: number }) {
+function AverageCalorieLine({ avgY, chartWidth }: { avgY: number; chartWidth: number }) {
   return (
     <>
       <Line
         x1={CHART_PADDING}
         y1={avgY}
-        x2={CHART_WIDTH - CHART_PADDING}
+        x2={chartWidth - CHART_PADDING}
         y2={avgY}
         stroke="#6b7280"
         strokeWidth={1}
         strokeDasharray="6 4"
       />
       <SvgText
-        x={CHART_WIDTH - CHART_PADDING + 2}
+        x={chartWidth - CHART_PADDING + 2}
         y={avgY - 2}
         fontSize={9}
         fill="#6b7280"
@@ -172,11 +171,13 @@ function XAxisLabels({
 }
 
 export function NutritionChart({ data, className }: NutritionChartProps) {
+  const { width } = useWindowDimensions();
+  const chartWidth = Math.max(100, width - 48);
   let content;
   if (data.length === 0) {
     content = <ChartEmptyState message="No nutrition data available for this period" />;
   } else {
-    const innerWidth = CHART_WIDTH - CHART_PADDING * 2;
+    const innerWidth = chartWidth - CHART_PADDING * 2;
     const innerHeight = CHART_HEIGHT - CHART_PADDING * 2;
 
     let maxCalories = 1;
@@ -205,12 +206,12 @@ export function NutritionChart({ data, className }: NutritionChartProps) {
 
     content = (
       <View className="mt-2">
-        <Svg width={CHART_WIDTH} height={CHART_HEIGHT}>
+        <Svg width={chartWidth} height={CHART_HEIGHT}>
           {/* Grid lines */}
-          {renderGridLines(gridLines)}
+          {renderGridLines(gridLines, chartWidth)}
 
           {/* Average calorie line */}
-          <AverageCalorieLine avgY={avgY} />
+          <AverageCalorieLine avgY={avgY} chartWidth={chartWidth} />
 
           {/* Stacked bars */}
           <StackedBars

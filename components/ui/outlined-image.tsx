@@ -8,6 +8,7 @@ import {
   type ImageStyle,
 } from "react-native";
 import { Image } from "expo-image";
+import { toExpoImageSource } from "~/utils/image-source";
 
 type OutlinedImageProps = {
   source: ImageSourcePropType | string | undefined;
@@ -38,10 +39,10 @@ export const OutlinedImage: FC<OutlinedImageProps> = ({
 }) => {
   const resolvedSource = useMemo(() => {
     if (source == null) return source;
-    if (cacheKey == null) return source;
+    if (cacheKey == null) return toExpoImageSource(source);
     if (typeof source === "string") return { uri: source, cacheKey };
     if (typeof source === "object" && "uri" in source) return { ...source, cacheKey };
-    return source;
+    return toExpoImageSource(source);
   }, [source, cacheKey]);
 
   const offsets = useMemo(() => {
@@ -77,7 +78,7 @@ export const OutlinedImage: FC<OutlinedImageProps> = ({
           ]}
           contentFit="contain"
           cachePolicy={cachePolicy}
-          transition={150}
+          transition={{ duration: 150, skipOnCacheHit: "all" }}
         />
       ))}
       <Image
@@ -85,7 +86,7 @@ export const OutlinedImage: FC<OutlinedImageProps> = ({
         style={[styles.abs, { width: size, height: size }, imageStyle]}
         contentFit="contain"
         cachePolicy={cachePolicy}
-        transition={150}
+        transition={{ duration: 150, skipOnCacheHit: "all" }}
       />
     </View>
   );

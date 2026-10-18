@@ -1,9 +1,8 @@
 import * as React from "react";
-import { View } from "react-native";
+import { View, useWindowDimensions } from "react-native";
 import Svg, { Path, Rect, Text as SvgText } from "react-native-svg";
 import { P } from "~/components/ui/typography";
 import {
-  CHART_WIDTH,
   CHART_HEIGHT,
   CHART_PADDING,
   ChartEmptyState,
@@ -57,6 +56,8 @@ function WasteChart({
   className,
   groupBy = "day",
 }: WasteChartProps) {
+  const { width } = useWindowDimensions();
+  const chartWidth = Math.max(100, width - 48);
   const formatDateLabel = (timestamp: number) => {
     const date = new Date(timestamp);
     if (groupBy === "month") {
@@ -100,7 +101,7 @@ function WasteChart({
       if (val < minValue) minValue = val;
     }
 
-    const innerWidth = CHART_WIDTH - CHART_PADDING * 2;
+    const innerWidth = chartWidth - CHART_PADDING * 2;
     const innerHeight = CHART_HEIGHT - CHART_PADDING * 2;
 
     const points: ChartDataPoint[] = data.map((item, index) => {
@@ -126,7 +127,7 @@ function WasteChart({
       return <ChartEmptyState message="No waste data available for this period" />;
     }
 
-    const innerWidth = CHART_WIDTH - CHART_PADDING * 2;
+    const innerWidth = chartWidth - CHART_PADDING * 2;
     const innerHeight = CHART_HEIGHT - CHART_PADDING * 2;
 
     // Create smooth curve path
@@ -137,8 +138,8 @@ function WasteChart({
       // Single point - draw a horizontal line with dot
       const x = points[0]?.x ?? CHART_PADDING;
       const y = points[0]?.y ?? CHART_HEIGHT / 2;
-      pathD = `M ${CHART_PADDING} ${y} L ${CHART_WIDTH - CHART_PADDING} ${y}`;
-      areaPathD = `M ${CHART_PADDING} ${y} L ${CHART_WIDTH - CHART_PADDING} ${y} L ${CHART_WIDTH - CHART_PADDING} ${CHART_HEIGHT - CHART_PADDING} L ${CHART_PADDING} ${CHART_HEIGHT - CHART_PADDING} Z`;
+      pathD = `M ${CHART_PADDING} ${y} L ${chartWidth - CHART_PADDING} ${y}`;
+      areaPathD = `M ${CHART_PADDING} ${y} L ${chartWidth - CHART_PADDING} ${y} L ${chartWidth - CHART_PADDING} ${CHART_HEIGHT - CHART_PADDING} L ${CHART_PADDING} ${CHART_HEIGHT - CHART_PADDING} Z`;
     } else {
       // Multiple points - draw smooth curve
       points.forEach((point, index) => {
@@ -170,9 +171,9 @@ function WasteChart({
 
     return (
       <View className="mt-2">
-        <Svg width={CHART_WIDTH} height={CHART_HEIGHT}>
+        <Svg width={chartWidth} height={CHART_HEIGHT}>
           {/* Grid lines */}
-          {renderGridLines(gridLines, (v) => formatValue(Math.round(v), metric))}
+          {renderGridLines(gridLines, chartWidth, (v) => formatValue(Math.round(v), metric))}
 
           {/* Area fill under the line */}
           {points.length > 1 && <Path d={areaPathD} fill={chartColor} fillOpacity={0.1} />}

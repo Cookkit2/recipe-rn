@@ -377,7 +377,7 @@ function RecipeDetailsContent({
         <AnimatedImage
           source={{ uri: displayedRecipe.imageUrl }}
           style={[styles.image, { height: windowWidth }]}
-          transition={100}
+          transition={{ duration: 100, skipOnCacheHit: "all" }}
         />
         <Animated.View
           style={[opacityStyle, styles.gradient, { height: windowWidth }]}

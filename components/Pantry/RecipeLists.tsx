@@ -1,11 +1,6 @@
 import RecipeItemCard from "./RecipeItemCard";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  View,
-  ActivityIndicator,
-  type NativeSyntheticEvent,
-  type NativeScrollEvent,
-} from "react-native";
+import { View, ActivityIndicator } from "react-native";
 import { useRecipeStore } from "~/store/RecipeContext";
 import { H4, P } from "~/components/ui/typography";
 import { CURVES } from "~/constants/curves";
@@ -17,11 +12,10 @@ import {
   createHistoryAwareRankingStrategy,
   DietaryFilter,
 } from "~/hooks/recommendation";
-import { LegendList } from "@legendapp/list";
+import RecyclingList, { type VisibleRange } from "~/components/Shared/RecyclingList";
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from "react-native-reanimated";
 import {
   useRecipeRecommendations,
-  useRecipesPaginated,
   type RecipeWithCompletion,
 } from "~/hooks/queries/useRecipeQueries";
 import { useImagePreloader } from "~/hooks/useImagePreloader";
@@ -47,10 +41,9 @@ export default function RecipeLists() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const isLoadingMoreRef = useRef(false);
 
-  // Regular scroll handler that updates shared value (LegendList doesn't support Reanimated handlers)
   const handleScroll = useCallback(
-    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      scrollY.value = event.nativeEvent.contentOffset.y;
+    (scrolled: boolean) => {
+      scrollY.value = scrolled ? 11 : 0;
     },
     [scrollY]
   );
@@ -162,13 +155,11 @@ export default function RecipeLists() {
 
   // Preload images for visible + next window on scroll (throttled)
   const scheduleScrollPrefetch = useCallback(
-    (contentOffsetY: number, data: RecipeWithCompletion[]) => {
+    (startIndex: number, data: RecipeWithCompletion[]) => {
       if (data.length === 0) return;
       if (throttleRef.current != null) return;
       throttleRef.current = setTimeout(() => {
         throttleRef.current = null;
-        const row = Math.floor(contentOffsetY / 200);
-        const startIndex = Math.min(row * NUM_COLUMNS, data.length - 1);
         if (startIndex < 0) return;
         if (startIndex === lastPrefetchStartRef.current) return;
         lastPrefetchStartRef.current = startIndex;
@@ -183,29 +174,18 @@ export default function RecipeLists() {
     [prefetch]
   );
 
-  const handleScrollWithPrefetch = useCallback(
-    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      handleScroll(event);
-      scheduleScrollPrefetch(event.nativeEvent.contentOffset.y, listData);
-
-      // Load more recipes when near bottom
-      const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-      const distanceFromBottom = contentSize.height - (layoutMeasurement.height + contentOffset.y);
-
-      // Trigger load more when within 500px of bottom (about 2-3 items)
-      if (distanceFromBottom < 500 && hasMoreToLoad && !isLoadingMoreRef.current) {
+  const handleVisibleRange = useCallback(
+    ({ first, last }: VisibleRange) => {
+      scheduleScrollPrefetch(first, listData);
+      if (
+        last >= listData.length - LOAD_MORE_THRESHOLD &&
+        hasMoreToLoad &&
+        !isLoadingMoreRef.current
+      ) {
         loadMore();
       }
     },
-    [
-      handleScroll,
-      listData,
-      scheduleScrollPrefetch,
-      hasMoreToLoad,
-      loadMore,
-      recipes.length,
-      displayLimit,
-    ]
+    [listData, scheduleScrollPrefetch, hasMoreToLoad, loadMore, recipes.length, displayLimit]
   );
 
   const emptyState = () => {
@@ -258,8 +238,7 @@ export default function RecipeLists() {
     []
   );
 
-  // Approximate item height for estimatedItemSize (image is square + text below)
-  const ITEM_HEIGHT = 200;
+  const ITEM_HEIGHT = 270;
 
   // Footer component for loading more indicator
   const ListFooter = useCallback(() => {
@@ -298,21 +277,19 @@ export default function RecipeLists() {
         style={separatorStyle}
       />
       <View testID="recipe-list-frame" className="flex-1">
-        <ExpiringRecipesSection />
-        <LegendList
+        <RecyclingList
+          testID="recipes"
           keyExtractor={(item) => item.recipe.id.toString()}
-          numColumns={2}
-          style={{ paddingHorizontal: 12, paddingTop: 8 }}
-          contentContainerStyle={{ paddingBottom: bottom + 16 }}
-          showsVerticalScrollIndicator={false}
+          numColumns={NUM_COLUMNS}
+          contentPadding={{ left: 12, right: 12, top: 8, bottom: bottom + 16 }}
           data={listData}
           renderItem={renderRecipeItem}
-          ListEmptyComponent={emptyState}
-          ListFooterComponent={ListFooter}
-          // LegendList performance optimizations
-          recycleItems
+          header={<ExpiringRecipesSection />}
+          empty={emptyState()}
+          footer={<ListFooter />}
           estimatedItemSize={ITEM_HEIGHT}
-          onScroll={handleScrollWithPrefetch}
+          onScrolledChange={handleScroll}
+          onVisibleRangeChange={handleVisibleRange}
         />
       </View>
     </>

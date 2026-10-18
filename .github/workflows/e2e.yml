@@ -9,7 +9,7 @@ on:
 jobs:
   e2e-ios:
     name: Detox iOS E2E
-    runs-on: macos-14
+    runs-on: macos-26
 
     steps:
       - name: Checkout
@@ -21,7 +21,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: "20"
+          node-version: "22"
 
       - name: Cache Bun dependencies
         uses: actions/cache@v6

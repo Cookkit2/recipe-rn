@@ -1,5 +1,0 @@
-🎯 **What:** The `cn` utility function in `lib/utils.ts` lacked dedicated unit tests. We added tests to verify its core functionality of merging classes using `clsx` and resolving Tailwind conflicts with `twMerge`.
-
-📊 **Coverage:** Tests now cover basic string merging, conditional classes, arrays of classes, handling of falsy values (undefined, null, false), Tailwind CSS conflict resolution (e.g., specific margins overriding general ones), and combined `clsx` and `twMerge` features.
-
-✨ **Result:** Improved test coverage for a highly utilized utility function, ensuring UI styling behaves predictably under various input scenarios and preventing future regressions.

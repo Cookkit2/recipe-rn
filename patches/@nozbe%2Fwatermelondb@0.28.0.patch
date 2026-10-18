@@ -1,0 +1,53 @@
+diff --git a/native/ios/WatermelonDB/JSIInstaller.h b/native/ios/WatermelonDB/JSIInstaller.h
+index c1b7efb0fb33d56bf7a2f1b3a5f16644ad855e9b..6e520c4d0dedc74c332312060fb31805af5782eb 100644
+--- a/native/ios/WatermelonDB/JSIInstaller.h
++++ b/native/ios/WatermelonDB/JSIInstaller.h
+@@ -7,7 +7,9 @@ extern "C"
+ {
+ #endif
+ 
++#if !RCT_REMOVE_LEGACY_ARCH
+ void installWatermelonJSI(RCTCxxBridge *bridge);
++#endif
+ void watermelondbProvideSyncJson(int id, NSData *json, NSError **errorPtr);
+ 
+ #ifdef __cplusplus
+diff --git a/native/ios/WatermelonDB/JSIInstaller.mm b/native/ios/WatermelonDB/JSIInstaller.mm
+index d508249731957ede36f5e4ad33b030c7fb221b23..aa09c42a63ad0814922b9d138769d8ac98c78745 100644
+--- a/native/ios/WatermelonDB/JSIInstaller.mm
++++ b/native/ios/WatermelonDB/JSIInstaller.mm
+@@ -1,6 +1,7 @@
+ #import "JSIInstaller.h"
+ #import "Database.h"
+ 
++#if !RCT_REMOVE_LEGACY_ARCH
+ extern "C" void installWatermelonJSI(RCTCxxBridge *bridge) {
+     if (bridge.runtime == nullptr) {
+         return;
+@@ -10,3 +11,4 @@ extern "C" void installWatermelonJSI(RCTCxxBridge *bridge) {
+     assert(runtime != nullptr);
+     watermelondb::Database::install(runtime);
+ }
++#endif
+diff --git a/native/ios/WatermelonDB/objc/WMDatabaseBridge.m b/native/ios/WatermelonDB/objc/WMDatabaseBridge.m
+index 8a3ab356bf57cad3e994ae7f660387bf2c3a9d16..b5144d631da54eebdbf19275a449b45d23b2d01e 100644
+--- a/native/ios/WatermelonDB/objc/WMDatabaseBridge.m
++++ b/native/ios/WatermelonDB/objc/WMDatabaseBridge.m
+@@ -196,12 +196,17 @@ BRIDGE_METHOD(getLocal,
+ 
+ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(initializeJSI)
+ {
++#if RCT_REMOVE_LEGACY_ARCH
++    // Bridgeless apps use the asynchronous adapter; RCTCxxBridge no longer exists.
++    return @NO;
++#else
+     __block RCTCxxBridge *bridge = (RCTCxxBridge *) _bridge;
+     dispatch_sync([self methodQueue], ^{
+         installWatermelonJSI(bridge);
+     });
+     
+     return @YES;
++#endif
+ }
+ 
+ 
