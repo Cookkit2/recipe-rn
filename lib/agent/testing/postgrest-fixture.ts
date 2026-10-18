@@ -63,6 +63,8 @@ export interface PostgrestFixtureState {
   householdMembers: { user_id: string; household_id: string }[];
   pivots: PivotRow[];
   recipes: RecipeRow[];
+  ingredientSynonyms: Record<string, unknown>[];
+  ingredientCategoryPivots: Record<string, unknown>[];
 }
 
 export interface RecordedHttpRequest {
@@ -105,6 +107,8 @@ const TABLES = {
   household_members: "householdMembers",
   pivot_recipe_ingredient: "pivots",
   recipe: "recipes",
+  ingredient_synonym: "ingredientSynonyms",
+  pivot_ingredient_category: "ingredientCategoryPivots",
 } as const;
 
 type TableName = keyof typeof TABLES;
@@ -153,6 +157,8 @@ function rowsFor(state: PostgrestFixtureState, table: TableName): Record<string,
 function matchesFilter(row: Record<string, unknown>, column: string, filter: string): boolean {
   const value = row[column];
   if (filter.startsWith("eq.")) return String(value ?? "") === filter.slice(3);
+  if (filter.startsWith("imatch."))
+    return new RegExp(filter.slice(7), "i").test(String(value ?? ""));
   if (filter.startsWith("ilike.")) {
     // The cooking tools send a bare name (no SQL wildcards), which PostgREST
     // treats as a case-insensitive exact match.
@@ -225,6 +231,8 @@ export async function startPostgrestFixture(
       ...row,
     })),
     recipes: [...(seed.recipes ?? [])],
+    ingredientSynonyms: [],
+    ingredientCategoryPivots: [],
   };
   const requests: RecordedHttpRequest[] = [];
   const storage = memoryStorage();
@@ -306,6 +314,14 @@ export async function startPostgrestFixture(
       if (method === "HEAD") {
         response.writeHead(200);
         response.end();
+        return;
+      }
+      if (request.headers.accept?.includes("application/vnd.pgrst.object+json")) {
+        if (matched.length !== 1) {
+          sendJson(response, 406, { message: "Expected one fixture row", code: "PGRST116" });
+          return;
+        }
+        sendJson(response, 200, matched[0]);
         return;
       }
       sendJson(response, 200, matched);

@@ -8,6 +8,7 @@ import { usePantryItemsByType } from "~/hooks/queries/usePantryQueries";
 import Animated, { LinearTransition, useAnimatedStyle, withTiming } from "react-native-reanimated";
 import { CURVES } from "~/constants/curves";
 import IngredientCategoryButtonGroup from "./IngredientCategoryButtonGroup";
+import { TEST_IDS } from "~/constants/test-ids";
 
 export default function IngredientLists() {
   const { bottom } = useSafeAreaInsets();
@@ -55,6 +56,7 @@ export default function IngredientLists() {
 
   return (
     <Animated.FlatList
+      testID={TEST_IDS.home.pantryList}
       contentInsetAdjustmentBehavior="automatic"
       ref={ingredientScrollRef}
       keyExtractor={(item) => item.id.toString()}

@@ -1,8 +1,8 @@
-import { by, element, expect, waitFor } from "detox";
+import { by, device, element, expect, waitFor } from "detox";
 import { TEST_IDS } from "~/constants/test-ids";
 
 describe("Assistant", () => {
-  it("adds an ingredient from the fridge assistant", async () => {
+  it("adds an ingredient to the visible pantry and keeps it after relaunch", async () => {
     await waitFor(element(by.id(TEST_IDS.home.screen)))
       .toBeVisible()
       .withTimeout(30000);
@@ -36,5 +36,23 @@ describe("Assistant", () => {
 
     await expect(element(by.id(TEST_IDS.assistant.bubble))).toBeVisible();
     await expect(element(by.id(TEST_IDS.assistant.list))).toBeVisible();
+
+    // Return to the already-mounted pantry: this catches missing query invalidation.
+    await device.openURL({ url: "cookkit:///" });
+    await waitFor(element(by.id(TEST_IDS.home.screen)))
+      .toBeVisible()
+      .withTimeout(20000);
+    const eggs = element(by.text("eggs").withAncestor(by.id(TEST_IDS.home.pantryList)));
+    const quantity = element(by.text("6 count").withAncestor(by.id(TEST_IDS.home.pantryList)));
+    await waitFor(eggs).toBeVisible().withTimeout(20000);
+    await expect(quantity).toBeVisible();
+
+    // Preserve app data so a cloud-only write cannot pass as a local pantry update.
+    await device.launchApp({ newInstance: true });
+    await waitFor(element(by.id(TEST_IDS.home.screen)))
+      .toBeVisible()
+      .withTimeout(30000);
+    await waitFor(eggs).toBeVisible().withTimeout(20000);
+    await expect(quantity).toBeVisible();
   });
 });
