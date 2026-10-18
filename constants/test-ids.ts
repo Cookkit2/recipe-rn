@@ -63,7 +63,14 @@ export const TEST_IDS = {
   profile: {
     screen: "profile-screen",
     preferencesButton: "profile-preferences-button",
+    assistantButton: "profile-assistant-button",
     achievementsButton: "profile-achievements-button",
     mealPlanButton: "profile-meal-plan-button",
+  },
+  assistant: {
+    list: "assistant-message-list",
+    bubble: "assistant-bubble",
+    composer: "assistant-composer",
+    send: "assistant-send",
   },
 } as const;

@@ -9,11 +9,13 @@ export default function ListButton({
   icon,
   onPress,
   external,
+  testID,
 }: {
   title: string;
   icon?: (props: LucidePropsWithClassName) => React.ReactNode;
   onPress: () => void;
   external?: boolean;
+  testID?: string;
 }) {
   const Icon = icon as React.ComponentType<LucidePropsWithClassName>;
 
@@ -26,6 +28,7 @@ export default function ListButton({
       enableAnimation={false}
       accessibilityRole={external ? "link" : "button"}
       accessibilityLabel={title}
+      testID={testID}
       accessibilityHint={external ? `Opens ${title} in a browser` : `Navigates to ${title}`}
     >
       {icon && <Icon className="text-foreground" size={24} strokeWidth={2} />}

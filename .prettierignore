@@ -21,3 +21,7 @@ bun.lockb
 .agents
 .claude
 .cursor
+
+# Sourced by Xcode and Detox. Prettier has no parser for these.
+scripts/e2e-ios-env.sh
+ios/.xcode.env.updates
