@@ -7,6 +7,7 @@ import {
   MailIcon,
   MessageSquareHeartIcon,
   SettingsIcon,
+  SparklesIcon,
   TrophyIcon,
 } from "lucide-uniwind";
 import React from "react";
@@ -138,6 +139,11 @@ export default function ProfileScreen() {
               title="Preferences"
               icon={SettingsIcon}
               onPress={() => router.push("/profile/preferences")}
+            />
+            <ListButton
+              title="Assistant"
+              icon={SparklesIcon}
+              onPress={() => router.push("/assistant")}
             />
             {/* <ListButton
               title="Analytics"

@@ -11,7 +11,19 @@ The legacy `utils/gemini-api.ts` implementation is retained for future reference
 
 The app calls the `nebius-ai` Supabase Edge Function with a user session. The function verifies the session with Supabase Auth, applies a persistent daily request quota, and chooses the model based on whether an image is present. The app cannot override the model or provider endpoint.
 
-The Nebius key is server-only `NEBIUS_API_KEY`. Never use `EXPO_PUBLIC_NEBIUS_API_KEY`: Expo public variables can be included in shipped app bundles. The existing Supabase URL and public anon key remain app configuration.
+The Nebius key for recipe extraction is server-only `NEBIUS_API_KEY`. The extraction client must not read `EXPO_PUBLIC_NEBIUS_API_KEY`. The existing Supabase URL and public anon key remain app configuration.
+
+## Prototype in-app cooking assistant
+
+`lib/agent` is a separate prototype. It runs the Vercel AI SDK `streamText` loop inside the app and calls Nebius with `@ai-sdk/openai-compatible`. That path reads:
+
+| Variable | Purpose |
+| --- | --- |
+| `EXPO_PUBLIC_NEBIUS_API_KEY` | Prototype bearer token. Empty in git. It is embedded in the binary. |
+| `EXPO_PUBLIC_NEBIUS_BASE_URL` | Defaults to `https://api.tokenfactory.nebius.com/v1`. |
+| `EXPO_PUBLIC_NEBIUS_MODEL` | Chat model. The Nebius function-calling guide uses `meta-llama/Meta-Llama-3.1-8B-Instruct-fast`. |
+
+Do not ship a store build with a real `EXPO_PUBLIC_NEBIUS_API_KEY`. Move the agent loop and the key to a backend before any real release. `bun run agent:smoke` exercises `streamText` and tools against a local mock of the OpenAI-compatible stream. It does not call Nebius.
 
 ## Local simulator testing
 
