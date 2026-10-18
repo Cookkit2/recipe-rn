@@ -13,13 +13,14 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "~/lib/supabase/supabase-types";
+import { E2E_ACCESS_TOKEN, E2E_ANON_KEY, E2E_HOUSEHOLD_ID, E2E_USER_ID } from "./e2e-contract";
 
-export const TEST_USER_ID = "11111111-1111-4111-8111-111111111111";
-export const TEST_HOUSEHOLD_ID = "22222222-2222-4222-8222-222222222222";
+export const TEST_USER_ID = E2E_USER_ID;
+export const TEST_HOUSEHOLD_ID = E2E_HOUSEHOLD_ID;
 /** Dummy public key. Not a credential. */
-export const TEST_ANON_KEY = "test-anon-key";
+export const TEST_ANON_KEY = E2E_ANON_KEY;
 /** Dummy bearer token stored in the session. Not a credential. */
-export const TEST_ACCESS_TOKEN = "test-access-token";
+export const TEST_ACCESS_TOKEN = E2E_ACCESS_TOKEN;
 export const AUTH_STORAGE_KEY = "sb-cookkit-agent-test-auth-token";
 
 export interface StockRow {
@@ -209,7 +210,8 @@ function nextStockId(state: PostgrestFixtureState): string {
 }
 
 export async function startPostgrestFixture(
-  seed: PostgrestFixtureSeed = {}
+  seed: PostgrestFixtureSeed = {},
+  options: { port?: number } = {}
 ): Promise<PostgrestFixture> {
   const state: PostgrestFixtureState = {
     stock: [...(seed.stock ?? [])],
@@ -313,8 +315,12 @@ export async function startPostgrestFixture(
     sendJson(response, 405, { message: `Unsupported method ${method}`, code: "fixture" });
   });
 
-  await new Promise<void>((resolve) => {
-    server.listen(0, "127.0.0.1", resolve);
+  await new Promise<void>((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(options.port ?? 0, "127.0.0.1", () => {
+      server.off("error", reject);
+      resolve();
+    });
   });
   const address = server.address();
   if (!address || typeof address === "string") {

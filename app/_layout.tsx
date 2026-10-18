@@ -26,6 +26,7 @@ import * as Sentry from "@sentry/react-native";
 import { initImageCache, resolveImageCacheConfig } from "~/lib/image-cache";
 import { AuthProvider, MockAuthStrategy, SupabaseAuthStrategy } from "~/auth";
 import { TEST_IDS } from "~/constants/test-ids";
+import { seedE2ESupabaseSession } from "~/lib/e2e/seed-supabase-session";
 import { IS_E2E } from "~/utils/e2e-flags";
 import { arePaywallsEnabled } from "~/utils/paywall-flags";
 import { invalidateSubscriptionEntitlementsQuery } from "~/lib/subscription-query-sync";
@@ -97,6 +98,11 @@ Sentry.init({
 export default Sentry.wrap(function RootLayout() {
   usePlatformSpecificSetup();
   useNativeAppearance();
+
+  useEffect(() => {
+    if (!IS_E2E) return;
+    void seedE2ESupabaseSession();
+  }, []);
 
   const authStrategy = useMemo(
     () =>

@@ -6,13 +6,17 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Text } from "~/components/ui/text";
 import { P } from "~/components/ui/typography";
+import { TEST_IDS } from "~/constants/test-ids";
 import { useCookingAgentChat, type CookingChatMessage } from "~/hooks/useCookingAgentChat";
 import type { CookingAgent } from "~/lib/agent/types";
 
 function MessageBubble({ message }: { message: CookingChatMessage }) {
   const mine = message.role === "user";
   return (
-    <View className={mine ? "items-end" : "items-start"}>
+    <View
+      testID={mine ? undefined : TEST_IDS.assistant.bubble}
+      className={mine ? "items-end" : "items-start"}
+    >
       <View
         className={
           mine
@@ -59,6 +63,7 @@ export function AssistantChat({ agent }: { agent: CookingAgent }) {
       <FlatList
         className="flex-1 overflow-hidden"
         ref={listRef}
+        testID={TEST_IDS.assistant.list}
         data={messages}
         keyExtractor={(item) => item.id}
         contentInsetAdjustmentBehavior="never"
@@ -79,12 +84,14 @@ export function AssistantChat({ agent }: { agent: CookingAgent }) {
           onChangeText={setDraft}
           placeholder="Ask about your fridge"
           accessibilityLabel="Message"
+          testID={TEST_IDS.assistant.composer}
           editable={!streaming}
           multiline
           onSubmitEditing={onSend}
         />
         <Button
           accessibilityLabel={streaming ? "Stop" : "Send"}
+          testID={TEST_IDS.assistant.send}
           onPress={streaming ? stop : onSend}
           disabled={!streaming && draft.trim().length === 0}
         >
