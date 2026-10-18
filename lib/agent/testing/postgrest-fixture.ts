@@ -48,6 +48,7 @@ export interface RecipeRow {
 }
 
 export interface PivotRow {
+  id?: string;
   recipe_id: string;
   name: string;
   quantity: number | null;
@@ -170,14 +171,24 @@ function matchesFilter(row: Record<string, unknown>, column: string, filter: str
 function applyFilters(rows: Record<string, unknown>[], url: URL): Record<string, unknown>[] {
   let filtered = rows;
   for (const [column, filter] of url.searchParams.entries()) {
-    if (column === "select" || column === "limit" || column === "offset" || column === "columns") {
+    if (["select", "limit", "offset", "columns", "order"].includes(column)) {
       continue;
     }
     filtered = filtered.filter((row) => matchesFilter(row, column, filter));
   }
-  const limit = url.searchParams.get("limit");
-  if (limit) filtered = filtered.slice(0, Number(limit));
-  return filtered;
+  const order = url.searchParams.get("order");
+  if (order) {
+    const [column, direction] = order.split(".");
+    if (column) {
+      filtered = [...filtered].sort((a, b) => {
+        const comparison = String(a[column] ?? "").localeCompare(String(b[column] ?? ""));
+        return direction === "desc" ? -comparison : comparison;
+      });
+    }
+  }
+  const offset = Number(url.searchParams.get("offset") ?? 0);
+  const limit = Math.min(Number(url.searchParams.get("limit") ?? 1000), 1000);
+  return filtered.slice(offset, offset + limit);
 }
 
 async function readBody(request: IncomingMessage): Promise<unknown> {
@@ -207,7 +218,10 @@ export async function startPostgrestFixture(
       seed.preferences === undefined ? [] : [{ id: TEST_USER_ID, preferences: seed.preferences }],
     householdMembers:
       seed.household === false ? [] : [{ user_id: TEST_USER_ID, household_id: TEST_HOUSEHOLD_ID }],
-    pivots: [...(seed.pivots ?? [])],
+    pivots: (seed.pivots ?? []).map((row, index) => ({
+      id: String(index).padStart(6, "0"),
+      ...row,
+    })),
     recipes: [...(seed.recipes ?? [])],
   };
   const requests: RecordedHttpRequest[] = [];
