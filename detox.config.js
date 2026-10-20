@@ -1,3 +1,20 @@
+const {
+  PREFERRED_SIMULATOR_OS,
+  PREFERRED_SIMULATOR_TYPE,
+} = require("./scripts/select-e2e-simulator.cjs");
+
+function configuredValue(name, fallback) {
+  const value = process.env[name];
+  if (typeof value !== "string") return fallback;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : fallback;
+}
+
+// ios.sim.debug targets iPhone Air / iOS 26.2. The E2E workflow sets
+// DETOX_SIMULATOR_TYPE and DETOX_SIMULATOR_OS when that device is not available.
+const simulatorType = configuredValue("DETOX_SIMULATOR_TYPE", PREFERRED_SIMULATOR_TYPE);
+const simulatorOS = configuredValue("DETOX_SIMULATOR_OS", PREFERRED_SIMULATOR_OS);
+
 /** @type {Detox.DetoxConfig} */
 module.exports = {
   testRunner: {
@@ -27,8 +44,8 @@ module.exports = {
     simulator: {
       type: "ios.simulator",
       device: {
-        type: "iPhone Air",
-        os: "iOS 26.2",
+        type: simulatorType,
+        os: simulatorOS,
       },
     },
   },
