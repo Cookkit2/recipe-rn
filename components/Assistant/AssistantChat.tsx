@@ -9,6 +9,7 @@ import { P } from "~/components/ui/typography";
 import { TEST_IDS } from "~/constants/test-ids";
 import { useCookingAgentChat, type CookingChatMessage } from "~/hooks/useCookingAgentChat";
 import type { CookingAgent } from "~/lib/agent/types";
+import { IS_E2E } from "~/utils/e2e-flags";
 
 function MessageBubble({ message }: { message: CookingChatMessage }) {
   const mine = message.role === "user";
@@ -56,9 +57,16 @@ export function AssistantChat({ agent }: { agent: CookingAgent }) {
 
   return (
     <KeyboardAvoidingView
+      testID={TEST_IDS.assistant.screen}
+      collapsable={false}
       className="flex-1 bg-background"
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={headerHeight}
+      style={{ flex: 1 }}
+      // iOS keyboard-frame notifications on the simulator keep this padding
+      // animating, which holds the main run loop awake and leaves the bottom
+      // field under Detox's 75% visibility threshold. The Detox build types
+      // into a stable composer instead.
+      behavior={Platform.OS === "ios" && !IS_E2E ? "padding" : undefined}
     >
       <FlatList
         className="flex-1 overflow-hidden"
@@ -67,6 +75,8 @@ export function AssistantChat({ agent }: { agent: CookingAgent }) {
         data={messages}
         keyExtractor={(item) => item.id}
         contentInsetAdjustmentBehavior="never"
+        style={{ flex: 1 }}
+        keyboardShouldPersistTaps="handled"
         contentContainerClassName="gap-3 px-4 py-4"
         ListEmptyComponent={
           <P className="px-2 pt-8 text-muted-foreground">Ask what to cook from your fridge.</P>
@@ -76,10 +86,11 @@ export function AssistantChat({ agent }: { agent: CookingAgent }) {
       />
       <View
         className="flex-row items-end gap-2 border-t border-border px-4 pt-3"
-        style={{ paddingBottom: Math.max(bottom, 12) }}
+        style={{ paddingBottom: bottom + 12, flexShrink: 0 }}
       >
         <Input
           className="flex-1 text-left text-foreground"
+          style={{ minHeight: 48 }}
           value={draft}
           onChangeText={setDraft}
           placeholder="Ask about your fridge"
