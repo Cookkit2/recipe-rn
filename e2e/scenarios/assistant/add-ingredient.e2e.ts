@@ -9,17 +9,24 @@ describe("Assistant", () => {
 
     await element(by.label("Profile")).tap();
 
+    // Home stays mounted under the profile card. Opening it left Detox busy
+    // (pending animations and layout), and the assistant-button expectation
+    // never completed. withTimeout() is also terminal in Detox 20, so it
+    // cannot be combined with whileElement().scroll(). Skip synchronization
+    // only until the assistant screen is on screen.
+    await device.disableSynchronization();
+    await waitFor(element(by.id(TEST_IDS.profile.screen)))
+      .toBeVisible()
+      .withTimeout(20000);
     await waitFor(element(by.id(TEST_IDS.profile.assistantButton)))
       .toBeVisible()
-      .withTimeout(20000)
       .whileElement(by.id(TEST_IDS.profile.screen))
       .scroll(200, "down");
-
     await element(by.id(TEST_IDS.profile.assistantButton)).tap();
-
     await waitFor(element(by.id(TEST_IDS.assistant.composer)))
       .toBeVisible()
       .withTimeout(15000);
+    await device.enableSynchronization();
 
     await element(by.id(TEST_IDS.assistant.composer)).replaceText("Add 6 eggs to my pantry.");
     await element(by.id(TEST_IDS.assistant.send)).tap();
