@@ -68,6 +68,7 @@ export const TEST_IDS = {
     mealPlanButton: "profile-meal-plan-button",
   },
   assistant: {
+    screen: "assistant-screen",
     list: "assistant-message-list",
     bubble: "assistant-bubble",
     composer: "assistant-composer",
