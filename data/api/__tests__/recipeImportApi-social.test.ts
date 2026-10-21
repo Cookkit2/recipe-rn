@@ -42,21 +42,21 @@ jest.mock("~/lib/ai/client", () => ({
   generateAIContent: jest.fn(),
 }));
 
-const analyzeForRecipe = jest.fn(async (_content: unknown) => ({}) as RecipeAnalysisResult);
+const mockAnalyzeForRecipe = jest.fn(async (_content: unknown) => ({}) as RecipeAnalysisResult);
 
 jest.mock("~/lib/recipe-scrapper/SocialRecipeService", () => ({
   socialRecipeService: {
-    analyzeForRecipe: (content: unknown) => analyzeForRecipe(content),
+    analyzeForRecipe: (content: unknown) => mockAnalyzeForRecipe(content),
   },
 }));
 
-const createRecipe = jest.fn(async (_data: unknown) => ({}));
-const getShoppingListForRecipe = jest.fn(async (_recipeId: unknown) => ({}));
+const mockCreateRecipe = jest.fn(async (_data: unknown) => ({}));
+const mockGetShoppingListForRecipe = jest.fn(async (_recipeId: unknown) => ({}));
 
 jest.mock("~/data/db/DatabaseFacade", () => ({
   databaseFacade: {
-    createRecipe: (data: unknown) => createRecipe(data),
-    getShoppingListForRecipe: (recipeId: unknown) => getShoppingListForRecipe(recipeId),
+    createRecipe: (data: unknown) => mockCreateRecipe(data),
+    getShoppingListForRecipe: (recipeId: unknown) => mockGetShoppingListForRecipe(recipeId),
   },
 }));
 
@@ -86,7 +86,7 @@ const SAMPLE_RECIPE = {
 describe("recipeImportApi.importRecipeFromSocialMedia", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    createRecipe.mockResolvedValue({
+    mockCreateRecipe.mockResolvedValue({
       id: "recipe-1",
       title: "TikTok Pasta",
       description: "Feta pasta",
@@ -98,14 +98,14 @@ describe("recipeImportApi.importRecipeFromSocialMedia", () => {
       sourceUrl: SAMPLE_RECIPE.sourceUrl,
       tags: ["tiktok"],
     });
-    getShoppingListForRecipe.mockResolvedValue({
+    mockGetShoppingListForRecipe.mockResolvedValue({
       missingIngredients: [{ name: "feta", quantity: 1, unit: "block" }],
       availableIngredients: [],
     });
   });
 
   it("saves the recipe and returns a shopping list when Nebius is confident", async () => {
-    analyzeForRecipe.mockResolvedValue({
+    mockAnalyzeForRecipe.mockResolvedValue({
       isCookingVideo: true,
       confidence: 0.9,
       recipe: SAMPLE_RECIPE,
@@ -118,19 +118,19 @@ describe("recipeImportApi.importRecipeFromSocialMedia", () => {
     );
 
     expect(result.success).toBe(true);
-    expect(analyzeForRecipe).toHaveBeenCalledWith({
+    expect(mockAnalyzeForRecipe).toHaveBeenCalledWith({
       platform: "tiktok",
       url: "https://www.tiktok.com/@chef/video/7300000000000000000",
       postId: "7300000000000000000",
     });
-    expect(createRecipe).toHaveBeenCalledTimes(1);
-    expect(getShoppingListForRecipe).toHaveBeenCalledWith("recipe-1");
+    expect(mockCreateRecipe).toHaveBeenCalledTimes(1);
+    expect(mockGetShoppingListForRecipe).toHaveBeenCalledWith("recipe-1");
     expect(result.recipe?.id).toBe("recipe-1");
     expect(result.shoppingList?.missingIngredients).toHaveLength(1);
   });
 
   it("surfaces a graceful fallback when no recipe is detected (e.g. not a recipe post)", async () => {
-    analyzeForRecipe.mockResolvedValue({
+    mockAnalyzeForRecipe.mockResolvedValue({
       isCookingVideo: false,
       confidence: 0.2,
     });
@@ -144,11 +144,11 @@ describe("recipeImportApi.importRecipeFromSocialMedia", () => {
     expect(result.success).toBe(false);
     expect(result.error).toContain("Instagram");
     // Must NOT have saved anything for a non-recipe post.
-    expect(createRecipe).not.toHaveBeenCalled();
+    expect(mockCreateRecipe).not.toHaveBeenCalled();
   });
 
   it("surfaces a graceful fallback when isCookingVideo is true but no recipe was parsed", async () => {
-    analyzeForRecipe.mockResolvedValue({
+    mockAnalyzeForRecipe.mockResolvedValue({
       isCookingVideo: true,
       confidence: 0.5,
       // recipe intentionally absent
@@ -162,14 +162,14 @@ describe("recipeImportApi.importRecipeFromSocialMedia", () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toContain("manually");
-    expect(createRecipe).not.toHaveBeenCalled();
+    expect(mockCreateRecipe).not.toHaveBeenCalled();
   });
 
   it("handles the platform blocking the fetch (Nebius returns confidence 0 with a message)", async () => {
     // When the platform blocks scraping, SocialRecipeService feeds empty metadata
     // to Nebius, which returns low confidence / an error message. The import API
     // must translate that into a clear user-facing error, not a crash.
-    analyzeForRecipe.mockResolvedValue({
+    mockAnalyzeForRecipe.mockResolvedValue({
       isCookingVideo: false,
       confidence: 0,
       errorMessage: "Could not extract valid ingredients or steps from this post.",
@@ -183,11 +183,11 @@ describe("recipeImportApi.importRecipeFromSocialMedia", () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toBeTruthy();
-    expect(createRecipe).not.toHaveBeenCalled();
+    expect(mockCreateRecipe).not.toHaveBeenCalled();
   });
 
   it("emits import status callbacks through the full flow", async () => {
-    analyzeForRecipe.mockResolvedValue({
+    mockAnalyzeForRecipe.mockResolvedValue({
       isCookingVideo: true,
       confidence: 0.9,
       recipe: SAMPLE_RECIPE,
@@ -212,7 +212,7 @@ describe("recipeImportApi.importRecipeFromSocialMedia", () => {
     jest
       .mocked(analyzeUrl)
       .mockReturnValue({ isValid: true, type: "youtube", url, normalizedUrl: url });
-    analyzeForRecipe.mockResolvedValue({
+    mockAnalyzeForRecipe.mockResolvedValue({
       isCookingVideo: true,
       confidence: 0.9,
       recipe: SAMPLE_RECIPE,
@@ -222,12 +222,12 @@ describe("recipeImportApi.importRecipeFromSocialMedia", () => {
       text: "Bake 1 block feta with pasta.",
     });
     expect(result.success).toBe(true);
-    expect(analyzeForRecipe).toHaveBeenCalledWith({
+    expect(mockAnalyzeForRecipe).toHaveBeenCalledWith({
       platform: "text",
       url: "",
       text: "Bake 1 block feta with pasta.",
     });
-    expect(createRecipe).toHaveBeenCalledWith(expect.objectContaining({ sourceUrl: url }));
+    expect(mockCreateRecipe).toHaveBeenCalledWith(expect.objectContaining({ sourceUrl: url }));
   });
 
   it("falls back to the linked page when the shared text is only a generic message", async () => {
@@ -235,7 +235,7 @@ describe("recipeImportApi.importRecipeFromSocialMedia", () => {
     jest
       .mocked(analyzeUrl)
       .mockReturnValue({ isValid: true, type: "website", url, normalizedUrl: url });
-    analyzeForRecipe.mockResolvedValue({ isCookingVideo: false, confidence: 0.1 });
+    mockAnalyzeForRecipe.mockResolvedValue({ isCookingVideo: false, confidence: 0.1 });
     const fallback = jest
       .spyOn(recipeImportApi, "importRecipeFromWebsite")
       .mockResolvedValue({ success: false, error: "Page blocked" });
@@ -246,7 +246,7 @@ describe("recipeImportApi.importRecipeFromSocialMedia", () => {
       });
       expect(fallback).toHaveBeenCalledWith(url, undefined);
       expect(result.error).toBe("Page blocked");
-      expect(createRecipe).not.toHaveBeenCalled();
+      expect(mockCreateRecipe).not.toHaveBeenCalled();
     } finally {
       fallback.mockRestore();
     }
@@ -259,7 +259,7 @@ describe("recipeImportApi.importRecipeFromSocialMedia", () => {
       .mockReturnValue({ isValid: false, type: "unknown", url, normalizedUrl: url });
     const result = await recipeImportApi.importSharedRecipe({ url, text: "Bake feta." });
     expect(result.success).toBe(false);
-    expect(analyzeForRecipe).not.toHaveBeenCalled();
-    expect(createRecipe).not.toHaveBeenCalled();
+    expect(mockAnalyzeForRecipe).not.toHaveBeenCalled();
+    expect(mockCreateRecipe).not.toHaveBeenCalled();
   });
 });

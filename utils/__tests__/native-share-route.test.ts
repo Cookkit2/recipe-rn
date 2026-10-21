@@ -5,8 +5,8 @@ it.each([
   "cookkit://expo-sharing",
   "cookkit://expo-sharing?source=android",
   "/expo-sharing",
-])("routes a native share to the receiving form instead of replacing it with Pantry", (path) =>
-  expect(redirectSharedRecipeIntent(path)).toBe("/import-recipe")
+])("opens the app shell while the shared recipe is imported automatically", (path) =>
+  expect(redirectSharedRecipeIntent(path)).toBe("/")
 );
 it.each([
   "cookkit://recipe/one",

@@ -1,10 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import {
-  useNavigationContainerRef,
-  useRootNavigationState,
-  useRouter,
-  useSegments,
-} from "expo-router";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigationContainerRef, useRootNavigationState, useSegments } from "expo-router";
 import { AppState, Linking } from "react-native";
 import { requireOptionalNativeModule } from "expo";
 import { toast } from "sonner-native";
@@ -12,24 +7,33 @@ import { storage } from "~/data";
 import { ONBOARDING_COMPLETED_KEY } from "~/constants/storage-keys";
 import { normalizeIncomingRecipeShare } from "~/utils/shared-recipe";
 import { isSharedRecipeIntent } from "~/utils/native-share-route";
-import { readPendingRecipeShare, savePendingRecipeShare } from "~/lib/recipe-share-inbox";
+import {
+  clearPendingRecipeShare,
+  readPendingRecipeShare,
+  savePendingRecipeShare,
+} from "~/lib/recipe-share-inbox";
 import { log } from "~/utils/logger";
+
+const SharedRecipeImport = lazy(() => import("./SharedRecipeImport"));
 
 export default function SocialRecipeShareHandler() {
   const root = useRootNavigationState();
-  const router = useRouter();
   const navigation = useNavigationContainerRef();
   const segments = useSegments();
   const [ready, setReady] = useState(() => navigation.isReady());
   const [revision, setRevision] = useState(0);
-  const routed = useRef<string | null>(null);
+  const pending = useMemo(readPendingRecipeShare, [revision]);
+  const consume = useCallback((id: string) => {
+    clearPendingRecipeShare(id);
+    setRevision((value) => value + 1);
+  }, []);
   useEffect(() => {
     const updateReady = () => setReady(navigation.isReady());
     updateReady();
     return navigation.addListener("state", updateReady);
   }, [navigation]);
   useEffect(() => {
-    // Older development binaries can still use the paste/import screen until rebuilt.
+    // Older binaries can still use the manual import dialog until rebuilt.
     if (!requireOptionalNativeModule("ExpoSharing")) return;
     let disposed = false;
     let receiving = false;
@@ -41,7 +45,7 @@ export default function SocialRecipeShareHandler() {
         if (disposed) return;
         const payloads = getSharedPayloads();
         if (payloads.length === 0) return;
-        // Read raw text instead of resolving URLs before the user chooses Extract.
+        // Persist raw text before clearing the OS payload or starting extraction.
         const input = normalizeIncomingRecipeShare(payloads);
         if (!input) {
           clearSharedPayloads();
@@ -72,22 +76,19 @@ export default function SocialRecipeShareHandler() {
       links.remove();
     };
   }, []);
-  useEffect(() => {
-    if (
-      !root?.key ||
-      !ready ||
-      !navigation.isReady() ||
-      !storage.get<boolean>(ONBOARDING_COMPLETED_KEY) ||
-      segments[0] === "onboarding"
-    )
-      return;
-    const pending = readPendingRecipeShare();
-    if (pending && pending.id !== routed.current) {
-      if (segments[0] === "import-recipe") router.setParams({ shareId: pending.id });
-      else router.push({ pathname: "/import-recipe", params: { shareId: pending.id } });
-      routed.current = pending.id;
-      log.debug("Recipe share opened for import");
-    }
-  }, [root?.key, segments, revision, router, ready, navigation]);
-  return null;
+  if (
+    !pending ||
+    !root?.key ||
+    !ready ||
+    !navigation.isReady() ||
+    !storage.get<boolean>(ONBOARDING_COMPLETED_KEY) ||
+    segments[0] === "onboarding"
+  )
+    return null;
+
+  return (
+    <Suspense fallback={null}>
+      <SharedRecipeImport key={pending.id} pending={pending} onComplete={consume} />
+    </Suspense>
+  );
 }

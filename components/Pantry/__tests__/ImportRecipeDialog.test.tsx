@@ -1,20 +1,13 @@
-/**
- * Editability test for ImportRecipeDialog (issue #730).
- *
- * Asserts that a successfully imported recipe is routed to the EDIT screen
- * (`/recipes/${id}/edit`), not the view screen — so any mis-parsed
- * ingredient/step is correctable before save.
- */
-
 import { describe, it, expect, jest } from "@jest/globals";
 import { render, fireEvent, act, waitFor } from "@testing-library/react-native";
 import React from "react";
+import type { SharedRecipeInput } from "~/types/SharedRecipe";
 
-const pushMock = jest.fn();
+const mockPush = jest.fn();
 
 jest.mock("expo-router", () => ({
   __esModule: true,
-  useRouter: () => ({ push: pushMock, replace: jest.fn(), back: jest.fn() }),
+  useRouter: () => ({ push: mockPush, replace: jest.fn(), back: jest.fn() }),
 }));
 
 jest.mock("sonner-native", () => ({
@@ -31,7 +24,13 @@ jest.mock("~/components/ui/button", () => {
     Button: ({ children, onPress, disabled }: any) =>
       React.createElement(
         Pressable,
-        { onPress, disabled, testID: "btn" },
+        {
+          onPress: () => {
+            void onPress();
+          },
+          disabled,
+          testID: "btn",
+        },
         React.isValidElement(children) ? children : React.createElement(RNText, null, children)
       ),
   };
@@ -61,52 +60,85 @@ jest.mock("~/components/ui/dialog", () => {
 jest.mock("lucide-uniwind", () => ({ __esModule: true, LinkIcon: () => null }));
 
 // Controllable import hook so the test can drive a successful import.
-const importRecipeAsync = jest.fn<(url: string) => Promise<any>>();
-const reset = jest.fn();
+const mockImportRecipeAsync = jest.fn<(input: SharedRecipeInput) => Promise<any>>();
+const mockReset = jest.fn();
 jest.mock("~/hooks/queries/useRecipeImportQueries", () => ({
   __esModule: true,
   useImportRecipe: () => ({
-    importRecipeAsync,
+    importRecipeAsync: mockImportRecipeAsync,
     importStatus: "idle",
     isPending: false,
-    reset,
+    reset: mockReset,
   }),
 }));
 
 import ImportRecipeDialog from "~/components/Pantry/ImportRecipeDialog";
 
-describe("ImportRecipeDialog routing (always-editable)", () => {
+describe("manual recipe import and failed-share recovery", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it("routes to the EDIT screen on a successful import", async () => {
-    importRecipeAsync.mockResolvedValue({
+  it.each([
+    ["https://example.com/r", { url: "https://example.com/r", text: undefined }],
+    ["Fry 2 eggs in oil.", { url: undefined, text: "Fry 2 eggs in oil." }],
+    [
+      "https://example.com/r\nFry 2 eggs in oil.",
+      { url: "https://example.com/r", text: "Fry 2 eggs in oil." },
+    ],
+  ])("opens recipe details after importing %s", async (content, expected) => {
+    mockImportRecipeAsync.mockResolvedValue({
       success: true,
       recipe: { id: "recipe-42", title: "Soup" },
     });
 
-    const { getAllByTestId, getByTestId } = await render(
+    const { getByText, getByTestId } = await render(
       <ImportRecipeDialog open={true} onOpenChange={jest.fn()} />
     );
 
-    const input = getByTestId("import-recipe-url-input");
+    const input = getByTestId("import-recipe-content-input");
     await act(async () => {
-      fireEvent.changeText(input, "https://example.com/r");
+      fireEvent.changeText(input, content);
     });
 
-    // The Import button is the second testID="btn" (Cancel is first).
-    const buttons = getAllByTestId("btn");
-    const importButton = buttons[buttons.length - 1];
-    if (importButton) {
-      await act(async () => {
-        fireEvent.press(importButton);
-      });
-    }
+    await act(async () => fireEvent.press(getByText("Import")));
 
-    await waitFor(() => expect(pushMock).toHaveBeenCalledTimes(1));
-    expect(pushMock).toHaveBeenCalledWith("/recipes/recipe-42/edit");
-    // Sanity: must NOT route to the view screen.
-    expect(pushMock).not.toHaveBeenCalledWith("/recipes/recipe-42");
+    await waitFor(() => expect(mockPush).toHaveBeenCalledTimes(1));
+    expect(mockImportRecipeAsync).toHaveBeenCalledWith(expected);
+    expect(mockPush).toHaveBeenCalledWith("/recipes/recipe-42");
+  });
+
+  it("keeps the shared source available for a recovery attempt", async () => {
+    const screen = await render(
+      <ImportRecipeDialog
+        open
+        onOpenChange={jest.fn()}
+        initialInput={{ url: "https://example.com/r", text: "Fry 2 eggs in oil." }}
+      />
+    );
+    expect(screen.getByTestId("import-recipe-content-input").props.value).toBe(
+      "https://example.com/r\n\nFry 2 eggs in oil."
+    );
+  });
+
+  it("does not navigate from an import that finishes after the dialog is closed", async () => {
+    let finish!: (value: unknown) => void;
+    mockImportRecipeAsync.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        })
+    );
+    const screen = await render(<ImportRecipeDialog open onOpenChange={jest.fn()} />);
+    await act(async () =>
+      fireEvent.changeText(
+        screen.getByTestId("import-recipe-content-input"),
+        "https://example.com/r"
+      )
+    );
+    await act(async () => fireEvent.press(screen.getByText("Import")));
+    await screen.rerender(<ImportRecipeDialog open={false} onOpenChange={jest.fn()} />);
+    await act(async () => finish({ success: true, recipe: { id: "old-recipe" } }));
+    expect(mockPush).not.toHaveBeenCalled();
   });
 });

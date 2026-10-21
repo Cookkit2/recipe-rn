@@ -48,7 +48,7 @@ const NEBIUS_RECIPE_RESPONSE = JSON.stringify({
 const mockGenerateContent = jest.fn(async (_request: { prompt: string }) => NEBIUS_RECIPE_RESPONSE);
 
 jest.mock("~/lib/ai/client", () => ({
-  generateAIContent: mockGenerateContent,
+  generateAIContent: (request: { prompt: string }) => mockGenerateContent(request),
 }));
 
 import { SocialRecipeService } from "../SocialRecipeService";

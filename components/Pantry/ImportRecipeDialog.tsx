@@ -1,58 +1,73 @@
-import { useState } from "react";
-import { View, TextInput } from "react-native";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "expo-router";
-import { LinkIcon } from "lucide-uniwind";
 import { toast } from "sonner-native";
 import { Button } from "~/components/ui/button";
 import { Text } from "~/components/ui/text";
+import { Input } from "~/components/ui/input";
 import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog";
 import { useImportRecipe } from "~/hooks/queries/useRecipeImportQueries";
+import { normalizeSharedRecipe } from "~/utils/shared-recipe";
+import type { SharedRecipeInput } from "~/types/SharedRecipe";
 
 interface ImportRecipeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialInput?: SharedRecipeInput;
 }
 
-export default function ImportRecipeDialog({ open, onOpenChange }: ImportRecipeDialogProps) {
+export default function ImportRecipeDialog({
+  open,
+  onOpenChange,
+  initialInput,
+}: ImportRecipeDialogProps) {
   const router = useRouter();
-  const [recipeUrl, setRecipeUrl] = useState("");
+  const [content, setContent] = useState("");
+  const request = useRef(0);
   const { importRecipeAsync, importStatus, isPending, reset } = useImportRecipe();
+
+  useEffect(() => {
+    if (open) setContent([initialInput?.url, initialInput?.text].filter(Boolean).join("\n\n"));
+    return () => {
+      request.current += 1;
+    };
+  }, [open, initialInput?.url, initialInput?.text]);
 
   const isImporting =
     isPending ||
     (importStatus !== "idle" && importStatus !== "complete" && importStatus !== "error");
 
   const handleSubmit = async () => {
-    if (!recipeUrl.trim()) {
-      toast.error("Please enter a URL");
+    if (isImporting) return;
+    const input = normalizeSharedRecipe({ text: content });
+    if (!input) {
+      toast.error("Enter a valid recipe link or paste the caption.");
       return;
     }
 
+    const currentRequest = request.current;
     try {
-      const result = await importRecipeAsync(recipeUrl);
+      const result = await importRecipeAsync(input);
+      if (request.current !== currentRequest) return;
 
       if (result.success && result.recipe?.id) {
         toast.success("Recipe imported successfully!");
         onOpenChange(false);
-        setRecipeUrl("");
+        setContent("");
         reset();
-        // Always land imported recipes on the EDIT screen so any mis-parsed
-        // ingredient/step is correctable before the user commits (issue #730,
-        // acceptance: every result is editable).
-        router.push(`/recipes/${result.recipe.id}/edit`);
+        router.push(`/recipes/${result.recipe.id}`);
       } else {
         const errorMessage = result.error || "Failed to import recipe";
         toast.error(errorMessage);
       }
     } catch (err) {
+      if (request.current !== currentRequest) return;
       const errorMessage = err instanceof Error ? err.message : "Failed to import recipe";
       toast.error(errorMessage);
     }
@@ -61,7 +76,8 @@ export default function ImportRecipeDialog({ open, onOpenChange }: ImportRecipeD
   const handleDialogOpenChange = (isOpen: boolean) => {
     onOpenChange(isOpen);
     if (!isOpen) {
-      setRecipeUrl("");
+      request.current += 1;
+      setContent("");
       reset();
     }
   };
@@ -70,39 +86,24 @@ export default function ImportRecipeDialog({ open, onOpenChange }: ImportRecipeD
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Import Recipe from URL</DialogTitle>
-          <DialogDescription>
-            Paste a YouTube, Instagram, TikTok, or recipe website link to extract the recipe
-          </DialogDescription>
+          <DialogTitle>Import recipe</DialogTitle>
         </DialogHeader>
 
-        <View className="gap-4">
-          <View className="flex-row items-center bg-muted rounded-xl px-4 py-3">
-            <LinkIcon className="text-muted-foreground mr-2" size={18} />
-            <TextInput
-              testID="import-recipe-url-input"
-              className="flex-1 text-foreground"
-              placeholder="Paste recipe URL here..."
-              placeholderTextColor="#888"
-              value={recipeUrl}
-              onChangeText={setRecipeUrl}
-              autoCapitalize="none"
-              autoCorrect={false}
-              autoComplete="off"
-              keyboardType="url"
-              editable={!isImporting}
-            />
-          </View>
-          <Button
-            variant="ghost"
-            onPress={() => {
-              onOpenChange(false);
-              router.push("/import-recipe");
-            }}
-          >
-            <Text>Import from caption or text</Text>
-          </Button>
-        </View>
+        <Input
+          testID="import-recipe-content-input"
+          accessibilityLabel="Recipe link or caption"
+          placeholder="Paste a recipe link or caption"
+          value={content}
+          onChangeText={setContent}
+          autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete="off"
+          multiline
+          maxLength={32000}
+          className="min-h-36 px-4 py-4 text-left"
+          textAlignVertical="top"
+          editable={!isImporting}
+        />
 
         <DialogFooter>
           <DialogClose asChild>
@@ -110,7 +111,7 @@ export default function ImportRecipeDialog({ open, onOpenChange }: ImportRecipeD
               <Text>Cancel</Text>
             </Button>
           </DialogClose>
-          <Button onPress={handleSubmit} disabled={!recipeUrl.trim()} isLoading={isImporting}>
+          <Button onPress={handleSubmit} disabled={!content.trim()} isLoading={isImporting}>
             <Text>Import</Text>
           </Button>
         </DialogFooter>
