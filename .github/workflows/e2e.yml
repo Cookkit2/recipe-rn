@@ -44,7 +44,9 @@ jobs:
         run: |
           xcode_version="$(xcodebuild -version | awk 'NR==1 { print $2 }')"
           sanitized="$(printf '%s' "$xcode_version" | tr -c 'A-Za-z0-9._-' '-')"
-          echo "key=${{ runner.os }}-xcode-${sanitized}-detox-ios-debug-${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          # App inputs only. e2e/** and this workflow are not part of the hash,
+          # so those commits reuse Cookkit.app instead of running xcodebuild.
+          echo "key=${{ runner.os }}-xcode-${sanitized}-detox-ios-debug-${{ hashFiles('package.json', 'bun.lockb', 'bun.lock', 'app.json', 'app.config.js', 'babel.config.js', 'metro.config.js', 'global.css', 'detox.config.js', 'scripts/e2e-ios-env.sh', 'patches/**', 'ios/**', 'app/**', 'assets/**', 'auth/**', 'components/**', 'constants/**', 'data/**', 'hooks/**', 'lib/**', 'store/**', 'types/**', 'utils/**', 'services/**') }}" >> "$GITHUB_OUTPUT"
 
       - name: Cache Bun dependencies
         uses: actions/cache@v6
