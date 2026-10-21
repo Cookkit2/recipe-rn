@@ -29,6 +29,9 @@ jobs:
             echo "applesimutils already installed: $(applesimutils --version)"
           else
             brew tap wix/brew
+            if brew help trust >/dev/null 2>&1; then
+              brew trust --formula wix/brew/applesimutils
+            fi
             brew install applesimutils
             applesimutils --version
           fi
