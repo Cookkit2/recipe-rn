@@ -59,4 +59,14 @@ module.exports = {
       app: "ios.release",
     },
   },
+  // Failed tests write under artifacts/<configuration>.<timestamp>/, which the
+  // e2e workflow uploads from artifacts/.
+  artifacts: {
+    rootDir: "artifacts",
+    plugins: {
+      screenshot: "failing",
+      log: "failing",
+      uiHierarchy: "enabled",
+    },
+  },
 };

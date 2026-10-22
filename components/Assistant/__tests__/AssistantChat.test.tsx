@@ -38,9 +38,22 @@ it("renders a stable assistant composer above the home indicator in E2E", async 
   expect(StyleSheet.flatten(root.props.style)).toMatchObject({ flex: 1 });
 
   const composer = screen.getByTestId(TEST_IDS.assistant.composer);
-  expect(StyleSheet.flatten(composer.props.style)).toMatchObject({ minHeight: 48 });
+  expect(composer.props.multiline).toBe(false);
+  expect(composer.props.scrollEnabled).toBe(false);
+  expect(StyleSheet.flatten(composer.props.style)).toMatchObject({
+    height: 48,
+    maxHeight: 48,
+  });
   expect(screen.getByTestId(TEST_IDS.assistant.list)).toBeTruthy();
 
   const barStyle = StyleSheet.flatten(composer.parent?.props.style);
-  expect(barStyle).toMatchObject({ paddingBottom: 46, flexShrink: 0 });
+  expect(barStyle).toMatchObject({
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 2,
+    paddingBottom: 46,
+    flexShrink: 0,
+  });
 });
