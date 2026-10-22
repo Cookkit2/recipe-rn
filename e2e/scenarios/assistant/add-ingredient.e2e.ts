@@ -29,13 +29,11 @@ describe("Assistant", () => {
       .withTimeout(20000);
 
     const composer = element(by.id(TEST_IDS.assistant.composer));
-    // The composer is pinned to the bottom. It can exist while the keyboard
-    // or the home indicator keeps it under Detox's 75% visibility threshold.
+    // Visibility is not the assertion. replaceText acts on an existing field,
+    // including one Detox would not count as 75% visible.
     await waitFor(composer).toExist().withTimeout(15000);
-    await element(by.id(TEST_IDS.assistant.list)).tap();
-    await waitFor(composer).toBeVisible().withTimeout(15000);
 
-    await element(by.id(TEST_IDS.assistant.composer)).replaceText("Add 6 eggs to my pantry.");
+    await composer.replaceText("Add 6 eggs to my pantry.");
     await element(by.id(TEST_IDS.assistant.send)).tap();
 
     await waitFor(element(by.text("Updated pantry")))

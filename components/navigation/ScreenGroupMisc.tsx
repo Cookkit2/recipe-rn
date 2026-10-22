@@ -48,6 +48,9 @@ export function getMiscScreens({
         headerTitle: "Assistant",
         headerTransparent: false,
         headerStyle: { backgroundColor },
+        // A large title keeps resizing the iOS 26 navigation bar. The screen is
+        // laid out under that bar, and safe-area insets lag the bar's frame.
+        headerLargeTitleEnabled: false,
       }}
     />,
     <Stack.Screen

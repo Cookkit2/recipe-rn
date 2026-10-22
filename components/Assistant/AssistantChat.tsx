@@ -41,6 +41,11 @@ function MessageBubble({ message }: { message: CookingChatMessage }) {
   );
 }
 
+const COMPOSER_HEIGHT = 48;
+// iPhone Air's home indicator is 34pt. useSafeAreaInsets() can still report 0
+// while UIKit is correcting the iOS 26 navigation-bar frame.
+const HOME_INDICATOR_FALLBACK = 34;
+
 export function AssistantChat({ agent }: { agent: CookingAgent }) {
   const { messages, status, send, stop } = useCookingAgentChat(agent);
   const [draft, setDraft] = useState("");
@@ -48,6 +53,7 @@ export function AssistantChat({ agent }: { agent: CookingAgent }) {
   const { bottom } = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const streaming = status === "streaming";
+  const composerClearance = Math.max(bottom, HOME_INDICATOR_FALLBACK) + 12;
 
   const onSend = useCallback(() => {
     const text = draft;
@@ -62,11 +68,10 @@ export function AssistantChat({ agent }: { agent: CookingAgent }) {
       className="flex-1 bg-background"
       keyboardVerticalOffset={headerHeight}
       style={{ flex: 1 }}
-      // iOS keyboard-frame notifications on the simulator keep this padding
-      // animating, which holds the main run loop awake and leaves the bottom
-      // field under Detox's 75% visibility threshold. The Detox build types
-      // into a stable composer instead.
+      // Keyboard-frame notifications on the simulator keep padding in flux.
+      // E2E types into a field that does not move.
       behavior={Platform.OS === "ios" && !IS_E2E ? "padding" : undefined}
+      enabled={!IS_E2E}
     >
       <FlatList
         className="flex-1 overflow-hidden"
@@ -77,27 +82,45 @@ export function AssistantChat({ agent }: { agent: CookingAgent }) {
         contentInsetAdjustmentBehavior="never"
         style={{ flex: 1 }}
         keyboardShouldPersistTaps="handled"
-        contentContainerClassName="gap-3 px-4 py-4"
+        contentContainerClassName="gap-3 px-4"
+        contentContainerStyle={{
+          // The opaque native header already reserves the top safe area.
+          paddingTop: 12,
+          paddingBottom: COMPOSER_HEIGHT + 12 + composerClearance,
+        }}
         ListEmptyComponent={
           <P className="px-2 pt-8 text-muted-foreground">Ask what to cook from your fridge.</P>
         }
-        onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
+        onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: !IS_E2E })}
         renderItem={({ item }) => <MessageBubble message={item} />}
       />
       <View
-        className="flex-row items-end gap-2 border-t border-border px-4 pt-3"
-        style={{ paddingBottom: bottom + 12, flexShrink: 0 }}
+        className="flex-row items-end gap-2 border-t border-border bg-background px-4 pt-3"
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 2,
+          paddingBottom: composerClearance,
+          flexShrink: 0,
+        }}
       >
         <Input
           className="flex-1 text-left text-foreground"
-          style={{ minHeight: 48 }}
+          style={{ height: COMPOSER_HEIGHT, maxHeight: COMPOSER_HEIGHT }}
           value={draft}
           onChangeText={setDraft}
           placeholder="Ask about your fridge"
           accessibilityLabel="Message"
           testID={TEST_IDS.assistant.composer}
           editable={!streaming}
-          multiline
+          // A multiline field is a UITextView (a scroll view). Detox matches
+          // that inner view, and its frame is not counted 75% visible at the
+          // bottom of a full-bleed iOS 26 screen. A fixed single-line field
+          // has the same frame as its accessibility element.
+          multiline={false}
+          scrollEnabled={false}
           onSubmitEditing={onSend}
         />
         <Button
