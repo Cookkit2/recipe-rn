@@ -35,6 +35,11 @@ describe("Assistant", () => {
     await waitFor(composer).toBeVisible().withTimeout(15000);
 
     await composer.replaceText("Add 6 eggs to my pantry.");
+    // replaceText focuses the field. The E2E composer stays pinned to the
+    // bottom, so the keyboard dock covers Send: the Dictate key sits on the
+    // button center (69x42 at y=824, Dictate at y=843). The list center is
+    // above the keyboard; tapping it blurs the field. Then Send is hittable.
+    await element(by.id(TEST_IDS.assistant.list)).tap();
     await element(by.id(TEST_IDS.assistant.send)).tap();
 
     await waitFor(element(by.text("Updated pantry")))
