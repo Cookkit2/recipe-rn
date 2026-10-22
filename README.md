@@ -47,8 +47,8 @@ Cloud AI uses NVIDIA Nemotron on Nebius Token Factory: Nano for recipe text and 
 
 ### Prerequisites
 
-- Node.js 18+
-- npm/yarn/bun
+- Node.js 22.13+ (see `engines` in `package.json`)
+- Bun 1.4.3 (matches CI and the binary lockfile version)
 - iOS: macOS with Xcode (for iOS development)
 - Android: Android Studio with SDK (for Android development)
 - Expo Go app (for quick device testing)
@@ -61,14 +61,19 @@ git clone https://github.com/Fridgit00/fridgit.git
 cd fridgit
 
 # Install dependencies
-npm install
+bun install --frozen-lockfile
 
 # Copy environment template and fill in values (see docs/DEPLOYMENT.md)
 cp .env.example .env
 
 # Start development server
-npm run dev
+bun run dev
 ```
+
+Project typechecking uses the native TypeScript 7 `tsc`. Jest uses the TypeScript 6
+compiler API through the `typescript` compatibility alias, following the
+[upstream side-by-side setup](https://kulshekhar.github.io/ts-jest/docs/next/guides/typescript-7).
+Keep both compiler packages when updating dependencies.
 
 ### Running the App
 

@@ -29,6 +29,14 @@ describe("verified dependency audit", () => {
     expect(inventory.packages["string-width"]).toContain("4.2.3");
   });
 
+  test("audits the native and compatibility compiler aliases under their published names", () => {
+    const native = require("@typescript/native/package.json");
+    const compatibility = require("typescript/package.json");
+    expect(inventory.packages["@typescript/native"]).toBeUndefined();
+    expect(inventory.packages[native.name]).toContain(native.version);
+    expect(inventory.packages[compatibility.name]).toContain(compatibility.version);
+  });
+
   test("fails when the patch file hash changes", () => {
     const changed = [{ ...policy[0], patchSha256: "0".repeat(64) }];
     expect(() => verifyBackports(root, changed, inventory)).toThrow(/patch hash mismatch/);
