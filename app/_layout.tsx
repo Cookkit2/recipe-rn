@@ -1,7 +1,7 @@
 import "~/global.css";
 import React, { useEffect, useMemo } from "react";
 import { useNavigationContainerRef } from "expo-router";
-import { Platform, View } from "react-native";
+import { LogBox, Platform, View } from "react-native";
 import { PortalHost } from "@rn-primitives/portal";
 import { setAndroidNavigationBar } from "~/lib/android-navigation-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -45,6 +45,14 @@ import RecipeLinkHandler from "~/components/Recipe/RecipeLinkHandler";
 import LeftoverReminderCoordinator from "~/lib/notifications/LeftoverReminderCoordinator";
 import SocialRecipeShareHandler from "~/components/Recipe/SocialRecipeShareHandler";
 import { MealPlanCalendarProvider } from "~/store/MealPlanCalendarContext";
+
+// Detox builds have no debugger attached. Any console.warn then becomes the
+// fusebox banner "Open debugger to view warnings.", which is absolutely
+// positioned over the bottom of the screen and covers the assistant composer.
+// Ignore the notifications in E2E; the warnings still print to the device log.
+if (IS_E2E) {
+  LogBox.ignoreAllLogs();
+}
 
 /**
  * Approximate cold-start launch timestamp (issue #733). Captured at this
