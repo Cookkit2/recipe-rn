@@ -60,12 +60,18 @@ describe("Assistant", () => {
     // Back returns to the already-mounted profile, then home, which is what
     // catches a missing pantry query invalidation. Home keeps the main queue
     // awake, so don't wait for idle around these taps.
+    //
+    // label "Back" matches two views of the same control: the bar button and
+    // its chevron image. The bar button's accessibility id is BackButton, and
+    // it sits in the nav bar whose id is the screen title.
+    const backButton = (screenTitle: string) =>
+      element(by.id("BackButton").withAncestor(by.id(screenTitle)));
     await device.disableSynchronization();
-    await element(by.label("Back")).tap();
+    await backButton("Assistant").tap();
     await waitFor(element(by.id(TEST_IDS.profile.screen)))
       .toBeVisible()
       .withTimeout(20000);
-    await element(by.label("Back")).tap();
+    await backButton("Profile").tap();
     await waitFor(element(by.id(TEST_IDS.home.screen)))
       .toBeVisible()
       .withTimeout(20000);
