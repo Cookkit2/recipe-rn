@@ -405,7 +405,10 @@ async function sendToRevenueCat(event: FunnelEvent): Promise<void> {
   // setAttributes may be absent when RevenueCat is unconfigured (E2E / dev) —
   // treat a missing method as a no-op rather than throwing.
   if (typeof Purchases.setAttributes !== "function") return;
-  Purchases.setAttributes({
+  // setAttributes returns a promise that rejects when Purchases.configure has
+  // not run. Awaiting it keeps that rejection on this function, which callers
+  // already swallow. Leaving it floating surfaces as a LogBox toast.
+  await Purchases.setAttributes({
     [`funnel_last_event`]: event.type,
     [`funnel_last_event_ts`]: String(event.eventTs),
     [`funnel_${event.type}_ts`]: String(event.eventTs),

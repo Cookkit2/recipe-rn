@@ -29,9 +29,10 @@ describe("Assistant", () => {
       .withTimeout(20000);
 
     const composer = element(by.id(TEST_IDS.assistant.composer));
-    // Visibility is not the assertion. replaceText acts on an existing field,
-    // including one Detox would not count as 75% visible.
-    await waitFor(composer).toExist().withTimeout(15000);
+    // Existence is not enough to type: a LogBox toast can cover the field
+    // while its frame is still fully on screen. Wait until the field is
+    // actually visible, then type.
+    await waitFor(composer).toBeVisible().withTimeout(15000);
 
     await composer.replaceText("Add 6 eggs to my pantry.");
     await element(by.id(TEST_IDS.assistant.send)).tap();

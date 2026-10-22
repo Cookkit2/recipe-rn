@@ -257,8 +257,6 @@ function useRevenueCatSetup() {
     let customerInfoListener: CustomerInfoUpdateListener | undefined;
 
     const handle = requestIdleCallback(() => {
-      Purchases.setLogLevel(LOG_LEVEL.ERROR);
-
       const appleApiKey =
         process.env.EXPO_PUBLIC_REVENUECAT_PROJECT_APPLE_API_KEY ||
         Constants.expoConfig?.extra?.EXPO_PUBLIC_REVENUECAT_PROJECT_APPLE_API_KEY;
@@ -267,13 +265,12 @@ function useRevenueCatSetup() {
         process.env.EXPO_PUBLIC_REVENUECAT_PROJECT_GOOGLE_API_KEY ||
         Constants.expoConfig?.extra?.EXPO_PUBLIC_REVENUECAT_PROJECT_GOOGLE_API_KEY;
 
-      if (Platform.OS === "ios" && appleApiKey) {
-        Purchases.configure({ apiKey: appleApiKey });
-      } else if (Platform.OS === "android" && googleApiKey) {
-        Purchases.configure({ apiKey: googleApiKey });
-      } else {
-        return;
-      }
+      const apiKey =
+        Platform.OS === "ios" ? appleApiKey : Platform.OS === "android" ? googleApiKey : undefined;
+      if (!apiKey) return;
+
+      Purchases.setLogLevel(LOG_LEVEL.ERROR);
+      Purchases.configure({ apiKey });
 
       customerInfoListener = (customerInfo: CustomerInfo) => {
         // Diff against the previously seen CustomerInfo to derive funnel
