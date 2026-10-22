@@ -32,6 +32,9 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "expo*"
         update-types: ["version-update:semver-major"]
+      # Expo SDK 58's preset and synchronous Jest transforms use Babel 7.
+      - dependency-name: "@babel/*"
+        update-types: ["version-update:semver-major"]
     groups:
       # Group React-related updates together
       react-dependencies:
