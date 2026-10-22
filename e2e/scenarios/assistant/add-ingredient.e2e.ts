@@ -55,8 +55,17 @@ describe("Assistant", () => {
     await expect(element(by.id(TEST_IDS.assistant.bubble))).toBeVisible();
     await expect(element(by.id(TEST_IDS.assistant.list))).toBeVisible();
 
-    // Return to the already-mounted pantry: this catches missing query invalidation.
-    await device.openURL({ url: "cookkit:///" });
+    // cookkit:/// does not pop this stack. After openURL the Assistant card
+    // was still the only visible screen (title, transcript, and composer).
+    // Back returns to the already-mounted profile, then home, which is what
+    // catches a missing pantry query invalidation. Home keeps the main queue
+    // awake, so don't wait for idle around these taps.
+    await device.disableSynchronization();
+    await element(by.label("Back")).tap();
+    await waitFor(element(by.id(TEST_IDS.profile.screen)))
+      .toBeVisible()
+      .withTimeout(20000);
+    await element(by.label("Back")).tap();
     await waitFor(element(by.id(TEST_IDS.home.screen)))
       .toBeVisible()
       .withTimeout(20000);
@@ -64,8 +73,11 @@ describe("Assistant", () => {
     const quantity = element(by.text("6 count").withAncestor(by.id(TEST_IDS.home.pantryList)));
     await waitFor(eggs).toBeVisible().withTimeout(20000);
     await expect(quantity).toBeVisible();
+    await device.enableSynchronization();
 
     // Preserve app data so a cloud-only write cannot pass as a local pantry update.
+    // newInstance does not delete the install. A fresh process idles the way the
+    // opening home wait did, so synchronization stays on for the persistence check.
     await device.launchApp({ newInstance: true });
     await waitFor(element(by.id(TEST_IDS.home.screen)))
       .toBeVisible()
