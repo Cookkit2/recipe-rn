@@ -17,16 +17,13 @@ export default function RecipeButton() {
   const { isRecipeOpen, updateRecipeOpen } = usePantryStore();
   const [isFirstTime, setIsFirstTime] = useState(!storage.get(PREFERENCE_COMPLETED_KEY));
 
-  const recipeButtonStyle = useAnimatedStyle(
-    () => ({
-      transform: [
-        {
-          scale: withTiming(isRecipeOpen ? 0 : 1, CURVES["expressive.fast.spatial"]),
-        },
-      ],
-    }),
-    [isRecipeOpen]
-  );
+  const recipeButtonStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        scale: withTiming(isRecipeOpen ? 0 : 1, CURVES["expressive.fast.spatial"]),
+      },
+    ],
+  }));
 
   const onRecipeButtonPress = () => {
     if (isFirstTime) {

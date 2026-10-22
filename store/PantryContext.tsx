@@ -60,6 +60,8 @@ export function PantryProvider({ children }: { children: React.ReactNode }) {
   const collapsedHeight = useMemo(() => bottom + 8 + 44, [bottom]);
 
   // Preserve the drawer's expansion fraction when the window or safe area changes.
+  // No dependency array: native Reanimated ignores it and console.warns, which
+  // becomes a LogBox toast when no debugger is attached.
   useAnimatedReaction(
     () => Math.max(0, expandedHeight - collapsedHeight),
     (travel, previousTravel) => {
@@ -67,8 +69,7 @@ export function PantryProvider({ children }: { children: React.ReactNode }) {
         translateY.value = -Math.min(1, Math.max(0, -translateY.value / previousTravel)) * travel;
         context.value = { y: translateY.value };
       }
-    },
-    [expandedHeight, collapsedHeight]
+    }
   );
 
   // UI callbacks

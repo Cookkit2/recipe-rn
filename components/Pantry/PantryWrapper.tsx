@@ -43,10 +43,10 @@ export default function PantryWrapper() {
     expandedHeight,
   } = usePantryStore();
 
-  const entranceOffset = useDerivedValue(
-    () => withSpring(isRecipeOpen ? 1 : 0, SPRING_CONFIG),
-    [isRecipeOpen]
-  );
+  // Dependency arrays are ignored on native and each one logs a console.warn.
+  // In a dev build with no debugger that warning is a LogBox toast over the
+  // bottom of the screen. The Babel plugin already tracks the closure.
+  const entranceOffset = useDerivedValue(() => withSpring(isRecipeOpen ? 1 : 0, SPRING_CONFIG));
 
   useEffect(() => {
     setStatusBarStyle("auto", true);
@@ -117,7 +117,7 @@ export default function PantryWrapper() {
       marginBottom: isRecipeOpen ? collapsedHeight - translateY.value : 0,
       paddingTop: withSpring(isRecipeOpen ? top - 8 : top, SPRING_CONFIG),
     };
-  }, [isRecipeOpen, collapsedHeight, top]);
+  });
 
   const closeRecipe = useCallback(() => {
     if (isRecipeOpen) {
@@ -134,7 +134,7 @@ export default function PantryWrapper() {
       // Bound the list to the visible drawer instead of extending it offscreen.
       bottom: 0,
     };
-  }, [collapsedHeight, screenHeight]);
+  });
 
   return (
     <View testID={TEST_IDS.home.screen} collapsable={false} style={{ flex: 1 }}>

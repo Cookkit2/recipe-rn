@@ -61,6 +61,38 @@ describe("subscription-utils", () => {
     expect(Purchases.getCustomerInfo).not.toHaveBeenCalled();
   });
 
+  it("returns null without calling getCustomerInfo when Purchases is not configured", async () => {
+    const purchases = Purchases as typeof Purchases & { isConfigured?: jest.Mock };
+    const previous = purchases.isConfigured;
+    purchases.isConfigured = jest.fn().mockResolvedValue(false);
+
+    try {
+      expect(await readEntitlement()).toBeNull();
+      expect(purchases.isConfigured).toHaveBeenCalled();
+      expect(Purchases.getCustomerInfo).not.toHaveBeenCalled();
+      expect(log.error).not.toHaveBeenCalled();
+    } finally {
+      purchases.isConfigured = previous;
+    }
+  });
+
+  it("reads the Pro entitlement when Purchases is configured", async () => {
+    const purchases = Purchases as typeof Purchases & { isConfigured?: jest.Mock };
+    const previous = purchases.isConfigured;
+    purchases.isConfigured = jest.fn().mockResolvedValue(true);
+    const entitlement = { identifier: "Pro" };
+    (Purchases.getCustomerInfo as jest.Mock).mockResolvedValueOnce({
+      entitlements: { active: { Pro: entitlement } },
+    });
+
+    try {
+      expect(await readEntitlement()).toEqual(entitlement);
+      expect(Purchases.getCustomerInfo).toHaveBeenCalled();
+    } finally {
+      purchases.isConfigured = previous;
+    }
+  });
+
   describe("presentPaywall", () => {
     it("allows the action without presenting or recording a purchase when disabled", async () => {
       jest.mocked(arePaywallsEnabled).mockReturnValue(false);
