@@ -61,17 +61,17 @@ describe("Assistant", () => {
     // catches a missing pantry query invalidation. Home keeps the main queue
     // awake, so don't wait for idle around these taps.
     //
-    // label "Back" matches two views of the same control: the bar button and
-    // its chevron image. The bar button's accessibility id is BackButton, and
-    // it sits in the nav bar whose id is the screen title.
-    const backButton = (screenTitle: string) =>
-      element(by.id("BackButton").withAncestor(by.id(screenTitle)));
+    // label "Back" matches the bar button and its chevron. id "BackButton"
+    // still matches more than one view under the Assistant bar. The bar
+    // itself is unique (its id is the screen title) and the back platter is
+    // the 44pt control at (20, 0) inside it.
+    const pop = (screenTitle: string) => element(by.id(screenTitle)).tap({ x: 42, y: 22 });
     await device.disableSynchronization();
-    await backButton("Assistant").tap();
+    await pop("Assistant");
     await waitFor(element(by.id(TEST_IDS.profile.screen)))
       .toBeVisible()
       .withTimeout(20000);
-    await backButton("Profile").tap();
+    await pop("Profile");
     await waitFor(element(by.id(TEST_IDS.home.screen)))
       .toBeVisible()
       .withTimeout(20000);
