@@ -34,7 +34,7 @@ export function AnimatedStack() {
   useOnboardingCheck();
 
   return (
-    <Stack>
+    <Stack screenOptions={{ headerTintColor: colors.foreground }}>
       {/* ======== PANTRY ======== */}
       {getPantryScreens()}
 

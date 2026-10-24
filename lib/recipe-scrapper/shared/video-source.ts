@@ -82,8 +82,15 @@ export function videoResolverScript(): string {
       for (const name of ['__UNIVERSAL_DATA_FOR_REHYDRATION__','SIGI_STATE']) {
         try {
           const data = JSON.parse(document.getElementById(name)?.textContent || '{}');
-          const item = data.__DEFAULT_SCOPE__?.['webapp.video-detail']?.itemInfo?.itemStruct || (id && data.ItemModule?.[id]);
-          if (item && (!id || item.id === id)) finish(item.video?.playAddr || item.video?.downloadAddr, item.desc || caption);
+          const scope = data.__DEFAULT_SCOPE__;
+          const items = [
+            scope?.['webapp.video-detail']?.itemInfo?.itemStruct,
+            scope?.['webapp.reflow.video.detail']?.itemInfo?.itemStruct,
+            id && data.ItemModule?.[id]
+          ];
+          for (const item of items) {
+            if (item && (!id || String(item.id) === id)) finish(item.video?.playAddr || item.video?.downloadAddr, item.desc || caption);
+          }
         } catch {}
       }
       for (const node of document.querySelectorAll('script[type="application/ld+json"]')) {

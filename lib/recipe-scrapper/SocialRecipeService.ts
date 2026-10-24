@@ -11,7 +11,8 @@ import type { RecipeAnalysisResult, GeneratedRecipe } from "~/types/ScrappedReci
 import { isValidRecipe } from "./validation-utils";
 import { fetchWithTimeout } from "~/utils/fetch-with-timeout";
 import { extractSocialMetadata } from "./shared/social-metadata";
-import { hasInstructionEvidence } from "./shared/instruction-evidence";
+import { extractTikTokMetadata, extractWebVttText } from "./shared/tiktok-metadata";
+import { hasInstructionEvidence, hasLeadingCookingAction } from "./shared/instruction-evidence";
 import { readRecipeVideo } from "./recipe-video";
 import type { RecipeVideoOptions } from "~/types/RecipeVideo";
 
@@ -40,11 +41,38 @@ export class SocialRecipeService {
       // Supplied captions can be extracted without waiting on a social login wall.
       const suppliedText = content.text?.trim();
       const analyze = async (metadata: { title: string; description: string }) => {
-        const response = await generateAIContent(
-          buildSocialRecipeRequest(this.buildAnalysisPrompt(content, metadata)),
-          options.signal
+        const request = buildSocialRecipeRequest(this.buildAnalysisPrompt(content, metadata));
+        const subtitleInstructions =
+          metadata.description
+            .split("PUBLISHED VIDEO SUBTITLES")
+            .slice(1)
+            .map((track) =>
+              [
+                ...new Set(
+                  track
+                    .split("\n")
+                    .slice(1)
+                    .map((line) => line.trim())
+                    .filter(
+                      (line) =>
+                        line.length <= 1600 &&
+                        hasLeadingCookingAction(line) &&
+                        hasInstructionEvidence(line, line)
+                    )
+                ),
+              ].slice(0, 40)
+            )
+            .find((instructions) => instructions.length > 0) ?? [];
+        if (subtitleInstructions.length) {
+          request.prompt += `\nChoose each step description verbatim from these published cooking instructions. Ingredient-only fragments are not steps:\n${JSON.stringify(subtitleInstructions)}`;
+        }
+        const response = await generateAIContent(request, options.signal);
+        return this.parseResponse(
+          response,
+          content.url,
+          metadata.description,
+          subtitleInstructions
         );
-        return this.parseResponse(response, content.url, metadata.description);
       };
       let suppliedResult: RecipeAnalysisResult | undefined;
       if (suppliedText && !content.videoUri) {
@@ -148,7 +176,29 @@ export class SocialRecipeService {
         20_000
       );
       if (!response.ok) throw new Error(`Failed to fetch URL: ${response.status}`);
-      return extractSocialMetadata(await response.text());
+      const html = await response.text();
+      const metadata = extractSocialMetadata(html);
+      const tiktok = extractTikTokMetadata(html, response.url || url);
+      if (!tiktok) return metadata;
+      const subtitles = await Promise.all(
+        tiktok.subtitles.map(async ({ url: subtitleUrl, language }) => {
+          try {
+            const subtitle = await fetchWithTimeout(subtitleUrl, { signal }, 8_000);
+            if (!subtitle.ok || Number(subtitle.headers.get("content-length")) > 128_000) return "";
+            const text = extractWebVttText(await subtitle.text());
+            return text ? `PUBLISHED VIDEO SUBTITLES (${language}):\n${text}` : "";
+          } catch {
+            signal?.throwIfAborted();
+            return "";
+          }
+        })
+      );
+      return {
+        title: metadata.title || tiktok.title,
+        description: [tiktok.caption || metadata.description, ...subtitles]
+          .filter(Boolean)
+          .join("\n\n"),
+      };
     } catch (error) {
       signal?.throwIfAborted();
       log.warn("SocialRecipeService: Failed to fetch metadata", error);
@@ -217,7 +267,8 @@ Return a valid JSON response matching the schema.
   private parseResponse(
     response: string,
     sourceUrl: string,
-    evidence: string
+    evidence: string,
+    subtitleInstructions: string[] = []
   ): RecipeAnalysisResult {
     try {
       const parsed = JSON.parse(response);
@@ -234,7 +285,13 @@ Return a valid JSON response matching the schema.
 
       if (parsed.isCookingVideo && parsed.recipe) {
         const ingredients = this.normalizeIngredients(parsed.recipe.ingredients);
-        const steps = this.normalizeSteps(parsed.recipe.steps);
+        const steps = subtitleInstructions.length
+          ? subtitleInstructions.map((description, index) => ({
+              step: index + 1,
+              title: `Step ${index + 1}`,
+              description,
+            }))
+          : this.normalizeSteps(parsed.recipe.steps);
 
         if (
           !steps.length ||
@@ -280,6 +337,10 @@ Return a valid JSON response matching the schema.
         result.warnings = ingredients.some((ingredient) => ingredient.quantity <= 0)
           ? ["Add the missing ingredient amounts before saving."]
           : [];
+        if (subtitleInstructions.length)
+          result.warnings.push(
+            "Instructions come from published subtitles. Check them against the video."
+          );
       }
 
       return result;

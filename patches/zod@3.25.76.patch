@@ -1,0 +1,1135 @@
+diff --git a/src/v3/types.ts b/src/v3/types.ts
+index b10e84f1beb1dacdae5e01c42a223974b9e20b73..e719496ad97ebd9dcfb41037ddec3a33959aa0ec 100644
+--- a/src/v3/types.ts
++++ b/src/v3/types.ts
+@@ -2231,6 +2231,32 @@ export type arrayOutputType<
+   Cardinality extends ArrayCardinality = "many",
+ > = Cardinality extends "atleastone" ? [T["_output"], ...T["_output"][]] : T["_output"][];
+ 
++// Stop invalid collection expansion and keep async validation bounded.
++function parseCollectionV3(ctx: ParseContext, input: Iterable<any>, parseItem: (value: any, index: number) => any, finish: (results: any[]) => any): any {
++    const iterator = input[Symbol.iterator]();
++    const results: any[] = [];
++    let index = 0;
++    const advance = (): any => {
++        while (true) {
++            if (ctx.common.issues.length >= 100) return INVALID;
++            const pending: Promise<unknown>[] = [];
++            let done = false;
++            for (let batch = 0; batch < 32; batch++) {
++                if (ctx.common.issues.length >= 100) break;
++                const next = iterator.next();
++                if (next.done) { done = true; break; }
++                const current = index++;
++                const result = parseItem(next.value, current);
++                if (result instanceof Promise) pending.push(result.then(value => { results[current] = value; }));
++                else results[current] = result;
++            }
++            if (pending.length) return Promise.all(pending).then(() => done ? finish(results) : advance());
++            if (done) return finish(results);
++        }
++    };
++    return advance();
++}
++
+ export class ZodArray<T extends ZodTypeAny, Cardinality extends ArrayCardinality = "many"> extends ZodType<
+   arrayOutputType<T, Cardinality>,
+   ZodArrayDef<T>,
+@@ -2264,6 +2290,7 @@ export class ZodArray<T extends ZodTypeAny, Cardinality extends ArrayCardinality
+           message: def.exactLength.message,
+         });
+         status.dirty();
++        if (tooBig) return INVALID;
+       }
+     }
+ 
+@@ -2291,27 +2318,12 @@ export class ZodArray<T extends ZodTypeAny, Cardinality extends ArrayCardinality
+           exact: false,
+           message: def.maxLength.message,
+         });
+-        status.dirty();
++        return INVALID;
+       }
+     }
+ 
+-    if (ctx.common.async) {
+-      return Promise.all(
+-        ([...ctx.data] as any[]).map((item, i) => {
+-          return def.type._parseAsync(new ParseInputLazyPath(ctx, item, ctx.path, i));
+-        })
+-      ).then((result) => {
+-        return ParseStatus.mergeArray(status, result);
+-      });
+-    }
+-
+-    const result = ([...ctx.data] as any[]).map((item, i) => {
+-      return def.type._parseSync(new ParseInputLazyPath(ctx, item, ctx.path, i));
+-    });
+-
+-    return ParseStatus.mergeArray(status, result);
++    return parseCollectionV3(ctx, ctx.data, (item, index) => def.type._parse(new ParseInputLazyPath(ctx, item, ctx.path, index)), (results) => ParseStatus.mergeArray(status, results));
+   }
+-
+   get element() {
+     return this._def.type;
+   }
+@@ -3612,46 +3624,21 @@ export class ZodMap<Key extends ZodTypeAny = ZodTypeAny, Value extends ZodTypeAn
+     const keyType = this._def.keyType;
+     const valueType = this._def.valueType;
+ 
+-    const pairs = [...(ctx.data as Map<unknown, unknown>).entries()].map(([key, value], index) => {
+-      return {
+-        key: keyType._parse(new ParseInputLazyPath(ctx, key, ctx.path, [index, "key"])),
+-        value: valueType._parse(new ParseInputLazyPath(ctx, value, ctx.path, [index, "value"])),
+-      };
+-    });
+-
+-    if (ctx.common.async) {
+-      const finalMap = new Map();
+-      return Promise.resolve().then(async () => {
++    return parseCollectionV3(ctx, ctx.data.entries(), ([key, value], index) => {
++        const parsedKey = keyType._parse(new ParseInputLazyPath(ctx, key, ctx.path, [index, "key"]));
++        const parsedValue = valueType._parse(new ParseInputLazyPath(ctx, value, ctx.path, [index, "value"]));
++        if (parsedKey instanceof Promise || parsedValue instanceof Promise) return Promise.all([parsedKey, parsedValue]).then(([key, value]) => ({ key, value }));
++        return { key: parsedKey, value: parsedValue };
++    }, (pairs) => {
++        const finalMap = new Map();
+         for (const pair of pairs) {
+-          const key = await pair.key;
+-          const value = await pair.value;
+-          if (key.status === "aborted" || value.status === "aborted") {
+-            return INVALID;
+-          }
+-          if (key.status === "dirty" || value.status === "dirty") {
+-            status.dirty();
+-          }
+-
+-          finalMap.set(key.value, value.value);
+-        }
+-        return { status: status.value, value: finalMap };
+-      });
+-    } else {
+-      const finalMap = new Map();
+-      for (const pair of pairs) {
+-        const key = pair.key as SyncParseReturnType;
+-        const value = pair.value as SyncParseReturnType;
+-        if (key.status === "aborted" || value.status === "aborted") {
+-          return INVALID;
++            const {key, value} = pair;
++            if (key.status === "aborted" || value.status === "aborted") return INVALID;
++            if (key.status === "dirty" || value.status === "dirty") status.dirty();
++            finalMap.set(key.value, value.value);
+         }
+-        if (key.status === "dirty" || value.status === "dirty") {
+-          status.dirty();
+-        }
+-
+-        finalMap.set(key.value, value.value);
+-      }
+-      return { status: status.value, value: finalMap };
+-    }
++        return {status: status.value, value: finalMap};
++    });
+   }
+   static create = <KeySchema extends ZodTypeAny = ZodTypeAny, ValueSchema extends ZodTypeAny = ZodTypeAny>(
+     keyType: KeySchema,
+@@ -3723,7 +3710,7 @@ export class ZodSet<Value extends ZodTypeAny = ZodTypeAny> extends ZodType<
+           exact: false,
+           message: def.maxSize.message,
+         });
+-        status.dirty();
++        return INVALID;
+       }
+     }
+ 
+@@ -3739,15 +3726,7 @@ export class ZodSet<Value extends ZodTypeAny = ZodTypeAny> extends ZodType<
+       return { status: status.value, value: parsedSet };
+     }
+ 
+-    const elements = [...(ctx.data as Set<unknown>).values()].map((item, i) =>
+-      valueType._parse(new ParseInputLazyPath(ctx, item, ctx.path, i))
+-    );
+-
+-    if (ctx.common.async) {
+-      return Promise.all(elements).then((elements) => finalizeSet(elements));
+-    } else {
+-      return finalizeSet(elements as SyncParseReturnType[]);
+-    }
++    return parseCollectionV3(ctx, ctx.data.values(), (item, index) => valueType._parse(new ParseInputLazyPath(ctx, item, ctx.path, index)), finalizeSet);
+   }
+ 
+   min(minSize: number, message?: errorUtil.ErrMessage): this {
+diff --git a/src/v4/core/schemas.ts b/src/v4/core/schemas.ts
+index ce16838549a39ff2522a1b6eea2b8994265f1b0f..fad2e9189f361758458142d3f28dbbe721993096 100644
+--- a/src/v4/core/schemas.ts
++++ b/src/v4/core/schemas.ts
+@@ -169,6 +169,7 @@ export interface _$ZodType<T extends $ZodTypeInternals = $ZodTypeInternals>
+   // _zod: T;
+ }
+ 
++const exhaustedCollections = new WeakMap<object, $ZodType>();
+ export const $ZodType: core.$constructor<$ZodType> = /*@__PURE__*/ core.$constructor("$ZodType", (inst, def) => {
+   inst ??= {} as any;
+ 
+@@ -203,6 +204,7 @@ export const $ZodType: core.$constructor<$ZodType> = /*@__PURE__*/ core.$constru
+       checks: checks.$ZodCheck<never>[],
+       ctx?: ParseContextInternal | undefined
+     ): util.MaybeAsync<ParsePayload> => {
++      if (exhaustedCollections.get(payload) === inst) { exhaustedCollections.delete(payload); return payload; }
+       let isAborted = util.aborted(payload);
+ 
+       let asyncResult!: Promise<unknown> | undefined;
+@@ -1507,9 +1509,43 @@ export interface $ZodArrayInternals<T extends SomeType = $ZodType> extends _$Zod
+ 
+ export interface $ZodArray<T extends SomeType = $ZodType> extends $ZodType<any, any, $ZodArrayInternals<T>> {}
+ 
++// Bound invalid-collection diagnostics and outstanding async work, preserving output-size checks.
++const MAX_COLLECTION_ISSUES = 100;
++function appendCollectionIssues(final: ParsePayload, issues: errors.$ZodRawIssue[], key?: PropertyKey) {
++    const remaining = MAX_COLLECTION_ISSUES - final.issues.length;
++    if (remaining <= 0) return;
++    const bounded = issues.slice(0, remaining);
++    final.issues.push(...(key === undefined ? bounded : util.prefixIssues(key, bounded)));
++}
++function parseCollectionItems(inst: $ZodType, payload: ParsePayload, ctx: ParseContextInternal | undefined, input: Iterable<any>, parseItem: (value: any, index: number) => unknown): util.MaybeAsync<ParsePayload> {
++    const iterator = input[Symbol.iterator]();
++    let index = 0;
++    const advance = (): util.MaybeAsync<ParsePayload> => {
++        while (true) {
++            const pending: Promise<unknown>[] = [];
++            let done = false;
++            for (let batch = 0; batch < 32; batch++) {
++                if (payload.issues.length >= MAX_COLLECTION_ISSUES) {
++                    (payload.issues[0] as { continue?: boolean }).continue = false;
++                    exhaustedCollections.set(payload, inst);
++                    done = true;
++                    break;
++                }
++                const next = iterator.next();
++                if (next.done) { done = true; break; }
++                const result = parseItem(next.value, index++);
++                if (result instanceof Promise) pending.push(result);
++            }
++            if (pending.length) return Promise.all(pending).then(() => done ? payload : advance());
++            if (done) return payload;
++        }
++    };
++    return advance();
++}
++
+ function handleArrayResult(result: ParsePayload<any>, final: ParsePayload<any[]>, index: number) {
+   if (result.issues.length) {
+-    final.issues.push(...util.prefixIssues(index, result.issues));
++    appendCollectionIssues(final, result.issues, index);
+   }
+   final.value[index] = result.value;
+ }
+@@ -1518,42 +1554,17 @@ export const $ZodArray: core.$constructor<$ZodArray> = /*@__PURE__*/ core.$const
+   $ZodType.init(inst, def);
+ 
+   inst._zod.parse = (payload, ctx) => {
+-    const input = payload.value;
+-
+-    if (!Array.isArray(input)) {
+-      payload.issues.push({
+-        expected: "array",
+-        code: "invalid_type",
+-        input,
+-        inst,
+-      });
+-      return payload;
+-    }
+-
+-    payload.value = Array(input.length);
+-    const proms: Promise<any>[] = [];
+-    for (let i = 0; i < input.length; i++) {
+-      const item = input[i];
+-      const result = def.element._zod.run(
+-        {
+-          value: item,
+-          issues: [],
+-        },
+-        ctx
+-      );
+-
+-      if (result instanceof Promise) {
+-        proms.push(result.then((result) => handleArrayResult(result, payload, i)));
+-      } else {
+-        handleArrayResult(result, payload, i);
++      const input = payload.value;
++      if (!(Array.isArray(input))) {
++          payload.issues.push({ expected: "array", code: "invalid_type", input, inst });
++          return payload;
+       }
+-    }
+-
+-    if (proms.length) {
+-      return Promise.all(proms).then(() => payload);
+-    }
+-
+-    return payload; //handleArrayResultsAsync(parseResults, final);
++      payload.value = [];
++      return parseCollectionItems(inst, payload, ctx, input, (item, index) => {
++          const result = def.element._zod.run({ value: item, issues: [] }, ctx);
++          if (result instanceof Promise) return result.then(value => handleArrayResult(value, payload as ParsePayload<any[]>, index));
++          handleArrayResult(result, payload as ParsePayload<any[]>, index);
++      });
+   };
+ });
+ 
+@@ -2357,7 +2368,7 @@ export const $ZodTuple: core.$constructor<$ZodTuple> = /*@__PURE__*/ core.$const
+ 
+ function handleTupleResult(result: ParsePayload, final: ParsePayload<any[]>, index: number) {
+   if (result.issues.length) {
+-    final.issues.push(...util.prefixIssues(index, result.issues));
++    appendCollectionIssues(final, result.issues, index);
+   }
+   final.value[index] = result.value;
+ }
+@@ -2567,37 +2578,21 @@ export const $ZodMap: core.$constructor<$ZodMap> = /*@__PURE__*/ core.$construct
+   $ZodType.init(inst, def);
+ 
+   inst._zod.parse = (payload, ctx) => {
+-    const input = payload.value;
+-    if (!(input instanceof Map)) {
+-      payload.issues.push({
+-        expected: "map",
+-        code: "invalid_type",
+-        input,
+-        inst,
+-      });
+-      return payload;
+-    }
+-
+-    const proms: Promise<any>[] = [];
+-    payload.value = new Map();
+-
+-    for (const [key, value] of input) {
+-      const keyResult = def.keyType._zod.run({ value: key, issues: [] }, ctx);
+-      const valueResult = def.valueType._zod.run({ value: value, issues: [] }, ctx);
+-
+-      if (keyResult instanceof Promise || valueResult instanceof Promise) {
+-        proms.push(
+-          Promise.all([keyResult, valueResult]).then(([keyResult, valueResult]) => {
+-            handleMapResult(keyResult, valueResult, payload, key, input, inst, ctx);
+-          })
+-        );
+-      } else {
+-        handleMapResult(keyResult as ParsePayload, valueResult as ParsePayload, payload, key, input, inst, ctx);
++      const input = payload.value;
++      if (!(input instanceof Map)) {
++          payload.issues.push({ expected: "map", code: "invalid_type", input, inst });
++          return payload;
+       }
+-    }
+-
+-    if (proms.length) return Promise.all(proms).then(() => payload);
+-    return payload;
++      payload.value = new Map();
++      return parseCollectionItems(inst, payload, ctx, input, (item, index) => {
++          const [key, value] = item;
++          const keyResult = def.keyType._zod.run({ value: key, issues: [] }, ctx);
++          const valueResult = def.valueType._zod.run({ value, issues: [] }, ctx);
++          if (keyResult instanceof Promise || valueResult instanceof Promise) {
++              return Promise.all([keyResult, valueResult]).then(([keyResult, valueResult]) => handleMapResult(keyResult, valueResult, payload, key, input, inst, ctx));
++          }
++          handleMapResult(keyResult as ParsePayload, valueResult as ParsePayload, payload as ParsePayload<Map<unknown, unknown>>, key, input as Map<any, any>, inst, ctx);
++      });
+   };
+ });
+ 
+@@ -2610,9 +2605,10 @@ function handleMapResult(
+   inst: $ZodMap,
+   ctx?: ParseContext | undefined
+ ): void {
++  if (final.issues.length >= MAX_COLLECTION_ISSUES) return;
+   if (keyResult.issues.length) {
+     if (util.propertyKeyTypes.has(typeof key)) {
+-      final.issues.push(...util.prefixIssues(key as PropertyKey, keyResult.issues));
++      appendCollectionIssues(final, keyResult.issues, key as PropertyKey);
+     } else {
+       final.issues.push({
+         origin: "map",
+@@ -2625,7 +2621,7 @@ function handleMapResult(
+   }
+   if (valueResult.issues.length) {
+     if (util.propertyKeyTypes.has(typeof key)) {
+-      final.issues.push(...util.prefixIssues(key as PropertyKey, valueResult.issues));
++      appendCollectionIssues(final, valueResult.issues, key as PropertyKey);
+     } else {
+       final.issues.push({
+         origin: "map",
+@@ -2668,34 +2664,23 @@ export const $ZodSet: core.$constructor<$ZodSet> = /*@__PURE__*/ core.$construct
+   $ZodType.init(inst, def);
+ 
+   inst._zod.parse = (payload, ctx) => {
+-    const input = payload.value;
+-    if (!(input instanceof Set)) {
+-      payload.issues.push({
+-        input,
+-        inst,
+-        expected: "set",
+-        code: "invalid_type",
++      const input = payload.value;
++      if (!(input instanceof Set)) {
++          payload.issues.push({ expected: "set", code: "invalid_type", input, inst });
++          return payload;
++      }
++      payload.value = new Set();
++      return parseCollectionItems(inst, payload, ctx, input, (item, index) => {
++          const result = def.valueType._zod.run({ value: item, issues: [] }, ctx);
++          if (result instanceof Promise) return result.then(value => handleSetResult(value, payload as ParsePayload<Set<any>>));
++          handleSetResult(result, payload as ParsePayload<Set<any>>);
+       });
+-      return payload;
+-    }
+-
+-    const proms: Promise<any>[] = [];
+-    payload.value = new Set();
+-    for (const item of input) {
+-      const result = def.valueType._zod.run({ value: item, issues: [] }, ctx);
+-      if (result instanceof Promise) {
+-        proms.push(result.then((result) => handleSetResult(result, payload)));
+-      } else handleSetResult(result, payload);
+-    }
+-
+-    if (proms.length) return Promise.all(proms).then(() => payload);
+-    return payload;
+   };
+ });
+ 
+ function handleSetResult(result: ParsePayload, final: ParsePayload<Set<any>>) {
+   if (result.issues.length) {
+-    final.issues.push(...result.issues);
++    appendCollectionIssues(final, result.issues);
+   }
+   final.value.add(result.value);
+ }
+diff --git a/v3/types.cjs b/v3/types.cjs
+index 11ed4dfc4745f9af1f1501874576b78b77d294ef..af4d5364b028f5540dd40b0c6ae9b3382e356a04 100644
+--- a/v3/types.cjs
++++ b/v3/types.cjs
+@@ -1765,6 +1765,32 @@ ZodVoid.create = (params) => {
+         ...processCreateParams(params),
+     });
+ };
++// Stop invalid collection expansion and keep async validation bounded.
++function parseCollectionV3(ctx, input, parseItem, finish) {
++    const iterator = input[Symbol.iterator]();
++    const results = [];
++    let index = 0;
++    const advance = () => {
++        while (true) {
++            if (ctx.common.issues.length >= 100) return parseUtil_js_1.INVALID;
++            const pending = [];
++            let done = false;
++            for (let batch = 0; batch < 32; batch++) {
++                if (ctx.common.issues.length >= 100) break;
++                const next = iterator.next();
++                if (next.done) { done = true; break; }
++                const current = index++;
++                const result = parseItem(next.value, current);
++                if (result instanceof Promise) pending.push(result.then(value => { results[current] = value; }));
++                else results[current] = result;
++            }
++            if (pending.length) return Promise.all(pending).then(() => done ? finish(results) : advance());
++            if (done) return finish(results);
++        }
++    };
++    return advance();
++}
++
+ class ZodArray extends ZodType {
+     _parse(input) {
+         const { ctx, status } = this._processInputParams(input);
+@@ -1791,6 +1817,7 @@ class ZodArray extends ZodType {
+                     message: def.exactLength.message,
+                 });
+                 status.dirty();
++                if (tooBig) return parseUtil_js_1.INVALID;
+             }
+         }
+         if (def.minLength !== null) {
+@@ -1816,20 +1843,10 @@ class ZodArray extends ZodType {
+                     exact: false,
+                     message: def.maxLength.message,
+                 });
+-                status.dirty();
++                return parseUtil_js_1.INVALID;
+             }
+         }
+-        if (ctx.common.async) {
+-            return Promise.all([...ctx.data].map((item, i) => {
+-                return def.type._parseAsync(new ParseInputLazyPath(ctx, item, ctx.path, i));
+-            })).then((result) => {
+-                return parseUtil_js_1.ParseStatus.mergeArray(status, result);
+-            });
+-        }
+-        const result = [...ctx.data].map((item, i) => {
+-            return def.type._parseSync(new ParseInputLazyPath(ctx, item, ctx.path, i));
+-        });
+-        return parseUtil_js_1.ParseStatus.mergeArray(status, result);
++        return parseCollectionV3(ctx, ctx.data, (item, index) => def.type._parse(new ParseInputLazyPath(ctx, item, ctx.path, index)), (results) => parseUtil_js_1.ParseStatus.mergeArray(status, results));
+     }
+     get element() {
+         return this._def.type;
+@@ -2759,44 +2776,21 @@ class ZodMap extends ZodType {
+         }
+         const keyType = this._def.keyType;
+         const valueType = this._def.valueType;
+-        const pairs = [...ctx.data.entries()].map(([key, value], index) => {
+-            return {
+-                key: keyType._parse(new ParseInputLazyPath(ctx, key, ctx.path, [index, "key"])),
+-                value: valueType._parse(new ParseInputLazyPath(ctx, value, ctx.path, [index, "value"])),
+-            };
+-        });
+-        if (ctx.common.async) {
+-            const finalMap = new Map();
+-            return Promise.resolve().then(async () => {
+-                for (const pair of pairs) {
+-                    const key = await pair.key;
+-                    const value = await pair.value;
+-                    if (key.status === "aborted" || value.status === "aborted") {
+-                        return parseUtil_js_1.INVALID;
+-                    }
+-                    if (key.status === "dirty" || value.status === "dirty") {
+-                        status.dirty();
+-                    }
+-                    finalMap.set(key.value, value.value);
+-                }
+-                return { status: status.value, value: finalMap };
+-            });
+-        }
+-        else {
+-            const finalMap = new Map();
+-            for (const pair of pairs) {
+-                const key = pair.key;
+-                const value = pair.value;
+-                if (key.status === "aborted" || value.status === "aborted") {
+-                    return parseUtil_js_1.INVALID;
+-                }
+-                if (key.status === "dirty" || value.status === "dirty") {
+-                    status.dirty();
+-                }
+-                finalMap.set(key.value, value.value);
+-            }
+-            return { status: status.value, value: finalMap };
+-        }
++        return parseCollectionV3(ctx, ctx.data.entries(), ([key, value], index) => {
++        const parsedKey = keyType._parse(new ParseInputLazyPath(ctx, key, ctx.path, [index, "key"]));
++        const parsedValue = valueType._parse(new ParseInputLazyPath(ctx, value, ctx.path, [index, "value"]));
++        if (parsedKey instanceof Promise || parsedValue instanceof Promise) return Promise.all([parsedKey, parsedValue]).then(([key, value]) => ({ key, value }));
++        return { key: parsedKey, value: parsedValue };
++    }, (pairs) => {
++        const finalMap = new Map();
++        for (const pair of pairs) {
++            const {key, value} = pair;
++            if (key.status === "aborted" || value.status === "aborted") return parseUtil_js_1.INVALID;
++            if (key.status === "dirty" || value.status === "dirty") status.dirty();
++            finalMap.set(key.value, value.value);
++        }
++        return {status: status.value, value: finalMap};
++    });
+     }
+ }
+ exports.ZodMap = ZodMap;
+@@ -2843,7 +2837,7 @@ class ZodSet extends ZodType {
+                     exact: false,
+                     message: def.maxSize.message,
+                 });
+-                status.dirty();
++                return parseUtil_js_1.INVALID;
+             }
+         }
+         const valueType = this._def.valueType;
+@@ -2858,13 +2852,7 @@ class ZodSet extends ZodType {
+             }
+             return { status: status.value, value: parsedSet };
+         }
+-        const elements = [...ctx.data.values()].map((item, i) => valueType._parse(new ParseInputLazyPath(ctx, item, ctx.path, i)));
+-        if (ctx.common.async) {
+-            return Promise.all(elements).then((elements) => finalizeSet(elements));
+-        }
+-        else {
+-            return finalizeSet(elements);
+-        }
++        return parseCollectionV3(ctx, ctx.data.values(), (item, index) => valueType._parse(new ParseInputLazyPath(ctx, item, ctx.path, index)), finalizeSet);
+     }
+     min(minSize, message) {
+         return new ZodSet({
+diff --git a/v3/types.js b/v3/types.js
+index 40b11c0f01b2af54e0ed48e198607bd8836d9a63..9ae3261b1d415533b22a1976c43a0d5a86c8f0c0 100644
+--- a/v3/types.js
++++ b/v3/types.js
+@@ -1744,6 +1744,32 @@ ZodVoid.create = (params) => {
+         ...processCreateParams(params),
+     });
+ };
++// Stop invalid collection expansion and keep async validation bounded.
++function parseCollectionV3(ctx, input, parseItem, finish) {
++    const iterator = input[Symbol.iterator]();
++    const results = [];
++    let index = 0;
++    const advance = () => {
++        while (true) {
++            if (ctx.common.issues.length >= 100) return INVALID;
++            const pending = [];
++            let done = false;
++            for (let batch = 0; batch < 32; batch++) {
++                if (ctx.common.issues.length >= 100) break;
++                const next = iterator.next();
++                if (next.done) { done = true; break; }
++                const current = index++;
++                const result = parseItem(next.value, current);
++                if (result instanceof Promise) pending.push(result.then(value => { results[current] = value; }));
++                else results[current] = result;
++            }
++            if (pending.length) return Promise.all(pending).then(() => done ? finish(results) : advance());
++            if (done) return finish(results);
++        }
++    };
++    return advance();
++}
++
+ export class ZodArray extends ZodType {
+     _parse(input) {
+         const { ctx, status } = this._processInputParams(input);
+@@ -1770,6 +1796,7 @@ export class ZodArray extends ZodType {
+                     message: def.exactLength.message,
+                 });
+                 status.dirty();
++                if (tooBig) return INVALID;
+             }
+         }
+         if (def.minLength !== null) {
+@@ -1795,20 +1822,10 @@ export class ZodArray extends ZodType {
+                     exact: false,
+                     message: def.maxLength.message,
+                 });
+-                status.dirty();
++                return INVALID;
+             }
+         }
+-        if (ctx.common.async) {
+-            return Promise.all([...ctx.data].map((item, i) => {
+-                return def.type._parseAsync(new ParseInputLazyPath(ctx, item, ctx.path, i));
+-            })).then((result) => {
+-                return ParseStatus.mergeArray(status, result);
+-            });
+-        }
+-        const result = [...ctx.data].map((item, i) => {
+-            return def.type._parseSync(new ParseInputLazyPath(ctx, item, ctx.path, i));
+-        });
+-        return ParseStatus.mergeArray(status, result);
++        return parseCollectionV3(ctx, ctx.data, (item, index) => def.type._parse(new ParseInputLazyPath(ctx, item, ctx.path, index)), (results) => ParseStatus.mergeArray(status, results));
+     }
+     get element() {
+         return this._def.type;
+@@ -2731,44 +2748,21 @@ export class ZodMap extends ZodType {
+         }
+         const keyType = this._def.keyType;
+         const valueType = this._def.valueType;
+-        const pairs = [...ctx.data.entries()].map(([key, value], index) => {
+-            return {
+-                key: keyType._parse(new ParseInputLazyPath(ctx, key, ctx.path, [index, "key"])),
+-                value: valueType._parse(new ParseInputLazyPath(ctx, value, ctx.path, [index, "value"])),
+-            };
+-        });
+-        if (ctx.common.async) {
+-            const finalMap = new Map();
+-            return Promise.resolve().then(async () => {
+-                for (const pair of pairs) {
+-                    const key = await pair.key;
+-                    const value = await pair.value;
+-                    if (key.status === "aborted" || value.status === "aborted") {
+-                        return INVALID;
+-                    }
+-                    if (key.status === "dirty" || value.status === "dirty") {
+-                        status.dirty();
+-                    }
+-                    finalMap.set(key.value, value.value);
+-                }
+-                return { status: status.value, value: finalMap };
+-            });
+-        }
+-        else {
+-            const finalMap = new Map();
+-            for (const pair of pairs) {
+-                const key = pair.key;
+-                const value = pair.value;
+-                if (key.status === "aborted" || value.status === "aborted") {
+-                    return INVALID;
+-                }
+-                if (key.status === "dirty" || value.status === "dirty") {
+-                    status.dirty();
+-                }
+-                finalMap.set(key.value, value.value);
+-            }
+-            return { status: status.value, value: finalMap };
+-        }
++        return parseCollectionV3(ctx, ctx.data.entries(), ([key, value], index) => {
++        const parsedKey = keyType._parse(new ParseInputLazyPath(ctx, key, ctx.path, [index, "key"]));
++        const parsedValue = valueType._parse(new ParseInputLazyPath(ctx, value, ctx.path, [index, "value"]));
++        if (parsedKey instanceof Promise || parsedValue instanceof Promise) return Promise.all([parsedKey, parsedValue]).then(([key, value]) => ({ key, value }));
++        return { key: parsedKey, value: parsedValue };
++    }, (pairs) => {
++        const finalMap = new Map();
++        for (const pair of pairs) {
++            const {key, value} = pair;
++            if (key.status === "aborted" || value.status === "aborted") return INVALID;
++            if (key.status === "dirty" || value.status === "dirty") status.dirty();
++            finalMap.set(key.value, value.value);
++        }
++        return {status: status.value, value: finalMap};
++    });
+     }
+ }
+ ZodMap.create = (keyType, valueType, params) => {
+@@ -2814,7 +2808,7 @@ export class ZodSet extends ZodType {
+                     exact: false,
+                     message: def.maxSize.message,
+                 });
+-                status.dirty();
++                return INVALID;
+             }
+         }
+         const valueType = this._def.valueType;
+@@ -2829,13 +2823,7 @@ export class ZodSet extends ZodType {
+             }
+             return { status: status.value, value: parsedSet };
+         }
+-        const elements = [...ctx.data.values()].map((item, i) => valueType._parse(new ParseInputLazyPath(ctx, item, ctx.path, i)));
+-        if (ctx.common.async) {
+-            return Promise.all(elements).then((elements) => finalizeSet(elements));
+-        }
+-        else {
+-            return finalizeSet(elements);
+-        }
++        return parseCollectionV3(ctx, ctx.data.values(), (item, index) => valueType._parse(new ParseInputLazyPath(ctx, item, ctx.path, index)), finalizeSet);
+     }
+     min(minSize, message) {
+         return new ZodSet({
+diff --git a/v4/core/schemas.cjs b/v4/core/schemas.cjs
+index 7c77d2b5af031e086d535f4b2e1898cec17eda29..352bb297f8f2a3975d86d35e82934b2624ccd31b 100644
+--- a/v4/core/schemas.cjs
++++ b/v4/core/schemas.cjs
+@@ -35,6 +35,7 @@ const parse_js_1 = require("./parse.cjs");
+ const regexes = __importStar(require("./regexes.cjs"));
+ const util = __importStar(require("./util.cjs"));
+ const versions_js_1 = require("./versions.cjs");
++const exhaustedCollections = new WeakMap();
+ exports.$ZodType = core.$constructor("$ZodType", (inst, def) => {
+     var _a;
+     inst ?? (inst = {});
+@@ -62,6 +63,7 @@ exports.$ZodType = core.$constructor("$ZodType", (inst, def) => {
+     }
+     else {
+         const runChecks = (payload, checks, ctx) => {
++            if (exhaustedCollections.get(payload) === inst) { exhaustedCollections.delete(payload); return payload; }
+             let isAborted = util.aborted(payload);
+             let asyncResult;
+             for (const ch of checks) {
+@@ -644,9 +646,43 @@ exports.$ZodDate = core.$constructor("$ZodDate", (inst, def) => {
+         return payload;
+     };
+ });
++// Bound invalid-collection diagnostics and outstanding async work, preserving output-size checks.
++const MAX_COLLECTION_ISSUES = 100;
++function appendCollectionIssues(final, issues, key) {
++    const remaining = MAX_COLLECTION_ISSUES - final.issues.length;
++    if (remaining <= 0) return;
++    const bounded = issues.slice(0, remaining);
++    final.issues.push(...(key === undefined ? bounded : util.prefixIssues(key, bounded)));
++}
++function parseCollectionItems(inst, payload, ctx, input, parseItem) {
++    const iterator = input[Symbol.iterator]();
++    let index = 0;
++    const advance = () => {
++        while (true) {
++            const pending = [];
++            let done = false;
++            for (let batch = 0; batch < 32; batch++) {
++                if (payload.issues.length >= MAX_COLLECTION_ISSUES) {
++                    payload.issues[0].continue = false;
++                    exhaustedCollections.set(payload, inst);
++                    done = true;
++                    break;
++                }
++                const next = iterator.next();
++                if (next.done) { done = true; break; }
++                const result = parseItem(next.value, index++);
++                if (result instanceof Promise) pending.push(result);
++            }
++            if (pending.length) return Promise.all(pending).then(() => done ? payload : advance());
++            if (done) return payload;
++        }
++    };
++    return advance();
++}
++
+ function handleArrayResult(result, final, index) {
+     if (result.issues.length) {
+-        final.issues.push(...util.prefixIssues(index, result.issues));
++        appendCollectionIssues(final, result.issues, index);
+     }
+     final.value[index] = result.value;
+ }
+@@ -654,34 +690,16 @@ exports.$ZodArray = core.$constructor("$ZodArray", (inst, def) => {
+     exports.$ZodType.init(inst, def);
+     inst._zod.parse = (payload, ctx) => {
+         const input = payload.value;
+-        if (!Array.isArray(input)) {
+-            payload.issues.push({
+-                expected: "array",
+-                code: "invalid_type",
+-                input,
+-                inst,
+-            });
++        if (!(Array.isArray(input))) {
++            payload.issues.push({ expected: "array", code: "invalid_type", input, inst });
+             return payload;
+         }
+-        payload.value = Array(input.length);
+-        const proms = [];
+-        for (let i = 0; i < input.length; i++) {
+-            const item = input[i];
+-            const result = def.element._zod.run({
+-                value: item,
+-                issues: [],
+-            }, ctx);
+-            if (result instanceof Promise) {
+-                proms.push(result.then((result) => handleArrayResult(result, payload, i)));
+-            }
+-            else {
+-                handleArrayResult(result, payload, i);
+-            }
+-        }
+-        if (proms.length) {
+-            return Promise.all(proms).then(() => payload);
+-        }
+-        return payload; //handleArrayResultsAsync(parseResults, final);
++        payload.value = [];
++        return parseCollectionItems(inst, payload, ctx, input, (item, index) => {
++            const result = def.element._zod.run({ value: item, issues: [] }, ctx);
++            if (result instanceof Promise) return result.then(value => handleArrayResult(value, payload, index));
++            handleArrayResult(result, payload, index);
++        });
+     };
+ });
+ function handleObjectResult(result, final, key) {
+@@ -1173,7 +1191,7 @@ exports.$ZodTuple = core.$constructor("$ZodTuple", (inst, def) => {
+ });
+ function handleTupleResult(result, final, index) {
+     if (result.issues.length) {
+-        final.issues.push(...util.prefixIssues(index, result.issues));
++        appendCollectionIssues(final, result.issues, index);
+     }
+     final.value[index] = result.value;
+ }
+@@ -1278,37 +1296,26 @@ exports.$ZodMap = core.$constructor("$ZodMap", (inst, def) => {
+     inst._zod.parse = (payload, ctx) => {
+         const input = payload.value;
+         if (!(input instanceof Map)) {
+-            payload.issues.push({
+-                expected: "map",
+-                code: "invalid_type",
+-                input,
+-                inst,
+-            });
++            payload.issues.push({ expected: "map", code: "invalid_type", input, inst });
+             return payload;
+         }
+-        const proms = [];
+         payload.value = new Map();
+-        for (const [key, value] of input) {
++        return parseCollectionItems(inst, payload, ctx, input, (item, index) => {
++            const [key, value] = item;
+             const keyResult = def.keyType._zod.run({ value: key, issues: [] }, ctx);
+-            const valueResult = def.valueType._zod.run({ value: value, issues: [] }, ctx);
++            const valueResult = def.valueType._zod.run({ value, issues: [] }, ctx);
+             if (keyResult instanceof Promise || valueResult instanceof Promise) {
+-                proms.push(Promise.all([keyResult, valueResult]).then(([keyResult, valueResult]) => {
+-                    handleMapResult(keyResult, valueResult, payload, key, input, inst, ctx);
+-                }));
+-            }
+-            else {
+-                handleMapResult(keyResult, valueResult, payload, key, input, inst, ctx);
++                return Promise.all([keyResult, valueResult]).then(([keyResult, valueResult]) => handleMapResult(keyResult, valueResult, payload, key, input, inst, ctx));
+             }
+-        }
+-        if (proms.length)
+-            return Promise.all(proms).then(() => payload);
+-        return payload;
++            handleMapResult(keyResult, valueResult, payload, key, input, inst, ctx);
++        });
+     };
+ });
+ function handleMapResult(keyResult, valueResult, final, key, input, inst, ctx) {
++    if (final.issues.length >= MAX_COLLECTION_ISSUES) return;
+     if (keyResult.issues.length) {
+         if (util.propertyKeyTypes.has(typeof key)) {
+-            final.issues.push(...util.prefixIssues(key, keyResult.issues));
++            appendCollectionIssues(final, keyResult.issues, key);
+         }
+         else {
+             final.issues.push({
+@@ -1322,7 +1329,7 @@ function handleMapResult(keyResult, valueResult, final, key, input, inst, ctx) {
+     }
+     if (valueResult.issues.length) {
+         if (util.propertyKeyTypes.has(typeof key)) {
+-            final.issues.push(...util.prefixIssues(key, valueResult.issues));
++            appendCollectionIssues(final, valueResult.issues, key);
+         }
+         else {
+             final.issues.push({
+@@ -1342,32 +1349,20 @@ exports.$ZodSet = core.$constructor("$ZodSet", (inst, def) => {
+     inst._zod.parse = (payload, ctx) => {
+         const input = payload.value;
+         if (!(input instanceof Set)) {
+-            payload.issues.push({
+-                input,
+-                inst,
+-                expected: "set",
+-                code: "invalid_type",
+-            });
++            payload.issues.push({ expected: "set", code: "invalid_type", input, inst });
+             return payload;
+         }
+-        const proms = [];
+         payload.value = new Set();
+-        for (const item of input) {
++        return parseCollectionItems(inst, payload, ctx, input, (item, index) => {
+             const result = def.valueType._zod.run({ value: item, issues: [] }, ctx);
+-            if (result instanceof Promise) {
+-                proms.push(result.then((result) => handleSetResult(result, payload)));
+-            }
+-            else
+-                handleSetResult(result, payload);
+-        }
+-        if (proms.length)
+-            return Promise.all(proms).then(() => payload);
+-        return payload;
++            if (result instanceof Promise) return result.then(value => handleSetResult(value, payload));
++            handleSetResult(result, payload);
++        });
+     };
+ });
+ function handleSetResult(result, final) {
+     if (result.issues.length) {
+-        final.issues.push(...result.issues);
++        appendCollectionIssues(final, result.issues);
+     }
+     final.value.add(result.value);
+ }
+diff --git a/v4/core/schemas.js b/v4/core/schemas.js
+index 692ce1fc2d0e138b51b5af2bafe0e2b4a279c0bc..734d55e7fc891b72df13cad923b23b842a673702 100644
+--- a/v4/core/schemas.js
++++ b/v4/core/schemas.js
+@@ -5,6 +5,7 @@ import { safeParse, safeParseAsync } from "./parse.js";
+ import * as regexes from "./regexes.js";
+ import * as util from "./util.js";
+ import { version } from "./versions.js";
++const exhaustedCollections = new WeakMap();
+ export const $ZodType = /*@__PURE__*/ core.$constructor("$ZodType", (inst, def) => {
+     var _a;
+     inst ?? (inst = {});
+@@ -32,6 +33,7 @@ export const $ZodType = /*@__PURE__*/ core.$constructor("$ZodType", (inst, def)
+     }
+     else {
+         const runChecks = (payload, checks, ctx) => {
++            if (exhaustedCollections.get(payload) === inst) { exhaustedCollections.delete(payload); return payload; }
+             let isAborted = util.aborted(payload);
+             let asyncResult;
+             for (const ch of checks) {
+@@ -613,9 +615,43 @@ export const $ZodDate = /*@__PURE__*/ core.$constructor("$ZodDate", (inst, def)
+         return payload;
+     };
+ });
++// Bound invalid-collection diagnostics and outstanding async work, preserving output-size checks.
++const MAX_COLLECTION_ISSUES = 100;
++function appendCollectionIssues(final, issues, key) {
++    const remaining = MAX_COLLECTION_ISSUES - final.issues.length;
++    if (remaining <= 0) return;
++    const bounded = issues.slice(0, remaining);
++    final.issues.push(...(key === undefined ? bounded : util.prefixIssues(key, bounded)));
++}
++function parseCollectionItems(inst, payload, ctx, input, parseItem) {
++    const iterator = input[Symbol.iterator]();
++    let index = 0;
++    const advance = () => {
++        while (true) {
++            const pending = [];
++            let done = false;
++            for (let batch = 0; batch < 32; batch++) {
++                if (payload.issues.length >= MAX_COLLECTION_ISSUES) {
++                    payload.issues[0].continue = false;
++                    exhaustedCollections.set(payload, inst);
++                    done = true;
++                    break;
++                }
++                const next = iterator.next();
++                if (next.done) { done = true; break; }
++                const result = parseItem(next.value, index++);
++                if (result instanceof Promise) pending.push(result);
++            }
++            if (pending.length) return Promise.all(pending).then(() => done ? payload : advance());
++            if (done) return payload;
++        }
++    };
++    return advance();
++}
++
+ function handleArrayResult(result, final, index) {
+     if (result.issues.length) {
+-        final.issues.push(...util.prefixIssues(index, result.issues));
++        appendCollectionIssues(final, result.issues, index);
+     }
+     final.value[index] = result.value;
+ }
+@@ -623,34 +659,16 @@ export const $ZodArray = /*@__PURE__*/ core.$constructor("$ZodArray", (inst, def
+     $ZodType.init(inst, def);
+     inst._zod.parse = (payload, ctx) => {
+         const input = payload.value;
+-        if (!Array.isArray(input)) {
+-            payload.issues.push({
+-                expected: "array",
+-                code: "invalid_type",
+-                input,
+-                inst,
+-            });
++        if (!(Array.isArray(input))) {
++            payload.issues.push({ expected: "array", code: "invalid_type", input, inst });
+             return payload;
+         }
+-        payload.value = Array(input.length);
+-        const proms = [];
+-        for (let i = 0; i < input.length; i++) {
+-            const item = input[i];
+-            const result = def.element._zod.run({
+-                value: item,
+-                issues: [],
+-            }, ctx);
+-            if (result instanceof Promise) {
+-                proms.push(result.then((result) => handleArrayResult(result, payload, i)));
+-            }
+-            else {
+-                handleArrayResult(result, payload, i);
+-            }
+-        }
+-        if (proms.length) {
+-            return Promise.all(proms).then(() => payload);
+-        }
+-        return payload; //handleArrayResultsAsync(parseResults, final);
++        payload.value = [];
++        return parseCollectionItems(inst, payload, ctx, input, (item, index) => {
++            const result = def.element._zod.run({ value: item, issues: [] }, ctx);
++            if (result instanceof Promise) return result.then(value => handleArrayResult(value, payload, index));
++            handleArrayResult(result, payload, index);
++        });
+     };
+ });
+ function handleObjectResult(result, final, key) {
+@@ -1142,7 +1160,7 @@ export const $ZodTuple = /*@__PURE__*/ core.$constructor("$ZodTuple", (inst, def
+ });
+ function handleTupleResult(result, final, index) {
+     if (result.issues.length) {
+-        final.issues.push(...util.prefixIssues(index, result.issues));
++        appendCollectionIssues(final, result.issues, index);
+     }
+     final.value[index] = result.value;
+ }
+@@ -1247,37 +1265,26 @@ export const $ZodMap = /*@__PURE__*/ core.$constructor("$ZodMap", (inst, def) =>
+     inst._zod.parse = (payload, ctx) => {
+         const input = payload.value;
+         if (!(input instanceof Map)) {
+-            payload.issues.push({
+-                expected: "map",
+-                code: "invalid_type",
+-                input,
+-                inst,
+-            });
++            payload.issues.push({ expected: "map", code: "invalid_type", input, inst });
+             return payload;
+         }
+-        const proms = [];
+         payload.value = new Map();
+-        for (const [key, value] of input) {
++        return parseCollectionItems(inst, payload, ctx, input, (item, index) => {
++            const [key, value] = item;
+             const keyResult = def.keyType._zod.run({ value: key, issues: [] }, ctx);
+-            const valueResult = def.valueType._zod.run({ value: value, issues: [] }, ctx);
++            const valueResult = def.valueType._zod.run({ value, issues: [] }, ctx);
+             if (keyResult instanceof Promise || valueResult instanceof Promise) {
+-                proms.push(Promise.all([keyResult, valueResult]).then(([keyResult, valueResult]) => {
+-                    handleMapResult(keyResult, valueResult, payload, key, input, inst, ctx);
+-                }));
+-            }
+-            else {
+-                handleMapResult(keyResult, valueResult, payload, key, input, inst, ctx);
++                return Promise.all([keyResult, valueResult]).then(([keyResult, valueResult]) => handleMapResult(keyResult, valueResult, payload, key, input, inst, ctx));
+             }
+-        }
+-        if (proms.length)
+-            return Promise.all(proms).then(() => payload);
+-        return payload;
++            handleMapResult(keyResult, valueResult, payload, key, input, inst, ctx);
++        });
+     };
+ });
+ function handleMapResult(keyResult, valueResult, final, key, input, inst, ctx) {
++    if (final.issues.length >= MAX_COLLECTION_ISSUES) return;
+     if (keyResult.issues.length) {
+         if (util.propertyKeyTypes.has(typeof key)) {
+-            final.issues.push(...util.prefixIssues(key, keyResult.issues));
++            appendCollectionIssues(final, keyResult.issues, key);
+         }
+         else {
+             final.issues.push({
+@@ -1291,7 +1298,7 @@ function handleMapResult(keyResult, valueResult, final, key, input, inst, ctx) {
+     }
+     if (valueResult.issues.length) {
+         if (util.propertyKeyTypes.has(typeof key)) {
+-            final.issues.push(...util.prefixIssues(key, valueResult.issues));
++            appendCollectionIssues(final, valueResult.issues, key);
+         }
+         else {
+             final.issues.push({
+@@ -1311,32 +1318,20 @@ export const $ZodSet = /*@__PURE__*/ core.$constructor("$ZodSet", (inst, def) =>
+     inst._zod.parse = (payload, ctx) => {
+         const input = payload.value;
+         if (!(input instanceof Set)) {
+-            payload.issues.push({
+-                input,
+-                inst,
+-                expected: "set",
+-                code: "invalid_type",
+-            });
++            payload.issues.push({ expected: "set", code: "invalid_type", input, inst });
+             return payload;
+         }
+-        const proms = [];
+         payload.value = new Set();
+-        for (const item of input) {
++        return parseCollectionItems(inst, payload, ctx, input, (item, index) => {
+             const result = def.valueType._zod.run({ value: item, issues: [] }, ctx);
+-            if (result instanceof Promise) {
+-                proms.push(result.then((result) => handleSetResult(result, payload)));
+-            }
+-            else
+-                handleSetResult(result, payload);
+-        }
+-        if (proms.length)
+-            return Promise.all(proms).then(() => payload);
+-        return payload;
++            if (result instanceof Promise) return result.then(value => handleSetResult(value, payload));
++            handleSetResult(result, payload);
++        });
+     };
+ });
+ function handleSetResult(result, final) {
+     if (result.issues.length) {
+-        final.issues.push(...result.issues);
++        appendCollectionIssues(final, result.issues);
+     }
+     final.value.add(result.value);
+ }

@@ -1,4 +1,5 @@
 import { Stack } from "expo-router";
+import useColors from "~/hooks/useColor";
 
 interface MealPlanHeaderRightProps {
   viewMode: "week" | "month";
@@ -17,9 +18,14 @@ export function MealPlanHeaderRight({
   isPendingGeneration,
   onPlanMyWeek,
 }: MealPlanHeaderRightProps) {
+  const colors = useColors();
   return (
     <Stack.Toolbar placement="right">
-      <Stack.Toolbar.Menu icon="ellipsis" accessibilityLabel="Meal plan options">
+      <Stack.Toolbar.Menu
+        icon="ellipsis"
+        tintColor={colors.foreground}
+        accessibilityLabel="Meal plan options"
+      >
         <Stack.Toolbar.Label>Options</Stack.Toolbar.Label>
         <Stack.Toolbar.MenuAction
           isOn={viewMode === "week"}

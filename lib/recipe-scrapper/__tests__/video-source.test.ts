@@ -3,6 +3,39 @@ import {
   normalizeVideoPostUrl,
   videoResolverScript,
 } from "../shared/video-source";
+import { runInNewContext } from "node:vm";
+
+function resolvePage(scope: string, itemId = "7538296153562008840") {
+  const postMessage = jest.fn();
+  const item = {
+    id: itemId,
+    desc: "Egg 5, water 375 ml. Steam for 15 minutes.",
+    video: { playAddr: "https://v16-webapp-prime.tiktok.com/video/example.mp4" },
+  };
+  runInNewContext(videoResolverScript(), {
+    window: { webkit: { messageHandlers: { cookkitVideo: { postMessage } } } },
+    document: {
+      title: "TikTok · teefoodd",
+      getElementById: (id: string) =>
+        id === "__UNIVERSAL_DATA_FOR_REHYDRATION__"
+          ? {
+              textContent: JSON.stringify({
+                __DEFAULT_SCOPE__: { [scope]: { itemInfo: { itemStruct: item } } },
+              }),
+            }
+          : null,
+      querySelector: () => null,
+      querySelectorAll: () => [],
+    },
+    location: { href: "https://www.tiktok.com/@teefoodd/video/7538296153562008840" },
+    navigator: { userAgent: "iPhone Safari" },
+    URL,
+    setInterval: () => 0,
+    setTimeout: () => 0,
+    clearInterval: () => {},
+  });
+  return postMessage;
+}
 
 describe("on-device social video sources", () => {
   it("accepts the reported TikTok and strips tracking from Instagram posts", () => {
@@ -42,5 +75,21 @@ describe("on-device social video sources", () => {
   it("emits valid JavaScript without embedding credentials", () => {
     expect(() => new Function(videoResolverScript())).not.toThrow();
     expect(videoResolverScript()).not.toMatch(/cookie|NEBIUS|Authorization/);
+  });
+  it.each(["webapp.video-detail", "webapp.reflow.video.detail"])(
+    "resolves the selected TikTok video from %s metadata",
+    (scope) => {
+      const send = resolvePage(scope);
+      expect(send).toHaveBeenCalledTimes(1);
+      expect(JSON.parse(send.mock.calls[0]![0])).toEqual(
+        expect.objectContaining({
+          mediaUrl: "https://v16-webapp-prime.tiktok.com/video/example.mp4",
+          caption: "Egg 5, water 375 ml. Steam for 15 minutes.",
+        })
+      );
+    }
+  );
+  it("does not resolve metadata for a different TikTok video", () => {
+    expect(resolvePage("webapp.reflow.video.detail", "1111111111111111111")).not.toHaveBeenCalled();
   });
 });
