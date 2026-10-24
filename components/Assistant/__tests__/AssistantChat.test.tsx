@@ -14,6 +14,8 @@ jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 59, bottom: 34, left: 0, right: 0 }),
 }));
 
+jest.mock("expo-router/react-navigation", () => ({ useHeaderHeight: () => 103 }));
+
 jest.mock("~/hooks/useCookingAgentChat", () => ({
   useCookingAgentChat: () => ({
     messages: [],
@@ -44,7 +46,9 @@ it("renders a stable assistant composer above the home indicator in E2E", async 
     height: 48,
     maxHeight: 48,
   });
-  expect(screen.getByTestId(TEST_IDS.assistant.list)).toBeTruthy();
+  expect(screen.getByTestId(TEST_IDS.assistant.list).props.contentContainerStyle).toMatchObject({
+    paddingTop: 12,
+  });
 
   const barStyle = StyleSheet.flatten(composer.parent?.props.style);
   expect(barStyle).toMatchObject({
