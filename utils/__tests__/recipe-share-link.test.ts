@@ -40,6 +40,39 @@ it("only publishes the explicit recipe fields and keeps source attribution", () 
   expect(JSON.stringify(snapshot)).not.toMatch(/private-device-id|pantry-id|isFavorite/);
   expect(snapshot.ingredients[0]?.quantity).toBe(200);
 });
+it("shares a persisted recipe with absent calories stored as null", () => {
+  const persisted = { ...sharedRecipe, calories: null } as unknown as Recipe;
+  expect(buildRecipeShareSnapshot(persisted).calories).toBeUndefined();
+});
+it("shares persisted ingredients with absent notes stored as null", () => {
+  const persisted = {
+    ...sharedRecipe,
+    ingredients: sharedRecipe.ingredients.map((ingredient) => ({ ...ingredient, notes: null })),
+  } as unknown as Recipe;
+  expect(buildRecipeShareSnapshot(persisted).ingredients[0]?.notes).toBeUndefined();
+});
+it("retains zero calories and ingredient notes when provided", () => {
+  const snapshot = buildRecipeShareSnapshot({
+    ...sharedRecipe,
+    calories: 0,
+    ingredients: sharedRecipe.ingredients.map((ingredient) => ({
+      ...ingredient,
+      notes: "Keep some pasta water",
+    })),
+  });
+  expect(snapshot.calories).toBe(0);
+  expect(snapshot.ingredients[0]?.notes).toBe("Keep some pasta water");
+});
+it("still rejects null optional values in untrusted remote snapshots", () => {
+  const snapshot = buildRecipeShareSnapshot(sharedRecipe);
+  expect(() => parseRecipeShareSnapshot({ ...snapshot, calories: null })).toThrow();
+  expect(() =>
+    parseRecipeShareSnapshot({
+      ...snapshot,
+      ingredients: snapshot.ingredients.map((ingredient) => ({ ...ingredient, notes: null })),
+    })
+  ).toThrow();
+});
 it("rejects malformed snapshots and unsafe external URLs", () => {
   const snapshot = buildRecipeShareSnapshot(sharedRecipe);
   expect(() => parseRecipeShareSnapshot({ ...snapshot, ingredients: [] })).toThrow();
