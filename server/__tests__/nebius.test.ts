@@ -60,6 +60,34 @@ describe("Nebius provider boundary", () => {
     expect(result.usage?.estimatedCost).toBeCloseTo(0.00105);
   });
 
+  it("sends chronological video frames in a single vision request", async () => {
+    fetcher.mockResolvedValue(completion('{"name":"rice","quantity":1}'));
+    await run({
+      ...request,
+      images: [
+        { mimeType: "image/jpeg", data: "YWJj" },
+        { mimeType: "image/png", data: "ZGVm" },
+      ],
+    });
+    const body = JSON.parse(fetcher.mock.calls[0]![1]!.body as string);
+    expect(body.model).toBe(VISION_MODEL);
+    expect(
+      body.messages[1].content.map((part: any) => part.image_url?.url).filter(Boolean)
+    ).toEqual(["data:image/jpeg;base64,YWJj", "data:image/png;base64,ZGVm"]);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects excessive or ambiguous frames before calling the provider", async () => {
+    const frame = { mimeType: "image/jpeg" as const, data: "YWJj" };
+    for (const input of [
+      { images: Array(9).fill(frame) },
+      { image: frame, images: [frame] },
+      { images: [{ ...frame, data: "a".repeat(1_500_001) }] },
+    ])
+      await expect(run({ ...request, ...input })).rejects.toThrow();
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
   it("accepts fenced JSON but never returns reasoning as the answer", async () => {
     fetcher.mockResolvedValue(completion('```json\n{"name":"rice","quantity":1}\n```'));
     expect((await run()).content).toBe('{"name":"rice","quantity":1}');

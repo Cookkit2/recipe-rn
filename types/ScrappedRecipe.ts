@@ -28,6 +28,7 @@ export interface RecipeAnalysisResult {
   confidence: number; // 0-1
   recipe?: GeneratedRecipe;
   errorMessage?: string;
+  warnings?: string[];
 }
 
 export interface GeneratedRecipe {
