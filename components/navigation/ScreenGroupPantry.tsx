@@ -15,7 +15,7 @@ export function getPantryScreens() {
             {
               type: "custom",
               hidesSharedBackground: true,
-              element: <H1 className="font-bowlby-one pt-5 pb-2">Pantry</H1>,
+              element: <H1 className="font-bowlby-one pt-5 pb-2 pl-2">Pantry</H1>,
             },
           ];
         },

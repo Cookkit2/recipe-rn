@@ -28,7 +28,7 @@ export default function IngredientCategoryButtonGroup() {
     : [PANTRY_ITEM_TYPES];
 
   return (
-    <View className="flex-row items-center gap-x-2 pb-3 px-3">
+    <View className="flex-row items-center gap-x-2 pb-3 pl-2 pr-3">
       <ScrollView
         key={viewportWidth}
         horizontal
