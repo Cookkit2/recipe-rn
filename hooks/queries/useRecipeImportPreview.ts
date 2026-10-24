@@ -43,7 +43,7 @@ export function useRecipeImportPreview() {
     };
   }, [cancel]);
   const prepare = useCallback(
-    async (input: SharedRecipeInput) => {
+    async (input: SharedRecipeInput, options?: { onSaved?: () => void }) => {
       cancel();
       const controller = new AbortController();
       current.current = controller;
@@ -56,8 +56,13 @@ export function useRecipeImportPreview() {
           },
           { signal: controller.signal }
         );
+        // A database save is atomic. Record success even if the user left while it committed,
+        // so a restored native payload cannot save the same import again.
+        if (result.kind === "saved" && result.result.success && result.result.recipe?.id) {
+          options?.onSaved?.();
+          invalidate();
+        }
         controller.signal.throwIfAborted();
-        if (result.kind === "saved" && result.result.success) invalidate();
         return result;
       } finally {
         if (current.current === controller) {

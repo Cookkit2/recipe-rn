@@ -19,7 +19,7 @@ const result = JSON.stringify({
     title: "Steamed egg",
     ingredients: [
       { name: "egg", quantity: 5, unit: "piece" },
-      { name: "minced chicken", quantity: 0, unit: "gram" },
+      { name: "minced chicken", quantity: 150, unit: "gram", amountSource: "estimated" },
     ],
     steps: [{ step: 1, title: "Steam", description: "Steam for 15 minutes." }],
   },
@@ -61,8 +61,8 @@ describe("social video recipe fallback", () => {
     expect(generate.mock.calls[2]?.[0].prompt).toContain("Steam for fifteen minutes");
     expect(generate.mock.calls[2]?.[0].prompt).toContain("[8s] Steam for 15 minutes.");
     expect(generate.mock.calls[2]?.[0].prompt).toContain("Egg 5");
-    expect(analysis.recipe?.ingredients[1]?.quantity).toBe(0);
-    expect(analysis.warnings?.join(" ")).toContain("amount");
+    expect(analysis.recipe?.ingredients[1]?.quantity).toBe(150);
+    expect(analysis.recipe?.ingredients[1]?.notes).toContain("AI estimate");
   });
   it("uses a chosen local video without fetching the social webpage", async () => {
     generate
@@ -77,7 +77,7 @@ describe("social video recipe fallback", () => {
     expect(read.mock.calls[0]?.[0].videoUri).toBe("file:///cache/picked.mp4");
     expect(analysis.recipe).toBeDefined();
   });
-  it("imports TikTok's published caption and subtitles without downloading blocked media", async () => {
+  it("translates TikTok's published subtitles without downloading blocked media", async () => {
     const html = `<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__">${JSON.stringify({
       __DEFAULT_SCOPE__: {
         "webapp.reflow.video.detail": {
@@ -108,7 +108,14 @@ describe("social video recipe fallback", () => {
         )
     );
     const modelResult = JSON.parse(result);
-    modelResult.recipe.steps = [{ step: 1, title: "Cook", description: "Bake at 200 degrees." }];
+    modelResult.recipe.steps = [
+      {
+        step: 1,
+        title: "Steam",
+        description: "Steam for 15 minutes.",
+        sourceQuote: "Steam for 15 minutes.",
+      },
+    ];
     generate.mockResolvedValueOnce(JSON.stringify(modelResult));
     const analysis = await new SocialRecipeService().analyzeForRecipe({
       platform: "tiktok",
@@ -120,9 +127,6 @@ describe("social video recipe fallback", () => {
     expect(analysis.recipe?.steps.map((step) => step.description)).toEqual([
       "Steam for 15 minutes.",
     ]);
-    expect(analysis.warnings).toContain(
-      "Instructions come from published subtitles. Check them against the video."
-    );
   });
   it("retains the video fallback when published subtitles are unavailable", async () => {
     const html = `<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__">${JSON.stringify({

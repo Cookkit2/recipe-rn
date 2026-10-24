@@ -69,3 +69,27 @@ it("keeps an active request across Strict Mode effect replay and cancels on unmo
   await Promise.resolve();
   expect(signal.aborted).toBe(true);
 });
+
+it("records an atomic save after cancellation so a restored native share is not imported twice", async () => {
+  let finish!: (value: unknown) => void;
+  mockPrepare.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      })
+  );
+  const saved = jest.fn();
+  const screen = await renderHook(useRecipeImportPreview);
+  let result!: Promise<unknown>;
+  await act(async () => {
+    result = screen.result.current
+      .prepare({ text: "eggs" }, { onSaved: saved })
+      .catch((error) => error);
+  });
+  await act(async () => screen.result.current.cancel());
+  await act(async () =>
+    finish({ kind: "saved", result: { success: true, recipe: { id: "committed" } } })
+  );
+  expect(saved).toHaveBeenCalledTimes(1);
+  expect(await result).toMatchObject({ name: "AbortError" });
+});
