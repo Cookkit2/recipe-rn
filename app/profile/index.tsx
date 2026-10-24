@@ -139,6 +139,11 @@ export default function ProfileScreen() {
               icon={SettingsIcon}
               onPress={() => router.push("/profile/preferences")}
             />
+            <ListButton
+              title="Meal Plan"
+              icon={CalendarIcon}
+              onPress={() => router.push("/meal-plan")}
+            />
             {/* <ListButton
               title="Analytics"
               icon={ChartBarIcon}
@@ -148,11 +153,6 @@ export default function ProfileScreen() {
               title="Achievements"
               icon={TrophyIcon}
               onPress={() => router.push("/profile/achievements")}
-            />
-            <ListButton
-              title="Meal Plans"
-              icon={CalendarIcon}
-              onPress={() => router.push("/meal-plan")}
             /> */}
             {/* <ListButton
               title="Notification"

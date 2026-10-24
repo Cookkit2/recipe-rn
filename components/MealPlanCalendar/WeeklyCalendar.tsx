@@ -1,11 +1,12 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { View, ScrollView, useWindowDimensions, ActivityIndicator } from "react-native";
 import { P } from "~/components/ui/typography";
-import { useMealPlanCalendar } from "~/store/MealPlanCalendarContext";
+import { useMealPlanCalendar, type MealDropHandler } from "~/store/MealPlanCalendarContext";
 import { useCalendarMealPlans } from "~/hooks/queries/useCalendarMealPlans";
 import type { DayMealPlan, MealSlot } from "~/types/MealPlan";
 import { groupMealsByDay } from "~/utils/meal-plan-calendar";
 import DayColumn from "./DayColumn";
+import { useMealDragAutoScroll } from "./useMealDragAutoScroll";
 
 interface WeeklyCalendarProps {
   /**
@@ -15,7 +16,7 @@ interface WeeklyCalendarProps {
   /**
    * Optional callback when a recipe is dropped on a meal slot
    */
-  onMealSlotDrop?: (date: Date, mealSlot: MealSlot) => void;
+  onMealSlotDrop?: MealDropHandler;
 }
 
 /**
@@ -26,7 +27,9 @@ interface WeeklyCalendarProps {
  */
 export default function WeeklyCalendar({ onMealSlotPress, onMealSlotDrop }: WeeklyCalendarProps) {
   const { width } = useWindowDimensions();
-  const { selectedWeek } = useMealPlanCalendar();
+  const { selectedWeek, dragState } = useMealPlanCalendar();
+  const verticalScroll = useMealDragAutoScroll();
+  const horizontalScroll = useMealDragAutoScroll(true);
 
   // Calculate week start and end dates
   const weekStartDate = new Date(selectedWeek);
@@ -36,13 +39,21 @@ export default function WeeklyCalendar({ onMealSlotPress, onMealSlotDrop }: Week
   // Fetch meal plans for the current week
   const { data: mealPlans, isLoading, error } = useCalendarMealPlans(weekStartDate, weekEndDate);
 
-  const weekDays = groupMealsByDay(
-    Array.from(
-      { length: 7 },
-      (_, i) =>
-        new Date(selectedWeek.getFullYear(), selectedWeek.getMonth(), selectedWeek.getDate() + i)
-    ),
-    mealPlans ?? []
+  const weekDays = useMemo(
+    () =>
+      groupMealsByDay(
+        Array.from(
+          { length: 7 },
+          (_, i) =>
+            new Date(
+              selectedWeek.getFullYear(),
+              selectedWeek.getMonth(),
+              selectedWeek.getDate() + i
+            )
+        ),
+        mealPlans ?? []
+      ),
+    [selectedWeek, mealPlans]
   );
 
   const renderDayColumn = (dayMealPlan: DayMealPlan, index: number) => {
@@ -83,13 +94,17 @@ export default function WeeklyCalendar({ onMealSlotPress, onMealSlotDrop }: Week
 
   return (
     <ScrollView
+      {...verticalScroll}
       className="flex-1 bg-background"
       contentContainerStyle={{ flexGrow: 1 }}
       nestedScrollEnabled
+      scrollEnabled={!dragState.isDragging}
     >
       <ScrollView
+        {...horizontalScroll}
         horizontal
         nestedScrollEnabled
+        scrollEnabled={!dragState.isDragging}
         showsHorizontalScrollIndicator={false}
         pagingEnabled={false}
         contentContainerStyle={{ flexDirection: "row" }}

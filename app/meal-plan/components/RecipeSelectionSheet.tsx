@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Pressable, ActivityIndicator, FlatList } from "react-native";
 import { H3, P } from "~/components/ui/typography";
-import RecipeDraggable from "~/components/MealPlanCalendar/RecipeDraggable";
+import { Image } from "expo-image";
 import type { Recipe } from "~/types/Recipe";
 
 interface RecipeSelectionSheetProps {
@@ -62,9 +62,26 @@ export function RecipeSelectionSheet({
             data={recipes}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
-              <View className="mb-3">
-                <RecipeDraggable recipe={item} onPress={onSelect} />
-              </View>
+              <Pressable
+                onPress={() => onSelect(item)}
+                accessibilityRole="button"
+                accessibilityLabel={`Add ${item.title} to ${targetLabel}`}
+                className="flex-row items-center gap-3 p-3 mb-3 bg-card rounded-xl"
+              >
+                <Image
+                  source={{ uri: item.imageUrl }}
+                  style={{ width: 56, height: 56, borderRadius: 10 }}
+                  contentFit="cover"
+                />
+                <View className="flex-1">
+                  <P className="font-urbanist-semibold" numberOfLines={2}>
+                    {item.title}
+                  </P>
+                  <P className="text-xs text-muted-foreground mt-1">
+                    {item.servings ?? 2} servings
+                  </P>
+                </View>
+              </Pressable>
             )}
             className="flex-1 px-4 pt-4 pb-8"
             showsVerticalScrollIndicator={false}
