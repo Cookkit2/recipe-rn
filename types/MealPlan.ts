@@ -97,6 +97,7 @@ export interface MealPlanDragData {
   mealPlanId: string;
   currentDate: Date;
   currentMealSlot: MealSlot;
+  servings: number;
 }
 
 /**
