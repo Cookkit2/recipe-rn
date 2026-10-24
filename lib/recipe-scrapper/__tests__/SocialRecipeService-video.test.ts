@@ -53,20 +53,20 @@ describe("social video recipe fallback", () => {
   it("combines spoken instructions and frame observations with the ingredient caption", async () => {
     generate
       .mockResolvedValueOnce(notRecipe)
-      .mockResolvedValueOnce(JSON.stringify({ text: "[8s] 15 mins" }))
+      .mockResolvedValueOnce(JSON.stringify({ text: "[8s] Steam for 15 minutes." }))
       .mockResolvedValueOnce(result);
     const analysis = await new SocialRecipeService().analyzeForRecipe({ platform: "tiktok", url });
     expect(read).toHaveBeenCalledTimes(1);
     expect(generate.mock.calls[1]?.[0].images).toHaveLength(1);
     expect(generate.mock.calls[2]?.[0].prompt).toContain("Steam for fifteen minutes");
-    expect(generate.mock.calls[2]?.[0].prompt).toContain("[8s] 15 mins");
+    expect(generate.mock.calls[2]?.[0].prompt).toContain("[8s] Steam for 15 minutes.");
     expect(generate.mock.calls[2]?.[0].prompt).toContain("Egg 5");
     expect(analysis.recipe?.ingredients[1]?.quantity).toBe(0);
     expect(analysis.warnings?.join(" ")).toContain("amount");
   });
   it("uses a chosen local video without fetching the social webpage", async () => {
     generate
-      .mockResolvedValueOnce(JSON.stringify({ text: "Steam 15 mins" }))
+      .mockResolvedValueOnce(JSON.stringify({ text: "Steam for 15 minutes." }))
       .mockResolvedValueOnce(result);
     const analysis = await new SocialRecipeService().analyzeForRecipe({
       platform: "tiktok",
@@ -97,7 +97,7 @@ describe("social video recipe fallback", () => {
       warnings: ["Speech unavailable; review the steps."],
     });
     generate
-      .mockResolvedValueOnce(JSON.stringify({ text: "Steam 15 minutes" }))
+      .mockResolvedValueOnce(JSON.stringify({ text: "Steam for 15 minutes." }))
       .mockResolvedValueOnce(result);
     const analysis = await new SocialRecipeService().analyzeForRecipe({
       platform: "text",
@@ -116,6 +116,17 @@ describe("social video recipe fallback", () => {
     expect(analysis.recipe).toBeUndefined();
     expect(analysis.errorMessage).toContain("Choose a saved video");
   });
+  it("does not accept invented cooking steps from an ingredient-only caption", async () => {
+    generate.mockResolvedValueOnce(result);
+    const analysis = await new SocialRecipeService().analyzeForRecipe({
+      platform: "text",
+      url: "",
+      text: "Egg 5, water 375ml, minced chicken.",
+    });
+    expect(analysis.recipe).toBeUndefined();
+    expect(analysis.confidence).toBe(0);
+  });
+
   it("does not attempt a video download for plain pasted text", async () => {
     generate.mockResolvedValueOnce(notRecipe);
     await new SocialRecipeService().analyzeForRecipe({

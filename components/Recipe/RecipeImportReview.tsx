@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { KeyboardAvoidingView, Modal, Platform, ScrollView, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Text } from "~/components/ui/text";
@@ -18,6 +18,7 @@ export default function RecipeImportReview({
   onSave: (draft: RecipeImportDraft) => void;
   onBack: () => void;
 }) {
+  const insets = useSafeAreaInsets();
   const [title, setTitle] = useState(draft.recipe.title);
   const [servings, setServings] = useState(String(draft.recipe.servings));
   const [prepMinutes, setPrepMinutes] = useState(String(draft.recipe.prepMinutes));
@@ -55,7 +56,10 @@ export default function RecipeImportReview({
         if (!saving) onBack();
       }}
     >
-      <SafeAreaView className="flex-1 bg-background">
+      <View
+        className="flex-1 bg-background"
+        style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
+      >
         <KeyboardAvoidingView
           className="flex-1"
           behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -236,11 +240,16 @@ export default function RecipeImportReview({
               </Text>
             ) : null}
             <View className="flex-row gap-2">
-              <Button variant="outline" className="flex-1" disabled={saving} onPress={onBack}>
+              <Button
+                variant="outline"
+                containerClassName="flex-1"
+                disabled={saving}
+                onPress={onBack}
+              >
                 <Text>Back</Text>
               </Button>
               <Button
-                className="flex-1"
+                containerClassName="flex-1"
                 disabled={!!validation || saving}
                 isLoading={saving}
                 onPress={() => onSave(reviewed)}
@@ -250,7 +259,7 @@ export default function RecipeImportReview({
             </View>
           </View>
         </KeyboardAvoidingView>
-      </SafeAreaView>
+      </View>
     </Modal>
   );
 }

@@ -5,12 +5,13 @@
  */
 
 import { generateAIContent } from "~/lib/ai/client";
-import { buildTextRecipeRequest } from "./shared/recipe-ai-utils";
+import { buildSocialRecipeRequest } from "./shared/recipe-ai-utils";
 import { log } from "~/utils/logger";
 import type { RecipeAnalysisResult, GeneratedRecipe } from "~/types/ScrappedRecipe";
 import { isValidRecipe } from "./validation-utils";
 import { fetchWithTimeout } from "~/utils/fetch-with-timeout";
 import { extractSocialMetadata } from "./shared/social-metadata";
+import { hasInstructionEvidence } from "./shared/instruction-evidence";
 import { readRecipeVideo } from "./recipe-video";
 import type { RecipeVideoOptions } from "~/types/RecipeVideo";
 
@@ -40,10 +41,10 @@ export class SocialRecipeService {
       const suppliedText = content.text?.trim();
       const analyze = async (metadata: { title: string; description: string }) => {
         const response = await generateAIContent(
-          buildTextRecipeRequest(this.buildAnalysisPrompt(content, metadata)),
+          buildSocialRecipeRequest(this.buildAnalysisPrompt(content, metadata)),
           options.signal
         );
-        return this.parseResponse(response, content.url);
+        return this.parseResponse(response, content.url, metadata.description);
       };
       let suppliedResult: RecipeAnalysisResult | undefined;
       if (suppliedText && !content.videoUri) {
@@ -193,8 +194,8 @@ INSTRUCTIONS:
      - CAREFULLY PARSE the description for ingredients and instructions.
      - Instagram citations often put the full recipe in the caption/description.
      - If the full recipe is NOT in the text, do NOT make up "Unknown Ingredient" or generic steps.
-     - Preserve stated quantities. If an ingredient is named without an amount, use quantity 0 and notes "Amount not specified" so the user can fill it in. Never invent an amount.
-     - Extract only preparation steps supported by the supplied caption, transcript, or timestamped frame observations. If there is not enough evidence, return confidence 0 and no recipe with a concise errorMessage.
+     - Preserve stated quantities. If an ingredient is named without an amount, use quantity 0 and notes "Amount not specified" so the user can fill it in. Never invent an amount. Leave the unit empty when it is not stated.
+     - For each steps.description, copy the exact preparation sentence or phrase from the supplied caption, transcript, or timestamped frame observations. Do not rewrite it, infer a method from the dish name, or add prior cooking knowledge. If there is not enough evidence, return confidence 0 and no recipe with a concise errorMessage.
 
 4. Fills:
    - Prep/Cook time: Use stated times, or 0 if not found.
@@ -213,7 +214,11 @@ Return a valid JSON response matching the schema.
   /**
    * Parse Nebius response into RecipeAnalysisResult
    */
-  private parseResponse(response: string, sourceUrl: string): RecipeAnalysisResult {
+  private parseResponse(
+    response: string,
+    sourceUrl: string,
+    evidence: string
+  ): RecipeAnalysisResult {
     try {
       const parsed = JSON.parse(response);
 
@@ -230,6 +235,18 @@ Return a valid JSON response matching the schema.
       if (parsed.isCookingVideo && parsed.recipe) {
         const ingredients = this.normalizeIngredients(parsed.recipe.ingredients);
         const steps = this.normalizeSteps(parsed.recipe.steps);
+
+        if (
+          !steps.length ||
+          steps.some((step) => !hasInstructionEvidence(step.description, evidence))
+        ) {
+          return {
+            isCookingVideo: true,
+            confidence: 0,
+            errorMessage:
+              "Cooking instructions weren't included. Choose the saved video or paste the full recipe caption.",
+          };
+        }
 
         const potentialRecipe = {
           ...parsed.recipe,
@@ -290,7 +307,7 @@ Return a valid JSON response matching the schema.
     return ingredients.map((ing) => ({
       name: (ing.name || "Unknown ingredient").trim().toLowerCase(),
       quantity: ing.quantity ?? 0,
-      unit: (ing.unit || "piece").trim().toLowerCase(),
+      unit: (ing.unit || "").trim().toLowerCase(),
       notes: ing.notes?.trim(),
     }));
   }

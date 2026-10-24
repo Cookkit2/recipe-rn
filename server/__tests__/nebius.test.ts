@@ -1,6 +1,9 @@
 import { generateNebiusContent, TEXT_MODEL, VISION_MODEL } from "../nebius";
 import type { AIRequest } from "../../lib/ai/types";
-import { buildTextRecipeRequest } from "../../lib/recipe-scrapper/shared/recipe-ai-utils";
+import {
+  buildSocialRecipeRequest,
+  buildTextRecipeRequest,
+} from "../../lib/recipe-scrapper/shared/recipe-ai-utils";
 
 const request: AIRequest = {
   prompt: "Identify this food.",
@@ -114,6 +117,36 @@ describe("Nebius provider boundary", () => {
       )
     );
     expect((await run(buildTextRecipeRequest("Cook rice."))).content).toContain('"calories":null');
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps unknown social-recipe units and amounts instead of forcing a model repair", async () => {
+    fetcher.mockResolvedValue(
+      completion(
+        JSON.stringify({
+          isCookingVideo: true,
+          confidence: 0.9,
+          recipe: {
+            title: "Eggs",
+            description: "",
+            prepMinutes: 0,
+            cookMinutes: 15,
+            servings: 2,
+            difficultyStars: 1,
+            ingredients: [
+              { name: "chicken", quantity: 0, unit: "", notes: "Amount not specified" },
+            ],
+            steps: [{ step: 1, title: "Steam", description: "Steam for 15 minutes." }],
+          },
+        })
+      )
+    );
+    const result = await run(
+      buildSocialRecipeRequest("Steam for 15 minutes. Chicken amount not specified.")
+    );
+    expect(JSON.parse(result.content).recipe.ingredients[0]).toEqual(
+      expect.objectContaining({ quantity: 0, unit: "" })
+    );
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
 

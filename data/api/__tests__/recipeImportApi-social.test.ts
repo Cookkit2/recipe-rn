@@ -298,6 +298,17 @@ describe("recipeImportApi.importRecipeFromSocialMedia", () => {
     expect(mockCreateRecipe).not.toHaveBeenCalled();
   });
 
+  it("requires a missing unit to be reviewed before writing a known amount", async () => {
+    const draft = {
+      recipe: { ...SAMPLE_RECIPE, ingredients: [{ name: "chicken", quantity: 100, unit: "" }] },
+      warnings: [],
+    };
+    await expect(recipeImportApi.saveRecipeDraft(draft)).rejects.toThrow(
+      "missing ingredient units"
+    );
+    expect(mockCreateRecipe).not.toHaveBeenCalled();
+  });
+
   it("saves corrected amounts and the source only after review", async () => {
     const draft = { recipe: SAMPLE_RECIPE, warnings: [] };
     expect((await recipeImportApi.saveRecipeDraft(draft)).success).toBe(true);

@@ -1,6 +1,8 @@
 PODS:
   - boost (1.84.0):
     - ReactNativeDependencies
+  - CookkitVideo (1.0.0):
+    - ExpoModulesCore
   - DoubleConversion (1.1.6):
     - ReactNativeDependencies
   - EASClient (58.0.2):
@@ -2253,7 +2255,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNGestureHandler (3.3.0):
+  - RNGestureHandler (3.4.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2435,7 +2437,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNSentry (8.28.0):
+  - RNSentry (8.31.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2636,6 +2638,7 @@ PODS:
 
 DEPENDENCIES:
   - boost (from `build/rndeps-facades/boost`)
+  - CookkitVideo (from `../modules/cookkit-video/ios`)
   - DoubleConversion (from `build/rndeps-facades/DoubleConversion`)
   - EASClient (from `../node_modules/expo-eas-client/ios`)
   - EXConstants (from `../node_modules/expo-constants/ios`)
@@ -2809,6 +2812,8 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   boost:
     :path: build/rndeps-facades/boost
+  CookkitVideo:
+    :path: "../modules/cookkit-video/ios"
   DoubleConversion:
     :path: build/rndeps-facades/DoubleConversion
   EASClient:
@@ -3111,6 +3116,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost: 2a9d6e1d9873337543f08d9dbc007b288f4e113b
+  CookkitVideo: b58aff1f89090778d035170f58b3e6b688ae1982
   DoubleConversion: e85e4faac763226bfd1cc4c6a98d8355149b27a5
   EASClient: 6fcbaa6430883fd0fbda39928cd994d4116bfd50
   EXConstants: 8d855ca919f1ff90af258a07e9d5c2135b5bdc7c
@@ -3256,12 +3262,12 @@ SPEC CHECKSUMS:
   RNCClipboard: 24547ecb47e7d762c20f64dd16e847ed115290dd
   RNCMaskedView: 09491c3529b32ef5c150a8b2623491394b96a232
   RNDateTimePicker: 34a077e6b05ff19de26089ec49c8e0e53e835ba7
-  RNGestureHandler: b435743b662a28149de03251a94cb8c8d7341fde
+  RNGestureHandler: 31b42d92cb205b684973a3ee363a88cbdeb3cc48
   RNPaywalls: cdc342b805bf83bce137f77dc877c64c0315cb74
   RNPurchases: 625e5b72cf141f6ecf8fa5799108587d00ff5663
   RNReanimated: 7ab31d1453dfe17e097f8dc584996ce29a550364
   RNScreens: edd28da703fa994ae9b63af0dc95ee4078ae0134
-  RNSentry: 48f03a3e4d4620bf165edc2b10e70b62e43f0d6e
+  RNSentry: 0cc6126c6cd7605e9f7f33dd045927f0c8473308
   RNSVG: ff258e92ebf710458755537fb151a47973dfbad9
   RNWorklets: ec2adca24e3ce8d80b14b976cfe7b8d22b9d7682
   SDWebImage: e9fc87c1aab89a8ab1bbd74eba378c6f53be8abf

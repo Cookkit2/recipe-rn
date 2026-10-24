@@ -8,7 +8,9 @@ jest.mock("react-native/Libraries/Modal/Modal", () => ({
   default: ({ children }: any) => children,
 }));
 
-jest.mock("react-native-safe-area-context", () => ({ SafeAreaView: require("react-native").View }));
+jest.mock("react-native-safe-area-context", () => ({
+  useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
+}));
 jest.mock("~/components/ui/input", () => ({ Input: require("react-native").TextInput }));
 jest.mock("~/components/ui/text", () => ({ Text: require("react-native").Text }));
 jest.mock("~/components/ui/button", () => ({
@@ -70,4 +72,27 @@ it("allows a falsely identified ingredient to be removed and blocks empty instru
   expect(screen.getByRole("button", { name: "Save recipe" }).props.disabled).toBe(false);
   await act(async () => fireEvent.changeText(screen.getByLabelText("Instruction 1"), ""));
   expect(screen.getByRole("button", { name: "Save recipe" }).props.disabled).toBe(true);
+});
+
+it("keeps a stated count editable when its unit is unknown", async () => {
+  const save = jest.fn();
+  const screen = await render(
+    <RecipeImportReview
+      draft={{
+        ...draft,
+        recipe: { ...draft.recipe, ingredients: [{ name: "egg", quantity: 2, unit: "" }] },
+      }}
+      saving={false}
+      onSave={save}
+      onBack={jest.fn()}
+    />
+  );
+  expect(screen.getByRole("button", { name: "Save recipe" }).props.disabled).toBe(true);
+  await act(async () =>
+    fireEvent.changeText(screen.getByLabelText("Unit for ingredient 1"), "piece")
+  );
+  await act(async () => fireEvent.press(screen.getByRole("button", { name: "Save recipe" })));
+  expect(save.mock.calls[0]?.[0].recipe.ingredients[0]).toEqual(
+    expect.objectContaining({ quantity: 2, unit: "piece" })
+  );
 });
