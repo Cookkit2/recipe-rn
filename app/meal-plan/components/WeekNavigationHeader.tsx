@@ -8,7 +8,7 @@ interface WeekNavigationHeaderProps {
   selectedWeek: Date;
   onPreviousWeek: () => void;
   onNextWeek: () => void;
-  onGoToToday: () => void;
+  onGoToToday?: () => void;
 }
 
 export function WeekNavigationHeader({
@@ -82,7 +82,7 @@ export function WeekNavigationHeader({
         </Pressable>
       </View>
 
-      {!isCurrentWeek() && (
+      {onGoToToday && !isCurrentWeek() && (
         <View className="items-center mt-2">
           <Button variant="ghost" size="sm" onPress={onGoToToday} className="h-7 px-3 rounded-full">
             <CalendarIcon size={14} strokeWidth={2} className="text-foreground mr-1" />
