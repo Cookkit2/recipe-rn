@@ -11,7 +11,7 @@ import { Stack, Link } from "expo-router";
 import { useMealPlanCalendar } from "~/store/MealPlanCalendarContext";
 import { WeekNavigationHeader } from "~/app/meal-plan/components/WeekNavigationHeader";
 import { toast } from "sonner-native";
-import { shopForIngredients, type IngredientShoppingProvider } from "~/lib/ingredient-shopping";
+import { shopForIngredients } from "~/lib/ingredient-shopping";
 import useColors from "~/hooks/useColor";
 
 export default function GroceryListPage() {
@@ -34,12 +34,12 @@ export default function GroceryListPage() {
     (item) => !item.isChecked && !item.isCovered && item.neededQuantity > 0
   );
 
-  const handleShopForIngredients = async (provider: IngredientShoppingProvider) => {
+  const handleShopForIngredients = async () => {
     if (isOpeningStore) return;
     setIsOpeningStore(true);
 
     try {
-      const result = await shopForIngredients(provider, allItems);
+      const result = await shopForIngredients("grabmart", allItems);
       switch (result) {
         case "empty":
           toast("No items left to buy");
@@ -48,9 +48,7 @@ export default function GroceryListPage() {
           toast.success("List copied");
           break;
         case "copied":
-          toast.error(
-            `List copied. Open ${provider === "grabmart" ? "GrabMart" : "foodpanda"} to shop.`
-          );
+          toast.error("List copied. Open GrabMart to shop.");
           break;
       }
     } catch {
@@ -208,25 +206,17 @@ export default function GroceryListPage() {
           <>
             {hasRemainingItems && !isSelectionMode && (
               <View className="px-5 mb-6">
-                <View className="flex-row gap-2">
-                  {(["grabmart", "foodpanda"] as const).map((provider) => (
-                    <Button
-                      key={provider}
-                      variant="outline"
-                      containerClassName="flex-1"
-                      onPress={() => handleShopForIngredients(provider)}
-                      disabled={isOpeningStore}
-                      accessibilityLabel={`Shop on ${provider === "grabmart" ? "GrabMart" : "foodpanda"}`}
-                      accessibilityHint="Copies remaining ingredients and opens the grocery store"
-                    >
-                      <P className="font-urbanist-semibold">
-                        {provider === "grabmart" ? "GrabMart" : "foodpanda"}
-                      </P>
-                    </Button>
-                  ))}
-                </View>
+                <Button
+                  variant="outline"
+                  onPress={handleShopForIngredients}
+                  disabled={isOpeningStore}
+                  accessibilityLabel="Shop on GrabMart"
+                  accessibilityHint="Copies remaining ingredients and opens the grocery store"
+                >
+                  <P className="font-urbanist-semibold">GrabMart</P>
+                </Button>
                 <P className="text-muted-foreground text-xs mt-2">
-                  Copies remaining items so you can shop in the provider app or website.
+                  Copies remaining items so you can shop on GrabMart.
                 </P>
               </View>
             )}
