@@ -63,7 +63,7 @@ it("preserves a cold-start link until onboarding finishes and imports only once"
   segments = ["index"];
   await hook.rerender(undefined);
   await waitFor(() => expect(push).toHaveBeenCalledWith(`/recipes/${token}`));
-  await act(() => receive({ url: link(token) }));
+  await act(() => receive({ url: link("QwE4yysXQsinK7Z-HFrJJw") }));
   expect(resolveSharedRecipe).toHaveBeenCalledTimes(1);
 });
 

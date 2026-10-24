@@ -36,7 +36,7 @@ afterEach(() => jest.restoreAllMocks());
 it("publishes only the displayed snapshot and returns an HTTPS token link", async () => {
   abortSignal.mockResolvedValue({ data: token, error: null });
   await expect(publishRecipeShare(recipe)).resolves.toBe(
-    `https://recipe-web-mings-projects-6bb85e23.vercel.app/r/${token}`
+    "https://recipe-web-mings-projects-6bb85e23.vercel.app/r/QwE4yysXQsinK7Z-HFrJJw"
   );
   expect(rpc).toHaveBeenCalledWith("create_recipe_share", {
     p_snapshot: buildRecipeShareSnapshot(recipe),

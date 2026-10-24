@@ -35,17 +35,19 @@ export function useDeepLinkShare(): void {
   const [ready, setReady] = useState(() => navigation.isReady());
   const running = useRef(false);
   const mounted = useRef(false);
-  const lastReceived = useRef({ url: "", time: 0 });
+  const lastReceived = useRef({ key: "", time: 0 });
 
   useEffect(() => {
     if (!DEEP_LINK_SHARING_ENABLED) return;
     mounted.current = true;
     const receive = (url: string | null | undefined) => {
       if (!mounted.current || !url) return;
-      if (!parseRecipeShareLink(url) && parseRecipeDeepLink(url).kind !== "recipe") return;
+      const token = parseRecipeShareLink(url);
+      if (!token && parseRecipeDeepLink(url).kind !== "recipe") return;
+      const key = token ?? url;
       const last = lastReceived.current;
-      if (last.url === url && Date.now() - last.time < 1500) return;
-      lastReceived.current = { url, time: Date.now() };
+      if (last.key === key && Date.now() - last.time < 1500) return;
+      lastReceived.current = { key, time: Date.now() };
       storage.set(PENDING_KEY, url);
       setPending(url);
       setRevision((value) => value + 1);
