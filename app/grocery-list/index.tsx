@@ -71,7 +71,6 @@ export default function GroceryListPage() {
         day.setDate(day.getDate() + 7);
         changeSelectedWeek(day);
       }}
-      onGoToToday={() => changeSelectedWeek(new Date())}
     />
   );
   if (error)
