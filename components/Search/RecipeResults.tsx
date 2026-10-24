@@ -10,7 +10,7 @@ type RecipeResultItemProps = {
   isLast: boolean;
 };
 
-function RecipeResultItem({ recipe, isLast }: RecipeResultItemProps) {
+export function RecipeResultItem({ recipe, isLast }: RecipeResultItemProps) {
   return (
     <SearchResultRow
       href={`/recipes/${recipe.id}`}

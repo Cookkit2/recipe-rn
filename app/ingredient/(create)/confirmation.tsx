@@ -42,21 +42,17 @@ export default function ConfirmationPage() {
       await presentPaywallIfNeeded({ triggerSource: "ingredient_confirmation" });
       const savedItems = await addPantryItemsWithMetadata.mutateAsync(completedItems);
 
-      // Schedule expiry notifications for saved items (using DB-assigned IDs)
-      try {
-        const { granted } = await getNotificationPermissions();
-        if (!granted) {
-          await requestNotificationPermissions();
-        }
-        await scheduleExpiryNotifications(savedItems);
-      } catch {
-        // Non-critical: don't block save flow if notifications fail
-      }
-
-      queryClient.invalidateQueries({
-        queryKey: recipeQueryKeys.recommendations(),
-      });
+      void queryClient.invalidateQueries({ queryKey: recipeQueryKeys.recommendations() });
       router.dismissTo("/");
+
+      // The pantry write is complete. Permission/scheduling work must not keep Save spinning.
+      void (async () => {
+        const { granted } = await getNotificationPermissions();
+        if (!granted) await requestNotificationPermissions();
+        await scheduleExpiryNotifications(savedItems);
+      })().catch(() => {
+        /* Reminder failures do not undo saved ingredients. */
+      });
     } catch {
       toast.error("Error saving ingredients");
     } finally {

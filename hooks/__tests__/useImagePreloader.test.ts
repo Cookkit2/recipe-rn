@@ -1,6 +1,9 @@
 import { renderHook, act } from "@testing-library/react-native";
 import { useImagePreloader } from "../useImagePreloader";
 import { Image } from "expo-image";
+import { log } from "~/utils/logger";
+
+jest.mock("~/utils/logger", () => ({ log: { warn: jest.fn() } }));
 
 jest.mock("expo-image", () => ({
   Image: {
@@ -101,5 +104,65 @@ describe("useImagePreloader", () => {
     });
 
     expect(Image.prefetch).not.toHaveBeenCalled();
+  });
+
+  it("settles the prefetch promise and loading state if a completion callback throws", async () => {
+    const failure = new Error("Subscriber failed");
+    const { result } = await renderHook(() =>
+      useImagePreloader({
+        priority: "high",
+        onComplete: () => {
+          throw failure;
+        },
+      })
+    );
+    await act(async () => {
+      const promise = result.current.prefetch("https://example.com/callback.jpg");
+      jest.runAllTimers();
+      expect(await promise).toBe(true);
+    });
+    expect(result.current.isPreloading).toBe(false);
+    expect(log.warn).toHaveBeenCalledWith("Image prefetch completion failed", failure);
+  });
+
+  it("waits for the current batch and deduplicates overlapping requests", async () => {
+    jest.useFakeTimers();
+    const finishes: Array<() => void> = [];
+    jest.mocked(Image.prefetch).mockImplementation(
+      () =>
+        new Promise<boolean>((resolve) => {
+          finishes.push(() => resolve(true));
+        })
+    );
+    const { result, unmount } = await renderHook(() =>
+      useImagePreloader({ priority: "high", concurrency: 2 })
+    );
+    let first!: Promise<boolean | void>;
+    let second!: Promise<boolean | void>;
+    try {
+      await act(async () => {
+        first = result.current.prefetch([
+          "https://example.com/pending-a",
+          "https://example.com/pending-b",
+          "https://example.com/pending-c",
+        ]);
+        second = result.current.prefetch(["https://example.com/pending-a"]);
+        jest.runAllTimers();
+      });
+      expect(Image.prefetch).toHaveBeenCalledTimes(1);
+      expect(jest.mocked(Image.prefetch).mock.calls[0]?.[0]).toHaveLength(2);
+      await act(async () => {
+        finishes.shift()!();
+      });
+      expect(Image.prefetch).toHaveBeenCalledTimes(2);
+      await act(async () => {
+        finishes.shift()!();
+        await Promise.all([first, second]);
+      });
+      await unmount();
+    } finally {
+      jest.mocked(Image.prefetch).mockResolvedValue(true);
+      jest.useRealTimers();
+    }
   });
 });

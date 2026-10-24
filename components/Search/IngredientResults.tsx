@@ -16,7 +16,7 @@ type IngredientResultItemProps = {
   colors: ReturnType<typeof useColors>;
 };
 
-function IngredientResultItem({ item, index, isLast, colors }: IngredientResultItemProps) {
+export function IngredientResultItem({ item, index, isLast, colors }: IngredientResultItemProps) {
   return (
     <SearchResultRow
       href={`/ingredient/${item.id}`}

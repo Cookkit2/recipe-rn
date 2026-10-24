@@ -41,6 +41,8 @@ export type DbRecipeForConversion = {
   sourceUrl?: string | null;
   calories?: number | null;
   tags?: string[] | null;
+  allergens?: string[];
+  isFavorite?: boolean;
 };
 
 /**
@@ -77,6 +79,8 @@ export const convertDbRecipesToUIRecipesBatch = (
       sourceUrl: recipe.sourceUrl ?? undefined,
       calories: recipe.calories ?? undefined,
       tags: recipe.tags ?? undefined,
+      allergens: dbRecipe.allergens,
+      isFavorite: dbRecipe.isFavorite,
       ingredients: ingredients.map((ing) => ({
         name: ing.name,
         relatedIngredientId: ing.id,
