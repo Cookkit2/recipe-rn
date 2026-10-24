@@ -1,4 +1,4 @@
-import { hasInstructionEvidence } from "../shared/instruction-evidence";
+import { hasInstructionEvidence, hasLeadingCookingAction } from "../shared/instruction-evidence";
 
 it("accepts quoted instructions despite formatting differences", () => {
   expect(hasInstructionEvidence("Whisk 2 eggs, then fry.", "🥚 WHISK 2 eggs — then fry!")).toBe(
@@ -25,4 +25,16 @@ it("supports quoted Chinese and Malay preparation instructions", () => {
   expect(
     hasInstructionEvidence("Kacau sehingga sebati.", "Kacau sehingga sebati. Kemudian masak.")
   ).toBe(true);
+});
+it("recognizes subtitle cooking actions without treating an introduction as a step", () => {
+  expect(hasLeadingCookingAction("means chicken steam egg.")).toBe(false);
+  expect(hasLeadingCookingAction("salt water")).toBe(false);
+  for (const instruction of [
+    "Add eggs.",
+    "Steam for 15 minutes.",
+    "Masukkan telur.",
+    "Tapiskan buih wrap dan cucur.",
+    "Tumiskan daun bawang.",
+  ])
+    expect(hasLeadingCookingAction(instruction)).toBe(true);
 });

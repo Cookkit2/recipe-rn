@@ -139,11 +139,11 @@
     "ws": "^8.22.0"
   },
   "resolutions": {
-    "fast-uri": "^3.1.8"
+    "fast-uri": "^3.1.9"
   },
   "overrides": {
     "form-data": "^4.0.6",
-    "fast-uri": "^3.1.8",
+    "fast-uri": "^3.1.9",
     "@babel/runtime": ">=7.26.10 <8",
     "tmp": ">=0.2.6",
     "expo-constants": "~58.0.12",
@@ -179,7 +179,8 @@
     "stream-json@1.9.1": "patches/stream-json@1.9.1.patch",
     "@nozbe/watermelondb@0.28.0": "patches/@nozbe%2Fwatermelondb@0.28.0.patch",
     "react-native-screen-corner-radius@0.2.3": "patches/react-native-screen-corner-radius@0.2.3.patch",
-    "@expo/ui@58.0.20": "patches/@expo%2Fui@58.0.20.patch"
+    "@expo/ui@58.0.20": "patches/@expo%2Fui@58.0.20.patch",
+    "zod@3.25.76": "patches/zod@3.25.76.patch"
   },
   "expo": {
     "autolinking": {

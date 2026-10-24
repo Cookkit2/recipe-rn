@@ -30,6 +30,7 @@ import { IS_E2E } from "~/utils/e2e-flags";
 import { arePaywallsEnabled } from "~/utils/paywall-flags";
 import { invalidateSubscriptionEntitlementsQuery } from "~/lib/subscription-query-sync";
 import { AnimatedStack } from "~/components/AnimatedStack";
+import { useNativeAppearance } from "~/hooks/useNativeAppearance";
 import { NotificationProvider } from "~/lib/notifications";
 import { getInstallAnchor } from "~/lib/install-anchor";
 import {
@@ -95,6 +96,7 @@ Sentry.init({
 
 export default Sentry.wrap(function RootLayout() {
   usePlatformSpecificSetup();
+  useNativeAppearance();
 
   const authStrategy = useMemo(
     () =>

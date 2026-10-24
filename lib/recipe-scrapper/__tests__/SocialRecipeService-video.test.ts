@@ -77,6 +77,85 @@ describe("social video recipe fallback", () => {
     expect(read.mock.calls[0]?.[0].videoUri).toBe("file:///cache/picked.mp4");
     expect(analysis.recipe).toBeDefined();
   });
+  it("imports TikTok's published caption and subtitles without downloading blocked media", async () => {
+    const html = `<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__">${JSON.stringify({
+      __DEFAULT_SCOPE__: {
+        "webapp.reflow.video.detail": {
+          itemInfo: {
+            itemStruct: {
+              id: "7538296153562008840",
+              desc: caption,
+              video: {
+                subtitleInfos: [
+                  {
+                    Format: "webvtt",
+                    Url: "https://v16-webapp.tiktok.com/subtitles",
+                    LanguageCodeName: "eng-US",
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    })}</script>`;
+    globalThis.fetch = jest.fn(
+      async (input) =>
+        new Response(
+          String(input).includes("/subtitles")
+            ? "WEBVTT\n\n00:00:00.000 --> 00:00:01.000\nmeans chicken steam egg.\n\n00:00:01.000 --> 00:00:03.000\nSteam for 15 minutes.\n"
+            : html
+        )
+    );
+    const modelResult = JSON.parse(result);
+    modelResult.recipe.steps = [{ step: 1, title: "Cook", description: "Bake at 200 degrees." }];
+    generate.mockResolvedValueOnce(JSON.stringify(modelResult));
+    const analysis = await new SocialRecipeService().analyzeForRecipe({
+      platform: "tiktok",
+      url: "https://vt.tiktok.com/ZSguquYyJ/",
+    });
+    expect(analysis.recipe).toBeDefined();
+    expect(generate.mock.calls[0]?.[0].prompt).toContain("Steam for 15 minutes.");
+    expect(read).not.toHaveBeenCalled();
+    expect(analysis.recipe?.steps.map((step) => step.description)).toEqual([
+      "Steam for 15 minutes.",
+    ]);
+    expect(analysis.warnings).toContain(
+      "Instructions come from published subtitles. Check them against the video."
+    );
+  });
+  it("retains the video fallback when published subtitles are unavailable", async () => {
+    const html = `<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__">${JSON.stringify({
+      __DEFAULT_SCOPE__: {
+        "webapp.reflow.video.detail": {
+          itemInfo: {
+            itemStruct: {
+              id: "7538296153562008840",
+              desc: caption,
+              video: {
+                subtitleInfos: [
+                  { Format: "webvtt", Url: "https://v16-webapp.tiktok.com/subtitles" },
+                ],
+              },
+            },
+          },
+        },
+      },
+    })}</script>`;
+    globalThis.fetch = jest.fn(
+      async (input) =>
+        new Response(String(input).includes("/subtitles") ? "Forbidden" : html, {
+          status: String(input).includes("/subtitles") ? 403 : 200,
+        })
+    );
+    generate
+      .mockResolvedValueOnce(notRecipe)
+      .mockResolvedValueOnce(JSON.stringify({ text: "Steam for 15 minutes." }))
+      .mockResolvedValueOnce(result);
+    const analysis = await new SocialRecipeService().analyzeForRecipe({ platform: "tiktok", url });
+    expect(read).toHaveBeenCalledTimes(1);
+    expect(analysis.recipe).toBeDefined();
+  });
   it("keeps a full caption on the fast text path", async () => {
     generate.mockResolvedValueOnce(result);
     await new SocialRecipeService().analyzeForRecipe({

@@ -72,5 +72,22 @@
       "filters/Replace.js": "9558273c734deed31c323648c3f144e961d5f45a6058184c03abb9afa2f90511",
       "utils/Verifier.js": "bc97b64fe774869613759dd1354b2883a6c71167465991d37b9f7b75fb5a859b"
     }
+  },
+  {
+    "package": "zod",
+    "version": "3.25.76",
+    "advisories": ["GHSA-mrhx-c7xc-m3w5"],
+    "reason": "Bound collection diagnostics and async validation batches in every Zod 3 and bundled Zod 4 entry point, preserving valid transformations, conditional checks, catch/refinement behavior and Expo compatibility.",
+    "patch": "patches/zod@3.25.76.patch",
+    "patchSha256": "b45b2644d28c42d7bf31947f2a5a2ff519cad02f4ff0d3ea3e82902692704260",
+    "files": {
+      "package.json": "70eedbe34fd52385a4ae2f3e5759b19682189f0118ea73a6e7c32c677f61668e",
+      "v3/types.cjs": "3784112c360fd20fc2c2faecf7cd5e9c770b1158fc2253841eb8980d467a2e9f",
+      "v3/types.js": "890328e91d99beeb0429b637244baff53869d8ef715f55526f98344f9b4a4189",
+      "src/v3/types.ts": "74e1eb90c6b29f3ff5b5796220768cc5574cc8800a829a349727e632f811f10b",
+      "v4/core/schemas.cjs": "faa5fcb03af955e7adf9ecadecf5fe2618be8ce685bd87578a9db76f979f0900",
+      "v4/core/schemas.js": "0123dfb2514b2d32ef81684ba97c84be6ca0699f43fb4972a9656ef6dd250a22",
+      "src/v4/core/schemas.ts": "6632c8f06f50b6080f098883fa5d75794f7726d3b3ad6ca414b17b6aac6c520e"
+    }
   }
 ]
