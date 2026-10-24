@@ -1,4 +1,5 @@
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
+import type { NativeStackNavigationOptions } from "expo-router/native-stack";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import {
   View,
@@ -390,7 +391,7 @@ function RecipeDetailsContent({
             },
           },
         ],
-      });
+      } satisfies NativeStackNavigationOptions);
     } else {
       navigation.setOptions({ headerRight: () => <RecipeHeaderActions onShare={handleShare} /> });
     }

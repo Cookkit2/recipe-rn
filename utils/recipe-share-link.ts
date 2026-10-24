@@ -17,7 +17,10 @@ export function parseRecipeShareLink(value: string | null | undefined): string |
   if (!value) return null;
   try {
     const url = new URL(value);
-    if (url.username || url.password || url.port) return null;
+    // Reject user information and non-default ports in shared URLs.
+    if (url.username) return null;
+    if (url.password) return null;
+    if (url.port) return null;
     const publicLink = url.origin === RECIPE_SHARE_ORIGIN;
     const appLink = url.protocol === "cookkit:" && url.hostname === "share";
     if (!publicLink && !appLink) return null;
