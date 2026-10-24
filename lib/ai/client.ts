@@ -29,6 +29,9 @@ export async function generateAIContent(request: AIRequest, signal?: AbortSignal
       throw new Error("Couldn't process this with AI. Please try again.");
     }
     const result: AIResponse = await response.json();
+    if (request.images && result.inputImageCount !== request.images.length) {
+      throw new Error("Video analysis isn't available yet. Paste the full recipe caption.");
+    }
     if (typeof result.content !== "string" || !result.content.trim()) {
       throw new Error("The AI service returned an empty answer. Please try again.");
     }

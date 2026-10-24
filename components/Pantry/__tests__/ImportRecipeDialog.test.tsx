@@ -62,13 +62,28 @@ jest.mock("lucide-uniwind", () => ({ __esModule: true, LinkIcon: () => null }));
 // Controllable import hook so the test can drive a successful import.
 const mockImportRecipeAsync = jest.fn<(input: SharedRecipeInput) => Promise<any>>();
 const mockReset = jest.fn();
-jest.mock("~/hooks/queries/useRecipeImportQueries", () => ({
+const mockSave = jest.fn<(draft: unknown) => Promise<any>>();
+const mockReview = jest.fn<(props: any) => any>(() => null);
+const mockPick = jest.fn<(...args: any[]) => Promise<any>>();
+jest.mock("expo-image-picker", () => ({
+  launchImageLibraryAsync: (...args: any[]) => mockPick(...args),
+}));
+jest.mock("~/components/Recipe/RecipeImportReview", () => ({
   __esModule: true,
-  useImportRecipe: () => ({
-    importRecipeAsync: mockImportRecipeAsync,
+  default: (props: any) => mockReview(props),
+}));
+jest.mock("~/hooks/queries/useRecipeImportPreview", () => ({
+  __esModule: true,
+  useRecipeImportPreview: () => ({
+    prepare: async (input: SharedRecipeInput) => {
+      const result = await mockImportRecipeAsync(input);
+      return result.kind ? result : { kind: "saved", result };
+    },
+    save: mockSave,
+    cancel: mockReset,
     importStatus: "idle",
     isPending: false,
-    reset: mockReset,
+    statusMessage: "Reading video frames...",
   }),
 }));
 
@@ -101,11 +116,56 @@ describe("manual recipe import and failed-share recovery", () => {
       fireEvent.changeText(input, content);
     });
 
-    await act(async () => fireEvent.press(getByText("Import")));
+    await act(async () => fireEvent.press(getByText("Continue")));
 
     await waitFor(() => expect(mockPush).toHaveBeenCalledTimes(1));
     expect(mockImportRecipeAsync).toHaveBeenCalledWith(expected);
     expect(mockPush).toHaveBeenCalledWith("/recipes/recipe-42");
+  });
+
+  it("shows a review without navigating or saving, then saves the corrected draft", async () => {
+    const draft = { recipe: { title: "Eggs" }, warnings: ["Missing amounts"] };
+    mockImportRecipeAsync.mockResolvedValue({ kind: "review", draft });
+    mockSave.mockResolvedValue({ success: true, recipe: { id: "reviewed" } });
+    const screen = await render(
+      <ImportRecipeDialog
+        open
+        onOpenChange={jest.fn()}
+        initialInput={{ url: "https://vt.tiktok.com/ZSgH2hh7B/" }}
+      />
+    );
+    await act(async () => fireEvent.press(screen.getByText("Continue")));
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(mockSave).not.toHaveBeenCalled();
+    const props = mockReview.mock.calls.at(-1)?.[0];
+    expect(props.draft).toBe(draft);
+    await act(async () => props.onSave(draft));
+    expect(mockSave).toHaveBeenCalledWith(draft);
+    expect(mockPush).toHaveBeenCalledWith("/recipes/reviewed");
+  });
+
+  it("keeps the TikTok link and caption when choosing a local video", async () => {
+    const url = "https://vt.tiktok.com/ZSgH2hh7B/";
+    mockPick.mockResolvedValue({
+      canceled: false,
+      assets: [{ uri: "file:///picked.mp4", fileSize: 2000, duration: 18000 }],
+    });
+    mockImportRecipeAsync.mockResolvedValue({
+      kind: "review",
+      draft: { recipe: { title: "Eggs" }, warnings: [] },
+    });
+    const screen = await render(
+      <ImportRecipeDialog open onOpenChange={jest.fn()} initialInput={{ url, text: "5 eggs" }} />
+    );
+    await act(async () => fireEvent.press(screen.getByText("Choose video")));
+    await act(async () => fireEvent.press(screen.getByText("Continue")));
+    expect(mockImportRecipeAsync).toHaveBeenCalledWith({
+      url,
+      text: "5 eggs",
+      videoUri: "file:///picked.mp4",
+      language: "en-US",
+    });
+    expect(mockSave).not.toHaveBeenCalled();
   });
 
   it("keeps the shared source available for a recovery attempt", async () => {
@@ -136,7 +196,7 @@ describe("manual recipe import and failed-share recovery", () => {
         "https://example.com/r"
       )
     );
-    await act(async () => fireEvent.press(screen.getByText("Import")));
+    await act(async () => fireEvent.press(screen.getByText("Continue")));
     await screen.rerender(<ImportRecipeDialog open={false} onOpenChange={jest.fn()} />);
     await act(async () => finish({ success: true, recipe: { id: "old-recipe" } }));
     expect(mockPush).not.toHaveBeenCalled();

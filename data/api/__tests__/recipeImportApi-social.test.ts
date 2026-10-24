@@ -262,4 +262,84 @@ describe("recipeImportApi.importRecipeFromSocialMedia", () => {
     expect(mockAnalyzeForRecipe).not.toHaveBeenCalled();
     expect(mockCreateRecipe).not.toHaveBeenCalled();
   });
+
+  it("prepares a social draft without saving or adding shopping items", async () => {
+    const url = "https://vt.tiktok.com/ZSgH2hh7B/";
+    jest
+      .mocked(analyzeUrl)
+      .mockReturnValue({ isValid: true, type: "tiktok", url, normalizedUrl: url });
+    mockAnalyzeForRecipe.mockResolvedValue({
+      isCookingVideo: true,
+      confidence: 0.9,
+      recipe: SAMPLE_RECIPE,
+      warnings: ["Check the steps."],
+    });
+    const prepared = await recipeImportApi.prepareSharedRecipe({
+      url,
+      videoUri: "file:///picked.mp4",
+    });
+    expect(prepared.kind).toBe("review");
+    if (prepared.kind === "review") {
+      expect(prepared.draft.recipe.sourceUrl).toBe(url);
+      expect(prepared.draft.warnings).toContain("Check the steps.");
+    }
+    expect(mockCreateRecipe).not.toHaveBeenCalled();
+    expect(mockGetShoppingListForRecipe).not.toHaveBeenCalled();
+  });
+
+  it("rejects a draft with an unknown amount before any database write", async () => {
+    const draft = {
+      recipe: { ...SAMPLE_RECIPE, ingredients: [{ name: "chicken", quantity: 0, unit: "gram" }] },
+      warnings: [],
+    };
+    await expect(recipeImportApi.saveRecipeDraft(draft)).rejects.toThrow(
+      "missing ingredient amounts"
+    );
+    expect(mockCreateRecipe).not.toHaveBeenCalled();
+  });
+
+  it("requires a missing unit to be reviewed before writing a known amount", async () => {
+    const draft = {
+      recipe: { ...SAMPLE_RECIPE, ingredients: [{ name: "chicken", quantity: 100, unit: "" }] },
+      warnings: [],
+    };
+    await expect(recipeImportApi.saveRecipeDraft(draft)).rejects.toThrow(
+      "missing ingredient units"
+    );
+    expect(mockCreateRecipe).not.toHaveBeenCalled();
+  });
+
+  it("saves corrected amounts and the source only after review", async () => {
+    const draft = { recipe: SAMPLE_RECIPE, warnings: [] };
+    expect((await recipeImportApi.saveRecipeDraft(draft)).success).toBe(true);
+    expect(mockCreateRecipe).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ingredients: SAMPLE_RECIPE.ingredients,
+        sourceUrl: SAMPLE_RECIPE.sourceUrl,
+      })
+    );
+  });
+
+  it("preserves the actionable video recovery message", async () => {
+    const url = SAMPLE_RECIPE.sourceUrl;
+    jest
+      .mocked(analyzeUrl)
+      .mockReturnValue({ isValid: true, type: "tiktok", url, normalizedUrl: url });
+    mockAnalyzeForRecipe.mockResolvedValue({
+      isCookingVideo: false,
+      confidence: 0,
+      errorMessage: "Choose a saved video or paste the full caption.",
+    });
+    await expect(recipeImportApi.prepareSharedRecipe({ url })).rejects.toThrow(
+      "Choose a saved video"
+    );
+    expect(mockCreateRecipe).not.toHaveBeenCalled();
+  });
+
+  it("does not retry a successful save when pantry comparison fails", async () => {
+    mockGetShoppingListForRecipe.mockRejectedValueOnce(new Error("Pantry unavailable"));
+    const result = await recipeImportApi.saveRecipeDraft({ recipe: SAMPLE_RECIPE, warnings: [] });
+    expect(result.recipe?.id).toBe("recipe-1");
+    expect(mockCreateRecipe).toHaveBeenCalledTimes(1);
+  });
 });

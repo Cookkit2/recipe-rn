@@ -45,6 +45,16 @@ const NEBIUS_RECIPE_RESPONSE = JSON.stringify({
   },
 });
 
+function responseForInstructions(...descriptions: string[]) {
+  const result = JSON.parse(NEBIUS_RECIPE_RESPONSE);
+  result.recipe.steps = descriptions.map((description, index) => ({
+    step: index + 1,
+    title: `Step ${index + 1}`,
+    description,
+  }));
+  return JSON.stringify(result);
+}
+
 const mockGenerateContent = jest.fn(async (_request: { prompt: string }) => NEBIUS_RECIPE_RESPONSE);
 
 jest.mock("~/lib/ai/client", () => ({
@@ -69,7 +79,9 @@ describe("SocialRecipeService.analyzeForRecipe", () => {
   /** Build a minimal HTML page with og:* meta + optional JSON-LD. */
   function pageHtml(opts: { title?: string; description?: string; jsonLd?: string }): string {
     const title = opts.title ?? "Viral TikTok Pasta";
-    const description = opts.description ?? "Best pasta ever #recipe #feta";
+    const description =
+      opts.description ??
+      "Ingredients: 2 cups tomatoes, 1 block feta, 200g pasta. Bake tomatoes and feta at 200C for 30 min. Stir through cooked pasta.";
     return [
       "<html><head>",
       `<meta property="og:title" content="${title}" />`,
@@ -123,6 +135,7 @@ describe("SocialRecipeService.analyzeForRecipe", () => {
   });
 
   it("reads caption meta attributes in either order and preserves quotes and entities", async () => {
+    mockGenerateContent.mockResolvedValueOnce(responseForInstructions("whisk 2 eggs & fry."));
     globalThis.fetch = jest.fn(
       async () =>
         new Response(
@@ -145,6 +158,7 @@ describe("SocialRecipeService.analyzeForRecipe", () => {
 
   it("extracts captions from JSON-LD arrays and graph entries", async () => {
     const caption = "Whisk 2 eggs with a pinch of salt. Fry in 1 tsp oil for 3 minutes.";
+    mockGenerateContent.mockResolvedValueOnce(responseForInstructions(caption));
     globalThis.fetch = jest.fn(
       async () =>
         new Response(
@@ -160,9 +174,9 @@ describe("SocialRecipeService.analyzeForRecipe", () => {
   });
 
   it("tries accessible post text when a generic share message contains no recipe", async () => {
-    mockGenerateContent.mockResolvedValueOnce(
-      JSON.stringify({ isCookingVideo: false, confidence: 0 })
-    );
+    mockGenerateContent
+      .mockResolvedValueOnce(JSON.stringify({ isCookingVideo: false, confidence: 0 }))
+      .mockResolvedValueOnce(responseForInstructions("Boil 200g pasta and stir in 2 tbsp pesto."));
     globalThis.fetch = jest.fn(
       async () =>
         new Response(pageHtml({ description: "Boil 200g pasta and stir in 2 tbsp pesto." }), {
@@ -198,6 +212,7 @@ describe("SocialRecipeService.analyzeForRecipe", () => {
     }) as unknown as typeof fetch;
     const text =
       "Bake 2 cups tomatoes and 1 block feta at 200C for 30 minutes. Stir in 200g cooked pasta.";
+    mockGenerateContent.mockResolvedValueOnce(responseForInstructions(text));
     const result = await service.analyzeForRecipe({
       platform: "instagram",
       url: "https://www.instagram.com/p/abc/",
@@ -210,6 +225,9 @@ describe("SocialRecipeService.analyzeForRecipe", () => {
   });
 
   it("extracts a caption-only recipe without fetching any platform", async () => {
+    mockGenerateContent.mockResolvedValueOnce(
+      responseForInstructions("Boil 200g pasta, then stir in pesto.")
+    );
     const fetchMock = jest.fn();
     globalThis.fetch = fetchMock as unknown as typeof fetch;
     expect(

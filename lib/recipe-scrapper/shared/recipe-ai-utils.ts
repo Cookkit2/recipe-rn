@@ -144,3 +144,15 @@ export function buildTextRecipeRequest(prompt: string): AIRequest {
     responseSchema: getAnalysisResponseSchema(),
   };
 }
+
+/** Social/video drafts may contain an explicitly unknown ingredient unit for review. */
+export function buildSocialRecipeRequest(prompt: string): AIRequest {
+  const responseSchema = getAnalysisResponseSchema();
+  const ingredient = responseSchema.properties.recipe.properties.ingredients.items;
+  ingredient.properties.unit = { type: "string", minLength: 0 };
+  Object.assign(responseSchema.properties.recipe.properties.steps.items.properties.description, {
+    description:
+      "Copy the exact preparation instruction from the supplied caption, transcript or frame observations. Do not add cooking knowledge or rewrite it.",
+  });
+  return { ...buildTextRecipeRequest(prompt), responseSchema };
+}

@@ -21,7 +21,13 @@ const mockRecovery = jest.fn(
     initialInput: SharedRecipeInput;
   }) => null
 );
-type ImportResult = { success: boolean; recipe?: { id: string }; error?: string };
+type ImportResult = {
+  success: boolean;
+  recipe?: { id: string };
+  error?: string;
+  kind?: string;
+  draft?: unknown;
+};
 const mockImport = jest.fn(async (_input: SharedRecipeInput): Promise<ImportResult> => ({
   success: true,
   recipe: { id: "recipe-1" },
@@ -75,8 +81,21 @@ jest.mock("sonner-native", () => ({
     dismiss: (...args: unknown[]) => mockDismiss(...args),
   },
 }));
-jest.mock("~/hooks/queries/useRecipeImportQueries", () => ({
-  useImportRecipe: () => ({ importRecipeAsync: mockImport }),
+const mockReview = jest.fn((_props: any) => null);
+const mockSaveDraft = jest.fn(async (_draft: unknown) => ({
+  success: true,
+  recipe: { id: "reviewed" },
+}));
+jest.mock("../RecipeImportReview", () => ({
+  __esModule: true,
+  default: (props: any) => mockReview(props),
+}));
+const mockPrepare = async (input: SharedRecipeInput) => {
+  const result = await mockImport(input);
+  return result.kind ? result : { kind: "saved", result };
+};
+jest.mock("~/hooks/queries/useRecipeImportPreview", () => ({
+  useRecipeImportPreview: () => ({ prepare: mockPrepare, save: mockSaveDraft, isPending: false }),
 }));
 jest.mock("~/components/Pantry/ImportRecipeDialog", () => ({
   __esModule: true,
@@ -218,42 +237,41 @@ it("opens only the latest recipe when a second share arrives during extraction",
   expect(mockConsume).toHaveBeenCalledWith("share-2");
 });
 
-it("offers recovery on failure without opening a form or retrying on every app resume", async () => {
-  mockImport.mockResolvedValueOnce({ success: false, error: "Paste the full recipe caption." });
+it("opens file/caption recovery on failure and does not retry on every app resume", async () => {
+  mockImport.mockResolvedValueOnce({
+    success: false,
+    error: "Choose the saved video or paste the full caption.",
+  });
   mockPayloads = caption;
   await render(<SocialRecipeShareHandler />);
   await waitFor(() =>
-    expect(mockToast).toHaveBeenCalledWith(
-      "Paste the full recipe caption.",
-      expect.objectContaining({ action: expect.objectContaining({ label: "Try again" }) })
+    expect(mockRecovery).toHaveBeenCalledWith(
+      expect.objectContaining({
+        open: true,
+        initialError: "Choose the saved video or paste the full caption.",
+        initialInput: expect.objectContaining({ text: caption[0]?.value }),
+      })
     )
   );
   expect(mockRouter.push).not.toHaveBeenCalled();
-  expect(mockRecovery).not.toHaveBeenCalled();
   expect(mockPending?.id).toBe("share-1");
   await act(async () => active?.("active"));
   expect(mockImport).toHaveBeenCalledTimes(1);
-  const options = mockToast.mock.calls[0]?.[1] as { action: { onClick: () => void } };
-  await act(async () => options.action.onClick());
-  expect(mockRecovery).toHaveBeenCalledWith(
-    expect.objectContaining({
-      open: true,
-      initialInput: expect.objectContaining({ text: caption[0]?.value }),
-    })
-  );
-  await act(async () => mockRecovery.mock.calls[0]?.[0].onOpenChange(false));
+  await act(async () => mockRecovery.mock.calls.at(-1)?.[0].onOpenChange(false));
   expect(mockConsume).toHaveBeenCalledWith("share-1");
   expect(mockPending).toBeNull();
 });
 
-it("retains the source and replaces progress with an error if the import throws", async () => {
+it("retains the source and shows an actionable recovery sheet if extraction throws", async () => {
   mockImport.mockRejectedValueOnce(new Error("Connection unavailable."));
   mockPayloads = caption;
   await render(<SocialRecipeShareHandler />);
   await waitFor(() =>
-    expect(mockToast).toHaveBeenCalledWith(
-      "Connection unavailable.",
-      expect.objectContaining({ id: "recipe-share-share-1", action: expect.any(Object) })
+    expect(mockRecovery).toHaveBeenCalledWith(
+      expect.objectContaining({
+        initialError: "Connection unavailable.",
+        initialInput: expect.objectContaining({ text: caption[0]?.value }),
+      })
     )
   );
   expect(mockConsume).not.toHaveBeenCalled();
@@ -297,4 +315,20 @@ it("allows older binaries to keep using manual paste without loading a missing m
   await render(<SocialRecipeShareHandler />);
   expect(mockSave).not.toHaveBeenCalled();
   expect(AppState.addEventListener).not.toHaveBeenCalled();
+});
+
+it("reviews a native social share before writing the recipe or consuming its source", async () => {
+  const url = "https://vt.tiktok.com/ZSgH2hh7B/";
+  const draft = { recipe: { title: "Steamed egg", sourceUrl: url }, warnings: ["Review amounts"] };
+  mockImport.mockResolvedValueOnce({ success: true, kind: "review", draft });
+  mockPayloads = [{ shareType: "url", value: url }];
+  await render(<SocialRecipeShareHandler />);
+  await waitFor(() => expect(mockReview).toHaveBeenCalled());
+  expect(mockConsume).not.toHaveBeenCalled();
+  expect(mockRouter.push).not.toHaveBeenCalled();
+  expect(mockSaveDraft).not.toHaveBeenCalled();
+  await act(async () => mockReview.mock.calls.at(-1)?.[0].onSave(draft));
+  expect(mockSaveDraft).toHaveBeenCalledWith(draft);
+  expect(mockConsume).toHaveBeenCalledWith("share-1");
+  expect(mockRouter.push).toHaveBeenCalledWith("/recipes/reviewed");
 });
