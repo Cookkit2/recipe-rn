@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Image } from "expo-image";
+import { prefetchImages } from "~/lib/image-prefetch";
+import { log } from "~/utils/logger";
 
 const DEFAULT_PREFETCH_BATCH_SIZE = 8;
 const DEFAULT_DELAY_MS = 100;
@@ -71,11 +72,14 @@ export function useImagePreloader(options: UseImagePreloaderOptions = {}) {
   const [isPreloading, setIsPreloading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const mountedRef = useRef(true);
+  const controllerRef = useRef(new AbortController());
 
   useEffect(() => {
     mountedRef.current = true;
+    controllerRef.current = new AbortController();
     return () => {
       mountedRef.current = false;
+      controllerRef.current.abort();
     };
   }, []);
 
@@ -89,50 +93,37 @@ export function useImagePreloader(options: UseImagePreloaderOptions = {}) {
       const valid = dedupe(list);
       if (valid.length === 0) return Promise.resolve(true);
 
-      // Clamp concurrency to >= 1 so an explicit 0 never produces an empty
-      // (infinite-loop) batch slice.
-      const batchSize = Math.max(1, concurrency);
-
-      const doPrefetch = async () => {
-        let allOk = true;
-        const promises = [];
-        for (let i = 0; i < valid.length && mountedRef.current; i += batchSize) {
-          const batch = valid.slice(i, i + batchSize);
-          promises.push(Image.prefetch(batch, { cachePolicy }));
-        }
-        const results = await Promise.all(promises);
-        if (!mountedRef.current) return;
-        allOk = results.every((ok) => ok);
-        if (!allOk) {
-          const err = new Error("Image prefetch failed for one or more URLs");
-          setError(err);
-          onError?.(err);
-        } else {
-          setError(null);
-          onComplete?.();
-        }
-        setIsPreloading(false);
-      };
-
-      const runPrefetch = () => {
-        doPrefetch().catch((err) => {
-          if (!mountedRef.current) {
-            return;
+      setIsPreloading(true);
+      const signal = controllerRef.current.signal;
+      return new Promise<boolean>((resolve) => {
+        const runPrefetch = async () => {
+          let ok = false;
+          try {
+            ok = await prefetchImages(valid, cachePolicy, concurrency, signal);
+            if (mountedRef.current && !signal.aborted) {
+              if (ok) {
+                setError(null);
+                onComplete?.();
+              } else {
+                const failure = new Error("Image prefetch failed for one or more URLs");
+                setError(failure);
+                onError?.(failure);
+              }
+            }
+          } catch (cause) {
+            log.warn("Image prefetch completion failed", cause);
+          } finally {
+            if (mountedRef.current && !signal.aborted) setIsPreloading(false);
+            resolve(ok);
           }
-          const normalizedError = err instanceof Error ? err : new Error(String(err));
-          setError(normalizedError);
-          setIsPreloading(false);
-          onError?.(normalizedError);
-        });
-      };
-
-      if (priority === "high") {
-        scheduleIdleTask(runPrefetch);
-      } else {
-        scheduleIdleTask(runPrefetch, delay);
-      }
-
-      return Promise.resolve();
+        };
+        scheduleIdleTask(
+          () => {
+            void runPrefetch();
+          },
+          priority === "high" ? 0 : delay
+        );
+      });
     },
     [delay, priority, cachePolicy, concurrency, enabled, onComplete, onError]
   );

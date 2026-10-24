@@ -47,7 +47,8 @@ describe("photo recognition request", () => {
         responseSchema: expect.objectContaining({
           required: ["name", "quantity", "unit", "confidence"],
         }),
-      })
+      }),
+      undefined
     );
   });
 });

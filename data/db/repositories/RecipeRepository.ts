@@ -1,3 +1,7 @@
+import { storageFacade } from "~/data/storage";
+import { contentFingerprint } from "~/utils/content-fingerprint";
+import { notifyRecipeCatalogChanged } from "~/data/recipe-catalog-events";
+
 import { Q } from "@nozbe/watermelondb";
 import Recipe, { type RecipeData } from "../models/Recipe";
 import RecipeStep, { type RecipeStepData } from "../models/RecipeStep";
@@ -9,6 +13,10 @@ import type { Tables } from "~/lib/supabase/supabase-types";
 import { log } from "~/utils/logger";
 import { sanitizeSearchTerm } from "~/utils/input-sanitization";
 import type { NutritionSource, DietaryTag } from "~/types/Nutrition";
+
+const CATALOG_SYNC_KEY = "recipe-catalog-sync-v2";
+const CATALOG_FRESH_MS = 15 * 60 * 1000;
+type CatalogSyncState = { syncedAt: number; limit: number; fingerprints: Record<string, string> };
 
 export interface RecipeSearchOptions extends SearchOptions {
   tags?: string[];
@@ -30,6 +38,8 @@ export interface CreateRecipeWithDetailsData {
 
 export class RecipeRepository extends BaseRepository<Recipe> {
   private isInitialized = false;
+  private initialization: Promise<void> | undefined;
+  private syncPromise: Promise<void> | undefined;
 
   constructor() {
     super("recipe"); // Updated from "recipes" to "recipe"
@@ -38,17 +48,22 @@ export class RecipeRepository extends BaseRepository<Recipe> {
   // Initialize repository and sync recipes from Supabase
   async initialize(): Promise<void> {
     if (this.isInitialized) return;
-
-    try {
-      // Sync from Supabase on start - use high limit to get all recipes
-      await this.syncFromSupabase(1000);
-
-      this.isInitialized = true;
-    } catch (error) {
-      // Don't throw error during initialization to prevent app crashes
-      // The app can still function with local-only recipes
-      this.isInitialized = true;
-    }
+    this.initialization ??= (async () => {
+      try {
+        const state = storageFacade.get<CatalogSyncState>(CATALOG_SYNC_KEY);
+        const fresh =
+          state?.limit === 1000 &&
+          Date.now() >= state.syncedAt &&
+          Date.now() - state.syncedAt < CATALOG_FRESH_MS;
+        if (!fresh || (await this.count()) === 0) await this.syncFromSupabase(1000);
+        this.isInitialized = true;
+      } catch (error) {
+        log.warn("Recipe refresh deferred; using the local catalog", error);
+      } finally {
+        this.initialization = undefined;
+      }
+    })();
+    return this.initialization;
   }
 
   // Search recipes with advanced filters
@@ -262,7 +277,10 @@ export class RecipeRepository extends BaseRepository<Recipe> {
    * const details = await recipeRepository.getRecipesWithDetails([singleId]);
    * const singleRecipe = details.get(singleId);
    */
-  async getRecipesWithDetails(recipeIds: string[]): Promise<
+  async getRecipesWithDetails(
+    recipeIds: string[],
+    options?: { includeSteps?: boolean; recipes?: Recipe[] }
+  ): Promise<
     Map<
       string,
       {
@@ -279,23 +297,22 @@ export class RecipeRepository extends BaseRepository<Recipe> {
 
     try {
       // Batch fetch all recipes using Q.oneOf
-      const recipes = await this.collection.query(Q.where("id", Q.oneOf(recipeIds))).fetch();
+      const recipes =
+        options?.recipes ??
+        (await this.collection.query(Q.where("id", Q.oneOf(recipeIds))).fetch());
 
       if (recipes.length === 0) {
         return new Map();
       }
 
-      // Batch fetch all steps for these recipes in a single query
       const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
-      const allSteps = await stepsCollection
-        .query(Q.where("recipe_id", Q.oneOf(recipeIds)))
-        .fetch();
-
-      // Batch fetch all ingredients for these recipes in a single query
       const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
-      const allIngredients = await ingredientsCollection
-        .query(Q.where("recipe_id", Q.oneOf(recipeIds)))
-        .fetch();
+      const [allSteps, allIngredients] = await Promise.all([
+        options?.includeSteps === false
+          ? Promise.resolve([] as RecipeStep[])
+          : stepsCollection.query(Q.where("recipe_id", Q.oneOf(recipeIds))).fetch(),
+        ingredientsCollection.query(Q.where("recipe_id", Q.oneOf(recipeIds))).fetch(),
+      ]);
 
       // Build the result Map
       const resultMap = new Map<
@@ -440,135 +457,85 @@ export class RecipeRepository extends BaseRepository<Recipe> {
 
   // Sync recipes from Supabase
   async syncFromSupabase(limit: number = 1000): Promise<void> {
-    try {
-      const recipesWithDetails = await recipeApi.getRecipesWithDetailsSupabase(limit);
-      log.info(`Syncing ${recipesWithDetails.length} recipes from Supabase...`);
+    this.syncPromise ??= this.syncCatalog(limit).finally(() => {
+      this.syncPromise = undefined;
+    });
+    return this.syncPromise;
+  }
 
-      if (recipesWithDetails.length === 0) {
-        log.info("No recipes found to sync from Supabase");
-        return;
+  private async syncCatalog(limit: number): Promise<void> {
+    const remote = await recipeApi.getRecipesWithDetailsSupabase(limit);
+    if (!remote.length) return;
+    const previous = storageFacade.get<CatalogSyncState>(CATALOG_SYNC_KEY);
+    const existing = await this.collection.query().fetch();
+    const byId = new Map(existing.map((recipe) => [recipe.id, recipe]));
+    const fingerprints = { ...previous?.fingerprints };
+    const changed = remote.filter((item) => {
+      const signature = contentFingerprint([
+        this.transformSupabaseRecipe(item.recipe),
+        item.steps.map((step) => this.transformSupabaseStep(step)).sort((a, b) => a.step - b.step),
+        item.ingredients
+          .map((ingredient) => this.transformSupabaseIngredient(ingredient))
+          .sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))),
+      ]);
+      const differs = !byId.has(item.recipe.id) || fingerprints[item.recipe.id] !== signature;
+      fingerprints[item.recipe.id] = signature;
+      return differs;
+    });
+    if (changed.length) {
+      const ids = changed.map((item) => item.recipe.id);
+      const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
+      const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
+      const [steps, ingredients] = ids.length
+        ? await Promise.all([
+            stepsCollection.query(Q.where("recipe_id", Q.oneOf(ids))).fetch(),
+            ingredientsCollection.query(Q.where("recipe_id", Q.oneOf(ids))).fetch(),
+          ])
+        : [[], []];
+      const stepsById = new Map<string, RecipeStep[]>();
+      const ingredientsById = new Map<string, RecipeIngredient[]>();
+      for (const step of steps) {
+        const group = stepsById.get(step.recipeId) ?? [];
+        group.push(step);
+        stepsById.set(step.recipeId, group);
       }
-
-      log.info(`First recipe: ${recipesWithDetails[0]?.recipe.title}`);
-
-      // Get all existing recipes
-      const existingRecipes = await this.collection.query().fetch();
-      const existingRecipesMap = new Map(existingRecipes.map((r) => [r.id, r]));
-
-      // Separate new recipes from existing ones
-      const newRecipes: SupabaseRecipeWithDetails[] = [];
-      const existingRecipesToUpdate: SupabaseRecipeWithDetails[] = [];
-
-      recipesWithDetails.forEach((supabaseRecipe) => {
-        if (existingRecipesMap.has(supabaseRecipe.recipe.id)) {
-          existingRecipesToUpdate.push(supabaseRecipe);
-        } else {
-          newRecipes.push(supabaseRecipe);
+      for (const ingredient of ingredients) {
+        const group = ingredientsById.get(ingredient.recipeId) ?? [];
+        group.push(ingredient);
+        ingredientsById.set(ingredient.recipeId, group);
+      }
+      await database.write(async () => {
+        const operations: import("@nozbe/watermelondb").Model[] = [];
+        for (const item of changed) {
+          const local = byId.get(item.recipe.id);
+          if (!local) {
+            // Repair child rows left by an older parent-only deletion before recreating it.
+            for (const step of stepsById.get(item.recipe.id) ?? [])
+              operations.push(step.prepareDestroyPermanently());
+            for (const ingredient of ingredientsById.get(item.recipe.id) ?? [])
+              operations.push(ingredient.prepareDestroyPermanently());
+          }
+          operations.push(
+            ...(local
+              ? this.prepareUpdateExistingRecipe(
+                  item,
+                  local,
+                  stepsById.get(local.id) ?? [],
+                  ingredientsById.get(local.id) ?? []
+                )
+              : this.prepareSyncSingleRecipe(item))
+          );
+        }
+        for (let i = 0; i < operations.length; i += 500) {
+          await database.batch(operations.slice(i, i + 500));
         }
       });
-
-      log.info(
-        `Found ${newRecipes.length} new recipes and ${existingRecipesToUpdate.length} existing recipes to update`
-      );
-
-      // Prepare operations - delete all existing recipes first, then recreate everything
-      // This avoids "Cannot update a record with pending changes" errors
-      const batchOps: import("@nozbe/watermelondb").Model[] = [];
-
-      // Delete all existing local recipes that need updating.
-      // WatermelonDB does not cascade deletes: destroying only the parent recipe leaves
-      // `recipe_step` / `recipe_ingredient` rows with the same recipe_id, so the subsequent
-      // `prepareSyncSingleRecipe` insert duplicates steps and ingredients on every app open.
-
-      // ⚡ Bolt Optimization: Fetch all steps and ingredients in two queries instead of N*2
-      // Impact: Eliminates N+1 database querying, which incurs significant overhead due to database bridge crossings.
-      const recipeIdsToUpdate = existingRecipesToUpdate.map((r) => r.recipe.id);
-      let allSteps: RecipeStep[] = [];
-      let allIngredients: RecipeIngredient[] = [];
-
-      if (recipeIdsToUpdate.length > 0) {
-        [allSteps, allIngredients] = await Promise.all([
-          database.collections
-            .get<RecipeStep>("recipe_step")
-            .query(Q.where("recipe_id", Q.oneOf(recipeIdsToUpdate)))
-            .fetch(),
-          database.collections
-            .get<RecipeIngredient>("recipe_ingredient")
-            .query(Q.where("recipe_id", Q.oneOf(recipeIdsToUpdate)))
-            .fetch(),
-        ]);
-      }
-
-      const stepsByRecipeId = new Map<string, RecipeStep[]>();
-      for (const step of allSteps) {
-        const steps = stepsByRecipeId.get(step.recipeId) || [];
-        steps.push(step);
-        stepsByRecipeId.set(step.recipeId, steps);
-      }
-
-      const ingredientsByRecipeId = new Map<string, RecipeIngredient[]>();
-      for (const ingredient of allIngredients) {
-        const ingredients = ingredientsByRecipeId.get(ingredient.recipeId) || [];
-        ingredients.push(ingredient);
-        ingredientsByRecipeId.set(ingredient.recipeId, ingredients);
-      }
-
-      for (const supabaseRecipe of existingRecipesToUpdate) {
-        const recipeId = supabaseRecipe.recipe.id;
-        const localRecipe = existingRecipesMap.get(recipeId);
-        if (localRecipe) {
-          try {
-            const existingSteps = stepsByRecipeId.get(recipeId) || [];
-            const existingIngredients = ingredientsByRecipeId.get(recipeId) || [];
-
-            for (const step of existingSteps) {
-              batchOps.push(step.prepareDestroyPermanently());
-            }
-            for (const ingredient of existingIngredients) {
-              batchOps.push(ingredient.prepareDestroyPermanently());
-            }
-            batchOps.push(localRecipe.prepareDestroyPermanently());
-          } catch (error) {
-            log.error(`Failed to prepare destroy for recipe ${recipeId}:`, error);
-          }
-        }
-      }
-
-      // Add all recipes (both new and from Supabase) as fresh creates
-      for (const supabaseRecipe of recipesWithDetails) {
-        try {
-          batchOps.push(...this.prepareSyncSingleRecipe(supabaseRecipe));
-        } catch (error) {
-          log.error(`Failed to prepare recipe ${supabaseRecipe.recipe.id}:`, error);
-        }
-      }
-
-      // Execute all operations in chunks inside a single transaction
-      if (batchOps.length > 0) {
-        try {
-          await database.write(async () => {
-            const BATCH_SIZE = 500;
-            for (let i = 0; i < batchOps.length; i += BATCH_SIZE) {
-              try {
-                await database.batch(batchOps.slice(i, i + BATCH_SIZE));
-              } catch (batchError) {
-                log.error(`Error executing batch ${i}-${i + BATCH_SIZE}:`, batchError);
-                // Continue with next batch even if one fails
-              }
-            }
-          });
-        } catch (error) {
-          log.error("Error executing sync transaction:", error);
-          // Don't throw - we want to keep what we successfully synced
-        }
-      }
-
-      // Verify sync worked
-      const localCount = await this.count();
-      log.info(`Local database now has ${localCount} recipes`);
-    } catch (error) {
-      log.error("Error syncing from Supabase:", error);
-      throw error;
+    }
+    try {
+      storageFacade.set(CATALOG_SYNC_KEY, { syncedAt: Date.now(), limit, fingerprints });
+    } finally {
+      // Successful database writes must reach mounted queries even if persisting the marker fails.
+      if (changed.length) notifyRecipeCatalogChanged();
     }
   }
 
@@ -583,20 +550,11 @@ export class RecipeRepository extends BaseRepository<Recipe> {
     const recipeData = this.transformSupabaseRecipe(supabaseRecipe.recipe);
 
     const recipe = this.collection.prepareCreate((r) => {
-      r._raw.id = recipeData.id;
-      r.title = recipeData.title;
-      r.description = recipeData.description;
-      if (recipeData.imageUrl) r.imageUrl = recipeData.imageUrl;
-      r.prepMinutes = recipeData.prepMinutes;
-      r.cookMinutes = recipeData.cookMinutes;
-      r.difficultyStars = recipeData.difficultyStars;
-      r.servings = recipeData.servings;
-      if (recipeData.sourceUrl) r.sourceUrl = recipeData.sourceUrl;
-      if (recipeData.calories) r.calories = recipeData.calories;
-      if (recipeData.tags) r.tags = recipeData.tags;
-      if (recipeData.type) r.type = recipeData.type;
-      r.syncedAt = Date.now(); // Set sync time
-      r.isFavorite = false; // Default to false
+      const { id, ...fields } = recipeData;
+      r._raw.id = id;
+      Object.assign(r, fields);
+      r.syncedAt = Date.now();
+      r.isFavorite = false;
     });
     ops.push(recipe);
 
@@ -640,27 +598,11 @@ export class RecipeRepository extends BaseRepository<Recipe> {
     const ingredientsCollection = database.collections.get<RecipeIngredient>("recipe_ingredient");
     const recipeId = existingRecipe.id;
 
-    // Mark the recipe as clean to clear any pending changes before updating
-    // This prevents "Cannot update a record with pending changes" error
-    try {
-      (existingRecipe as any).markAsClean();
-    } catch {
-      // Ignore if markAsClean fails
-    }
-
     ops.push(
       existingRecipe.prepareUpdate((recipe) => {
-        const transformedRecipe = this.transformSupabaseRecipe(supabaseRecipe.recipe);
-        recipe.title = transformedRecipe.title;
-        recipe.description = transformedRecipe.description;
-        if (transformedRecipe.imageUrl) recipe.imageUrl = transformedRecipe.imageUrl;
-        recipe.prepMinutes = transformedRecipe.prepMinutes;
-        recipe.cookMinutes = transformedRecipe.cookMinutes;
-        recipe.difficultyStars = transformedRecipe.difficultyStars;
-        recipe.servings = transformedRecipe.servings;
-        if (transformedRecipe.sourceUrl) recipe.sourceUrl = transformedRecipe.sourceUrl;
-        if (transformedRecipe.calories) recipe.calories = transformedRecipe.calories;
-        if (transformedRecipe.tags) recipe.tags = transformedRecipe.tags;
+        const { id: _id, ...fields } = this.transformSupabaseRecipe(supabaseRecipe.recipe);
+        Object.assign(recipe, fields);
+        recipe.syncedAt = Date.now();
       })
     );
 

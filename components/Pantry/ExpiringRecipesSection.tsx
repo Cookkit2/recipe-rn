@@ -88,11 +88,12 @@ function ErrorState({ error, onRetry }: { error: Error; onRetry: () => void }) {
   );
 }
 
-export default function ExpiringRecipesSection() {
+export default function ExpiringRecipesSection({ active = true }: { active?: boolean }) {
   const [isDismissed, setIsDismissed] = useState(false);
 
   const { recipes, expiringIngredientIds, isLoading, error, refetch } = useExpiringRecipes({
     maxRecommendations: MAX_RECIPES_TO_SHOW,
+    enabled: active,
   });
 
   const expiringCount = expiringIngredientIds.size;

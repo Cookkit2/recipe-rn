@@ -28,18 +28,17 @@ const SCROLL_PREFETCH_THROTTLE_MS = 200;
 const INITIAL_RECIPE_LIMIT = 30;
 const LOAD_MORE_THRESHOLD = 10; // Load more when 10 items from bottom
 
-export default function RecipeLists() {
+export default function RecipeLists({ active = true }: { active?: boolean }) {
   const { bottom } = useSafeAreaInsets();
   const { selectedRecipeTags } = useRecipeStore();
   const scrollY = useSharedValue(0);
-  const { prefetch } = useImagePreloader({ priority: "low", delay: 50 });
+  const { prefetch } = useImagePreloader({ priority: "low", delay: 50, enabled: active });
   const lastPrefetchStartRef = useRef(-1);
   const throttleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // State for progressive loading
   const [displayLimit, setDisplayLimit] = useState(INITIAL_RECIPE_LIMIT);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const isLoadingMoreRef = useRef(false);
+  const displayLimitRef = useRef(INITIAL_RECIPE_LIMIT);
 
   const handleScroll = useCallback(
     (scrolled: boolean) => {
@@ -79,6 +78,7 @@ export default function RecipeLists() {
 
   // Fetch recipes with filtering and ranking (fetch more than we display initially)
   const { recipes, isLoading, error } = useRecipeRecommendations({
+    enabled: active,
     maxRecommendations: 200, // Fetch up to 200 recipes total
     categories: selectedRecipeTags.length > 0 ? selectedRecipeTags : undefined,
     filterStrategy,
@@ -92,21 +92,15 @@ export default function RecipeLists() {
 
   // Load more function
   const loadMore = useCallback(() => {
-    if (isLoadingMoreRef.current || displayLimit >= recipes.length) return;
-
-    isLoadingMoreRef.current = true;
-    setIsLoadingMore(true);
-
-    // Simulate async loading for smooth UX
-    setTimeout(() => {
-      setDisplayLimit((prev) => Math.min(prev + INITIAL_RECIPE_LIMIT, recipes.length));
-      setIsLoadingMore(false);
-      isLoadingMoreRef.current = false;
-    }, 100);
-  }, [displayLimit, recipes.length]);
+    const next = Math.min(displayLimitRef.current + INITIAL_RECIPE_LIMIT, recipes.length);
+    if (next <= displayLimitRef.current) return;
+    displayLimitRef.current = next;
+    setDisplayLimit(next);
+  }, [recipes.length]);
 
   // Reset display limit when filters change
   useEffect(() => {
+    displayLimitRef.current = INITIAL_RECIPE_LIMIT;
     setDisplayLimit(INITIAL_RECIPE_LIMIT);
   }, [selectedRecipeTags]);
 
@@ -177,11 +171,7 @@ export default function RecipeLists() {
   const handleVisibleRange = useCallback(
     ({ first, last }: VisibleRange) => {
       scheduleScrollPrefetch(first, listData);
-      if (
-        last >= listData.length - LOAD_MORE_THRESHOLD &&
-        hasMoreToLoad &&
-        !isLoadingMoreRef.current
-      ) {
+      if (last >= listData.length - LOAD_MORE_THRESHOLD && hasMoreToLoad) {
         loadMore();
       }
     },
@@ -256,18 +246,8 @@ export default function RecipeLists() {
       );
     }
 
-    // Show loading indicator
-    if (isLoadingMore) {
-      return (
-        <View className="py-4 items-center justify-center">
-          <ActivityIndicator size="small" />
-          <P className="mt-2 text-muted-foreground text-sm">Loading more recipes...</P>
-        </View>
-      );
-    }
-
     return null;
-  }, [isLoading, isLoadingMore, hasMoreToLoad, recipes.length]);
+  }, [isLoading, hasMoreToLoad, recipes.length]);
 
   return (
     <>
@@ -284,7 +264,7 @@ export default function RecipeLists() {
           contentPadding={{ left: 12, right: 12, top: 8, bottom: bottom + 16 }}
           data={listData}
           renderItem={renderRecipeItem}
-          header={<ExpiringRecipesSection />}
+          header={<ExpiringRecipesSection active={active} />}
           empty={emptyState()}
           footer={<ListFooter />}
           estimatedItemSize={ITEM_HEIGHT}

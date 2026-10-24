@@ -16,10 +16,12 @@ const MAGIC_TOUCH_MODEL_INPUT_SIZE = 512;
 
 export const segmentStaticImage = async (
   skImage: SkImage,
-  coordinate: { x: number; y: number }
+  coordinate: { x: number; y: number },
+  signal?: AbortSignal
 ) => {
   // Step 1: Model Loading
   const { magicTouchModel } = await allModel.get();
+  signal?.throwIfAborted();
 
   try {
     // Step 2: Preprocessing Input
@@ -29,7 +31,8 @@ export const segmentStaticImage = async (
     }); // Float32Array length 512*512*4
 
     // Step 3: Model Inference
-    const magicTouchOutputs = magicTouchModel.runSync([input.buffer]);
+    const magicTouchOutputs = await magicTouchModel.run([input.buffer]);
+    signal?.throwIfAborted();
 
     let returnSkImage: SkImage = skImage;
 
@@ -58,6 +61,7 @@ export const segmentStaticImage = async (
       skImage: returnSkImage,
     };
   } catch (error) {
+    signal?.throwIfAborted();
     log.error("[create-camera] segmentStaticImage failed", error);
     return {
       background_color: undefined,

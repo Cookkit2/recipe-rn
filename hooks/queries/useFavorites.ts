@@ -95,6 +95,7 @@ export function useToggleFavorite() {
       }
     },
     onSettled: (data, error, recipeId) => {
+      queryClient.invalidateQueries({ queryKey: recipeQueryKeys.catalog() });
       // Always refetch after error or success to ensure server sync
       queryClient.invalidateQueries({ queryKey: recipeQueryKeys.favorites() });
       queryClient.invalidateQueries({ queryKey: recipeQueryKeys.recipe(recipeId) });

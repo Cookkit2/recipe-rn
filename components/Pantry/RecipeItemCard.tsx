@@ -139,15 +139,8 @@ function RecipeItemCard({
   );
 }
 
-export default React.memo(RecipeItemCard, (prevProps, nextProps) => {
-  // Only re-render if these specific props change
-  return (
-    prevProps.recipe.id === nextProps.recipe.id &&
-    prevProps.recipe.isFavorite === nextProps.recipe.isFavorite &&
-    prevProps.completionPercentage === nextProps.completionPercentage &&
-    prevProps.matchCategory === nextProps.matchCategory
-  );
-});
+// Catalog rows retain their identity until their content changes.
+export default React.memo(RecipeItemCard);
 
 const styles = StyleSheet.create({
   image: {

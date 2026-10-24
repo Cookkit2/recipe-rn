@@ -1,4 +1,5 @@
-import React, { createContext, useCallback, useContext, useRef, useState } from "react";
+import { AsyncWorkQueue } from "~/utils/async-work-queue";
+import React, { createContext, useCallback, useContext, useRef, useState, useEffect } from "react";
 import type { ItemType, PantryItem } from "~/types/PantryItem";
 import { useWindowDimensions } from "react-native";
 import { baseIngredientApi } from "~/data/supabase-api/BaseIngredientApi";
@@ -98,6 +99,16 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [processPantryItems, setProcessPantryItems] = useState<CreatePantryItem[]>([]);
+  const itemsRef = useRef(processPantryItems);
+  itemsRef.current = processPantryItems;
+  const queueRef = useRef(new AsyncWorkQueue(2));
+  const controllers = useRef(new Map<string, AbortController>());
+  useEffect(
+    () => () => {
+      for (const controller of controllers.current.values()) controller.abort();
+    },
+    []
+  );
 
   const { width, height } = useWindowDimensions();
   const [framePosition, setFramePosition] = useState({
@@ -111,7 +122,12 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
 
   // Process a single item (runs independently, updates state when done)
   const processItem = useCallback(
-    async (itemId: string, imagePath: string, itemFramePosition: { x: number; y: number }) => {
+    async (
+      itemId: string,
+      imagePath: string,
+      itemFramePosition: { x: number; y: number },
+      signal: AbortSignal
+    ) => {
       const pipelineStart = performance.now();
 
       try {
@@ -126,7 +142,9 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
           import("~/hooks/model/classifyModel"),
         ]);
 
+        signal.throwIfAborted();
         const skImage = await loadImageIntoSkia(imagePath);
+        signal.throwIfAborted();
 
         if (!skImage) {
           throw new Error("Failed to load image");
@@ -137,8 +155,13 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
           y: (itemFramePosition.y / ((width * 4) / 3)) * skImage.height(),
         };
 
-        // Step 1: Segment the image first
-        const segmentedImage = await segmentStaticImage(skImage, normalizedFramePosition);
+        // Recognition uses the original photo, so it can overlap native segmentation.
+        const recognition = classifyStaticImage(skImage, signal).then(
+          (value) => ({ value, error: undefined }),
+          (error: unknown) => ({ value: undefined, error })
+        );
+        const segmentedImage = await segmentStaticImage(skImage, normalizedFramePosition, signal);
+        signal.throwIfAborted();
 
         if (!segmentedImage) {
           throw new Error("Segmentation failed");
@@ -168,7 +191,10 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
         );
 
         // Step 4: Classify the image
-        const content = await classifyStaticImage(skImage);
+        const recognized = await recognition;
+        signal.throwIfAborted();
+        if (recognized.error) throw recognized.error;
+        const content = recognized.value;
 
         if (!content) {
           throw new Error("Classification failed");
@@ -203,14 +229,17 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
 
         // Step 6: Fetch base ingredient data in the background
         try {
+          signal.throwIfAborted();
           const formattedName = titleCase(content.name);
           let baseIngredient = baseIngredientCache.get(formattedName);
 
           if (baseIngredient === undefined) {
             baseIngredient = await baseIngredientApi.getBaseIngredientByName(formattedName);
+            signal.throwIfAborted();
             baseIngredientCache.set(formattedName, baseIngredient);
           }
 
+          signal.throwIfAborted();
           if (baseIngredient) {
             const newExpiryDate = new Date(
               Date.now() + baseIngredient.days_to_expire * 24 * 60 * 60 * 1000
@@ -235,10 +264,12 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
             );
           }
         } catch (error) {
+          if (signal.aborted) return;
           log.error("Error fetching base ingredient after processing:", error);
           // Continue with default values if fetch fails
         }
       } catch (error) {
+        if (signal.aborted) return;
         log.error("[create-camera] processing error", {
           itemId,
           imagePath,
@@ -262,6 +293,21 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
       }
     },
     [height, width]
+  );
+
+  const startProcessing = useCallback(
+    (id: string, path: string, point: { x: number; y: number }) => {
+      controllers.current.get(id)?.abort();
+      const controller = new AbortController();
+      controllers.current.set(id, controller);
+      void queueRef.current
+        .run(() => processItem(id, path, point, controller.signal), controller.signal)
+        .finally(() => {
+          if (controllers.current.get(id) === controller) controllers.current.delete(id);
+        })
+        .catch((error) => log.warn("Photo processing failed", error));
+    },
+    [processItem]
   );
 
   // Add item and immediately start processing (fire and forget, parallel)
@@ -293,33 +339,31 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
       setProcessPantryItems((prev) => [newItem, ...prev]);
 
       // Start processing in parallel (fire and forget)
-      processItem(itemId, imagePath, itemFramePosition);
+      startProcessing(itemId, imagePath, itemFramePosition);
     },
-    [processItem]
+    [startProcessing]
   );
 
   // Remove item from list
   const removeItem = useCallback((id: string) => {
+    controllers.current.get(id)?.abort();
+    controllers.current.delete(id);
     setProcessPantryItems((prev) => prev.filter((item) => item.id !== id));
   }, []);
 
   // Retry a failed item
   const retryItem = useCallback(
     (id: string) => {
-      setProcessPantryItems((prev) => {
-        const item = prev.find((i) => i.id === id);
-        if (item?.imagePath && item?.framePosition) {
-          // Restart processing
-          processItem(id, item.imagePath, item.framePosition);
-          return prev.map((i) =>
-            i.id === id ? { ...i, status: "processing" as const, error: undefined } : i
-          );
-        }
-        log.warn("[create-camera] retry skipped because source image data is missing", { id });
-        return prev;
-      });
+      const item = itemsRef.current.find((candidate) => candidate.id === id);
+      if (!item?.imagePath || !item.framePosition) return;
+      setProcessPantryItems((previous) =>
+        previous.map((candidate) =>
+          candidate.id === id ? { ...candidate, status: "processing", error: undefined } : candidate
+        )
+      );
+      startProcessing(id, item.imagePath, item.framePosition);
     },
-    [processItem]
+    [startProcessing]
   );
 
   // Clear all failed items
@@ -389,6 +433,8 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
   }, []);
 
   const deleteProcessPantryItems = useCallback((id: string) => {
+    controllers.current.get(id)?.abort();
+    controllers.current.delete(id);
     setProcessPantryItems((prev) => prev.filter((item) => item.id !== id));
   }, []);
 

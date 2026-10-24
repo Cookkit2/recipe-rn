@@ -50,7 +50,11 @@ jest.mock("react-native-reanimated", () => ({
 }));
 jest.mock("../RecipeButton", () => ({ __esModule: true, default: () => null }));
 jest.mock("../RecipeCategoryButtonGroup", () => ({ __esModule: true, default: () => null }));
-jest.mock("../RecipeLists", () => ({ __esModule: true, default: () => null }));
+const mockRecipeList = jest.fn((_props: unknown) => null);
+jest.mock("../RecipeLists", () => ({
+  __esModule: true,
+  default: (props: unknown) => mockRecipeList(props),
+}));
 jest.mock("../IngredientLists", () => ({ __esModule: true, default: () => null }));
 
 describe("recipe drawer viewport", () => {
@@ -87,4 +91,17 @@ describe("recipe drawer viewport", () => {
     expect(top()).toBe(600 - 278);
     dimensions.mockRestore();
   });
+});
+
+it("does not mount recipe queries until first open and preserves the mounted list after closing", async () => {
+  mockRecipeList.mockClear();
+  pantry.isRecipeOpen = false;
+  const screen = await render(<PantryWrapper />);
+  expect(mockRecipeList).not.toHaveBeenCalled();
+  pantry.isRecipeOpen = true;
+  await screen.rerender(<PantryWrapper />);
+  expect(mockRecipeList).toHaveBeenLastCalledWith({ active: true });
+  pantry.isRecipeOpen = false;
+  await screen.rerender(<PantryWrapper />);
+  expect(mockRecipeList).toHaveBeenLastCalledWith({ active: false });
 });
