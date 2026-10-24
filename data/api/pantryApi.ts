@@ -25,18 +25,9 @@ import { resolveBaseIngredientId, prepareStockData } from "./api-helpers";
 
 /** Fetch all pantry items – shared by fetchAllPantryItems & fetchAllPantryItemsResult. */
 async function fetchAllPantryItemsCore(): Promise<PantryItem[]> {
-  log.info("🔍 Fetching pantry items...");
-
-  const isHealthy = await databaseFacade.isHealthy();
-  log.info("Database healthy:", isHealthy);
-
-  const stockCount = await databaseFacade.getStockCount();
-  log.info("Stock count in database:", stockCount);
-
   const stockItems = await databaseFacade.getAllStock();
 
   if (stockItems.length === 0) {
-    log.warn("⚠️ No stock items found in database");
     return [];
   }
 
@@ -51,10 +42,7 @@ async function fetchAllPantryItemsCore(): Promise<PantryItem[]> {
   }
 
   const results = await Promise.all(batchPromises);
-  const pantryItemsConverted: PantryItem[] = results.flat();
-
-  log.info("✅ Converted pantry items:", pantryItemsConverted.length);
-  return pantryItemsConverted;
+  return results.flat();
 }
 
 /** Add a single pantry item – shared by addPantryItem & addPantryItemResult. */
@@ -133,6 +121,17 @@ export const pantryApi = {
    */
   async fetchAllPantryItemsResult(): Promise<AppResult<PantryItem[], AppError>> {
     return logAndWrapResult(() => fetchAllPantryItemsCore(), "Error fetching pantry items");
+  },
+
+  /** Optional cloud metadata. Keep this separate from local pantry reads. */
+  async fetchIngredientCategories(
+    names: string[]
+  ): Promise<Record<string, NonNullable<PantryItem["categories"]>>> {
+    if (names.length === 0) return {};
+    const ingredients = await baseIngredientApi.getBaseIngredientsByNames(names);
+    return Object.fromEntries(
+      Array.from(ingredients, ([name, ingredient]) => [name.toLowerCase(), ingredient.categories])
+    );
   },
 
   /**
@@ -543,44 +542,12 @@ const convertStockToPantryItemBatch = async (stocks: Stock[]): Promise<PantryIte
     stepsByStockId.set(stockId, list);
   });
 
-  // Pre-fetch missing categories to avoid N+1 query problem
-  const stocksMissingCategories = stocks.filter((stock) => {
-    const categories = categoriesByStockId.get(stock.id) || [];
-    return categories.length === 0;
-  });
-
-  const missingCategoriesMap = new Map<string, Array<{ id: string; name: string }>>();
-  if (stocksMissingCategories.length > 0) {
-    try {
-      const namesToFetch = stocksMissingCategories.map((s) => s.name);
-      // Ensure we use a batch fetch method avoiding N+1 requests over the network!
-      const baseIngredientsMap = await baseIngredientApi.getBaseIngredientsByNames(namesToFetch);
-
-      stocksMissingCategories.forEach((stock) => {
-        const baseIngredient = baseIngredientsMap.get(stock.name.toLowerCase());
-        if (baseIngredient?.categories?.length) {
-          missingCategoriesMap.set(stock.id, baseIngredient.categories);
-        }
-      });
-    } catch (error) {
-      log.error("Error batch fetching base ingredient categories:", error);
-    }
-  }
-
   // Use simple map instead of Promise.all with async map since all data is pre-fetched
   return stocks.map((stock) => {
     const synonyms = synonymsByStockId.get(stock.id) || [];
-    let categories = categoriesByStockId.get(stock.id) || [];
+    const categories = categoriesByStockId.get(stock.id) || [];
     const stepsToStore = stepsByStockId.get(stock.id) || [];
     stepsToStore.sort((a, b) => a.sequence - b.sequence);
-
-    // Fallback: if no local categories, try using pre-fetched from BaseIngredient
-    if (categories.length === 0) {
-      const fetchedCategories = missingCategoriesMap.get(stock.id);
-      if (fetchedCategories?.length) {
-        categories = fetchedCategories;
-      }
-    }
 
     return {
       id: stock.id,
