@@ -51,7 +51,7 @@ it("reports a missing prototype key before opening a stream", async () => {
     events.push(event);
   }
   expect(events[0]).toMatchObject({ type: "error" });
-  expect(events[0]?.type === "error" ? events[0].message : "").toContain(
-    "EXPO_PUBLIC_NEBIUS_API_KEY"
+  expect(events[0]?.type === "error" ? events[0].message : "").toBe(
+    "Something went wrong, please try again later"
   );
 });
