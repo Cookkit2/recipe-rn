@@ -1,11 +1,20 @@
 import { publishRecipeShare, fetchRecipeShare } from "../recipeShareApi";
 import type { Recipe } from "~/types/Recipe";
 import { buildRecipeShareSnapshot } from "~/utils/recipe-share-snapshot";
+import { buildRecipeShareLink } from "~/utils/recipe-share-link";
 
 const getSession = jest.fn();
 const signInAnonymously = jest.fn();
 const rpc = jest.fn();
 const abortSignal = jest.fn();
+const cachedValues = new Map<string, unknown>();
+jest.mock("~/data/storage", () => ({
+  storageFacade: {
+    get: (key: string) => cachedValues.get(key) ?? null,
+    set: (key: string, value: unknown) => cachedValues.set(key, value),
+    delete: (key: string) => cachedValues.delete(key),
+  },
+}));
 jest.mock("~/lib/supabase/supabase-client", () => ({
   supabase: {
     auth: {
@@ -26,11 +35,14 @@ const recipe: Recipe = {
 };
 beforeEach(() => {
   jest.resetAllMocks();
+  cachedValues.clear();
   rpc.mockReturnValue({ abortSignal });
   getSession.mockResolvedValue({ data: { session: { access_token: "session" } }, error: null });
   jest
     .spyOn(globalThis, "fetch")
-    .mockResolvedValue(Response.json({ service: "cookkit-recipe-links", ready: true }));
+    .mockImplementation(async () =>
+      Response.json({ service: "cookkit-recipe-links", ready: true })
+    );
 });
 afterEach(() => jest.restoreAllMocks());
 it("publishes only the displayed snapshot and returns an HTTPS token link", async () => {
@@ -55,10 +67,61 @@ it("doesn't publish if authentication fails", async () => {
   await expect(publishRecipeShare(recipe)).rejects.toThrow("Couldn't connect");
   expect(rpc).not.toHaveBeenCalled();
 });
-it("doesn't generate a broken public link before the domain is ready", async () => {
-  jest.mocked(fetch).mockRejectedValueOnce(new Error("Domain unavailable"));
-  await expect(publishRecipeShare(recipe)).rejects.toThrow("Domain unavailable");
-  expect(rpc).not.toHaveBeenCalled();
+it("reuses a published link without website, session, or publishing requests", async () => {
+  abortSignal.mockResolvedValue({ data: token, error: null });
+  const link = await publishRecipeShare(recipe);
+  await expect(publishRecipeShare(recipe)).resolves.toBe(link);
+  expect(fetch).not.toHaveBeenCalled();
+  expect(getSession).toHaveBeenCalledTimes(1);
+  expect(rpc).toHaveBeenCalledTimes(1);
+});
+it("reuses links after the publishing module reloads", async () => {
+  abortSignal.mockResolvedValue({ data: token, error: null });
+  const link = await publishRecipeShare(recipe);
+  jest.resetModules();
+  const reloaded = await import("../recipeShareApi");
+  await expect(reloaded.publishRecipeShare(recipe)).resolves.toBe(link);
+  expect(rpc).toHaveBeenCalledTimes(1);
+});
+it("publishes a new snapshot when the displayed servings or recipe content changes", async () => {
+  const newToken = "b22530b9-d036-4c95-b319-21cef0ea281f";
+  abortSignal
+    .mockResolvedValueOnce({ data: token, error: null })
+    .mockResolvedValue({ data: newToken, error: null });
+  const firstLink = await publishRecipeShare(recipe);
+  const changed = { ...recipe, servings: 4 };
+  await expect(publishRecipeShare(changed)).resolves.not.toBe(firstLink);
+  await publishRecipeShare({ ...changed, title: "New pasta" });
+  expect(rpc).toHaveBeenCalledTimes(3);
+});
+it("doesn't republish for changes to private recipe state", async () => {
+  abortSignal.mockResolvedValue({ data: token, error: null });
+  const link = await publishRecipeShare(recipe);
+  await expect(
+    publishRecipeShare({
+      ...recipe,
+      isFavorite: true,
+      ingredients: recipe.ingredients.map((ingredient) => ({
+        ...ingredient,
+        relatedIngredientId: "another-pantry-id",
+      })),
+    })
+  ).resolves.toBe(link);
+  expect(rpc).toHaveBeenCalledTimes(1);
+});
+it("coalesces simultaneous shares of the same recipe", async () => {
+  abortSignal.mockResolvedValue({ data: token, error: null });
+  const links = await Promise.all([publishRecipeShare(recipe), publishRecipeShare(recipe)]);
+  expect(links[0]).toBe(links[1]);
+  expect(rpc).toHaveBeenCalledTimes(1);
+});
+it("allows retrying a failed publish", async () => {
+  abortSignal
+    .mockResolvedValueOnce({ data: null, error: { message: "Offline" } })
+    .mockResolvedValueOnce({ data: token, error: null });
+  await expect(publishRecipeShare(recipe)).rejects.toThrow("Couldn't create");
+  await expect(publishRecipeShare(recipe)).resolves.toBe(buildRecipeShareLink(token));
+  expect(rpc).toHaveBeenCalledTimes(2);
 });
 it("validates remote data and distinguishes unavailable links", async () => {
   abortSignal.mockResolvedValueOnce({ data: buildRecipeShareSnapshot(recipe), error: null });

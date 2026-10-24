@@ -11,7 +11,6 @@ export function useShareRecipe(recipe: Recipe) {
     if (pending.current) return;
     pending.current = true;
     const toastId = "publish-recipe-share";
-    toast.loading("Preparing recipe link…", { id: toastId });
     try {
       let link: string | undefined;
       try {
@@ -19,7 +18,6 @@ export function useShareRecipe(recipe: Recipe) {
       } catch {
         toast("Couldn't create a link. Sharing the recipe text instead.", { id: toastId });
       }
-      if (link) toast.dismiss(toastId);
       await shareRecipe(recipe, link);
     } finally {
       pending.current = false;

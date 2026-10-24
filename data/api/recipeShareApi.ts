@@ -1,31 +1,31 @@
 import type { Recipe } from "~/types/Recipe";
 import type { Json } from "~/lib/supabase/supabase-types";
-import {
-  buildRecipeShareLink,
-  isRecipeShareToken,
-  RECIPE_SHARE_ORIGIN,
-  RECIPE_SHARE_HEALTH_PATH,
-} from "~/utils/recipe-share-link";
+import { cacheRecipeShareLink, getCachedRecipeShareLink } from "~/lib/recipe-share-cache";
+import { buildRecipeShareLink, isRecipeShareToken } from "~/utils/recipe-share-link";
 import { buildRecipeShareSnapshot, parseRecipeShareSnapshot } from "~/utils/recipe-share-snapshot";
 
-/** A persisted guest session is sufficient; sharing doesn't require account registration. */
+const pendingShares = new Map<string, Promise<string>>();
+
+/** Reuse unchanged public snapshots before doing any authentication or networking. */
 export async function publishRecipeShare(recipe: Recipe): Promise<string> {
-  const snapshot = buildRecipeShareSnapshot(recipe);
-  // Don't hand out broken links while the website/domain is being activated.
-  const available = await fetch(`${RECIPE_SHARE_ORIGIN}${RECIPE_SHARE_HEALTH_PATH}`, {
-    signal: AbortSignal.timeout(5000),
-  });
-  const health: unknown = available.ok ? await available.json() : null;
-  if (
-    !health ||
-    typeof health !== "object" ||
-    !("service" in health) ||
-    health.service !== "cookkit-recipe-links" ||
-    !("ready" in health) ||
-    health.ready !== true
-  ) {
-    throw new Error("Recipe links aren't available right now.");
+  const snapshot = JSON.stringify(buildRecipeShareSnapshot(recipe));
+  const cachedLink = getCachedRecipeShareLink(recipe.id, snapshot);
+  if (cachedLink) return cachedLink;
+
+  const key = JSON.stringify([recipe.id, snapshot]);
+  const pending = pendingShares.get(key);
+  if (pending) return pending;
+  const publishing = createRecipeShare(recipe.id, snapshot);
+  pendingShares.set(key, publishing);
+  try {
+    return await publishing;
+  } finally {
+    pendingShares.delete(key);
   }
+}
+
+/** A persisted guest session is sufficient; sharing doesn't require account registration. */
+async function createRecipeShare(recipeId: string, snapshot: string): Promise<string> {
   const { supabase } = await import("~/lib/supabase/supabase-client");
   if (!supabase) throw new Error("Recipe links aren't configured yet.");
   const session = await supabase.auth.getSession();
@@ -36,11 +36,13 @@ export async function publishRecipeShare(recipe: Recipe): Promise<string> {
   }
   const { data, error } = await supabase
     .rpc("create_recipe_share", {
-      p_snapshot: JSON.parse(JSON.stringify(snapshot)) as Json,
+      p_snapshot: JSON.parse(snapshot) as Json,
     })
     .abortSignal(AbortSignal.timeout(12000));
   if (error || !data) throw new Error("Couldn't create a recipe link.");
-  return buildRecipeShareLink(data);
+  const link = buildRecipeShareLink(data);
+  cacheRecipeShareLink(recipeId, snapshot, data);
+  return link;
 }
 
 export async function fetchRecipeShare(token: string) {
