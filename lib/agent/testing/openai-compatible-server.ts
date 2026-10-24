@@ -89,6 +89,8 @@ async function readBody(request: IncomingMessage): Promise<string> {
 export async function startOpenAICompatibleServer(options: {
   script: OpenAITurnScript;
   onRequest?: (request: RecordedChatRequest) => void;
+  /** Fixed port for Detox. Jest leaves this unset and uses an ephemeral port. */
+  port?: number;
 }): Promise<OpenAICompatibleServer> {
   const requests: RecordedChatRequest[] = [];
   const server = createServer(async (request, response) => {
@@ -144,8 +146,12 @@ export async function startOpenAICompatibleServer(options: {
     );
   });
 
-  await new Promise<void>((resolve) => {
-    server.listen(0, "127.0.0.1", resolve);
+  await new Promise<void>((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(options.port ?? 0, "127.0.0.1", () => {
+      server.off("error", reject);
+      resolve();
+    });
   });
   const address = server.address();
   if (!address || typeof address === "string") {

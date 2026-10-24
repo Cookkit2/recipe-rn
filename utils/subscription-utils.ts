@@ -27,6 +27,13 @@ export async function readEntitlement(): Promise<PurchasesEntitlementInfo | null
   if (!arePaywallsEnabled()) return null;
 
   try {
+    // E2E and local builds skip Purchases.configure when no API key is set.
+    // getCustomerInfo rejects in that state and the caught error is logged on
+    // every cold start. Treat "not configured" as no entitlement.
+    if (typeof Purchases.isConfigured === "function" && !(await Purchases.isConfigured())) {
+      return null;
+    }
+
     const customerInfo = await Purchases.getCustomerInfo();
     log.info("Customer Info:", customerInfo);
     // Use the same entitlement identifier as configured in RevenueCat dashboard

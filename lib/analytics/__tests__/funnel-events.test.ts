@@ -338,6 +338,27 @@ describe("funnel-events: emitFunnelEvent (fan-out + safety)", () => {
     await Promise.resolve();
   });
 
+  it("does not leave a rejected Purchases.setAttributes call unhandled", async () => {
+    setAttributesMock.mockRejectedValue(
+      new Error(
+        "There is no singleton instance. Make sure you configure Purchases before trying to get the default instance."
+      )
+    );
+    const unhandled: unknown[] = [];
+    const onUnhandled = (reason: unknown) => {
+      unhandled.push(reason);
+    };
+    process.on("unhandledRejection", onUnhandled);
+    try {
+      emitFunnelEvent("session_start");
+      await new Promise((resolve) => setImmediate(resolve));
+    } finally {
+      process.off("unhandledRejection", onUnhandled);
+    }
+    expect(unhandled).toEqual([]);
+    expect(setAttributesMock).toHaveBeenCalled();
+  });
+
   it("emitPaywallPresented emits the presented event with the trigger source", () => {
     emitPaywallPresented("ingredient_confirmation");
     expect(addBreadcrumbSpy).toHaveBeenCalledTimes(1);

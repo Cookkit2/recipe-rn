@@ -1,7 +1,7 @@
 import "~/global.css";
 import React, { useEffect, useMemo } from "react";
 import { useNavigationContainerRef } from "expo-router";
-import { Platform, View } from "react-native";
+import { LogBox, Platform, View } from "react-native";
 import { PortalHost } from "@rn-primitives/portal";
 import { setAndroidNavigationBar } from "~/lib/android-navigation-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -26,6 +26,7 @@ import * as Sentry from "@sentry/react-native";
 import { initImageCache, resolveImageCacheConfig } from "~/lib/image-cache";
 import { AuthProvider, MockAuthStrategy, SupabaseAuthStrategy } from "~/auth";
 import { TEST_IDS } from "~/constants/test-ids";
+import { seedE2ESupabaseSession } from "~/lib/e2e/seed-supabase-session";
 import { IS_E2E } from "~/utils/e2e-flags";
 import { arePaywallsEnabled } from "~/utils/paywall-flags";
 import { invalidateSubscriptionEntitlementsQuery } from "~/lib/subscription-query-sync";
@@ -43,6 +44,14 @@ import { useDeepLinkShare } from "~/hooks/useDeepLinkShare";
 import LeftoverReminderCoordinator from "~/lib/notifications/LeftoverReminderCoordinator";
 import SocialRecipeShareHandler from "~/components/Recipe/SocialRecipeShareHandler";
 import { MealPlanCalendarProvider } from "~/store/MealPlanCalendarContext";
+
+// Detox builds have no debugger attached. Any console.warn then becomes the
+// fusebox banner "Open debugger to view warnings.", which is absolutely
+// positioned over the bottom of the screen and covers the assistant composer.
+// Ignore the notifications in E2E; the warnings still print to the device log.
+if (IS_E2E) {
+  LogBox.ignoreAllLogs();
+}
 
 /**
  * Approximate cold-start launch timestamp (issue #733). Captured at this
@@ -99,6 +108,11 @@ export default Sentry.wrap(function RootLayout() {
   // Issue #737: ingest cookkit://recipe/<id> deep links on cold start +
   // foreground. Resolves LOCAL recipes; server-snapshot import is DEFERRED.
   useDeepLinkShare();
+
+  useEffect(() => {
+    if (!IS_E2E) return;
+    void seedE2ESupabaseSession();
+  }, []);
 
   const authStrategy = useMemo(
     () =>
@@ -251,8 +265,6 @@ function useRevenueCatSetup() {
     let customerInfoListener: CustomerInfoUpdateListener | undefined;
 
     const handle = requestIdleCallback(() => {
-      Purchases.setLogLevel(LOG_LEVEL.ERROR);
-
       const appleApiKey =
         process.env.EXPO_PUBLIC_REVENUECAT_PROJECT_APPLE_API_KEY ||
         Constants.expoConfig?.extra?.EXPO_PUBLIC_REVENUECAT_PROJECT_APPLE_API_KEY;
@@ -261,13 +273,12 @@ function useRevenueCatSetup() {
         process.env.EXPO_PUBLIC_REVENUECAT_PROJECT_GOOGLE_API_KEY ||
         Constants.expoConfig?.extra?.EXPO_PUBLIC_REVENUECAT_PROJECT_GOOGLE_API_KEY;
 
-      if (Platform.OS === "ios" && appleApiKey) {
-        Purchases.configure({ apiKey: appleApiKey });
-      } else if (Platform.OS === "android" && googleApiKey) {
-        Purchases.configure({ apiKey: googleApiKey });
-      } else {
-        return;
-      }
+      const apiKey =
+        Platform.OS === "ios" ? appleApiKey : Platform.OS === "android" ? googleApiKey : undefined;
+      if (!apiKey) return;
+
+      Purchases.setLogLevel(LOG_LEVEL.ERROR);
+      Purchases.configure({ apiKey });
 
       customerInfoListener = (customerInfo: CustomerInfo) => {
         // Diff against the previously seen CustomerInfo to derive funnel

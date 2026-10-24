@@ -13,13 +13,14 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "~/lib/supabase/supabase-types";
+import { E2E_ACCESS_TOKEN, E2E_ANON_KEY, E2E_HOUSEHOLD_ID, E2E_USER_ID } from "./e2e-contract";
 
-export const TEST_USER_ID = "11111111-1111-4111-8111-111111111111";
-export const TEST_HOUSEHOLD_ID = "22222222-2222-4222-8222-222222222222";
+export const TEST_USER_ID = E2E_USER_ID;
+export const TEST_HOUSEHOLD_ID = E2E_HOUSEHOLD_ID;
 /** Dummy public key. Not a credential. */
-export const TEST_ANON_KEY = "test-anon-key";
+export const TEST_ANON_KEY = E2E_ANON_KEY;
 /** Dummy bearer token stored in the session. Not a credential. */
-export const TEST_ACCESS_TOKEN = "test-access-token";
+export const TEST_ACCESS_TOKEN = E2E_ACCESS_TOKEN;
 export const AUTH_STORAGE_KEY = "sb-cookkit-agent-test-auth-token";
 
 export interface StockRow {
@@ -62,6 +63,8 @@ export interface PostgrestFixtureState {
   householdMembers: { user_id: string; household_id: string }[];
   pivots: PivotRow[];
   recipes: RecipeRow[];
+  ingredientSynonyms: Record<string, unknown>[];
+  ingredientCategoryPivots: Record<string, unknown>[];
 }
 
 export interface RecordedHttpRequest {
@@ -104,6 +107,8 @@ const TABLES = {
   household_members: "householdMembers",
   pivot_recipe_ingredient: "pivots",
   recipe: "recipes",
+  ingredient_synonym: "ingredientSynonyms",
+  pivot_ingredient_category: "ingredientCategoryPivots",
 } as const;
 
 type TableName = keyof typeof TABLES;
@@ -152,6 +157,8 @@ function rowsFor(state: PostgrestFixtureState, table: TableName): Record<string,
 function matchesFilter(row: Record<string, unknown>, column: string, filter: string): boolean {
   const value = row[column];
   if (filter.startsWith("eq.")) return String(value ?? "") === filter.slice(3);
+  if (filter.startsWith("imatch."))
+    return new RegExp(filter.slice(7), "i").test(String(value ?? ""));
   if (filter.startsWith("ilike.")) {
     // The cooking tools send a bare name (no SQL wildcards), which PostgREST
     // treats as a case-insensitive exact match.
@@ -209,7 +216,8 @@ function nextStockId(state: PostgrestFixtureState): string {
 }
 
 export async function startPostgrestFixture(
-  seed: PostgrestFixtureSeed = {}
+  seed: PostgrestFixtureSeed = {},
+  options: { port?: number } = {}
 ): Promise<PostgrestFixture> {
   const state: PostgrestFixtureState = {
     stock: [...(seed.stock ?? [])],
@@ -223,6 +231,8 @@ export async function startPostgrestFixture(
       ...row,
     })),
     recipes: [...(seed.recipes ?? [])],
+    ingredientSynonyms: [],
+    ingredientCategoryPivots: [],
   };
   const requests: RecordedHttpRequest[] = [];
   const storage = memoryStorage();
@@ -306,6 +316,14 @@ export async function startPostgrestFixture(
         response.end();
         return;
       }
+      if (request.headers.accept?.includes("application/vnd.pgrst.object+json")) {
+        if (matched.length !== 1) {
+          sendJson(response, 406, { message: "Expected one fixture row", code: "PGRST116" });
+          return;
+        }
+        sendJson(response, 200, matched[0]);
+        return;
+      }
       sendJson(response, 200, matched);
       return;
     }
@@ -313,8 +331,12 @@ export async function startPostgrestFixture(
     sendJson(response, 405, { message: `Unsupported method ${method}`, code: "fixture" });
   });
 
-  await new Promise<void>((resolve) => {
-    server.listen(0, "127.0.0.1", resolve);
+  await new Promise<void>((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(options.port ?? 0, "127.0.0.1", () => {
+      server.off("error", reject);
+      resolve();
+    });
   });
   const address = server.address();
   if (!address || typeof address === "string") {

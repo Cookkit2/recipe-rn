@@ -100,7 +100,12 @@ function getEncryptedConfig(): StorageConfig {
   const characterTypes = [hasUpperCase, hasLowerCase, hasNumbers, hasSpecial].filter(
     Boolean
   ).length;
-  if (characterTypes < 3) {
+  // A generated key is 32 random bytes stored as hex. That is 256 bits even
+  // though hex only uses digits and a-f, so the password character-class
+  // check does not apply. Warning here fired on every cold start, including
+  // Detox, for a key that is already strong.
+  const isGeneratedHexKey = /^[0-9a-f]{64}$/i.test(key);
+  if (!isGeneratedHexKey && characterTypes < 3) {
     log.warn(
       "[storage-config] Encryption key should contain at least 3 of: uppercase, lowercase, numbers, special characters for optimal security."
     );
