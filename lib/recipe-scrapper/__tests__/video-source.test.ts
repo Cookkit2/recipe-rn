@@ -93,3 +93,81 @@ describe("on-device social video sources", () => {
     expect(resolvePage("webapp.reflow.video.detail", "1111111111111111111")).not.toHaveBeenCalled();
   });
 });
+
+it("resolves the reported Instagram reel when the player uses a blob URL", () => {
+  const postMessage = jest.fn();
+  const media = {
+    code: "Db18zFIR5k-",
+    caption: { text: "Easy summer drink idea! - peach oolong" },
+    video_versions: [
+      { type: 101, url: "https://instagram.example.fna.fbcdn.net/peach.mp4?signature=abc" },
+    ],
+  };
+  const script = {
+    textContent: JSON.stringify({
+      require: [
+        [
+          "ScheduledServerJS",
+          "handle",
+          null,
+          [
+            {
+              __bbox: {
+                require: [
+                  [
+                    "RelayPrefetchedStreamCache",
+                    "next",
+                    [],
+                    [
+                      "query",
+                      {
+                        __bbox: {
+                          result: {
+                            data: {
+                              xig_polaris_media: {
+                                code: "Db18zFIR5k-",
+                                if_not_gated_logged_out: media,
+                              },
+                            },
+                          },
+                        },
+                      },
+                    ],
+                  ],
+                ],
+              },
+            },
+          ],
+        ],
+      ],
+    }),
+  };
+  runInNewContext(videoResolverScript(), {
+    window: { webkit: { messageHandlers: { cookkitVideo: { postMessage } } } },
+    document: {
+      title: "Peach oolong",
+      getElementById: () => null,
+      querySelector: (selector: string) =>
+        selector === "video"
+          ? {
+              currentSrc: "blob:https://www.instagram.com/abc",
+              muted: false,
+              play: () => Promise.resolve(),
+            }
+          : null,
+      querySelectorAll: (selector: string) =>
+        selector.includes("application/json") ? [script] : [],
+    },
+    location: { href: "https://www.instagram.com/reel/Db18zFIR5k-/" },
+    navigator: { userAgent: "iPhone Safari" },
+    URL,
+    setInterval: () => 0,
+    setTimeout: () => 0,
+    clearInterval: () => {},
+  });
+  expect(postMessage).toHaveBeenCalledTimes(1);
+  expect(JSON.parse(postMessage.mock.calls[0]![0])).toMatchObject({
+    mediaUrl: media.video_versions[0]!.url,
+    caption: media.caption.text,
+  });
+});

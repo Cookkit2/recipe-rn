@@ -1,5 +1,10 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigationContainerRef, useRootNavigationState, useSegments } from "expo-router";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useNavigationContainerRef,
+  useRootNavigationState,
+  useRouter,
+  useSegments,
+} from "expo-router";
 import { AppState, Linking } from "react-native";
 import { requireOptionalNativeModule } from "expo";
 import { toast } from "sonner-native";
@@ -7,26 +12,18 @@ import { storage } from "~/data";
 import { ONBOARDING_COMPLETED_KEY } from "~/constants/storage-keys";
 import { normalizeIncomingRecipeShare } from "~/utils/shared-recipe";
 import { isSharedRecipeIntent } from "~/utils/native-share-route";
-import {
-  clearPendingRecipeShare,
-  readPendingRecipeShare,
-  savePendingRecipeShare,
-} from "~/lib/recipe-share-inbox";
+import { readPendingRecipeShare, savePendingRecipeShare } from "~/lib/recipe-share-inbox";
 import { log } from "~/utils/logger";
 
-const SharedRecipeImport = lazy(() => import("./SharedRecipeImport"));
-
 export default function SocialRecipeShareHandler() {
+  const router = useRouter();
+  const routed = useRef<string | null>(null);
   const root = useRootNavigationState();
   const navigation = useNavigationContainerRef();
   const segments = useSegments();
   const [ready, setReady] = useState(() => navigation.isReady());
   const [revision, setRevision] = useState(0);
   const pending = useMemo(readPendingRecipeShare, [revision]);
-  const consume = useCallback((id: string) => {
-    clearPendingRecipeShare(id);
-    setRevision((value) => value + 1);
-  }, []);
   useEffect(() => {
     const updateReady = () => setReady(navigation.isReady());
     updateReady();
@@ -76,19 +73,22 @@ export default function SocialRecipeShareHandler() {
       links.remove();
     };
   }, []);
-  if (
-    !pending ||
-    !root?.key ||
-    !ready ||
-    !navigation.isReady() ||
-    !storage.get<boolean>(ONBOARDING_COMPLETED_KEY) ||
-    segments[0] === "onboarding"
-  )
-    return null;
-
-  return (
-    <Suspense fallback={null}>
-      <SharedRecipeImport key={pending.id} pending={pending} onComplete={consume} />
-    </Suspense>
-  );
+  useEffect(() => {
+    if (
+      !pending ||
+      !root?.key ||
+      !ready ||
+      !navigation.isReady() ||
+      !storage.get<boolean>(ONBOARDING_COMPLETED_KEY) ||
+      segments[0] === "onboarding" ||
+      routed.current === pending.id
+    )
+      return;
+    routed.current = pending.id;
+    // Navigate before extraction. The route owns the skeleton, retry and final detail handoff.
+    const target = { pathname: "/recipes/import" as const, params: { shareId: pending.id } };
+    if (segments.join("/") === "recipes/import") router.replace(target);
+    else router.push(target);
+  }, [pending, root?.key, ready, navigation, segments, router]);
+  return null;
 }

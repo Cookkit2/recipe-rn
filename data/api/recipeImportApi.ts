@@ -80,7 +80,7 @@ async function withImportErrorHandling<T>(
 }
 
 export const recipeImportApi = {
-  /** Social captions and video evidence are reviewed before any database write. */
+  /** Extract and save complete social recipes; the detail screen remains editable afterwards. */
   async prepareSharedRecipe(
     input: SharedRecipeInput,
     onStatusChange?: (status: RecipeImportStatus) => void,
@@ -120,13 +120,14 @@ export const recipeImportApi = {
           "Couldn't read enough instructions. Choose the saved video or paste the full recipe caption."
       );
     }
-    onStatusChange?.("complete");
+    const draft = {
+      recipe: { ...analysis.recipe, sourceUrl: source?.normalizedUrl ?? "" },
+      warnings: analysis.warnings ?? [],
+    };
+    options.signal?.throwIfAborted();
     return {
-      kind: "review",
-      draft: {
-        recipe: { ...analysis.recipe, sourceUrl: source?.normalizedUrl ?? "" },
-        warnings: analysis.warnings ?? [],
-      },
+      kind: "saved",
+      result: await this.saveRecipeDraft(draft, onStatusChange),
     };
   },
 

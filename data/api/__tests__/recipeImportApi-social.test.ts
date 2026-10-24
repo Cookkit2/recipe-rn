@@ -263,7 +263,7 @@ describe("recipeImportApi.importRecipeFromSocialMedia", () => {
     expect(mockCreateRecipe).not.toHaveBeenCalled();
   });
 
-  it("prepares a social draft without saving or adding shopping items", async () => {
+  it("automatically saves a complete social recipe without requiring a review page", async () => {
     const url = "https://vt.tiktok.com/ZSgH2hh7B/";
     jest
       .mocked(analyzeUrl)
@@ -278,13 +278,10 @@ describe("recipeImportApi.importRecipeFromSocialMedia", () => {
       url,
       videoUri: "file:///picked.mp4",
     });
-    expect(prepared.kind).toBe("review");
-    if (prepared.kind === "review") {
-      expect(prepared.draft.recipe.sourceUrl).toBe(url);
-      expect(prepared.draft.warnings).toContain("Check the steps.");
-    }
-    expect(mockCreateRecipe).not.toHaveBeenCalled();
-    expect(mockGetShoppingListForRecipe).not.toHaveBeenCalled();
+    expect(prepared.kind).toBe("saved");
+    if (prepared.kind === "saved") expect(prepared.result.recipe?.id).toBe("recipe-1");
+    expect(mockCreateRecipe).toHaveBeenCalledWith(expect.objectContaining({ sourceUrl: url }));
+    expect(mockGetShoppingListForRecipe).toHaveBeenCalledWith("recipe-1");
   });
 
   it("rejects a draft with an unknown amount before any database write", async () => {

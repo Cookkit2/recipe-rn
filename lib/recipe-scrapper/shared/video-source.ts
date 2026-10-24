@@ -1,3 +1,5 @@
+import { INSTAGRAM_VIDEO_RESOLVER } from "./instagram-metadata";
+
 const postHosts = new Set([
   "tiktok.com",
   "www.tiktok.com",
@@ -79,6 +81,21 @@ export function videoResolverScript(): string {
       const caption = document.querySelector('meta[property="og:description"]')?.content || document.querySelector('meta[name="description"]')?.content || '';
       const canonical = document.querySelector('link[rel="canonical"]')?.href || location.href;
       const id = canonical.match(/\\/video\\/(\\d+)/)?.[1];
+      const instagramId = canonical.match(/\\/(?:p|reel|reels)\\/([\\w-]+)/)?.[1];
+      if (instagramId) {
+        const findInstagram = ${INSTAGRAM_VIDEO_RESOLVER};
+        let scanned = 0;
+        for (const node of document.querySelectorAll('script[type="application/json"]')) {
+          const text = node.textContent || '';
+          scanned += text.length;
+          if (scanned > 2000000) break;
+          if (!text.includes(instagramId)) continue;
+          try {
+            const selected = findInstagram(JSON.parse(text), instagramId);
+            if (selected) finish(selected.mediaUrl, selected.caption || caption);
+          } catch {}
+        }
+      }
       for (const name of ['__UNIVERSAL_DATA_FOR_REHYDRATION__','SIGI_STATE']) {
         try {
           const data = JSON.parse(document.getElementById(name)?.textContent || '{}');
