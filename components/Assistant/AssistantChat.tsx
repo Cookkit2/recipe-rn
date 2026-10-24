@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { FlatList, KeyboardAvoidingView, Platform, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useHeaderHeight } from "expo-router/react-navigation";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Text } from "~/components/ui/text";
@@ -20,7 +21,7 @@ function MessageBubble({ message }: { message: CookingChatMessage }) {
         }
       >
         <Text className={mine ? "text-primary-foreground text-left" : "text-left"}>
-          {message.content || (message.role === "assistant" ? "…" : "")}
+          {message.content || message.error || (message.role === "assistant" ? "…" : "")}
         </Text>
       </View>
       {message.activities.map((activity, index) => (
@@ -28,7 +29,9 @@ function MessageBubble({ message }: { message: CookingChatMessage }) {
           {activity}
         </P>
       ))}
-      {message.error ? <P className="mt-1 text-sm text-destructive">{message.error}</P> : null}
+      {message.error && message.content ? (
+        <P className="mt-1 text-sm text-destructive">{message.error}</P>
+      ) : null}
     </View>
   );
 }
@@ -38,6 +41,7 @@ export function AssistantChat({ agent }: { agent: CookingAgent }) {
   const [draft, setDraft] = useState("");
   const listRef = useRef<FlatList<CookingChatMessage>>(null);
   const { bottom } = useSafeAreaInsets();
+  const headerHeight = useHeaderHeight();
   const streaming = status === "streaming";
 
   const onSend = useCallback(() => {
@@ -50,12 +54,14 @@ export function AssistantChat({ agent }: { agent: CookingAgent }) {
     <KeyboardAvoidingView
       className="flex-1 bg-background"
       behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={headerHeight}
     >
       <FlatList
+        className="flex-1 overflow-hidden"
         ref={listRef}
         data={messages}
         keyExtractor={(item) => item.id}
-        contentInsetAdjustmentBehavior="automatic"
+        contentInsetAdjustmentBehavior="never"
         contentContainerClassName="gap-3 px-4 py-4"
         ListEmptyComponent={
           <P className="px-2 pt-8 text-muted-foreground">Ask what to cook from your fridge.</P>
@@ -68,7 +74,7 @@ export function AssistantChat({ agent }: { agent: CookingAgent }) {
         style={{ paddingBottom: Math.max(bottom, 12) }}
       >
         <Input
-          className="flex-1 text-left"
+          className="flex-1 text-left text-foreground"
           value={draft}
           onChangeText={setDraft}
           placeholder="Ask about your fridge"

@@ -2,8 +2,10 @@ import { Stack } from "expo-router";
 
 export function getMiscScreens({
   commonHeaderOptions,
+  backgroundColor,
 }: {
   commonHeaderOptions: React.ComponentProps<typeof Stack.Screen>["options"];
+  backgroundColor: string;
 }) {
   return [
     <Stack.Screen
@@ -41,7 +43,12 @@ export function getMiscScreens({
     <Stack.Screen
       key="assistant/index"
       name="assistant/index"
-      options={{ ...commonHeaderOptions, headerTitle: "Assistant" }}
+      options={{
+        ...commonHeaderOptions,
+        headerTitle: "Assistant",
+        headerTransparent: false,
+        headerStyle: { backgroundColor },
+      }}
     />,
     <Stack.Screen
       key="(misc)/search"

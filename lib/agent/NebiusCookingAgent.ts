@@ -1,4 +1,5 @@
 import { COOKING_ASSISTANT_INSTRUCTIONS } from "./instructions";
+import { assistantErrorMessage } from "./errors";
 import {
   describeMissingNebiusConfig,
   readNebiusAgentConfig,
@@ -36,9 +37,10 @@ export class NebiusCookingAgent implements CookingAgent {
         : this.streamFromNebius(input);
       yield* mapProviderStream(source);
     } catch (error) {
+      if (input.signal?.aborted) return;
       yield {
         type: "error",
-        message: error instanceof Error ? error.message : "The cooking assistant failed.",
+        message: assistantErrorMessage(error),
       };
     }
   }

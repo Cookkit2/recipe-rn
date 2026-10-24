@@ -15,7 +15,7 @@ jest.mock("expo-router", () => {
   };
   return { Stack: Object.assign(jest.fn(Stack), { Screen }) };
 });
-jest.mock("~/hooks/useColor", () => jest.fn(() => ({ foreground: "black" })));
+jest.mock("~/hooks/useColor", () => jest.fn(() => ({ foreground: "black", background: "white" })));
 jest.mock("~/hooks/useNotificationHandlers", () => ({ useNotificationHandlers: jest.fn() }));
 jest.mock("~/hooks/useOnboardingCheck", () => ({ useOnboardingCheck: jest.fn() }));
 jest.mock("~/components/ui/typography", () => ({ H1: () => null }));
@@ -32,6 +32,12 @@ it("passes direct, uniquely named screens to the router across rerenders", async
   const names = screens.map((screen) => screen.props.name);
   expect(names).toContain("grocery-list/index");
   expect(new Set(names).size).toBe(names.length);
+  const assistant = screens.find((screen) => screen.props.name === "assistant/index");
+  expect((assistant?.props as { options?: unknown }).options).toMatchObject({
+    headerTitle: "Assistant",
+    headerTransparent: false,
+    headerStyle: { backgroundColor: "white" },
+  });
 });
 
 it("updates the native header tint when the app theme changes", async () => {

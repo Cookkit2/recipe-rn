@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import type { AgentEvent, AgentTextMessage, CookingAgent } from "~/lib/agent/types";
+import { assistantErrorMessage } from "~/lib/agent/errors";
 
 export interface CookingChatMessage extends AgentTextMessage {
   activities: string[];
@@ -32,9 +33,9 @@ function applyEvent(message: CookingChatMessage, event: AgentEvent): CookingChat
         activities: [...message.activities, TOOL_LABELS[event.toolName] ?? event.toolName],
       };
     case "tool-error":
-      return { ...message, error: event.error };
+      return { ...message, error: assistantErrorMessage(event.error) };
     case "error":
-      return { ...message, error: event.message };
+      return { ...message, error: assistantErrorMessage(event.message) };
     case "tool-call":
     case "finish":
       return message;
@@ -92,7 +93,7 @@ export function useCookingAgentChat(agent: CookingAgent) {
         }
       } catch (error) {
         if (controller.signal.aborted) return;
-        const message = error instanceof Error ? error.message : "The cooking assistant failed.";
+        const message = assistantErrorMessage(error);
         setMessages((current) =>
           current.map((item) =>
             item.id === assistantMessage.id ? { ...item, error: message } : item

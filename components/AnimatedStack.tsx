@@ -48,7 +48,7 @@ export function AnimatedStack() {
       {getProfileScreens({ commonHeaderOptions })}
 
       {/* ======== MISCELLANOUS ======== */}
-      {getMiscScreens({ commonHeaderOptions })}
+      {getMiscScreens({ commonHeaderOptions, backgroundColor: colors.background })}
     </Stack>
   );
 }

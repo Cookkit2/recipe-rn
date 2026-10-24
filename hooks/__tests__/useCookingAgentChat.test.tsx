@@ -32,3 +32,33 @@ it("appends streamed assistant text and a tool activity", async () => {
   ]);
   expect(result.current.messages[1]?.activities).toEqual(["Matched recipes"]);
 });
+
+it.each(["error", "tool-error", "throw"] as const)(
+  "sanitizes the %s failure path and allows retry",
+  async (path) => {
+    const agent: CookingAgent = {
+      kind: "nebius",
+      async *stream() {
+        if (path === "throw") throw new Error("secret API response");
+        if (path === "error") yield { type: "error", message: "secret API response" };
+        else
+          yield {
+            type: "tool-error",
+            toolCallId: "1",
+            toolName: "analyze_diet",
+            error: "secret API response",
+          };
+      },
+    };
+    const { result } = await renderHook(() => useCookingAgentChat(agent));
+    await act(async () => {
+      await result.current.send("Help");
+    });
+    expect(result.current.messages[1]?.error).toBe("Something went wrong, please try again later");
+    expect(result.current.status).toBe("idle");
+    await act(async () => {
+      await result.current.send("Try again");
+    });
+    expect(result.current.messages).toHaveLength(4);
+  }
+);
