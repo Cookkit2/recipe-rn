@@ -24,8 +24,10 @@ module.exports = {
     ],
     "^.+\\.(js|jsx)$": ["babel-jest", { presets: ["babel-preset-expo"] }],
   },
+  // `ai` and `@ai-sdk/*` are ESM-only. Jest 30 on Node 22 cannot require them
+  // until Babel compiles them, which the cooking-agent integration test needs.
   transformIgnorePatterns: [
-    "node_modules/(?!(react-native-purchases|react-native-purchases-ui|react-native|@react-native|@nozbe|@expo|expo|expo-modules-core|expo-constants|expo-secure-store|expo-crypto|expo-auth-session|expo-linking|react-navigation|react-native-reanimated|react-native-worklets|@rn-primitives|expo-file-system|expo-maps|lucide-react-native|@testing-library)/)",
+    "node_modules/(?!(react-native-purchases|react-native-purchases-ui|react-native|@react-native|@nozbe|@expo|expo|expo-modules-core|expo-constants|expo-secure-store|expo-crypto|expo-auth-session|expo-linking|react-navigation|react-native-reanimated|react-native-worklets|@rn-primitives|expo-file-system|expo-maps|lucide-react-native|@testing-library|ai|@ai-sdk|zod|@workflow|eventsource-parser|@vercel)/)",
   ],
   moduleNameMapper: {
     // Test-only native mocks target RN internals that 0.88 no longer exports.
