@@ -23,7 +23,7 @@ export interface RecipeSearchOptions extends SearchOptions {
 }
 
 export interface CreateRecipeWithDetailsData {
-  recipe: RecipeData;
+  recipe: RecipeData & { id?: string };
   steps?: RecipeStepData[];
   ingredients?: RecipeIngredientData[];
 }

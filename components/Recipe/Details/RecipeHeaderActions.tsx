@@ -1,8 +1,11 @@
-import { Pressable, View } from "react-native";
+import { Platform, Pressable, View } from "react-native";
+import { SymbolView } from "expo-symbols";
 import { Share2Icon } from "lucide-uniwind";
+import useColors from "~/hooks/useColor";
 import AddToPlanHeaderButton from "./AddToPlanHeaderButton";
 
 export default function RecipeHeaderActions({ onShare }: { onShare?: () => void }) {
+  const colors = useColors();
   return (
     <View className="flex-row items-center gap-2">
       {onShare && (
@@ -13,7 +16,16 @@ export default function RecipeHeaderActions({ onShare }: { onShare?: () => void 
           onPress={onShare}
           className="h-11 w-11 items-center justify-center"
         >
-          <Share2Icon className="text-foreground" size={22} />
+          {Platform.OS === "ios" ? (
+            <SymbolView
+              name="square.and.arrow.up"
+              size={22}
+              weight="regular"
+              tintColor={colors.foreground}
+            />
+          ) : (
+            <Share2Icon className="text-foreground" size={22} />
+          )}
         </Pressable>
       )}
       <AddToPlanHeaderButton />

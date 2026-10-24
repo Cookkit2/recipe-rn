@@ -221,6 +221,8 @@ describe("buildRecipeTextExport", () => {
 });
 
 describe("shareRecipe", () => {
+  const link =
+    "https://recipe-web-mings-projects-6bb85e23.vercel.app/r/430138cb-2b17-42c8-a72b-b67e1c5ac927";
   const mockedShare = Share.share as jest.MockedFunction<typeof Share.share>;
 
   beforeEach(() => {
@@ -229,7 +231,7 @@ describe("shareRecipe", () => {
 
   it("emits share_link_created before opening the sheet", async () => {
     mockedShare.mockResolvedValue({ action: Share.sharedAction, activityType: undefined });
-    await shareRecipe(baseRecipe);
+    await shareRecipe(baseRecipe, link);
     const createdCall = (emitFunnelEvent as jest.Mock).mock.calls.find(
       ([type]) => type === "share_link_created"
     );
@@ -239,7 +241,7 @@ describe("shareRecipe", () => {
 
   it("emits share_exported when the user completes a share", async () => {
     mockedShare.mockResolvedValue({ action: Share.sharedAction, activityType: undefined });
-    await shareRecipe(baseRecipe);
+    await shareRecipe(baseRecipe, link);
     const exportedCall = (emitFunnelEvent as jest.Mock).mock.calls.find(
       ([type]) => type === "share_exported"
     );
@@ -249,10 +251,10 @@ describe("shareRecipe", () => {
 
   it("passes the text export + deep link as the share message", async () => {
     mockedShare.mockResolvedValue({ action: Share.sharedAction, activityType: undefined });
-    await shareRecipe(baseRecipe);
+    await shareRecipe(baseRecipe, link);
     const arg = mockedShare.mock.calls[0]![0];
     expect(arg.message).toContain("Spaghetti Carbonara");
-    expect(arg.message).toContain("cookkit://recipe/recipe-123");
+    expect(arg.message).toContain(link);
     expect(arg.message).toContain("Open in Cookkit");
   });
 
@@ -263,7 +265,7 @@ describe("shareRecipe", () => {
 
   it("returns { action: dismissed } and does NOT emit share_exported when dismissed", async () => {
     mockedShare.mockResolvedValue({ action: Share.dismissedAction, activityType: undefined });
-    const result = await shareRecipe(baseRecipe);
+    const result = await shareRecipe(baseRecipe, link);
     expect(result).toEqual({ action: "dismissed" });
     const exportedCall = (emitFunnelEvent as jest.Mock).mock.calls.find(
       ([type]) => type === "share_exported"
@@ -289,5 +291,12 @@ describe("shareRecipe", () => {
   it("never throws — analytics or share failures degrade to dismissed", async () => {
     mockedShare.mockRejectedValue(new Error("boom"));
     await expect(shareRecipe(baseRecipe)).resolves.toBeDefined();
+  });
+  it("shares recipe text offline without an unusable device-local link", async () => {
+    mockedShare.mockResolvedValue({ action: Share.sharedAction, activityType: undefined });
+    await shareRecipe(baseRecipe);
+    expect(mockedShare.mock.calls[0]![0].message).toContain("Spaghetti Carbonara");
+    expect(mockedShare.mock.calls[0]![0].message).not.toContain("cookkit://");
+    expect(emitFunnelEvent).not.toHaveBeenCalledWith("share_link_created", expect.anything());
   });
 });
