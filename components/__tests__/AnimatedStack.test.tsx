@@ -20,6 +20,7 @@ jest.mock("~/hooks/useOnboardingCheck", () => ({ useOnboardingCheck: jest.fn() }
 jest.mock("~/components/ui/typography", () => ({ H1: () => null }));
 jest.mock("~/components/Ingredient/IngredientDeleteButton", () => () => null);
 jest.mock("~/components/Recipe/Details/AddToPlanHeaderButton", () => () => null);
+jest.mock("expo-symbols", () => ({ SymbolView: () => null }));
 
 it("passes direct, uniquely named screens to the router across rerenders", async () => {
   const { rerender } = await render(<AnimatedStack />);

@@ -1,22 +1,4 @@
-/**
- * Recipe sharing MVP (issue #737, P4-2 / tracer-bullet).
- *
- * This is the CLIENT-SIDE slice of the sharing surface: it builds a deep link
- * to a recipe the user already owns, produces a deterministic plain-text
- * export for the native share sheet, and wraps React Native `Share.share` with
- * funnel instrumentation (#718 pattern). Everything here works offline with no
- * account and no network beyond link generation.
- *
- * The SERVER-SIDE story (Supabase `recipe_share` snapshot table + RLS, so that
- * a recipient who does NOT own the recipe can resolve the token to a server
- * snapshot and import it) is DEFERRED — see the PR body / deferredFollowups.
- * The MVP deep link resolves LOCAL recipes only; an unowned token surfaces a
- * "recipe not in your library" state in the ingestion hook.
- *
- * Pure helpers (`buildRecipeDeepLink`, `buildRecipeTextExport`, the
- * `cookkit://recipe/<id>` URL parser) are exported separately so the Jest suite
- * can assert determinism without touching `Share` / Sentry.
- */
+/** Plain-text export and share sheet; older local recipe links remain readable. */
 
 import { Share } from "react-native";
 import type { Recipe } from "~/types/Recipe";
@@ -204,8 +186,8 @@ export type ShareRecipeResult = {
  * and the deep link so the recipient can either read inline or open in Cookkit.
  *
  * Emits two funnel events (#718 pattern):
- *  - `share_link_created` — the deep link was generated and attached (always,
- *    even if the user dismisses the sheet, because the link materialized).
+ *  - `share_link_created` — a published snapshot link was attached.
+ *    Offline text-only exports omit this event.
  *  - `share_exported` — the user completed a share action (not a dismissal).
  *
  * Both emits are fire-and-forget: `shareRecipe` never throws on an analytics
@@ -213,16 +195,14 @@ export type ShareRecipeResult = {
  * (e.g. share sheet unavailable) resolves to `{ action: "dismissed" }` rather
  * than throwing, so the recipe detail screen's tap handler stays simple.
  */
-export async function shareRecipe(recipe: Recipe): Promise<ShareRecipeResult> {
-  // Build the link up front so it can be attached to the message even if we
-  // later choose a different share surface, and so share_link_created fires
-  // before any await that could reject.
-  const link = buildRecipeDeepLink(recipe.id);
-  emitFunnelEvent("share_link_created", {
-    detail: { recipeId: recipe.id },
-  });
+export async function shareRecipe(recipe: Recipe, link?: string): Promise<ShareRecipeResult> {
+  // Only published snapshot links count as created links. Offline exports contain text only.
+  if (link)
+    emitFunnelEvent("share_link_created", {
+      detail: { recipeId: recipe.id },
+    });
 
-  const text = `${buildRecipeTextExport(recipe)}\n\nOpen in Cookkit: ${link}`;
+  const text = `${buildRecipeTextExport(recipe)}${link ? `\n\nOpen in Cookkit: ${link}` : ""}`;
 
   try {
     const result = await Share.share({

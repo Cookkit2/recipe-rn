@@ -69,6 +69,7 @@ export interface UpdateStockData {
 }
 
 export interface CreateRecipeData {
+  id?: string;
   title: string;
   description: string;
   imageUrl?: string;
@@ -478,6 +479,7 @@ class DatabaseFacade {
   async createRecipe(data: CreateRecipeData): Promise<Recipe> {
     return await this.recipes.createRecipeWithDetails({
       recipe: {
+        id: data.id,
         title: data.title,
         description: data.description,
         imageUrl: data.imageUrl,

@@ -12,6 +12,7 @@
       "icon": "./assets/icon.png",
       "supportsTablet": false,
       "bundleIdentifier": "app.cookkit.cookkit",
+      "associatedDomains": ["applinks:recipe-web-mings-projects-6bb85e23.vercel.app"],
       "buildNumber": "10",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
@@ -30,6 +31,24 @@
       "package": "app.cookkit.cookkit",
       "permissions": ["android.permission.CAMERA"],
       "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "recipe-web-mings-projects-6bb85e23.vercel.app",
+              "pathPrefix": "/r/"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": false,
+          "data": [{ "scheme": "cookkit", "host": "share" }],
+          "category": ["BROWSABLE", "DEFAULT"]
+        },
         {
           "action": "VIEW",
           "autoVerify": false,
