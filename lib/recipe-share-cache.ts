@@ -39,7 +39,50 @@ export function cacheRecipeShareLink(recipeId: string, snapshot: string, token: 
     storage.set(INDEX_KEY, next.slice(0, MAX_ENTRIES));
     for (const id of next.slice(MAX_ENTRIES)) storage.delete(PREFIX + id);
     storage.set(PREFIX + recipeId, { snapshot, token });
+    rememberResolvedRecipeShareId(token, recipeId);
   } catch {
     // Sharing still succeeds if local persistence is unavailable.
+  }
+}
+
+const RESOLVED_PREFIX = "recipe_share_resolved_v1:";
+const RESOLVED_INDEX_KEY = "recipe_share_resolved_index_v1";
+const MAX_RESOLVED_ENTRIES = 100;
+
+/** Resolve a received link offline, including links published by this installation. */
+export function getResolvedRecipeShareId(token: string): string | undefined {
+  if (!isRecipeShareToken(token)) return undefined;
+  try {
+    const resolved = storage.get<unknown>(RESOLVED_PREFIX + token);
+    if (typeof resolved === "string" && resolved) return resolved;
+    // Recover links published before incoming-link identity was persisted.
+    const index = storage.get<unknown>(INDEX_KEY);
+    if (Array.isArray(index)) {
+      for (const id of index.slice(0, MAX_ENTRIES)) {
+        if (typeof id !== "string") continue;
+        const entry = storage.get<{ token?: unknown }>(PREFIX + id);
+        if (entry?.token === token) return id;
+      }
+    }
+  } catch {
+    // A corrupt cache must not prevent the ordinary import path.
+  }
+  return undefined;
+}
+
+/** Keep link identity separate from mutable recipe content and private state. */
+export function rememberResolvedRecipeShareId(token: string, recipeId: string): void {
+  if (!isRecipeShareToken(token) || !recipeId) return;
+  try {
+    const index = storage.get<unknown>(RESOLVED_INDEX_KEY);
+    const previous = Array.isArray(index)
+      ? index.filter((id): id is string => typeof id === "string" && id !== token)
+      : [];
+    const next = [token, ...new Set(previous)];
+    storage.set(RESOLVED_INDEX_KEY, next.slice(0, MAX_RESOLVED_ENTRIES));
+    for (const id of next.slice(MAX_RESOLVED_ENTRIES)) storage.delete(RESOLVED_PREFIX + id);
+    storage.set(RESOLVED_PREFIX + token, recipeId);
+  } catch {
+    // Saving/opening a recipe still succeeds when optional persistence is unavailable.
   }
 }

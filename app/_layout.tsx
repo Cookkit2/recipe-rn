@@ -29,6 +29,7 @@ import { TEST_IDS } from "~/constants/test-ids";
 import { IS_E2E } from "~/utils/e2e-flags";
 import { arePaywallsEnabled } from "~/utils/paywall-flags";
 import { invalidateSubscriptionEntitlementsQuery } from "~/lib/subscription-query-sync";
+import { AppThemeProvider } from "~/components/AppThemeProvider";
 import { AnimatedStack } from "~/components/AnimatedStack";
 import { useNativeAppearance } from "~/hooks/useNativeAppearance";
 import { NotificationProvider } from "~/lib/notifications";
@@ -117,29 +118,31 @@ export default Sentry.wrap(function RootLayout() {
   useRevenueCatSetup();
 
   return (
-    <GestureHandlerRootView className="flex-1 bg-background">
-      <View testID={TEST_IDS.appRoot} collapsable={false} style={{ flex: 1 }}>
-        <SafeAreaProvider>
-          <QueryProvider>
-            <AuthProvider strategy={authStrategy} autoInitialize={true}>
-              <NotificationProvider>
-                <KeyboardProvider>
-                  <StatusBar style="auto" />
-                  <LeftoverReminderCoordinator />
-                  <MealPlanCalendarProvider>
-                    <RecipeLinkHandler />
-                    <SocialRecipeShareHandler />
-                    <AnimatedStack />
-                  </MealPlanCalendarProvider>
-                  <Toaster visibleToasts={2} position="bottom-center" offset={80} />
-                  <PortalHost />
-                </KeyboardProvider>
-              </NotificationProvider>
-            </AuthProvider>
-          </QueryProvider>
-        </SafeAreaProvider>
-      </View>
-    </GestureHandlerRootView>
+    <AppThemeProvider>
+      <GestureHandlerRootView className="flex-1 bg-background">
+        <View testID={TEST_IDS.appRoot} collapsable={false} style={{ flex: 1 }}>
+          <SafeAreaProvider>
+            <QueryProvider>
+              <AuthProvider strategy={authStrategy} autoInitialize={true}>
+                <NotificationProvider>
+                  <KeyboardProvider>
+                    <StatusBar style="auto" />
+                    <LeftoverReminderCoordinator />
+                    <MealPlanCalendarProvider>
+                      <RecipeLinkHandler />
+                      <SocialRecipeShareHandler />
+                      <AnimatedStack />
+                    </MealPlanCalendarProvider>
+                    <Toaster visibleToasts={2} position="bottom-center" offset={80} />
+                    <PortalHost />
+                  </KeyboardProvider>
+                </NotificationProvider>
+              </AuthProvider>
+            </QueryProvider>
+          </SafeAreaProvider>
+        </View>
+      </GestureHandlerRootView>
+    </AppThemeProvider>
   );
 });
 

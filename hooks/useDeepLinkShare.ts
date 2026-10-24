@@ -17,6 +17,8 @@ import { storageFacade as storage } from "~/data/storage";
 import { ONBOARDING_COMPLETED_KEY } from "~/constants/storage-keys";
 import { emitShareLinkOpened } from "~/lib/analytics/funnel-events";
 import { resolveSharedRecipe } from "~/lib/resolve-shared-recipe";
+import { findMatchingSharedRecipe } from "~/lib/find-matching-shared-recipe";
+import { getResolvedRecipeShareId, rememberResolvedRecipeShareId } from "~/lib/recipe-share-cache";
 
 export { handleShareDeepLink } from "~/utils/deep-link-share";
 export type { HandleShareDeepLinkDeps } from "~/utils/deep-link-share";
@@ -84,6 +86,9 @@ export function useDeepLinkShare(): void {
           const id = await resolveSharedRecipe(token, {
             getRecipeById: (id) => databaseFacade.getRecipeById(id),
             fetchSnapshot: fetchRecipeShare,
+            findMatchingRecipe: (snapshot) => findMatchingSharedRecipe(snapshot, databaseFacade),
+            getResolvedRecipeId: getResolvedRecipeShareId,
+            rememberResolvedRecipeId: rememberResolvedRecipeShareId,
             createRecipe: (data) => databaseFacade.createRecipe(data),
           });
           if (!mounted.current) return;
