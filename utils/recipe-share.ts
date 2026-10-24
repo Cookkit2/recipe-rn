@@ -182,8 +182,8 @@ export type ShareRecipeResult = {
 };
 
 /**
- * Open the native share sheet for a recipe, sharing both the plain-text export
- * and the deep link so the recipient can either read inline or open in Cookkit.
+ * Open the native share sheet with just the published URL. When publishing is
+ * unavailable, retain the plain-text recipe export as the offline fallback.
  *
  * Emits two funnel events (#718 pattern):
  *  - `share_link_created` — a published snapshot link was attached.
@@ -202,7 +202,7 @@ export async function shareRecipe(recipe: Recipe, link?: string): Promise<ShareR
       detail: { recipeId: recipe.id },
     });
 
-  const text = `${buildRecipeTextExport(recipe)}${link ? `\n\nOpen in Cookkit: ${link}` : ""}`;
+  const text = link ?? buildRecipeTextExport(recipe);
 
   try {
     const result = await Share.share({

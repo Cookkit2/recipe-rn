@@ -3,6 +3,7 @@ import { buildRecipeShareSnapshot, parseRecipeShareSnapshot } from "../recipe-sh
 import type { Recipe } from "~/types/Recipe";
 
 export const token = "430138cb-2b17-42c8-a72b-b67e1c5ac927";
+const shortToken = "QwE4yysXQsinK7Z-HFrJJw";
 export const sharedRecipe: Recipe = {
   id: "private-device-id",
   title: "Pasta",
@@ -18,8 +19,15 @@ export const sharedRecipe: Recipe = {
 };
 
 it("round trips public and browser Open in Cookkit links", () => {
+  expect(buildRecipeShareLink(token)).toBe(
+    `https://recipe-web-mings-projects-6bb85e23.vercel.app/r/${shortToken}`
+  );
   expect(parseRecipeShareLink(buildRecipeShareLink(token))).toBe(token);
+  expect(parseRecipeShareLink(`cookkit://share/${shortToken}`)).toBe(token);
   expect(parseRecipeShareLink(`cookkit://share/${token}`)).toBe(token);
+  expect(
+    parseRecipeShareLink(`https://recipe-web-mings-projects-6bb85e23.vercel.app/r/${token}`)
+  ).toBe(token);
   expect(parseRecipeShareLink(`${buildRecipeShareLink(token)}/?utm_source=chat`)).toBe(token);
 });
 it.each([
@@ -29,6 +37,8 @@ it.each([
   `https://user@recipe-web-mings-projects-6bb85e23.vercel.app/r/${token}`,
   `https://recipe-web-mings-projects-6bb85e23.vercel.app/r/${token}/extra`,
   "https://recipe-web-mings-projects-6bb85e23.vercel.app/r/not-a-token",
+  `https://recipe-web-mings-projects-6bb85e23.vercel.app/r/${shortToken.slice(0, -1)}x`,
+  "https://recipe-web-mings-projects-6bb85e23.vercel.app/r/AAAAAAAAAAAAAAAAAAAAAA",
   null,
 ])("rejects unrelated or malformed link %s", (value) => {
   expect(parseRecipeShareLink(value)).toBeNull();
@@ -39,6 +49,39 @@ it("only publishes the explicit recipe fields and keeps source attribution", () 
   expect(snapshot.imageUrl).toBe("");
   expect(JSON.stringify(snapshot)).not.toMatch(/private-device-id|pantry-id|isFavorite/);
   expect(snapshot.ingredients[0]?.quantity).toBe(200);
+});
+it("shares a persisted recipe with absent calories stored as null", () => {
+  const persisted = { ...sharedRecipe, calories: null } as unknown as Recipe;
+  expect(buildRecipeShareSnapshot(persisted).calories).toBeUndefined();
+});
+it("shares persisted ingredients with absent notes stored as null", () => {
+  const persisted = {
+    ...sharedRecipe,
+    ingredients: sharedRecipe.ingredients.map((ingredient) => ({ ...ingredient, notes: null })),
+  } as unknown as Recipe;
+  expect(buildRecipeShareSnapshot(persisted).ingredients[0]?.notes).toBeUndefined();
+});
+it("retains zero calories and ingredient notes when provided", () => {
+  const snapshot = buildRecipeShareSnapshot({
+    ...sharedRecipe,
+    calories: 0,
+    ingredients: sharedRecipe.ingredients.map((ingredient) => ({
+      ...ingredient,
+      notes: "Keep some pasta water",
+    })),
+  });
+  expect(snapshot.calories).toBe(0);
+  expect(snapshot.ingredients[0]?.notes).toBe("Keep some pasta water");
+});
+it("still rejects null optional values in untrusted remote snapshots", () => {
+  const snapshot = buildRecipeShareSnapshot(sharedRecipe);
+  expect(() => parseRecipeShareSnapshot({ ...snapshot, calories: null })).toThrow();
+  expect(() =>
+    parseRecipeShareSnapshot({
+      ...snapshot,
+      ingredients: snapshot.ingredients.map((ingredient) => ({ ...ingredient, notes: null })),
+    })
+  ).toThrow();
 });
 it("rejects malformed snapshots and unsafe external URLs", () => {
   const snapshot = buildRecipeShareSnapshot(sharedRecipe);

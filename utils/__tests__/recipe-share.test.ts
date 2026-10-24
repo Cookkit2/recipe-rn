@@ -249,13 +249,11 @@ describe("shareRecipe", () => {
     expect(exportedCall![1]).toMatchObject({ detail: { recipeId: "recipe-123" } });
   });
 
-  it("passes the text export + deep link as the share message", async () => {
+  it("shares only the published URL so Copy contains no recipe text", async () => {
     mockedShare.mockResolvedValue({ action: Share.sharedAction, activityType: undefined });
     await shareRecipe(baseRecipe, link);
     const arg = mockedShare.mock.calls[0]![0];
-    expect(arg.message).toContain("Spaghetti Carbonara");
-    expect(arg.message).toContain(link);
-    expect(arg.message).toContain("Open in Cookkit");
+    expect(arg.message).toBe(link);
   });
 
   it("returns { action: shared } on a completed share", async () => {

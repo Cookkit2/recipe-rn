@@ -100,7 +100,13 @@ export function buildRecipeShareSnapshot(recipe: Recipe): RecipeShareSnapshot {
     cookMinutes: recipe.cookMinutes ?? 0,
     difficultyStars: recipe.difficultyStars ?? 1,
     servings: recipe.servings ?? 1,
+    // WatermelonDB represents absent optional columns as null on persisted recipes.
+    calories: recipe.calories ?? undefined,
     tags: recipe.tags ?? [],
+    ingredients: recipe.ingredients.map((ingredient) => ({
+      ...ingredient,
+      notes: ingredient.notes ?? undefined,
+    })),
   });
   if (new TextEncoder().encode(JSON.stringify(snapshot)).byteLength > 128000) {
     throw new Error("This recipe is too large to share as a link.");
