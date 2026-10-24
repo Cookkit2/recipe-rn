@@ -12,8 +12,10 @@ import { useMealPlanCalendar } from "~/store/MealPlanCalendarContext";
 import { WeekNavigationHeader } from "~/app/meal-plan/components/WeekNavigationHeader";
 import { toast } from "sonner-native";
 import { shopForIngredients, type IngredientShoppingProvider } from "~/lib/ingredient-shopping";
+import useColors from "~/hooks/useColor";
 
 export default function GroceryListPage() {
+  const colors = useColors();
   const { selectedWeek, changeSelectedWeek } = useMealPlanCalendar();
   const { sections, stats, isLoading, isEmpty, hasNeededItems, error, refetch } = useGroceryList();
   const {
@@ -142,10 +144,12 @@ export default function GroceryListPage() {
   }
 
   return (
-    <>
+    <View className="flex-1 bg-background">
       <Stack.Screen
         options={{
           headerTransparent: false,
+          headerStyle: { backgroundColor: colors.background },
+          contentStyle: { backgroundColor: colors.background },
           unstable_headerRightItems: () =>
             isSelectionMode
               ? [
@@ -243,16 +247,20 @@ export default function GroceryListPage() {
           />
         )}
       />
-    </>
+    </View>
   );
 }
 
 function GroceryListState({ header, children }: { header: ReactNode; children: ReactNode }) {
+  const colors = useColors();
+
   return (
     <View className="flex-1 bg-background">
       <Stack.Screen
         options={{
           headerTransparent: false,
+          headerStyle: { backgroundColor: colors.background },
+          contentStyle: { backgroundColor: colors.background },
           headerTitle: "Grocery List",
           unstable_headerRightItems: () => [],
         }}
