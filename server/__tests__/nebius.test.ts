@@ -120,34 +120,38 @@ describe("Nebius provider boundary", () => {
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
 
-  it("keeps unknown social-recipe units and amounts instead of forcing a model repair", async () => {
-    fetcher.mockResolvedValue(
-      completion(
-        JSON.stringify({
-          isCookingVideo: true,
-          confidence: 0.9,
-          recipe: {
-            title: "Eggs",
-            description: "",
-            prepMinutes: 0,
-            cookMinutes: 15,
-            servings: 2,
-            difficultyStars: 1,
-            ingredients: [
-              { name: "chicken", quantity: 0, unit: "", notes: "Amount not specified" },
-            ],
-            steps: [{ step: 1, title: "Steam", description: "Steam for 15 minutes." }],
-          },
-        })
-      )
-    );
+  it("repairs missing social ingredient amounts into explicitly marked positive estimates", async () => {
+    const recipe = {
+      title: "Eggs",
+      description: "",
+      prepMinutes: 0,
+      cookMinutes: 15,
+      servings: 2,
+      servingsSource: "estimated",
+      difficultyStars: 1,
+      ingredients: [{ name: "chicken", quantity: 0, unit: "", amountSource: "estimated" }],
+      steps: [
+        {
+          step: 1,
+          title: "Steam",
+          description: "Steam for 15 minutes.",
+          sourceQuote: "Kukus selama 15 minit.",
+        },
+      ],
+    };
+    const wrap = () => JSON.stringify({ isCookingVideo: true, confidence: 0.9, recipe });
+    fetcher.mockResolvedValueOnce(completion(wrap()));
+    recipe.ingredients = [
+      { name: "chicken", quantity: 150, unit: "grams", amountSource: "estimated" },
+    ];
+    fetcher.mockResolvedValueOnce(completion(wrap()));
     const result = await run(
-      buildSocialRecipeRequest("Steam for 15 minutes. Chicken amount not specified.")
+      buildSocialRecipeRequest("Kukus selama 15 minit. Chicken amount not specified.")
     );
     expect(JSON.parse(result.content).recipe.ingredients[0]).toEqual(
-      expect.objectContaining({ quantity: 0, unit: "" })
+      expect.objectContaining({ quantity: 150, unit: "grams", amountSource: "estimated" })
     );
-    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(fetcher).toHaveBeenCalledTimes(2);
   });
 
   it.each(['{"name":"rice"}', '{"name":"rice","quantity":-1}', "not JSON"])(

@@ -28,3 +28,46 @@ export function hasLeadingCookingAction(description: string): boolean {
     normalize(description).replace(/^(?:then|next|now|and)\s+/, "")
   );
 }
+
+/** Select only action-bearing published subtitle lines, keeping the schema bounded. */
+export function getPublishedSubtitleInstructions(source: string): string[] {
+  for (const track of source.split("PUBLISHED VIDEO SUBTITLES").slice(1)) {
+    const instructions: string[] = [];
+    let characters = 0;
+    for (const line of track.split("\n").slice(1)) {
+      const instruction = line.trim();
+      if (
+        instruction.length > 800 ||
+        !hasLeadingCookingAction(instruction) ||
+        !hasInstructionEvidence(instruction, instruction) ||
+        instructions.includes(instruction)
+      )
+        continue;
+      if (characters + instruction.length > 6000 || instructions.length >= 24) break;
+      characters += instruction.length;
+      instructions.push(instruction);
+    }
+    if (instructions.length) return instructions;
+  }
+  return [];
+}
+
+/** Keep explicit caption actions available to the translation schema as well. */
+export function getCaptionInstructions(source: string): string[] {
+  const instructions: string[] = [];
+  let characters = 0;
+  for (const sentence of source.split(/(?<=[.!?。！？])\s+|\n+/u)) {
+    const instruction = sentence.trim();
+    if (
+      instruction.length > 800 ||
+      !hasLeadingCookingAction(instruction) ||
+      !hasInstructionEvidence(instruction, instruction) ||
+      instructions.includes(instruction)
+    )
+      continue;
+    if (characters + instruction.length > 6000 || instructions.length >= 24) break;
+    characters += instruction.length;
+    instructions.push(instruction);
+  }
+  return instructions;
+}

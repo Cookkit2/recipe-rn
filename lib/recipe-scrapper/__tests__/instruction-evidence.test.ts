@@ -1,4 +1,9 @@
-import { hasInstructionEvidence, hasLeadingCookingAction } from "../shared/instruction-evidence";
+import {
+  getPublishedSubtitleInstructions,
+  getCaptionInstructions,
+  hasInstructionEvidence,
+  hasLeadingCookingAction,
+} from "../shared/instruction-evidence";
 
 it("accepts quoted instructions despite formatting differences", () => {
   expect(hasInstructionEvidence("Whisk 2 eggs, then fry.", "🥚 WHISK 2 eggs — then fry!")).toBe(
@@ -37,4 +42,21 @@ it("recognizes subtitle cooking actions without treating an introduction as a st
     "Tumiskan daun bawang.",
   ])
     expect(hasLeadingCookingAction(instruction)).toBe(true);
+});
+
+it("omits title/ready subtitles while retaining original English or Malay cooking directions", () => {
+  const source =
+    "Caption\nPUBLISHED VIDEO SUBTITLES (ms):\nTelur kukus\nMasukkan telur dan air\nKukus selama 15 minit\nTelur kukus sudah siap\n";
+  expect(getPublishedSubtitleInstructions(source)).toEqual([
+    "Masukkan telur dan air",
+    "Kukus selama 15 minit",
+  ]);
+});
+
+it("keeps each explicit Malay caption action without treating ingredients as a step", () => {
+  expect(
+    getCaptionInstructions(
+      "Ayam telur kukus. 2 biji telur, ayam cincang. Kacau telur dan ayam sehingga sebati. Kukus selama 15 minit."
+    )
+  ).toEqual(["Kacau telur dan ayam sehingga sebati.", "Kukus selama 15 minit."]);
 });
