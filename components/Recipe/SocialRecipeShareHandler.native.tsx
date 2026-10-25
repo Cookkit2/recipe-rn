@@ -67,7 +67,7 @@ export default function SocialRecipeShareHandler() {
           cleanupWarningReported = false;
           return;
         }
-        payloadKey = JSON.stringify(payloads);
+        payloadKey = JSON.stringify(payloads.map(({ shareType, value }) => [shareType, value]));
         const clear = () => {
           try {
             clearSharedPayloads();

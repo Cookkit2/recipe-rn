@@ -228,6 +228,8 @@ it("keeps a saved share queued without a failure toast or duplicate import when 
   });
   await render(<SocialRecipeShareHandler />);
   await waitFor(() => expect(mockRouter.push).toHaveBeenCalledWith(target("share-1")));
+  // Native records can return equivalent fields in a different property order.
+  mockPayloads = caption.map(({ shareType, value }) => ({ value, shareType }));
   await act(async () => active?.("active"));
   expect(mockSave).toHaveBeenCalledTimes(1);
   expect(mockRouter.push).toHaveBeenCalledTimes(1);
