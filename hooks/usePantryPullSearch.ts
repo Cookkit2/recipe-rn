@@ -11,7 +11,7 @@ import {
 import { scheduleOnRN } from "react-native-worklets";
 
 const SEARCH_PULL_DISTANCE = 72;
-type SearchPhase = "closed" | "pulling" | "open";
+type SearchPhase = "closed" | "pulling" | "open" | "closing" | "canceling";
 
 /** Keep the original scroll gesture alive until release; search shares its live displacement. */
 export function usePantryPullSearch(enabled: boolean, restingTop: number) {
@@ -35,13 +35,30 @@ export function usePantryPullSearch(enabled: boolean, restingTop: number) {
     }, [focused])
   );
 
-  const dismiss = useCallback(() => {
+  const finishDismiss = useCallback(() => {
     previewShown.value = false;
-    startedAtTop.value = false;
-    searchOffset.value = 0;
-    progress.value = 0;
     setPhase("closed");
-  }, [previewShown, startedAtTop, searchOffset, progress]);
+  }, [previewShown]);
+
+  const dismiss = useCallback(() => {
+    startedAtTop.value = false;
+    if (!previewShown.value) return;
+    setPhase((current) => (current === "open" || current === "closing" ? "closing" : "canceling"));
+    searchOffset.value = withSpring(0, { damping: 24, stiffness: 260, mass: 0.8 });
+    progress.value = withTiming(0, { duration: 180 }, (finished) => {
+      if (finished) scheduleOnRN(finishDismiss);
+    });
+  }, [previewShown, startedAtTop, searchOffset, progress, finishDismiss]);
+
+  const open = useCallback(() => {
+    if (previewShown.value) return;
+    previewShown.value = true;
+    searchOffset.value = 0;
+    setPhase("pulling");
+    progress.value = withTiming(1, { duration: 180 }, (finished) => {
+      if (finished) scheduleOnRN(setPhase, "open");
+    });
+  }, [previewShown, searchOffset, progress]);
 
   const onScroll = useAnimatedScrollHandler((event) => {
     offset.value = event.contentOffset.y;
@@ -72,11 +89,12 @@ export function usePantryPullSearch(enabled: boolean, restingTop: number) {
       }
     })
     .onEnd((_event, success) => {
+      released.value = true;
       if (!success) {
         if (startedAtTop.value) scheduleOnRN(dismiss);
+        startedAtTop.value = false;
         return;
       }
-      released.value = true;
       if (!startedAtTop.value) return;
       startedAtTop.value = false;
       if (pullDistance.value >= SEARCH_PULL_DISTANCE) {
@@ -89,22 +107,23 @@ export function usePantryPullSearch(enabled: boolean, restingTop: number) {
       }
     })
     .onFinalize(() => {
-      if (!released.value && startedAtTop.value) scheduleOnRN(dismiss);
+      if (!released.value && startedAtTop.value && previewShown.value) scheduleOnRN(dismiss);
       startedAtTop.value = false;
     });
 
-  const pullStyle = useAnimatedStyle(() => ({
-    opacity: 1 - progress.value * 0.45,
+  const homeStyle = useAnimatedStyle(() => ({
+    opacity: 1 - progress.value,
   }));
 
   return {
     gesture: Gesture.Simultaneous(Gesture.Native(), pull),
     onScroll,
-    pullStyle,
+    homeStyle,
     searchOffset,
     progress,
     phase,
     focusEnabled: phase === "open",
     dismiss,
+    open,
   };
 }

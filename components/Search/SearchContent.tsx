@@ -37,9 +37,11 @@ const DIETARY_TAGS = ["Vegetarian", "Vegan", "Gluten-Free"];
 export function SearchContent({
   onDismiss,
   focusEnabled = true,
+  transparent = false,
 }: {
   onDismiss: () => void;
   focusEnabled?: boolean;
+  transparent?: boolean;
 }) {
   const { top, bottom } = useSafeAreaInsets();
   const colors = useColors();
@@ -282,7 +284,7 @@ export function SearchContent({
   );
 
   return (
-    <View className="flex-1 bg-background">
+    <View className={transparent ? "flex-1" : "flex-1 bg-background"}>
       {focusEnabled && (
         <Stack.SearchBar
           ref={searchBarRef}
@@ -303,6 +305,7 @@ export function SearchContent({
           loading={showSearchLoading}
           top={top}
           bottom={bottom}
+          transparent={transparent}
         />
       </Pressable>
       {/* <Pressable

@@ -10,7 +10,7 @@ import { CURVES } from "~/constants/curves";
 import IngredientCategoryButtonGroup from "./IngredientCategoryButtonGroup";
 import { TEST_IDS } from "~/constants/test-ids";
 import { GestureDetector } from "react-native-gesture-handler";
-import { usePantryPullSearch } from "~/hooks/usePantryPullSearch";
+import type { usePantryPullSearch } from "~/hooks/usePantryPullSearch";
 
 export default function IngredientLists({
   pullSearch,
@@ -19,7 +19,7 @@ export default function IngredientLists({
 }) {
   const { bottom } = useSafeAreaInsets();
   const { selectedItemType, ingredientScrollRef, isRecipeOpen } = usePantryStore();
-  const { gesture, onScroll, pullStyle } = pullSearch;
+  const { gesture, onScroll } = pullSearch;
   const { data, isLoading, error } = usePantryItemsByType(selectedItemType);
   const items = data ?? [];
   const ingredientListStyle = useAnimatedStyle(() => ({
@@ -72,7 +72,7 @@ export default function IngredientLists({
         contentContainerStyle={{ paddingBottom: 100 + bottom }}
         showsVerticalScrollIndicator={false}
         data={items}
-        style={[ingredientListStyle, pullStyle]}
+        style={ingredientListStyle}
         onScroll={onScroll}
         alwaysBounceVertical
         ListHeaderComponent={

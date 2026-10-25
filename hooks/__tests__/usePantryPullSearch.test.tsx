@@ -3,6 +3,7 @@ import { act, renderHook } from "@testing-library/react-native";
 import { usePantryPullSearch } from "../usePantryPullSearch";
 
 let mockFocused = true;
+let mockTransitions: ((finished: boolean) => void)[] = [];
 let mockHandlers: Record<string, (event?: { translationY: number }, success?: boolean) => void> =
   {};
 jest.mock("expo-router", () => ({
@@ -41,11 +42,15 @@ jest.mock("react-native-reanimated", () => ({
   useSharedValue: (value: unknown) => require("react").useRef({ value }).current,
   useAnimatedStyle: (callback: () => unknown) => callback(),
   useAnimatedScrollHandler: (callback: () => unknown) => callback,
-  withTiming: (value: number) => value,
+  withTiming: (value: number, _config: unknown, callback?: (finished: boolean) => void) => {
+    if (callback) mockTransitions.push(callback);
+    return value;
+  },
   withSpring: (value: number) => value,
 }));
 beforeEach(() => {
   mockFocused = true;
+  mockTransitions = [];
   mockHandlers = {};
 });
 function scroll(handler: unknown, y: number) {
@@ -57,6 +62,13 @@ async function pull(distance: number) {
     mockHandlers.onUpdate!({ translationY: distance });
     mockHandlers.onEnd!(undefined, true);
     mockHandlers.onFinalize!();
+  });
+  await finishTransitions();
+}
+async function finishTransitions() {
+  await act(async () => {
+    const callbacks = mockTransitions.splice(0);
+    callbacks.forEach((callback) => callback(true));
   });
 }
 
@@ -101,6 +113,7 @@ it("cancels an interrupted preview without focusing the keyboard", async () => {
     mockHandlers.onEnd!(undefined, false);
     mockHandlers.onFinalize!();
   });
+  await finishTransitions();
   expect(result.current.phase).toBe("closed");
   expect(result.current.focusEnabled).toBe(false);
 });
@@ -128,7 +141,41 @@ it("lets a new pull open search after dismissal", async () => {
   const { result } = await renderHook(() => usePantryPullSearch(true, 0));
   await pull(100);
   await act(async () => result.current.dismiss());
+  await finishTransitions();
   expect(result.current.phase).toBe("closed");
   await pull(100);
   expect(result.current.phase).toBe("open");
+});
+
+it("keeps search mounted during the reverse fade and only closes when it finishes", async () => {
+  const { result } = await renderHook(() => usePantryPullSearch(true, 0));
+  await pull(100);
+  await act(async () => result.current.dismiss());
+  expect(result.current.phase).toBe("closing");
+  expect(result.current.focusEnabled).toBe(false);
+  expect(mockTransitions).toHaveLength(1);
+  await finishTransitions();
+  expect(result.current.phase).toBe("closed");
+});
+
+it("fades the whole home away, and delays button-opened native search until the fade finishes", async () => {
+  const { result, rerender } = await renderHook(() => usePantryPullSearch(true, 0));
+  await act(async () => result.current.open());
+  expect(result.current.phase).toBe("pulling");
+  expect(result.current.focusEnabled).toBe(false);
+  await rerender({});
+  expect(result.current.homeStyle).toEqual(expect.objectContaining({ opacity: 0 }));
+  await finishTransitions();
+  expect(result.current.phase).toBe("open");
+  expect(result.current.focusEnabled).toBe(true);
+});
+
+it("does not start a search fade for an ordinary tap that never became a pull", async () => {
+  const { result } = await renderHook(() => usePantryPullSearch(true, 0));
+  await act(async () => {
+    mockHandlers.onBegin!();
+    mockHandlers.onFinalize!();
+  });
+  expect(result.current.phase).toBe("closed");
+  expect(mockTransitions).toHaveLength(0);
 });
