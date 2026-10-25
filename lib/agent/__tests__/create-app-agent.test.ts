@@ -6,6 +6,7 @@ import type { PantryItem } from "~/types/PantryItem";
 import { QueryClient } from "@tanstack/react-query";
 import { pantryQueryKeys } from "~/hooks/queries/pantryQueryKeys";
 import { recipeQueryKeys } from "~/hooks/queries/recipeQueryKeys";
+import { err, ok } from "~/utils/result";
 
 jest.mock("~/lib/supabase/supabase-client", () => ({ supabase: null }));
 jest.mock("../tools/device-diet", () => ({ readDeviceDietProfile: () => null }));
@@ -13,6 +14,7 @@ jest.mock("../factory", () => ({ createCookingAgent: jest.fn(() => ({ kind: "neb
 jest.mock("~/data/api/pantryApi", () => ({
   pantryApi: {
     fetchAllPantryItems: jest.fn(),
+    fetchAllPantryItemsResult: jest.fn(),
     manageAssistantPantry: jest.fn(),
   },
 }));
@@ -34,6 +36,7 @@ const localItem: PantryItem = {
 beforeEach(() => {
   jest.clearAllMocks();
   jest.mocked(pantryApi.fetchAllPantryItems).mockResolvedValue([localItem]);
+  jest.mocked(pantryApi.fetchAllPantryItemsResult).mockResolvedValue(ok([localItem]));
   jest
     .mocked(pantryApi.manageAssistantPantry)
     .mockResolvedValue({ ok: true, status: "updated", item: localItem });
@@ -46,6 +49,58 @@ function getData(queryClient?: QueryClient): CookingDataClient {
 
 it("reads the same local pantry as the app even without Supabase", async () => {
   await expect(getData().listPantry()).resolves.toMatchObject([{ id: "local-1", name: "eggs" }]);
+  expect(pantryApi.fetchAllPantryItemsResult).toHaveBeenCalledTimes(1);
+  expect(pantryApi.fetchAllPantryItems).not.toHaveBeenCalled();
+});
+
+it("reads an empty signed-out pantry without invalidating queries or writing", async () => {
+  const client = new QueryClient();
+  const invalidate = jest.spyOn(client, "invalidateQueries");
+  jest.mocked(pantryApi.fetchAllPantryItemsResult).mockResolvedValueOnce(ok([]));
+
+  await expect(getData(client).listPantry()).resolves.toEqual([]);
+
+  expect(pantryApi.manageAssistantPantry).not.toHaveBeenCalled();
+  expect(invalidate).not.toHaveBeenCalled();
+});
+
+it("propagates signed-out read errors instead of using the old empty-array fallback", async () => {
+  const client = new QueryClient();
+  const invalidate = jest.spyOn(client, "invalidateQueries");
+  jest.mocked(pantryApi.fetchAllPantryItems).mockResolvedValueOnce([]);
+  jest
+    .mocked(pantryApi.fetchAllPantryItemsResult)
+    .mockResolvedValueOnce(err({ kind: "infra", message: "Local database unavailable" }));
+
+  await expect(getData(client).listPantry()).rejects.toThrow("Local database unavailable");
+
+  expect(pantryApi.fetchAllPantryItems).not.toHaveBeenCalled();
+  expect(pantryApi.manageAssistantPantry).not.toHaveBeenCalled();
+  expect(invalidate).not.toHaveBeenCalled();
+});
+
+it("reads actual local values without invalidating queries or writing", async () => {
+  const client = new QueryClient();
+  const invalidate = jest.spyOn(client, "invalidateQueries");
+  jest
+    .mocked(pantryApi.fetchAllPantryItemsResult)
+    .mockResolvedValueOnce(
+      ok([{ ...localItem, quantity: 0.25, unit: "kg", expiry_date: new Date("2026-11-01Z") }])
+    );
+
+  await expect(getData(client).listPantry()).resolves.toEqual([
+    {
+      id: "local-1",
+      name: "eggs",
+      quantity: 0.25,
+      unit: "kg",
+      expiryDate: "2026-11-01T00:00:00.000Z",
+      householdId: null,
+      addedByUserId: null,
+    },
+  ]);
+  expect(pantryApi.manageAssistantPantry).not.toHaveBeenCalled();
+  expect(invalidate).not.toHaveBeenCalled();
 });
 
 it("adds through the existing local pantry API", async () => {
@@ -82,8 +137,8 @@ it("uses stockId to remove only one of several local rows with the same name", a
     .mocked(pantryApi.manageAssistantPantry)
     .mockResolvedValue({ ok: true, status: "removed", removed: [{ ...localItem, id: "local-2" }] });
   jest
-    .mocked(pantryApi.fetchAllPantryItems)
-    .mockResolvedValue([localItem, { ...localItem, id: "local-2" }]);
+    .mocked(pantryApi.fetchAllPantryItemsResult)
+    .mockResolvedValue(ok([localItem, { ...localItem, id: "local-2" }]));
   await expect(
     getData().removeIngredient({ stockId: "local-2", name: "eggs" })
   ).resolves.toMatchObject({

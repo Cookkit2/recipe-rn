@@ -31,7 +31,10 @@ function MessageBubble({
         }
       >
         {message.recipeSuggestions ? (
-          <RecipeSuggestions result={message.recipeSuggestions} onOpenRecipe={onOpenRecipe} />
+          <View className="gap-3">
+            {displayContent ? <Text className="text-left">{displayContent}</Text> : null}
+            <RecipeSuggestions result={message.recipeSuggestions} onOpenRecipe={onOpenRecipe} />
+          </View>
         ) : (
           <Text className={mine ? "text-primary-foreground text-left" : "text-left"}>
             {displayContent || message.error || (message.role === "assistant" ? "…" : "")}

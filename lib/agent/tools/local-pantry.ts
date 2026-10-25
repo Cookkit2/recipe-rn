@@ -2,7 +2,7 @@ import type { pantryApi } from "~/data/api/pantryApi";
 import type { PantryItem as AppPantryItem } from "~/types/PantryItem";
 import type { CookingDataClient, PantryItem } from "./planning";
 
-type PantryApi = Pick<typeof pantryApi, "fetchAllPantryItems" | "manageAssistantPantry">;
+type PantryApi = Pick<typeof pantryApi, "fetchAllPantryItemsResult" | "manageAssistantPantry">;
 
 function toAgentItem(item: AppPantryItem): PantryItem {
   return {
@@ -41,7 +41,9 @@ export function withLocalPantry(
     ...data,
     managePantry: manage,
     async listPantry() {
-      return (await pantry.fetchAllPantryItems()).map(toAgentItem);
+      const result = await pantry.fetchAllPantryItemsResult();
+      if (result.isErr()) throw new Error(result.error.message);
+      return result.value.map(toAgentItem);
     },
     async addIngredient(input) {
       const result = await manage({ ...input, action: "add" });

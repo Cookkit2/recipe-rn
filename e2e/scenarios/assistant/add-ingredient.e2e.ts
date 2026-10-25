@@ -19,7 +19,7 @@ describe("Assistant", () => {
     await waitFor(element(by.text("Added to pantry")))
       .toBeVisible()
       .withTimeout(20000);
-    await waitFor(element(by.text("Added eggs to your pantry.")))
+    await waitFor(element(by.text("Added eggs. Pantry total: 6 count.")))
       .toBeVisible()
       .withTimeout(20000);
     await waitFor(element(by.id(TEST_IDS.search.stopAssistant)))

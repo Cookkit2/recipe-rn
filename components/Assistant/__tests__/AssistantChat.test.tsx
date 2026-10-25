@@ -176,3 +176,25 @@ it("hides unfinished emphasis markers during streaming", async () => {
   const screen = await render(<AssistantChat agent={agent} />);
   expect(screen.getByText("You have eg")).toBeTruthy();
 });
+
+it("shows pantry rows alongside recipe cards for a combined read and suggestion", async () => {
+  chatMessages.push({
+    id: "combined",
+    role: "assistant",
+    content: "Pantry (entries 1–1 of 1):\nEggs: 6 pcs",
+    activities: ["Read pantry", "Matched recipes"],
+    pantryReadStatus: "complete",
+    pantryReadPages: [
+      {
+        items: [{ id: "eggs", name: "Eggs", quantity: 6, unit: "pcs", expiryDate: null }],
+        totalCount: 1,
+        offset: 0,
+        truncated: false,
+      },
+    ],
+    recipeSuggestions: { recipes: [], pantryCount: 1, truncated: false },
+  });
+  const screen = await render(<AssistantChat agent={agent} />);
+  expect(screen.getByText("Pantry (entries 1–1 of 1):\nEggs: 6 pcs")).toBeTruthy();
+  expect(screen.getByText("No matching recipes found in the available catalog.")).toBeTruthy();
+});

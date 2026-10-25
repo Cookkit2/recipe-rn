@@ -34,6 +34,7 @@ import { createSupabaseCookingDataClient } from "../tools/supabase-cooking-data"
 import { withLocalPantry } from "../tools/local-pantry";
 import type { PantryItem } from "~/types/PantryItem";
 import type { AgentEvent } from "../types";
+import { ok } from "~/utils/result";
 import type { Database } from "~/lib/supabase/supabase-types";
 
 jest.setTimeout(60_000);
@@ -96,8 +97,8 @@ function createLocalPantryFixture(stock: StockRow[]) {
         }
         return { ok: false, error: "Unused fixture action" };
       },
-      async fetchAllPantryItems() {
-        return [...items];
+      async fetchAllPantryItemsResult() {
+        return ok([...items]);
       },
       async addPantryItem(input: Omit<PantryItem, "id" | "created_at" | "updated_at">) {
         const item = {
@@ -126,7 +127,38 @@ async function runScenario(
 ): Promise<ScenarioResult> {
   const pantry = createLocalPantryFixture(seed.stock ?? []);
   const database = await startPostgrestFixture({ ...seed, stock: [] });
-  const model = await startOpenAICompatibleServer({ script });
+  // Scripted semantic plans exercise execution through the real provider;
+  // they are fixtures, not a production keyword classifier.
+  const intents: Record<string, string> = {
+    "Add 6 eggs to my pantry.": "add_ingredient",
+    "Remove eggs from my pantry.": "remove_ingredient",
+    "Does my pantry fit my diet?": "analyze_diet",
+    "Plan one lunch from what I have.": "suggest_meal_plan",
+    "What can I cook from the fridge?": "suggest_recipes",
+    "Suggest recipes without my allergens.": "suggest_recipes",
+    "Keep adding eggs.": "add_ingredient",
+  };
+  const model = await startOpenAICompatibleServer({
+    script: (context) => {
+      if (
+        context.body.messages?.some((message) =>
+          String(message.content).includes("COOKKIT_REQUEST_ROUTER")
+        )
+      ) {
+        const intent = intents[prompt];
+        return {
+          textDeltas: [
+            JSON.stringify(
+              intent
+                ? { status: "ready", steps: [{ id: "step-1", intent, request: prompt }] }
+                : { status: "unsupported", message: "Boil the eggs." }
+            ),
+          ],
+        };
+      }
+      return script({ ...context, requestIndex: context.requestIndex - 1 });
+    },
+  });
   let client: SupabaseClient<Database> | undefined;
   try {
     client = createFixtureSupabaseClient(database);
@@ -243,11 +275,11 @@ it("adds an ingredient to the app local pantry", async () => {
       ok: true,
       item: { name: "eggs", quantity: 6, unit: "count", addedByUserId: null },
     });
-    expect(textDeltas(result.events).join("")).toBe("Added eggs to your pantry.");
+    expect(textDeltas(result.events).join("")).toBe("Added eggs. Pantry total: 6 count.");
     expect(result.model.requests).toHaveLength(2);
-    expect(
-      result.model.requests[1]?.body.messages?.some((message) => message.role === "tool")
-    ).toBe(true);
+    expect(result.model.requests[1]?.body).toMatchObject({
+      tool_choice: { type: "function", function: { name: "manage_ingredients" } },
+    });
     expect(paths(result, "/stock")).toEqual([]);
     expect(result.pantry.changes).toBe(1);
     expect(result.pantry.items).toEqual([
@@ -301,7 +333,7 @@ it("removes an ingredient from the app local pantry", async () => {
       ok: true,
       removed: [{ id: "stock-eggs", name: "eggs" }],
     });
-    expect(textDeltas(result.events).join("")).toBe("Removed eggs from your pantry.");
+    expect(textDeltas(result.events).join("")).toBe("Removed 1 pantry entry.");
     expect(paths(result, "/stock")).toEqual([]);
     expect(result.pantry.items).toEqual([]);
     expect(result.pantry.changes).toBe(1);
@@ -474,7 +506,7 @@ it("suggests recipes that overlap the fridge", async () => {
     expect(output.recipes.map((recipe) => recipe.title)).toEqual(["Spinach omelette"]);
     expect(output.recipes[0]?.coverage).toBe(1);
     expect(textDeltas(result.events).join("")).toBe("You can cook Spinach omelette.");
-    expect(result.model.requests[0]?.body).toMatchObject({
+    expect(result.model.requests[1]?.body).toMatchObject({
       tool_choice: { type: "function", function: { name: "suggest_recipes" } },
     });
   } finally {
@@ -482,14 +514,14 @@ it("suggests recipes that overlap the fridge", async () => {
   }
 });
 
-it("forwards incremental text deltas and the full answer", async () => {
+it("returns a direct scope response without executing tools", async () => {
   const result = await runScenario("How should I boil eggs?", () => ({
     textDeltas: ["Boil ", "the ", "eggs."],
   }));
   try {
     assertClean(result.events);
-    expect(textDeltas(result.events)).toEqual(["Boil ", "the ", "eggs."]);
-    expect(textDeltas(result.events).join("")).toBe("Boil the eggs.");
+    expect(result.events).toContainEqual({ type: "request-message", message: "Boil the eggs." });
+    expect(textDeltas(result.events)).toEqual([]);
     expect(result.events.some((event) => event.type === "tool-call")).toBe(false);
     expect(result.events.some((event) => event.type === "finish")).toBe(true);
     expect(
@@ -554,7 +586,7 @@ it("excludes plural allergens found past the first ingredient page", async () =>
   }
 });
 
-it("stops the tool loop after 5 model calls", async () => {
+it("stops after the one authorized write instead of repeating model writes", async () => {
   const result = await runScenario("Keep adding eggs.", ({ requestIndex }) => ({
     toolCalls: [
       {
@@ -574,11 +606,11 @@ it("stops the tool loop after 5 model calls", async () => {
     const completions = result.model.requests.filter((request) =>
       request.path.endsWith("/chat/completions")
     );
-    expect(completions).toHaveLength(5);
-    expect(result.events.filter((event) => event.type === "tool-result")).toHaveLength(5);
+    expect(completions).toHaveLength(2);
+    expect(result.events.filter((event) => event.type === "tool-result")).toHaveLength(1);
     expect(result.events.some((event) => event.type === "finish")).toBe(true);
-    expect(result.pantry.items).toHaveLength(5);
-    expect(result.pantry.changes).toBe(5);
+    expect(result.pantry.items).toHaveLength(1);
+    expect(result.pantry.changes).toBe(1);
     expect(paths(result, "/stock")).toEqual([]);
   } finally {
     await finish(result);
