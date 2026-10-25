@@ -643,7 +643,7 @@ export const recipeImportApi = {
       const recipeData: CreateRecipeData = {
         title: generatedRecipe.title,
         description: generatedRecipe.description,
-        imageUrl,
+        imageUrl: imageUrl ?? generatedRecipe.imageUrl,
         prepMinutes: generatedRecipe.prepMinutes,
         cookMinutes: generatedRecipe.cookMinutes,
         difficultyStars: generatedRecipe.difficultyStars,

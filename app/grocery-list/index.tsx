@@ -1,8 +1,8 @@
-import { useState, type ReactNode } from "react";
-import { View, FlatList, ActivityIndicator, Pressable } from "react-native";
-import { H3, P } from "~/components/ui/typography";
+import type { ReactNode } from "react";
+import { View, FlatList, ActivityIndicator } from "react-native";
+import { H3, H4, P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
-import { TrashIcon, CheckCircleIcon, XIcon, Edit2Icon, ShoppingCartIcon } from "lucide-uniwind";
+import { CheckCircleIcon } from "lucide-uniwind";
 import { useGroceryList } from "~/hooks/queries/useGroceryList";
 import { useGroceryListActions } from "~/hooks/useGroceryListActions";
 import GroceryListItem from "~/components/GroceryList/GroceryListItem";
@@ -10,8 +10,7 @@ import GroceryListHeader from "~/components/GroceryList/GroceryListHeader";
 import { Stack, Link } from "expo-router";
 import { useMealPlanCalendar } from "~/store/MealPlanCalendarContext";
 import { WeekNavigationHeader } from "~/app/meal-plan/components/WeekNavigationHeader";
-import { toast } from "sonner-native";
-import { shopForIngredients } from "~/lib/ingredient-shopping";
+import GroceryListHeaderRight from "~/components/GroceryList/GroceryListHeaderRight";
 import useColors from "~/hooks/useColor";
 
 export default function GroceryListPage() {
@@ -27,36 +26,7 @@ export default function GroceryListPage() {
     toggleItemSelection,
     handleDeleteSelected,
   } = useGroceryListActions();
-  const [isOpeningStore, setIsOpeningStore] = useState(false);
-
   const allItems = sections.flatMap((section) => section.items);
-  const hasRemainingItems = allItems.some(
-    (item) => !item.isChecked && !item.isCovered && item.neededQuantity > 0
-  );
-
-  const handleShopForIngredients = async () => {
-    if (isOpeningStore) return;
-    setIsOpeningStore(true);
-
-    try {
-      const result = await shopForIngredients("grabmart", allItems);
-      switch (result) {
-        case "empty":
-          toast("No items left to buy");
-          break;
-        case "opened":
-          toast.success("List copied");
-          break;
-        case "copied":
-          toast.error("List copied. Open GrabMart to shop.");
-          break;
-      }
-    } catch {
-      toast.error("Couldn't copy your list. Please try again.");
-    } finally {
-      setIsOpeningStore(false);
-    }
-  };
 
   const weekNavigation = (
     <WeekNavigationHeader
@@ -73,9 +43,20 @@ export default function GroceryListPage() {
       }}
     />
   );
+  const canSelectItems =
+    !isLoading && !error && !isEmpty && hasNeededItems && !stats.allCheckedOrCovered;
+  const toolbar = (
+    <GroceryListHeaderRight
+      items={allItems}
+      canSelectItems={canSelectItems}
+      isSelectionMode={canSelectItems && isSelectionMode}
+      onToggleSelection={toggleSelectionMode}
+      onDeleteSelected={handleDeleteSelected}
+    />
+  );
   if (error)
     return (
-      <GroceryListState header={weekNavigation}>
+      <GroceryListState header={weekNavigation} toolbar={toolbar}>
         <P>Couldn't load the shopping list.</P>
         <Button variant="outline" onPress={() => refetch()}>
           <P>Try again</P>
@@ -86,7 +67,7 @@ export default function GroceryListPage() {
   // Loading state
   if (isLoading) {
     return (
-      <GroceryListState header={weekNavigation}>
+      <GroceryListState header={weekNavigation} toolbar={toolbar}>
         <ActivityIndicator size="large" />
         <P className="mt-4 text-muted-foreground">Loading grocery list...</P>
       </GroceryListState>
@@ -96,17 +77,16 @@ export default function GroceryListPage() {
   // Empty state
   if (isEmpty) {
     return (
-      <GroceryListState header={weekNavigation}>
-        <View className="w-24 h-24 rounded-full bg-muted items-center justify-center mb-6">
-          <ShoppingCartIcon className="text-muted-foreground" size={48} strokeWidth={1.5} />
-        </View>
-        <H3 className="font-bowlby-one text-center mb-2">Your list is empty</H3>
-        <P className="text-muted-foreground text-center max-w-xs mb-8">
-          Add recipes to your meal plan, and the ingredients you need will appear here.
+      <GroceryListState header={weekNavigation} toolbar={toolbar}>
+        <H4 className="text-muted-foreground text-center font-urbanist-semibold">
+          Your grocery list is empty
+        </H4>
+        <P className="text-muted-foreground text-center font-urbanist-regular text-sm mt-1">
+          Add recipes to your meal plan
         </P>
         <Link href="/meal-plan" asChild>
-          <Button variant="default" className="bg-foreground">
-            <P className="font-urbanist-semibold text-background">Plan Meals</P>
+          <Button variant="outline" className="mt-5">
+            <P className="font-urbanist-semibold text-sm text-muted-foreground">Plan meals</P>
           </Button>
         </Link>
       </GroceryListState>
@@ -116,7 +96,7 @@ export default function GroceryListPage() {
   // All items covered/checked state
   if (!hasNeededItems || stats.allCheckedOrCovered) {
     return (
-      <GroceryListState header={weekNavigation}>
+      <GroceryListState header={weekNavigation} toolbar={toolbar}>
         <View className="items-center">
           <View className="w-24 h-24 rounded-full bg-green-500/20 items-center justify-center mb-6">
             <CheckCircleIcon className="text-green-500" size={48} strokeWidth={1.5} />
@@ -147,81 +127,14 @@ export default function GroceryListPage() {
           headerTransparent: false,
           headerStyle: { backgroundColor: colors.background },
           contentStyle: { backgroundColor: colors.background },
-          unstable_headerRightItems: () =>
-            isSelectionMode
-              ? [
-                  {
-                    type: "custom",
-                    element: (
-                      <Pressable
-                        onPress={toggleSelectionMode}
-                        className="px-1.5"
-                        accessibilityRole="button"
-                        accessibilityLabel="Cancel selection"
-                        accessibilityHint="Exits selection mode without deleting items"
-                      >
-                        <XIcon className="text-muted-foreground" size={24} />
-                      </Pressable>
-                    ),
-                  },
-                  {
-                    type: "custom",
-                    element: (
-                      <Pressable
-                        onPress={handleDeleteSelected}
-                        className="px-1.5"
-                        accessibilityRole="button"
-                        accessibilityLabel="Delete selected items"
-                        accessibilityHint="Permanently deletes the selected items"
-                      >
-                        <TrashIcon className="text-destructive" size={24} />
-                      </Pressable>
-                    ),
-                  },
-                ]
-              : [
-                  {
-                    type: "custom",
-                    element: (
-                      <Pressable
-                        onPress={toggleSelectionMode}
-                        className="px-1.5"
-                        accessibilityRole="button"
-                        accessibilityLabel="Edit selection mode"
-                        accessibilityHint="Enables selection mode to delete multiple items"
-                      >
-                        <Edit2Icon className="text-foreground" size={24} />
-                      </Pressable>
-                    ),
-                  },
-                ],
           headerTitle: isSelectionMode ? `${selectedItemNames.size} Selected` : "Grocery List",
         }}
       />
+      {toolbar}
       {weekNavigation}
       <FlatList
         data={allItems}
-        ListHeaderComponent={
-          <>
-            {hasRemainingItems && !isSelectionMode && (
-              <View className="px-5 mb-6">
-                <Button
-                  variant="outline"
-                  onPress={handleShopForIngredients}
-                  disabled={isOpeningStore}
-                  accessibilityLabel="Shop on GrabMart"
-                  accessibilityHint="Copies remaining ingredients and opens the grocery store"
-                >
-                  <P className="font-urbanist-semibold">GrabMart</P>
-                </Button>
-                <P className="text-muted-foreground text-xs mt-2">
-                  Copies remaining items so you can shop on GrabMart.
-                </P>
-              </View>
-            )}
-            <GroceryListHeader />
-          </>
-        }
+        ListHeaderComponent={<GroceryListHeader />}
         keyExtractor={(item) => item.normalizedName}
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={{ paddingBottom: 32 }}
@@ -240,7 +153,15 @@ export default function GroceryListPage() {
   );
 }
 
-function GroceryListState({ header, children }: { header: ReactNode; children: ReactNode }) {
+function GroceryListState({
+  header,
+  toolbar,
+  children,
+}: {
+  header: ReactNode;
+  toolbar: ReactNode;
+  children: ReactNode;
+}) {
   const colors = useColors();
 
   return (
@@ -251,9 +172,9 @@ function GroceryListState({ header, children }: { header: ReactNode; children: R
           headerStyle: { backgroundColor: colors.background },
           contentStyle: { backgroundColor: colors.background },
           headerTitle: "Grocery List",
-          unstable_headerRightItems: () => [],
         }}
       />
+      {toolbar}
       {header}
       <View className="flex-1 items-center justify-center px-6">{children}</View>
     </View>

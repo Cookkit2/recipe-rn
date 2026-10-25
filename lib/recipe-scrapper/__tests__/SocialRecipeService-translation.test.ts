@@ -87,3 +87,23 @@ it("enforces complete estimated amounts at the deployed proxy's JSON schema boun
     getAnalysisResponseSchema().properties.recipe.properties.ingredients.items.required
   ).not.toContain("amountSource");
 });
+
+it("restricts published-subtitle quotations to cooking instructions while asking for English", () => {
+  const allowed = ["Kukus selama 15 minit."];
+  const request = buildSocialRecipeRequest("extract", allowed);
+  expect(request.systemPrompt).toContain("English");
+  const validate = new Ajv({ strict: false }).compile(request.responseSchema!);
+  const recipe = JSON.parse(response());
+  expect(validate(recipe)).toBe(true);
+  recipe.recipe.steps[0].sourceQuote = "Steamed egg is ready";
+  expect(validate(recipe)).toBe(false);
+});
+
+it("requires enough translated steps to cover each explicit cooking instruction", () => {
+  const request = buildSocialRecipeRequest("extract", [
+    "Kacau sehingga sebati.",
+    "Kukus selama 15 minit.",
+  ]);
+  const validate = new Ajv({ strict: false }).compile(request.responseSchema!);
+  expect(validate(JSON.parse(response()))).toBe(false);
+});

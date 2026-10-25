@@ -51,3 +51,15 @@ it("extracts cue text without promoting notes, timestamps or styling into instru
   expect(extractWebVttText("<html>Not a subtitle file</html>")).toBe("");
   expect(extractWebVttText("WEBVTT\n" + "x".repeat(128_000))).toBe("");
 });
+
+it("reads the selected video's published cover frame without accepting another host", () => {
+  const cover = "https://p16.tiktokcdn.com/finished-dish.jpg";
+  const html = page().replace(
+    '"subtitleInfos":',
+    '"originCover":' + JSON.stringify(cover) + ',"subtitleInfos":'
+  );
+  expect(extractTikTokMetadata(html, url)?.image).toBe(cover);
+  expect(
+    extractTikTokMetadata(html.replace(cover, "http://127.0.0.1/private"), url)?.image
+  ).toBeUndefined();
+});

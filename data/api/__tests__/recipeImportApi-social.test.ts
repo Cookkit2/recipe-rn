@@ -129,6 +129,18 @@ describe("recipeImportApi.importRecipeFromSocialMedia", () => {
     expect(result.shoppingList?.missingIngredients).toHaveLength(1);
   });
 
+  it("persists the video's cover image with the recipe", async () => {
+    mockAnalyzeForRecipe.mockResolvedValue({
+      isCookingVideo: true,
+      confidence: 0.9,
+      recipe: { ...SAMPLE_RECIPE, imageUrl: "data:image/jpeg;base64,YWJj" },
+    });
+    await recipeImportApi.importRecipeFromSocialMedia(SAMPLE_RECIPE.sourceUrl, "tiktok", undefined);
+    expect(mockCreateRecipe).toHaveBeenCalledWith(
+      expect.objectContaining({ imageUrl: "data:image/jpeg;base64,YWJj" })
+    );
+  });
+
   it("surfaces a graceful fallback when no recipe is detected (e.g. not a recipe post)", async () => {
     mockAnalyzeForRecipe.mockResolvedValue({
       isCookingVideo: false,

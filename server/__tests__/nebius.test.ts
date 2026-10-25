@@ -120,80 +120,88 @@ describe("Nebius provider boundary", () => {
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
 
-  it("accepts labeled estimates and source quotes for social recipes without forcing a repair", async () => {
-    fetcher.mockResolvedValue(
-      completion(
-        JSON.stringify({
-          isCookingVideo: true,
-          confidence: 0.9,
-          recipe: {
-            title: "Eggs",
-            description: "",
-            prepMinutes: 0,
-            cookMinutes: 15,
-            servings: 2,
-            servingsSource: "estimated",
-            difficultyStars: 1,
-            ingredients: [
-              {
-                name: "chicken",
-                quantity: 300,
-                unit: "g",
-                amountSource: "estimated",
-                notes: "Amount not specified; estimated for two servings",
-              },
-            ],
-            steps: [
-              {
-                step: 1,
-                title: "Steam",
-                description: "Steam for 15 minutes.",
-                sourceQuote: "Steam for 15 minutes.",
-              },
-            ],
-          },
-        })
-      )
-    );
+  it("repairs missing social ingredient amounts into explicitly marked positive estimates", async () => {
+    const recipe = {
+      title: "Eggs",
+      description: "",
+      prepMinutes: 0,
+      cookMinutes: 15,
+      servings: 2,
+      servingsSource: "estimated",
+      difficultyStars: 1,
+      ingredients: [{ name: "chicken", quantity: 0, unit: "", amountSource: "estimated" }],
+      steps: [
+        {
+          step: 1,
+          title: "Steam",
+          description: "Steam for 15 minutes.",
+          sourceQuote: "Kukus selama 15 minit.",
+        },
+      ],
+    };
+    const wrap = () => JSON.stringify({ isCookingVideo: true, confidence: 0.9, recipe });
+    fetcher.mockResolvedValueOnce(completion(wrap()));
+    recipe.ingredients = [
+      { name: "chicken", quantity: 150, unit: "grams", amountSource: "estimated" },
+    ];
+    fetcher.mockResolvedValueOnce(completion(wrap()));
     const result = await run(
-      buildSocialRecipeRequest("Steam for 15 minutes. Chicken amount not specified.")
+      buildSocialRecipeRequest("Kukus selama 15 minit. Chicken amount not specified.")
     );
     expect(JSON.parse(result.content).recipe.ingredients[0]).toEqual(
-      expect.objectContaining({ quantity: 300, unit: "g", amountSource: "estimated" })
+      expect.objectContaining({ quantity: 150, unit: "grams", amountSource: "estimated" })
     );
-    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(fetcher).toHaveBeenCalledTimes(2);
   });
 
-  it.each([
-    { quantity: 0, unit: "g" },
-    { quantity: 300, unit: "" },
-  ])("rejects invalid social-recipe amounts after one repair: %j", async (amount) => {
-    const content = JSON.stringify({
+  it("repairs multiple source quotation mismatches together using the rejected answer and validation paths", async () => {
+    const output = {
       isCookingVideo: true,
       confidence: 0.9,
       recipe: {
-        title: "Steamed chicken",
+        title: "Steamed eggs",
         description: "",
         prepMinutes: 0,
         cookMinutes: 15,
         servings: 2,
         servingsSource: "estimated",
         difficultyStars: 1,
-        ingredients: [{ name: "chicken", ...amount, amountSource: "estimated" }],
+        ingredients: [{ name: "egg", quantity: 5, unit: "piece", amountSource: "stated" }],
         steps: [
+          { step: 1, title: "Add eggs", description: "Add eggs.", sourceQuote: "salt water" },
           {
-            step: 1,
+            step: 2,
             title: "Steam",
             description: "Steam for 15 minutes.",
-            sourceQuote: "Steam for 15 minutes.",
+            sourceQuote: "minced chicken garlic",
           },
         ],
       },
+    };
+    const rejected = JSON.stringify(output);
+    fetcher.mockImplementation(async (_url, options) => {
+      const body = JSON.parse(options!.body as string);
+      const correction = body.messages.at(-1);
+      const hasFeedback =
+        correction.role === "user" &&
+        correction.content.includes("/recipe/steps/0/sourceQuote") &&
+        correction.content.includes("/recipe/steps/1/sourceQuote") &&
+        correction.content.includes("enum") &&
+        body.messages.some(
+          (message: any) => message.role === "assistant" && message.content === rejected
+        );
+      if (!hasFeedback) return completion(rejected);
+      output.recipe.steps[0]!.sourceQuote = "Add eggs.";
+      output.recipe.steps[1]!.sourceQuote = "Steam for 15 minutes.";
+      return completion(JSON.stringify(output));
     });
-    fetcher.mockImplementation(async () => completion(content));
-    await expect(
-      run(buildSocialRecipeRequest("Steam for 15 minutes. Chicken amount not specified."))
-    ).rejects.toThrow("valid recipe data");
+    const result = await run(
+      buildSocialRecipeRequest("Add eggs. salt water Steam for 15 minutes. minced chicken garlic", [
+        "Add eggs.",
+        "Steam for 15 minutes.",
+      ])
+    );
+    expect(JSON.parse(result.content).recipe.steps[0].sourceQuote).toBe("Add eggs.");
     expect(fetcher).toHaveBeenCalledTimes(2);
   });
 

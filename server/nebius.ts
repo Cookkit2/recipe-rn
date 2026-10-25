@@ -5,7 +5,7 @@ export const TEXT_MODEL = "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B";
 export const VISION_MODEL = "nvidia/Nemotron-3.5-Super-VL";
 const ENDPOINT = "https://api.tokenfactory.nebius.com/v1/chat/completions";
 const RETRYABLE_STATUS = new Set([408, 425, 429, 500, 502, 503, 504]);
-const ajv = new Ajv({ strict: false, allErrors: false });
+const ajv = new Ajv({ strict: false, allErrors: true });
 
 function checkSchemaComplexity(value: unknown, depth = 0): void {
   if (depth > 16) throw new AIError("Response schema is too complex.", 400);
@@ -120,6 +120,8 @@ export async function generateNebiusContent(
   signal?.addEventListener("abort", abort, { once: true });
   const timeout = setTimeout(abort, 60_000);
   let repairs = 0;
+  let rejectedAnswer = "";
+  let correction = "";
   let transientFailures = 0;
   let promptTokens = 0;
   let completionTokens = 0;
@@ -142,6 +144,15 @@ export async function generateNebiusContent(
                   : ""),
             },
             { role: "user", content },
+            ...(repairs
+              ? [
+                  { role: "assistant", content: rejectedAnswer },
+                  {
+                    role: "user",
+                    content: `Correct the rejected answer above and return the complete JSON object. Validation failure: ${correction}. Follow the original schema, including allowed sourceQuote values. Do not add source ingredients or cooking actions.`,
+                  },
+                ]
+              : []),
           ],
           max_tokens: images.length > 1 ? 4096 : images.length ? 2048 : 8192,
           temperature: 0,
@@ -178,14 +189,29 @@ export async function generateNebiusContent(
       const choice = data.choices?.[0];
       let parsed: unknown;
       try {
+        rejectedAnswer =
+          typeof choice?.message?.content === "string"
+            ? choice.message.content.slice(0, 40_000)
+            : "";
+        correction = "The answer was missing or truncated; return complete JSON.";
         if (choice?.finish_reason !== "stop" || typeof choice.message?.content !== "string") {
           throw new Error("Missing or truncated answer.");
         }
         const text = choice.message.content
           .trim()
           .replace(/^```(?:json)?\s*([\s\S]*?)\s*```$/i, "$1");
+        correction = "The answer was not valid JSON.";
         parsed = JSON.parse(text);
-        if (!validate(parsed)) throw new Error("Schema mismatch.");
+        if (!validate(parsed)) {
+          correction = JSON.stringify(
+            validate.errors?.slice(0, 12).map(({ instancePath, keyword, message }) => ({
+              instancePath,
+              keyword,
+              message,
+            }))
+          );
+          throw new Error("Schema mismatch.");
+        }
       } catch {
         if (repairs++ < 1) continue;
         throw new AIError("Nebius couldn't return valid recipe data. Please try again.");
