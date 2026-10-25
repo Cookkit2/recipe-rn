@@ -1,3 +1,4 @@
+import { useRecipeLoadingGlow } from "~/components/Recipe/Loading/RecipeLoadingGlowProvider";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import type { NativeStackNavigationOptions } from "expo-router/native-stack";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
@@ -136,6 +137,7 @@ function RecipeDetailsContent({
   const [tailoredRecipe, setTailoredRecipe] = useState<Recipe | null>(null);
   const [mode, setMode] = useState<"original" | "tailored">("original");
   const [isTailoring, setIsTailoring] = useState(false);
+  useRecipeLoadingGlow(isTailoring);
   const { data: isInPlan, isLoading: isCheckingPlan } = useIsRecipeInPlan(recipeId);
   const addToMealPlan = useAddToMealPlan();
 
