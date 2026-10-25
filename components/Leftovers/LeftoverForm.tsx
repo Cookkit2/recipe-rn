@@ -1,21 +1,18 @@
 import { useState } from "react";
-import {
-  Modal,
-  View,
-  ScrollView,
-  Switch,
-  Pressable,
-  KeyboardAvoidingView,
-  Platform,
-} from "react-native";
+import { Modal, View, ScrollView, Switch, KeyboardAvoidingView, Platform } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { toast } from "sonner-native";
-import { H3, P } from "~/components/ui/typography";
+import { SymbolView } from "expo-symbols";
+import { XIcon } from "lucide-uniwind";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { H1, H4, P } from "~/components/ui/typography";
+import { Card, CardContent } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import { useLeftoverActions } from "~/hooks/queries/useLeftovers";
 import { defaultLeftoverReminder } from "~/utils/leftovers";
 import type { Leftover } from "~/types/Leftover";
+import useColors from "~/hooks/useColor";
 
 export default function LeftoverForm({
   item,
@@ -28,6 +25,8 @@ export default function LeftoverForm({
   recipeName?: string;
   onClose: () => void;
 }) {
+  const { bottom } = useSafeAreaInsets();
+  const colors = useColors();
   const [name, setName] = useState(item?.name ?? recipeName ?? "");
   const [servings, setServings] = useState(String(item?.servings ?? 1));
   const [cookedAt, setCookedAt] = useState(item?.cookedAt ?? new Date());
@@ -37,6 +36,9 @@ export default function LeftoverForm({
   );
   const [picker, setPicker] = useState<"cooked" | "date" | "time" | null>(null);
   const { save } = useLeftoverActions();
+  const close = () => {
+    if (!save.isPending) onClose();
+  };
   const submit = async () => {
     try {
       const result = await save.mutateAsync({
@@ -60,96 +62,182 @@ export default function LeftoverForm({
     }
   };
   return (
-    <Modal visible transparent animationType="slide" onRequestClose={onClose}>
+    <Modal
+      visible
+      animationType="slide"
+      presentationStyle="pageSheet"
+      allowSwipeDismissal={!save.isPending}
+      onRequestClose={close}
+    >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="flex-1 justify-end bg-black/40"
+        className="flex-1 bg-background"
       >
         <ScrollView
+          className="flex-1"
           keyboardShouldPersistTaps="handled"
-          className="bg-background rounded-t-3xl max-h-[85%]"
-          contentContainerStyle={{ padding: 24, paddingBottom: 40, gap: 16 }}
+          keyboardDismissMode="on-drag"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 24 }}
         >
-          <H3>{item ? "Edit leftovers" : "Save leftovers"}</H3>
-          <Input
-            value={name}
-            onChangeText={setName}
-            placeholder="Food name"
-            accessibilityLabel="Leftover food name"
-          />
-          <P>Servings left</P>
-          <Input
-            value={servings}
-            onChangeText={setServings}
-            keyboardType="decimal-pad"
-            accessibilityLabel="Servings left"
-          />
-          <Pressable onPress={() => setPicker("cooked")} accessibilityRole="button">
-            <P>Prepared {cookedAt.toLocaleDateString()}</P>
-          </Pressable>
-          <View className="flex-row justify-between items-center">
-            <P>Remind me</P>
-            <Switch
-              accessibilityLabel="Leftover reminder"
-              value={reminderEnabled}
-              onValueChange={setReminderEnabled}
-            />
+          <View className="mt-24 mb-4 px-6">
+            <H1 className="font-bowlby-one pt-2">{item ? "Edit leftovers" : "Add leftovers"}</H1>
+            <P className="font-urbanist-regular text-muted-foreground">
+              Save a dish and choose when to be reminded.
+            </P>
           </View>
-          {reminderEnabled && (
-            <View className="flex-row gap-3">
-              <Button variant="outline" onPress={() => setPicker("date")}>
-                <P>{remindAt.toLocaleDateString()}</P>
-              </Button>
-              <Button variant="outline" onPress={() => setPicker("time")}>
-                <P>
-                  {remindAt.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
+
+          <Card className="mx-6 mt-4 border-none shadow-none">
+            <CardContent className="py-6 gap-3 bg-muted/50 rounded-3xl">
+              <H4 className="font-urbanist-bold">Food</H4>
+              <Input
+                value={name}
+                onChangeText={setName}
+                placeholder="Food name"
+                accessibilityLabel="Leftover food name"
+                className="text-foreground text-left"
+              />
+              <P className="font-urbanist-semibold">Servings left</P>
+              <Input
+                value={servings}
+                onChangeText={setServings}
+                keyboardType="decimal-pad"
+                accessibilityLabel="Servings left"
+                className="text-foreground"
+              />
+              <Button
+                variant="ghost"
+                className="flex-row justify-between px-0"
+                accessibilityLabel="Prepared date"
+                onPress={() => setPicker("cooked")}
+              >
+                <P className="font-urbanist-semibold">Prepared</P>
+                <P className="font-urbanist-regular text-muted-foreground">
+                  {cookedAt.toLocaleDateString()}
                 </P>
               </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="mx-6 mt-4 border-none shadow-none">
+            <CardContent className="py-6 gap-3 bg-muted/50 rounded-3xl">
+              <H4 className="font-urbanist-bold">Reminder</H4>
+              <View className="flex-row justify-between items-center">
+                <P className="font-urbanist-semibold">Remind me</P>
+                <Switch
+                  accessibilityLabel="Leftover reminder"
+                  value={reminderEnabled}
+                  onValueChange={setReminderEnabled}
+                  trackColor={{ false: colors.muted, true: colors.foreground }}
+                  thumbColor={colors.background}
+                />
+              </View>
+              {reminderEnabled && (
+                <View className="flex-row gap-3">
+                  <Button
+                    variant="outline"
+                    className="flex-1 rounded-full"
+                    accessibilityLabel="Reminder date"
+                    onPress={() => setPicker("date")}
+                  >
+                    <P className="font-urbanist-semibold">{remindAt.toLocaleDateString()}</P>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1 rounded-full"
+                    accessibilityLabel="Reminder time"
+                    onPress={() => setPicker("time")}
+                  >
+                    <P className="font-urbanist-semibold">
+                      {remindAt.toLocaleTimeString(undefined, {
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
+                    </P>
+                  </Button>
+                </View>
+              )}
+            </CardContent>
+          </Card>
+          {picker && (
+            <View className="mx-6 mt-4">
+              <DateTimePicker
+                value={picker === "cooked" ? cookedAt : remindAt}
+                maximumDate={picker === "cooked" ? new Date() : undefined}
+                mode={picker === "time" ? "time" : "date"}
+                onChange={(_, value) => {
+                  if (value) {
+                    if (picker === "cooked") {
+                      const date = new Date(value);
+                      date.setHours(0, 0, 0, 0);
+                      setCookedAt(date);
+                    } else if (picker === "date")
+                      setRemindAt(
+                        new Date(
+                          value.getFullYear(),
+                          value.getMonth(),
+                          value.getDate(),
+                          remindAt.getHours(),
+                          remindAt.getMinutes()
+                        )
+                      );
+                    else
+                      setRemindAt(
+                        new Date(
+                          remindAt.getFullYear(),
+                          remindAt.getMonth(),
+                          remindAt.getDate(),
+                          value.getHours(),
+                          value.getMinutes()
+                        )
+                      );
+                  }
+                  setPicker(null);
+                }}
+              />
             </View>
           )}
-          {picker && (
-            <DateTimePicker
-              value={picker === "cooked" ? cookedAt : remindAt}
-              maximumDate={picker === "cooked" ? new Date() : undefined}
-              mode={picker === "time" ? "time" : "date"}
-              onChange={(_, value) => {
-                if (value) {
-                  if (picker === "cooked") {
-                    const date = new Date(value);
-                    date.setHours(0, 0, 0, 0);
-                    setCookedAt(date);
-                  } else if (picker === "date")
-                    setRemindAt(
-                      new Date(
-                        value.getFullYear(),
-                        value.getMonth(),
-                        value.getDate(),
-                        remindAt.getHours(),
-                        remindAt.getMinutes()
-                      )
-                    );
-                  else
-                    setRemindAt(
-                      new Date(
-                        remindAt.getFullYear(),
-                        remindAt.getMonth(),
-                        remindAt.getDate(),
-                        value.getHours(),
-                        value.getMinutes()
-                      )
-                    );
-                }
-                setPicker(null);
-              }}
-            />
-          )}
-          <Button onPress={submit} isLoading={save.isPending}>
-            <P>Save leftovers</P>
-          </Button>
-          <Button variant="ghost" disabled={save.isPending} onPress={onClose}>
-            <P>Cancel</P>
-          </Button>
         </ScrollView>
+        <View className="absolute right-6 top-6">
+          <Button
+            size="icon"
+            variant="ghost"
+            accessibilityLabel="Close"
+            disabled={save.isPending}
+            onPress={close}
+          >
+            {Platform.OS === "ios" ? (
+              <SymbolView name="xmark" tintColor={colors.foreground} size={20} />
+            ) : (
+              <XIcon className="text-foreground" size={20} strokeWidth={2.618} />
+            )}
+          </Button>
+        </View>
+        <View
+          className="border-t border-border py-3 px-6 bg-background"
+          style={{ paddingBottom: Math.max(bottom, 12) }}
+        >
+          <View className="flex-row items-center justify-between">
+            <Button
+              size="lg"
+              variant="outline"
+              className="rounded-full px-6"
+              disabled={save.isPending}
+              onPress={close}
+            >
+              <H4 className="font-urbanist-semibold text-foreground">Cancel</H4>
+            </Button>
+            <Button
+              size="lg"
+              className="rounded-full px-6"
+              accessibilityLabel="Save leftovers"
+              onPress={submit}
+              isLoading={save.isPending}
+            >
+              <H4 className="font-urbanist-semibold text-primary-foreground">Save</H4>
+            </Button>
+          </View>
+        </View>
       </KeyboardAvoidingView>
     </Modal>
   );

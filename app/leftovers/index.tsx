@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { View, FlatList, ActivityIndicator, Alert } from "react-native";
 import { Stack, useLocalSearchParams } from "expo-router";
-import { PlusIcon } from "lucide-uniwind";
 import { toast } from "sonner-native";
 import { Button } from "~/components/ui/button";
 import { Text } from "~/components/ui/text";
@@ -9,9 +8,11 @@ import { H4, P } from "~/components/ui/typography";
 import { useLeftovers, useLeftoverActions } from "~/hooks/queries/useLeftovers";
 import LeftoverForm from "~/components/Leftovers/LeftoverForm";
 import type { Leftover, LeftoverStatus } from "~/types/Leftover";
+import useColors from "~/hooks/useColor";
 
 export default function LeftoversPage() {
   const params = useLocalSearchParams<{ recipeId?: string; recipeName?: string; add?: string }>();
+  const colors = useColors();
   const [formOpen, setFormOpen] = useState(params.add === "1");
   const [editing, setEditing] = useState<Leftover | undefined>();
   const { data: items = [], isLoading, error, refetch } = useLeftovers();
@@ -25,24 +26,18 @@ export default function LeftoversPage() {
   };
   return (
     <View className="flex-1 bg-background">
-      <Stack.Screen
-        options={{
-          headerTitle: "Leftovers",
-          headerRight: () => (
-            <Button
-              variant="ghost"
-              size="icon"
-              accessibilityLabel="Add leftovers"
-              onPress={() => {
-                setEditing(undefined);
-                setFormOpen(true);
-              }}
-            >
-              <PlusIcon className="text-foreground" size={20} strokeWidth={2.618} />
-            </Button>
-          ),
-        }}
-      />
+      <Stack.Screen options={{ headerTitle: "Leftovers" }} />
+      <Stack.Toolbar placement="right">
+        <Stack.Toolbar.Button
+          icon="plus"
+          tintColor={colors.foreground}
+          accessibilityLabel="Add leftovers"
+          onPress={() => {
+            setEditing(undefined);
+            setFormOpen(true);
+          }}
+        />
+      </Stack.Toolbar>
       {isLoading ? (
         <ActivityIndicator className="mt-8" />
       ) : error ? (
