@@ -11,6 +11,7 @@
  * speech engine (hooks/useSpeechRecognition.ts) is shared.
  */
 
+import { normalizeIngredientIdentity } from "./ingredient-identity";
 import * as Crypto from "expo-crypto";
 import { titleCase } from "~/utils/text-formatter";
 import type { CreatePantryItem } from "~/store/CreateIngredientContext";
@@ -123,24 +124,10 @@ function numberWordToValue(word: string): number | undefined {
 }
 
 /**
- * Simple plural -> singular form for display names. Matches the rule set
- * used elsewhere in the codebase (see VoiceCommandParser.normalizeIngredientName).
+ * Shared food noun normalization for display names and catalog matching.
  */
 export function singularize(word: string): string {
-  const rules = [
-    { pattern: /ies$/i, replacement: "y" }, // berries -> berry
-    { pattern: /([^aeiou])oes$/i, replacement: "$1o" }, // tomatoes -> tomato (keep shoes -> sho? handled below)
-    { pattern: /ves$/i, replacement: "f" }, // knives -> knife
-    { pattern: /(sh|ch|s|x|z)es$/i, replacement: "$1" }, // dishes -> dish, boxes -> box, buses -> bus
-    { pattern: /oes$/i, replacement: "" }, // potatoes already handled above; toes -> toe fallback
-    { pattern: /s$/i, replacement: "" }, // eggs -> egg
-  ];
-  for (const rule of rules) {
-    if (rule.pattern.test(word)) {
-      return word.replace(rule.pattern, rule.replacement);
-    }
-  }
-  return word;
+  return normalizeIngredientIdentity(word);
 }
 
 /**
@@ -221,12 +208,7 @@ export function parseFragment(fragment: string): ParsedPantryCandidate | undefin
   if (nameTokens.length === 0) return undefined;
 
   // Singularize the head noun for friendlier dedup against the catalog.
-  const head = nameTokens[0];
-  if (head) {
-    nameTokens[0] = singularize(head);
-  }
-
-  const name = titleCase(nameTokens.join(" "));
+  const name = titleCase(singularize(nameTokens.join(" ")));
 
   if (!name) return undefined;
 

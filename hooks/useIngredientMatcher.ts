@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef } from "react";
 
-import { isIngredientMatch } from "~/utils/ingredient-matching";
+import { ingredientClarification } from "~/utils/ingredient-identity";
+import { normalizeRecipeIngredient } from "~/utils/recipe-ingredient-match";
 
 import type { PantryItem } from "~/types/PantryItem";
 import type { RecipeIngredient } from "~/types/Recipe";
@@ -53,34 +54,13 @@ interface IngredientMatcherReturn {
   getMissingIngredients: (ingredients: RecipeIngredient[]) => RecipeIngredient[];
 }
 
-/**
- * Build a pre-computed index from pantry items for fast exact/synonym ingredient lookups.
- *
- * Optimization: This adds an O(1) lookup path for ingredients whose normalized text
- * matches a pantry item name or one of its synonyms, reducing the number of
- * expensive `isIngredientMatch` calls in the common case.
- *
- * - n = number of recipe ingredients
- * - m = number of pantry items
- * - s = average synonyms per pantry item
- *
- * When most ingredients match via the index (e.g., 20 ingredients × 50 pantry items × 3 synonyms),
- * we go from ~3,000 `isIngredientMatch` calls per render to ~60 index lookups plus a small
- * number of fallback scans for non-exact matches.
- *
- * Note: The overall worst-case complexity of the matching algorithm remains O(n*m*s) because
- * we still fall back to scanning pantry items with `isIngredientMatch` when no direct index
- * hit is found. The index improves average-case performance but does not change the
- * theoretical worst-case bound.
- *
- * The index maps normalized pantry item names and all their synonyms to the pantry item,
- * enabling constant-time lookups for exact and synonym-based ingredient matching.
- */
+/** Index complete names and explicit synonyms; never categories or keyword fragments. */
 const buildPantryIndex = (pantryItems: PantryItem[]): Map<string, PantryItem> => {
   const index = new Map<string, PantryItem>();
 
   for (const pantryItem of pantryItems) {
-    const normalizedName = pantryItem.name.toLowerCase().trim();
+    if (ingredientClarification(pantryItem.name)) continue;
+    const normalizedName = normalizeRecipeIngredient(pantryItem.name);
 
     // Index the main name (preserve first-in-array match if duplicates exist)
     if (!index.has(normalizedName)) {
@@ -90,10 +70,14 @@ const buildPantryIndex = (pantryItems: PantryItem[]): Map<string, PantryItem> =>
     // Index all synonyms
     if (pantryItem.synonyms && pantryItem.synonyms.length > 0) {
       for (const synonymEntry of pantryItem.synonyms) {
-        const normalizedSynonym = synonymEntry.synonym.toLowerCase().trim();
+        const normalizedSynonym = normalizeRecipeIngredient(synonymEntry.synonym);
 
         // Preserve first-in-array match for duplicate synonyms as well
-        if (!index.has(normalizedSynonym)) {
+        if (
+          normalizedSynonym &&
+          !ingredientClarification(synonymEntry.synonym) &&
+          !index.has(normalizedSynonym)
+        ) {
           index.set(normalizedSynonym, pantryItem);
         }
       }
@@ -127,29 +111,12 @@ export function useIngredientMatcher(
   /**
    * Find a matching pantry item for a single ingredient using O(1) index lookup
    */
-  const findMatch = useCallback(
-    (ingredient: RecipeIngredient): PantryItem | null => {
-      const normalizedName = ingredient.name.toLowerCase().trim();
+  const findMatch = useCallback((ingredient: RecipeIngredient): PantryItem | null => {
+    const normalizedName = normalizeRecipeIngredient(ingredient.name);
 
-      // Try direct index lookup first (fast path)
-      const directMatch = pantryIndexRef.current.get(normalizedName);
-      if (directMatch) {
-        return directMatch;
-      }
-
-      // Fallback to checking all pantry items with isIngredientMatch for edge cases
-      // This is slower but only runs when direct lookup fails
-      for (const pantryItem of pantryItems) {
-        const synonyms = pantryItem.synonyms || [];
-        if (isIngredientMatch(pantryItem.name, ingredient.name, synonyms)) {
-          return pantryItem;
-        }
-      }
-
-      return null;
-    },
-    [pantryItems]
-  );
+    if (ingredientClarification(ingredient.name)) return null;
+    return pantryIndexRef.current.get(normalizedName) ?? null;
+  }, []);
 
   /**
    * Match all ingredients against pantry items

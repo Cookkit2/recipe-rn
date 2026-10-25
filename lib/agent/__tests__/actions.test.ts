@@ -68,7 +68,8 @@ it("refuses an add without a name", async () => {
   const data = createFakeData();
   await expect(runManageIngredients(data, { action: "add", name: " " })).resolves.toEqual({
     ok: false,
-    error: "An ingredient name is required.",
+    status: "needs_clarification",
+    question: "Which ingredient would you like to add?",
   });
 });
 
@@ -112,4 +113,12 @@ it("returns complete missing ingredient lists for partial matches", async () => 
   });
   const result = await runSuggestRecipes(data, {});
   expect(result.recipes[0]?.missing).toHaveLength(12);
+});
+
+it("rejects a vague name before calling even a legacy pantry client", async () => {
+  const data = createFakeData();
+  expect(
+    await runManageIngredients(data, { action: "add", name: "vegetables", quantity: 6 })
+  ).toMatchObject({ ok: false, status: "needs_clarification" });
+  expect(data.added).toEqual([]);
 });

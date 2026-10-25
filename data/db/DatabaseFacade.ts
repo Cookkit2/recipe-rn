@@ -40,7 +40,11 @@ import type {
   WasteOverTimeData,
 } from "./repositories/WasteLogRepository";
 import { convertToUnitSystem, roundToReasonablePrecision } from "~/utils/unit-converter";
-import { isIngredientMatch } from "~/utils/ingredient-matching";
+import { ingredientClarification } from "~/utils/ingredient-identity";
+import {
+  normalizeRecipeIngredient,
+  matchesRecipeIngredient,
+} from "~/utils/recipe-ingredient-match";
 import { log } from "~/utils/logger";
 
 // Public interfaces for database operations
@@ -1154,10 +1158,10 @@ class DatabaseFacade {
   /**
    * Get recipes that can be made with current stock.
    *
-   * Two-phase flow: (1) Load all active stock and batch-fetch synonyms and categories
+   * Two-phase flow: (1) Load all active stock and batch-fetch explicit synonyms
    * (batch size 500 to avoid SQLite limits). (2) For each recipe, compute availability
-   * using isIngredientMatch (see utils/ingredient-matching.ts) against pantry names
-   * and synonym/category expansion. Returns canMake and partiallyCanMake with
+   * using full-name recipe compatibility against pantry names
+   * and explicit synonym matching. Returns canMake and partiallyCanMake with
    * completion percentages.
    */
   async getAvailableRecipes(): Promise<AvailableRecipesResult> {
@@ -1181,7 +1185,6 @@ class DatabaseFacade {
       const activeStockIds = activeStock.map((s) => s.id);
 
       let allSynonyms: IngredientSynonym[] = [];
-      let allStockCategories: StockCategory[] = [];
 
       if (activeStockIds.length > 0) {
         // Fetch synonyms in batches of 500 to avoid SQLite limits
@@ -1197,40 +1200,6 @@ class DatabaseFacade {
         }
         const synonymResults = await Promise.all(synonymBatches);
         allSynonyms = synonymResults.flat();
-
-        // Fetch stock categories in batches
-        const stockCategoryBatches: Promise<StockCategory[]>[] = [];
-        for (let i = 0; i < activeStockIds.length; i += 500) {
-          const batchIds = activeStockIds.slice(i, i + 500);
-          stockCategoryBatches.push(
-            database
-              .get<StockCategory>("stock_category")
-              .query(Q.where("stock_id", Q.oneOf(batchIds)))
-              .fetch()
-          );
-        }
-        const stockCategoryResults = await Promise.all(stockCategoryBatches);
-        allStockCategories = stockCategoryResults.flat();
-      }
-
-      // Collect unique category IDs
-      const categoryIds = [...new Set(allStockCategories.map((sc) => sc.categoryId))];
-
-      let allCategories: IngredientCategory[] = [];
-      if (categoryIds.length > 0) {
-        // Fetch categories in batches
-        const categoryBatches: Promise<IngredientCategory[]>[] = [];
-        for (let i = 0; i < categoryIds.length; i += 500) {
-          const batchIds = categoryIds.slice(i, i + 500);
-          categoryBatches.push(
-            database
-              .get<IngredientCategory>("ingredient_category")
-              .query(Q.where("id", Q.oneOf(batchIds)))
-              .fetch()
-          );
-        }
-        const categoryResults = await Promise.all(categoryBatches);
-        allCategories = categoryResults.flat();
       }
 
       // Create lookup maps
@@ -1242,29 +1211,12 @@ class DatabaseFacade {
         synonymsByStockId.get(syn.stockId)?.push(syn.synonym);
       });
 
-      const categoryNameMap = new Map<string, string>();
-      allCategories.forEach((cat) => categoryNameMap.set(cat.id, cat.name));
-
-      const categoriesByStockId = new Map<string, string[]>();
-      allStockCategories.forEach((sc) => {
-        const categoryName = categoryNameMap.get(sc.categoryId);
-        if (categoryName) {
-          if (!categoriesByStockId.has(sc.stockId)) {
-            categoriesByStockId.set(sc.stockId, []);
-          }
-          categoriesByStockId.get(sc.stockId)?.push(categoryName);
-        }
-      });
-
-      const pantryItemsWithMetadata = activeStock.map((stock) => {
-        const synonyms = synonymsByStockId.get(stock.id) || [];
-        const categories = categoriesByStockId.get(stock.id) || [];
-
-        return {
+      const pantryItemsWithMetadata = activeStock
+        .filter((stock) => !ingredientClarification(stock.name))
+        .map((stock) => ({
           name: stock.name,
-          synonyms: [...synonyms, ...categories],
-        };
-      });
+          synonyms: synonymsByStockId.get(stock.id) || [],
+        }));
 
       // Pre-compute an index of pantry items and their synonyms for O(1) matching.
       const pantryIndex = new Map<string, { name: string; synonyms: string[] }>();
@@ -1276,12 +1228,12 @@ class DatabaseFacade {
 
         for (let j = item.synonyms.length - 1; j >= 0; j--) {
           const syn = item.synonyms[j];
-          if (syn) {
-            pantryIndex.set(syn.toLowerCase().trim(), item);
+          if (syn && !ingredientClarification(syn)) {
+            pantryIndex.set(normalizeRecipeIngredient(syn), item);
           }
         }
         if (item.name) {
-          pantryIndex.set(item.name.toLowerCase().trim(), item);
+          pantryIndex.set(normalizeRecipeIngredient(item.name), item);
         }
       }
 
@@ -1313,7 +1265,8 @@ class DatabaseFacade {
 
         let availableCount = 0;
         for (const ingredient of recipeDetails.ingredients) {
-          const normalizedIngredientName = ingredient.name.toLowerCase().trim();
+          if (ingredientClarification(ingredient.name)) continue;
+          const normalizedIngredientName = normalizeRecipeIngredient(ingredient.name);
 
           let matchingItem: (typeof pantryItemsWithMetadata)[0] | null | undefined =
             ingredientMatchCache.get(normalizedIngredientName);
@@ -1327,7 +1280,7 @@ class DatabaseFacade {
                 const pantryItem = pantryItemsWithMetadata[k];
                 if (
                   pantryItem &&
-                  isIngredientMatch(pantryItem.name, ingredient.name, pantryItem.synonyms)
+                  matchesRecipeIngredient(pantryItem.name, ingredient.name, pantryItem.synonyms)
                 ) {
                   matchingItem = pantryItem;
                   break;
@@ -1396,7 +1349,7 @@ class DatabaseFacade {
         const stock = matchingStocks[i];
         if (!stock) continue;
 
-        if (isIngredientMatch(stock.name, ingredient.name, stock.synonyms)) {
+        if (matchesRecipeIngredient(stock.name, ingredient.name, stock.synonyms)) {
           totalStock += stock.quantity;
           // Capture the unit from the first matched stock item
           if (!firstStockItemUnit && stock.unit) {

@@ -21,7 +21,7 @@ import {
   useUpdatePantryItem,
   useDeletePantryItem,
 } from "~/hooks/queries/usePantryQueries";
-import { isIngredientMatch } from "~/utils/ingredient-matching";
+import { matchesRecipeIngredient } from "~/utils/recipe-ingredient-match";
 import {
   areDimensionsCompatible,
   convertToBaseUnit,
@@ -263,7 +263,7 @@ export function RecipeStepsProvider({
 
       recipe.ingredients.forEach((recipeIngredient) => {
         const matchingPantryItem = pantryItems.find((pantryItem) =>
-          isIngredientMatch(pantryItem.name, recipeIngredient.name, pantryItem.synonyms || [])
+          matchesRecipeIngredient(pantryItem.name, recipeIngredient.name, pantryItem.synonyms || [])
         );
         if (matchingPantryItem) {
           matches.push({ pantryItem: matchingPantryItem, recipeIngredient });

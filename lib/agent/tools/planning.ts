@@ -1,4 +1,10 @@
-import { isIngredientMatch } from "~/utils/ingredient-matching";
+import type {
+  AssistantPantryInput,
+  AssistantPantryResult,
+  PantryWriteResult,
+  PantryRemovalResult,
+} from "~/types/AssistantPantryMutation";
+import { matchesRecipeIngredient } from "~/utils/recipe-ingredient-match";
 
 export interface PantryItem {
   id: string;
@@ -44,16 +50,18 @@ export interface CatalogRecipe {
 }
 
 export interface CookingDataClient {
+  managePantry?(input: AssistantPantryInput): Promise<AssistantPantryResult<PantryItem>>;
   listPantry(): Promise<PantryItem[]>;
   addIngredient(input: {
     name: string;
     quantity?: number;
     unit?: string;
-  }): Promise<{ ok: true; item: PantryItem } | { ok: false; error: string }>;
+    stockId?: string;
+  }): Promise<PantryWriteResult<PantryItem>>;
   removeIngredient(input: {
     name?: string;
     stockId?: string;
-  }): Promise<{ ok: true; removed: PantryItem[] } | { ok: false; error: string }>;
+  }): Promise<PantryRemovalResult<PantryItem>>;
   getDietProfile(): Promise<DietProfile>;
   listRecipes(): Promise<{ recipes: CatalogRecipe[]; truncated: boolean }>;
 }
@@ -171,7 +179,7 @@ export function scoreRecipe(recipe: CatalogRecipe, pantryNames: readonly string[
   for (const ingredient of recipe.ingredients) {
     const name = ingredient.name.trim();
     if (!name) continue;
-    const hit = pantryNames.some((pantryName) => isIngredientMatch(pantryName, name));
+    const hit = pantryNames.some((pantryName) => matchesRecipeIngredient(pantryName, name));
     if (hit) matched.push(name);
     else missing.push(name);
   }

@@ -15,7 +15,7 @@ bun run typecheck
 ## Patterns & conventions
 
 - **Pure functions** preferred — pass inputs, return results; avoid hidden globals except the shared logger.
-- **✅ DO**: Extend patterns in `utils/recipe-scaling.ts`, `utils/ingredient-matching.ts`, and `utils/api-error-handler.ts` with colocated tests in `utils/__tests__/*.test.ts`.
+- **✅ DO**: Extend patterns in `utils/recipe-scaling.ts`, `utils/ingredient-identity.ts`, and `utils/api-error-handler.ts` with colocated tests in `utils/__tests__/*.test.ts`.
 - **❌ DON’T**: Add **new** cross-cutting modules in `utils/` that depend on `~/data` or other app singletons — `utils/voice-cooking.ts` already does this for TTS settings; prefer `lib/` or `hooks/` for new device/storage integration so `utils/` stays mostly pure.
 
 ## Touch points / key files

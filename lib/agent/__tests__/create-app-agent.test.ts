@@ -13,8 +13,7 @@ jest.mock("../factory", () => ({ createCookingAgent: jest.fn(() => ({ kind: "neb
 jest.mock("~/data/api/pantryApi", () => ({
   pantryApi: {
     fetchAllPantryItems: jest.fn(),
-    addPantryItem: jest.fn(),
-    deletePantryItem: jest.fn(),
+    manageAssistantPantry: jest.fn(),
   },
 }));
 
@@ -35,8 +34,9 @@ const localItem: PantryItem = {
 beforeEach(() => {
   jest.clearAllMocks();
   jest.mocked(pantryApi.fetchAllPantryItems).mockResolvedValue([localItem]);
-  jest.mocked(pantryApi.addPantryItem).mockResolvedValue(localItem);
-  jest.mocked(pantryApi.deletePantryItem).mockResolvedValue(undefined);
+  jest
+    .mocked(pantryApi.manageAssistantPantry)
+    .mockResolvedValue({ ok: true, status: "updated", item: localItem });
 });
 
 function getData(queryClient?: QueryClient): CookingDataClient {
@@ -52,17 +52,20 @@ it("adds through the existing local pantry API", async () => {
   await expect(
     getData().addIngredient({ name: "eggs", quantity: 6, unit: "count" })
   ).resolves.toMatchObject({ ok: true, item: { id: "local-1" } });
-  expect(pantryApi.addPantryItem).toHaveBeenCalledWith(
-    expect.objectContaining({ name: "eggs", quantity: 6, unit: "count" })
+  expect(pantryApi.manageAssistantPantry).toHaveBeenCalledWith(
+    expect.objectContaining({ action: "add", name: "eggs", quantity: 6, unit: "count" })
   );
 });
 
-it("removes local rows through the existing pantry API", async () => {
+it("removes local rows through the atomic pantry API", async () => {
+  jest
+    .mocked(pantryApi.manageAssistantPantry)
+    .mockResolvedValue({ ok: true, status: "removed", removed: [localItem] });
   await expect(getData().removeIngredient({ name: "Eggs" })).resolves.toMatchObject({
     ok: true,
     removed: [{ id: "local-1" }],
   });
-  expect(pantryApi.deletePantryItem).toHaveBeenCalledWith("local-1");
+  expect(pantryApi.manageAssistantPantry).toHaveBeenCalledWith({ action: "remove", name: "Eggs" });
 });
 
 it("invalidates pantry and recipe queries after a local mutation", async () => {
@@ -76,6 +79,9 @@ it("invalidates pantry and recipe queries after a local mutation", async () => {
 
 it("uses stockId to remove only one of several local rows with the same name", async () => {
   jest
+    .mocked(pantryApi.manageAssistantPantry)
+    .mockResolvedValue({ ok: true, status: "removed", removed: [{ ...localItem, id: "local-2" }] });
+  jest
     .mocked(pantryApi.fetchAllPantryItems)
     .mockResolvedValue([localItem, { ...localItem, id: "local-2" }]);
   await expect(
@@ -84,14 +90,20 @@ it("uses stockId to remove only one of several local rows with the same name", a
     ok: true,
     removed: [{ id: "local-2" }],
   });
-  expect(pantryApi.deletePantryItem).toHaveBeenCalledTimes(1);
-  expect(pantryApi.deletePantryItem).toHaveBeenCalledWith("local-2");
+  expect(pantryApi.manageAssistantPantry).toHaveBeenCalledTimes(1);
+  expect(pantryApi.manageAssistantPantry).toHaveBeenCalledWith({
+    action: "remove",
+    stockId: "local-2",
+    name: "eggs",
+  });
 });
 
 it("reports a local write failure without invalidating queries", async () => {
   const client = new QueryClient();
   const invalidate = jest.spyOn(client, "invalidateQueries");
-  jest.mocked(pantryApi.addPantryItem).mockRejectedValueOnce(new Error("Local write failed"));
+  jest
+    .mocked(pantryApi.manageAssistantPantry)
+    .mockRejectedValueOnce(new Error("Local write failed"));
   await expect(getData(client).addIngredient({ name: "eggs" })).resolves.toEqual({
     ok: false,
     error: "Local write failed",
@@ -99,19 +111,16 @@ it("reports a local write failure without invalidating queries", async () => {
   expect(invalidate).not.toHaveBeenCalled();
 });
 
-it("refreshes the pantry after a partially successful multi-row removal", async () => {
+it("does not invalidate or claim success when a mutation needs clarification", async () => {
   const client = new QueryClient();
   const invalidate = jest.spyOn(client, "invalidateQueries");
-  jest
-    .mocked(pantryApi.fetchAllPantryItems)
-    .mockResolvedValue([localItem, { ...localItem, id: "local-2" }]);
-  jest
-    .mocked(pantryApi.deletePantryItem)
-    .mockResolvedValueOnce(undefined)
-    .mockRejectedValueOnce(new Error("Delete failed"));
-  await expect(getData(client).removeIngredient({ name: "eggs" })).resolves.toEqual({
+  jest.mocked(pantryApi.manageAssistantPantry).mockResolvedValue({
     ok: false,
-    error: "Delete failed",
+    status: "needs_clarification",
+    question: "Which pantry entry?",
   });
-  expect(invalidate).toHaveBeenCalledWith({ queryKey: pantryQueryKeys.all });
+  await expect(getData(client).addIngredient({ name: "eggs" })).resolves.toMatchObject({
+    status: "needs_clarification",
+  });
+  expect(invalidate).not.toHaveBeenCalled();
 });
