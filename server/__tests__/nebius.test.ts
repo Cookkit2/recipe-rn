@@ -120,7 +120,7 @@ describe("Nebius provider boundary", () => {
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
 
-  it("keeps unknown social-recipe units and amounts instead of forcing a model repair", async () => {
+  it("accepts labeled estimates and source quotes for social recipes without forcing a repair", async () => {
     fetcher.mockResolvedValue(
       completion(
         JSON.stringify({
@@ -132,11 +132,25 @@ describe("Nebius provider boundary", () => {
             prepMinutes: 0,
             cookMinutes: 15,
             servings: 2,
+            servingsSource: "estimated",
             difficultyStars: 1,
             ingredients: [
-              { name: "chicken", quantity: 0, unit: "", notes: "Amount not specified" },
+              {
+                name: "chicken",
+                quantity: 300,
+                unit: "g",
+                amountSource: "estimated",
+                notes: "Amount not specified; estimated for two servings",
+              },
             ],
-            steps: [{ step: 1, title: "Steam", description: "Steam for 15 minutes." }],
+            steps: [
+              {
+                step: 1,
+                title: "Steam",
+                description: "Steam for 15 minutes.",
+                sourceQuote: "Steam for 15 minutes.",
+              },
+            ],
           },
         })
       )
@@ -145,9 +159,42 @@ describe("Nebius provider boundary", () => {
       buildSocialRecipeRequest("Steam for 15 minutes. Chicken amount not specified.")
     );
     expect(JSON.parse(result.content).recipe.ingredients[0]).toEqual(
-      expect.objectContaining({ quantity: 0, unit: "" })
+      expect.objectContaining({ quantity: 300, unit: "g", amountSource: "estimated" })
     );
     expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    { quantity: 0, unit: "g" },
+    { quantity: 300, unit: "" },
+  ])("rejects invalid social-recipe amounts after one repair: %j", async (amount) => {
+    const content = JSON.stringify({
+      isCookingVideo: true,
+      confidence: 0.9,
+      recipe: {
+        title: "Steamed chicken",
+        description: "",
+        prepMinutes: 0,
+        cookMinutes: 15,
+        servings: 2,
+        servingsSource: "estimated",
+        difficultyStars: 1,
+        ingredients: [{ name: "chicken", ...amount, amountSource: "estimated" }],
+        steps: [
+          {
+            step: 1,
+            title: "Steam",
+            description: "Steam for 15 minutes.",
+            sourceQuote: "Steam for 15 minutes.",
+          },
+        ],
+      },
+    });
+    fetcher.mockImplementation(async () => completion(content));
+    await expect(
+      run(buildSocialRecipeRequest("Steam for 15 minutes. Chicken amount not specified."))
+    ).rejects.toThrow("valid recipe data");
+    expect(fetcher).toHaveBeenCalledTimes(2);
   });
 
   it.each(['{"name":"rice"}', '{"name":"rice","quantity":-1}', "not JSON"])(
