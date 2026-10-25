@@ -1,9 +1,10 @@
 import React from "react";
-import { StyleSheet } from "react-native";
+import { Platform, StyleSheet } from "react-native";
 import { render } from "@testing-library/react-native";
 import { AssistantChat } from "../AssistantChat";
 import { TEST_IDS } from "~/constants/test-ids";
 import type { CookingAgent } from "~/lib/agent/types";
+import * as e2eFlags from "~/utils/e2e-flags";
 
 jest.mock("expo-haptics", () => ({
   impactAsync: jest.fn(),
@@ -25,7 +26,7 @@ jest.mock("~/hooks/useCookingAgentChat", () => ({
   }),
 }));
 
-jest.mock("~/utils/e2e-flags", () => ({ IS_E2E: true }));
+jest.mock("~/utils/e2e-flags", () => ({ __esModule: true, IS_E2E: true }));
 
 const agent = {
   kind: "nebius",
@@ -60,4 +61,19 @@ it("renders a stable assistant composer above the home indicator in E2E", async 
     paddingBottom: 46,
     flexShrink: 0,
   });
+});
+
+it("keeps the production composer in keyboard-adjusted layout flow", async () => {
+  jest.replaceProperty(e2eFlags, "IS_E2E", false);
+  jest.replaceProperty(Platform, "OS", "ios");
+  try {
+    const screen = await render(<AssistantChat agent={agent} />);
+    const composer = screen.getByTestId(TEST_IDS.assistant.composer);
+    expect(StyleSheet.flatten(composer.parent?.props.style).position).not.toBe("absolute");
+    expect(
+      screen.getByTestId(TEST_IDS.assistant.list).props.contentContainerStyle.paddingBottom
+    ).toBe(12);
+  } finally {
+    jest.restoreAllMocks();
+  }
 });

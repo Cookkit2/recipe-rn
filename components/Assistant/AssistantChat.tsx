@@ -86,7 +86,7 @@ export function AssistantChat({ agent }: { agent: CookingAgent }) {
         contentContainerStyle={{
           // The opaque native header already reserves the top safe area.
           paddingTop: 12,
-          paddingBottom: COMPOSER_HEIGHT + 12 + composerClearance,
+          paddingBottom: IS_E2E ? COMPOSER_HEIGHT + 12 + composerClearance : 12,
         }}
         ListEmptyComponent={
           <P className="px-2 pt-8 text-muted-foreground">Ask what to cook from your fridge.</P>
@@ -97,7 +97,8 @@ export function AssistantChat({ agent }: { agent: CookingAgent }) {
       <View
         className="flex-row items-end gap-2 border-t border-border bg-background px-4 pt-3"
         style={{
-          position: "absolute",
+          // Normal flow lets keyboard padding lift the composer in production.
+          position: IS_E2E ? "absolute" : "relative",
           left: 0,
           right: 0,
           bottom: 0,
