@@ -3,6 +3,7 @@ import { isAllowedVideoMediaUrl, normalizeVideoPostUrl } from "./video-source";
 interface TikTokMetadata {
   title: string;
   caption: string;
+  image?: string;
   subtitles: { url: string; language: string }[];
 }
 
@@ -44,7 +45,16 @@ export function extractTikTokMetadata(html: string, sourceUrl: string): TikTokMe
         subtitles.sort(
           (a, b) => Number(b.language.startsWith("eng")) - Number(a.language.startsWith("eng"))
         );
+        const covers = [
+          item.video?.originCover,
+          item.video?.cover,
+          item.video?.dynamicCover,
+        ].flatMap((value) =>
+          typeof value === "string" ? [value] : Array.isArray(value?.urlList) ? value.urlList : []
+        );
+        const image = covers.find(isAllowedVideoMediaUrl);
         return {
+          ...(image ? { image } : {}),
           title:
             typeof detail.shareMeta?.title === "string"
               ? detail.shareMeta.title.slice(0, 500)

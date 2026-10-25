@@ -63,6 +63,7 @@ describe("social video recipe fallback", () => {
     expect(generate.mock.calls[2]?.[0].prompt).toContain("Egg 5");
     expect(analysis.recipe?.ingredients[1]?.quantity).toBe(150);
     expect(analysis.recipe?.ingredients[1]?.notes).toContain("AI estimate");
+    expect(analysis.recipe?.imageUrl).toBe("data:image/jpeg;base64,/9j/");
   });
   it("uses a chosen local video without fetching the social webpage", async () => {
     generate
@@ -168,7 +169,7 @@ describe("social video recipe fallback", () => {
     expect(read).toHaveBeenCalledTimes(1);
     expect(analysis.recipe).toBeDefined();
   });
-  it("keeps a full caption on the fast text path", async () => {
+  it("keeps full caption extraction on the text path while checking the post for a cover", async () => {
     generate.mockResolvedValueOnce(result);
     await new SocialRecipeService().analyzeForRecipe({
       platform: "tiktok",
@@ -176,7 +177,7 @@ describe("social video recipe fallback", () => {
       text: "Whisk 5 eggs and steam for 15 minutes.",
     });
     expect(read).not.toHaveBeenCalled();
-    expect(globalThis.fetch).not.toHaveBeenCalled();
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
     expect(generate).toHaveBeenCalledTimes(1);
   });
   it("reads frames when speech is unavailable or permission was denied", async () => {

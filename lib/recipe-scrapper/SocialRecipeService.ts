@@ -18,6 +18,8 @@ import {
   getCaptionInstructions,
 } from "./shared/instruction-evidence";
 import { readRecipeVideo } from "./recipe-video";
+import { isAllowedVideoMediaUrl } from "./shared/video-source";
+import { getRecipeVideoCover } from "./shared/video-cover";
 import type { RecipeVideoOptions } from "~/types/RecipeVideo";
 
 export interface SocialMediaContent {
@@ -44,7 +46,15 @@ export class SocialRecipeService {
 
       // Supplied captions can be extracted without waiting on a social login wall.
       const suppliedText = content.text?.trim();
-      const analyze = async (metadata: { title: string; description: string }) => {
+      const metadataTask =
+        content.url && !content.videoUri
+          ? this.fetchPageMetadata(content.url, options.signal).catch(() => ({
+              title: "",
+              description: "",
+              image: undefined,
+            }))
+          : undefined;
+      const analyze = async (metadata: { title: string; description: string; image?: string }) => {
         const subtitleQuotes = getPublishedSubtitleInstructions(metadata.description);
         const sourceQuotes = subtitleQuotes.length
           ? subtitleQuotes
@@ -57,7 +67,10 @@ export class SocialRecipeService {
           sourceQuotes
         );
         const response = await generateAIContent(request, options.signal);
-        return this.parseResponse(response, content.url, metadata.description);
+        const result = this.parseResponse(response, content.url, metadata.description);
+        if (result.recipe && metadata.image && isAllowedVideoMediaUrl(metadata.image))
+          result.recipe.imageUrl = metadata.image;
+        return result;
       };
       let suppliedResult: RecipeAnalysisResult | undefined;
       if (suppliedText && !content.videoUri) {
@@ -68,13 +81,16 @@ export class SocialRecipeService {
             suppliedResult.confidence >= 0.6) ||
           !content.url ||
           content.platform === "text"
-        )
+        ) {
+          const cover = (await metadataTask)?.image;
+          options.signal?.throwIfAborted();
+          if (suppliedResult.recipe && cover && isAllowedVideoMediaUrl(cover))
+            suppliedResult.recipe.imageUrl = cover;
           return suppliedResult;
+        }
       }
-      const metadata =
-        content.url && !content.videoUri
-          ? await this.fetchPageMetadata(content.url, options.signal)
-          : { title: "", description: "" };
+      const metadata = (await metadataTask) ?? { title: "", description: "" };
+      options.signal?.throwIfAborted();
       let textResult = suppliedResult;
       if (metadata.description.trim() && metadata.description.trim() !== suppliedText) {
         textResult = await analyze(metadata);
@@ -121,6 +137,10 @@ export class SocialRecipeService {
           `TIMESTAMPED VIDEO FRAME OBSERVATIONS:\n${frameText.slice(0, 18_000)}`,
         ].join("\n\n"),
       });
+      if (result.recipe)
+        result.recipe.imageUrl =
+          getRecipeVideoCover(evidence.frames) ??
+          (metadata.image && isAllowedVideoMediaUrl(metadata.image) ? metadata.image : undefined);
       result.warnings = [...new Set([...(result.warnings ?? []), ...evidence.warnings])];
       return result;
     } catch (error) {
@@ -188,6 +208,7 @@ export class SocialRecipeService {
       );
       return {
         title: metadata.title || tiktok.title,
+        image: tiktok.image ?? metadata.image,
         description: [tiktok.caption || metadata.description, ...subtitles]
           .filter(Boolean)
           .join("\n\n"),
