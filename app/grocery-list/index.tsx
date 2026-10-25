@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
-import { View, FlatList, ActivityIndicator, Pressable } from "react-native";
+import { View, FlatList, ActivityIndicator } from "react-native";
 import { H3, P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
-import { TrashIcon, CheckCircleIcon, XIcon, Edit2Icon, ShoppingCartIcon } from "lucide-uniwind";
+import { CheckCircleIcon, ShoppingCartIcon } from "lucide-uniwind";
 import { useGroceryList } from "~/hooks/queries/useGroceryList";
 import { useGroceryListActions } from "~/hooks/useGroceryListActions";
 import GroceryListItem from "~/components/GroceryList/GroceryListItem";
@@ -10,7 +10,7 @@ import GroceryListHeader from "~/components/GroceryList/GroceryListHeader";
 import { Stack, Link } from "expo-router";
 import { useMealPlanCalendar } from "~/store/MealPlanCalendarContext";
 import { WeekNavigationHeader } from "~/app/meal-plan/components/WeekNavigationHeader";
-import GroceryStoreShortcuts from "~/components/GroceryList/GroceryStoreShortcuts";
+import GroceryListHeaderRight from "~/components/GroceryList/GroceryListHeaderRight";
 import useColors from "~/hooks/useColor";
 
 export default function GroceryListPage() {
@@ -43,15 +43,20 @@ export default function GroceryListPage() {
       }}
     />
   );
-  const listHeader = (
-    <>
-      {weekNavigation}
-      {!isSelectionMode && <GroceryStoreShortcuts items={allItems} />}
-    </>
+  const canSelectItems =
+    !isLoading && !error && !isEmpty && hasNeededItems && !stats.allCheckedOrCovered;
+  const toolbar = (
+    <GroceryListHeaderRight
+      items={allItems}
+      canSelectItems={canSelectItems}
+      isSelectionMode={canSelectItems && isSelectionMode}
+      onToggleSelection={toggleSelectionMode}
+      onDeleteSelected={handleDeleteSelected}
+    />
   );
   if (error)
     return (
-      <GroceryListState header={listHeader}>
+      <GroceryListState header={weekNavigation} toolbar={toolbar}>
         <P>Couldn't load the shopping list.</P>
         <Button variant="outline" onPress={() => refetch()}>
           <P>Try again</P>
@@ -62,7 +67,7 @@ export default function GroceryListPage() {
   // Loading state
   if (isLoading) {
     return (
-      <GroceryListState header={listHeader}>
+      <GroceryListState header={weekNavigation} toolbar={toolbar}>
         <ActivityIndicator size="large" />
         <P className="mt-4 text-muted-foreground">Loading grocery list...</P>
       </GroceryListState>
@@ -72,7 +77,7 @@ export default function GroceryListPage() {
   // Empty state
   if (isEmpty) {
     return (
-      <GroceryListState header={listHeader}>
+      <GroceryListState header={weekNavigation} toolbar={toolbar}>
         <View className="w-24 h-24 rounded-full bg-muted items-center justify-center mb-6">
           <ShoppingCartIcon className="text-muted-foreground" size={48} strokeWidth={1.5} />
         </View>
@@ -92,7 +97,7 @@ export default function GroceryListPage() {
   // All items covered/checked state
   if (!hasNeededItems || stats.allCheckedOrCovered) {
     return (
-      <GroceryListState header={listHeader}>
+      <GroceryListState header={weekNavigation} toolbar={toolbar}>
         <View className="items-center">
           <View className="w-24 h-24 rounded-full bg-green-500/20 items-center justify-center mb-6">
             <CheckCircleIcon className="text-green-500" size={48} strokeWidth={1.5} />
@@ -123,58 +128,11 @@ export default function GroceryListPage() {
           headerTransparent: false,
           headerStyle: { backgroundColor: colors.background },
           contentStyle: { backgroundColor: colors.background },
-          unstable_headerRightItems: () =>
-            isSelectionMode
-              ? [
-                  {
-                    type: "custom",
-                    element: (
-                      <Pressable
-                        onPress={toggleSelectionMode}
-                        className="px-1.5"
-                        accessibilityRole="button"
-                        accessibilityLabel="Cancel selection"
-                        accessibilityHint="Exits selection mode without deleting items"
-                      >
-                        <XIcon className="text-muted-foreground" size={24} />
-                      </Pressable>
-                    ),
-                  },
-                  {
-                    type: "custom",
-                    element: (
-                      <Pressable
-                        onPress={handleDeleteSelected}
-                        className="px-1.5"
-                        accessibilityRole="button"
-                        accessibilityLabel="Delete selected items"
-                        accessibilityHint="Permanently deletes the selected items"
-                      >
-                        <TrashIcon className="text-destructive" size={24} />
-                      </Pressable>
-                    ),
-                  },
-                ]
-              : [
-                  {
-                    type: "custom",
-                    element: (
-                      <Pressable
-                        onPress={toggleSelectionMode}
-                        className="px-1.5"
-                        accessibilityRole="button"
-                        accessibilityLabel="Edit selection mode"
-                        accessibilityHint="Enables selection mode to delete multiple items"
-                      >
-                        <Edit2Icon className="text-foreground" size={24} />
-                      </Pressable>
-                    ),
-                  },
-                ],
           headerTitle: isSelectionMode ? `${selectedItemNames.size} Selected` : "Grocery List",
         }}
       />
-      {listHeader}
+      {toolbar}
+      {weekNavigation}
       <FlatList
         data={allItems}
         ListHeaderComponent={<GroceryListHeader />}
@@ -196,7 +154,15 @@ export default function GroceryListPage() {
   );
 }
 
-function GroceryListState({ header, children }: { header: ReactNode; children: ReactNode }) {
+function GroceryListState({
+  header,
+  toolbar,
+  children,
+}: {
+  header: ReactNode;
+  toolbar: ReactNode;
+  children: ReactNode;
+}) {
   const colors = useColors();
 
   return (
@@ -207,9 +173,9 @@ function GroceryListState({ header, children }: { header: ReactNode; children: R
           headerStyle: { backgroundColor: colors.background },
           contentStyle: { backgroundColor: colors.background },
           headerTitle: "Grocery List",
-          unstable_headerRightItems: () => [],
         }}
       />
+      {toolbar}
       {header}
       <View className="flex-1 items-center justify-center px-6">{children}</View>
     </View>
