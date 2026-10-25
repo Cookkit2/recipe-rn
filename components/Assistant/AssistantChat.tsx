@@ -9,10 +9,14 @@ import { P } from "~/components/ui/typography";
 import { TEST_IDS } from "~/constants/test-ids";
 import { useCookingAgentChat, type CookingChatMessage } from "~/hooks/useCookingAgentChat";
 import type { CookingAgent } from "~/lib/agent/types";
+import { toAssistantPlainText } from "~/lib/agent/plain-text";
+import { RecipeSuggestions } from "./RecipeSuggestions";
 import { IS_E2E } from "~/utils/e2e-flags";
 
 function MessageBubble({ message }: { message: CookingChatMessage }) {
   const mine = message.role === "user";
+  const displayContent = mine ? message.content : toAssistantPlainText(message.content);
+  const secondaryError = message.pantryError ?? message.error;
   return (
     <View
       testID={mine ? undefined : TEST_IDS.assistant.bubble}
@@ -25,17 +29,22 @@ function MessageBubble({ message }: { message: CookingChatMessage }) {
             : "max-w-[85%] rounded-2xl bg-muted px-4 py-3"
         }
       >
-        <Text className={mine ? "text-primary-foreground text-left" : "text-left"}>
-          {message.content || message.error || (message.role === "assistant" ? "…" : "")}
-        </Text>
+        {message.recipeSuggestions ? (
+          <RecipeSuggestions result={message.recipeSuggestions} />
+        ) : (
+          <Text className={mine ? "text-primary-foreground text-left" : "text-left"}>
+            {displayContent || message.error || (message.role === "assistant" ? "…" : "")}
+          </Text>
+        )}
       </View>
       {message.activities.map((activity, index) => (
         <P key={`${activity}-${index}`} className="mt-1 text-sm text-muted-foreground">
           {activity}
         </P>
       ))}
-      {message.error && message.content ? (
-        <P className="mt-1 text-sm text-destructive">{message.error}</P>
+      {secondaryError &&
+      (message.content || message.recipeSuggestions || secondaryError !== message.error) ? (
+        <P className="mt-1 text-sm text-destructive">{secondaryError}</P>
       ) : null}
     </View>
   );

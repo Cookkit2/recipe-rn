@@ -28,6 +28,7 @@ export const TEST_IDS = {
     searchButton: "home-search-button",
     addIngredientButton: "home-add-ingredient-button",
     profileButton: "home-profile-button",
+    assistantButton: "home-assistant-button",
   },
   search: {
     screen: "search-screen",
@@ -63,7 +64,6 @@ export const TEST_IDS = {
   profile: {
     screen: "profile-screen",
     preferencesButton: "profile-preferences-button",
-    assistantButton: "profile-assistant-button",
     achievementsButton: "profile-achievements-button",
     mealPlanButton: "profile-meal-plan-button",
   },

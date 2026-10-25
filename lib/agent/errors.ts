@@ -1,4 +1,8 @@
+export const PANTRY_UPDATE_UNCERTAIN_MESSAGE =
+  "A pantry update may still finish. Check your pantry before trying again.";
+
 const MESSAGES = {
+  uncertainPantryUpdate: PANTRY_UPDATE_UNCERTAIN_MESSAGE,
   unknown: "Something went wrong, please try again later",
   timeout: "The assistant took too long to respond. Please try again.",
   network: "Unable to connect. Check your connection and try again.",

@@ -7,7 +7,9 @@ import type { CookingSupabase } from "../tools/supabase-cooking-data";
 
 type Row = Record<string, unknown>;
 
-function createMemorySupabase(): CookingSupabase & { tables: Record<string, Row[]> } {
+function createMemorySupabase(
+  strictRecipeSchema = false
+): CookingSupabase & { tables: Record<string, Row[]> } {
   const tables: Record<string, Row[]> = {
     stock: [],
     household_members: [{ user_id: "user-1", household_id: "house-1" }],
@@ -21,8 +23,10 @@ function createMemorySupabase(): CookingSupabase & { tables: Record<string, Row[
     let working = (tables[table] ?? []).map((row) => ({ ...row }));
     let mode: "select" | "insert" | "delete" = "select";
     let inserted: Row | null = null;
+    let queryError: { message: string } | null = null;
 
     const finishMany = () => {
+      if (queryError) return { data: null, error: queryError };
       if (mode === "insert" && inserted) {
         tables[table] = [...(tables[table] ?? []), inserted];
         return { data: [inserted], error: null };
@@ -37,7 +41,22 @@ function createMemorySupabase(): CookingSupabase & { tables: Record<string, Row[
     };
 
     const api = {
-      select() {
+      select(columns: string) {
+        if (strictRecipeSchema && table === "recipe") {
+          const supported = new Set([
+            "id",
+            "title",
+            "tags",
+            "calories",
+            "servings",
+            "cook_minutes",
+          ]);
+          const missing = columns
+            .split(",")
+            .map((column) => column.trim())
+            .find((column) => !supported.has(column));
+          if (missing) queryError = { message: `column recipe.${missing} does not exist` };
+        }
         return api;
       },
       eq(column: string, value: string) {
@@ -202,4 +221,27 @@ it("bounds parent recipes while keeping their ingredient lists complete", async 
   expect(catalog.truncated).toBe(true);
   expect(catalog.recipes.every((recipe) => recipe.ingredients.length === 10)).toBe(true);
   expect(catalog.recipes.some((recipe) => recipe.id === "100")).toBe(false);
+});
+
+it("loads the deployed recipe schema without optional nutrition or allergen columns", async () => {
+  const supabase = createMemorySupabase(true);
+  supabase.tables.recipe = [
+    { id: "r1", title: "Eggs", tags: [], calories: 100, servings: 1, cook_minutes: 5 },
+  ];
+  supabase.tables.pivot_recipe_ingredient = [
+    { id: "p1", recipe_id: "r1", name: "eggs", quantity: 2, unit: "count" },
+  ];
+  await expect(createSupabaseCookingDataClient(supabase).listRecipes()).resolves.toMatchObject({
+    recipes: [
+      {
+        title: "Eggs",
+        allergens: [],
+        protein: null,
+        carbs: null,
+        fat: null,
+        fiber: null,
+        ingredients: [{ name: "eggs" }],
+      },
+    ],
+  });
 });

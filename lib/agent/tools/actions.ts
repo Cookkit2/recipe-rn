@@ -1,6 +1,9 @@
 import type { CookingDataClient } from "./planning";
 import { analyzePantryDiet, rankRecipes, suggestMeals } from "./planning";
 
+const CATALOG_DATA_NOTE =
+  "Allergen checks use ingredient names; catalog allergen labels and macro nutrition are unavailable. Do not claim recipes are allergen-free or invent macro values.";
+
 const DEFAULT_SLOTS = ["lunch", "dinner"] as const;
 
 export async function runManageIngredients(
@@ -50,11 +53,16 @@ export async function runSuggestRecipes(data: CookingDataClient, input: { limit?
     title: recipe.title,
     coverage: recipe.coverage,
     matched: recipe.matched,
-    missing: recipe.missing.slice(0, 8),
+    missing: recipe.missing,
     calories: recipe.calories,
     tags: recipe.tags,
   }));
-  return { recipes, truncated: catalog.truncated, pantryCount: pantry.length };
+  return {
+    recipes,
+    truncated: catalog.truncated,
+    pantryCount: pantry.length,
+    note: CATALOG_DATA_NOTE,
+  };
 }
 
 export async function runSuggestMealPlan(
@@ -81,7 +89,7 @@ export async function runSuggestMealPlan(
     calories,
     macroTarget: profile.macroTarget,
     persisted: false,
-    note: "Suggestions only. Meal plans stay in the on-device calendar and were not saved.",
+    note: `Suggestions only. Meal plans stay in the on-device calendar and were not saved. ${CATALOG_DATA_NOTE}`,
     truncated: catalog.truncated,
   };
 }

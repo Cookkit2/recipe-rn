@@ -1,8 +1,15 @@
 import React from "react";
-import { Dimensions, StyleSheet } from "react-native";
-import { render } from "@testing-library/react-native";
+import { Dimensions, Pressable, StyleSheet } from "react-native";
+import { fireEvent, render } from "@testing-library/react-native";
 import PantryWrapper from "../PantryWrapper";
 import { TEST_IDS } from "~/constants/test-ids";
+
+const push = jest.fn();
+jest.mock("expo-router", () => ({ useRouter: () => ({ push }) }));
+jest.mock("lucide-uniwind", () => ({ SparklesIcon: () => null }));
+jest.mock("~/components/ui/button", () => ({
+  Button: (props: object) => <Pressable {...props} />,
+}));
 
 const pantry = {
   isRecipeOpen: true,
@@ -104,4 +111,19 @@ it("does not mount recipe queries until first open and preserves the mounted lis
   pantry.isRecipeOpen = false;
   await screen.rerender(<PantryWrapper />);
   expect(mockRecipeList).toHaveBeenLastCalledWith({ active: false });
+});
+
+describe("Assistant entry point", () => {
+  it("opens Assistant directly from Pantry", async () => {
+    pantry.isRecipeOpen = false;
+    const screen = await render(<PantryWrapper />);
+    await fireEvent.press(screen.getByLabelText("Assistant"));
+    expect(push).toHaveBeenCalledWith("/assistant");
+  });
+
+  it("hides Assistant while the recipe drawer is open", async () => {
+    pantry.isRecipeOpen = true;
+    const screen = await render(<PantryWrapper />);
+    expect(screen.queryByLabelText("Assistant")).toBeNull();
+  });
 });

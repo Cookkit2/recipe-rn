@@ -7,22 +7,10 @@ describe("Assistant", () => {
       .toBeVisible()
       .withTimeout(30000);
 
-    await element(by.label("Profile")).tap();
-
-    // Home stays mounted under the profile card. Scroll without synchronization
-    // so a busy home screen cannot block the button. withTimeout() is terminal
-    // in Detox 20 and cannot be combined with whileElement().scroll().
-    await device.disableSynchronization();
-    await waitFor(element(by.id(TEST_IDS.profile.screen)))
+    await waitFor(element(by.id(TEST_IDS.home.assistantButton)))
       .toBeVisible()
       .withTimeout(20000);
-    await waitFor(element(by.id(TEST_IDS.profile.assistantButton)))
-      .toBeVisible()
-      .whileElement(by.id(TEST_IDS.profile.screen))
-      .scroll(200, "down");
-    await device.enableSynchronization();
-
-    await element(by.id(TEST_IDS.profile.assistantButton)).tap();
+    await element(by.id(TEST_IDS.home.assistantButton)).tap();
 
     await waitFor(element(by.id(TEST_IDS.assistant.screen)))
       .toBeVisible()
@@ -57,7 +45,7 @@ describe("Assistant", () => {
 
     // cookkit:/// does not pop this stack. After openURL the Assistant card
     // was still the only visible screen (title, transcript, and composer).
-    // Back returns to the already-mounted profile, then home, which is what
+    // Back returns to the already-mounted home screen, which is what
     // catches a missing pantry query invalidation. Home keeps the main queue
     // awake, so don't wait for idle around these taps.
     //
@@ -68,10 +56,6 @@ describe("Assistant", () => {
     const pop = (screenTitle: string) => element(by.id(screenTitle)).tap({ x: 42, y: 22 });
     await device.disableSynchronization();
     await pop("Assistant");
-    await waitFor(element(by.id(TEST_IDS.profile.screen)))
-      .toBeVisible()
-      .withTimeout(20000);
-    await pop("Profile");
     await waitFor(element(by.id(TEST_IDS.home.screen)))
       .toBeVisible()
       .withTimeout(20000);
