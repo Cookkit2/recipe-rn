@@ -77,57 +77,65 @@ describe("social video recipe fallback", () => {
     expect(read.mock.calls[0]?.[0].videoUri).toBe("file:///cache/picked.mp4");
     expect(analysis.recipe).toBeDefined();
   });
-  it("translates TikTok's published subtitles without downloading blocked media", async () => {
-    const html = `<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__">${JSON.stringify({
-      __DEFAULT_SCOPE__: {
-        "webapp.reflow.video.detail": {
-          itemInfo: {
-            itemStruct: {
-              id: "7538296153562008840",
-              desc: caption,
-              video: {
-                subtitleInfos: [
-                  {
-                    Format: "webvtt",
-                    Url: "https://v16-webapp.tiktok.com/subtitles",
-                    LanguageCodeName: "eng-US",
-                  },
-                ],
+  it.each([
+    "https://vt.tiktok.com/ZSguquYyJ/",
+    "https://www.tiktok.com/@teefoodd/video/7538296153562008840",
+  ])(
+    "translates published subtitles from the shared TikTok URL %s without downloading media",
+    async (sharedUrl) => {
+      const html = `<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__">${JSON.stringify({
+        __DEFAULT_SCOPE__: {
+          "webapp.reflow.video.detail": {
+            itemInfo: {
+              itemStruct: {
+                id: "7538296153562008840",
+                desc: caption,
+                video: {
+                  subtitleInfos: [
+                    {
+                      Format: "webvtt",
+                      Url: "https://v16-webapp.tiktok.com/subtitles",
+                      LanguageCodeName: "eng-US",
+                    },
+                  ],
+                },
               },
             },
           },
         },
-      },
-    })}</script>`;
-    globalThis.fetch = jest.fn(
-      async (input) =>
-        new Response(
-          String(input).includes("/subtitles")
-            ? "WEBVTT\n\n00:00:00.000 --> 00:00:01.000\nmeans chicken steam egg.\n\n00:00:01.000 --> 00:00:03.000\nSteam for 15 minutes.\n"
-            : html
-        )
-    );
-    const modelResult = JSON.parse(result);
-    modelResult.recipe.steps = [
-      {
-        step: 1,
-        title: "Steam",
-        description: "Steam for 15 minutes.",
-        sourceQuote: "Steam for 15 minutes.",
-      },
-    ];
-    generate.mockResolvedValueOnce(JSON.stringify(modelResult));
-    const analysis = await new SocialRecipeService().analyzeForRecipe({
-      platform: "tiktok",
-      url: "https://vt.tiktok.com/ZSguquYyJ/",
-    });
-    expect(analysis.recipe).toBeDefined();
-    expect(generate.mock.calls[0]?.[0].prompt).toContain("Steam for 15 minutes.");
-    expect(read).not.toHaveBeenCalled();
-    expect(analysis.recipe?.steps.map((step) => step.description)).toEqual([
-      "Steam for 15 minutes.",
-    ]);
-  });
+      })}</script>`;
+      globalThis.fetch = jest.fn(
+        async (input) =>
+          new Response(
+            String(input).includes("/subtitles")
+              ? "WEBVTT\n\n00:00:00.000 --> 00:00:01.000\nmeans chicken steam egg.\n\n00:00:01.000 --> 00:00:03.000\nSteam for 15 minutes.\n"
+              : String(input).includes("www.tiktok.com") && !String(input).includes("_r=1")
+                ? "<html>No mobile metadata</html>"
+                : html
+          )
+      );
+      const modelResult = JSON.parse(result);
+      modelResult.recipe.steps = [
+        {
+          step: 1,
+          title: "Steam",
+          description: "Steam for 15 minutes.",
+          sourceQuote: "Steam for 15 minutes.",
+        },
+      ];
+      generate.mockResolvedValueOnce(JSON.stringify(modelResult));
+      const analysis = await new SocialRecipeService().analyzeForRecipe({
+        platform: "tiktok",
+        url: sharedUrl,
+      });
+      expect(analysis.recipe).toBeDefined();
+      expect(generate.mock.calls[0]?.[0].prompt).toContain("Steam for 15 minutes.");
+      expect(read).not.toHaveBeenCalled();
+      expect(analysis.recipe?.steps.map((step) => step.description)).toEqual([
+        "Steam for 15 minutes.",
+      ]);
+    }
+  );
   it("retains the video fallback when published subtitles are unavailable", async () => {
     const html = `<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__">${JSON.stringify({
       __DEFAULT_SCOPE__: {

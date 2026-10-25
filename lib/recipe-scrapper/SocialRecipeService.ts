@@ -148,8 +148,16 @@ export class SocialRecipeService {
     image?: string;
   }> {
     try {
+      // Safari shares the canonical URL without TikTok's mobile-reflow flag.
+      // Request that public mobile payload so captions/subtitles remain available.
+      const metadataUrl = new URL(url);
+      if (
+        (metadataUrl.hostname === "www.tiktok.com" || metadataUrl.hostname === "tiktok.com") &&
+        /^\/@[\w.-]+\/video\/\d+\/?$/.test(metadataUrl.pathname)
+      )
+        metadataUrl.searchParams.set("_r", "1");
       const response = await fetchWithTimeout(
-        url,
+        metadataUrl.toString(),
         {
           signal,
           headers: {
