@@ -45,7 +45,7 @@ export function SearchContent({
 }) {
   const { top, bottom } = useSafeAreaInsets();
   const colors = useColors();
-  const { searchBarRef, onFocus } = useSearchBarFocus(focusEnabled);
+  const { searchBarRef, onFocus, onBlur } = useSearchBarFocus(focusEnabled);
   const filterSheetRef = useRef<BottomSheetMethods>(null);
   const filterSnapPoints = useMemo(() => ["55%"], []);
 
@@ -289,6 +289,7 @@ export function SearchContent({
         <Stack.SearchBar
           ref={searchBarRef}
           onFocus={onFocus}
+          onBlur={onBlur}
           hideNavigationBar
           onCancelButtonPress={handleDismiss}
           onClose={handleDismiss}
