@@ -5,7 +5,6 @@ import {
   View,
   StyleSheet,
   useWindowDimensions,
-  ActivityIndicator,
   ScrollView,
   Alert,
   RefreshControl,
@@ -59,6 +58,7 @@ import WriteReviewModal from "~/components/Recipe/Details/WriteReviewModal";
 import TipsList from "~/components/Recipe/Details/TipsList";
 import WriteTipModal from "~/components/Recipe/Details/WriteTipModal";
 import { useRecipeReviewsAndTips } from "~/hooks/useRecipeReviewsAndTips";
+import RecipeDetailsSkeleton from "~/components/Recipe/Details/RecipeDetailsSkeleton";
 
 const AnimatedH1 = Animated.createAnimatedComponent(H1);
 const AnimatedImage = Animated.createAnimatedComponent(Image);
@@ -72,12 +72,7 @@ export default function RecipeDetails() {
   }, [refetch]);
 
   if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator size="large" />
-        <P className="mt-4 text-muted-foreground">Loading recipe...</P>
-      </View>
-    );
+    return <RecipeDetailsSkeleton />;
   }
 
   if (error) {
