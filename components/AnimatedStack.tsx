@@ -1,4 +1,5 @@
-import { Stack } from "expo-router";
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
+import { useUniwind } from "uniwind";
 import useColors from "~/hooks/useColor";
 import { useNotificationHandlers } from "~/hooks/useNotificationHandlers";
 import { useOnboardingCheck } from "~/hooks/useOnboardingCheck";
@@ -10,6 +11,22 @@ import { getMiscScreens } from "~/components/navigation/ScreenGroupMisc";
 
 export function AnimatedStack() {
   const colors = useColors();
+  const { theme } = useUniwind();
+  const baseTheme = theme === "dark" ? DarkTheme : DefaultTheme;
+  // Native transitions expose the stack container around the rounded screens.
+  // Keep that backdrop and native chrome on the same theme as the screen content.
+  const navigationTheme = {
+    ...baseTheme,
+    colors: {
+      ...baseTheme.colors,
+      background: colors.background,
+      card: colors.card,
+      text: colors.foreground,
+      primary: colors.primary,
+      border: colors.border,
+      notification: colors.destructive,
+    },
+  };
 
   const commonHeaderOptions = {
     presentation: "card",
@@ -34,21 +51,23 @@ export function AnimatedStack() {
   useOnboardingCheck();
 
   return (
-    <Stack screenOptions={{ headerTintColor: colors.foreground }}>
-      {/* ======== PANTRY ======== */}
-      {getPantryScreens()}
+    <ThemeProvider value={navigationTheme}>
+      <Stack screenOptions={{ headerTintColor: colors.foreground }}>
+        {/* ======== PANTRY ======== */}
+        {getPantryScreens()}
 
-      {/* ======== INGREDIENT ======== */}
-      {getIngredientScreens()}
+        {/* ======== INGREDIENT ======== */}
+        {getIngredientScreens()}
 
-      {/* ======== RECIPE ======== */}
-      {getRecipeScreens({ colors })}
+        {/* ======== RECIPE ======== */}
+        {getRecipeScreens({ colors })}
 
-      {/* ======== PROFILE ======== */}
-      {getProfileScreens({ commonHeaderOptions })}
+        {/* ======== PROFILE ======== */}
+        {getProfileScreens({ commonHeaderOptions })}
 
-      {/* ======== MISCELLANOUS ======== */}
-      {getMiscScreens({ commonHeaderOptions, backgroundColor: colors.background })}
-    </Stack>
+        {/* ======== MISCELLANOUS ======== */}
+        {getMiscScreens({ commonHeaderOptions, backgroundColor: colors.background })}
+      </Stack>
+    </ThemeProvider>
   );
 }
