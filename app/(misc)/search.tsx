@@ -1,12 +1,19 @@
 import React, { useMemo, useRef, useState } from "react";
-import { View, Keyboard, Pressable, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  View,
+  Keyboard,
+  Pressable,
+  TouchableOpacity,
+  StyleSheet,
+  useWindowDimensions,
+} from "react-native";
 import BottomSheet, {
   BottomSheetScrollView,
   type BottomSheetMethods,
 } from "@expo/ui/community/bottom-sheet";
 import { Portal } from "@rn-primitives/portal";
 import { cn } from "~/lib/utils";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ActivityIndicator, Text } from "react-native";
 import { useRecipes, type RecipeFilters } from "~/hooks/queries/useRecipeQueries";
@@ -18,6 +25,7 @@ import useColors from "~/hooks/useColor";
 import * as Haptics from "expo-haptics";
 import { useFeatureFlag } from "~/hooks/queries/useFeatureFlags";
 import { useSearchBarFocus } from "~/hooks/useSearchBarFocus";
+import { getSearchPullOffset, SearchEntrance } from "~/components/Search/SearchEntrance";
 
 const TIME_OPTIONS = [
   { label: "15m", maxTotalTime: 15 },
@@ -38,6 +46,9 @@ export default function SearchScreen() {
   const { top, bottom } = useSafeAreaInsets();
   const colors = useColors();
   const router = useRouter();
+  const { pullOffset } = useLocalSearchParams<{ pullOffset?: string | string[] }>();
+  const { height } = useWindowDimensions();
+  const entranceOffset = getSearchPullOffset(pullOffset, height);
   const searchBarRef = useSearchBarFocus();
   const filterSheetRef = useRef<BottomSheetMethods>(null);
   const filterSnapPoints = useMemo(() => ["55%"], []);
@@ -266,7 +277,8 @@ export default function SearchScreen() {
   );
 
   return (
-    <>
+    <View className="flex-1 bg-background">
+      <Stack.Screen options={{ animation: entranceOffset > 0 ? "none" : "fade" }} />
       <Stack.SearchBar
         ref={searchBarRef}
         autoFocus
@@ -275,17 +287,19 @@ export default function SearchScreen() {
         onChangeText={(e) => setInput(e.nativeEvent.text)}
         placeholder="Search"
       />
-      <Pressable className="flex-1" onPress={handleDismiss}>
-        <SearchResultsList
-          recipes={recipeResults}
-          ingredients={ingredientResults}
-          colors={colors}
-          hasQuery={hasQuery}
-          loading={showSearchLoading}
-          top={top}
-          bottom={bottom}
-        />
-      </Pressable>
+      <SearchEntrance offset={entranceOffset}>
+        <Pressable className="flex-1" onPress={handleDismiss}>
+          <SearchResultsList
+            recipes={recipeResults}
+            ingredients={ingredientResults}
+            colors={colors}
+            hasQuery={hasQuery}
+            loading={showSearchLoading}
+            top={top}
+            bottom={bottom}
+          />
+        </Pressable>
+      </SearchEntrance>
       {/* <Pressable
         accessibilityRole="button"
         accessibilityLabel={
@@ -309,7 +323,7 @@ export default function SearchScreen() {
         ) : null}
       </Pressable> */}
       {renderFilterSheet()}
-    </>
+    </View>
   );
 }
 

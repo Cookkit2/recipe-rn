@@ -5,6 +5,8 @@ import SearchScreen from "~/app/(misc)/search";
 let mockNativeReady = false;
 let mockScreenFocused = true;
 const mockFocus = jest.fn();
+let mockSearchParams: { pullOffset?: string | string[] } = {};
+const mockScreenOptions = jest.fn();
 const mockListeners = new Map<string, Set<() => void>>();
 const mockNavigation = {
   isFocused: () => mockScreenFocused,
@@ -19,12 +21,17 @@ const mockNavigation = {
 jest.mock("expo-router", () => ({
   useRouter: () => ({ back: jest.fn() }),
   useNavigation: () => mockNavigation,
+  useLocalSearchParams: () => mockSearchParams,
   useFocusEffect: (callback: () => void) => {
     require("react").useEffect(() => {
       if (mockScreenFocused) return callback();
     }, [callback, mockScreenFocused]);
   },
   Stack: {
+    Screen: ({ options }: { options: unknown }) => {
+      mockScreenOptions(options);
+      return null;
+    },
     SearchBar: ({ ref }: { ref: React.Ref<{ focus: () => void }> }) => {
       require("react").useLayoutEffect(() => {
         if (!mockNativeReady) return;
@@ -56,6 +63,12 @@ jest.mock("~/hooks/queries/useFeatureFlags", () => ({
 }));
 jest.mock("../SearchResultsList", () => ({ SearchResultsList: () => null }));
 jest.mock("expo-haptics", () => ({}));
+jest.mock("react-native-reanimated", () => ({
+  __esModule: true,
+  default: { View: require("react-native").View },
+  withSpring: (value: number) => value,
+  withTiming: (value: number) => value,
+}));
 
 let nextFrame = 0;
 const frames = new Map<number, FrameRequestCallback>();
@@ -74,6 +87,8 @@ beforeEach(() => {
   mockNativeReady = false;
   mockScreenFocused = true;
   mockFocus.mockClear();
+  mockSearchParams = {};
+  mockScreenOptions.mockClear();
   mockListeners.clear();
   frames.clear();
   global.requestAnimationFrame = jest.fn((callback) => {
@@ -125,3 +140,26 @@ it("does not open the keyboard after leaving search and refocuses when returning
   await flushFrames();
   expect(mockFocus).toHaveBeenCalledTimes(1);
 });
+
+it("starts the incoming search content at the passed pull offset and springs it to rest", async () => {
+  mockSearchParams = { pullOffset: "38" };
+  const screen = await render(<SearchScreen />);
+  const entrance = screen.getByTestId("search-pull-entrance").props.entering();
+  expect(entrance.initialValues.transform).toEqual([{ translateY: 38 }]);
+  expect(entrance.animations.transform).toEqual([{ translateY: 0 }]);
+  expect(mockScreenOptions).toHaveBeenLastCalledWith(
+    expect.objectContaining({ animation: "none" })
+  );
+});
+
+it.each([undefined, "bad", "Infinity", "-10", "0"])(
+  "keeps the normal search entrance without a valid positive pull offset (%s)",
+  async (pullOffset) => {
+    mockSearchParams = { pullOffset };
+    const screen = await render(<SearchScreen />);
+    expect(screen.getByTestId("search-pull-entrance").props.entering).toBeUndefined();
+    expect(mockScreenOptions).toHaveBeenLastCalledWith(
+      expect.objectContaining({ animation: "fade" })
+    );
+  }
+);

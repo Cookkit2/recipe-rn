@@ -17,6 +17,7 @@ export function usePantryPullSearch(enabled: boolean) {
   const navigation = useNavigation();
   const opening = useRef(false);
   const offset = useSharedValue(0);
+  const dragStartOffset = useSharedValue(0);
   const startedAtTop = useSharedValue(false);
   const triggered = useSharedValue(false);
   const pullDistance = useSharedValue(0);
@@ -27,11 +28,14 @@ export function usePantryPullSearch(enabled: boolean) {
     }, [])
   );
 
-  const openSearch = useCallback(() => {
-    if (!enabled || opening.current || !navigation.isFocused()) return;
-    opening.current = true;
-    router.push("/search");
-  }, [enabled, navigation, router]);
+  const openSearch = useCallback(
+    (visiblePull: number) => {
+      if (!enabled || opening.current || !navigation.isFocused()) return;
+      opening.current = true;
+      router.push({ pathname: "/search", params: { pullOffset: String(visiblePull) } });
+    },
+    [enabled, navigation, router]
+  );
 
   const onScroll = useAnimatedScrollHandler((event) => {
     // Automatic iOS header insets make the resting offset negative.
@@ -43,6 +47,7 @@ export function usePantryPullSearch(enabled: boolean) {
     .failOffsetX([-20, 20])
     .onBegin(() => {
       startedAtTop.value = enabled && offset.value <= 1;
+      dragStartOffset.value = offset.value;
       triggered.value = false;
     })
     .onUpdate((event) => {
@@ -51,7 +56,9 @@ export function usePantryPullSearch(enabled: boolean) {
       // Open during the pull, before releasing the list starts its rebound.
       if (!triggered.value && pullDistance.value >= SEARCH_PULL_DISTANCE) {
         triggered.value = true;
-        scheduleOnRN(openSearch);
+        // Native scrolling rubber-bands the content less than the finger moves.
+        // Hand off that visible displacement so search starts at the same spot.
+        scheduleOnRN(openSearch, Math.max(0, dragStartOffset.value - offset.value));
       }
     })
     .onFinalize(() => {

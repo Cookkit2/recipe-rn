@@ -16,7 +16,7 @@ jest.mock("expo-router", () => ({
     require("react").useEffect(callback, [callback, mockFocusGeneration]),
 }));
 jest.mock("react-native-worklets", () => ({
-  scheduleOnRN: (callback: () => void) => callback(),
+  scheduleOnRN: (callback: (...args: unknown[]) => void, ...args: unknown[]) => callback(...args),
 }));
 jest.mock("react-native-gesture-handler", () => ({
   Gesture: {
@@ -74,7 +74,18 @@ it("opens search once after a deliberate pull at the top, including automatic he
     drag(100);
   });
   expect(mockPush).toHaveBeenCalledTimes(1);
-  expect(mockPush).toHaveBeenCalledWith("/search");
+  expect(mockPush).toHaveBeenCalledWith({ pathname: "/search", params: { pullOffset: "0" } });
+});
+
+it("hands search the visible overscroll rather than the finger's undamped travel", async () => {
+  const { result } = await renderHook(() => usePantryPullSearch(true));
+  await act(async () => {
+    scroll(result.current.onScroll, -54);
+    mockHandlers.onBegin!();
+    scroll(result.current.onScroll, -92);
+    mockHandlers.onUpdate!({ translationY: 80 });
+  });
+  expect(mockPush).toHaveBeenCalledWith({ pathname: "/search", params: { pullOffset: "38" } });
 });
 
 it("opens search while the finger is still down as soon as the pull crosses the threshold", async () => {
