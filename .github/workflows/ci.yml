@@ -3,8 +3,9 @@ name: CI
 on:
   push:
     branches: [main, master, develop, staging]
+  # Any PR base, including a branch stacked on another open PR. Push stays
+  # limited to the long-lived branches above.
   pull_request:
-    branches: [main, master, develop, staging]
 
 env:
   NODE_VERSION: "22"

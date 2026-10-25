@@ -48,10 +48,8 @@ export default function PantryWrapper() {
     if (isRecipeOpen) setRecipesMounted(true);
   }, [isRecipeOpen]);
 
-  const entranceOffset = useDerivedValue(
-    () => withSpring(isRecipeOpen ? 1 : 0, SPRING_CONFIG),
-    [isRecipeOpen]
-  );
+  // The Babel plugin tracks the closure; dependency arrays warn on native.
+  const entranceOffset = useDerivedValue(() => withSpring(isRecipeOpen ? 1 : 0, SPRING_CONFIG));
 
   useEffect(() => {
     setStatusBarStyle("auto", true);
@@ -122,7 +120,7 @@ export default function PantryWrapper() {
       marginBottom: isRecipeOpen ? collapsedHeight - translateY.value : 0,
       paddingTop: withSpring(isRecipeOpen ? top - 8 : top, SPRING_CONFIG),
     };
-  }, [isRecipeOpen, collapsedHeight, top]);
+  });
 
   const closeRecipe = useCallback(() => {
     if (isRecipeOpen) {
@@ -139,7 +137,7 @@ export default function PantryWrapper() {
       // Bound the list to the visible drawer instead of extending it offscreen.
       bottom: 0,
     };
-  }, [collapsedHeight, screenHeight]);
+  });
 
   return (
     <View testID={TEST_IDS.home.screen} collapsable={false} style={{ flex: 1 }}>

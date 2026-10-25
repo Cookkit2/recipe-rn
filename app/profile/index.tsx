@@ -18,6 +18,7 @@ import Purchases from "react-native-purchases";
 import { CardContent } from "~/components/ui/card";
 import { P } from "~/components/ui/typography";
 import ListButton from "~/components/Shared/ListButton";
+import { TEST_IDS } from "~/constants/test-ids";
 import { toast } from "sonner-native";
 import * as WebBrowser from "expo-web-browser";
 import SubscriptionCard from "~/components/Profile/SubscriptionCard";
@@ -116,6 +117,7 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView
+      testID={TEST_IDS.profile.screen}
       contentInsetAdjustmentBehavior="automatic"
       className="flex-1 bg-background"
       showsVerticalScrollIndicator={false}
@@ -148,6 +150,7 @@ export default function ProfileScreen() {
             <ListButton
               title="Assistant"
               icon={SparklesIcon}
+              testID={TEST_IDS.profile.assistantButton}
               onPress={() => router.push("/assistant")}
             />
             {/* <ListButton

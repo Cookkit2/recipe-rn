@@ -3,7 +3,9 @@ module.exports = {
   rootDir: "..",
   testRunner: "jest-circus/runner",
   testMatch: ["<rootDir>/e2e/scenarios/**/*.e2e.ts"],
-  testTimeout: 120000,
+  // Cold launch on the iOS 26 simulator includes SpringBoard permission grants
+  // that have exceeded 120s. Hooks in e2e/setup.js use the same budget.
+  testTimeout: 300000,
   maxWorkers: 1,
   globalSetup: "detox/runners/jest/globalSetup",
   globalTeardown: "detox/runners/jest/globalTeardown",
