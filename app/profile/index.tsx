@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 import {
   BellIcon,
-  CalendarIcon,
+  ChefHatIcon,
   ChartBarIcon,
   InfoIcon,
   MailIcon,
@@ -140,9 +140,9 @@ export default function ProfileScreen() {
               onPress={() => router.push("/profile/preferences")}
             />
             <ListButton
-              title="Meal Plan"
-              icon={CalendarIcon}
-              onPress={() => router.push("/meal-plan")}
+              title="Cooked Recipes"
+              icon={ChefHatIcon}
+              onPress={() => router.push("/profile/cooked-recipes")}
             />
             {/* <ListButton
               title="Analytics"
