@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { onRecipeCatalogChanged } from "~/data/recipe-catalog-events";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Create a client with optimized defaults for mobile
@@ -45,6 +46,13 @@ interface QueryProviderProps {
 }
 
 export function QueryProvider({ children }: QueryProviderProps) {
+  useEffect(
+    () =>
+      onRecipeCatalogChanged(() => {
+        void queryClient.invalidateQueries({ queryKey: ["recipes"] });
+      }),
+    []
+  );
   return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }
 

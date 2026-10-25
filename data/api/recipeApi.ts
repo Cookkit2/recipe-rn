@@ -197,6 +197,66 @@ const deleteRecipeCore = async (id: string): Promise<void> => {
   await databaseFacade.deleteRecipe(id);
 };
 
+/** Card catalog: ingredients are needed for matching; cooking steps are detail-only. */
+async function fetchRecommendationCatalogCore(): Promise<Recipe[]> {
+  const recipes = (await databaseFacade.getAllRecipes()).filter(
+    (r) => r.type !== RecipeType.TAILORED
+  );
+  const details = await databaseFacade.getRecipesWithDetails(
+    recipes.map((r) => r.id),
+    {
+      includeSteps: false,
+      recipes,
+    }
+  );
+  return convertDbRecipesToUIRecipesBatch(recipes, details);
+}
+
+export function rankRecipeRecommendations(
+  recipes: readonly Recipe[],
+  availability: AvailableRecipesResult<{ id: string }>,
+  options: {
+    maxRecommendations?: number;
+    categories?: string[];
+    filterStrategy?: RecipeFilterStrategy;
+    rankingStrategy?: RecipeRankingStrategy;
+    rankingContext?: RankingContext;
+  } = {}
+): { recipes: Array<{ recipe: Recipe; completionPercentage: number }> } {
+  const completionMap = new Map<string, number>();
+  for (const recipe of availability.canMake) completionMap.set(recipe.id, 100);
+  for (const item of availability.partiallyCanMake)
+    completionMap.set(item.recipe.id, item.completionPercentage);
+  const filterContext: FilterContext = {
+    completionPercentages: completionMap,
+    selectedCategories: options.categories,
+  };
+  const context: RankingContext = {
+    ...options.rankingContext,
+    completionPercentages: completionMap,
+  };
+  const ranking = options.rankingStrategy ?? createHistoryAwareRankingStrategy();
+  const category = options.categories?.length
+    ? new CategoryFilter({ categories: options.categories })
+    : undefined;
+  const scored = recipes
+    .filter(
+      (recipe) =>
+        (!category || category.filter(recipe, filterContext)) &&
+        (!options.filterStrategy || options.filterStrategy.filter(recipe, filterContext))
+    )
+    .map((recipe) => ({
+      recipe,
+      score: ranking.score(recipe, context),
+      completionPercentage: completionMap.get(recipe.id) ?? 0,
+    }));
+  scored.sort((a, b) => b.score - a.score);
+  const limited = options.maxRecommendations ? scored.slice(0, options.maxRecommendations) : scored;
+  return {
+    recipes: limited.map(({ recipe, completionPercentage }) => ({ recipe, completionPercentage })),
+  };
+}
+
 const getAvailableRecipesCore = async (): Promise<{
   canMake: Recipe[];
   partiallyCanMake: Array<{ recipe: Recipe; completionPercentage: number }>;
@@ -236,6 +296,7 @@ const getAvailableRecipesCore = async (): Promise<{
  * These functions only handle database interactions and data transformation
  */
 export const recipeApi = {
+  fetchRecommendationCatalog: fetchRecommendationCatalogCore,
   /**
    * Fetch all recipes from the local database as lightweight list rows (no steps/ingredients).
    * Full detail for a recipe: `getRecipeById` / `useRecipe`.
@@ -530,7 +591,8 @@ export const recipeApi = {
     /** Pre-built ranking context (for strategies that need external data like cooking history) */
     rankingContext?: RankingContext;
     /** Pre-fetched availability data (optional - if provided, skips database call) */
-    preFetchedAvailability?: AvailableRecipesResult;
+    preFetchedAvailability?: AvailableRecipesResult<{ id: string }>;
+    preFetchedRecipes?: Recipe[];
     /** Pre-fetched cooking history data (optional - if provided, skips database call) */
     preFetchedCookingHistory?: CookingHistoryData;
   }): Promise<{
@@ -539,42 +601,11 @@ export const recipeApi = {
   }> {
     return withSilentError(
       async () => {
-        const {
-          maxRecommendations,
-          categories,
-          filterStrategy: providedStrategy,
-          rankingStrategy = createHistoryAwareRankingStrategy(),
-          rankingContext,
-        } = options || {};
-
-        // Ensure categories are filtered if provided
-        let filterStrategy = providedStrategy;
-
-        if (categories && categories.length > 0) {
-          const categoryFilter = new CategoryFilter({ categories });
-          if (filterStrategy) {
-            // Combine provided strategy with category filter
-            filterStrategy = new CompositeFilterStrategy()
-              .addFilter(filterStrategy)
-              .addFilter(categoryFilter);
-          } else {
-            // Use category filter as the strategy
-            filterStrategy = categoryFilter;
-          }
-        }
-
-        // Get availability data (needed for completion percentages)
+        const { rankingContext } = options ?? {};
+        const recipes = options?.preFetchedRecipes ?? (await fetchRecommendationCatalogCore());
         const availability =
-          options?.preFetchedAvailability ?? (await databaseFacade.getAvailableRecipes());
-
-        // Build completion percentage map
-        const completionMap = new Map<string, number>();
-        for (const recipe of availability.canMake) {
-          completionMap.set(recipe.id, 100);
-        }
-        for (const item of availability.partiallyCanMake) {
-          completionMap.set(item.recipe.id, item.completionPercentage);
-        }
+          options?.preFetchedAvailability ??
+          (await databaseFacade.getRecipeAvailabilityForCatalog(recipes));
 
         // Auto-fetch cooking history data if not provided in context or pre-fetched
         let cookingHistoryData: CookingHistoryData | undefined =
@@ -619,52 +650,10 @@ export const recipeApi = {
           }
         }
 
-        // Build contexts for filtering and ranking
-        const filterCtx: FilterContext = {
-          completionPercentages: completionMap,
-          selectedCategories: categories,
-        };
-
-        const rankingCtx: RankingContext = {
-          ...rankingContext,
-          completionPercentages: completionMap,
-          cookingHistory: cookingHistoryData,
-        };
-
-        const scoreRecipe = (recipe: Recipe) => rankingStrategy!.score(recipe, rankingCtx);
-
-        // Fetch ALL recipes, excluding tailored recipes from the main list
-        const allDbRecipes = await databaseFacade.getAllRecipes();
-
-        // Use batch query to get all recipe details in one call
-        const recipeIds = allDbRecipes
-          .filter((r) => r.type !== RecipeType.TAILORED)
-          .map((r) => r.id);
-        const recipeDetailsMap = await databaseFacade.getRecipesWithDetails(recipeIds);
-
-        // Use batch conversion to avoid N+1 queries
-        let allRecipes = convertDbRecipesToUIRecipesBatch(allDbRecipes, recipeDetailsMap);
-
-        // Apply filter strategy
-        if (filterStrategy) {
-          allRecipes = allRecipes.filter((recipe) => filterStrategy.filter(recipe, filterCtx));
-        }
-
-        // Map to recipes with completion percentages
-        let recipesWithCompletion = allRecipes.map((recipe) => ({
-          recipe,
-          completionPercentage: completionMap.get(recipe.id) ?? 0,
-        }));
-
-        // Apply ranking strategy
-        recipesWithCompletion.sort((a, b) => scoreRecipe(b.recipe) - scoreRecipe(a.recipe));
-
-        // Apply limit if specified
-        if (maxRecommendations && maxRecommendations < recipesWithCompletion.length) {
-          recipesWithCompletion = recipesWithCompletion.slice(0, maxRecommendations);
-        }
-
-        return { recipes: recipesWithCompletion };
+        return rankRecipeRecommendations(recipes, availability, {
+          ...options,
+          rankingContext: { ...rankingContext, cookingHistory: cookingHistoryData },
+        });
       },
       { recipes: [] }
     );

@@ -17,7 +17,7 @@ import RecipeLists from "~/components/Pantry/RecipeLists";
 import { SNAP_THRESHOLD } from "~/constants/pantry";
 import { usePantryStore } from "~/store/PantryContext";
 import IngredientLists from "~/components/Pantry/IngredientLists";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { setStatusBarStyle } from "expo-status-bar";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -42,6 +42,11 @@ export default function PantryWrapper() {
     collapsedHeight,
     expandedHeight,
   } = usePantryStore();
+
+  const [recipesMounted, setRecipesMounted] = useState(isRecipeOpen);
+  useEffect(() => {
+    if (isRecipeOpen) setRecipesMounted(true);
+  }, [isRecipeOpen]);
 
   const entranceOffset = useDerivedValue(
     () => withSpring(isRecipeOpen ? 1 : 0, SPRING_CONFIG),
@@ -161,7 +166,7 @@ export default function PantryWrapper() {
               <RecipeCategoryButtonGroup />
             </View>
           </GestureDetector>
-          <RecipeLists />
+          {recipesMounted && <RecipeLists active={isRecipeOpen} />}
         </Animated.View>
       </Animated.View>
     </View>

@@ -1,3 +1,4 @@
+import { lazySingleton } from "~/utils/lazy-singleton";
 /**
  * Achievement Service
  *
@@ -86,10 +87,15 @@ export class AchievementService {
         userAchievementsMap = new Map(userAchievements.map((ua: any) => [ua.achievementId, ua]));
       }
 
+      const metricProgress = new Map<string, Promise<number>>();
       // Check each achievement
       for (const achievement of achievements) {
         const userAchievement = userAchievementsMap.get(achievement.id);
-        const checkResult = await this._evaluateAchievement(achievement, userAchievement);
+        const checkResult = await this._evaluateAchievement(
+          achievement,
+          userAchievement,
+          metricProgress
+        );
 
         if (checkResult.newlyUnlocked) {
           result.newlyUnlocked.push({
@@ -123,7 +129,8 @@ export class AchievementService {
    */
   private async _evaluateAchievement(
     achievement: any,
-    userAchievement?: any
+    userAchievement?: any,
+    metricProgress?: Map<string, Promise<number>>
   ): Promise<{
     newlyUnlocked: boolean;
     progressUpdated: boolean;
@@ -145,7 +152,13 @@ export class AchievementService {
 
       // Parse requirement and get current progress
       const requirement = achievement.parsedRequirement as AchievementRequirement;
-      const currentProgress = await this.getCurrentProgress(requirement);
+      const metricKey = JSON.stringify([requirement.metric, requirement.timeframe]);
+      let progress = metricProgress?.get(metricKey);
+      if (!progress) {
+        progress = this.getCurrentProgress(requirement);
+        metricProgress?.set(metricKey, progress);
+      }
+      const currentProgress = await progress;
       const target = requirement.target;
 
       // Update progress
@@ -531,4 +544,4 @@ export class AchievementService {
 }
 
 // Singleton instance
-export const achievementService = new AchievementService();
+export const achievementService = lazySingleton(() => new AchievementService());

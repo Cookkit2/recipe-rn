@@ -7,6 +7,8 @@ export const recipeQueryKeys = {
   // Base key for all recipe queries
   all: ["recipes"] as const,
 
+  catalog: () => [...recipeQueryKeys.all, "catalog"] as const,
+
   // All recipes list
   recipes: () => [...recipeQueryKeys.all, "list"] as const,
 

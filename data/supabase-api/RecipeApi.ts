@@ -99,15 +99,14 @@ export const recipeApi = {
     // Fetch steps and ingredients separately for better performance
     const recipeIds = allRecipes.map((r) => r.id);
 
-    const { data: steps } = await supabase!
-      .from("recipe_step")
-      .select("*")
-      .in("recipe_id", recipeIds);
-
-    const { data: ingredients } = await supabase!
-      .from("pivot_recipe_ingredient")
-      .select("*")
-      .in("recipe_id", recipeIds);
+    const [stepsResult, ingredientsResult] = await Promise.all([
+      supabase!.from("recipe_step").select("*").in("recipe_id", recipeIds),
+      supabase!.from("pivot_recipe_ingredient").select("*").in("recipe_id", recipeIds),
+    ]);
+    if (stepsResult.error) throw stepsResult.error;
+    if (ingredientsResult.error) throw ingredientsResult.error;
+    const steps = stepsResult.data;
+    const ingredients = ingredientsResult.data;
 
     // Group by recipe ID
     const stepsByRecipe = new Map<string, Tables<"recipe_step">[]>();
