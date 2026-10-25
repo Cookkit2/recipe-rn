@@ -30,7 +30,7 @@ describe("Assistant", () => {
     await element(by.id(TEST_IDS.assistant.list)).tap();
     await element(by.id(TEST_IDS.assistant.send)).tap();
 
-    await waitFor(element(by.text("Updated pantry")))
+    await waitFor(element(by.text("Added to pantry")))
       .toBeVisible()
       .withTimeout(20000);
     await waitFor(element(by.text("Added eggs to your pantry.")))

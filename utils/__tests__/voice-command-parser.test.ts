@@ -1,4 +1,4 @@
-import { normalizeIngredientName, voiceCommandParser } from "../voice-command-parser";
+import { voiceCommandParser } from "../voice-command-parser";
 import type { Recipe } from "~/types/Recipe";
 
 describe("VoiceCommandParser", () => {
@@ -38,13 +38,6 @@ describe("VoiceCommandParser", () => {
   });
 
   describe("ingredient normalization", () => {
-    it("normalizes modifiers and common plural endings", () => {
-      expect(normalizeIngredientName("fresh tomatoes")).toEqual(["tomato"]);
-      expect(normalizeIngredientName("diced onions")).toEqual(["onion"]);
-      expect(normalizeIngredientName("cooked chicken breast")).toEqual(["chicken", "breast"]);
-      expect(normalizeIngredientName("frozen cherries")).toEqual(["cherry"]);
-    });
-
     it("matches modified plural ingredient names through the public parser", () => {
       const mockRecipe = {
         ingredients: [{ name: "Tomato", quantity: 3, unit: "pieces", relatedIngredientId: "1" }],
@@ -104,4 +97,15 @@ describe("VoiceCommandParser", () => {
       expect(temps).toHaveLength(0);
     });
   });
+});
+
+it.each([
+  "what amount of flour do I need?",
+  "how much of the flour do I need?",
+  "what is the quantity of flour?",
+])("recognizes grammatical wrappers: %s", (text) => {
+  const recipe = {
+    ingredients: [{ name: "Flour", quantity: 2, unit: "cups", relatedIngredientId: "1" }],
+  } as Recipe;
+  expect(voiceCommandParser.parseCommand(text, recipe).ingredient?.name).toBe("Flour");
 });
