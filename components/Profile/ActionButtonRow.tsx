@@ -1,4 +1,4 @@
-import { CalendarIcon, ChefHatIcon, LeafIcon, ShoppingCartIcon } from "lucide-uniwind";
+import { CalendarIcon, LeafIcon, ShoppingCartIcon } from "lucide-uniwind";
 import React from "react";
 import { Pressable, View } from "react-native";
 import { CardContent } from "../ui/card";
@@ -13,10 +13,10 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 export default function ActionButtonRow() {
   const router = useRouter();
   const {
-    animatedStyle: cookedAnimatedStyle,
-    roundedStyle: cookedRoundedStyle,
-    onPressIn: onCookedPressIn,
-    onPressOut: onCookedPressOut,
+    animatedStyle: mealPlanAnimatedStyle,
+    roundedStyle: mealPlanRoundedStyle,
+    onPressIn: onMealPlanPressIn,
+    onPressOut: onMealPlanPressOut,
   } = useButtonAnimation(true, 24);
 
   const {
@@ -33,9 +33,9 @@ export default function ActionButtonRow() {
     onPressOut: onAnalyticsPressOut,
   } = useButtonAnimation(true, 24);
 
-  const onCookedRecipesPress = () => {
+  const onMealPlanPress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.push("/profile/cooked-recipes");
+    router.push("/meal-plan");
   };
 
   const onGroceryListPress = () => {
@@ -52,16 +52,16 @@ export default function ActionButtonRow() {
     <View className="flex-row px-6 mt-6 gap-6 ">
       <AnimatedPressable
         className="flex-1 rounded-3xl shadow-md shadow-foreground/10 border-none bg-card"
-        onPressIn={onCookedPressIn}
-        onPressOut={onCookedPressOut}
-        onPress={onCookedRecipesPress}
-        style={[cookedAnimatedStyle, cookedRoundedStyle]}
+        onPressIn={onMealPlanPressIn}
+        onPressOut={onMealPlanPressOut}
+        onPress={onMealPlanPress}
+        style={[mealPlanAnimatedStyle, mealPlanRoundedStyle]}
         accessibilityRole="button"
-        accessibilityLabel="Cooked Recipes"
+        accessibilityLabel="Meal Plan"
       >
         <CardContent className="py-6 flex gap-3">
-          <ChefHatIcon className="text-foreground" size={32} strokeWidth={1.618} />
-          <P className="font-urbanist-medium">Cooked Recipes</P>
+          <CalendarIcon className="text-foreground" size={32} strokeWidth={1.618} />
+          <P className="font-urbanist-medium">Meal Plan</P>
         </CardContent>
       </AnimatedPressable>
       <AnimatedPressable
