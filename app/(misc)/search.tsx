@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { View, Keyboard, Pressable, TouchableOpacity, StyleSheet } from "react-native";
 import BottomSheet, {
   BottomSheetScrollView,
@@ -6,8 +6,7 @@ import BottomSheet, {
 } from "@expo/ui/community/bottom-sheet";
 import { Portal } from "@rn-primitives/portal";
 import { cn } from "~/lib/utils";
-import { Stack, useFocusEffect, useRouter } from "expo-router";
-import type { SearchBarCommands } from "react-native-screens";
+import { Stack, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ActivityIndicator, Text } from "react-native";
 import { useRecipes, type RecipeFilters } from "~/hooks/queries/useRecipeQueries";
@@ -18,6 +17,7 @@ import { SearchResultsList } from "~/components/Search/SearchResultsList";
 import useColors from "~/hooks/useColor";
 import * as Haptics from "expo-haptics";
 import { useFeatureFlag } from "~/hooks/queries/useFeatureFlags";
+import { useSearchBarFocus } from "~/hooks/useSearchBarFocus";
 
 const TIME_OPTIONS = [
   { label: "15m", maxTotalTime: 15 },
@@ -38,7 +38,7 @@ export default function SearchScreen() {
   const { top, bottom } = useSafeAreaInsets();
   const colors = useColors();
   const router = useRouter();
-  const searchBarRef = useRef<SearchBarCommands>(null);
+  const searchBarRef = useSearchBarFocus();
   const filterSheetRef = useRef<BottomSheetMethods>(null);
   const filterSnapPoints = useMemo(() => ["55%"], []);
 
@@ -93,16 +93,6 @@ export default function SearchScreen() {
 
   const showSearchLoading =
     (hasQuery && isRecipesCatalogPending) || (trimmedInput.length > 0 && isPantryPending);
-
-  useFocusEffect(
-    useCallback(() => {
-      // Try immediately and also after a delay to handle both first mount
-      // and subsequent re-focus (screen already mounted in the stack).
-      searchBarRef.current?.focus();
-      const t = setTimeout(() => searchBarRef.current?.focus(), 150);
-      return () => clearTimeout(t);
-    }, [])
-  );
 
   const handleDismiss = () => {
     Keyboard.dismiss();
