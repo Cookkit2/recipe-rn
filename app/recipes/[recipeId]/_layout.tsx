@@ -3,13 +3,14 @@ import React from "react";
 import { RecipeDetailProvider } from "~/store/RecipeDetailContext";
 import { TimerProvider } from "~/store/TimerContext";
 import useColors from "~/hooks/useColor";
+import { APP_HEADER_APPEARANCE } from "~/components/navigation/native-header-appearance";
 
 export default function RecipeIdLayout() {
   const colors = useColors();
   return (
     <RecipeDetailProvider>
       <TimerProvider>
-        <Stack screenOptions={{ headerShown: false }}>
+        <Stack screenOptions={{ ...APP_HEADER_APPEARANCE, headerShown: false }}>
           <Stack.Screen
             name="index"
             options={{

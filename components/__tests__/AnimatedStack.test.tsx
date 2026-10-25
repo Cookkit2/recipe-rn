@@ -31,6 +31,7 @@ jest.mock("expo-router", () => {
       testID: "native-stack-background",
       style: { backgroundColor: theme.colors.background },
       accessibilityHint: theme.dark ? "dark" : "light",
+      accessibilityValue: { text: theme.colors.primary },
     });
   };
   return {
@@ -81,7 +82,12 @@ it("updates the native header tint when the app theme changes", async () => {
   jest.mocked(useColors).mockReturnValue({ foreground: "white" } as ReturnType<typeof useColors>);
   const { rerender } = await render(<Navigation />);
   expect(jest.mocked(Stack).mock.calls.at(-1)![0].screenOptions).toEqual(
-    expect.objectContaining({ headerTintColor: "white" })
+    expect.objectContaining({
+      headerTintColor: "white",
+      unstable_nativeProps: {
+        headerConfig: { experimental_userInterfaceStyle: "unspecified" },
+      },
+    })
   );
 
   jest.mocked(useColors).mockReturnValue({ foreground: "black" } as ReturnType<typeof useColors>);
@@ -106,10 +112,16 @@ it("keeps the native transition backdrop aligned with the resolved app theme", a
   const { getByTestId, rerender } = await render(<Navigation />);
   expect(getByTestId("native-stack-background")).toHaveStyle({ backgroundColor: "#0b0b0b" });
   expect(getByTestId("native-stack-background").props.accessibilityHint).toBe("dark");
+  expect(getByTestId("native-stack-background").props.accessibilityValue.text).toBe("#f1f1f1");
 
   jest.mocked(useUniwind).mockReturnValue({ theme: "light", hasAdaptiveThemes: false });
-  jest.mocked(useColors).mockReturnValue({ ...darkColors, background: "#e4e4e4" });
+  jest.mocked(useColors).mockReturnValue({
+    ...darkColors,
+    background: "#e4e4e4",
+    foreground: "#0b0b0b",
+  });
   await rerender(<Navigation />);
   expect(getByTestId("native-stack-background")).toHaveStyle({ backgroundColor: "#e4e4e4" });
   expect(getByTestId("native-stack-background").props.accessibilityHint).toBe("light");
+  expect(getByTestId("native-stack-background").props.accessibilityValue.text).toBe("#0b0b0b");
 });

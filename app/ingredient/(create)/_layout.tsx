@@ -2,12 +2,13 @@ import React from "react";
 import { Stack } from "expo-router";
 import { CreateIngredientProvider } from "~/store/CreateIngredientContext";
 import useColors from "~/hooks/useColor";
+import { APP_HEADER_APPEARANCE } from "~/components/navigation/native-header-appearance";
 
 export default function CreateIngredientLayout() {
   const colors = useColors();
   return (
     <CreateIngredientProvider>
-      <Stack screenOptions={{ headerShown: false }}>
+      <Stack screenOptions={{ ...APP_HEADER_APPEARANCE, headerShown: false }}>
         <Stack.Screen
           name="create"
           options={{

@@ -8,6 +8,7 @@ import { getIngredientScreens } from "~/components/navigation/ScreenGroupIngredi
 import { getRecipeScreens } from "~/components/navigation/ScreenGroupRecipe";
 import { getProfileScreens } from "~/components/navigation/ScreenGroupProfile";
 import { getMiscScreens } from "~/components/navigation/ScreenGroupMisc";
+import { APP_HEADER_APPEARANCE } from "~/components/navigation/native-header-appearance";
 
 export function AnimatedStack() {
   const colors = useColors();
@@ -22,7 +23,9 @@ export function AnimatedStack() {
       background: colors.background,
       card: colors.card,
       text: colors.foreground,
-      primary: colors.primary,
+      // Nested native headers use the navigation primary color for their back
+      // button when they don't supply a tint of their own.
+      primary: colors.foreground,
       border: colors.border,
       notification: colors.destructive,
     },
@@ -52,7 +55,7 @@ export function AnimatedStack() {
 
   return (
     <ThemeProvider value={navigationTheme}>
-      <Stack screenOptions={{ headerTintColor: colors.foreground }}>
+      <Stack screenOptions={{ ...APP_HEADER_APPEARANCE, headerTintColor: colors.foreground }}>
         {/* ======== PANTRY ======== */}
         {getPantryScreens()}
 
