@@ -146,7 +146,10 @@ export function buildTextRecipeRequest(prompt: string): AIRequest {
 }
 
 /** Social imports translate instructions and distinguish estimated amounts from source amounts. */
-export function buildSocialRecipeRequest(prompt: string): AIRequest {
+export function buildSocialRecipeRequest(
+  prompt: string,
+  sourceQuotes: readonly string[] = []
+): AIRequest {
   const responseSchema = getAnalysisResponseSchema();
   const recipe = responseSchema.properties.recipe;
   const ingredient = recipe.properties.ingredients.items;
@@ -159,6 +162,7 @@ export function buildSocialRecipeRequest(prompt: string): AIRequest {
     servingsSource: { type: "string", enum: ["stated", "estimated"] },
   });
   recipe.required.push("servingsSource");
+  if (sourceQuotes.length) recipe.properties.steps.minItems = sourceQuotes.length;
   const step = recipe.properties.steps.items;
   Object.assign(step.properties.description, {
     description:
@@ -168,10 +172,16 @@ export function buildSocialRecipeRequest(prompt: string): AIRequest {
     sourceQuote: {
       type: "string",
       minLength: 1,
+      ...(sourceQuotes.length ? { enum: [...sourceQuotes] } : {}),
       description:
         "Verbatim preparation instruction from the supplied source, in its original language.",
     },
   });
   step.required.push("sourceQuote");
-  return { ...buildTextRecipeRequest(prompt), responseSchema };
+  const request = buildTextRecipeRequest(prompt);
+  return {
+    ...request,
+    systemPrompt: `${request.systemPrompt} Write all displayed recipe text in English. Translate every original-language cooking instruction faithfully and in order, preserving all stated times and temperatures; only sourceQuote stays in the source language. Fill missing ingredient amounts with realistic positive estimates for the stated or default servings, marking them estimated. Never add ingredients absent from the source.`,
+    responseSchema,
+  };
 }

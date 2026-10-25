@@ -13,10 +13,14 @@ export async function shopForIngredients(
   const list = formatGrabMartShoppingList(items);
   if (!list) return "empty";
   await navigator.clipboard.writeText(list);
+  return (await openIngredientStore(provider)) ? "opened" : "copied";
+}
+
+export async function openIngredientStore(provider: IngredientShoppingProvider): Promise<boolean> {
   try {
     window.location.assign(provider === "grabmart" ? GRABMART_FALLBACK_URL : FOODPANDA_GROCERY_URL);
   } catch {
-    return "copied";
+    return false;
   }
-  return "opened";
+  return true;
 }

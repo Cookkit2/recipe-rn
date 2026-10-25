@@ -219,7 +219,7 @@ describe("SocialRecipeService.analyzeForRecipe", () => {
       text,
     });
     expect(result.recipe).toBeDefined();
-    expect(globalThis.fetch).not.toHaveBeenCalled();
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
     expect(mockGenerateContent).toHaveBeenCalledTimes(1);
     expect(mockGenerateContent.mock.calls[0]?.[0].prompt).toContain(text);
   });

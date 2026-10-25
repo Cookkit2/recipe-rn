@@ -1,11 +1,13 @@
 import { SocialRecipeService } from "../SocialRecipeService";
 import { readRecipeVideo } from "../recipe-video";
 import { generateAIContent } from "~/lib/ai/client";
+import { readRecipeVideoCoverFrames } from "../recipe-video-cover";
 
 jest.mock("~/utils/logger", () => ({
   log: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
 }));
 jest.mock("../recipe-video", () => ({ readRecipeVideo: jest.fn() }));
+jest.mock("../recipe-video-cover", () => ({ readRecipeVideoCoverFrames: jest.fn(async () => []) }));
 jest.mock("~/lib/ai/client", () => ({ generateAIContent: jest.fn() }));
 const generate = jest.mocked(generateAIContent);
 const read = jest.mocked(readRecipeVideo);
@@ -35,6 +37,7 @@ describe("social video recipe fallback", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     generate.mockReset();
+    jest.mocked(readRecipeVideoCoverFrames).mockResolvedValue([]);
     globalThis.fetch = jest.fn(
       async () => new Response(`<meta name="description" content="${caption}">`)
     );
@@ -54,7 +57,8 @@ describe("social video recipe fallback", () => {
     generate
       .mockResolvedValueOnce(notRecipe)
       .mockResolvedValueOnce(JSON.stringify({ text: "[8s] Steam for 15 minutes." }))
-      .mockResolvedValueOnce(result);
+      .mockResolvedValueOnce(result)
+      .mockResolvedValueOnce(JSON.stringify({ frameNumber: 1 }));
     const analysis = await new SocialRecipeService().analyzeForRecipe({ platform: "tiktok", url });
     expect(read).toHaveBeenCalledTimes(1);
     expect(generate.mock.calls[1]?.[0].images).toHaveLength(1);
@@ -63,6 +67,7 @@ describe("social video recipe fallback", () => {
     expect(generate.mock.calls[2]?.[0].prompt).toContain("Egg 5");
     expect(analysis.recipe?.ingredients[1]?.quantity).toBe(150);
     expect(analysis.recipe?.ingredients[1]?.notes).toContain("AI estimate");
+    expect(analysis.recipe?.imageUrl).toBe("data:image/jpeg;base64,/9j/");
   });
   it("uses a chosen local video without fetching the social webpage", async () => {
     generate
@@ -77,56 +82,94 @@ describe("social video recipe fallback", () => {
     expect(read.mock.calls[0]?.[0].videoUri).toBe("file:///cache/picked.mp4");
     expect(analysis.recipe).toBeDefined();
   });
-  it("translates TikTok's published subtitles without downloading blocked media", async () => {
-    const html = `<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__">${JSON.stringify({
-      __DEFAULT_SCOPE__: {
-        "webapp.reflow.video.detail": {
-          itemInfo: {
-            itemStruct: {
-              id: "7538296153562008840",
-              desc: caption,
-              video: {
-                subtitleInfos: [
-                  {
-                    Format: "webvtt",
-                    Url: "https://v16-webapp.tiktok.com/subtitles",
-                    LanguageCodeName: "eng-US",
-                  },
-                ],
+  it.each([
+    "https://vt.tiktok.com/ZSguquYyJ/",
+    "https://www.tiktok.com/@teefoodd/video/7538296153562008840",
+  ])(
+    "translates published subtitles from the shared TikTok URL %s without downloading media",
+    async (sharedUrl) => {
+      const html = `<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__">${JSON.stringify({
+        __DEFAULT_SCOPE__: {
+          "webapp.reflow.video.detail": {
+            itemInfo: {
+              itemStruct: {
+                id: "7538296153562008840",
+                desc: caption,
+                video: {
+                  subtitleInfos: [
+                    {
+                      Format: "webvtt",
+                      Url: "https://v16-webapp.tiktok.com/subtitles",
+                      LanguageCodeName: "eng-US",
+                    },
+                  ],
+                },
               },
             },
           },
         },
-      },
-    })}</script>`;
-    globalThis.fetch = jest.fn(
-      async (input) =>
-        new Response(
-          String(input).includes("/subtitles")
-            ? "WEBVTT\n\n00:00:00.000 --> 00:00:01.000\nmeans chicken steam egg.\n\n00:00:01.000 --> 00:00:03.000\nSteam for 15 minutes.\n"
-            : html
-        )
-    );
-    const modelResult = JSON.parse(result);
-    modelResult.recipe.steps = [
-      {
-        step: 1,
-        title: "Steam",
-        description: "Steam for 15 minutes.",
-        sourceQuote: "Steam for 15 minutes.",
-      },
-    ];
-    generate.mockResolvedValueOnce(JSON.stringify(modelResult));
-    const analysis = await new SocialRecipeService().analyzeForRecipe({
-      platform: "tiktok",
-      url: "https://vt.tiktok.com/ZSguquYyJ/",
-    });
-    expect(analysis.recipe).toBeDefined();
-    expect(generate.mock.calls[0]?.[0].prompt).toContain("Steam for 15 minutes.");
-    expect(read).not.toHaveBeenCalled();
-    expect(analysis.recipe?.steps.map((step) => step.description)).toEqual([
-      "Steam for 15 minutes.",
+      })}</script>`;
+      globalThis.fetch = jest.fn(
+        async (input) =>
+          new Response(
+            String(input).includes("/subtitles")
+              ? "WEBVTT\n\n00:00:00.000 --> 00:00:01.000\nmeans chicken steam egg.\n\n00:00:01.000 --> 00:00:03.000\nSteam for 15 minutes.\n"
+              : String(input).includes("www.tiktok.com") && !String(input).includes("_r=1")
+                ? "<html>No mobile metadata</html>"
+                : html
+          )
+      );
+      const modelResult = JSON.parse(result);
+      modelResult.recipe.steps = [
+        {
+          step: 1,
+          title: "Steam",
+          description: "Steam for 15 minutes.",
+          sourceQuote: "Steam for 15 minutes.",
+        },
+      ];
+      generate.mockResolvedValueOnce(JSON.stringify(modelResult));
+      const analysis = await new SocialRecipeService().analyzeForRecipe({
+        platform: "tiktok",
+        url: sharedUrl,
+      });
+      expect(analysis.recipe).toBeDefined();
+      expect(generate.mock.calls[0]?.[0].prompt).toContain("Steam for 15 minutes.");
+      expect(read).not.toHaveBeenCalled();
+      expect(analysis.recipe?.steps.map((step) => step.description)).toEqual([
+        "Steam for 15 minutes.",
+      ]);
+    }
+  );
+  it("automatically samples and selects a finished-food frame during caption import", async () => {
+    jest.mocked(readRecipeVideoCoverFrames).mockResolvedValueOnce([
+      { timestamp: 0.2, mimeType: "image/jpeg", data: "YWJj" },
+      { timestamp: 1, mimeType: "image/jpeg", data: "ZGVm" },
     ]);
+    generate.mockResolvedValueOnce(result).mockResolvedValueOnce('{"frameNumber":2}');
+    const imported = await new SocialRecipeService().analyzeForRecipe({
+      platform: "tiktok",
+      url,
+      text: "Whisk 5 eggs and steam for 15 minutes.",
+    });
+    expect(readRecipeVideoCoverFrames).toHaveBeenCalledWith(url, expect.any(Object));
+    expect(generate.mock.calls[1]?.[0].images).toHaveLength(2);
+    expect(imported.recipe?.imageUrl).toBe("data:image/jpeg;base64,ZGVm");
+    expect(read).not.toHaveBeenCalled();
+  });
+  it("does not substitute a publisher thumbnail if actual frame sampling is unavailable", async () => {
+    generate.mockResolvedValueOnce(result);
+    globalThis.fetch = jest.fn(
+      async () =>
+        new Response('<meta property="og:image" content="https://p16.tiktokcdn.com/portrait.jpg">')
+    );
+    const imported = await new SocialRecipeService().analyzeForRecipe({
+      platform: "tiktok",
+      url,
+      text: "Whisk 5 eggs and steam for 15 minutes.",
+    });
+    expect(imported.recipe?.imageUrl).toBeUndefined();
+    expect(imported.recipe).toBeDefined();
   });
   it("retains the video fallback when published subtitles are unavailable", async () => {
     const html = `<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__">${JSON.stringify({
@@ -160,7 +203,7 @@ describe("social video recipe fallback", () => {
     expect(read).toHaveBeenCalledTimes(1);
     expect(analysis.recipe).toBeDefined();
   });
-  it("keeps a full caption on the fast text path", async () => {
+  it("keeps full caption extraction on the text path while checking the post for a cover", async () => {
     generate.mockResolvedValueOnce(result);
     await new SocialRecipeService().analyzeForRecipe({
       platform: "tiktok",
@@ -168,7 +211,7 @@ describe("social video recipe fallback", () => {
       text: "Whisk 5 eggs and steam for 15 minutes.",
     });
     expect(read).not.toHaveBeenCalled();
-    expect(globalThis.fetch).not.toHaveBeenCalled();
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
     expect(generate).toHaveBeenCalledTimes(1);
   });
   it("reads frames when speech is unavailable or permission was denied", async () => {
