@@ -18,8 +18,14 @@ export async function readRecipeVideoCoverFrames(
   const normalized = normalizeVideoPostUrl(url);
   if (!normalized || !native?.sampleVideoCoverFrames) return [];
   const address = new URL(normalized);
-  if (address.hostname.endsWith("tiktok.com") && address.pathname.includes("/video/"))
-    address.searchParams.set("_r", "1");
+  const postId = address.hostname.endsWith("tiktok.com")
+    ? address.pathname.match(/\/video\/(\d+)/)?.[1]
+    : undefined;
+  if (postId) {
+    address.hostname = "www.tiktok.com";
+    address.pathname = `/player/v1/${postId}`;
+    address.search = "autoplay=1&muted=1&controls=0";
+  }
   const result = await native.sampleVideoCoverFrames(address.toString(), videoCoverFramesScript());
   options.signal?.throwIfAborted();
   if (typeof result.frames !== "string" || result.frames.length > 1_500_000) return [];

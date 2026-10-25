@@ -58,7 +58,7 @@ describe("social video recipe fallback", () => {
       .mockResolvedValueOnce(notRecipe)
       .mockResolvedValueOnce(JSON.stringify({ text: "[8s] Steam for 15 minutes." }))
       .mockResolvedValueOnce(result)
-      .mockResolvedValueOnce(JSON.stringify({ frameIndex: 0 }));
+      .mockResolvedValueOnce(JSON.stringify({ frameNumber: 1 }));
     const analysis = await new SocialRecipeService().analyzeForRecipe({ platform: "tiktok", url });
     expect(read).toHaveBeenCalledTimes(1);
     expect(generate.mock.calls[1]?.[0].images).toHaveLength(1);
@@ -146,7 +146,7 @@ describe("social video recipe fallback", () => {
       { timestamp: 0.2, mimeType: "image/jpeg", data: "YWJj" },
       { timestamp: 1, mimeType: "image/jpeg", data: "ZGVm" },
     ]);
-    generate.mockResolvedValueOnce(result).mockResolvedValueOnce('{"frameIndex":1}');
+    generate.mockResolvedValueOnce(result).mockResolvedValueOnce('{"frameNumber":2}');
     const imported = await new SocialRecipeService().analyzeForRecipe({
       platform: "tiktok",
       url,

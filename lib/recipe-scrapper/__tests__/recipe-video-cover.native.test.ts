@@ -4,7 +4,7 @@ const sample = jest.fn();
 const moduleMock = jest.fn(() => ({ sampleVideoCoverFrames: sample }));
 jest.mock("expo", () => ({ requireOptionalNativeModule: () => moduleMock() }));
 beforeEach(() => jest.clearAllMocks());
-it("reads bounded decoded frames from the public player and requests TikTok's mobile page", async () => {
+it("reads bounded decoded frames from the public player and requests TikTok's embedded player", async () => {
   sample.mockResolvedValueOnce({
     frames: JSON.stringify([
       { timestamp: 1, mimeType: "image/jpeg", data: "YWJj" },
@@ -14,7 +14,9 @@ it("reads bounded decoded frames from the public player and requests TikTok's mo
   expect(
     await readRecipeVideoCoverFrames("https://www.tiktok.com/@chef/video/7538296153562008840")
   ).toEqual([{ timestamp: 1, mimeType: "image/jpeg", data: "YWJj" }]);
-  expect(sample.mock.calls[0]?.[0]).toContain("_r=1");
+  expect(sample.mock.calls[0]?.[0]).toBe(
+    "https://www.tiktok.com/player/v1/7538296153562008840?autoplay=1&muted=1&controls=0"
+  );
   expect(sample.mock.calls[0]?.[1]).toContain("drawImage(video");
 });
 it("never opens an untrusted URL", async () => {

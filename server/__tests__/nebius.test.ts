@@ -154,6 +154,57 @@ describe("Nebius provider boundary", () => {
     expect(fetcher).toHaveBeenCalledTimes(2);
   });
 
+  it("repairs multiple source quotation mismatches together using the rejected answer and validation paths", async () => {
+    const output = {
+      isCookingVideo: true,
+      confidence: 0.9,
+      recipe: {
+        title: "Steamed eggs",
+        description: "",
+        prepMinutes: 0,
+        cookMinutes: 15,
+        servings: 2,
+        servingsSource: "estimated",
+        difficultyStars: 1,
+        ingredients: [{ name: "egg", quantity: 5, unit: "piece", amountSource: "stated" }],
+        steps: [
+          { step: 1, title: "Add eggs", description: "Add eggs.", sourceQuote: "salt water" },
+          {
+            step: 2,
+            title: "Steam",
+            description: "Steam for 15 minutes.",
+            sourceQuote: "minced chicken garlic",
+          },
+        ],
+      },
+    };
+    const rejected = JSON.stringify(output);
+    fetcher.mockImplementation(async (_url, options) => {
+      const body = JSON.parse(options!.body as string);
+      const correction = body.messages.at(-1);
+      const hasFeedback =
+        correction.role === "user" &&
+        correction.content.includes("/recipe/steps/0/sourceQuote") &&
+        correction.content.includes("/recipe/steps/1/sourceQuote") &&
+        correction.content.includes("enum") &&
+        body.messages.some(
+          (message: any) => message.role === "assistant" && message.content === rejected
+        );
+      if (!hasFeedback) return completion(rejected);
+      output.recipe.steps[0]!.sourceQuote = "Add eggs.";
+      output.recipe.steps[1]!.sourceQuote = "Steam for 15 minutes.";
+      return completion(JSON.stringify(output));
+    });
+    const result = await run(
+      buildSocialRecipeRequest("Add eggs. salt water Steam for 15 minutes. minced chicken garlic", [
+        "Add eggs.",
+        "Steam for 15 minutes.",
+      ])
+    );
+    expect(JSON.parse(result.content).recipe.steps[0].sourceQuote).toBe("Add eggs.");
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
   it.each(['{"name":"rice"}', '{"name":"rice","quantity":-1}', "not JSON"])(
     "repairs invalid JSON or schema output once: %s",
     async (invalid) => {

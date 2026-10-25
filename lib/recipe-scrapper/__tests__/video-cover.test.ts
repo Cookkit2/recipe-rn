@@ -7,15 +7,16 @@ beforeEach(() => jest.resetAllMocks());
 it("saves the actual finished-food frame chosen by vision, rather than the final portrait", async () => {
   const frames = [
     { timestamp: 1, mimeType: "image/jpeg" as const, data: "YWJj" },
-    { timestamp: 15, mimeType: "image/jpeg" as const, data: "ZGVm" },
+    { timestamp: 2, mimeType: "image/jpeg" as const, data: "ZGVm" },
+    { timestamp: 3, mimeType: "image/jpeg" as const, data: "Z2hp" },
   ];
-  generate.mockResolvedValueOnce('{"frameIndex":0}');
-  expect(await selectRecipeVideoCover(frames)).toBe("data:image/jpeg;base64,YWJj");
-  expect(generate.mock.calls[0]?.[0].images).toHaveLength(2);
+  generate.mockResolvedValueOnce('{"frameNumber":2}');
+  expect(await selectRecipeVideoCover(frames)).toBe("data:image/jpeg;base64,ZGVm");
+  expect(generate.mock.calls[0]?.[0].images).toHaveLength(3);
   expect(generate.mock.calls[0]?.[0].prompt).toContain("whole prepared dish");
 });
 it("leaves the cover unset when no actual frame shows a suitable finished dish", async () => {
-  generate.mockResolvedValueOnce('{"frameIndex":-1}');
+  generate.mockResolvedValueOnce('{"frameNumber":0}');
   expect(
     await selectRecipeVideoCover([{ timestamp: 1, mimeType: "image/jpeg", data: "YWJj" }])
   ).toBeUndefined();
@@ -67,6 +68,7 @@ it("automatically seeks and captures six decoded frames from the public player",
   };
   vm.runInNewContext(videoCoverFramesScript(), {
     window: { webkit: { messageHandlers: { cookkitVideo: { postMessage } } } },
+    location: { hostname: "www.tiktok.com", pathname: "/player/v1/7538296153562008840" },
     document: { querySelector: () => video, createElement: () => canvas },
     setInterval: (callback: () => Promise<void>) => {
       tick = callback;
@@ -84,4 +86,18 @@ it("automatically seeks and captures six decoded frames from the public player",
     0.18, 1.08, 2.88, 7.2, 12.6, 16.2,
   ]);
   expect(new Set(frames.map((frame: { data: string }) => frame.data)).size).toBe(6);
+});
+
+it("continues a resolved TikTok short link in the same post's public player", () => {
+  const replace = jest.fn();
+  const setInterval = jest.fn();
+  vm.runInNewContext(videoCoverFramesScript(), {
+    window: {},
+    location: { hostname: "www.tiktok.com", pathname: "/@chef/video/7538296153562008840", replace },
+    setInterval,
+  });
+  expect(replace).toHaveBeenCalledWith(
+    "https://www.tiktok.com/player/v1/7538296153562008840?autoplay=1&muted=1&controls=0"
+  );
+  expect(setInterval).not.toHaveBeenCalled();
 });
