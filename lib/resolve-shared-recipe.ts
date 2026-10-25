@@ -1,6 +1,7 @@
 import type { RecipeShareSnapshot } from "~/utils/recipe-share-snapshot";
 import { isRecipeShareToken } from "~/utils/recipe-share-link";
 import type { CreateRecipeData } from "~/data/db/DatabaseFacade";
+import { RecipeType } from "~/data/db/models/Recipe";
 
 export interface SharedRecipeResolver {
   getRecipeById: (id: string) => Promise<{ id: string } | null>;
@@ -18,7 +19,12 @@ export async function resolveSharedRecipe(
   if (local) return local.id;
   const { version, instructions, ...recipe } = await deps.fetchSnapshot(token);
   try {
-    const created = await deps.createRecipe({ ...recipe, id: token, steps: instructions });
+    const created = await deps.createRecipe({
+      ...recipe,
+      id: token,
+      steps: instructions,
+      type: RecipeType.CONVERTED,
+    });
     return created.id;
   } catch (error) {
     // Another receiver may have saved the same token while this fetch was running.

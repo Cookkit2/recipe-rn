@@ -29,6 +29,7 @@ it("imports another person's full recipe without needing the sender's local ID",
   expect(deps.createRecipe).toHaveBeenCalledWith(
     expect.objectContaining({
       id: token,
+      type: "converted",
       title: "Pasta",
       ingredients: snapshot.ingredients,
       steps: snapshot.instructions,

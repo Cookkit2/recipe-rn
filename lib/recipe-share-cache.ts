@@ -43,3 +43,20 @@ export function cacheRecipeShareLink(recipeId: string, snapshot: string, token: 
     // Sharing still succeeds if local persistence is unavailable.
   }
 }
+
+/** Recover received Cookkit links saved by earlier app builds before imports had a recipe type. */
+export function getResolvedRecipeShareIds(): string[] {
+  try {
+    const index = storage.get<unknown>("recipe_share_resolved_index_v1");
+    if (!Array.isArray(index)) return [];
+    const ids = new Set<string>();
+    for (const token of index.slice(0, 100)) {
+      if (typeof token !== "string" || !isRecipeShareToken(token)) continue;
+      const id = storage.get<unknown>("recipe_share_resolved_v1:" + token);
+      if (typeof id === "string" && id) ids.add(id);
+    }
+    return [...ids];
+  } catch {
+    return [];
+  }
+}
