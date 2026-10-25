@@ -1,4 +1,8 @@
-import { cacheRecipeShareLink, getCachedRecipeShareLink } from "../recipe-share-cache";
+import {
+  cacheRecipeShareLink,
+  getCachedRecipeShareLink,
+  getResolvedRecipeShareIds,
+} from "../recipe-share-cache";
 import { storageFacade as storage } from "~/data/storage";
 import { buildRecipeShareLink } from "~/utils/recipe-share-link";
 
@@ -55,4 +59,23 @@ it("treats storage failures as cache misses instead of blocking sharing", () => 
     throw new Error("Storage full");
   });
   expect(() => cacheRecipeShareLink("pasta", "snapshot", token)).not.toThrow();
+});
+
+it("lists unique saved IDs from received links without treating corrupt data as a recipe", () => {
+  const second = "530138cb-2b17-42c8-a72b-b67e1c5ac927";
+  const third = "630138cb-2b17-42c8-a72b-b67e1c5ac927";
+  values.set("recipe_share_resolved_index_v1", [third, second, token]);
+  values.set("recipe_share_resolved_v1:" + token, "legacy-import");
+  values.set("recipe_share_resolved_v1:" + second, "legacy-import");
+  values.set("recipe_share_resolved_v1:" + third, "another-import");
+  expect(getResolvedRecipeShareIds()).toEqual(["another-import", "legacy-import"]);
+  values.set("recipe_share_resolved_index_v1", ["bad-token", token]);
+  values.set("recipe_share_resolved_v1:" + token, { invalid: true });
+  expect(getResolvedRecipeShareIds()).toEqual([]);
+  values.set("recipe_share_resolved_index_v1", "corrupt");
+  expect(getResolvedRecipeShareIds()).toEqual([]);
+  jest.mocked(storage.get).mockImplementationOnce(() => {
+    throw new Error("Unavailable");
+  });
+  expect(getResolvedRecipeShareIds()).toEqual([]);
 });
