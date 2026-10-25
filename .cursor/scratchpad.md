@@ -447,3 +447,38 @@ Plan (authorized by user for later self-review):
 Design: preserve the agent contract and cloud recipe/profile reads; route app pantry operations through the existing local API and invalidate pantry/recipe queries after mutations. Use stable pagination so no partial ingredient lists reach ranking.
 
 Verification: 8 affected Jest suites / 31 tests passed; typecheck passed after refreshing ignored Expo route declarations; loopback agent smoke passed. Root lint fails only on pre-existing untracked `.github/copilot-instructions.md` and `youtube-transcript-tools-analysis.md`; formatting passes with those two files excluded. No dependency or lockfile changes.
+
+
+## 2026-10-24 — Assistant recipe suggestion failures
+
+Authorized scope: repair the diagnosed catalog/schema mismatch, stalled requests, missing tool progress, and false pantry success labels. Keep the user’s current navigation and native changes.
+
+- [x] Reproduce the live catalog error and add failing regression tests.
+- [x] Query deployed recipe columns; retain ingredient-based matching and disclose missing catalog metadata.
+- [x] Bound chat requests to 45 seconds, release Stop promptly, ignore late events, and show truthful tool activity.
+- [x] Run affected tests, loopback smoke, typecheck, formatting, and a live read-only catalog check.
+
+Verification: 11 affected suites / 64 tests passed; typecheck and agent smoke passed. Production listRecipes read 100 recipes / 899 ingredient rows from live Supabase; production suggest_recipes returned 3 matches for a temporary in-memory pantry of six eggs, without writing cloud or local pantry data. Full lint is blocked only by pre-existing untracked `.github/copilot-instructions.md` and `youtube-transcript-tools-analysis.md`. Review caught the uncertain-outcome risk for in-flight writes; Stop/timeout now advises checking pantry before retrying, covered by two delayed-write regressions. Follow-up review found no remaining actionable findings. Real Nebius/device execution remains for manual retest.
+
+
+## 2026-10-24 — Verified recipe suggestions
+
+Approved design: render catalog results directly, separate all-ingredient matches from partial matches, show complete have/need lists and quantity caveat, and fail closed on lookup failure. Keep general cooking chat.
+
+- [x] Add regressions for invented prose after lookup failure/success, missing tool calls, complete ingredient lists, and grouped UI.
+- [x] Add a shared validated recipe result contract and recipe-request routing; require the recipe tool on explicit suggestion turns.
+- [x] Store verified results separately in chat, suppress model suggestion prose, and render grouped results.
+- [x] Run focused tests, typecheck, formatting, smoke, and review.
+
+Verified recipe results: 13 affected suites / 88 tests passed, including real SDK forced-tool routing, invented text suppression, failed/malformed/no-tool lookup handling, grouped UI, complete missing lists, combined pantry errors, and follow-up routing. Live read-only tool check with an in-memory six-egg pantry returned 0 ready-to-cook and 3 partial matches (2, 4, and 4 missing ingredient names). Agent smoke passed. Review findings around follow-ups, cooking questions, and mutation warnings were fixed with regressions; final correction review found no actionable findings. No real Nebius/device visual test performed.
+
+
+## 2026-10-25 — Plain-text assistant replies
+
+Authorized design: instruct the model to use plain text and normalize assistant copy at the display boundary, including old messages and partial streamed emphasis. Preserve user input. Reuse normalization for catalog titles and ingredient text.
+
+- [x] Add failing formatter, model instruction, screenshot, and partial-stream regressions.
+- [x] Add plain-text normalization and wire assistant displays.
+- [x] Verify affected tests, typecheck, formatting, and smoke.
+
+Plain-text verification: 14 affected suites / 106 tests passed; typecheck, agent smoke, changed-file formatting, and diff whitespace checks passed. Root lint still reports only the two pre-existing untracked Markdown files. Normalization preserves user messages, fractions, temperatures, spaced multiplication, and underscores within ordinary words; covers full and partial emphasis, headings, list prefixes, links, code fences, images, and tables.

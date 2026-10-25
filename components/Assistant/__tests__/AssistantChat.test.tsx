@@ -1,6 +1,7 @@
 import React from "react";
 import { Platform, StyleSheet } from "react-native";
 import { render } from "@testing-library/react-native";
+import type { CookingChatMessage } from "~/hooks/useCookingAgentChat";
 import { AssistantChat } from "../AssistantChat";
 import { TEST_IDS } from "~/constants/test-ids";
 import type { CookingAgent } from "~/lib/agent/types";
@@ -17,9 +18,14 @@ jest.mock("react-native-safe-area-context", () => ({
 
 jest.mock("expo-router/react-navigation", () => ({ useHeaderHeight: () => 103 }));
 
+const chatMessages: CookingChatMessage[] = [];
+beforeEach(() => {
+  chatMessages.length = 0;
+});
+
 jest.mock("~/hooks/useCookingAgentChat", () => ({
   useCookingAgentChat: () => ({
-    messages: [],
+    messages: chatMessages,
     status: "idle",
     send: jest.fn(),
     stop: jest.fn(),
@@ -76,4 +82,97 @@ it("keeps the production composer in keyboard-adjusted layout flow", async () =>
   } finally {
     jest.restoreAllMocks();
   }
+});
+
+it("groups verified recipes and shows all missing ingredients and quantity caveat", async () => {
+  const message = {
+    id: "a1",
+    role: "assistant" as const,
+    content: "",
+    activities: [],
+    recipeSuggestions: {
+      recipes: [
+        {
+          id: "r1",
+          title: "Boiled eggs",
+          matched: ["eggs"],
+          missing: [],
+          coverage: 1,
+          calories: null,
+          tags: [],
+        },
+        {
+          id: "r2",
+          title: "Spinach omelette",
+          matched: ["eggs"],
+          missing: ["spinach", "cheese"],
+          coverage: 1 / 3,
+          calories: null,
+          tags: [],
+        },
+      ],
+      pantryCount: 1,
+      truncated: true,
+    },
+  };
+  chatMessages.push(message);
+  const screen = await render(<AssistantChat agent={agent} />);
+  expect(screen.getByText("Ready to cook")).toBeTruthy();
+  expect(screen.getByText("Needs extra ingredients")).toBeTruthy();
+  expect(screen.getByText("Boiled eggs")).toBeTruthy();
+  expect(screen.getAllByText("Have: eggs")[0]).toBeTruthy();
+  expect(screen.getByText("Need: spinach, cheese")).toBeTruthy();
+  expect(
+    screen.getByText("Ingredient names matched; quantities haven't been checked.")
+  ).toBeTruthy();
+  expect(screen.getByText("Matches are from part of the recipe catalog.")).toBeTruthy();
+});
+
+it("shows an empty catalog result without substituting a recipe", async () => {
+  const message = {
+    id: "empty",
+    role: "assistant" as const,
+    content: "",
+    activities: [],
+    recipeSuggestions: { recipes: [], pantryCount: 1, truncated: false },
+  };
+  chatMessages.push(message);
+  const screen = await render(<AssistantChat agent={agent} />);
+  expect(screen.getByText("No matching recipes found in the available catalog.")).toBeTruthy();
+  expect(screen.queryByText("Ready to cook")).toBeNull();
+});
+
+it("shows a pantry error beside verified recipe results", async () => {
+  const message = {
+    id: "mixed",
+    role: "assistant" as const,
+    content: "",
+    activities: [],
+    error: "A pantry update may still finish. Check your pantry before trying again.",
+    recipeSuggestions: { recipes: [], pantryCount: 1, truncated: false },
+  };
+  chatMessages.push(message);
+  const screen = await render(<AssistantChat agent={agent} />);
+  expect(screen.getByText(message.error)).toBeTruthy();
+});
+
+it("shows assistant Markdown as plain text while preserving the user's message", async () => {
+  chatMessages.push(
+    { id: "user-format", role: "user", content: "Check **eggs**", activities: [] },
+    {
+      id: "assistant-format",
+      role: "assistant",
+      content: "Your saved allergens include **eggs**, and you have eggs.",
+      activities: [],
+    }
+  );
+  const screen = await render(<AssistantChat agent={agent} />);
+  expect(screen.getByText("Your saved allergens include eggs, and you have eggs.")).toBeTruthy();
+  expect(screen.getByText("Check **eggs**")).toBeTruthy();
+});
+
+it("hides unfinished emphasis markers during streaming", async () => {
+  chatMessages.push({ id: "partial", role: "assistant", content: "You have **eg", activities: [] });
+  const screen = await render(<AssistantChat agent={agent} />);
+  expect(screen.getByText("You have eg")).toBeTruthy();
 });

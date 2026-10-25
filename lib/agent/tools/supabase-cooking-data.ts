@@ -10,8 +10,9 @@ import type {
 import { EMPTY_DIET_PROFILE } from "./planning";
 
 const STOCK_COLUMNS = "id, name, quantity, unit, expiry_date, household_id, added_by_user_id";
-const RECIPE_COLUMNS =
-  "id, title, tags, allergens, calories, protein, carbs, fat, fiber, servings, cook_minutes";
+// Only request columns present in the deployed catalog. Ingredient names still
+// support diet matching; missing nutrition and allergen metadata remain unknown.
+const RECIPE_COLUMNS = "id, title, tags, calories, servings, cook_minutes";
 const RECIPE_LIMIT = 100;
 // Stay below PostgREST's default 1,000-row response cap on every page.
 const INGREDIENT_PAGE_SIZE = 500;

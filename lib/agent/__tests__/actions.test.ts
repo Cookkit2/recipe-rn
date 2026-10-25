@@ -1,5 +1,5 @@
 import type { CookingDataClient, PantryItem } from "../tools/planning";
-import { runManageIngredients, runSuggestRecipes } from "../tools/actions";
+import { runManageIngredients, runSuggestMealPlan, runSuggestRecipes } from "../tools/actions";
 
 function pantryItem(name: string, id = name): PantryItem {
   return {
@@ -77,4 +77,39 @@ it("suggests the recipe that matches the pantry", async () => {
   const result = await runSuggestRecipes(data, { limit: 3 });
   expect(result.recipes[0]?.title).toBe("Tomato salad");
   expect(result.recipes[0]?.coverage).toBe(1);
+});
+
+it.each(["recipes", "meals"] as const)(
+  "discloses unavailable catalog metadata for %s",
+  async (kind) => {
+    const data = createFakeData();
+    const result =
+      kind === "recipes" ? await runSuggestRecipes(data, {}) : await runSuggestMealPlan(data, {});
+    expect(result.note).toContain("Allergen checks use ingredient names");
+    expect(result.note).toContain("macro nutrition are unavailable");
+  }
+);
+
+it("returns complete missing ingredient lists for partial matches", async () => {
+  const data = createFakeData();
+  const original = await data.listRecipes();
+  const recipe = original.recipes[0]!;
+  data.listRecipes = async () => ({
+    truncated: false,
+    recipes: [
+      {
+        ...recipe,
+        ingredients: [
+          ...recipe.ingredients,
+          ...Array.from({ length: 12 }, (_, i) => ({
+            name: `extra ${i}`,
+            quantity: 1,
+            unit: null,
+          })),
+        ],
+      },
+    ],
+  });
+  const result = await runSuggestRecipes(data, {});
+  expect(result.recipes[0]?.missing).toHaveLength(12);
 });

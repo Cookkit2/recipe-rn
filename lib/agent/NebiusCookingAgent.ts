@@ -1,3 +1,4 @@
+import { requestsRecipeSuggestions } from "./recipe-suggestions";
 import { COOKING_ASSISTANT_INSTRUCTIONS } from "./instructions";
 import { assistantErrorMessage } from "./errors";
 import {
@@ -72,6 +73,10 @@ export class NebiusCookingAgent implements CookingAgent {
         .map((message) => ({ role: message.role, content: message.content })),
       tools: createCookingTools(this.options.data),
       stopWhen: isStepCount(5),
+      prepareStep: ({ stepNumber }) =>
+        stepNumber === 0 && requestsRecipeSuggestions(input.messages)
+          ? { toolChoice: { type: "tool", toolName: "suggest_recipes" } }
+          : undefined,
       abortSignal: input.signal,
     });
 

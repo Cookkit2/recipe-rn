@@ -446,6 +446,9 @@ it("suggests recipes that overlap the fridge", async () => {
     expect(output.recipes.map((recipe) => recipe.title)).toEqual(["Spinach omelette"]);
     expect(output.recipes[0]?.coverage).toBe(1);
     expect(textDeltas(result.events).join("")).toBe("You can cook Spinach omelette.");
+    expect(result.model.requests[0]?.body).toMatchObject({
+      tool_choice: { type: "function", function: { name: "suggest_recipes" } },
+    });
   } finally {
     await finish(result);
   }

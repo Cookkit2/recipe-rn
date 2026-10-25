@@ -31,6 +31,16 @@
 		F11748442D0307B40044C1D9 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748432D0307B40044C1D9 /* SceneDelegate.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		A94580A988FD487AA297A1C8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3F24201BF2E24FBFA9586B80;
+			remoteInfo = "expo-sharing-extension";
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
 		F170FBFB523E41E498D2B3F1 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -521,6 +531,14 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		FE5EFC0CC9D64EA69B6F52AB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3F24201BF2E24FBFA9586B80 /* expo-sharing-extension */;
+			targetProxy = A94580A988FD487AA297A1C8 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -840,24 +858,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin PBXTargetDependency section */
-		FE5EFC0CC9D64EA69B6F52AB /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 3F24201BF2E24FBFA9586B80 /* expo-sharing-extension */;
-			targetProxy = A94580A988FD487AA297A1C8 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
-
-/* Begin PBXContainerItemProxy section */
-		A94580A988FD487AA297A1C8 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 3F24201BF2E24FBFA9586B80;
-			remoteInfo = "expo-sharing-extension";
-		};
-/* End PBXContainerItemProxy section */
 	};
 	rootObject = 83CBB9F71A601CBA00E9B192 /* Project object */;
 }
