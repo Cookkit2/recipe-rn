@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { View, FlatList, ActivityIndicator } from "react-native";
-import { H3, P } from "~/components/ui/typography";
+import { H3, H4, P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
-import { CheckCircleIcon, ShoppingCartIcon } from "lucide-uniwind";
+import { CheckCircleIcon } from "lucide-uniwind";
 import { useGroceryList } from "~/hooks/queries/useGroceryList";
 import { useGroceryListActions } from "~/hooks/useGroceryListActions";
 import GroceryListItem from "~/components/GroceryList/GroceryListItem";
@@ -78,16 +78,15 @@ export default function GroceryListPage() {
   if (isEmpty) {
     return (
       <GroceryListState header={weekNavigation} toolbar={toolbar}>
-        <View className="w-24 h-24 rounded-full bg-muted items-center justify-center mb-6">
-          <ShoppingCartIcon className="text-muted-foreground" size={48} strokeWidth={1.5} />
-        </View>
-        <H3 className="font-bowlby-one text-center mb-2">Your list is empty</H3>
-        <P className="text-muted-foreground text-center max-w-xs mb-8">
-          Add recipes to your meal plan, and the ingredients you need will appear here.
+        <H4 className="text-muted-foreground text-center font-urbanist-semibold">
+          Your grocery list is empty
+        </H4>
+        <P className="text-muted-foreground text-center font-urbanist-regular text-sm mt-1">
+          Add recipes to your meal plan
         </P>
         <Link href="/meal-plan" asChild>
-          <Button variant="default" className="bg-foreground">
-            <P className="font-urbanist-semibold text-background">Plan Meals</P>
+          <Button variant="outline" className="mt-5">
+            <P className="font-urbanist-semibold text-sm text-muted-foreground">Plan meals</P>
           </Button>
         </Link>
       </GroceryListState>
