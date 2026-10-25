@@ -4,6 +4,11 @@ import React from "react";
 import type { SharedRecipeInput } from "~/types/SharedRecipe";
 
 const mockPush = jest.fn();
+const mockLoadingGlow = jest.fn();
+let mockPending = false;
+jest.mock("~/components/Recipe/Loading/RecipeLoadingGlowProvider", () => ({
+  useRecipeLoadingGlow: (active: boolean) => mockLoadingGlow(active),
+}));
 
 jest.mock("expo-router", () => ({
   __esModule: true,
@@ -82,7 +87,7 @@ jest.mock("~/hooks/queries/useRecipeImportPreview", () => ({
     save: mockSave,
     cancel: mockReset,
     importStatus: "idle",
-    isPending: false,
+    isPending: mockPending,
     statusMessage: "Reading video frames...",
   }),
 }));
@@ -92,6 +97,7 @@ import ImportRecipeDialog from "~/components/Pantry/ImportRecipeDialog";
 describe("manual recipe import and failed-share recovery", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockPending = false;
   });
 
   it.each([
@@ -201,4 +207,17 @@ describe("manual recipe import and failed-share recovery", () => {
     await act(async () => finish({ success: true, recipe: { id: "old-recipe" } }));
     expect(mockPush).not.toHaveBeenCalled();
   });
+});
+
+it("shows the glow only while an open paste-link import is pending", async () => {
+  const screen = await render(<ImportRecipeDialog open onOpenChange={jest.fn()} />);
+  expect(mockLoadingGlow).toHaveBeenLastCalledWith(false);
+  mockPending = true;
+  await screen.rerender(<ImportRecipeDialog open onOpenChange={jest.fn()} />);
+  expect(mockLoadingGlow).toHaveBeenLastCalledWith(true);
+  await screen.rerender(<ImportRecipeDialog open={false} onOpenChange={jest.fn()} />);
+  expect(mockLoadingGlow).toHaveBeenLastCalledWith(false);
+  mockPending = false;
+  await screen.rerender(<ImportRecipeDialog open onOpenChange={jest.fn()} />);
+  expect(mockLoadingGlow).toHaveBeenLastCalledWith(false);
 });

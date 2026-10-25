@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog";
+import { useRecipeLoadingGlow } from "~/components/Recipe/Loading/RecipeLoadingGlowProvider";
 import RecipeImportReview from "~/components/Recipe/RecipeImportReview";
 import { useRecipeImportPreview } from "~/hooks/queries/useRecipeImportPreview";
 import { normalizeSharedRecipe } from "~/utils/shared-recipe";
@@ -39,6 +40,7 @@ export default function ImportRecipeDialog({
   const [draft, setDraft] = useState<RecipeImportDraft>();
   const request = useRef(0);
   const { prepare, save, cancel, statusMessage, isPending } = useRecipeImportPreview();
+  useRecipeLoadingGlow(open && isPending);
 
   useEffect(() => {
     if (open) {

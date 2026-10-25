@@ -43,6 +43,7 @@ import { reportBudgetBreach } from "~/utils/perf-budget-check";
 import RecipeLinkHandler from "~/components/Recipe/RecipeLinkHandler";
 import LeftoverReminderCoordinator from "~/lib/notifications/LeftoverReminderCoordinator";
 import SocialRecipeShareHandler from "~/components/Recipe/SocialRecipeShareHandler";
+import { RecipeLoadingGlowProvider } from "~/components/Recipe/Loading/RecipeLoadingGlowProvider";
 import { MealPlanCalendarProvider } from "~/store/MealPlanCalendarContext";
 
 // Detox builds have no debugger attached. Any console.warn then becomes the
@@ -137,15 +138,17 @@ export default Sentry.wrap(function RootLayout() {
             <AuthProvider strategy={authStrategy} autoInitialize={true}>
               <NotificationProvider>
                 <KeyboardProvider>
-                  <StatusBar style="auto" />
-                  <LeftoverReminderCoordinator />
-                  <MealPlanCalendarProvider>
-                    <RecipeLinkHandler />
-                    <SocialRecipeShareHandler />
-                    <AnimatedStack />
-                  </MealPlanCalendarProvider>
-                  <Toaster visibleToasts={2} position="bottom-center" offset={80} />
-                  <PortalHost />
+                  <RecipeLoadingGlowProvider>
+                    <StatusBar style="auto" />
+                    <LeftoverReminderCoordinator />
+                    <MealPlanCalendarProvider>
+                      <RecipeLinkHandler />
+                      <SocialRecipeShareHandler />
+                      <AnimatedStack />
+                    </MealPlanCalendarProvider>
+                    <Toaster visibleToasts={2} position="bottom-center" offset={80} />
+                    <PortalHost />
+                  </RecipeLoadingGlowProvider>
                 </KeyboardProvider>
               </NotificationProvider>
             </AuthProvider>

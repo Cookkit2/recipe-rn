@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRecipeImportPreview } from "~/hooks/queries/useRecipeImportPreview";
 import { clearPendingRecipeShare, readPendingRecipeShare } from "~/lib/recipe-share-inbox";
 import type { PendingRecipeShare } from "~/types/SharedRecipe";
+import { useRecipeLoadingGlow } from "./Loading/RecipeLoadingGlowProvider";
 import RecipeDetailsSkeleton from "./Details/RecipeDetailsSkeleton";
 import { Button } from "~/components/ui/button";
 import { H2, P } from "~/components/ui/typography";
@@ -15,6 +16,8 @@ export default function SharedRecipeImport({ pending }: { pending: PendingRecipe
   const insets = useSafeAreaInsets();
   const { prepare, save, statusMessage } = useRecipeImportPreview();
   const [error, setError] = useState("");
+  const [finished, setFinished] = useState(false);
+  useRecipeLoadingGlow(!error && !finished);
   const [attempt, setAttempt] = useState(0);
   const started = useRef(-1);
   const mounted = useRef(false);
@@ -48,7 +51,10 @@ export default function SharedRecipeImport({ pending }: { pending: PendingRecipe
         if (!result.success || !result.recipe?.id)
           throw new Error(result.error || "Couldn't read this recipe. Please try again.");
         clearPendingRecipeShare(pending.id);
-        if (isCurrent()) router.replace(`/recipes/${result.recipe.id}`);
+        if (isCurrent()) {
+          setFinished(true);
+          router.replace(`/recipes/${result.recipe.id}`);
+        }
       } catch (cause) {
         if (isCurrent())
           setError(cause instanceof Error ? cause.message : "Couldn't import this recipe.");
@@ -73,6 +79,7 @@ export default function SharedRecipeImport({ pending }: { pending: PendingRecipe
       </P>
       <Button
         onPress={() => {
+          setFinished(false);
           setError("");
           setAttempt((value) => value + 1);
         }}
