@@ -1,3 +1,4 @@
+import { lazySingleton } from "~/utils/lazy-singleton";
 /**
  * Streak Service
  *
@@ -322,4 +323,4 @@ export class StreakService {
 }
 
 // Singleton instance
-const streakService = new StreakService();
+const streakService = lazySingleton(() => new StreakService());

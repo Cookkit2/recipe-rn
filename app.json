@@ -2,7 +2,7 @@
   "expo": {
     "name": "Cookkit",
     "slug": "cookkit",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "cookkit",
@@ -12,14 +12,15 @@
       "icon": "./assets/icon.png",
       "supportsTablet": false,
       "bundleIdentifier": "app.cookkit.cookkit",
+      "associatedDomains": ["applinks:recipe-web-mings-projects-6bb85e23.vercel.app"],
       "buildNumber": "10",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera to capture ingredients",
-        "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to access your microphone",
+        "NSMicrophoneUsageDescription": "$(PRODUCT_NAME) uses speech recognition for hands-free cooking and to read the audio in recipe videos you choose.",
         "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos of ingredients",
         "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location to locate your nearby grocery stores",
-        "NSSpeechRecognitionUsageDescription": "$(PRODUCT_NAME) uses speech recognition so you can navigate recipes hands-free."
+        "NSSpeechRecognitionUsageDescription": "$(PRODUCT_NAME) uses speech recognition for hands-free cooking and to read the audio in recipe videos you choose."
       }
     },
     "android": {
@@ -30,6 +31,24 @@
       "package": "app.cookkit.cookkit",
       "permissions": ["android.permission.CAMERA"],
       "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "recipe-web-mings-projects-6bb85e23.vercel.app",
+              "pathPrefix": "/r/"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": false,
+          "data": [{ "scheme": "cookkit", "host": "share" }],
+          "category": ["BROWSABLE", "DEFAULT"]
+        },
         {
           "action": "VIEW",
           "autoVerify": false,

@@ -45,6 +45,30 @@ describe("AI app client", () => {
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
 
+  it("refuses a video answer from an older proxy that ignored its frames", async () => {
+    fetcher.mockResolvedValue(
+      new Response(JSON.stringify({ content: '{"text":"a guess"}', model: "text-model" }))
+    );
+    await expect(
+      generateAIContent({
+        prompt: "Read these frames",
+        images: [{ mimeType: "image/jpeg", data: "YWJj" }],
+      })
+    ).rejects.toThrow("Video analysis isn't available yet");
+  });
+
+  it("accepts frame observations when the proxy confirms the image count", async () => {
+    fetcher.mockResolvedValue(
+      new Response(JSON.stringify({ content: '{"text":"Steam 15 mins"}', inputImageCount: 1 }))
+    );
+    await expect(
+      generateAIContent({
+        prompt: "Read these frames",
+        images: [{ mimeType: "image/jpeg", data: "YWJj" }],
+      })
+    ).resolves.toContain("Steam 15 mins");
+  });
+
   it("aborts an in-flight request when the caller cancels", async () => {
     fetcher.mockImplementation(
       async (_url, options) =>

@@ -1,13 +1,14 @@
-import { useLocalSearchParams, useNavigation } from "expo-router";
+import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
+import type { NativeStackNavigationOptions } from "expo-router/native-stack";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import {
   View,
   StyleSheet,
   useWindowDimensions,
-  ActivityIndicator,
   ScrollView,
   Alert,
   RefreshControl,
+  Platform,
 } from "react-native";
 import Animated, {
   Extrapolation,
@@ -33,9 +34,13 @@ import MissingIngredients from "~/components/Recipe/Details/MissingIngredients";
 import BottomActionBar from "~/components/Recipe/Details/BottomActionBar";
 import { Image } from "expo-image";
 import { useRecipe } from "~/hooks/queries/useRecipeQueries";
-import { shareRecipe } from "~/utils/recipe-share";
+import { useShareRecipe } from "~/hooks/useShareRecipe";
 import { usePantryItemsByType } from "~/hooks/queries/usePantryQueries";
-import { useAddToMealPlan, useIsRecipeInPlan } from "~/hooks/queries/useMealPlanQueries";
+import {
+  useAddToMealPlan,
+  useIsRecipeInPlan,
+  useRemoveFromMealPlan,
+} from "~/hooks/queries/useMealPlanQueries";
 import { useRecipeDetailStore } from "~/store/RecipeDetailContext";
 import { setStatusBarStyle } from "expo-status-bar";
 import { recipeApi } from "~/data/api/recipeApi";
@@ -53,6 +58,7 @@ import WriteReviewModal from "~/components/Recipe/Details/WriteReviewModal";
 import TipsList from "~/components/Recipe/Details/TipsList";
 import WriteTipModal from "~/components/Recipe/Details/WriteTipModal";
 import { useRecipeReviewsAndTips } from "~/hooks/useRecipeReviewsAndTips";
+import RecipeDetailsSkeleton from "~/components/Recipe/Details/RecipeDetailsSkeleton";
 
 const AnimatedH1 = Animated.createAnimatedComponent(H1);
 const AnimatedImage = Animated.createAnimatedComponent(Image);
@@ -66,12 +72,7 @@ export default function RecipeDetails() {
   }, [refetch]);
 
   if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator size="large" />
-        <P className="mt-4 text-muted-foreground">Loading recipe...</P>
-      </View>
-    );
+    return <RecipeDetailsSkeleton />;
   }
 
   if (error) {
@@ -128,12 +129,14 @@ function RecipeDetailsContent({
 
   const { width: windowWidth } = useWindowDimensions();
   const navigation = useNavigation("/");
+  const router = useRouter();
+  const removeFromMealPlan = useRemoveFromMealPlan();
   const { data: filteredPantryItems = [] } = usePantryItemsByType("all");
   const { servings, updateServings } = useRecipeDetailStore();
   const [tailoredRecipe, setTailoredRecipe] = useState<Recipe | null>(null);
   const [mode, setMode] = useState<"original" | "tailored">("original");
   const [isTailoring, setIsTailoring] = useState(false);
-  const { data: isInPlan } = useIsRecipeInPlan(recipeId);
+  const { data: isInPlan, isLoading: isCheckingPlan } = useIsRecipeInPlan(recipeId);
   const addToMealPlan = useAddToMealPlan();
 
   // ─── Reviews & Ratings ──────────────────────────────────────────
@@ -346,26 +349,54 @@ function RecipeDetailsContent({
 
   const displayedRecipe = activeRecipe ?? recipe;
 
-  // Issue #737: open the native share sheet with the recipe's plain-text
-  // export + a cookkit://recipe/<id> deep link. Freemium (no paywall), works
-  // offline. shareRecipe never throws; a dismissed/unavailable sheet is a
-  // no-op. Operates on the displayed (possibly tailored) recipe so the user
-  // shares exactly what they see. Defined after `displayedRecipe` so the
-  // dependency closes over the resolved value.
-  const handleShare = useCallback(() => {
-    void shareRecipe(displayedRecipe);
-  }, [displayedRecipe]);
+  // Share the displayed version, including tailoring and serving adjustments.
+  const recipeToShare = useMemo(
+    () => ({ ...displayedRecipe, servings, ingredients: scaledIngredients }),
+    [displayedRecipe, servings, scaledIngredients]
+  );
+  const handleShare = useShareRecipe(recipeToShare);
 
   // This route's nested stack hides its header. Install both actions in the
   // visible parent header so native navigation owns their layout and touch areas.
   useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => <RecipeHeaderActions onShare={handleShare} />,
-    });
+    if (Platform.OS === "ios") {
+      // Native bar items use the same automatic SF Symbol weight as Home's toolbar.
+      navigation.setOptions({
+        headerRight: undefined,
+        unstable_headerRightItems: () => [
+          {
+            type: "button",
+            label: "Share recipe",
+            accessibilityLabel: "Share recipe",
+            icon: { type: "sfSymbol", name: "square.and.arrow.up" },
+            onPress: handleShare,
+          },
+          {
+            type: "button",
+            label: isInPlan ? "Remove from meal plan" : "Add to meal plan",
+            accessibilityLabel: isInPlan ? "Remove from meal plan" : "Add to meal plan",
+            icon: {
+              type: "sfSymbol",
+              name: isInPlan ? "calendar.badge.checkmark" : "calendar.badge.plus",
+            },
+            disabled: isCheckingPlan || removeFromMealPlan.isPending,
+            onPress: () => {
+              if (isInPlan) removeFromMealPlan.mutate(recipeId);
+              else router.push(`/recipes/${recipeId}/add-to-plan`);
+            },
+          },
+        ],
+      } satisfies NativeStackNavigationOptions);
+    } else {
+      navigation.setOptions({ headerRight: () => <RecipeHeaderActions onShare={handleShare} /> });
+    }
     return () => {
-      navigation.setOptions({ headerRight: () => <RecipeHeaderActions /> });
+      navigation.setOptions({
+        unstable_headerRightItems: undefined,
+        headerRight: () => <RecipeHeaderActions />,
+      });
     };
-  }, [navigation, handleShare]);
+  }, [navigation, handleShare, isInPlan, isCheckingPlan, removeFromMealPlan, recipeId, router]);
 
   return (
     <View className="relative flex-1 bg-background">

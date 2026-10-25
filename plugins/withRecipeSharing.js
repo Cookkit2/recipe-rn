@@ -4,6 +4,27 @@ const fs = require("fs");
 const path = require("path");
 const plist = require("@expo/plist").default;
 
+function ensureShareExtensionDependency(project) {
+  const { uuid: applicationId, firstTarget: application } = project.getFirstTarget();
+  const extensionId = Object.keys(project.pbxNativeTargetSection()).find(
+    (key) =>
+      project.pbxNativeTargetSection()[key]?.name?.replaceAll('"', "") === "expo-sharing-extension"
+  );
+  if (!extensionId) throw new Error("Cookkit share extension target is missing.");
+  const objects = project.hash.project.objects;
+  objects.PBXTargetDependency ??= {};
+  objects.PBXContainerItemProxy ??= {};
+  application.dependencies ??= [];
+  if (
+    !application.dependencies.some(
+      ({ value }) => objects.PBXTargetDependency[value]?.target === extensionId
+    )
+  ) {
+    // EAS discovers extension signing targets through explicit PBXTargetDependency entries.
+    project.addTargetDependency(applicationId, [extensionId]);
+  }
+}
+
 function customizeExtension(platformRoot) {
   const directory = path.join(platformRoot, "expo-sharing-extension");
   const infoPath = path.join(directory, "Info.plist");
@@ -46,6 +67,7 @@ module.exports = function withRecipeSharing(config, options) {
   // Apply Cookkit's iPhone-only build settings after the extension is generated.
   config = withXcodeProject(config, (config) => {
     customizeExtension(config.modRequest.platformProjectRoot);
+    ensureShareExtensionDependency(config.modResults);
     const configurations = config.modResults.pbxXCBuildConfigurationSection();
     for (const entry of Object.values(configurations)) {
       const settings = entry.buildSettings;
@@ -61,3 +83,4 @@ module.exports = function withRecipeSharing(config, options) {
 };
 
 module.exports.customizeExtension = customizeExtension;
+module.exports.ensureShareExtensionDependency = ensureShareExtensionDependency;

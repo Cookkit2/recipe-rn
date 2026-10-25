@@ -10,6 +10,37 @@ const Parser = require("stream-json/Parser");
 const Assembler = require("stream-json/Assembler");
 const Verifier = require("stream-json/utils/Verifier");
 const uuid = require("uuid");
+const fastUri = require("fast-uri");
+
+describe("URI normalization security boundaries", () => {
+  test.each(["%6Aavascript:alert(1)", "%u006Aavascript:alert(1)"])(
+    "does not activate an encoded scheme in %s",
+    (input) => {
+      expect(fastUri.parse(input).error).toBeTruthy();
+      expect(fastUri.normalize(input)).not.toBe("javascript:alert(1)");
+    }
+  );
+  test.each(["../x", "a/../b"])("preserves relative-reference meaning for %s", (input) => {
+    const base = "https://example.com/recipes/dinner/";
+    expect(fastUri.resolve(base, fastUri.normalize(input))).toBe(fastUri.resolve(base, input));
+  });
+  test.each(["http://a@b@evil.example/", "http://e\tvil.example/", "http://e\nvil.example/"])(
+    "rejects ambiguous HTTP authority %s",
+    (input) => expect(fastUri.parse(input).error).toBeTruthy()
+  );
+  test("escapes a relative first-segment colon in suffix mode", () => {
+    const output = fastUri.serialize({ path: "javascript:alert(1)" }, { reference: "suffix" });
+    expect(fastUri.parse(output).scheme).toBeUndefined();
+    expect(output).toContain("%3A");
+  });
+  test("preserves ordinary absolute URLs and distinct reference identities", () => {
+    expect(fastUri.normalize("https://EXAMPLE.com/recipes/egg")).toBe(
+      "https://example.com/recipes/egg"
+    );
+    expect(fastUri.equal("../x", "x")).toBe(false);
+    expect(fastUri.equal("%68ttp://a/", "http://a/")).toBe(false);
+  });
+});
 
 function collect(stream, input) {
   return new Promise((resolve, reject) => {

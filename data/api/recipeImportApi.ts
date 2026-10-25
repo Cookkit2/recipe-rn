@@ -6,6 +6,9 @@
  */
 
 import type { SharedRecipeInput } from "~/types/SharedRecipe";
+import type { RecipeImportDraft, RecipeImportPreparation } from "~/types/RecipeImportDraft";
+import type { RecipeVideoOptions } from "~/types/RecipeVideo";
+import { validateRecipeImportDraft } from "~/lib/recipe-scrapper/shared/import-review";
 import { analyzeUrl, type RecipeUrlType } from "~/utils/url-utils";
 import { websiteRecipeService } from "~/lib/recipe-scrapper/WebsiteRecipeService";
 import { getDefaultYouTubeService } from "~/lib/recipe-scrapper/youtube/YouTubeServiceFactory";
@@ -37,7 +40,12 @@ const MIN_RECIPE_CONFIDENCE = 0.6; // Minimum confidence score to accept a recip
 
 // Extend import status for all import types
 export type RecipeImportStatus =
-  YouTubeImportStatus | "fetching-website" | "parsing-content" | "fetching-social";
+  | YouTubeImportStatus
+  | "fetching-website"
+  | "parsing-content"
+  | "fetching-social"
+  | "reading-video"
+  | "transcribing-video";
 
 // Re-export for convenience
 export type { YouTubeImportResult as RecipeImportResult };
@@ -72,6 +80,86 @@ async function withImportErrorHandling<T>(
 }
 
 export const recipeImportApi = {
+  /** Extract and save complete social recipes; the detail screen remains editable afterwards. */
+  async prepareSharedRecipe(
+    input: SharedRecipeInput,
+    onStatusChange?: (status: RecipeImportStatus) => void,
+    options: RecipeVideoOptions = {}
+  ): Promise<RecipeImportPreparation> {
+    options.signal?.throwIfAborted();
+    const source = input.url ? analyzeUrl(input.url) : null;
+    if (input.url && !source?.isValid) throw new Error("Share a valid recipe link.");
+    if (!input.videoUri && source && source.type !== "tiktok" && source.type !== "instagram") {
+      const result = await this.importSharedRecipe(input, onStatusChange);
+      options.signal?.throwIfAborted();
+      return { kind: "saved", result };
+    }
+    if (!input.videoUri && !input.url && !input.text?.trim())
+      throw new Error("Share a recipe link, caption or video.");
+    onStatusChange?.("fetching-social");
+    const analysis = await socialRecipeService.analyzeForRecipe(
+      {
+        platform: source?.type === "tiktok" || source?.type === "instagram" ? source.type : "text",
+        url: source?.normalizedUrl ?? "",
+        postId: source?.postId,
+        text: input.text,
+        videoUri: input.videoUri,
+        language: input.language,
+      },
+      { ...options, onPhase: (phase) => onStatusChange?.(phase) }
+    );
+    options.signal?.throwIfAborted();
+    if (
+      !analysis.isCookingVideo ||
+      analysis.confidence < MIN_RECIPE_CONFIDENCE ||
+      !analysis.recipe
+    ) {
+      onStatusChange?.("error");
+      throw new Error(
+        analysis.errorMessage ||
+          "Couldn't read enough instructions. Choose the saved video or paste the full recipe caption."
+      );
+    }
+    const draft = {
+      recipe: { ...analysis.recipe, sourceUrl: source?.normalizedUrl ?? "" },
+      warnings: analysis.warnings ?? [],
+    };
+    options.signal?.throwIfAborted();
+    return {
+      kind: "saved",
+      result: await this.saveRecipeDraft(draft, onStatusChange),
+    };
+  },
+
+  async saveRecipeDraft(
+    draft: RecipeImportDraft,
+    onStatusChange?: (status: RecipeImportStatus) => void
+  ): Promise<YouTubeImportResult> {
+    const error = validateRecipeImportDraft(draft);
+    if (error) throw new Error(error);
+    const recipe = {
+      ...draft.recipe,
+      title: draft.recipe.title.trim(),
+      ingredients: draft.recipe.ingredients.map((item) => ({
+        ...item,
+        name: item.name.trim(),
+        unit: item.unit.trim(),
+      })),
+      steps: draft.recipe.steps.map((step, index) => ({
+        ...step,
+        step: index + 1,
+        title: step.title.trim() || `Step ${index + 1}`,
+        description: step.description.trim(),
+      })),
+    };
+    return this._finalizeImport(
+      recipe,
+      recipe.sourceUrl,
+      "Shared recipe",
+      undefined,
+      onStatusChange
+    );
+  },
   /**
    * Main entry point: Import a recipe from any supported URL
    *
@@ -437,12 +525,9 @@ export const recipeImportApi = {
         // couldn't confidently detect a recipe. Prompt manual entry rather than
         // presenting a fabricated recipe.
         if (!analysisResult.isCookingVideo || analysisResult.confidence < MIN_RECIPE_CONFIDENCE) {
-          const confidencePercent = (analysisResult.confidence * 100).toFixed(0);
           throw new Error(
-            `We couldn't extract a recipe from this ${platformName} post ` +
-              `(confidence: ${confidencePercent}%). The post may not be a recipe, ` +
-              `or ${platformName} may have blocked access. ` +
-              `Paste the full recipe caption, try a different link, or enter the recipe manually.`
+            analysisResult.errorMessage ||
+              `Couldn't read this ${platformName} recipe. Choose a saved video, paste its full caption, or enter the recipe manually.`
           );
         }
 
@@ -497,11 +582,17 @@ export const recipeImportApi = {
     onStatusChange?.("comparing-pantry");
     log.info(`${platformName} Import: Comparing with pantry...`);
 
-    const shoppingList = await databaseFacade.getShoppingListForRecipe(recipe.id);
+    // The recipe is already saved. A failed pantry lookup must not invite a duplicate save.
+    let shoppingList: ShoppingListResult | undefined;
+    try {
+      shoppingList = await databaseFacade.getShoppingListForRecipe(recipe.id);
+    } catch {
+      log.warn("Recipe saved; pantry comparison will be available from the recipe page.");
+    }
 
     log.info(
       `${platformName} Import: Shopping list generated -`,
-      shoppingList.missingIngredients.length,
+      shoppingList?.missingIngredients.length ?? 0,
       "missing items"
     );
 
@@ -643,6 +734,8 @@ export const IMPORT_STATUS_MESSAGES: Record<RecipeImportStatus, string> = {
   "fetching-transcript": "Extracting video transcript...",
   "fetching-website": "Fetching website content...",
   "fetching-social": "Reading social post...",
+  "reading-video": "Reading video frames...",
+  "transcribing-video": "Reading spoken instructions...",
   "parsing-content": "Parsing recipe content...",
   analyzing: "Analyzing with AI...",
   "generating-recipe": "Generating recipe...",
@@ -666,6 +759,8 @@ export function getImportProgress(status: RecipeImportStatus): number {
     "fetching-transcript": 40,
     "fetching-website": 25,
     "fetching-social": 25,
+    "reading-video": 35,
+    "transcribing-video": 50,
     "parsing-content": 40,
     analyzing: 60,
     "generating-recipe": 80,

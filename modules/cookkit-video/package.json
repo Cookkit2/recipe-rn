@@ -1,0 +1,7 @@
+{
+  "name": "cookkit-video",
+  "version": "1.0.0",
+  "description": "On-device recipe video preparation for Cookkit",
+  "license": "MIT",
+  "private": true
+}

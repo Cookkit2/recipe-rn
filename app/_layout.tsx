@@ -30,6 +30,7 @@ import { IS_E2E } from "~/utils/e2e-flags";
 import { arePaywallsEnabled } from "~/utils/paywall-flags";
 import { invalidateSubscriptionEntitlementsQuery } from "~/lib/subscription-query-sync";
 import { AnimatedStack } from "~/components/AnimatedStack";
+import { useNativeAppearance } from "~/hooks/useNativeAppearance";
 import { NotificationProvider } from "~/lib/notifications";
 import { getInstallAnchor } from "~/lib/install-anchor";
 import {
@@ -39,7 +40,7 @@ import {
   emitSessionStart,
 } from "~/lib/analytics/funnel-events";
 import { reportBudgetBreach } from "~/utils/perf-budget-check";
-import { useDeepLinkShare } from "~/hooks/useDeepLinkShare";
+import RecipeLinkHandler from "~/components/Recipe/RecipeLinkHandler";
 import LeftoverReminderCoordinator from "~/lib/notifications/LeftoverReminderCoordinator";
 import SocialRecipeShareHandler from "~/components/Recipe/SocialRecipeShareHandler";
 import { MealPlanCalendarProvider } from "~/store/MealPlanCalendarContext";
@@ -95,10 +96,7 @@ Sentry.init({
 
 export default Sentry.wrap(function RootLayout() {
   usePlatformSpecificSetup();
-
-  // Issue #737: ingest cookkit://recipe/<id> deep links on cold start +
-  // foreground. Resolves LOCAL recipes; server-snapshot import is DEFERRED.
-  useDeepLinkShare();
+  useNativeAppearance();
 
   const authStrategy = useMemo(
     () =>
@@ -129,6 +127,7 @@ export default Sentry.wrap(function RootLayout() {
                   <StatusBar style="auto" />
                   <LeftoverReminderCoordinator />
                   <MealPlanCalendarProvider>
+                    <RecipeLinkHandler />
                     <SocialRecipeShareHandler />
                     <AnimatedStack />
                   </MealPlanCalendarProvider>

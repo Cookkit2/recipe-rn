@@ -1,6 +1,9 @@
 import { generateNebiusContent, TEXT_MODEL, VISION_MODEL } from "../nebius";
 import type { AIRequest } from "../../lib/ai/types";
-import { buildTextRecipeRequest } from "../../lib/recipe-scrapper/shared/recipe-ai-utils";
+import {
+  buildSocialRecipeRequest,
+  buildTextRecipeRequest,
+} from "../../lib/recipe-scrapper/shared/recipe-ai-utils";
 
 const request: AIRequest = {
   prompt: "Identify this food.",
@@ -60,6 +63,34 @@ describe("Nebius provider boundary", () => {
     expect(result.usage?.estimatedCost).toBeCloseTo(0.00105);
   });
 
+  it("sends chronological video frames in a single vision request", async () => {
+    fetcher.mockResolvedValue(completion('{"name":"rice","quantity":1}'));
+    await run({
+      ...request,
+      images: [
+        { mimeType: "image/jpeg", data: "YWJj" },
+        { mimeType: "image/png", data: "ZGVm" },
+      ],
+    });
+    const body = JSON.parse(fetcher.mock.calls[0]![1]!.body as string);
+    expect(body.model).toBe(VISION_MODEL);
+    expect(
+      body.messages[1].content.map((part: any) => part.image_url?.url).filter(Boolean)
+    ).toEqual(["data:image/jpeg;base64,YWJj", "data:image/png;base64,ZGVm"]);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects excessive or ambiguous frames before calling the provider", async () => {
+    const frame = { mimeType: "image/jpeg" as const, data: "YWJj" };
+    for (const input of [
+      { images: Array(9).fill(frame) },
+      { image: frame, images: [frame] },
+      { images: [{ ...frame, data: "a".repeat(1_500_001) }] },
+    ])
+      await expect(run({ ...request, ...input })).rejects.toThrow();
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
   it("accepts fenced JSON but never returns reasoning as the answer", async () => {
     fetcher.mockResolvedValue(completion('```json\n{"name":"rice","quantity":1}\n```'));
     expect((await run()).content).toBe('{"name":"rice","quantity":1}');
@@ -87,6 +118,83 @@ describe("Nebius provider boundary", () => {
     );
     expect((await run(buildTextRecipeRequest("Cook rice."))).content).toContain('"calories":null');
     expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
+  it("accepts labeled estimates and source quotes for social recipes without forcing a repair", async () => {
+    fetcher.mockResolvedValue(
+      completion(
+        JSON.stringify({
+          isCookingVideo: true,
+          confidence: 0.9,
+          recipe: {
+            title: "Eggs",
+            description: "",
+            prepMinutes: 0,
+            cookMinutes: 15,
+            servings: 2,
+            servingsSource: "estimated",
+            difficultyStars: 1,
+            ingredients: [
+              {
+                name: "chicken",
+                quantity: 300,
+                unit: "g",
+                amountSource: "estimated",
+                notes: "Amount not specified; estimated for two servings",
+              },
+            ],
+            steps: [
+              {
+                step: 1,
+                title: "Steam",
+                description: "Steam for 15 minutes.",
+                sourceQuote: "Steam for 15 minutes.",
+              },
+            ],
+          },
+        })
+      )
+    );
+    const result = await run(
+      buildSocialRecipeRequest("Steam for 15 minutes. Chicken amount not specified.")
+    );
+    expect(JSON.parse(result.content).recipe.ingredients[0]).toEqual(
+      expect.objectContaining({ quantity: 300, unit: "g", amountSource: "estimated" })
+    );
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    { quantity: 0, unit: "g" },
+    { quantity: 300, unit: "" },
+  ])("rejects invalid social-recipe amounts after one repair: %j", async (amount) => {
+    const content = JSON.stringify({
+      isCookingVideo: true,
+      confidence: 0.9,
+      recipe: {
+        title: "Steamed chicken",
+        description: "",
+        prepMinutes: 0,
+        cookMinutes: 15,
+        servings: 2,
+        servingsSource: "estimated",
+        difficultyStars: 1,
+        ingredients: [{ name: "chicken", ...amount, amountSource: "estimated" }],
+        steps: [
+          {
+            step: 1,
+            title: "Steam",
+            description: "Steam for 15 minutes.",
+            sourceQuote: "Steam for 15 minutes.",
+          },
+        ],
+      },
+    });
+    fetcher.mockImplementation(async () => completion(content));
+    await expect(
+      run(buildSocialRecipeRequest("Steam for 15 minutes. Chicken amount not specified."))
+    ).rejects.toThrow("valid recipe data");
+    expect(fetcher).toHaveBeenCalledTimes(2);
   });
 
   it.each(['{"name":"rice"}', '{"name":"rice","quantity":-1}', "not JSON"])(

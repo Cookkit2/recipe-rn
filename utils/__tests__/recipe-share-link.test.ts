@@ -1,0 +1,93 @@
+import { buildRecipeShareLink, parseRecipeShareLink } from "../recipe-share-link";
+import { buildRecipeShareSnapshot, parseRecipeShareSnapshot } from "../recipe-share-snapshot";
+import type { Recipe } from "~/types/Recipe";
+
+export const token = "430138cb-2b17-42c8-a72b-b67e1c5ac927";
+const shortToken = "QwE4yysXQsinK7Z-HFrJJw";
+export const sharedRecipe: Recipe = {
+  id: "private-device-id",
+  title: "Pasta",
+  description: "Dinner",
+  imageUrl: "file:///private/photo.jpg",
+  isFavorite: true,
+  servings: 2,
+  sourceUrl: "https://example.com/pasta",
+  ingredients: [{ name: "Pasta", quantity: 200, unit: "g", relatedIngredientId: "pantry-id" }],
+  instructions: [
+    { step: 1, title: "Cook", description: "Boil pasta", relatedIngredientIds: ["pantry-id"] },
+  ],
+};
+
+it("round trips public and browser Open in Cookkit links", () => {
+  expect(buildRecipeShareLink(token)).toBe(
+    `https://recipe-web-mings-projects-6bb85e23.vercel.app/r/${shortToken}`
+  );
+  expect(parseRecipeShareLink(buildRecipeShareLink(token))).toBe(token);
+  expect(parseRecipeShareLink(`cookkit://share/${shortToken}`)).toBe(token);
+  expect(parseRecipeShareLink(`cookkit://share/${token}`)).toBe(token);
+  expect(
+    parseRecipeShareLink(`https://recipe-web-mings-projects-6bb85e23.vercel.app/r/${token}`)
+  ).toBe(token);
+  expect(parseRecipeShareLink(`${buildRecipeShareLink(token)}/?utm_source=chat`)).toBe(token);
+});
+it.each([
+  `http://recipe-web-mings-projects-6bb85e23.vercel.app/r/${token}`,
+  `https://evil.example/r/${token}`,
+  `https://recipe-web-mings-projects-6bb85e23.vercel.app.evil.example/r/${token}`,
+  `https://user@recipe-web-mings-projects-6bb85e23.vercel.app/r/${token}`,
+  `https://recipe-web-mings-projects-6bb85e23.vercel.app/r/${token}/extra`,
+  "https://recipe-web-mings-projects-6bb85e23.vercel.app/r/not-a-token",
+  `https://recipe-web-mings-projects-6bb85e23.vercel.app/r/${shortToken.slice(0, -1)}x`,
+  "https://recipe-web-mings-projects-6bb85e23.vercel.app/r/AAAAAAAAAAAAAAAAAAAAAA",
+  null,
+])("rejects unrelated or malformed link %s", (value) => {
+  expect(parseRecipeShareLink(value)).toBeNull();
+});
+it("only publishes the explicit recipe fields and keeps source attribution", () => {
+  const snapshot = buildRecipeShareSnapshot(sharedRecipe);
+  expect(snapshot.sourceUrl).toBe(sharedRecipe.sourceUrl);
+  expect(snapshot.imageUrl).toBe("");
+  expect(JSON.stringify(snapshot)).not.toMatch(/private-device-id|pantry-id|isFavorite/);
+  expect(snapshot.ingredients[0]?.quantity).toBe(200);
+});
+it("shares a persisted recipe with absent calories stored as null", () => {
+  const persisted = { ...sharedRecipe, calories: null } as unknown as Recipe;
+  expect(buildRecipeShareSnapshot(persisted).calories).toBeUndefined();
+});
+it("shares persisted ingredients with absent notes stored as null", () => {
+  const persisted = {
+    ...sharedRecipe,
+    ingredients: sharedRecipe.ingredients.map((ingredient) => ({ ...ingredient, notes: null })),
+  } as unknown as Recipe;
+  expect(buildRecipeShareSnapshot(persisted).ingredients[0]?.notes).toBeUndefined();
+});
+it("retains zero calories and ingredient notes when provided", () => {
+  const snapshot = buildRecipeShareSnapshot({
+    ...sharedRecipe,
+    calories: 0,
+    ingredients: sharedRecipe.ingredients.map((ingredient) => ({
+      ...ingredient,
+      notes: "Keep some pasta water",
+    })),
+  });
+  expect(snapshot.calories).toBe(0);
+  expect(snapshot.ingredients[0]?.notes).toBe("Keep some pasta water");
+});
+it("still rejects null optional values in untrusted remote snapshots", () => {
+  const snapshot = buildRecipeShareSnapshot(sharedRecipe);
+  expect(() => parseRecipeShareSnapshot({ ...snapshot, calories: null })).toThrow();
+  expect(() =>
+    parseRecipeShareSnapshot({
+      ...snapshot,
+      ingredients: snapshot.ingredients.map((ingredient) => ({ ...ingredient, notes: null })),
+    })
+  ).toThrow();
+});
+it("rejects malformed snapshots and unsafe external URLs", () => {
+  const snapshot = buildRecipeShareSnapshot(sharedRecipe);
+  expect(() => parseRecipeShareSnapshot({ ...snapshot, ingredients: [] })).toThrow();
+  expect(() => parseRecipeShareSnapshot({ ...snapshot, servings: NaN })).toThrow();
+  expect(
+    parseRecipeShareSnapshot({ ...snapshot, sourceUrl: "javascript:alert(1)" }).sourceUrl
+  ).toBeUndefined();
+});

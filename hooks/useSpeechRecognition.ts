@@ -15,6 +15,11 @@ import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from "expo-spe
 import { voiceCookingService, type VoiceCommand } from "~/utils/voice-cooking";
 import { log } from "~/utils/logger";
 import type { Recipe, RecipeStep } from "~/types/Recipe";
+import {
+  acquireSpeechSession,
+  ownsSpeechSession,
+  releaseSpeechSession,
+} from "~/lib/speech-session";
 
 interface UseSpeechRecognitionOptions {
   /** Callback to process recognized voice commands */
@@ -145,6 +150,7 @@ export function useSpeechRecognition({
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const shouldBeListeningRef = useRef(false);
+  const sessionRef = useRef<symbol | undefined>(undefined);
   const restartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { processCommand, clearDebounce } = useCommandProcessor(onCommand, { recipe, currentStep });
@@ -157,6 +163,7 @@ export function useSpeechRecognition({
   }, []);
 
   const startRecognition = useCallback(() => {
+    if (!ownsSpeechSession(sessionRef.current) || !shouldBeListeningRef.current) return;
     ExpoSpeechRecognitionModule.start({
       lang: "en-US",
       interimResults: true,
@@ -169,7 +176,7 @@ export function useSpeechRecognition({
   }, []);
 
   const stopRecognition = useCallback((updateUI = true) => {
-    ExpoSpeechRecognitionModule.abort();
+    if (ownsSpeechSession(sessionRef.current)) ExpoSpeechRecognitionModule.abort();
     if (updateUI) {
       setIsListening(false);
     }
@@ -197,6 +204,7 @@ export function useSpeechRecognition({
   );
 
   useSpeechRecognitionEvent("start", () => {
+    if (!ownsSpeechSession(sessionRef.current) || !shouldBeListeningRef.current) return;
     if (!isPausedDueToTTSRef.current) {
       setIsListening(true);
     }
@@ -204,6 +212,7 @@ export function useSpeechRecognition({
   });
 
   useSpeechRecognitionEvent("end", () => {
+    if (!ownsSpeechSession(sessionRef.current)) return;
     if (!isPausedDueToTTSRef.current) {
       setIsListening(false);
     }
@@ -215,6 +224,7 @@ export function useSpeechRecognition({
   });
 
   useSpeechRecognitionEvent("result", (event) => {
+    if (!ownsSpeechSession(sessionRef.current) || !shouldBeListeningRef.current) return;
     const text = event.results[0]?.transcript ?? "";
     const confidence = event.results[0]?.confidence ?? 0;
     setTranscript(text);
@@ -248,6 +258,7 @@ export function useSpeechRecognition({
   });
 
   useSpeechRecognitionEvent("error", (event) => {
+    if (!ownsSpeechSession(sessionRef.current)) return;
     if (event.error === "no-speech") {
       return;
     }
@@ -258,25 +269,42 @@ export function useSpeechRecognition({
       shouldBeListeningRef.current = false;
       setIsListening(false);
       clearRestart();
+      releaseSpeechSession(sessionRef.current);
+      sessionRef.current = undefined;
     }
   });
 
   const startListening = useCallback(async () => {
-    const result = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
-    if (!result.granted) {
-      log.warn("[SpeechRecognition] Permissions not granted");
-      return;
+    if (sessionRef.current) return;
+    const session = acquireSpeechSession("voice");
+    if (!session) return;
+    sessionRef.current = session;
+    try {
+      const result = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+      if (!ownsSpeechSession(session)) return;
+      if (!result.granted) {
+        log.warn("[SpeechRecognition] Permissions not granted");
+        releaseSpeechSession(session);
+        sessionRef.current = undefined;
+        return;
+      }
+      shouldBeListeningRef.current = true;
+      startRecognition();
+    } catch {
+      shouldBeListeningRef.current = false;
+      releaseSpeechSession(session);
+      sessionRef.current = undefined;
+      log.warn("[SpeechRecognition] Couldn't start voice commands.");
     }
-
-    shouldBeListeningRef.current = true;
-    startRecognition();
   }, [startRecognition]);
 
   const stopListening = useCallback(() => {
     shouldBeListeningRef.current = false;
     clearRestart();
     clearDebounce();
-    ExpoSpeechRecognitionModule.abort();
+    if (ownsSpeechSession(sessionRef.current)) ExpoSpeechRecognitionModule.abort();
+    releaseSpeechSession(sessionRef.current);
+    sessionRef.current = undefined;
     setIsListening(false);
     setTranscript("");
   }, [clearRestart, clearDebounce]);
@@ -308,7 +336,9 @@ export function useSpeechRecognition({
       shouldBeListeningRef.current = false;
       clearRestart();
       clearDebounce();
-      ExpoSpeechRecognitionModule.abort();
+      if (ownsSpeechSession(sessionRef.current)) ExpoSpeechRecognitionModule.abort();
+      releaseSpeechSession(sessionRef.current);
+      sessionRef.current = undefined;
     };
   }, [clearRestart, clearDebounce]);
 

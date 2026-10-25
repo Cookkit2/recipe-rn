@@ -68,7 +68,11 @@ Rules:
 
 const MODEL_INPUT_SIZE = 256; // Reduced from 400 for faster API calls
 
-export const classifyStaticImage = async (skImage: SkImage): Promise<ClassifiedIngredient> => {
+export const classifyStaticImage = async (
+  skImage: SkImage,
+  signal?: AbortSignal
+): Promise<ClassifiedIngredient> => {
+  signal?.throwIfAborted();
   // Get user's preferred unit system for prompt guidance
   const storedUnit = storage.get(PREF_UNIT_SYSTEM_KEY) as string | undefined;
   // Handle legacy "si" value and default to "metric"
@@ -78,11 +82,14 @@ export const classifyStaticImage = async (skImage: SkImage): Promise<ClassifiedI
   const imageCompressed = compressImage(skImage, MODEL_INPUT_SIZE);
 
   if (!imageCompressed) throw new Error("Couldn't prepare the ingredient photo. Please try again.");
-  const response = await generateAIContent({
-    prompt,
-    image: { mimeType: "image/jpeg", data: imageCompressed },
-    responseSchema: INGREDIENT_RESPONSE_SCHEMA,
-  });
+  const response = await generateAIContent(
+    {
+      prompt,
+      image: { mimeType: "image/jpeg", data: imageCompressed },
+      responseSchema: INGREDIENT_RESPONSE_SCHEMA,
+    },
+    signal
+  );
   const ingredient = postProcessResponse(response);
 
   // Observability: log the confidence distribution so the threshold can be

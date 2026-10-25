@@ -1,3 +1,4 @@
+import type { Recipe as UIRecipe } from "~/types/Recipe";
 import { database } from "./database";
 import { ConsumptionLogRepository } from "./repositories/ConsumptionLogRepository";
 import type { ConsumptionLogSearchOptions } from "./repositories/ConsumptionLogRepository";
@@ -69,6 +70,7 @@ export interface UpdateStockData {
 }
 
 export interface CreateRecipeData {
+  id?: string;
   title: string;
   description: string;
   imageUrl?: string;
@@ -137,10 +139,10 @@ export interface ShoppingListResult {
   }>;
 }
 
-export interface AvailableRecipesResult {
-  canMake: Recipe[];
+export interface AvailableRecipesResult<T = Recipe> {
+  canMake: T[];
   partiallyCanMake: Array<{
-    recipe: Recipe;
+    recipe: T;
     completionPercentage: number;
   }>;
 }
@@ -317,8 +319,11 @@ class DatabaseFacade {
    * const details = await databaseFacade.getRecipesWithDetails([singleId]);
    * // Instead use: await databaseFacade.getRecipeWithDetails(singleId);
    */
-  async getRecipesWithDetails(recipeIds: string[]): Promise<Map<string, RecipeWithDetails>> {
-    const resultMap = await this.recipes.getRecipesWithDetails(recipeIds);
+  async getRecipesWithDetails(
+    recipeIds: string[],
+    options?: { includeSteps?: boolean; recipes?: Recipe[] }
+  ): Promise<Map<string, RecipeWithDetails>> {
+    const resultMap = await this.recipes.getRecipesWithDetails(recipeIds, options);
 
     const transformedMap = new Map<string, RecipeWithDetails>();
     for (const [recipeId, details] of resultMap.entries()) {
@@ -478,6 +483,7 @@ class DatabaseFacade {
   async createRecipe(data: CreateRecipeData): Promise<Recipe> {
     return await this.recipes.createRecipeWithDetails({
       recipe: {
+        id: data.id,
         title: data.title,
         description: data.description,
         imageUrl: data.imageUrl,
@@ -1155,6 +1161,18 @@ class DatabaseFacade {
    * completion percentages.
    */
   async getAvailableRecipes(): Promise<AvailableRecipesResult> {
+    return this.calculateRecipeAvailability() as Promise<AvailableRecipesResult>;
+  }
+
+  async getRecipeAvailabilityForCatalog(
+    catalog: readonly UIRecipe[]
+  ): Promise<AvailableRecipesResult<UIRecipe>> {
+    return this.calculateRecipeAvailability(catalog) as Promise<AvailableRecipesResult<UIRecipe>>;
+  }
+
+  private async calculateRecipeAvailability(
+    catalog?: readonly UIRecipe[]
+  ): Promise<AvailableRecipesResult<Recipe | UIRecipe>> {
     try {
       const allStock = await this.stocks.findAll();
 
@@ -1267,11 +1285,11 @@ class DatabaseFacade {
         }
       }
 
-      const allRecipes = await this.recipes.findAll();
+      const allRecipes = catalog ?? (await this.recipes.findAll());
 
-      const canMake: Recipe[] = [];
+      const canMake: Array<Recipe | UIRecipe> = [];
       const partiallyCanMake: {
-        recipe: Recipe;
+        recipe: Recipe | UIRecipe;
         completionPercentage: number;
       }[] = [];
 
@@ -1279,7 +1297,9 @@ class DatabaseFacade {
 
       // Fetch all recipe details at once to avoid N+1 awaits in loop
       const recipeIds = allRecipes.map((recipe) => recipe.id);
-      const allDetailsMap = await this.getRecipesWithDetails(recipeIds);
+      const allDetailsMap = catalog
+        ? new Map(catalog.map((recipe) => [recipe.id, { ingredients: recipe.ingredients }]))
+        : await this.getRecipesWithDetails(recipeIds, { includeSteps: false });
 
       for (let j = 0; j < allRecipes.length; j++) {
         const recipe = allRecipes[j];

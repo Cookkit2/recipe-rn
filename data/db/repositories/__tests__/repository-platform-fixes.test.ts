@@ -16,6 +16,7 @@ jest.mock("../../database", () => ({
 
 import { CookingHistoryRepository } from "../CookingHistoryRepository";
 import { WasteLogRepository } from "../WasteLogRepository";
+import { Platform } from "react-native";
 
 describe("repository platform-safe aggregations", () => {
   beforeEach(() => {
@@ -87,4 +88,26 @@ describe("repository platform-safe aggregations", () => {
       process.env.TZ = previousTimezone;
     }
   });
+});
+
+it("uses one SQL aggregation on native and returns every grouped result", async () => {
+  const previous = Platform.OS;
+  Platform.OS = "ios";
+  try {
+    const rows = [
+      { recipe_id: "b", cookCount: 2, lastCookedAt: 3000 },
+      { recipe_id: "a", cookCount: 1, lastCookedAt: 1000 },
+    ];
+    const query = jest.fn((..._clauses: unknown[]) => ({ unsafeFetchRaw: async () => rows }));
+    mockCollections.cooking_history = { query };
+    const result = await new CookingHistoryRepository().getMostCookedRecipes(2);
+    expect(result).toEqual([
+      { recipeId: "b", cookCount: 2, lastCookedAt: 3000 },
+      { recipeId: "a", cookCount: 1, lastCookedAt: 1000 },
+    ]);
+    expect(query).toHaveBeenCalledTimes(1);
+    expect(query.mock.calls[0]?.[0]).toMatchObject({ type: "sqlQuery" });
+  } finally {
+    Platform.OS = previous;
+  }
 });

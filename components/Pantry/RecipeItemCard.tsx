@@ -1,5 +1,6 @@
 import React from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import ScrollAwarePressable from "~/components/Shared/ScrollAwarePressable";
 import { Image } from "expo-image";
 import { H4, P, Small } from "~/components/ui/typography";
 import * as Haptics from "expo-haptics";
@@ -52,7 +53,7 @@ function RecipeItemCard({
   return (
     <Animated.View key={recipe.id} className="p-3 flex-1" style={[animatedStyle]}>
       <Link href={`/recipes/${recipe.id}`} asChild>
-        <Pressable
+        <ScrollAwarePressable
           accessibilityRole="button"
           accessibilityHint={`View recipe for ${recipe.title}`}
           onPress={() => {
@@ -132,21 +133,14 @@ function RecipeItemCard({
               )} */}
             </View>
           </View>
-        </Pressable>
+        </ScrollAwarePressable>
       </Link>
     </Animated.View>
   );
 }
 
-export default React.memo(RecipeItemCard, (prevProps, nextProps) => {
-  // Only re-render if these specific props change
-  return (
-    prevProps.recipe.id === nextProps.recipe.id &&
-    prevProps.recipe.isFavorite === nextProps.recipe.isFavorite &&
-    prevProps.completionPercentage === nextProps.completionPercentage &&
-    prevProps.matchCategory === nextProps.matchCategory
-  );
-});
+// Catalog rows retain their identity until their content changes.
+export default React.memo(RecipeItemCard);
 
 const styles = StyleSheet.create({
   image: {

@@ -673,7 +673,8 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      create_recipe_share: { Args: { p_snapshot: Json }; Returns: string };
+      get_recipe_share: { Args: { p_token: string }; Returns: Json };
     };
     Enums: {
       [_ in never]: never;

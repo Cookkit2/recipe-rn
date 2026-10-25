@@ -11,6 +11,10 @@ export const pantryQueryKeys = {
   // All pantry items
   items: () => [...pantryQueryKeys.all, "items"] as const,
 
+  // Optional cloud categories, cached independently of local stock reads
+  ingredientCategories: (names: string[]) =>
+    [...pantryQueryKeys.all, "ingredientCategories", names] as const,
+
   // Pantry items filtered by type
   itemsByType: (type: Exclude<ItemType, "all">) =>
     [...pantryQueryKeys.items(), "type", type] as const,

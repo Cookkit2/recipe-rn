@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import { View, Keyboard, Pressable, TouchableOpacity, FlatList, StyleSheet } from "react-native";
+import { View, Keyboard, Pressable, TouchableOpacity, StyleSheet } from "react-native";
 import BottomSheet, {
   BottomSheetScrollView,
   type BottomSheetMethods,
@@ -14,8 +14,7 @@ import { useRecipes, type RecipeFilters } from "~/hooks/queries/useRecipeQueries
 import { usePantryItems } from "~/hooks/queries/usePantryQueries";
 import { filterPantryItemsByName } from "~/utils/filterPantryItemsByName";
 import { filterRecipesForSearch } from "~/utils/filterRecipesForSearch";
-import { IngredientResults } from "~/components/Search/IngredientResults";
-import { RecipeResults } from "~/components/Search/RecipeResults";
+import { SearchResultsList } from "~/components/Search/SearchResultsList";
 import useColors from "~/hooks/useColor";
 import * as Haptics from "expo-haptics";
 import { useFeatureFlag } from "~/hooks/queries/useFeatureFlags";
@@ -126,27 +125,6 @@ export default function SearchScreen() {
     setSelectedTags([]);
     setMinRating(null);
   };
-
-  const hasResults = (recipeResults && recipeResults.length > 0) || ingredientResults.length > 0;
-
-  type SectionItem =
-    | { key: "loading" }
-    | { key: "ingredients" }
-    | { key: "recipes" }
-    | { key: "no-results" }
-    | { key: "empty" };
-
-  const sections = useMemo<SectionItem[]>(() => {
-    if (hasQuery) {
-      const items: SectionItem[] = [];
-      if (showSearchLoading) items.push({ key: "loading" });
-      if (ingredientResults.length) items.push({ key: "ingredients" });
-      if (recipeResults?.length) items.push({ key: "recipes" });
-      if (!showSearchLoading && !hasResults) items.push({ key: "no-results" });
-      return items;
-    }
-    return [{ key: "empty" }];
-  }, [hasQuery, showSearchLoading, ingredientResults, recipeResults, hasResults]);
 
   const renderFilterChip = ({
     label,
@@ -297,40 +275,6 @@ export default function SearchScreen() {
     </Portal>
   );
 
-  const renderSection = ({ item }: { item: SectionItem }) => {
-    switch (item.key) {
-      case "loading":
-        return (
-          <View className="flex-row items-center gap-2 px-1 mt-12 mx-auto">
-            <ActivityIndicator size="small" color="#999" />
-            <Text className="text-xs text-muted-foreground font-urbanist-medium">Searching...</Text>
-          </View>
-        );
-      case "ingredients":
-        return <IngredientResults items={ingredientResults} colors={colors} />;
-      case "recipes":
-        return <RecipeResults recipes={recipeResults} />;
-      case "no-results":
-        return (
-          <View className="items-center py-8 gap-2">
-            <Text className="text-sm text-muted-foreground font-urbanist-medium">
-              No results found
-            </Text>
-          </View>
-        );
-      case "empty":
-        return (
-          <View className="items-center px-6 pt-16">
-            <Text className="text-sm text-muted-foreground font-urbanist-medium text-center">
-              Search pantry items or recipes.
-            </Text>
-          </View>
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
     <>
       <Stack.SearchBar
@@ -342,15 +286,14 @@ export default function SearchScreen() {
         placeholder="Search"
       />
       <Pressable className="flex-1" onPress={handleDismiss}>
-        <FlatList
-          className="flex-1 bg-background"
-          keyboardShouldPersistTaps="handled"
-          automaticallyAdjustKeyboardInsets
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: bottom + 64, paddingTop: top + 10 }}
-          data={sections}
-          keyExtractor={(item) => item.key}
-          renderItem={renderSection}
+        <SearchResultsList
+          recipes={recipeResults}
+          ingredients={ingredientResults}
+          colors={colors}
+          hasQuery={hasQuery}
+          loading={showSearchLoading}
+          top={top}
+          bottom={bottom}
         />
       </Pressable>
       {/* <Pressable

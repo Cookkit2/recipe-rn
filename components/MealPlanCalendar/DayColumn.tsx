@@ -5,6 +5,7 @@ import type { DayMealPlan, MealSlot } from "~/types/MealPlan";
 import { MEAL_SLOTS } from "~/types/MealPlan";
 import MealSlotComponent from "./MealSlot";
 import DailyNutritionBar from "./DailyNutritionBar";
+import type { MealDropHandler } from "~/store/MealPlanCalendarContext";
 
 interface DayColumnProps {
   /**
@@ -26,7 +27,7 @@ interface DayColumnProps {
   /**
    * Optional callback when a recipe is dropped on a slot
    */
-  onMealSlotDrop?: (date: Date, mealSlot: MealSlot) => void;
+  onMealSlotDrop?: MealDropHandler;
 }
 
 /**

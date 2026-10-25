@@ -1,12 +1,15 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { recipeQueryKeys } from "./recipeQueryKeys";
 import type { Recipe } from "~/types/Recipe";
-import { recipeApi } from "~/data/api/recipeApi";
+import { recipeApi, rankRecipeRecommendations } from "~/data/api/recipeApi";
 import { databaseFacade } from "~/data/db/DatabaseFacade";
 import {
   type RecipeRankingStrategy,
   type RecipeFilterStrategy,
   createHistoryAwareRankingStrategy,
+  DietaryFilter,
+  ExpiringIngredientsRankingStrategy,
+  type RankingContext,
 } from "~/hooks/recommendation";
 import { useMemo } from "react";
 
@@ -158,6 +161,8 @@ export interface RecipeWithCompletion {
  * Options for useRecipeRecommendations hook
  */
 export interface UseRecipeRecommendationsOptions {
+  enabled?: boolean;
+  rankingContext?: RankingContext;
   /** Maximum recommendations to return */
   maxRecommendations?: number;
   /** Filter by recipe tags/categories */
@@ -174,116 +179,84 @@ export interface UseRecipeRecommendationsOptions {
  * Uses cached data from availability and cooking history queries,
  * passing it to getRecipeRecommendations to avoid redundant database calls.
  */
-export function useRecipeRecommendations(options?: UseRecipeRecommendationsOptions) {
-  const {
-    maxRecommendations,
-    categories,
-    filterStrategy,
-    rankingStrategy = createHistoryAwareRankingStrategy(),
-  } = options || {};
-
-  // Get cached data from separate queries
-  const availabilityQuery = useRecipeAvailability();
-
-  const mostCookedQuery = useQuery({
+export function useRecipeRecommendations(options: UseRecipeRecommendationsOptions = {}) {
+  const { enabled = true } = options;
+  const catalog = useQuery({
+    queryKey: recipeQueryKeys.catalog(),
+    queryFn: recipeApi.fetchRecommendationCatalog,
+    staleTime: 5 * 60 * 1000,
+    networkMode: "always",
+    enabled,
+  });
+  const availability = useQuery({
+    queryKey: [...recipeQueryKeys.availability(), catalog.dataUpdatedAt],
+    queryFn: () => databaseFacade.getRecipeAvailabilityForCatalog(catalog.data!),
+    staleTime: 60 * 1000,
+    networkMode: "always",
+    enabled: enabled && !!catalog.data,
+  });
+  const mostCooked = useQuery({
     queryKey: ["cookingHistory", "mostCooked", 100],
     queryFn: () => databaseFacade.getMostCookedRecipes(100),
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 2 * 60 * 1000,
+    networkMode: "always",
+    enabled,
   });
-
-  const cookingHistoryQuery = useQuery({
+  const history = useQuery({
     queryKey: ["cookingHistory", "list", 500],
     queryFn: () => databaseFacade.getCookingHistory(500),
-    staleTime: 1 * 60 * 1000, // 1 minute
+    staleTime: 60 * 1000,
+    networkMode: "always",
+    enabled,
   });
-
-  // Query to compute recommendations from cached data
-  const recommendationsQuery = useQuery({
-    queryKey: [
-      "recipes",
-      "recommendations",
+  const cookingHistory = useMemo(() => {
+    const mostCookedMap = new Map((mostCooked.data ?? []).map((item) => [item.recipeId, item]));
+    const ratings = new Map<string, number>();
+    const totals = new Map<string, { sum: number; count: number }>();
+    for (const record of history.data ?? []) {
+      if (record.rating != null && record.rating >= 1 && record.rating <= 5) {
+        const total = totals.get(record.recipeId) ?? { sum: 0, count: 0 };
+        total.sum += record.rating;
+        total.count++;
+        totals.set(record.recipeId, total);
+      }
+    }
+    for (const [id, total] of totals) ratings.set(id, total.sum / total.count);
+    return { mostCooked: mostCookedMap, ratings };
+  }, [mostCooked.data, history.data]);
+  const { categories, maxRecommendations, filterStrategy, rankingStrategy, rankingContext } =
+    options;
+  const result = useMemo(() => {
+    if (!catalog.data || !availability.data) return { recipes: [] };
+    return rankRecipeRecommendations(catalog.data, availability.data, {
       categories,
-      // Use constructor names for stable cache keys (Object.prototype.toString returns [object Object] for objects)
-      filterStrategy?.constructor?.name ?? "default",
-      rankingStrategy?.constructor?.name ?? "default",
       maxRecommendations,
-    ],
-    queryFn: async () => {
-      const mostCookedData = mostCookedQuery.data ?? [];
-      const cookingHistoryDataRaw = cookingHistoryQuery.data ?? [];
-
-      // Build cooking history data from cached queries
-      const mostCookedMap = new Map(
-        mostCookedData.map((d) => [
-          d.recipeId,
-          { cookCount: d.cookCount, lastCookedAt: d.lastCookedAt },
-        ])
-      );
-
-      const ratingsByRecipe = new Map<string, { sum: number; count: number }>();
-      for (const record of cookingHistoryDataRaw) {
-        if (record.rating !== undefined && record.rating >= 1 && record.rating <= 5) {
-          const current = ratingsByRecipe.get(record.recipeId);
-          if (current) {
-            current.sum += record.rating;
-            current.count += 1;
-          } else {
-            ratingsByRecipe.set(record.recipeId, { sum: record.rating, count: 1 });
-          }
-        }
-      }
-
-      const ratingsMap = new Map<string, number>();
-      for (const [recipeId, data] of ratingsByRecipe) {
-        ratingsMap.set(recipeId, data.sum / data.count);
-      }
-
-      const cookingHistoryData = {
-        mostCooked: mostCookedMap,
-        ratings: ratingsMap,
-      };
-
-      return recipeApi.getRecipeRecommendations({
-        maxRecommendations,
-        categories,
-        filterStrategy,
-        rankingStrategy,
-        preFetchedAvailability: availabilityQuery.data,
-        preFetchedCookingHistory: cookingHistoryData,
-      });
-    },
-    enabled: !!availabilityQuery.data && !!mostCookedQuery.data && !!cookingHistoryQuery.data,
-    staleTime: 30 * 1000, // 30 seconds - recommendations depend on other cached data
-  });
-
-  const recipes = recommendationsQuery.data?.recipes ?? [];
-
-  // Combine loading states
-  const isLoading =
-    availabilityQuery.isLoading ||
-    mostCookedQuery.isLoading ||
-    cookingHistoryQuery.isLoading ||
-    recommendationsQuery.isLoading;
-
-  // Combine errors
-  const error =
-    availabilityQuery.error ||
-    mostCookedQuery.error ||
-    cookingHistoryQuery.error ||
-    recommendationsQuery.error;
-
+      filterStrategy,
+      rankingStrategy,
+      rankingContext: { ...rankingContext, cookingHistory },
+    });
+  }, [
+    catalog.data,
+    availability.data,
+    categories,
+    maxRecommendations,
+    filterStrategy,
+    rankingStrategy,
+    rankingContext,
+    cookingHistory,
+  ]);
+  const client = useQueryClient();
   return {
-    recipes,
-    isLoading,
-    error,
-    refetch: () => {
-      return Promise.all([
-        availabilityQuery.refetch(),
-        mostCookedQuery.refetch(),
-        cookingHistoryQuery.refetch(),
-        recommendationsQuery.refetch(),
-      ]);
-    },
+    recipes: result.recipes,
+    isLoading:
+      enabled &&
+      (catalog.isPending || availability.isPending || mostCooked.isPending || history.isPending),
+    error: catalog.error ?? availability.error ?? mostCooked.error ?? history.error,
+    refetch: () =>
+      Promise.all([
+        client.invalidateQueries({ queryKey: recipeQueryKeys.all }),
+        client.invalidateQueries({ queryKey: ["cookingHistory"] }),
+      ]),
   };
 }
 
@@ -328,25 +301,52 @@ export function useRandomRecipeRecommendation(options?: {
  * @param options.maxRecommendations - Maximum recommendations to return
  */
 export function useExpiringRecipes(options?: {
-  /** Number of days to look ahead for expiring ingredients (default: 3) */
   daysBeforeExpiry?: number;
-  /** Maximum recommendations to return */
   maxRecommendations?: number;
+  enabled?: boolean;
 }) {
-  const queryKey = recipeQueryKeys.expiringRecipes(options);
-
-  const query = useQuery({
-    queryKey,
-    queryFn: () => recipeApi.getRecipeRecommendationsForExpiring(options),
-    staleTime: 1 * 60 * 1000, // 1 minute - depends on pantry which changes frequently
+  const enabled = options?.enabled ?? true;
+  const days = options?.daysBeforeExpiry ?? 3;
+  const expiring = useQuery({
+    queryKey: ["pantry", "expiringStocks", days],
+    queryFn: () => databaseFacade.getExpiringStock(days),
+    staleTime: 60 * 1000,
+    networkMode: "always",
+    enabled,
   });
-
+  const expiringIngredientIds = useMemo(
+    () => new Set(expiring.data?.map((stock) => stock.id)),
+    [expiring.data]
+  );
+  const rankingContext = useMemo(
+    () => ({ expiringIngredients: expiringIngredientIds }),
+    [expiringIngredientIds]
+  );
+  const rankingStrategy = useMemo(
+    () =>
+      new ExpiringIngredientsRankingStrategy({
+        baseBonus: 20,
+        multipleIngredientMultiplier: 1.5,
+        multiplierThreshold: 2,
+      }),
+    []
+  );
+  const filterStrategy = useMemo(() => new DietaryFilter(), []);
+  const recommendations = useRecipeRecommendations({
+    maxRecommendations: options?.maxRecommendations,
+    rankingContext,
+    rankingStrategy,
+    filterStrategy,
+    enabled: enabled && expiringIngredientIds.size > 0,
+  });
   return {
-    recipes: query.data?.recipes ?? [],
-    expiringIngredientIds: query.data?.expiringIngredientIds ?? new Set<string>(),
-    isLoading: query.isLoading,
-    error: query.error,
-    refetch: query.refetch,
+    ...recommendations,
+    recipes: expiringIngredientIds.size ? recommendations.recipes : [],
+    expiringIngredientIds,
+    isLoading:
+      enabled &&
+      (expiring.isPending || (expiringIngredientIds.size > 0 && recommendations.isLoading)),
+    error: expiring.error ?? recommendations.error,
   };
 }
 
@@ -378,9 +378,9 @@ function useAddRecipe() {
       });
 
       // Invalidate related queries that might be affected
-      queryClient.invalidateQueries({
-        queryKey: recipeQueryKeys.available(),
-      });
+      queryClient.invalidateQueries({ queryKey: recipeQueryKeys.catalog() });
+      queryClient.invalidateQueries({ queryKey: recipeQueryKeys.availability() });
+      queryClient.invalidateQueries({ queryKey: recipeQueryKeys.available() });
     },
     onError: () => {
       // On error, invalidate the recipes list to ensure consistency
@@ -411,9 +411,9 @@ function useUpdateRecipe() {
       });
 
       // Invalidate related queries
-      queryClient.invalidateQueries({
-        queryKey: recipeQueryKeys.available(),
-      });
+      queryClient.invalidateQueries({ queryKey: recipeQueryKeys.catalog() });
+      queryClient.invalidateQueries({ queryKey: recipeQueryKeys.availability() });
+      queryClient.invalidateQueries({ queryKey: recipeQueryKeys.available() });
     },
     onError: (_, { id }) => {
       // On error, invalidate the specific recipe and list to ensure consistency
@@ -448,9 +448,9 @@ function useDeleteRecipe() {
       });
 
       // Invalidate related queries
-      queryClient.invalidateQueries({
-        queryKey: recipeQueryKeys.available(),
-      });
+      queryClient.invalidateQueries({ queryKey: recipeQueryKeys.catalog() });
+      queryClient.invalidateQueries({ queryKey: recipeQueryKeys.availability() });
+      queryClient.invalidateQueries({ queryKey: recipeQueryKeys.available() });
     },
     onError: () => {
       // On error, invalidate the recipes list to ensure consistency

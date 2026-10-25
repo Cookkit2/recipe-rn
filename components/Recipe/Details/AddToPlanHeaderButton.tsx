@@ -1,10 +1,12 @@
-import { Pressable } from "react-native";
+import { Platform, PlatformColor, Pressable } from "react-native";
+import { SymbolView } from "expo-symbols";
+import useColors from "~/hooks/useColor";
 import { CalendarPlusIcon, CalendarCheckIcon } from "lucide-uniwind";
 import { useIsRecipeInPlan, useRemoveFromMealPlan } from "~/hooks/queries/useMealPlanQueries";
-import { useRecipe } from "~/hooks/queries/useRecipeQueries";
 import { useGlobalSearchParams, useRouter } from "expo-router";
 
 export default function AddToPlanHeaderButton() {
+  const colors = useColors();
   const { recipeId } = useGlobalSearchParams<{ recipeId: string }>();
   const router = useRouter();
 
@@ -33,7 +35,14 @@ export default function AddToPlanHeaderButton() {
       accessibilityLabel={isInPlan ? "Remove from meal plan" : "Add to meal plan"}
       accessibilityState={{ disabled: isDisabled, checked: isInPlan }}
     >
-      {isInPlan ? (
+      {Platform.OS === "ios" ? (
+        <SymbolView
+          name={isInPlan ? "calendar.badge.checkmark" : "calendar.badge.plus"}
+          size={22}
+          weight="regular"
+          tintColor={isInPlan ? PlatformColor("systemGreen") : colors.foreground}
+        />
+      ) : isInPlan ? (
         <CalendarCheckIcon className="text-green-500" size={24} strokeWidth={2} />
       ) : (
         <CalendarPlusIcon className="text-foreground" size={24} strokeWidth={2} />

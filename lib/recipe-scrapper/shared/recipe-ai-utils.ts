@@ -144,3 +144,34 @@ export function buildTextRecipeRequest(prompt: string): AIRequest {
     responseSchema: getAnalysisResponseSchema(),
   };
 }
+
+/** Social imports translate instructions and distinguish estimated amounts from source amounts. */
+export function buildSocialRecipeRequest(prompt: string): AIRequest {
+  const responseSchema = getAnalysisResponseSchema();
+  const recipe = responseSchema.properties.recipe;
+  const ingredient = recipe.properties.ingredients.items;
+  Object.assign(ingredient.properties.quantity, { exclusiveMinimum: 0 });
+  Object.assign(ingredient.properties, {
+    amountSource: { type: "string", enum: ["stated", "estimated"] },
+  });
+  ingredient.required.push("amountSource");
+  Object.assign(recipe.properties, {
+    servingsSource: { type: "string", enum: ["stated", "estimated"] },
+  });
+  recipe.required.push("servingsSource");
+  const step = recipe.properties.steps.items;
+  Object.assign(step.properties.description, {
+    description:
+      "A faithful English translation of the quoted cooking instruction. Preserve actions, times and temperatures; do not add a method from prior knowledge.",
+  });
+  Object.assign(step.properties, {
+    sourceQuote: {
+      type: "string",
+      minLength: 1,
+      description:
+        "Verbatim preparation instruction from the supplied source, in its original language.",
+    },
+  });
+  step.required.push("sourceQuote");
+  return { ...buildTextRecipeRequest(prompt), responseSchema };
+}

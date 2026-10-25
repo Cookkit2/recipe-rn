@@ -1,76 +1,96 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "expo-router";
-import { toast } from "sonner-native";
-import ImportRecipeDialog from "~/components/Pantry/ImportRecipeDialog";
-import { useImportRecipe } from "~/hooks/queries/useRecipeImportQueries";
-import { readPendingRecipeShare } from "~/lib/recipe-share-inbox";
+import { Linking, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useRecipeImportPreview } from "~/hooks/queries/useRecipeImportPreview";
+import { clearPendingRecipeShare, readPendingRecipeShare } from "~/lib/recipe-share-inbox";
 import type { PendingRecipeShare } from "~/types/SharedRecipe";
+import RecipeDetailsSkeleton from "./Details/RecipeDetailsSkeleton";
+import { Button } from "~/components/ui/button";
+import { H2, P } from "~/components/ui/typography";
 
-/** Loaded only when a received share is ready to extract. */
-export default function SharedRecipeImport({
-  pending,
-  onComplete,
-}: {
-  pending: PendingRecipeShare;
-  onComplete: (id: string) => void;
-}) {
+/** Incoming shares open directly in the recipe layout, without a required edit form. */
+export default function SharedRecipeImport({ pending }: { pending: PendingRecipeShare }) {
   const router = useRouter();
-  const { importRecipeAsync } = useImportRecipe();
-  const [recovering, setRecovering] = useState(false);
-  const started = useRef(false);
+  const insets = useSafeAreaInsets();
+  const { prepare, save, statusMessage } = useRecipeImportPreview();
+  const [error, setError] = useState("");
+  const [attempt, setAttempt] = useState(0);
+  const started = useRef(-1);
   const mounted = useRef(false);
-  const toastId = `recipe-share-${pending.id}`;
-
   useEffect(() => {
     mounted.current = true;
-    toast.loading("Importing shared recipe…", { id: toastId, duration: Infinity });
     return () => {
       mounted.current = false;
-      toast.dismiss(toastId);
     };
-  }, [toastId]);
-
+  }, []);
   useEffect(() => {
-    if (started.current) return;
-    started.current = true;
-    const isCurrent = () => mounted.current && readPendingRecipeShare()?.id === pending.id;
-    const fail = (message: string) => {
-      if (!isCurrent()) return;
-      toast.error(message, {
-        id: toastId,
-        duration: 12000,
-        action: {
-          label: "Try again",
-          onClick: () => {
-            if (isCurrent()) setRecovering(true);
-          },
-        },
-      });
+    if (started.current === attempt) return;
+    started.current = attempt;
+    const isCurrent = () => {
+      const latest = readPendingRecipeShare();
+      return mounted.current && (!latest || latest.id === pending.id);
     };
     void (async () => {
       try {
-        const result = await importRecipeAsync({ url: pending.url, text: pending.text });
+        const prepared = await prepare(
+          {
+            url: pending.url,
+            text: pending.text,
+            videoUri: pending.videoUri,
+            language: pending.language,
+          },
+          { onSaved: () => clearPendingRecipeShare(pending.id) }
+        );
         if (!isCurrent()) return;
-        if (!result.success || !result.recipe?.id) {
-          fail(result.error ?? "Couldn't read this recipe. Try sharing the full caption.");
-          return;
-        }
-        toast.dismiss(toastId);
-        onComplete(pending.id);
-        router.push(`/recipes/${result.recipe.id}`);
-      } catch (error) {
-        fail(error instanceof Error ? error.message : "Couldn't import this recipe. Try again.");
+        // Keep compatibility with drafts produced by older/manual extraction paths.
+        const result = prepared.kind === "saved" ? prepared.result : await save(prepared.draft);
+        if (!result.success || !result.recipe?.id)
+          throw new Error(result.error || "Couldn't read this recipe. Please try again.");
+        clearPendingRecipeShare(pending.id);
+        if (isCurrent()) router.replace(`/recipes/${result.recipe.id}`);
+      } catch (cause) {
+        if (isCurrent())
+          setError(cause instanceof Error ? cause.message : "Couldn't import this recipe.");
       }
     })();
-  }, [pending.id, pending.url, pending.text, importRecipeAsync, onComplete, router, toastId]);
+  }, [pending, attempt, prepare, save, router]);
 
-  return recovering ? (
-    <ImportRecipeDialog
-      open
-      initialInput={pending}
-      onOpenChange={(open) => {
-        if (!open) onComplete(pending.id);
-      }}
-    />
-  ) : null;
+  if (!error)
+    return (
+      <RecipeDetailsSkeleton
+        message={statusMessage === "Ready to import" ? "Reading recipe…" : statusMessage}
+      />
+    );
+  return (
+    <View
+      className="flex-1 justify-center gap-4 bg-background px-6"
+      style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
+    >
+      <H2 className="text-center">Couldn't read this recipe</H2>
+      <P className="text-center text-muted-foreground" accessibilityRole="alert">
+        {error}
+      </P>
+      <Button
+        onPress={() => {
+          setError("");
+          setAttempt((value) => value + 1);
+        }}
+      >
+        <P className="font-urbanist-semibold text-primary-foreground">Try again</P>
+      </Button>
+      {pending.url && (
+        <Button
+          variant="outline"
+          onPress={() => {
+            void Linking.openURL(pending.url!).catch(() =>
+              setError("Couldn't open the original post.")
+            );
+          }}
+        >
+          <P>View original post</P>
+        </Button>
+      )}
+    </View>
+  );
 }

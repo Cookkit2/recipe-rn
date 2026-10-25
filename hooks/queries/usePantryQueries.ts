@@ -5,25 +5,21 @@ import { recipeQueryKeys } from "./recipeQueryKeys";
 import type { ItemType, PantryItem } from "~/types/PantryItem";
 import { pantryApi } from "~/data/api/pantryApi";
 import { cancelExpiryNotification, rescheduleExpiryNotification } from "~/lib/notifications";
-import { achievementService } from "~/data/services/AchievementService";
+import { scheduleAchievementCheck } from "~/data/services/backgroundAchievements";
 import { log } from "~/utils/logger";
 
 /**
  * Shared cache invalidation logic for pantry mutations.
  *
- * Checks achievements, then invalidates pantry, recipe recommendations,
+ * Refreshes local UI immediately and queues achievement checks. Invalidates pantry, recipe recommendations,
  * and available recipes queries.
  */
-async function invalidateAfterPantryChange(queryClient: ReturnType<typeof useQueryClient>) {
-  try {
-    await achievementService.checkAchievements();
-  } catch (error) {
-    log.warn("Failed to check achievements after pantry change:", error);
-  }
-
-  queryClient.invalidateQueries({ queryKey: pantryQueryKeys.all });
-  queryClient.invalidateQueries({ queryKey: recipeQueryKeys.recommendations() });
-  queryClient.invalidateQueries({ queryKey: recipeQueryKeys.available() });
+function invalidateAfterPantryChange(queryClient: ReturnType<typeof useQueryClient>) {
+  void queryClient.invalidateQueries({ queryKey: pantryQueryKeys.all });
+  void queryClient.invalidateQueries({ queryKey: recipeQueryKeys.recommendations() });
+  void queryClient.invalidateQueries({ queryKey: recipeQueryKeys.available() });
+  void queryClient.invalidateQueries({ queryKey: recipeQueryKeys.availability() });
+  scheduleAchievementCheck();
 }
 
 /**
@@ -36,12 +32,48 @@ async function invalidateAfterPantryChange(queryClient: ReturnType<typeof useQue
  * gcTime: 5 minutes - keeps cached data available for quick navigation back
  */
 export function usePantryItems() {
-  return useQuery({
+  const pantryQuery = useQuery({
     queryKey: pantryQueryKeys.items(),
     queryFn: pantryApi.fetchAllPantryItems,
+    networkMode: "always", // SQLite reads must also run when the device is offline.
     staleTime: 30 * 1000, // 30 seconds - balance between freshness and performance
     gcTime: 5 * 60 * 1000, // 5 minutes garbage collection
   });
+
+  const namesMissingCategories = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          pantryQuery.data
+            ?.filter((item) => !item.categories?.length && !item.category)
+            .map((item) => item.name)
+        )
+      ).sort(),
+    [pantryQuery.data]
+  );
+
+  const { data: ingredientCategories } = useQuery({
+    queryKey: pantryQueryKeys.ingredientCategories(namesMissingCategories),
+    queryFn: () => pantryApi.fetchIngredientCategories(namesMissingCategories),
+    enabled: namesMissingCategories.length > 0,
+    networkMode: "online",
+    staleTime: 30 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+  });
+
+  // Cloud enrichment never controls the list's loading/error state or writes old
+  // item snapshots back into the cache after an edit or deletion.
+  const data = useMemo(() => {
+    if (!ingredientCategories) return pantryQuery.data;
+    return pantryQuery.data?.map((item) => {
+      if (item.categories?.length || item.category) return item;
+      const categories = ingredientCategories[item.name.toLowerCase()];
+      if (!categories?.length) return item;
+      return { ...item, categories, category: categories[0]?.name ?? "" };
+    });
+  }, [pantryQuery.data, ingredientCategories]);
+
+  return { ...pantryQuery, data };
 }
 
 /**
@@ -167,19 +199,16 @@ export function useUpdatePantryItem() {
     mutationFn: ({ id, updates }: { id: string; updates: Partial<PantryItem> }) =>
       pantryApi.updatePantryItem(id, updates),
     onSuccess: async (updatedItem) => {
-      try {
-        await rescheduleExpiryNotification(updatedItem);
-      } catch {
-        // Non-critical
-      }
-
       queryClient.setQueryData<PantryItem[]>(pantryQueryKeys.items(), (oldData) => {
         if (!oldData) return oldData;
         return oldData.map((item) => (item.id === updatedItem.id ? updatedItem : item));
       });
 
       queryClient.invalidateQueries({ queryKey: pantryQueryKeys.expiring() });
-      await invalidateAfterPantryChange(queryClient);
+      invalidateAfterPantryChange(queryClient);
+      void rescheduleExpiryNotification(updatedItem).catch((error) =>
+        log.warn("Expiry reminder update failed", error)
+      );
     },
   });
 }
@@ -198,19 +227,16 @@ export function useDeletePantryItem() {
   return useMutation({
     mutationFn: pantryApi.deletePantryItem,
     onSuccess: async (_, deletedId) => {
-      try {
-        await cancelExpiryNotification(deletedId);
-      } catch {
-        // Non-critical
-      }
-
       queryClient.setQueryData<PantryItem[]>(pantryQueryKeys.items(), (oldData) => {
         if (!oldData) return oldData;
         return oldData.filter((item) => item.id !== deletedId);
       });
 
       queryClient.invalidateQueries({ queryKey: pantryQueryKeys.expiring() });
-      await invalidateAfterPantryChange(queryClient);
+      invalidateAfterPantryChange(queryClient);
+      void cancelExpiryNotification(deletedId).catch((error) =>
+        log.warn("Expiry reminder cancellation failed", error)
+      );
     },
   });
 }
