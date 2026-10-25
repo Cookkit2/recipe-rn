@@ -58,7 +58,7 @@ beforeEach(() => {
 function drag(distance: number) {
   mockHandlers.onBegin!();
   mockHandlers.onUpdate!({ translationY: distance });
-  mockHandlers.onEnd!({ translationY: distance });
+  mockHandlers.onEnd?.({ translationY: distance });
   mockHandlers.onFinalize!();
 }
 
@@ -77,6 +77,27 @@ it("opens search once after a deliberate pull at the top, including automatic he
   expect(mockPush).toHaveBeenCalledWith("/search");
 });
 
+it("opens search while the finger is still down as soon as the pull crosses the threshold", async () => {
+  await renderHook(() => usePantryPullSearch(true));
+  await act(async () => {
+    mockHandlers.onBegin!();
+    mockHandlers.onUpdate!({ translationY: 40 });
+  });
+  expect(mockPush).not.toHaveBeenCalled();
+
+  // No release or rebound event has occurred here.
+  await act(async () => mockHandlers.onUpdate!({ translationY: 80 }));
+  expect(mockPush).toHaveBeenCalledTimes(1);
+
+  await act(async () => {
+    mockHandlers.onUpdate!({ translationY: 100 });
+    mockHandlers.onUpdate!({ translationY: 130 });
+    mockHandlers.onEnd?.({ translationY: 0 });
+    mockHandlers.onFinalize!();
+  });
+  expect(mockPush).toHaveBeenCalledTimes(1);
+});
+
 it("ignores short bounces, upward swipes and pulls beginning partway down the list", async () => {
   const { result } = await renderHook(() => usePantryPullSearch(true));
   await act(async () => {
@@ -87,18 +108,18 @@ it("ignores short bounces, upward swipes and pulls beginning partway down the li
     // Reaching the top during an ordinary scroll must not activate search.
     scroll(result.current.onScroll, 0);
     mockHandlers.onUpdate!({ translationY: 200 });
-    mockHandlers.onEnd!({ translationY: 200 });
+    mockHandlers.onEnd?.({ translationY: 200 });
     mockHandlers.onFinalize!();
   });
   expect(mockPush).not.toHaveBeenCalled();
 });
 
-it("ignores canceled or retracted pulls and restores list opacity", async () => {
+it("ignores canceled or retracted pulls below the threshold and restores list opacity", async () => {
   const { result, rerender } = await renderHook(() => usePantryPullSearch(true));
   const opacity = () => (result.current.pullStyle as unknown as { opacity: number }).opacity;
   await act(async () => {
     mockHandlers.onBegin!();
-    mockHandlers.onUpdate!({ translationY: 100 });
+    mockHandlers.onUpdate!({ translationY: 50 });
   });
   await rerender({});
   expect(opacity()).toBeLessThan(1);
@@ -109,9 +130,9 @@ it("ignores canceled or retracted pulls and restores list opacity", async () => 
 
   await act(async () => {
     mockHandlers.onBegin!();
-    mockHandlers.onUpdate!({ translationY: 100 });
+    mockHandlers.onUpdate!({ translationY: 50 });
     mockHandlers.onUpdate!({ translationY: 20 });
-    mockHandlers.onEnd!({ translationY: 20 });
+    mockHandlers.onEnd?.({ translationY: 20 });
     mockHandlers.onFinalize!();
   });
   expect(mockPush).not.toHaveBeenCalled();

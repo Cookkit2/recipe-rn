@@ -18,6 +18,7 @@ export function usePantryPullSearch(enabled: boolean) {
   const opening = useRef(false);
   const offset = useSharedValue(0);
   const startedAtTop = useSharedValue(false);
+  const triggered = useSharedValue(false);
   const pullDistance = useSharedValue(0);
 
   useFocusEffect(
@@ -42,12 +43,14 @@ export function usePantryPullSearch(enabled: boolean) {
     .failOffsetX([-20, 20])
     .onBegin(() => {
       startedAtTop.value = enabled && offset.value <= 1;
+      triggered.value = false;
     })
     .onUpdate((event) => {
-      if (startedAtTop.value) pullDistance.value = Math.max(0, event.translationY);
-    })
-    .onEnd((event) => {
-      if (startedAtTop.value && event.translationY >= SEARCH_PULL_DISTANCE) {
+      if (!startedAtTop.value) return;
+      pullDistance.value = Math.max(0, event.translationY);
+      // Open during the pull, before releasing the list starts its rebound.
+      if (!triggered.value && pullDistance.value >= SEARCH_PULL_DISTANCE) {
+        triggered.value = true;
         scheduleOnRN(openSearch);
       }
     })
