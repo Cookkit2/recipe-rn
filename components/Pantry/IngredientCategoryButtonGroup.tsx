@@ -1,7 +1,5 @@
 import React, { useState } from "react";
 import { ScrollView, View } from "react-native";
-import { useRouter } from "expo-router";
-import { CookingPotIcon } from "lucide-uniwind";
 import { Button } from "~/components/ui/button";
 import { P } from "~/components/ui/typography";
 import { usePantryStore } from "~/store/PantryContext";
@@ -14,7 +12,6 @@ const PAGE_INSET = 4;
 type FilterType = (typeof PANTRY_ITEM_TYPES)[number]["type"];
 
 export default function IngredientCategoryButtonGroup() {
-  const router = useRouter();
   const { selectedItemType, changeItemType } = usePantryStore();
   const [viewportWidth, setViewportWidth] = useState(0);
   const [chipWidths, setChipWidths] = useState<Partial<Record<FilterType, number>>>({});
@@ -28,7 +25,7 @@ export default function IngredientCategoryButtonGroup() {
     : [PANTRY_ITEM_TYPES];
 
   return (
-    <View className="flex-row items-center gap-x-2 pb-3 pl-2 pr-3">
+    <View className="flex-row items-center pb-3 pl-2 pr-3">
       <ScrollView
         key={viewportWidth}
         horizontal
@@ -92,16 +89,6 @@ export default function IngredientCategoryButtonGroup() {
           </View>
         ))}
       </ScrollView>
-      <Button
-        size="sm"
-        containerClassName="shrink-0"
-        className="flex-row items-center gap-1 rounded-full border-continuous bg-background border border-border"
-        accessibilityLabel="Leftovers"
-        onPress={() => router.push("/leftovers")}
-      >
-        <CookingPotIcon className="text-foreground" size={18} />
-        <P className="text-sm font-urbanist-medium tracking-wider text-foreground">Leftovers</P>
-      </Button>
     </View>
   );
 }

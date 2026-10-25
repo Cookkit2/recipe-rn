@@ -3,6 +3,7 @@ import {
   BellIcon,
   BookOpenIcon,
   ChartBarIcon,
+  CookingPotIcon,
   InfoIcon,
   MailIcon,
   MessageSquareHeartIcon,
@@ -137,14 +138,19 @@ export default function ProfileScreen() {
         <View className="mx-6 rounded-2xl bg-muted/50 overflow-hidden border-continuous">
           <CardContent className="flex p-0 py-2">
             <ListButton
-              title="Preferences"
-              icon={SettingsIcon}
-              onPress={() => router.push("/profile/preferences")}
+              title="Leftovers"
+              icon={CookingPotIcon}
+              onPress={() => router.push("/leftovers")}
             />
             <ListButton
               title="My Recipes"
               icon={BookOpenIcon}
               onPress={() => router.push("/profile/my-recipes")}
+            />
+            <ListButton
+              title="Preferences"
+              icon={SettingsIcon}
+              onPress={() => router.push("/profile/preferences")}
             />
             {/* <ListButton
               title="Analytics"
