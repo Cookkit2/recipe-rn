@@ -1,11 +1,13 @@
 import { SocialRecipeService } from "../SocialRecipeService";
 import { readRecipeVideo } from "../recipe-video";
 import { generateAIContent } from "~/lib/ai/client";
+import { readRecipeVideoCoverFrames } from "../recipe-video-cover";
 
 jest.mock("~/utils/logger", () => ({
   log: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
 }));
 jest.mock("../recipe-video", () => ({ readRecipeVideo: jest.fn() }));
+jest.mock("../recipe-video-cover", () => ({ readRecipeVideoCoverFrames: jest.fn(async () => []) }));
 jest.mock("~/lib/ai/client", () => ({ generateAIContent: jest.fn() }));
 const generate = jest.mocked(generateAIContent);
 const read = jest.mocked(readRecipeVideo);
@@ -35,6 +37,7 @@ describe("social video recipe fallback", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     generate.mockReset();
+    jest.mocked(readRecipeVideoCoverFrames).mockResolvedValue([]);
     globalThis.fetch = jest.fn(
       async () => new Response(`<meta name="description" content="${caption}">`)
     );
@@ -54,7 +57,8 @@ describe("social video recipe fallback", () => {
     generate
       .mockResolvedValueOnce(notRecipe)
       .mockResolvedValueOnce(JSON.stringify({ text: "[8s] Steam for 15 minutes." }))
-      .mockResolvedValueOnce(result);
+      .mockResolvedValueOnce(result)
+      .mockResolvedValueOnce(JSON.stringify({ frameIndex: 0 }));
     const analysis = await new SocialRecipeService().analyzeForRecipe({ platform: "tiktok", url });
     expect(read).toHaveBeenCalledTimes(1);
     expect(generate.mock.calls[1]?.[0].images).toHaveLength(1);
@@ -137,6 +141,36 @@ describe("social video recipe fallback", () => {
       ]);
     }
   );
+  it("automatically samples and selects a finished-food frame during caption import", async () => {
+    jest.mocked(readRecipeVideoCoverFrames).mockResolvedValueOnce([
+      { timestamp: 0.2, mimeType: "image/jpeg", data: "YWJj" },
+      { timestamp: 1, mimeType: "image/jpeg", data: "ZGVm" },
+    ]);
+    generate.mockResolvedValueOnce(result).mockResolvedValueOnce('{"frameIndex":1}');
+    const imported = await new SocialRecipeService().analyzeForRecipe({
+      platform: "tiktok",
+      url,
+      text: "Whisk 5 eggs and steam for 15 minutes.",
+    });
+    expect(readRecipeVideoCoverFrames).toHaveBeenCalledWith(url, expect.any(Object));
+    expect(generate.mock.calls[1]?.[0].images).toHaveLength(2);
+    expect(imported.recipe?.imageUrl).toBe("data:image/jpeg;base64,ZGVm");
+    expect(read).not.toHaveBeenCalled();
+  });
+  it("does not substitute a publisher thumbnail if actual frame sampling is unavailable", async () => {
+    generate.mockResolvedValueOnce(result);
+    globalThis.fetch = jest.fn(
+      async () =>
+        new Response('<meta property="og:image" content="https://p16.tiktokcdn.com/portrait.jpg">')
+    );
+    const imported = await new SocialRecipeService().analyzeForRecipe({
+      platform: "tiktok",
+      url,
+      text: "Whisk 5 eggs and steam for 15 minutes.",
+    });
+    expect(imported.recipe?.imageUrl).toBeUndefined();
+    expect(imported.recipe).toBeDefined();
+  });
   it("retains the video fallback when published subtitles are unavailable", async () => {
     const html = `<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__">${JSON.stringify({
       __DEFAULT_SCOPE__: {

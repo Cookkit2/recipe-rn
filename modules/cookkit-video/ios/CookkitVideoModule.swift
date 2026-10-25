@@ -9,6 +9,9 @@ public class CookkitVideoModule: Module {
     AsyncFunction("resolveVideo") { (url: String, script: String) async throws -> [String: String] in
       return try await VideoLinkResolver().resolve(url, script: script)
     }
+    AsyncFunction("sampleVideoCoverFrames") { (url: String, script: String) async throws -> [String: String] in
+      return try await VideoLinkResolver().resolve(url, script: script, maximumMessageBytes: 1_500_000)
+    }
     AsyncFunction("prepareVideo") { (uri: String, directory: String) async throws -> [String: Any] in
       guard let file = URL(string: uri), file.isFileURL,
         let output = URL(string: directory), output.isFileURL,
@@ -118,8 +121,10 @@ private final class VideoLinkResolver: NSObject, WKScriptMessageHandler, WKNavig
   private var continuation: CheckedContinuation<[String: String], Error>?
   private var timeout: Task<Void, Never>?
   private var expectedPlatform = ""
+  private var maximumMessageBytes = 65_000
 
-  func resolve(_ address: String, script: String) async throws -> [String: String] {
+  func resolve(_ address: String, script: String, maximumMessageBytes: Int = 65_000) async throws -> [String: String] {
+    self.maximumMessageBytes = maximumMessageBytes
     guard let url = URL(string: address), url.scheme == "https",
       let host = url.host, allowedHost(host), script.utf8.count < 20_000
     else { throw VideoError.inaccessible }
@@ -132,7 +137,9 @@ private final class VideoLinkResolver: NSObject, WKScriptMessageHandler, WKNavig
       config.mediaTypesRequiringUserActionForPlayback = []
       config.userContentController.add(self, name: "cookkitVideo")
       config.userContentController.addUserScript(WKUserScript(source: script, injectionTime: .atDocumentEnd, forMainFrameOnly: true))
-      let browser = WKWebView(frame: CGRect(x: 0, y: 0, width: 1, height: 1), configuration: config)
+      let coverOnly = maximumMessageBytes > 65_000
+      let browser = WKWebView(frame: CGRect(x: 0, y: 0, width: coverOnly ? 390 : 1, height: coverOnly ? 844 : 1), configuration: config)
+      browser.isUserInteractionEnabled = false
       browser.navigationDelegate = self
       self.browser = browser
       if let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first,
@@ -156,19 +163,21 @@ private final class VideoLinkResolver: NSObject, WKScriptMessageHandler, WKNavig
       guard let url = action.request.url, url.scheme == "https", let host = url.host,
         allowedHost(host), host.hasSuffix(expectedPlatform) else {
         decisionHandler(.cancel)
-        finish(.failure(VideoError.inaccessible))
+        if maximumMessageBytes <= 65_000 { finish(.failure(VideoError.inaccessible)) }
         return
       }
     }
     decisionHandler(.allow)
   }
   func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-    guard message.frameInfo.isMainFrame, let text = message.body as? String, text.utf8.count < 65_000,
+    guard message.frameInfo.isMainFrame, let text = message.body as? String, text.utf8.count < maximumMessageBytes,
       let data = text.data(using: .utf8), let value = try? JSONSerialization.jsonObject(with: data) as? [String: String]
     else { return }
     finish(.success(value))
   }
   func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+    let failure = error as NSError
+    if maximumMessageBytes > 65_000 && ((failure.domain == NSURLErrorDomain && failure.code == NSURLErrorCancelled) || (failure.domain == "WebKitErrorDomain" && failure.code == 102)) { return }
     finish(.failure(VideoError.inaccessible))
   }
   private func finish(_ result: Result<[String: String], Error>) {
