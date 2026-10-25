@@ -18,6 +18,23 @@ import type { AppError } from "~/types/AppError";
 import { log } from "~/utils/logger";
 import { resolveBaseIngredientId, prepareStockData } from "./api-helpers";
 
+import type { AssistantPantryInput, AssistantPantryResult } from "~/types/AssistantPantryMutation";
+import { normalizeIngredientIdentity } from "~/utils/ingredient-identity";
+import { createAssistantPantryMutator } from "./assistant-pantry";
+
+const mutateAssistantPantry = createAssistantPantryMutator(database, async (name) => {
+  const ingredient =
+    (await baseIngredientApi.getBaseIngredientByName(name)) ??
+    (await baseIngredientApi.getBaseIngredientByName(normalizeIngredientIdentity(name)));
+  return ingredient
+    ? {
+        id: ingredient.id,
+        name: ingredient.name,
+        aliases: ingredient.synonyms.map((synonym) => synonym.synonym),
+      }
+    : null;
+});
+
 // ---------------------------------------------------------------------------
 // Core (shared) logic — called by both the throw-based and Result-based public
 // methods so the business logic is written only once per operation.
@@ -109,6 +126,20 @@ async function updatePantryItemCore(id: string, updates: Partial<PantryItem>): P
  * These functions only handle database interactions and data transformation
  */
 export const pantryApi = {
+  /** Assistant mutations validate and resolve identity atomically before writing stock. */
+  async manageAssistantPantry(
+    input: AssistantPantryInput
+  ): Promise<AssistantPantryResult<PantryItem>> {
+    const result = await mutateAssistantPantry(input);
+    if (!result.ok) return result;
+    if ("removed" in result) {
+      return { ...result, removed: await convertStockToPantryItemBatch(result.removed) };
+    }
+    const [item] = await convertStockToPantryItemBatch([result.item]);
+    if (!item) throw new Error("The pantry write did not return an item.");
+    return { ...result, item };
+  },
+
   /**
    * Fetch all pantry items from database
    */

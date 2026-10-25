@@ -425,3 +425,116 @@ it("retains verified recipe details in model history for cooking follow-ups", as
   expect(result.current.messages[1]?.content).toBe("");
   expect(result.current.messages[3]?.content).toBe("Cook the omelette in a pan.");
 });
+
+it("shows pantry clarification as ordinary conversation and carries row choices to the next turn", async () => {
+  const requests: unknown[] = [];
+  const agent: CookingAgent = {
+    kind: "nebius",
+    async *stream(input) {
+      requests.push(input.messages);
+      yield { type: "tool-call", toolCallId: "1", toolName: "manage_ingredients", input: {} };
+      yield {
+        type: "tool-result",
+        toolCallId: "1",
+        toolName: "manage_ingredients",
+        output: {
+          ok: false,
+          status: "needs_clarification",
+          question: "Which pantry entry should I update?",
+          candidates: [
+            {
+              id: "egg-1",
+              name: "eggs",
+              quantity: 6,
+              unit: "pcs",
+              storageType: "fridge",
+              expiryDate: null,
+            },
+          ],
+        },
+      };
+      yield { type: "text-delta", text: "Updated your pantry." };
+      yield { type: "finish", text: "Updated your pantry." };
+    },
+  };
+  const { result } = await renderHook(() => useCookingAgentChat(agent));
+  await act(async () => {
+    await result.current.send("Add 2 eggs");
+  });
+  expect(result.current.messages[1]).toMatchObject({
+    content: expect.stringContaining("Which pantry entry should I update?"),
+    activities: [],
+  });
+  expect(result.current.messages[1]?.content).toContain("6 pcs");
+  expect(result.current.messages[1]?.content).toContain("fridge");
+  expect(result.current.messages[1]?.error).toBeUndefined();
+  expect(result.current.messages[1]?.pantryError).toBeUndefined();
+  await act(async () => {
+    await result.current.send("The fridge entry");
+  });
+  expect(JSON.stringify(requests[1])).toContain("egg-1");
+});
+
+it.each(["added", "updated", "renamed", "merged", "removed"])(
+  "reports the confirmed %s pantry result",
+  async (status) => {
+    const agent: CookingAgent = {
+      kind: "nebius",
+      async *stream() {
+        yield {
+          type: "tool-result",
+          toolCallId: "1",
+          toolName: "manage_ingredients",
+          output: {
+            ok: true,
+            status,
+            item: { id: "egg", name: "eggs", quantity: 8, unit: "count" },
+            removed: [],
+          },
+        };
+      },
+    };
+    const { result } = await renderHook(() => useCookingAgentChat(agent));
+    await act(async () => {
+      await result.current.send("Change my pantry");
+    });
+    expect(result.current.messages[1]?.activities).toEqual([
+      status === "added"
+        ? "Added to pantry"
+        : status === "removed"
+          ? "Removed from pantry"
+          : "Updated pantry",
+    ]);
+  }
+);
+
+it("keeps a pantry clarification visible if the model calls recipes afterward", async () => {
+  const agent: CookingAgent = {
+    kind: "nebius",
+    async *stream() {
+      yield {
+        type: "tool-result",
+        toolCallId: "1",
+        toolName: "manage_ingredients",
+        output: { ok: false, status: "needs_clarification", question: "Which vegetables?" },
+      };
+      yield { type: "tool-call", toolCallId: "2", toolName: "suggest_recipes", input: {} };
+      yield {
+        type: "tool-result",
+        toolCallId: "2",
+        toolName: "suggest_recipes",
+        output: { recipes: [], pantryCount: 1, truncated: false },
+      };
+      yield { type: "finish", text: "Recipes" };
+    },
+  };
+  const { result } = await renderHook(() => useCookingAgentChat(agent));
+  await act(async () => {
+    await result.current.send("Add vegetables and suggest food");
+  });
+  expect(result.current.messages[1]).toMatchObject({
+    content: "Which vegetables?",
+    activities: [],
+  });
+  expect(result.current.messages[1]?.error).toBeUndefined();
+});

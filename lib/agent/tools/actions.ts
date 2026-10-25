@@ -1,3 +1,5 @@
+import type { AssistantPantryInput } from "~/types/AssistantPantryMutation";
+import { ingredientClarification } from "~/utils/ingredient-identity";
 import type { CookingDataClient } from "./planning";
 import { analyzePantryDiet, rankRecipes, suggestMeals } from "./planning";
 
@@ -6,16 +8,14 @@ const CATALOG_DATA_NOTE =
 
 const DEFAULT_SLOTS = ["lunch", "dinner"] as const;
 
-export async function runManageIngredients(
-  data: CookingDataClient,
-  input: {
-    action: "add" | "remove";
-    name?: string;
-    quantity?: number;
-    unit?: string;
-    stockId?: string;
+export async function runManageIngredients(data: CookingDataClient, input: AssistantPantryInput) {
+  if (input.action === "add" || input.action === "rename") {
+    const question = ingredientClarification(input.name ?? "");
+    if (question) return { ok: false as const, status: "needs_clarification" as const, question };
   }
-) {
+  if (data.managePantry) return data.managePantry(input);
+  if (input.action === "rename" || input.action === "merge")
+    return { ok: false as const, error: "This pantry does not support correcting entries." };
   if (input.action === "add") {
     const name = input.name?.trim() ?? "";
     if (!name) return { ok: false as const, error: "An ingredient name is required." };

@@ -6,7 +6,7 @@
  */
 
 import { log } from "~/utils/logger";
-import { isIngredientMatch } from "~/utils/ingredient-matching";
+import { matchesRecipeIngredient } from "~/utils/recipe-ingredient-match";
 import type { Recipe, RecipeIngredient, RecipeStep } from "~/types/Recipe";
 
 /**
@@ -25,44 +25,6 @@ export interface TemperatureInfo {
   value: number;
   unit: "F" | "C";
   context?: string; // e.g., "Preheat oven to", "Bake at"
-}
-
-function singularizeIngredientWord(word: string): string {
-  const pluralRules = [
-    { pattern: /ies$/i, replacement: "y" }, // cherries -> cherry
-    { pattern: /oes$/i, replacement: "o" }, // tomatoes -> tomato
-    { pattern: /ses$/i, replacement: "se" }, // cases -> case
-    { pattern: /ves$/i, replacement: "f" }, // halves -> half
-    { pattern: /xes$/i, replacement: "x" }, // boxes -> box
-    { pattern: /ches$/i, replacement: "ch" }, // peaches -> peach
-    { pattern: /shes$/i, replacement: "sh" }, // dishes -> dish
-    { pattern: /s$/i, replacement: "" }, // onions -> onion
-  ];
-
-  for (const rule of pluralRules) {
-    if (rule.pattern.test(word)) {
-      return word.replace(rule.pattern, rule.replacement);
-    }
-  }
-
-  return word;
-}
-
-/**
- * Normalize an ingredient phrase for fuzzy matching.
- */
-export function normalizeIngredientName(name: string): string[] {
-  return name
-    .toLowerCase()
-    .replace(
-      /\b(fresh|frozen|canned|dried|cooked|raw|organic|whole|sliced|diced|chopped|steamed|boiled|fried|grilled|ground|minced)\b/g,
-      ""
-    )
-    .split(/[\s,\-()]+/)
-    .flatMap((word) => {
-      const trimmed = word.trim();
-      return trimmed.length > 2 ? [singularizeIngredientWord(trimmed)] : [];
-    });
 }
 
 /**
@@ -168,7 +130,7 @@ class VoiceCommandParser {
   }
 
   /**
-   * Extract ingredient from text using fuzzy matching
+   * Extract an ingredient from a spoken quantity question
    *
    * @param text - The spoken text
    * @param ingredients - List of recipe ingredients
@@ -186,102 +148,18 @@ class VoiceCommandParser {
     const cleanedText = text
       .replace(/\b(how much|how many|quantity|amount of|what amount|do i need|i need|need)\b/gi, "")
       .replace(/[?!.]/g, "")
+      .trim()
+      .replace(/^(?:(?:what|is|the|of|for)\s+)+/i, "")
       .trim();
 
     if (!cleanedText) {
       return undefined;
     }
 
-    // Try to find best match using fuzzy matching
-    let bestMatch: RecipeIngredient | undefined;
-    let bestScore = 0;
-
-    for (const ingredient of ingredients) {
-      const score = this.calculateMatchScore(cleanedText, ingredient.name);
-      if (score > bestScore && score >= 0.6) {
-        // 0.6 threshold for fuzzy match
-        bestScore = score;
-        bestMatch = ingredient;
-      }
-    }
-
-    return bestMatch;
-  }
-
-  /**
-   * Calculate fuzzy match score between two sets of words
-   *
-   * @param spokenWords - Words from spoken text
-   * @param ingredientWords - Words from ingredient name
-   * @returns Match score between 0 and 1
-   */
-  private calculateFuzzyScore(spokenWords: string[], ingredientWords: string[]): number {
-    if (spokenWords.length === 0 || ingredientWords.length === 0) {
-      return 0;
-    }
-
-    // Count matching words (partial matches allowed)
-    const matchingWords = spokenWords.filter((spokenWord) =>
-      ingredientWords.some(
-        (ingWord) =>
-          spokenWord === ingWord || spokenWord.includes(ingWord) || ingWord.includes(spokenWord)
-      )
+    const matches = ingredients.filter((ingredient) =>
+      matchesRecipeIngredient(cleanedText, ingredient.name)
     );
-
-    if (matchingWords.length === 0) {
-      return 0;
-    }
-
-    // Score based on proportion of matching words
-    const maxWords = Math.max(spokenWords.length, ingredientWords.length);
-    return matchingWords.length / maxWords;
-  }
-
-  /**
-   * Calculate match score between spoken text and ingredient name
-   *
-   * @param spoken - The spoken text (cleaned)
-   * @param ingredientName - The ingredient name
-   * @returns Match score between 0 and 1
-   */
-  private calculateMatchScore(spoken: string, ingredientName: string): number {
-    // Direct match
-    if (spoken === ingredientName.toLowerCase()) {
-      return 1.0;
-    }
-
-    // Use existing isIngredientMatch utility (handles synonyms and variations)
-    if (isIngredientMatch(spoken, ingredientName)) {
-      return 0.95;
-    }
-
-    // Contains match (partial match)
-    if (
-      spoken.includes(ingredientName.toLowerCase()) ||
-      ingredientName.toLowerCase().includes(spoken)
-    ) {
-      return 0.85;
-    }
-
-    // Normalize and compare using fuzzy matching with plural handling
-    const spokenWords = normalizeIngredientName(spoken);
-    const ingredientWords = normalizeIngredientName(ingredientName);
-
-    const fuzzyScore = this.calculateFuzzyScore(spokenWords, ingredientWords);
-    if (fuzzyScore > 0) {
-      return fuzzyScore * 0.9; // Scale down slightly for fuzzy matches
-    }
-
-    // Fallback: simple word-based matching without normalization
-    const simpleSpokenWords = spoken.toLowerCase().split(/\s+/);
-    const simpleIngredientWords = ingredientName.toLowerCase().split(/\s+/);
-
-    const simpleScore = this.calculateFuzzyScore(simpleSpokenWords, simpleIngredientWords);
-    if (simpleScore > 0) {
-      return simpleScore * 0.7; // Lower score for simple match
-    }
-
-    return 0;
+    return matches.length === 1 ? matches[0] : undefined;
   }
 
   /**

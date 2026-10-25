@@ -1,3 +1,4 @@
+import type { AssistantPantryInput, AssistantPantryResult } from "~/types/AssistantPantryMutation";
 /**
  * Tier A: Jest integration through the production cooking agent.
  *
@@ -68,6 +69,33 @@ function createLocalPantryFixture(stock: StockRow[]) {
     items,
     changes: 0,
     api: {
+      async manageAssistantPantry(
+        input: AssistantPantryInput
+      ): Promise<AssistantPantryResult<PantryItem>> {
+        if (input.action === "add") {
+          const item = await this.addPantryItem({
+            name: input.name!,
+            quantity: input.quantity ?? 1,
+            unit: input.unit ?? "count",
+            type: "fridge",
+            category: "other",
+            image_url: undefined,
+            background_color: undefined,
+            steps_to_store: [],
+          });
+          return { ok: true, status: "added", item };
+        }
+        if (input.action === "remove") {
+          const matches = items.filter((item) =>
+            input.stockId
+              ? item.id === input.stockId
+              : item.name.toLowerCase() === input.name?.toLowerCase()
+          );
+          for (const item of matches) await this.deletePantryItem(item.id);
+          return { ok: true, status: "removed", removed: matches };
+        }
+        return { ok: false, error: "Unused fixture action" };
+      },
       async fetchAllPantryItems() {
         return [...items];
       },

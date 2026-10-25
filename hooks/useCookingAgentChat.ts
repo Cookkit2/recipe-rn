@@ -1,3 +1,4 @@
+import type { PantryCandidate } from "~/types/AssistantPantryMutation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AgentEvent, AgentTextMessage, CookingAgent } from "~/lib/agent/types";
 import { assistantErrorMessage, PANTRY_UPDATE_UNCERTAIN_MESSAGE } from "~/lib/agent/errors";
@@ -13,6 +14,7 @@ export interface CookingChatMessage extends AgentTextMessage {
   activities: string[];
   error?: string;
   pantryError?: string;
+  pantryClarification?: { question: string; candidates?: PantryCandidate[] };
   recipeStatus?: "pending" | "complete" | "failed";
   recipeSuggestions?: RecipeSuggestionsResult;
 }
@@ -52,12 +54,15 @@ function createId(): string {
 function applyEvent(message: CookingChatMessage, event: AgentEvent): CookingChatMessage {
   switch (event.type) {
     case "text-delta":
-      return message.recipeStatus ? message : { ...message, content: message.content + event.text };
+      return message.recipeStatus || message.pantryClarification
+        ? message
+        : { ...message, content: message.content + event.text };
     case "tool-result": {
       const activities = message.activities.filter(
         (activity) => activity !== TOOL_PROGRESS_LABELS[event.toolName]
       );
       if (event.toolName === "suggest_recipes") {
+        if (message.pantryClarification) return { ...message, activities };
         const result = recipeSuggestionsSchema.safeParse(event.output);
         if (!result.success)
           return {
@@ -78,6 +83,38 @@ function applyEvent(message: CookingChatMessage, event: AgentEvent): CookingChat
         };
       }
       const output = event.output;
+      if (
+        event.toolName === "manage_ingredients" &&
+        output &&
+        typeof output === "object" &&
+        "ok" in output &&
+        output.ok === false &&
+        "status" in output &&
+        output.status === "needs_clarification" &&
+        "question" in output &&
+        typeof output.question === "string"
+      ) {
+        const candidates =
+          "candidates" in output && Array.isArray(output.candidates)
+            ? (output.candidates as PantryCandidate[])
+            : undefined;
+        return {
+          ...message,
+          activities,
+          content: [
+            output.question,
+            ...(candidates ?? []).map(
+              (candidate, index) =>
+                `Entry ${index + 1}: ${candidate.name}, ${candidate.quantity} ${candidate.unit}${candidate.storageType ? `, ${candidate.storageType}` : ""}${candidate.expiryDate ? `, expires ${candidate.expiryDate.slice(0, 10)}` : ""}`
+            ),
+          ].join("\n"),
+          pantryClarification: { question: output.question, candidates },
+          recipeStatus: undefined,
+          recipeSuggestions: undefined,
+          error: undefined,
+          pantryError: undefined,
+        };
+      }
       if (output && typeof output === "object" && "ok" in output && output.ok === false) {
         return {
           ...message,
@@ -88,12 +125,28 @@ function applyEvent(message: CookingChatMessage, event: AgentEvent): CookingChat
             : {}),
         };
       }
+      const pantryStatus =
+        event.toolName === "manage_ingredients" &&
+        output &&
+        typeof output === "object" &&
+        "ok" in output &&
+        output.ok === true &&
+        "status" in output
+          ? output.status
+          : undefined;
+      const label =
+        pantryStatus === "added"
+          ? "Added to pantry"
+          : pantryStatus === "removed"
+            ? "Removed from pantry"
+            : (TOOL_LABELS[event.toolName] ?? event.toolName);
       return {
         ...message,
-        activities: [...activities, TOOL_LABELS[event.toolName] ?? event.toolName],
+        activities: [...activities, label],
       };
     }
     case "tool-error":
+      if (message.pantryClarification && event.toolName === "suggest_recipes") return message;
       if (event.toolName === "suggest_recipes") {
         return {
           ...clearProgress(message),
@@ -117,6 +170,7 @@ function applyEvent(message: CookingChatMessage, event: AgentEvent): CookingChat
         error: message.recipeStatus ? RECIPE_LOOKUP_ERROR : assistantErrorMessage(event.message),
       };
     case "tool-call": {
+      if (message.pantryClarification && event.toolName === "suggest_recipes") return message;
       if (event.toolName === "suggest_recipes") {
         return {
           ...message,
@@ -189,12 +243,18 @@ export function useCookingAgentChat(agent: CookingAgent) {
       const pendingPantryUpdates = new Set<string>();
       const consume = async () => {
         for await (const event of agent.stream({
-          messages: history.map(({ id, role, content, recipeSuggestions }) => ({
-            id,
-            role,
-            // Keep displayed catalog results available to later cooking questions.
-            content: recipeSuggestions ? JSON.stringify(recipeSuggestions) : content,
-          })),
+          messages: history.map(
+            ({ id, role, content, recipeSuggestions, pantryClarification }) => ({
+              id,
+              role,
+              // Keep displayed catalog results available to later cooking questions.
+              content: pantryClarification
+                ? JSON.stringify(pantryClarification)
+                : recipeSuggestions
+                  ? JSON.stringify(recipeSuggestions)
+                  : content,
+            })
+          ),
           signal: controller.signal,
         })) {
           // Some data operations cannot be aborted. Never apply their late results.
