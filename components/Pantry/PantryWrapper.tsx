@@ -20,6 +20,10 @@ import { usePantryStore } from "~/store/PantryContext";
 import IngredientLists from "~/components/Pantry/IngredientLists";
 import { useCallback, useEffect, useState } from "react";
 import { setStatusBarStyle } from "expo-status-bar";
+import type { usePantryPullSearch } from "~/hooks/usePantryPullSearch";
+import { SearchContent } from "~/components/Search/SearchContent";
+import { SearchEntrance } from "~/components/Search/SearchEntrance";
+import { SearchPreview } from "~/components/Search/SearchPreview";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -29,7 +33,11 @@ const SPRING_CONFIG = {
   stiffness: 500,
 };
 
-export default function PantryWrapper() {
+export default function PantryWrapper({
+  pullSearch,
+}: {
+  pullSearch: ReturnType<typeof usePantryPullSearch>;
+}) {
   const borderRadius = useDeviceCornerRadius();
   const { height: screenHeight } = useWindowDimensions();
   const { top } = useSafeAreaInsets();
@@ -141,14 +149,18 @@ export default function PantryWrapper() {
   });
 
   return (
-    <View testID={TEST_IDS.home.screen} collapsable={false} style={{ flex: 1 }}>
-      <Animated.View className="relative flex-1 bg-black rounded-xl">
+    <View testID={TEST_IDS.home.screen} collapsable={false} className="flex-1 bg-background">
+      <Animated.View
+        testID="pantry-home-content"
+        className="relative flex-1 bg-black rounded-xl"
+        style={pullSearch.homeStyle}
+      >
         <AnimatedPressable
           className="relative flex-1 bg-background overflow-hidden"
           style={containerStyle}
           onPress={closeRecipe}
         >
-          <IngredientLists />
+          <IngredientLists pullSearch={pullSearch} />
         </AnimatedPressable>
 
         <RecipeButton />
@@ -169,6 +181,21 @@ export default function PantryWrapper() {
           {recipesMounted && <RecipeLists active={isRecipeOpen} />}
         </Animated.View>
       </Animated.View>
+      <SearchEntrance
+        offset={pullSearch.searchOffset}
+        progress={pullSearch.progress}
+        interactive={pullSearch.focusEnabled}
+      >
+        {pullSearch.phase === "open" || pullSearch.phase === "closing" ? (
+          <SearchContent
+            onDismiss={pullSearch.dismiss}
+            focusEnabled={pullSearch.focusEnabled}
+            transparent
+          />
+        ) : (
+          <SearchPreview />
+        )}
+      </SearchEntrance>
     </View>
   );
 }

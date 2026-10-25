@@ -19,6 +19,7 @@ export function SearchResultsList({
   loading,
   top,
   bottom,
+  transparent = false,
 }: {
   recipes: readonly Recipe[];
   ingredients: readonly PantryItem[];
@@ -27,6 +28,7 @@ export function SearchResultsList({
   loading: boolean;
   top: number;
   bottom: number;
+  transparent?: boolean;
 }) {
   const sections = useMemo<Section[]>(
     () =>
@@ -55,7 +57,7 @@ export function SearchResultsList({
   return (
     <SectionList<Row, Section>
       testID="search-results"
-      className="flex-1 bg-background"
+      className={transparent ? "flex-1" : "flex-1 bg-background"}
       keyboardShouldPersistTaps="handled"
       automaticallyAdjustKeyboardInsets
       showsVerticalScrollIndicator={false}

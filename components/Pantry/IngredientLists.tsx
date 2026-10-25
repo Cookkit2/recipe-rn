@@ -9,10 +9,17 @@ import Animated, { LinearTransition, useAnimatedStyle, withTiming } from "react-
 import { CURVES } from "~/constants/curves";
 import IngredientCategoryButtonGroup from "./IngredientCategoryButtonGroup";
 import { TEST_IDS } from "~/constants/test-ids";
+import { GestureDetector } from "react-native-gesture-handler";
+import type { usePantryPullSearch } from "~/hooks/usePantryPullSearch";
 
-export default function IngredientLists() {
+export default function IngredientLists({
+  pullSearch,
+}: {
+  pullSearch: ReturnType<typeof usePantryPullSearch>;
+}) {
   const { bottom } = useSafeAreaInsets();
   const { selectedItemType, ingredientScrollRef, isRecipeOpen } = usePantryStore();
+  const { gesture, onScroll } = pullSearch;
   const { data, isLoading, error } = usePantryItemsByType(selectedItemType);
   const items = data ?? [];
   const ingredientListStyle = useAnimatedStyle(() => ({
@@ -55,31 +62,35 @@ export default function IngredientLists() {
   };
 
   return (
-    <Animated.FlatList
-      testID={TEST_IDS.home.pantryList}
-      contentInsetAdjustmentBehavior="automatic"
-      ref={ingredientScrollRef}
-      keyExtractor={(item) => item.id.toString()}
-      numColumns={2}
-      contentContainerStyle={{ paddingBottom: 100 + bottom }}
-      showsVerticalScrollIndicator={false}
-      data={items}
-      style={ingredientListStyle}
-      ListHeaderComponent={
-        <View className="bg-background pt-2">
-          <IngredientCategoryButtonGroup />
-        </View>
-      }
-      renderItem={({ item, index }) => (
-        <IngredientItemCard key={item.id} item={item} index={index} />
-      )}
-      ListEmptyComponent={emptyState}
-      scrollEventThrottle={16}
-      itemLayoutAnimation={LinearTransition.springify()
-        .damping(20)
-        .mass(1)
-        .stiffness(300)
-        .overshootClamping(0)}
-    />
+    <GestureDetector gesture={gesture}>
+      <Animated.FlatList
+        testID={TEST_IDS.home.pantryList}
+        contentInsetAdjustmentBehavior="automatic"
+        ref={ingredientScrollRef}
+        keyExtractor={(item) => item.id.toString()}
+        numColumns={2}
+        contentContainerStyle={{ paddingBottom: 100 + bottom }}
+        showsVerticalScrollIndicator={false}
+        data={items}
+        style={ingredientListStyle}
+        onScroll={onScroll}
+        alwaysBounceVertical
+        ListHeaderComponent={
+          <View className="bg-background pt-2">
+            <IngredientCategoryButtonGroup />
+          </View>
+        }
+        renderItem={({ item, index }) => (
+          <IngredientItemCard key={item.id} item={item} index={index} />
+        )}
+        ListEmptyComponent={emptyState}
+        scrollEventThrottle={16}
+        itemLayoutAnimation={LinearTransition.springify()
+          .damping(20)
+          .mass(1)
+          .stiffness(300)
+          .overshootClamping(0)}
+      />
+    </GestureDetector>
   );
 }
