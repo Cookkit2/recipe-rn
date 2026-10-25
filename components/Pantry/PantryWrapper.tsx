@@ -2,7 +2,6 @@ import { Pressable, View, useWindowDimensions } from "react-native";
 import { TEST_IDS } from "~/constants/test-ids";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import RecipeButton from "~/components/Pantry/RecipeButton";
-import AssistantButton from "~/components/Pantry/AssistantButton";
 import Animated, {
   useAnimatedStyle,
   useDerivedValue,
@@ -164,7 +163,6 @@ export default function PantryWrapper({
         </AnimatedPressable>
 
         <RecipeButton />
-        <AssistantButton />
 
         <Animated.View
           testID={TEST_IDS.home.recipeSheet}

@@ -1,54 +1,15 @@
-import { useCallback, useRef, useState } from "react";
-import { FlatList, KeyboardAvoidingView, Platform, View } from "react-native";
+import { useCallback, useState } from "react";
+import { KeyboardAvoidingView, Platform, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "expo-router/react-navigation";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Text } from "~/components/ui/text";
-import { P } from "~/components/ui/typography";
 import { TEST_IDS } from "~/constants/test-ids";
-import { useCookingAgentChat, type CookingChatMessage } from "~/hooks/useCookingAgentChat";
+import { useCookingAgentChat } from "~/hooks/useCookingAgentChat";
 import type { CookingAgent } from "~/lib/agent/types";
-import { toAssistantPlainText } from "~/lib/agent/plain-text";
-import { RecipeSuggestions } from "./RecipeSuggestions";
+import { AssistantMessages } from "./AssistantMessages";
 import { IS_E2E } from "~/utils/e2e-flags";
-
-function MessageBubble({ message }: { message: CookingChatMessage }) {
-  const mine = message.role === "user";
-  const displayContent = mine ? message.content : toAssistantPlainText(message.content);
-  const secondaryError = message.pantryError ?? message.error;
-  return (
-    <View
-      testID={mine ? undefined : TEST_IDS.assistant.bubble}
-      className={mine ? "items-end" : "items-start"}
-    >
-      <View
-        className={
-          mine
-            ? "max-w-[85%] rounded-2xl bg-primary px-4 py-3"
-            : "max-w-[85%] rounded-2xl bg-muted px-4 py-3"
-        }
-      >
-        {message.recipeSuggestions ? (
-          <RecipeSuggestions result={message.recipeSuggestions} />
-        ) : (
-          <Text className={mine ? "text-primary-foreground text-left" : "text-left"}>
-            {displayContent || message.error || (message.role === "assistant" ? "…" : "")}
-          </Text>
-        )}
-      </View>
-      {message.activities.map((activity, index) => (
-        <P key={`${activity}-${index}`} className="mt-1 text-sm text-muted-foreground">
-          {activity}
-        </P>
-      ))}
-      {secondaryError &&
-      (message.content || message.recipeSuggestions || secondaryError !== message.error) ? (
-        <P className="mt-1 text-sm text-destructive">{secondaryError}</P>
-      ) : null}
-    </View>
-  );
-}
 
 const COMPOSER_HEIGHT = 48;
 // iPhone Air's home indicator is 34pt. useSafeAreaInsets() can still report 0
@@ -58,7 +19,6 @@ const HOME_INDICATOR_FALLBACK = 34;
 export function AssistantChat({ agent }: { agent: CookingAgent }) {
   const { messages, status, send, stop } = useCookingAgentChat(agent);
   const [draft, setDraft] = useState("");
-  const listRef = useRef<FlatList<CookingChatMessage>>(null);
   const { bottom } = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const streaming = status === "streaming";
@@ -82,26 +42,9 @@ export function AssistantChat({ agent }: { agent: CookingAgent }) {
       behavior={Platform.OS === "ios" && !IS_E2E ? "padding" : undefined}
       enabled={!IS_E2E}
     >
-      <FlatList
-        className="flex-1 overflow-hidden"
-        ref={listRef}
-        testID={TEST_IDS.assistant.list}
-        data={messages}
-        keyExtractor={(item) => item.id}
-        contentInsetAdjustmentBehavior="never"
-        style={{ flex: 1 }}
-        keyboardShouldPersistTaps="handled"
-        contentContainerClassName="gap-3 px-4"
-        contentContainerStyle={{
-          // The opaque native header already reserves the top safe area.
-          paddingTop: 12,
-          paddingBottom: IS_E2E ? COMPOSER_HEIGHT + 12 + composerClearance : 12,
-        }}
-        ListEmptyComponent={
-          <P className="px-2 pt-8 text-muted-foreground">Ask what to cook from your fridge.</P>
-        }
-        onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: !IS_E2E })}
-        renderItem={({ item }) => <MessageBubble message={item} />}
+      <AssistantMessages
+        messages={messages}
+        bottom={IS_E2E ? COMPOSER_HEIGHT + 12 + composerClearance : 12}
       />
       <View
         className="flex-row items-end gap-2 border-t border-border bg-background px-4 pt-3"

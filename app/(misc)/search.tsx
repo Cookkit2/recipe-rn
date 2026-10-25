@@ -6,7 +6,12 @@ export default function SearchScreen() {
   return (
     <>
       <Stack.Screen options={{ animation: "fade" }} />
-      <SearchContent onDismiss={() => router.back()} />
+      <SearchContent
+        onDismiss={() => {
+          if (router.canGoBack()) router.back();
+          else router.replace("/");
+        }}
+      />
     </>
   );
 }

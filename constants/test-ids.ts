@@ -28,11 +28,12 @@ export const TEST_IDS = {
     searchButton: "home-search-button",
     addIngredientButton: "home-add-ingredient-button",
     profileButton: "home-profile-button",
-    assistantButton: "home-assistant-button",
   },
   search: {
     screen: "search-screen",
     input: "search-input",
+    askAssistant: "search-ask-cookkit",
+    stopAssistant: "search-stop-cookkit",
     filtersButton: "search-filters-button",
     filtersSheet: "search-filters-sheet",
     clearFiltersButton: "search-clear-filters-button",
