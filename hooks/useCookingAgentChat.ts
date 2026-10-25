@@ -188,7 +188,15 @@ export function useCookingAgentChat(agent: CookingAgent) {
 
       const pendingPantryUpdates = new Set<string>();
       const consume = async () => {
-        for await (const event of agent.stream({ messages: history, signal: controller.signal })) {
+        for await (const event of agent.stream({
+          messages: history.map(({ id, role, content, recipeSuggestions }) => ({
+            id,
+            role,
+            // Keep displayed catalog results available to later cooking questions.
+            content: recipeSuggestions ? JSON.stringify(recipeSuggestions) : content,
+          })),
+          signal: controller.signal,
+        })) {
           // Some data operations cannot be aborted. Never apply their late results.
           if (controller.signal.aborted) break;
           if (event.type === "tool-call" && event.toolName === "manage_ingredients") {

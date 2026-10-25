@@ -394,3 +394,34 @@ it("keeps an uncertain pantry warning after recipes have already loaded", async 
     jest.useRealTimers();
   }
 });
+
+it("retains verified recipe details in model history for cooking follow-ups", async () => {
+  const requests: Parameters<CookingAgent["stream"]>[0][] = [];
+  const agent: CookingAgent = {
+    kind: "nebius",
+    async *stream(input) {
+      requests.push(input);
+      if (requests.length === 1) {
+        yield {
+          type: "tool-result",
+          toolCallId: "recipes",
+          toolName: "suggest_recipes",
+          output: verifiedRecipeOutput,
+        };
+      } else {
+        yield { type: "text-delta", text: "Cook the omelette in a pan." };
+      }
+    },
+  };
+  const { result } = await renderHook(() => useCookingAgentChat(agent));
+  await act(async () => {
+    await result.current.send("Suggest recipes");
+  });
+  await act(async () => {
+    await result.current.send("How do I cook the first one?");
+  });
+  const priorReply = requests[1]?.messages.find((message) => message.role === "assistant");
+  expect(JSON.parse(priorReply?.content ?? "null")).toEqual(verifiedRecipeOutput);
+  expect(result.current.messages[1]?.content).toBe("");
+  expect(result.current.messages[3]?.content).toBe("Cook the omelette in a pan.");
+});
