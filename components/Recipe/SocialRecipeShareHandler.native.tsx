@@ -31,41 +31,96 @@ export default function SocialRecipeShareHandler() {
   }, [navigation]);
   useEffect(() => {
     // Older binaries can still use the manual import dialog until rebuilt.
-    if (!requireOptionalNativeModule("ExpoSharing")) return;
+    const nativeSharing = requireOptionalNativeModule<{
+      getSharedPayloads?: () => unknown;
+      clearSharedPayloads?: () => void;
+    }>("ExpoSharing");
+    if (
+      typeof nativeSharing?.getSharedPayloads !== "function" ||
+      typeof nativeSharing.clearSharedPayloads !== "function"
+    )
+      return;
     let disposed = false;
     let receiving = false;
-    const receive = async () => {
+    let shareRequested = false;
+    let reportedFailure: string | null = null;
+    let savedPayload: string | null = null;
+    let cleanupWarningReported = false;
+    const reportFailure = (key: string, message: string) => {
+      if (disposed || reportedFailure === key) return;
+      reportedFailure = key;
+      toast.error(message);
+    };
+    const receive = async (explicitShare = false) => {
+      shareRequested ||= explicitShare;
       if (receiving) return;
       receiving = true;
+      let payloadKey: string | null = null;
+      let stage = "read";
       try {
         const { getSharedPayloads, clearSharedPayloads } = await import("expo-sharing");
         if (disposed) return;
         const payloads = getSharedPayloads();
-        if (payloads.length === 0) return;
+        if (payloads.length === 0) {
+          reportedFailure = null;
+          savedPayload = null;
+          cleanupWarningReported = false;
+          return;
+        }
+        payloadKey = JSON.stringify(payloads.map(({ shareType, value }) => [shareType, value]));
+        const clear = () => {
+          try {
+            clearSharedPayloads();
+            savedPayload = null;
+            cleanupWarningReported = false;
+          } catch {
+            // A queued import is still valid. Retry cleanup on the next probe.
+            if (!cleanupWarningReported) log.warn("Could not clear the native recipe share inbox");
+            cleanupWarningReported = true;
+          }
+        };
         // Persist raw text before clearing the OS payload or starting extraction.
         const input = normalizeIncomingRecipeShare(payloads);
         if (!input) {
-          clearSharedPayloads();
-          toast.error("Share a recipe link or caption to import it.");
+          reportFailure(payloadKey, "Share a recipe link or caption to import it.");
+          clear();
           return;
         }
-        savePendingRecipeShare(input);
-        log.debug("Recipe share received", { hasUrl: !!input.url, hasCaption: !!input.text });
-        setRevision((value) => value + 1);
-        clearSharedPayloads();
-      } catch {
-        if (!disposed)
-          toast.error("Couldn't receive this share. Try sharing it again or pasting the caption.");
+        if (savedPayload !== payloadKey || (shareRequested && !readPendingRecipeShare())) {
+          stage = "persist";
+          savePendingRecipeShare(input);
+          savedPayload = payloadKey;
+          log.debug("Recipe share received", { hasUrl: !!input.url, hasCaption: !!input.text });
+          setRevision((value) => value + 1);
+        }
+        reportedFailure = null;
+        clear();
+      } catch (error) {
+        if (disposed) return;
+        const context = { stage, errorName: error instanceof Error ? error.name : "NativeError" };
+        // App startup/foreground probes are not user share attempts.
+        if (shareRequested || payloadKey) {
+          if (reportedFailure !== (payloadKey ?? "native-inbox"))
+            log.warn("Could not receive a native recipe share", context);
+          reportFailure(
+            payloadKey ?? "native-inbox",
+            "Couldn't receive this share. Try sharing it again or pasting the caption."
+          );
+        } else
+          log.debug("Native recipe share inbox unavailable during a background probe", context);
       } finally {
         receiving = false;
+        shareRequested = false;
       }
     };
-    void receive();
+    void Linking.getInitialURL()
+      .then((url) => receive(!!url && isSharedRecipeIntent(url)))
+      .catch(() => receive());
     const state = AppState.addEventListener("change", (next) => {
       if (next === "active") void receive();
     });
     const links = Linking.addEventListener("url", ({ url }) => {
-      if (isSharedRecipeIntent(url)) void receive();
+      if (isSharedRecipeIntent(url)) void receive(true);
     });
     return () => {
       disposed = true;
