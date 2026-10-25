@@ -6,7 +6,7 @@ import { IngredientResultItem } from "./IngredientResults";
 import type { Recipe } from "~/types/Recipe";
 import type { PantryItem } from "~/types/PantryItem";
 import type useColors from "~/hooks/useColor";
-import { useMemo } from "react";
+import { useMemo, type ReactElement } from "react";
 
 type Row = { kind: "recipe"; recipe: Recipe } | { kind: "ingredient"; item: PantryItem };
 type Section = { title: string; data: Row[] };
@@ -19,6 +19,7 @@ export function SearchResultsList({
   loading,
   top,
   bottom,
+  header,
   transparent = false,
 }: {
   recipes: readonly Recipe[];
@@ -28,6 +29,7 @@ export function SearchResultsList({
   loading: boolean;
   top: number;
   bottom: number;
+  header?: ReactElement;
   transparent?: boolean;
 }) {
   const sections = useMemo<Section[]>(
@@ -90,18 +92,23 @@ export function SearchResultsList({
       )}
       renderSectionFooter={() => <View className="h-5" />}
       ListHeaderComponent={
-        loading ? (
-          <View className="items-center py-8 gap-2">
-            <ActivityIndicator size="small" color={colors.mutedForeground} />
-            <P className="text-xs text-muted-foreground">Searching...</P>
-          </View>
-        ) : undefined
+        <View className="px-5">
+          {header}
+          {loading ? (
+            <View className="items-center py-8 gap-2">
+              <ActivityIndicator size="small" color={colors.mutedForeground} />
+              <P className="text-xs text-muted-foreground">Searching...</P>
+            </View>
+          ) : null}
+        </View>
       }
       ListEmptyComponent={
         !loading ? (
           <View className="items-center px-6 py-8">
             <P className="text-sm text-muted-foreground text-center">
-              {hasQuery ? "No results found" : "Search pantry items or recipes."}
+              {hasQuery
+                ? "No results found"
+                : "Search ingredients and recipes, or ask about your pantry."}
             </P>
           </View>
         ) : undefined

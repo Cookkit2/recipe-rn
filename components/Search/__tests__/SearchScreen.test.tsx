@@ -5,6 +5,17 @@ import { SearchContent } from "../SearchContent";
 import { SearchEntrance } from "../SearchEntrance";
 import { StyleSheet } from "react-native";
 
+jest.mock("../SearchAssistantHeader", () => ({ SearchAssistantHeader: () => null }));
+jest.mock("~/components/Assistant/AssistantMessages", () => ({ AssistantMessages: () => null }));
+const mockStopAssistant = jest.fn();
+jest.mock("~/hooks/useSearchAssistant", () => ({
+  useSearchAssistant: () => ({
+    messages: [],
+    status: "idle",
+    send: jest.fn(),
+    stop: mockStopAssistant,
+  }),
+}));
 let mockNativeReady = false;
 let mockScreenFocused = true;
 const mockFocus = jest.fn();

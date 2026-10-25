@@ -161,17 +161,8 @@ it("does not mount recipe queries until first open and preserves the mounted lis
   expect(mockRecipeList).toHaveBeenLastCalledWith({ active: false });
 });
 
-describe("Assistant entry point", () => {
-  it("opens Assistant directly from Pantry", async () => {
-    pantry.isRecipeOpen = false;
-    const screen = await render(<PantryWrapper pullSearch={mockPullSearch as never} />);
-    await fireEvent.press(screen.getByLabelText("Assistant"));
-    expect(push).toHaveBeenCalledWith("/assistant");
-  });
-
-  it("hides Assistant while the recipe drawer is open", async () => {
-    pantry.isRecipeOpen = true;
-    const screen = await render(<PantryWrapper pullSearch={mockPullSearch as never} />);
-    expect(screen.queryByLabelText("Assistant")).toBeNull();
-  });
+it("uses Search as the assistant entry instead of a floating pantry button", async () => {
+  pantry.isRecipeOpen = false;
+  const screen = await render(<PantryWrapper pullSearch={mockPullSearch as never} />);
+  expect(screen.queryByLabelText("Assistant")).toBeNull();
 });

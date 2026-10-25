@@ -1,10 +1,6 @@
-import { useMemo } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { createAppCookingAgent } from "~/lib/agent/create-app-agent";
-import { AssistantChat } from "~/components/Assistant/AssistantChat";
+import { Redirect } from "expo-router";
 
+/** Preserve existing links while search becomes the single assistant entry. */
 export default function AssistantScreen() {
-  const queryClient = useQueryClient();
-  const agent = useMemo(() => createAppCookingAgent(queryClient), [queryClient]);
-  return <AssistantChat agent={agent} />;
+  return <Redirect href="/search" />;
 }

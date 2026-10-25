@@ -40,19 +40,7 @@ export function getMiscScreens({
       name="leftovers/index"
       options={{ ...commonHeaderOptions, headerTitle: "Leftovers" }}
     />,
-    <Stack.Screen
-      key="assistant/index"
-      name="assistant/index"
-      options={{
-        ...commonHeaderOptions,
-        headerTitle: "Assistant",
-        headerTransparent: false,
-        headerStyle: { backgroundColor },
-        // A large title keeps resizing the iOS 26 navigation bar. The screen is
-        // laid out under that bar, and safe-area insets lag the bar's frame.
-        headerLargeTitleEnabled: false,
-      }}
-    />,
+    <Stack.Screen key="assistant/index" name="assistant/index" options={{ headerShown: false }} />,
     <Stack.Screen
       key="(misc)/search"
       name="(misc)/search"

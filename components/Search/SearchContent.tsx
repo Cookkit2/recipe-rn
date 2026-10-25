@@ -1,18 +1,22 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
-import { View, Keyboard, Pressable, TouchableOpacity, StyleSheet, BackHandler } from "react-native";
+import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
+import { View, Keyboard, TouchableOpacity, StyleSheet, BackHandler } from "react-native";
 import BottomSheet, {
   BottomSheetScrollView,
   type BottomSheetMethods,
 } from "@expo/ui/community/bottom-sheet";
 import { Portal } from "@rn-primitives/portal";
 import { cn } from "~/lib/utils";
-import { Stack, useFocusEffect } from "expo-router";
+import { Stack, useFocusEffect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ActivityIndicator, Text } from "react-native";
+import { Text } from "react-native";
 import { useRecipes, type RecipeFilters } from "~/hooks/queries/useRecipeQueries";
 import { usePantryItems } from "~/hooks/queries/usePantryQueries";
 import { filterPantryItemsByName } from "~/utils/filterPantryItemsByName";
 import { filterRecipesForSearch } from "~/utils/filterRecipesForSearch";
+import { TEST_IDS } from "~/constants/test-ids";
+import { useSearchAssistant } from "~/hooks/useSearchAssistant";
+import { AssistantMessages } from "~/components/Assistant/AssistantMessages";
+import { SearchAssistantHeader } from "~/components/Search/SearchAssistantHeader";
 import { SearchResultsList } from "~/components/Search/SearchResultsList";
 import useColors from "~/hooks/useColor";
 import * as Haptics from "expo-haptics";
@@ -45,11 +49,20 @@ export function SearchContent({
 }) {
   const { top, bottom } = useSafeAreaInsets();
   const colors = useColors();
+  const router = useRouter();
   const { searchBarRef, onFocus, onBlur } = useSearchBarFocus(focusEnabled);
   const filterSheetRef = useRef<BottomSheetMethods>(null);
   const filterSnapPoints = useMemo(() => ["55%"], []);
 
   const [input, setInput] = useState("");
+  const [showConversation, setShowConversation] = useState(false);
+  const { messages, status, send, stop } = useSearchAssistant();
+  const streaming = status === "streaming";
+  const hasConversation = messages.length > 0;
+  useEffect(() => {
+    if (!focusEnabled) stop();
+  }, [focusEnabled, stop]);
+  useFocusEffect(useCallback(() => () => stop(), [stop]));
 
   // Filters state
   const [selectedTime, setSelectedTime] = useState<{
@@ -101,10 +114,32 @@ export function SearchContent({
   const showSearchLoading =
     (hasQuery && isRecipesCatalogPending) || (trimmedInput.length > 0 && isPantryPending);
 
+  const askCookkit = () => {
+    if (!focusEnabled || !trimmedInput || streaming) return;
+    const question = trimmedInput;
+    setInput("");
+    searchBarRef.current?.clearText();
+    setShowConversation(true);
+    Keyboard.dismiss();
+    void send(question);
+  };
+  const assistantHeader = (
+    <SearchAssistantHeader
+      query={trimmedInput}
+      hasConversation={hasConversation}
+      showConversation={showConversation}
+      streaming={streaming}
+      onAsk={askCookkit}
+      onStop={stop}
+      onViewChange={setShowConversation}
+    />
+  );
+
   const handleDismiss = useCallback(() => {
+    stop();
     Keyboard.dismiss();
     onDismiss();
-  }, [onDismiss]);
+  }, [onDismiss, stop]);
 
   useFocusEffect(
     useCallback(() => {
@@ -284,7 +319,10 @@ export function SearchContent({
   );
 
   return (
-    <View className={transparent ? "flex-1" : "flex-1 bg-background"}>
+    <View
+      testID={TEST_IDS.search.screen}
+      className={transparent ? "flex-1" : "flex-1 bg-background"}
+    >
       {focusEnabled && (
         <Stack.SearchBar
           ref={searchBarRef}
@@ -293,11 +331,32 @@ export function SearchContent({
           hideNavigationBar
           onCancelButtonPress={handleDismiss}
           onClose={handleDismiss}
-          onChangeText={(e) => setInput(e.nativeEvent.text)}
-          placeholder="Search"
+          onChangeText={(e) => {
+            const value = e.nativeEvent.text;
+            setInput(value);
+            if (value.trim()) setShowConversation(false);
+          }}
+          onSearchButtonPress={() => {
+            Keyboard.dismiss();
+            setShowConversation(false);
+          }}
+          placeholder="Search or ask Cookkit…"
         />
       )}
-      <Pressable className="flex-1" onPress={handleDismiss}>
+      {showConversation ? (
+        <View className="flex-1">
+          <View className="px-5" style={{ paddingTop: top + 10 }}>
+            {assistantHeader}
+          </View>
+          <AssistantMessages
+            messages={messages}
+            top={0}
+            bottom={bottom + 64}
+            adjustKeyboardInsets
+            onOpenRecipe={(id) => router.push(`/recipes/${id}`)}
+          />
+        </View>
+      ) : (
         <SearchResultsList
           recipes={recipeResults}
           ingredients={ingredientResults}
@@ -307,8 +366,9 @@ export function SearchContent({
           top={top}
           bottom={bottom}
           transparent={transparent}
+          header={assistantHeader}
         />
-      </Pressable>
+      )}
       {/* <Pressable
         accessibilityRole="button"
         accessibilityLabel={
