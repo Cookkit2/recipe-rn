@@ -1,11 +1,14 @@
 import React from "react";
 import { act, render } from "@testing-library/react-native";
 import SearchScreen from "~/app/(misc)/search";
+import { SearchContent } from "../SearchContent";
+import { SearchEntrance } from "../SearchEntrance";
+import { StyleSheet } from "react-native";
 
 let mockNativeReady = false;
 let mockScreenFocused = true;
 const mockFocus = jest.fn();
-let mockSearchParams: { pullOffset?: string | string[] } = {};
+let mockOnFocus: (() => void) | undefined;
 const mockScreenOptions = jest.fn();
 const mockListeners = new Map<string, Set<() => void>>();
 const mockNavigation = {
@@ -21,7 +24,6 @@ const mockNavigation = {
 jest.mock("expo-router", () => ({
   useRouter: () => ({ back: jest.fn() }),
   useNavigation: () => mockNavigation,
-  useLocalSearchParams: () => mockSearchParams,
   useFocusEffect: (callback: () => void) => {
     require("react").useEffect(() => {
       if (mockScreenFocused) return callback();
@@ -32,7 +34,14 @@ jest.mock("expo-router", () => ({
       mockScreenOptions(options);
       return null;
     },
-    SearchBar: ({ ref }: { ref: React.Ref<{ focus: () => void }> }) => {
+    SearchBar: ({
+      ref,
+      onFocus,
+    }: {
+      ref: React.Ref<{ focus: () => void }>;
+      onFocus: () => void;
+    }) => {
+      mockOnFocus = onFocus;
       require("react").useLayoutEffect(() => {
         if (!mockNativeReady) return;
         const attach = (value: { focus: () => void } | null) => {
@@ -41,7 +50,7 @@ jest.mock("expo-router", () => ({
         };
         attach({ focus: mockFocus });
         return () => attach(null);
-      }, [ref, mockNativeReady]);
+      });
       return null;
     },
   },
@@ -63,11 +72,17 @@ jest.mock("~/hooks/queries/useFeatureFlags", () => ({
 }));
 jest.mock("../SearchResultsList", () => ({ SearchResultsList: () => null }));
 jest.mock("expo-haptics", () => ({}));
+jest.mock("react-native", () =>
+  Object.defineProperty(Object.create(jest.requireActual("react-native")), "BackHandler", {
+    value: { addEventListener: jest.fn(() => ({ remove: jest.fn() })) },
+  })
+);
 jest.mock("react-native-reanimated", () => ({
   __esModule: true,
   default: { View: require("react-native").View },
   withSpring: (value: number) => value,
   withTiming: (value: number) => value,
+  useAnimatedStyle: (callback: () => unknown) => callback(),
 }));
 
 let nextFrame = 0;
@@ -87,7 +102,7 @@ beforeEach(() => {
   mockNativeReady = false;
   mockScreenFocused = true;
   mockFocus.mockClear();
-  mockSearchParams = {};
+  mockOnFocus = undefined;
   mockScreenOptions.mockClear();
   mockListeners.clear();
   frames.clear();
@@ -141,25 +156,45 @@ it("does not open the keyboard after leaving search and refocuses when returning
   expect(mockFocus).toHaveBeenCalledTimes(1);
 });
 
-it("starts the incoming search content at the passed pull offset and springs it to rest", async () => {
-  mockSearchParams = { pullOffset: "38" };
-  const screen = await render(<SearchScreen />);
-  const entrance = screen.getByTestId("search-pull-entrance").props.entering();
-  expect(entrance.initialValues.transform).toEqual([{ translateY: 38 }]);
-  expect(entrance.animations.transform).toEqual([{ translateY: 0 }]);
-  expect(mockScreenOptions).toHaveBeenLastCalledWith(
-    expect.objectContaining({ animation: "none" })
-  );
+it("keeps the keyboard closed during the pull preview and focuses after release", async () => {
+  mockNativeReady = true;
+  const screen = await render(<SearchContent onDismiss={jest.fn()} focusEnabled={false} />);
+  await flushFrames();
+  expect(mockFocus).not.toHaveBeenCalled();
+  expect(mockOnFocus).toBeUndefined();
+  await screen.rerender(<SearchContent onDismiss={jest.fn()} focusEnabled />);
+  await flushFrames();
+  expect(mockFocus).toHaveBeenCalledTimes(1);
 });
 
-it.each([undefined, "bad", "Infinity", "-10", "0"])(
-  "keeps the normal search entrance without a valid positive pull offset (%s)",
-  async (pullOffset) => {
-    mockSearchParams = { pullOffset };
-    const screen = await render(<SearchScreen />);
-    expect(screen.getByTestId("search-pull-entrance").props.entering).toBeUndefined();
-    expect(mockScreenOptions).toHaveBeenLastCalledWith(
-      expect.objectContaining({ animation: "fade" })
-    );
-  }
-);
+it("does not force the keyboard open again merely because the native field ref reattaches", async () => {
+  mockNativeReady = true;
+  const screen = await render(<SearchScreen />);
+  await flushFrames();
+  await act(async () => mockOnFocus?.());
+  mockFocus.mockClear();
+  await screen.rerender(<SearchScreen />);
+  await act(async () => mockListeners.get("transitionEnd")?.forEach((callback) => callback()));
+  await flushFrames();
+  expect(mockFocus).not.toHaveBeenCalled();
+});
+
+it("renders search at the live pull position, not a route-param snapshot", async () => {
+  const offset = { value: 38 } as never;
+  const progress = { value: 0.8 } as never;
+  const screen = await render(
+    <SearchEntrance offset={offset} progress={progress} interactive={false}>
+      {null}
+    </SearchEntrance>
+  );
+  const entrance = () => screen.getByTestId("search-pull-entrance");
+  expect(StyleSheet.flatten(entrance().props.style).transform).toEqual([{ translateY: 38 }]);
+  expect(entrance().props.pointerEvents).toBe("none");
+  (offset as { value: number }).value = 76;
+  await screen.rerender(
+    <SearchEntrance offset={offset} progress={progress} interactive={false}>
+      {null}
+    </SearchEntrance>
+  );
+  expect(StyleSheet.flatten(entrance().props.style).transform).toEqual([{ translateY: 76 }]);
+});

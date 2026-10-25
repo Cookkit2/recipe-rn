@@ -2,18 +2,14 @@ import React from "react";
 import { act, renderHook } from "@testing-library/react-native";
 import { usePantryPullSearch } from "../usePantryPullSearch";
 
-const mockPush = jest.fn();
 let mockFocused = true;
-let mockFocusGeneration = 0;
-const mockNavigation = { isFocused: () => mockFocused };
-const mockRouter = { push: mockPush };
-let mockHandlers: Record<string, (event?: { translationY: number }) => void> = {};
-
+let mockHandlers: Record<string, (event?: { translationY: number }, success?: boolean) => void> =
+  {};
 jest.mock("expo-router", () => ({
-  useRouter: () => mockRouter,
-  useNavigation: () => mockNavigation,
   useFocusEffect: (callback: () => void) =>
-    require("react").useEffect(callback, [callback, mockFocusGeneration]),
+    require("react").useEffect(() => {
+      if (mockFocused) return callback();
+    }, [callback, mockFocused]),
 }));
 jest.mock("react-native-worklets", () => ({
   scheduleOnRN: (callback: (...args: unknown[]) => void, ...args: unknown[]) => callback(...args),
@@ -46,126 +42,93 @@ jest.mock("react-native-reanimated", () => ({
   useAnimatedStyle: (callback: () => unknown) => callback(),
   useAnimatedScrollHandler: (callback: () => unknown) => callback,
   withTiming: (value: number) => value,
+  withSpring: (value: number) => value,
 }));
-
 beforeEach(() => {
-  mockPush.mockClear();
   mockFocused = true;
-  mockFocusGeneration = 0;
   mockHandlers = {};
 });
-
-function drag(distance: number) {
-  mockHandlers.onBegin!();
-  mockHandlers.onUpdate!({ translationY: distance });
-  mockHandlers.onEnd?.({ translationY: distance });
-  mockHandlers.onFinalize!();
+function scroll(handler: unknown, y: number) {
+  (handler as (event: unknown) => void)({ contentOffset: { y } });
 }
-
-function scroll(handler: unknown, y: number, insetTop = 0) {
-  (handler as (event: unknown) => void)({ contentOffset: { y }, contentInset: { top: insetTop } });
-}
-
-it("opens search once after a deliberate pull at the top, including automatic header insets", async () => {
-  const { result } = await renderHook(() => usePantryPullSearch(true));
+async function pull(distance: number) {
   await act(async () => {
-    scroll(result.current.onScroll, -120, 120);
-    drag(100);
-    drag(100);
+    mockHandlers.onBegin!();
+    mockHandlers.onUpdate!({ translationY: distance });
+    mockHandlers.onEnd!(undefined, true);
+    mockHandlers.onFinalize!();
   });
-  expect(mockPush).toHaveBeenCalledTimes(1);
-  expect(mockPush).toHaveBeenCalledWith({ pathname: "/search", params: { pullOffset: "0" } });
-});
+}
 
-it("hands search the visible overscroll rather than the finger's undamped travel", async () => {
-  const { result } = await renderHook(() => usePantryPullSearch(true));
+it("keeps search following live native displacement while held and permits focus only on release", async () => {
+  const { result } = await renderHook(() => usePantryPullSearch(true, -54));
   await act(async () => {
     scroll(result.current.onScroll, -54);
     mockHandlers.onBegin!();
-    scroll(result.current.onScroll, -92);
     mockHandlers.onUpdate!({ translationY: 80 });
   });
-  expect(mockPush).toHaveBeenCalledWith({ pathname: "/search", params: { pullOffset: "38" } });
+  expect(result.current.phase).toBe("pulling");
+  expect(result.current.focusEnabled).toBe(false);
+  // Native scrolling can arrive after the pan callback; a route snapshot loses it.
+  await act(async () => scroll(result.current.onScroll, -92));
+  expect(result.current.searchOffset.value).toBe(38);
+  await act(async () => scroll(result.current.onScroll, -130));
+  expect(result.current.searchOffset.value).toBe(76);
+  expect(result.current.focusEnabled).toBe(false);
+  await act(async () => mockHandlers.onEnd!(undefined, true));
+  expect(result.current.phase).toBe("open");
+  expect(result.current.focusEnabled).toBe(true);
+  expect(result.current.searchOffset.value).toBe(0);
+  await act(async () => {
+    mockHandlers.onFinalize!();
+    scroll(result.current.onScroll, -90);
+  });
+  expect(result.current.searchOffset.value).toBe(0);
 });
 
-it("opens search while the finger is still down as soon as the pull crosses the threshold", async () => {
-  await renderHook(() => usePantryPullSearch(true));
+it.each([25, -100])("does not focus for a short or upward pull (%s)", async (distance) => {
+  const { result } = await renderHook(() => usePantryPullSearch(true, 0));
+  await pull(distance);
+  expect(result.current.phase).toBe("closed");
+  expect(result.current.focusEnabled).toBe(false);
+});
+
+it("cancels an interrupted preview without focusing the keyboard", async () => {
+  const { result } = await renderHook(() => usePantryPullSearch(true, 0));
   await act(async () => {
     mockHandlers.onBegin!();
-    mockHandlers.onUpdate!({ translationY: 40 });
-  });
-  expect(mockPush).not.toHaveBeenCalled();
-
-  // No release or rebound event has occurred here.
-  await act(async () => mockHandlers.onUpdate!({ translationY: 80 }));
-  expect(mockPush).toHaveBeenCalledTimes(1);
-
-  await act(async () => {
     mockHandlers.onUpdate!({ translationY: 100 });
-    mockHandlers.onUpdate!({ translationY: 130 });
-    mockHandlers.onEnd?.({ translationY: 0 });
+    mockHandlers.onEnd!(undefined, false);
     mockHandlers.onFinalize!();
   });
-  expect(mockPush).toHaveBeenCalledTimes(1);
+  expect(result.current.phase).toBe("closed");
+  expect(result.current.focusEnabled).toBe(false);
 });
 
-it("ignores short bounces, upward swipes and pulls beginning partway down the list", async () => {
-  const { result } = await renderHook(() => usePantryPullSearch(true));
-  await act(async () => {
-    drag(25);
-    drag(-100);
-    scroll(result.current.onScroll, 200);
-    mockHandlers.onBegin!();
-    // Reaching the top during an ordinary scroll must not activate search.
-    scroll(result.current.onScroll, 0);
-    mockHandlers.onUpdate!({ translationY: 200 });
-    mockHandlers.onEnd?.({ translationY: 200 });
-    mockHandlers.onFinalize!();
-  });
-  expect(mockPush).not.toHaveBeenCalled();
+it("ignores a pull starting below the real top, even with a partially hidden native header", async () => {
+  const { result } = await renderHook(() => usePantryPullSearch(true, -54));
+  await act(async () => scroll(result.current.onScroll, -30));
+  await pull(100);
+  expect(result.current.phase).toBe("closed");
 });
 
-it("ignores canceled or retracted pulls below the threshold and restores list opacity", async () => {
-  const { result, rerender } = await renderHook(() => usePantryPullSearch(true));
-  const opacity = () => (result.current.pullStyle as unknown as { opacity: number }).opacity;
-  await act(async () => {
-    mockHandlers.onBegin!();
-    mockHandlers.onUpdate!({ translationY: 50 });
-  });
-  await rerender({});
-  expect(opacity()).toBeLessThan(1);
-  await act(async () => mockHandlers.onFinalize!());
-  await rerender({});
-  expect(opacity()).toBe(1);
-  expect(mockPush).not.toHaveBeenCalled();
-
-  await act(async () => {
-    mockHandlers.onBegin!();
-    mockHandlers.onUpdate!({ translationY: 50 });
-    mockHandlers.onUpdate!({ translationY: 20 });
-    mockHandlers.onEnd?.({ translationY: 20 });
-    mockHandlers.onFinalize!();
-  });
-  expect(mockPush).not.toHaveBeenCalled();
-});
-
-it("disables pull search while the recipe drawer is open or Pantry is not focused", async () => {
+it("disables pulling while the drawer is open or Pantry is unfocused", async () => {
   let enabled = false;
-  const { rerender } = await renderHook(() => usePantryPullSearch(enabled));
-  await act(async () => drag(100));
-  expect(mockPush).not.toHaveBeenCalled();
+  const { result, rerender } = await renderHook(() => usePantryPullSearch(enabled, 0));
+  await pull(100);
+  expect(result.current.phase).toBe("closed");
+  mockFocused = false;
   enabled = true;
   await rerender({});
-  mockFocused = false;
-  await act(async () => drag(100));
-  expect(mockPush).not.toHaveBeenCalled();
+  await pull(100);
+  expect(result.current.phase).toBe("closed");
 });
 
-it("can open search again after returning to the same Pantry screen", async () => {
-  const { rerender } = await renderHook(() => usePantryPullSearch(true));
-  await act(async () => drag(100));
-  mockFocusGeneration++;
-  await rerender({});
-  await act(async () => drag(100));
-  expect(mockPush).toHaveBeenCalledTimes(2);
+it("lets a new pull open search after dismissal", async () => {
+  const { result } = await renderHook(() => usePantryPullSearch(true, 0));
+  await pull(100);
+  await act(async () => result.current.dismiss());
+  expect(result.current.phase).toBe("closed");
+  await pull(100);
+  expect(result.current.phase).toBe("open");
 });

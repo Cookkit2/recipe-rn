@@ -6,6 +6,19 @@ import { TEST_IDS } from "~/constants/test-ids";
 
 const push = jest.fn();
 jest.mock("expo-router", () => ({ useRouter: () => ({ push }) }));
+jest.mock("expo-router/react-navigation", () => ({ useHeaderHeight: () => 116 }));
+const mockPullSearch = {
+  phase: "closed",
+  focusEnabled: false,
+  searchOffset: { value: 0 },
+  progress: { value: 0 },
+  dismiss: jest.fn(),
+};
+jest.mock("~/hooks/usePantryPullSearch", () => ({ usePantryPullSearch: () => mockPullSearch }));
+const mockSearchContent = jest.fn((_props: unknown) => null);
+jest.mock("~/components/Search/SearchContent", () => ({
+  SearchContent: (props: unknown) => mockSearchContent(props),
+}));
 jest.mock("lucide-uniwind", () => ({ SparklesIcon: () => null }));
 jest.mock("~/components/ui/button", () => ({
   Button: (props: object) => <Pressable {...props} />,
@@ -62,7 +75,36 @@ jest.mock("../RecipeLists", () => ({
   __esModule: true,
   default: (props: unknown) => mockRecipeList(props),
 }));
-jest.mock("../IngredientLists", () => ({ __esModule: true, default: () => null }));
+const mockIngredientMount = jest.fn();
+jest.mock("../IngredientLists", () => ({
+  __esModule: true,
+  default: () => {
+    require("react").useEffect(mockIngredientMount, []);
+    return null;
+  },
+}));
+
+it("keeps the scroll owner mounted through preview and only enables native search after release", async () => {
+  mockIngredientMount.mockClear();
+  mockSearchContent.mockClear();
+  pantry.isRecipeOpen = false;
+  mockPullSearch.phase = "closed";
+  const screen = await render(<PantryWrapper />);
+  mockPullSearch.phase = "pulling";
+  await screen.rerender(<PantryWrapper />);
+  expect(mockSearchContent).toHaveBeenLastCalledWith(
+    expect.objectContaining({ focusEnabled: false })
+  );
+  mockPullSearch.phase = "open";
+  mockPullSearch.focusEnabled = true;
+  await screen.rerender(<PantryWrapper />);
+  expect(mockSearchContent).toHaveBeenLastCalledWith(
+    expect.objectContaining({ focusEnabled: true })
+  );
+  expect(mockIngredientMount).toHaveBeenCalledTimes(1);
+  mockPullSearch.phase = "closed";
+  mockPullSearch.focusEnabled = false;
+});
 
 describe("recipe drawer viewport", () => {
   it.each([

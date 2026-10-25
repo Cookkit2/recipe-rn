@@ -12,10 +12,14 @@ import { TEST_IDS } from "~/constants/test-ids";
 import { GestureDetector } from "react-native-gesture-handler";
 import { usePantryPullSearch } from "~/hooks/usePantryPullSearch";
 
-export default function IngredientLists() {
+export default function IngredientLists({
+  pullSearch,
+}: {
+  pullSearch: ReturnType<typeof usePantryPullSearch>;
+}) {
   const { bottom } = useSafeAreaInsets();
   const { selectedItemType, ingredientScrollRef, isRecipeOpen } = usePantryStore();
-  const { gesture, onScroll, pullStyle } = usePantryPullSearch(!isRecipeOpen);
+  const { gesture, onScroll, pullStyle } = pullSearch;
   const { data, isLoading, error } = usePantryItemsByType(selectedItemType);
   const items = data ?? [];
   const ingredientListStyle = useAnimatedStyle(() => ({

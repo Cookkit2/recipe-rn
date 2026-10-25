@@ -3,10 +3,14 @@ import { useFocusEffect, useNavigation, type NativeStackNavigationProp } from "e
 import type { SearchBarCommands } from "react-native-screens";
 
 /** Focus native search after both its ref and the visible screen are ready. */
-export function useSearchBarFocus() {
+export function useSearchBarFocus(enabled = true) {
   const navigation = useNavigation<NativeStackNavigationProp<Record<string, undefined>>>();
   const commands = useRef<SearchBarCommands | null>(null);
   const frame = useRef<number | null>(null);
+  const didFocus = useRef(false);
+  const onFocus = useCallback(() => {
+    didFocus.current = true;
+  }, []);
 
   const cancelFocus = useCallback(() => {
     if (frame.current !== null) cancelAnimationFrame(frame.current);
@@ -15,12 +19,12 @@ export function useSearchBarFocus() {
 
   const requestFocus = useCallback(() => {
     cancelFocus();
-    if (!navigation.isFocused() || !commands.current) return;
+    if (!enabled || didFocus.current || !navigation.isFocused() || !commands.current) return;
     frame.current = requestAnimationFrame(() => {
       frame.current = null;
-      if (navigation.isFocused()) commands.current?.focus();
+      if (enabled && !didFocus.current && navigation.isFocused()) commands.current?.focus();
     });
-  }, [cancelFocus, navigation]);
+  }, [cancelFocus, enabled, navigation]);
 
   // Stack.SearchBar accepts an object ref. Its setter also observes native
   // attachment, which can happen after the screen's focus effect has run.
@@ -40,6 +44,7 @@ export function useSearchBarFocus() {
 
   useFocusEffect(
     useCallback(() => {
+      didFocus.current = false;
       // Ref attachment covers late header mounts and direct entry. Transition
       // completion retries when iOS refused focus during the opening animation.
       const unsubscribe = navigation.addListener("transitionEnd", requestFocus);
@@ -51,5 +56,5 @@ export function useSearchBarFocus() {
     }, [cancelFocus, navigation, requestFocus])
   );
 
-  return searchBarRef;
+  return { searchBarRef, onFocus };
 }

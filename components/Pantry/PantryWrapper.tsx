@@ -1,4 +1,4 @@
-import { Pressable, View, useWindowDimensions } from "react-native";
+import { Platform, Pressable, View, useWindowDimensions } from "react-native";
 import { TEST_IDS } from "~/constants/test-ids";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import RecipeButton from "~/components/Pantry/RecipeButton";
@@ -20,6 +20,10 @@ import { usePantryStore } from "~/store/PantryContext";
 import IngredientLists from "~/components/Pantry/IngredientLists";
 import { useCallback, useEffect, useState } from "react";
 import { setStatusBarStyle } from "expo-status-bar";
+import { useHeaderHeight } from "expo-router/react-navigation";
+import { usePantryPullSearch } from "~/hooks/usePantryPullSearch";
+import { SearchContent } from "~/components/Search/SearchContent";
+import { SearchEntrance } from "~/components/Search/SearchEntrance";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -43,6 +47,11 @@ export default function PantryWrapper() {
     collapsedHeight,
     expandedHeight,
   } = usePantryStore();
+  const headerHeight = useHeaderHeight();
+  const pullSearch = usePantryPullSearch(
+    !isRecipeOpen,
+    Platform.OS === "ios" ? -Math.max(0, headerHeight - top) : 0
+  );
 
   const [recipesMounted, setRecipesMounted] = useState(isRecipeOpen);
   useEffect(() => {
@@ -148,7 +157,7 @@ export default function PantryWrapper() {
           style={containerStyle}
           onPress={closeRecipe}
         >
-          <IngredientLists />
+          <IngredientLists pullSearch={pullSearch} />
         </AnimatedPressable>
 
         <RecipeButton />
@@ -169,6 +178,15 @@ export default function PantryWrapper() {
           {recipesMounted && <RecipeLists active={isRecipeOpen} />}
         </Animated.View>
       </Animated.View>
+      {pullSearch.phase !== "closed" && (
+        <SearchEntrance
+          offset={pullSearch.searchOffset}
+          progress={pullSearch.progress}
+          interactive={pullSearch.focusEnabled}
+        >
+          <SearchContent onDismiss={pullSearch.dismiss} focusEnabled={pullSearch.focusEnabled} />
+        </SearchEntrance>
+      )}
     </View>
   );
 }
