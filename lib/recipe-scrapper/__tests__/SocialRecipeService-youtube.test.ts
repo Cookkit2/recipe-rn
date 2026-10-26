@@ -35,7 +35,7 @@ const recipe = JSON.stringify({
         step: 1,
         title: "Air fry",
         description: "Air fry the chicken for 15 minutes.",
-        sourceQuote: "Air fry the chicken for 15 minutes.",
+        sourceInstruction: 1,
       },
     ],
   },
@@ -65,6 +65,30 @@ it("uses real public-player captions and a selected food frame, then returns a c
   expect(readRecipeVideoCoverFrames).not.toHaveBeenCalled();
   expect(readRecipeVideo).not.toHaveBeenCalled();
   expect(mockVideoData).not.toHaveBeenCalled();
+});
+
+it("constrains YouTube steps to real caption and frame action quotes", async () => {
+  jest.mocked(readRecipePlayerEvidence).mockResolvedValue({
+    title: "Katsu",
+    caption: "Chicken 400g.",
+    transcript: "Rub until no particle left. Boil.",
+    frames,
+    warnings: [],
+  });
+  jest
+    .mocked(generateAIContent)
+    .mockResolvedValueOnce('{"text":"At 400 seconds, air fry the chicken for 15 minutes."}')
+    .mockResolvedValueOnce(recipe)
+    .mockResolvedValueOnce('{"frameNumber":1}');
+  await new SocialRecipeService().analyzeForRecipe({ platform: "youtube", url });
+  const schema = jest.mocked(generateAIContent).mock.calls[1]?.[0].responseSchema as any;
+  expect(
+    schema.properties.recipe.properties.steps.items.properties.sourceInstruction
+  ).toMatchObject({ type: "integer", minimum: 1, maximum: 3 });
+  expect(schema.properties.recipe.properties.steps.allOf).toHaveLength(3);
+  expect(jest.mocked(generateAIContent).mock.calls[1]?.[0].systemPrompt).toContain(
+    "Rub until no particle left."
+  );
 });
 it("reads cooking actions from actual frames when published captions are unavailable", async () => {
   jest.mocked(readRecipePlayerEvidence).mockResolvedValue({

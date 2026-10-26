@@ -144,6 +144,6 @@ it("captures only the selected YouTube video's own caption response before the p
   await browser.fetch("https://www.youtube.com/api/timedtext?v=-Ksv82YLW-A&fmt=json3");
   await tick();
   expect(JSON.parse(postMessage.mock.calls[1]?.[0]).transcript).toBe(
-    "Cook the chicken for 9 minutes."
+    "[0s] Cook the chicken for 9 minutes."
   );
 });

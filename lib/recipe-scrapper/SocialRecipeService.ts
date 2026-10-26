@@ -24,6 +24,7 @@ import type { RecipeVideoEvidence } from "~/types/RecipeVideo";
 import type { RecipeVideoOptions } from "~/types/RecipeVideo";
 import { getDefaultYouTubeService } from "./youtube/YouTubeServiceFactory";
 import { normalizeVideoPostUrl } from "./shared/video-source";
+import { getYouTubeInstructionEvidence } from "./youtube/instructions";
 
 export interface SocialMediaContent {
   platform: "tiktok" | "instagram" | "youtube" | "text";
@@ -80,24 +81,65 @@ export class SocialRecipeService {
               image: undefined,
             }))
           : undefined;
-      const analyze = async (metadata: { title: string; description: string; image?: string }) => {
+      const analyze = async (
+        metadata: { title: string; description: string; image?: string },
+        frames?: RecipeVideoEvidence["frames"]
+      ) => {
         const subtitleQuotes = getPublishedSubtitleInstructions(metadata.description);
-        // YouTube captions often label quantities, temperatures and actions separately.
-        // Keep their full context available alongside timestamped frame observations.
+        const youtubeInstructions =
+          content.platform === "youtube"
+            ? getYouTubeInstructionEvidence(metadata.description)
+            : undefined;
+        // Captions can separate actions from quantities; frame observations also carry
+        // timestamp prefixes. Constrain quotes to actual actions from both sources.
         const sourceQuotes =
           content.platform === "youtube"
-            ? []
+            ? youtubeInstructions!.map(({ quote }) => quote)
             : subtitleQuotes.length
               ? subtitleQuotes
               : getCaptionInstructions(metadata.description);
+        const indexed = content.platform === "youtube" && sourceQuotes.length > 0;
         const request = buildSocialRecipeRequest(
           this.buildAnalysisPrompt(content, metadata) +
+            (content.platform === "youtube"
+              ? "\nUse sourceQuote as the exact action evidence. In the English description, combine that action with its associated ingredient amounts, temperatures and times explicitly provided in the surrounding published captions. Never invent an unseen action."
+              : "") +
             (sourceQuotes.length
               ? `\nUse each step's sourceQuote verbatim from these source cooking instructions. Cover every listed cooking instruction in order, preserving all stated times and temperatures. Translate it into English for description. Omit introductions, ingredient-only fragments and ready-to-serve captions: ${JSON.stringify(sourceQuotes)}`
               : ""),
-          sourceQuotes
+          sourceQuotes,
+          indexed ? "index" : "text"
         );
-        const response = await generateAIContent(request, options.signal);
+        let response = await generateAIContent(
+          frames?.length
+            ? { ...request, images: frames.map(({ mimeType, data }) => ({ mimeType, data })) }
+            : request,
+          options.signal
+        );
+        if (indexed) {
+          const parsed = JSON.parse(response);
+          if (parsed.recipe?.steps) {
+            for (const step of parsed.recipe.steps) {
+              if (
+                !Number.isInteger(step.sourceInstruction) ||
+                !sourceQuotes[step.sourceInstruction - 1]
+              )
+                throw new Error("Couldn't match the recipe instructions to this video.");
+              step.sourceQuote = sourceQuotes[step.sourceInstruction - 1];
+            }
+            if (youtubeInstructions?.every(({ timestamp }) => timestamp !== undefined)) {
+              parsed.recipe.steps.sort(
+                (a: { sourceInstruction: number }, b: { sourceInstruction: number }) =>
+                  youtubeInstructions[a.sourceInstruction - 1]!.timestamp! -
+                  youtubeInstructions[b.sourceInstruction - 1]!.timestamp!
+              );
+              parsed.recipe.steps.forEach((step: { step: number }, index: number) => {
+                step.step = index + 1;
+              });
+            }
+          }
+          response = JSON.stringify(parsed);
+        }
         const result = this.parseResponse(response, content.url, metadata.description);
         return result;
       };
@@ -185,16 +227,19 @@ export class SocialRecipeService {
         );
         frameText = JSON.parse(response).text;
       }
-      const result = await analyze({
-        title: evidence.title || metadata.title || "Shared video",
-        description: [
-          [...new Set([suppliedText, metadata.description, evidence.caption].filter(Boolean))]
-            .join("\n")
-            .slice(0, content.platform === "youtube" ? 32_000 : 16_000),
-          `SPEECH TRANSCRIPT:\n${evidence.transcript.slice(0, 12_000)}`,
-          `TIMESTAMPED VIDEO FRAME OBSERVATIONS:\n${frameText.slice(0, 18_000)}`,
-        ].join("\n\n"),
-      });
+      const result = await analyze(
+        {
+          title: evidence.title || metadata.title || "Shared video",
+          description: [
+            [...new Set([suppliedText, metadata.description, evidence.caption].filter(Boolean))]
+              .join("\n")
+              .slice(0, content.platform === "youtube" ? 32_000 : 16_000),
+            `SPEECH TRANSCRIPT:\n${evidence.transcript.slice(0, 12_000)}`,
+            `TIMESTAMPED VIDEO FRAME OBSERVATIONS:\n${frameText.slice(0, 18_000)}`,
+          ].join("\n\n"),
+        },
+        content.platform === "youtube" ? evidence.frames : undefined
+      );
       result.warnings = [...new Set([...(result.warnings ?? []), ...evidence.warnings])];
       return await withVideoCover(result, evidence.frames);
     } catch (error) {

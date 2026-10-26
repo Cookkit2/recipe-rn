@@ -48,8 +48,8 @@ export function videoCoverFramesScript(options: { youtubeVideoId?: string } = {}
       const isCaption=(value)=>{try {const u=new URL(String(value),location.href);return ['www.youtube.com','youtube.com','m.youtube.com'].includes(u.hostname) && u.pathname==='/api/timedtext' && u.searchParams.get('v')===expectedYouTubeId;}catch{return false;}};
       const readCaption=(text)=>{
         if(typeof text!=='string' || text.length>256000) return;
-        try {const data=JSON.parse(text);const lines=(data.events||[]).flatMap(event=>(event.segs||[]).map(segment=>segment.utf8||'')).filter(Boolean);if(lines.length)transcript=lines.join(' ').slice(0,32000);}catch{
-          try {const xml=new DOMParser().parseFromString(text,'text/xml');const lines=Array.from(xml.querySelectorAll('text,body > p')).map(line=>line.textContent||'').filter(Boolean);if(lines.length)transcript=lines.join(' ').slice(0,32000);}catch{}
+        try {const data=JSON.parse(text);const lines=(data.events||[]).map(event=>{const text=(event.segs||[]).map(segment=>segment.utf8||'').join('').trim();return text ? '['+(Number(event.tStartMs||0)/1000)+'s] '+text : '';}).filter(Boolean);if(lines.length)transcript=lines.join('\\n').slice(0,32000);}catch{
+          try {const xml=new DOMParser().parseFromString(text,'text/xml');const lines=Array.from(xml.querySelectorAll('text,body > p')).map(line=>{const time=line.getAttribute('start')!==null?Number(line.getAttribute('start')):Number(line.getAttribute('t')||0)/1000;return '['+time+'s] '+(line.textContent||'');}).filter(Boolean);if(lines.length)transcript=lines.join('\\n').slice(0,32000);}catch{}
         }
       };
       if(window.fetch) {const original=window.fetch;window.fetch=function(...args){return original.apply(this,args).then(response=>{if(isCaption(response.url || args[0]?.url || args[0]))response.clone().text().then(readCaption).catch(()=>{});return response;});};}
@@ -96,7 +96,7 @@ export function videoCoverFramesScript(options: { youtubeVideoId?: string } = {}
       canvas.height=Math.max(1,Math.round(video.videoHeight*scale));
       const ctx=canvas.getContext('2d');
       if(!ctx) {send([]);return;}
-      for(const fraction of ${options.youtubeVideoId ? "[0.01,0.04,0.15,0.35,0.55,0.75,0.92,0.995]" : "[0.01,0.06,0.16,0.4,0.7,0.9]"}) {
+      for(const fraction of ${options.youtubeVideoId ? "[0.01,0.15,0.35,0.55,0.75,0.85,0.92,0.995]" : "[0.01,0.06,0.16,0.4,0.7,0.9]"}) {
         const timestamp=Math.min(video.duration-0.05,video.duration*fraction);
         try {
           await new Promise((resolve,reject)=>{
