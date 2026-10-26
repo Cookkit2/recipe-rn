@@ -8,7 +8,12 @@ import {
 } from "./nebius-config";
 import { assertCookingAgentRuntime, resolveStreamingFetch } from "./runtime";
 import { mapProviderStream, type ProviderStreamPart } from "./stream-events";
-import type { AgentEvent, AgentTurnInput, CookingAgent } from "./types";
+import {
+  AgentUnavailableError,
+  type AgentEvent,
+  type AgentTurnInput,
+  type CookingAgent,
+} from "./types";
 import type { CookingDataClient } from "./tools/planning";
 
 export interface NebiusCookingAgentOptions {
@@ -48,9 +53,10 @@ export class NebiusCookingAgent implements CookingAgent {
 
   private async *streamFromNebius(input: AgentTurnInput): AsyncIterable<ProviderStreamPart> {
     assertCookingAgentRuntime();
-    const config = this.options.config ?? readNebiusAgentConfig();
+    const config = this.options.config ?? (await readNebiusAgentConfig());
+    input.signal?.throwIfAborted();
     const missing = describeMissingNebiusConfig(config);
-    if (missing) throw new Error(missing);
+    if (missing) throw new AgentUnavailableError(missing);
 
     const [{ createOpenAICompatible }, { isStepCount, streamText }, { createCookingTools }] =
       await Promise.all([
@@ -63,6 +69,7 @@ export class NebiusCookingAgent implements CookingAgent {
       name: "nebius",
       baseURL: config.baseURL,
       apiKey: config.apiKey,
+      headers: config.headers,
       fetch: await resolveStreamingFetch(this.options.fetch),
     });
     const result = streamText({
