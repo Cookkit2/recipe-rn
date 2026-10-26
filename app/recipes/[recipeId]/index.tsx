@@ -1,5 +1,5 @@
 import { useRecipeLoadingGlow } from "~/components/Recipe/Loading/RecipeLoadingGlowProvider";
-import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
+import { Link, useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import type { NativeStackNavigationOptions } from "expo-router/native-stack";
 import {
   useCallback,
@@ -420,11 +420,14 @@ function RecipeDetailsContent({
         className="absolute top-0 left-0 right-0 bg-background"
         style={[parallaxHeaderStyle, { height: windowWidth, zIndex: 0 }]}
       >
-        <AnimatedImage
-          source={{ uri: displayedRecipe.imageUrl }}
-          style={[styles.image, { height: windowWidth }]}
-          transition={{ duration: 100, skipOnCacheHit: "all" }}
-        />
+        <Link.AppleZoomTarget>
+          <AnimatedImage
+            source={{ uri: displayedRecipe.imageUrl }}
+            style={[styles.image, { height: windowWidth }]}
+            transition={{ duration: 100, skipOnCacheHit: "all" }}
+            collapsable={false}
+          />
+        </Link.AppleZoomTarget>
         <Animated.View
           style={[opacityStyle, styles.gradient, { height: windowWidth }]}
           className="bg-background"
