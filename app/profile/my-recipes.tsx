@@ -1,11 +1,10 @@
-import { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, Platform, Pressable, StyleSheet, View } from "react-native";
-import { Link, Stack, useFocusEffect, useRouter } from "expo-router";
-import { Image } from "expo-image";
-import { BookOpenIcon, HistoryIcon } from "lucide-uniwind";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { ActivityIndicator, Platform, Pressable, View } from "react-native";
+import { Stack, useFocusEffect, useRouter } from "expo-router";
+import { HistoryIcon } from "lucide-uniwind";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import RecyclingList from "~/components/Shared/RecyclingList";
-import ScrollAwarePressable from "~/components/Shared/ScrollAwarePressable";
+import RecipeItemCard from "~/components/Pantry/RecipeItemCard";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { H4, P } from "~/components/ui/typography";
@@ -13,42 +12,11 @@ import { useMyRecipes } from "~/hooks/queries/useMyRecipes";
 import useColors from "~/hooks/useColor";
 import type { Recipe } from "~/types/Recipe";
 import { filterRecipesForSearch } from "~/utils/filterRecipesForSearch";
+import type { SearchBarCommands } from "react-native-screens";
 
-function MyRecipeRow({ recipe }: { recipe: Recipe }) {
-  const minutes = (recipe.prepMinutes ?? 0) + (recipe.cookMinutes ?? 0);
-  return (
-    <Link href={`/recipes/${recipe.id}`} asChild>
-      <ScrollAwarePressable
-        accessibilityRole="button"
-        accessibilityLabel={recipe.title}
-        className="mx-6 py-3 flex-row items-center gap-4 border-b border-border"
-      >
-        {recipe.imageUrl ? (
-          <Image
-            source={{ uri: recipe.imageUrl }}
-            style={styles.image}
-            contentFit="cover"
-            transition={150}
-            recyclingKey={recipe.id}
-            accessibilityLabel={`Image of ${recipe.title}`}
-          />
-        ) : (
-          <View style={styles.image} className="bg-muted items-center justify-center">
-            <BookOpenIcon size={28} className="text-muted-foreground" />
-          </View>
-        )}
-        <View className="flex-1 gap-1">
-          <H4 className="text-foreground font-urbanist-semibold" numberOfLines={2}>
-            {recipe.title}
-          </H4>
-          {minutes > 0 && <P className="text-muted-foreground text-sm">{minutes} min</P>}
-        </View>
-      </ScrollAwarePressable>
-    </Link>
-  );
-}
-
-const renderRecipe = ({ item }: { item: Recipe }) => <MyRecipeRow recipe={item} />;
+const renderRecipe = ({ item }: { item: Recipe }) => (
+  <RecipeItemCard recipe={item} titleClassName="text-foreground" />
+);
 
 export default function MyRecipesScreen() {
   const router = useRouter();
@@ -56,6 +24,7 @@ export default function MyRecipesScreen() {
   const { bottom } = useSafeAreaInsets();
   const { data: recipes = [], isPending, error, refetch } = useMyRecipes();
   const [search, setSearch] = useState("");
+  const searchBar = useRef<SearchBarCommands>(null);
   const filteredRecipes = useMemo(() => filterRecipesForSearch(recipes, search), [recipes, search]);
   const openHistory = useCallback(() => router.push("/profile/cooked-recipes"), [router]);
 
@@ -90,6 +59,25 @@ export default function MyRecipesScreen() {
             : {}),
         }}
       />
+      {Platform.OS !== "web" && (
+        <Stack.SearchBar
+          ref={searchBar}
+          placeholder="Search my recipes"
+          placement="stacked"
+          hideWhenScrolling={false}
+          hideNavigationBar={false}
+          obscureBackground={false}
+          autoCapitalize="none"
+          textColor={colors.foreground}
+          tintColor={colors.foreground}
+          headerIconColor={colors.foreground}
+          hintTextColor={colors.mutedForeground}
+          onChangeText={({ nativeEvent }) => setSearch(nativeEvent.text)}
+          onCancelButtonPress={() => setSearch("")}
+          onClose={() => setSearch("")}
+          onSearchButtonPress={() => searchBar.current?.blur()}
+        />
+      )}
       {Platform.OS === "ios" && (
         <Stack.Toolbar placement="right">
           <Stack.Toolbar.Button
@@ -113,7 +101,7 @@ export default function MyRecipesScreen() {
         </View>
       ) : (
         <>
-          {recipes.length > 0 && (
+          {Platform.OS === "web" && recipes.length > 0 && (
             <View className="px-6 pt-3 pb-2">
               <Input
                 accessibilityLabel="Search my recipes"
@@ -133,9 +121,10 @@ export default function MyRecipesScreen() {
             data={filteredRecipes}
             keyExtractor={(recipe) => recipe.id}
             renderItem={renderRecipe}
-            estimatedItemSize={105}
+            numColumns={2}
+            estimatedItemSize={270}
             className="bg-background"
-            contentPadding={{ bottom: bottom + 24 }}
+            contentPadding={{ left: 12, right: 12, top: 8, bottom: bottom + 16 }}
             empty={
               <View className="px-6 py-20 items-center">
                 <H4 className="text-muted-foreground text-center font-urbanist-semibold">
@@ -152,7 +141,3 @@ export default function MyRecipesScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  image: { width: 80, height: 80, borderRadius: 16 },
-});
