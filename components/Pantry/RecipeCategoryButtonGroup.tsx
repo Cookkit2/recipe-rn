@@ -35,6 +35,24 @@ const RECIPE_TAGS: {
 ];
 
 export default function RecipeCategoryButtonGroup() {
+  return (
+    <View className="mb-0.5">
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerClassName="flex-row gap-3 px-6"
+      >
+        {RECIPE_TAGS.map(({ label, icon, tag }) => (
+          <SegmentedButton key={tag} label={label} icon={icon} tag={tag} />
+        ))}
+        {/* <RecipeQuickActions /> */}
+      </ScrollView>
+    </View>
+  );
+}
+
+/** Kept for later; the Home category strip currently only shows recipe filters. */
+function RecipeQuickActions() {
   const { updateRecipeOpen: updateSelection } = usePantryStore();
   const { selectedRecipeTags } = useRecipeStore();
   const lightColors = useLightColors();
@@ -71,54 +89,43 @@ export default function RecipeCategoryButtonGroup() {
 
   return (
     <>
-      <View className="mb-0.5">
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerClassName="flex-row gap-3 px-6"
+      <Separator orientation="vertical" className="h-8 self-center bg-border/50" />
+      {!isLoading && hasRecipes && (
+        <Button
+          variant="outline"
+          className="rounded-2xl border-continuous flex-row items-center gap-2 border-white/20 bg-transparent"
+          onPress={handleChooseForMe}
+          accessibilityRole="button"
+          accessibilityLabel="Choose a random recipe"
         >
-          {RECIPE_TAGS.map(({ label, icon, tag }) => (
-            <SegmentedButton key={tag} label={label} icon={icon} tag={tag} />
-          ))}
-          <Separator orientation="vertical" className="h-8 self-center bg-border/50" />
-          {!isLoading && hasRecipes && (
-            <Button
-              variant="outline"
-              className="rounded-2xl border-continuous flex-row items-center gap-2 border-white/20 bg-transparent"
-              onPress={handleChooseForMe}
-              accessibilityRole="button"
-              accessibilityLabel="Choose a random recipe"
-            >
-              <DicesIcon color={lightColors.background} size={18} strokeWidth={3} />
-              <P
-                className="text-lg font-urbanist-semibold leading-snug"
-                style={{
-                  color: lightColors.background,
-                }}
-              >
-                Choose for me!
-              </P>
-            </Button>
-          )}
-          <Button
-            variant="outline"
-            className="rounded-2xl border-continuous flex-row items-center gap-2 border-white/20 bg-transparent"
-            onPress={() => setIsImportDialogOpen(true)}
-            accessibilityRole="button"
-            accessibilityLabel="Import recipe from URL"
+          <DicesIcon color={lightColors.background} size={18} strokeWidth={3} />
+          <P
+            className="text-lg font-urbanist-semibold leading-snug"
+            style={{
+              color: lightColors.background,
+            }}
           >
-            <GlobeIcon color={lightColors.background} size={18} strokeWidth={3} />
-            <P
-              className="text-lg font-urbanist-semibold leading-snug"
-              style={{
-                color: lightColors.background,
-              }}
-            >
-              Import
-            </P>
-          </Button>
-        </ScrollView>
-      </View>
+            Choose for me!
+          </P>
+        </Button>
+      )}
+      <Button
+        variant="outline"
+        className="rounded-2xl border-continuous flex-row items-center gap-2 border-white/20 bg-transparent"
+        onPress={() => setIsImportDialogOpen(true)}
+        accessibilityRole="button"
+        accessibilityLabel="Import recipe from URL"
+      >
+        <GlobeIcon color={lightColors.background} size={18} strokeWidth={3} />
+        <P
+          className="text-lg font-urbanist-semibold leading-snug"
+          style={{
+            color: lightColors.background,
+          }}
+        >
+          Import
+        </P>
+      </Button>
       <ImportRecipeDialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen} />
     </>
   );

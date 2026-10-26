@@ -37,6 +37,7 @@ jest.mock("expo-image", () => ({
 jest.mock("lucide-uniwind", () => ({
   BookOpenIcon: () => null,
   HistoryIcon: () => null,
+  PlusIcon: () => null,
   CheckCircleIcon: () => null,
 }));
 jest.mock("expo-haptics", () => ({
@@ -60,6 +61,21 @@ jest.mock("~/hooks/useColor", () => ({
   default: () => ({ background: "#fff", foreground: "#111", mutedForeground: "#666" }),
 }));
 jest.mock("~/hooks/queries/useMyRecipes", () => ({ useMyRecipes: () => mockQuery }));
+jest.mock("~/components/Pantry/ImportRecipeDialog", () => ({
+  __esModule: true,
+  default: ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) => {
+    const { Pressable, Text } = require("react-native");
+    return open ? (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Close recipe import"
+        onPress={() => onOpenChange(false)}
+      >
+        <Text>Import recipe dialog</Text>
+      </Pressable>
+    ) : null;
+  },
+}));
 jest.mock("~/components/ui/typography", () => {
   const { Text } = require("react-native");
   return { H4: Text, P: Text, Small: Text };
@@ -93,6 +109,26 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockQuery = { data: [], isPending: false, error: null, refetch: mockRefetch };
 });
+
+it.each(["ios", "android", "web"])(
+  "opens and closes recipe import from the %s plus action",
+  async (platform) => {
+    const original = Platform.OS;
+    Object.defineProperty(Platform, "OS", { value: platform, configurable: true });
+    try {
+      const screen = await render(<MyRecipesScreen />);
+      expect(screen.queryByText("Import recipe dialog")).toBeNull();
+      await fireEvent.press(screen.getByRole("button", { name: "Import recipe" }));
+      expect(screen.getByText("Import recipe dialog")).toBeTruthy();
+      await fireEvent.press(screen.getByRole("button", { name: "Close recipe import" }));
+      expect(screen.queryByText("Import recipe dialog")).toBeNull();
+      expect(mockPush).not.toHaveBeenCalled();
+      expect(screen.getByRole("button", { name: "Cooking history" })).toBeTruthy();
+    } finally {
+      Object.defineProperty(Platform, "OS", { value: original, configurable: true });
+    }
+  }
+);
 
 it.each(["ios", "android"])(
   "opens cooking history from the %s top-right action, even in an empty library",
