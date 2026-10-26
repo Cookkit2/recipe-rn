@@ -10,6 +10,16 @@ it("accepts quoted instructions despite formatting differences", () => {
     true
   );
 });
+it("retains short actions and katsu preparation verbs from the supplied video", () => {
+  for (const instruction of [
+    "Boil.",
+    "Rub until no particle left.",
+    "Coat the chicken in panko.",
+    "Dredge the chicken in flour.",
+  ])
+    expect(hasInstructionEvidence(instruction, instruction)).toBe(true);
+  expect(hasInstructionEvidence("Rub salt into the chicken.", "Chicken thigh 400g.")).toBe(false);
+});
 it("rejects an invented method and duration from an ingredient-only caption", () => {
   expect(
     hasInstructionEvidence(

@@ -55,9 +55,9 @@ export function getRecipeScreens({ colors }: { colors: { foreground: string } })
       name="(misc)/import-youtube"
       options={{
         presentation: "card",
-        headerShown: true,
+        headerShown: false,
         headerTransparent: true,
-        headerTitle: "Create Recipe",
+        headerTitle: "",
         headerBackButtonDisplayMode: "minimal",
         headerTintColor: colors.foreground,
       }}

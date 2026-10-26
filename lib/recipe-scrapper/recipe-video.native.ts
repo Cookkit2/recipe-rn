@@ -11,6 +11,7 @@ import {
   videoResolverScript,
 } from "./shared/video-source";
 import { transcribeVideoAudio } from "./video-speech";
+import { readRecipeVideoCoverFrames } from "./recipe-video-cover";
 
 interface PreparedVideo {
   duration: number;
@@ -51,7 +52,7 @@ export async function readRecipeVideo(
       await files.copyAsync({ from: input.videoUri, to: destination });
     } else {
       const url = input.url && normalizeVideoPostUrl(input.url);
-      if (!url) throw new Error("Choose a video or share a valid TikTok or Instagram post.");
+      if (!url) throw new Error("Share a valid YouTube, TikTok or Instagram video.");
       const source = await native.resolveVideo(url, videoResolverScript());
       options.signal?.throwIfAborted();
       if (!isAllowedVideoMediaUrl(source.mediaUrl))
@@ -121,6 +122,26 @@ export async function readRecipeVideo(
         "Check the amounts and steps against the original video. Video frames are sampled.",
       ],
     };
+  } catch (error) {
+    options.signal?.throwIfAborted();
+    const url = input.url && normalizeVideoPostUrl(input.url);
+    // YouTube can use an adaptive player instead of a downloadable MP4. Read its
+    // actual decoded frames while retaining the published captions in the service.
+    if (!input.videoUri && url && new URL(url).hostname === "www.youtube.com") {
+      const frames = await readRecipeVideoCoverFrames(url, options).catch(() => []);
+      options.signal?.throwIfAborted();
+      if (frames.length)
+        return {
+          title: "Shared YouTube video",
+          caption: "",
+          transcript: "",
+          frames,
+          warnings: [
+            "Check the amounts and instructions against the original video. Video frames are sampled.",
+          ],
+        };
+    }
+    throw error;
   } finally {
     await files.deleteAsync(directory, { idempotent: true }).catch(() => {});
   }

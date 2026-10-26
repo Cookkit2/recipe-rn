@@ -48,7 +48,8 @@ it("accepts English translations grounded in the original Malay instruction", as
   expect(result.recipe?.steps[0]?.description).toBe("Steam for 15 minutes.");
   expect(result.recipe?.ingredients[1]?.quantity).toBe(150);
   expect(result.recipe?.ingredients[1]?.notes).toContain("AI estimate");
-  expect(result.recipe?.description).toContain("2 servings");
+  expect(result.recipe?.description).toBe("Egg with chicken.");
+  expect(result.warnings).toContain("Ingredient amounts include AI estimates for 2 servings.");
   expect(generate.mock.calls[0]?.[0].prompt).toContain("English");
 });
 it("rejects a translated step whose source quotation is absent", async () => {
