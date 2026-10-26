@@ -30,3 +30,31 @@ it.each([
 it("explicitly instructs the model to reply in plain text", () => {
   expect(COOKING_ASSISTANT_INSTRUCTIONS).toContain("Reply in plain text only");
 });
+
+it.each([
+  [
+    "Chicken breast (stockId: opaque-chicken-123)\nMilk (stockId: opaque-milk-456)",
+    "Chicken breast\nMilk",
+  ],
+  ["Eggs (stock_id = abc123)", "Eggs"],
+  ["Eggs (**stockId**: `abc123`)", "Eggs"],
+  ["Eggs\nStock ID: abc123\n6 pcs", "Eggs\n\n6 pcs"],
+  ["Eggs (stockId: opaque-part", "Eggs"],
+  ["Eggs (stockId:", "Eggs"],
+])("hides stock identifier metadata in %s", (input, expected) => {
+  expect(toAssistantPlainText(input)).toBe(expected);
+});
+
+it("hides bare known stock IDs without removing quantities or ingredient names", () => {
+  expect(toAssistantPlainText("Eggs: 6 pcs. Selected opaque-eggs-123.", ["opaque-eggs-123"])).toBe(
+    "Eggs: 6 pcs. Selected."
+  );
+});
+
+it("never flashes a known stock ID split across streamed chunks", () => {
+  const stockId = "opaque-eggs-123";
+  for (let length = 3; length <= stockId.length; length++) {
+    const text = toAssistantPlainText(`Eggs (${stockId.slice(0, length)}`, [stockId]);
+    expect(text).toBe("Eggs");
+  }
+});

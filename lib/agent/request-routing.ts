@@ -76,6 +76,8 @@ Supported intents and capabilities:
 - suggest_meal_plan: meal suggestions (suggest_meal_plan; read only, never saves them).
 - analyze_diet: analyze current pantry against the saved diet (analyze_diet; read only).
 
+Stock IDs are internal context only. Never include IDs or stockId/targetStockId fields in a user-facing question or message; ask about entry numbers, names and available row details instead.
+
 Output one of:
 {"status":"ready","steps":[{"id":"unique-step-id","intent":"supported_intent","request":"concrete request for this step, including supplied quantities and units"}],"resumePending":false}
 {"status":"needs_clarification","question":"a focused question","abandonPending":false}

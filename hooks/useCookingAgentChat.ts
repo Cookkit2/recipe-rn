@@ -1,3 +1,4 @@
+import { stockIdsFromEvent } from "~/lib/agent/stock-id-display";
 import type { PantryCandidate } from "~/types/AssistantPantryMutation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AgentEvent, AgentTextMessage, CookingAgent } from "~/lib/agent/types";
@@ -18,6 +19,7 @@ import {
 
 export interface CookingChatMessage extends AgentTextMessage {
   activities: string[];
+  internalStockIds?: string[];
   error?: string;
   pantryError?: string;
   pantryClarification?: { question: string; candidates?: PantryCandidate[] };
@@ -80,6 +82,12 @@ function createId(): string {
 }
 
 function applyEvent(message: CookingChatMessage, event: AgentEvent): CookingChatMessage {
+  const ids = stockIdsFromEvent(event);
+  if (ids.length)
+    message = {
+      ...message,
+      internalStockIds: [...new Set([...(message.internalStockIds ?? []), ...ids])],
+    };
   // Routing messages are complete, verified conversation responses.
   if (message.requestMessage && event.type !== "request-context") return clearProgress(message);
   switch (event.type) {
@@ -380,6 +388,9 @@ export function useCookingAgentChat(agent: CookingAgent) {
         activities: [],
       };
       const history = [...messagesRef.current, userMessage];
+      assistantMessage.internalStockIds = [
+        ...new Set(history.flatMap((message) => message.internalStockIds ?? [])),
+      ];
       updateMessages(() => [...history, assistantMessage]);
       setStatus("streaming");
 

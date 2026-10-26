@@ -81,6 +81,12 @@ are labelled and cannot justify an exhaustive absence claim. If a later page
 fails, earlier verified rows remain visible with an error. Combined pantry reads
 and recipe requests display both the rows and the recipe cards.
 
+Stock IDs remain internal tool/context data for exact row selection. Assistant
+text, clarification choices, error text, recipe cards and accessibility labels
+filter identifier metadata and known stock IDs at the display boundary, including
+unfinished streamed text. Choices use ingredient details and entry numbers;
+filtering never changes the stored IDs, tool arguments or recipe navigation IDs.
+
 ## Existing ingredient identity and mutation policy
 
 Pantry changes from Assistant use `pantryApi.manageAssistantPantry`, backed by a

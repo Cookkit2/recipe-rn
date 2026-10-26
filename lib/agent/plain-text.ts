@@ -1,5 +1,7 @@
+import { hideStockIds } from "./stock-id-display";
+
 /** Normalize assistant copy at display time, including unfinished streamed emphasis. */
-export function toAssistantPlainText(text: string): string {
+export function toAssistantPlainText(text: string, stockIds: readonly string[] = []): string {
   const withoutBlocks = text
     .replace(/^[ \t]*(?:`{3,}|~{3,})[^\n]*(?:\n|$)/gm, "")
     .split("\n")
@@ -18,7 +20,7 @@ export function toAssistantPlainText(text: string): string {
     })
     .join("\n");
 
-  return withoutBlocks
+  const normalized = withoutBlocks
     .replace(/^ {0,3}#{1,6}[ \t]+(.*?)(?:[ \t]+#+)?$/gm, "$1")
     .replace(/^ {0,3}#{1,6}[ \t]*$/gm, "")
     .replace(/^(?: {0,3}>[ \t]?)+/gm, "")
@@ -38,4 +40,5 @@ export function toAssistantPlainText(text: string): string {
     .replace(/[ \t]+$/gm, "")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
+  return hideStockIds(normalized, stockIds);
 }

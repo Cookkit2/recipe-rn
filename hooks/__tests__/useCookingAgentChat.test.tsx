@@ -1269,3 +1269,44 @@ it.each(["read", "recipes"] as const)(
     }
   }
 );
+
+it("keeps stock identifiers as internal display metadata while preserving clarification context", async () => {
+  const stockId = "opaque-milk-123";
+  const requests: AgentTurnInput[] = [];
+  const agent: CookingAgent = {
+    kind: "nebius",
+    async *stream(input) {
+      requests.push(input);
+      yield {
+        type: "tool-result",
+        toolCallId: "diet",
+        toolName: "analyze_diet",
+        output: { conflicts: [{ id: stockId, name: "milk", reasons: ["allergen"] }] },
+      };
+      yield {
+        type: "request-context",
+        context: {
+          ...pendingRequest,
+          clarification: {
+            question: "Which milk entry?",
+            candidates: [
+              { id: "opaque-milk-456", name: "milk", quantity: 1, unit: "l", expiryDate: null },
+            ],
+          },
+        },
+      };
+      yield { type: "text-delta", text: `Milk (stockId: ${stockId})` };
+    },
+  };
+  const { result } = await renderHook(() => useCookingAgentChat(agent));
+  await act(async () => {
+    await result.current.send("Analyze pantry");
+  });
+  expect(result.current.messages[1]?.internalStockIds).toEqual(
+    expect.arrayContaining([stockId, "opaque-milk-456"])
+  );
+  await act(async () => {
+    await result.current.send("The first one");
+  });
+  expect(requests[1]?.pendingRequest?.clarification?.candidates?.[0]?.id).toBe("opaque-milk-456");
+});
