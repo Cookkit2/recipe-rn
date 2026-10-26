@@ -1,10 +1,11 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Platform, Pressable, View } from "react-native";
 import { Stack, useFocusEffect, useRouter } from "expo-router";
-import { HistoryIcon } from "lucide-uniwind";
+import { HistoryIcon, PlusIcon } from "lucide-uniwind";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import RecyclingList from "~/components/Shared/RecyclingList";
 import RecipeItemCard from "~/components/Pantry/RecipeItemCard";
+import ImportRecipeDialog from "~/components/Pantry/ImportRecipeDialog";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { H4, P } from "~/components/ui/typography";
@@ -24,6 +25,7 @@ export default function MyRecipesScreen() {
   const { bottom } = useSafeAreaInsets();
   const { data: recipes = [], isPending, error, refetch } = useMyRecipes();
   const [search, setSearch] = useState("");
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const searchBar = useRef<SearchBarCommands>(null);
   const query = search.trim().toLowerCase();
   const filteredRecipes = useMemo(() => filterRecipesForSearch(recipes, query), [recipes, query]);
@@ -42,19 +44,32 @@ export default function MyRecipesScreen() {
         options={{
           headerTitle: "My Recipes",
           headerTransparent: false,
+          headerShadowVisible: false,
+          headerLargeTitleShadowVisible: false,
           headerStyle: { backgroundColor: colors.background },
           ...(Platform.OS !== "ios"
             ? {
                 headerRight: () => (
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Cooking history"
-                    onPress={openHistory}
-                    hitSlop={8}
-                    className="p-2"
-                  >
-                    <HistoryIcon size={24} className="text-foreground" />
-                  </Pressable>
+                  <View className="flex-row items-center gap-2">
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Cooking history"
+                      onPress={openHistory}
+                      hitSlop={8}
+                      className="p-2"
+                    >
+                      <HistoryIcon size={24} className="text-foreground" />
+                    </Pressable>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Import recipe"
+                      onPress={() => setIsImportDialogOpen(true)}
+                      hitSlop={8}
+                      className="p-2"
+                    >
+                      <PlusIcon size={24} className="text-foreground" />
+                    </Pressable>
+                  </View>
                 ),
               }
             : {}),
@@ -86,6 +101,12 @@ export default function MyRecipesScreen() {
             tintColor={colors.foreground}
             accessibilityLabel="Cooking history"
             onPress={openHistory}
+          />
+          <Stack.Toolbar.Button
+            icon="plus"
+            tintColor={colors.foreground}
+            accessibilityLabel="Import recipe"
+            onPress={() => setIsImportDialogOpen(true)}
           />
         </Stack.Toolbar>
       )}
@@ -141,6 +162,7 @@ export default function MyRecipesScreen() {
           />
         </>
       )}
+      {isImportDialogOpen && <ImportRecipeDialog open onOpenChange={setIsImportDialogOpen} />}
     </View>
   );
 }
