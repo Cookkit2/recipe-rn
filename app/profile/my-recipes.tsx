@@ -25,7 +25,8 @@ export default function MyRecipesScreen() {
   const { data: recipes = [], isPending, error, refetch } = useMyRecipes();
   const [search, setSearch] = useState("");
   const searchBar = useRef<SearchBarCommands>(null);
-  const filteredRecipes = useMemo(() => filterRecipesForSearch(recipes, search), [recipes, search]);
+  const query = search.trim().toLowerCase();
+  const filteredRecipes = useMemo(() => filterRecipesForSearch(recipes, query), [recipes, query]);
   const openHistory = useCallback(() => router.push("/profile/cooked-recipes"), [router]);
 
   // Returning from an import, edit or favorite change refreshes quietly.
@@ -117,6 +118,8 @@ export default function MyRecipesScreen() {
             </View>
           )}
           <RecyclingList
+            // A new query starts at the top with a fresh native recycling window.
+            key={query}
             testID="my-recipes-list"
             data={filteredRecipes}
             keyExtractor={(recipe) => recipe.id}
