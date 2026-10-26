@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   useNavigationContainerRef,
   useRootNavigationState,
@@ -14,6 +14,7 @@ import { normalizeIncomingRecipeShare } from "~/utils/shared-recipe";
 import { isSharedRecipeIntent } from "~/utils/native-share-route";
 import { readPendingRecipeShare, savePendingRecipeShare } from "~/lib/recipe-share-inbox";
 import { log } from "~/utils/logger";
+import type { PendingRecipeShare } from "~/types/SharedRecipe";
 
 export default function SocialRecipeShareHandler() {
   const router = useRouter();
@@ -22,8 +23,8 @@ export default function SocialRecipeShareHandler() {
   const navigation = useNavigationContainerRef();
   const segments = useSegments();
   const [ready, setReady] = useState(() => navigation.isReady());
-  const [revision, setRevision] = useState(0);
-  const pending = useMemo(readPendingRecipeShare, [revision]);
+  // Saved retry data is not a new share request. Only this session's receiver may navigate.
+  const [pending, setPending] = useState<PendingRecipeShare | null>(null);
   useEffect(() => {
     const updateReady = () => setReady(navigation.isReady());
     updateReady();
@@ -43,6 +44,7 @@ export default function SocialRecipeShareHandler() {
     let disposed = false;
     let receiving = false;
     let shareRequested = false;
+    let needsNativeRetry = false;
     let reportedFailure: string | null = null;
     let savedPayload: string | null = null;
     let cleanupWarningReported = false;
@@ -53,7 +55,8 @@ export default function SocialRecipeShareHandler() {
     };
     const receive = async (explicitShare = false) => {
       shareRequested ||= explicitShare;
-      if (receiving) return;
+      needsNativeRetry ||= explicitShare;
+      if (receiving || !needsNativeRetry) return;
       receiving = true;
       let payloadKey: string | null = null;
       let stage = "read";
@@ -62,15 +65,22 @@ export default function SocialRecipeShareHandler() {
         if (disposed) return;
         const payloads = getSharedPayloads();
         if (payloads.length === 0) {
+          needsNativeRetry = false;
           reportedFailure = null;
           savedPayload = null;
           cleanupWarningReported = false;
           return;
         }
         payloadKey = JSON.stringify(payloads.map(({ shareType, value }) => [shareType, value]));
+        if (savedPayload && savedPayload !== payloadKey && !shareRequested) {
+          // A cleanup retry must not turn a different, unsolicited payload into navigation.
+          needsNativeRetry = false;
+          return;
+        }
         const clear = () => {
           try {
             clearSharedPayloads();
+            needsNativeRetry = false;
             savedPayload = null;
             cleanupWarningReported = false;
           } catch {
@@ -88,10 +98,10 @@ export default function SocialRecipeShareHandler() {
         }
         if (savedPayload !== payloadKey || (shareRequested && !readPendingRecipeShare())) {
           stage = "persist";
-          savePendingRecipeShare(input);
+          const next = savePendingRecipeShare(input);
           savedPayload = payloadKey;
           log.debug("Recipe share received", { hasUrl: !!input.url, hasCaption: !!input.text });
-          setRevision((value) => value + 1);
+          setPending(next);
         }
         reportedFailure = null;
         clear();
@@ -99,7 +109,7 @@ export default function SocialRecipeShareHandler() {
         if (disposed) return;
         const context = { stage, errorName: error instanceof Error ? error.name : "NativeError" };
         // App startup/foreground probes are not user share attempts.
-        if (shareRequested || payloadKey) {
+        if (needsNativeRetry || payloadKey) {
           if (reportedFailure !== (payloadKey ?? "native-inbox"))
             log.warn("Could not receive a native recipe share", context);
           reportFailure(
