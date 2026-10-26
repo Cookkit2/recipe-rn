@@ -23,6 +23,8 @@ const dailyLimit = Math.max(
 Deno.serve(
   createAIHandler({
     apiKey: requiredEnv("NEBIUS_API_KEY"),
+    geminiApiKey: Deno.env.get("GEMINI_API_KEY"),
+    geminiModel: Deno.env.get("GEMINI_YOUTUBE_MODEL"),
     async authenticate(token, signal) {
       const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
         headers: { apikey: anonKey, Authorization: `Bearer ${token}` },

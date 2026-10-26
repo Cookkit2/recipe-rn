@@ -71,10 +71,53 @@ describe("Nebius YouTube recipe analysis", () => {
     });
     expect(result.recipe?.calories).toBeUndefined();
   });
-  it("explains missing recipe text and makes no AI call for a URL and title alone", async () => {
+  it("uses YouTube video input when transcript and description are missing", async () => {
+    const result = await new RecipeAnalyzer().analyzeForRecipe(video);
+    expect(result.recipe?.title).toBe("Garlic rice");
+    expect(jest.mocked(generateAIContent).mock.calls[0]?.[0]).toMatchObject({
+      youtubeVideoUrl: "https://www.youtube.com/watch?v=abcdefghijk",
+    });
+  });
+  it("falls back when available text does not contain a usable recipe", async () => {
+    jest
+      .mocked(generateAIContent)
+      .mockResolvedValueOnce(
+        JSON.stringify({ isCookingVideo: false, confidence: 0, errorMessage: "Title only" })
+      );
+    const result = await new RecipeAnalyzer().analyzeForRecipe({
+      ...video,
+      description: "Subscribe!",
+    });
+    expect(result.recipe?.title).toBe("Garlic rice");
+    expect(generateAIContent).toHaveBeenCalledTimes(2);
+    expect(jest.mocked(generateAIContent).mock.calls[1]?.[0]).toHaveProperty("youtubeVideoUrl");
+  });
+  it("does not invoke video fallback for a usable text recipe", async () => {
+    await new RecipeAnalyzer().analyzeForRecipe({ ...video, description: "Cook rice in water." });
+    expect(generateAIContent).toHaveBeenCalledTimes(1);
+    expect(jest.mocked(generateAIContent).mock.calls[0]?.[0]).not.toHaveProperty("youtubeVideoUrl");
+  });
+  it("returns a safe failure when video analysis is unavailable", async () => {
+    jest
+      .mocked(generateAIContent)
+      .mockRejectedValue(new Error("Couldn't process this with AI. Please try again."));
     const result = await new RecipeAnalyzer().analyzeForRecipe(video);
     expect(result.isCookingVideo).toBe(false);
-    expect(result.errorMessage).toContain("caption or transcript");
-    expect(generateAIContent).not.toHaveBeenCalled();
+    expect(result.errorMessage).toContain("Couldn't process");
+  });
+  it.each([
+    { confidence: 0.2, recipe },
+    { confidence: 0.9, recipe: { ...recipe, steps: [] } },
+    {
+      confidence: 0.9,
+      recipe: { ...recipe, ingredients: [{ name: "rice", quantity: 0, unit: "cup" }] },
+    },
+  ])("rejects incomplete or low-confidence video recipes", async (answer) => {
+    jest
+      .mocked(generateAIContent)
+      .mockResolvedValue(JSON.stringify({ isCookingVideo: true, ...answer }));
+    const result = await new RecipeAnalyzer().analyzeForRecipe(video);
+    expect(result.isCookingVideo).toBe(false);
+    expect(result.recipe).toBeUndefined();
   });
 });

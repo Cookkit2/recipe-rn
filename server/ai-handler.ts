@@ -1,4 +1,5 @@
 import { AIError, generateNebiusContent, validateAIRequest } from "./nebius.ts";
+import { generateGeminiYouTubeContent } from "./gemini-youtube.ts";
 
 const MAX_BODY_BYTES = 2_000_000;
 const cors = {
@@ -9,6 +10,8 @@ const cors = {
 
 interface HandlerOptions {
   apiKey: string;
+  geminiApiKey?: string;
+  geminiModel?: string;
   authenticate: (token: string, signal: AbortSignal) => Promise<string | null>;
   consumeQuota: (userId: string, signal: AbortSignal) => Promise<boolean>;
   fetcher?: typeof fetch;
@@ -46,7 +49,14 @@ async function readRequest(request: Request, signal: AbortSignal): Promise<unkno
   }
 }
 
-export function createAIHandler({ apiKey, authenticate, consumeQuota, fetcher }: HandlerOptions) {
+export function createAIHandler({
+  apiKey,
+  geminiApiKey,
+  geminiModel,
+  authenticate,
+  consumeQuota,
+  fetcher,
+}: HandlerOptions) {
   return async (request: Request): Promise<Response> => {
     const json = (body: unknown, status = 200) =>
       Response.json(body, { status, headers: { ...cors, "Cache-Control": "no-store" } });
@@ -65,6 +75,16 @@ export function createAIHandler({ apiKey, authenticate, consumeQuota, fetcher }:
       validateAIRequest(input);
       if (!(await consumeQuota(userId, signal))) {
         return json({ error: "AI request limit reached. Please try again later." }, 429);
+      }
+      if (input.youtubeVideoUrl) {
+        return json(
+          await generateGeminiYouTubeContent(input, {
+            apiKey: geminiApiKey,
+            model: geminiModel,
+            fetcher,
+            signal,
+          })
+        );
       }
       return json(await generateNebiusContent(input, { apiKey, fetcher, signal }));
     } catch (error) {
