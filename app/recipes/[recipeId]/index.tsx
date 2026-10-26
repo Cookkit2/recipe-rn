@@ -60,6 +60,7 @@ import TipsList from "~/components/Recipe/Details/TipsList";
 import WriteTipModal from "~/components/Recipe/Details/WriteTipModal";
 import { useRecipeReviewsAndTips } from "~/hooks/useRecipeReviewsAndTips";
 import RecipeDetailsSkeleton from "~/components/Recipe/Details/RecipeDetailsSkeleton";
+import { cleanRecipeDescription } from "~/utils/recipe-description";
 
 const AnimatedH1 = Animated.createAnimatedComponent(H1);
 const AnimatedImage = Animated.createAnimatedComponent(Image);
@@ -350,6 +351,7 @@ function RecipeDetailsContent({
   }, [activeRecipe]);
 
   const displayedRecipe = activeRecipe ?? recipe;
+  const displayedDescription = cleanRecipeDescription(displayedRecipe.description);
 
   // Share the displayed version, including tailoring and serving adjustments.
   const recipeToShare = useMemo(
@@ -487,10 +489,8 @@ function RecipeDetailsContent({
 
           <Separator className="my-8" />
           {/* Description */}
-          {displayedRecipe.description && (
-            <P className="font-urbanist-regular text-foreground/60">
-              {displayedRecipe.description}
-            </P>
+          {displayedDescription && (
+            <P className="font-urbanist-regular text-foreground/60">{displayedDescription}</P>
           )}
 
           {/* <Separator className="my-8" /> */}

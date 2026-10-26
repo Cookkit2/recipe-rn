@@ -471,7 +471,7 @@ Return a valid JSON response matching the schema.
             : "";
         result.recipe = {
           title: parsed.recipe.title || "Untitled Recipe",
-          description: [parsed.recipe.description, estimateNote].filter(Boolean).join("\n\n"),
+          description: parsed.recipe.description || "",
           prepMinutes: parsed.recipe.prepMinutes ?? 0,
           cookMinutes: parsed.recipe.cookMinutes ?? 0,
           servings,
