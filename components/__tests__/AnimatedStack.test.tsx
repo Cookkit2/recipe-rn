@@ -72,9 +72,8 @@ it("passes direct, uniquely named screens to the router across rerenders", async
   expect(new Set(names).size).toBe(names.length);
   const assistant = screens.find((screen) => screen.props.name === "assistant/index");
   expect((assistant?.props as { options?: unknown }).options).toMatchObject({
-    headerTitle: "Assistant",
-    headerTransparent: false,
-    headerStyle: { backgroundColor: "white" },
+    // The legacy assistant route redirects to Search and must not flash its old header.
+    headerShown: false,
   });
 });
 
