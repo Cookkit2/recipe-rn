@@ -101,3 +101,49 @@ it("continues a resolved TikTok short link in the same post's public player", ()
   );
   expect(setInterval).not.toHaveBeenCalled();
 });
+
+it("captures only the selected YouTube video's own caption response before the player loads", async () => {
+  let tick: () => Promise<void> = async () => {};
+  let clock = 0;
+  const postMessage = jest.fn();
+  const request = async (url: string) => ({
+    url,
+    clone: () => ({
+      text: async () =>
+        JSON.stringify({ events: [{ segs: [{ utf8: "Cook the chicken for 9 minutes." }] }] }),
+    }),
+  });
+  const browser = {
+    fetch: request,
+    webkit: { messageHandlers: { cookkitVideo: { postMessage } } },
+  };
+  vm.runInNewContext(videoCoverFramesScript({ youtubeVideoId: "-Ksv82YLW-A" }), {
+    window: browser,
+    URL,
+    location: {
+      href: "https://www.youtube.com/embed/-Ksv82YLW-A",
+      hostname: "www.youtube.com",
+      pathname: "/embed/-Ksv82YLW-A",
+    },
+    document: {
+      querySelector: () => null,
+      getElementById: () => ({ getVideoData: () => ({ video_id: "-Ksv82YLW-A" }) }),
+    },
+    setInterval: (callback: () => Promise<void>) => {
+      tick = callback;
+      return 1;
+    },
+    clearInterval: jest.fn(),
+    Date: { now: () => clock },
+  });
+  await browser.fetch("https://attacker.test/api/timedtext?v=-Ksv82YLW-A");
+  await browser.fetch("https://www.youtube.com/api/timedtext?v=other-video");
+  clock = 14000;
+  await tick();
+  expect(JSON.parse(postMessage.mock.calls[0]?.[0]).transcript).toBe("");
+  await browser.fetch("https://www.youtube.com/api/timedtext?v=-Ksv82YLW-A&fmt=json3");
+  await tick();
+  expect(JSON.parse(postMessage.mock.calls[1]?.[0]).transcript).toBe(
+    "Cook the chicken for 9 minutes."
+  );
+});

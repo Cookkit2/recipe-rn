@@ -38,22 +38,48 @@ export async function selectRecipeVideoCover(
 }
 
 /** Runs in an isolated public-post WebView; captures decoded frames rather than covers. */
-export function videoCoverFramesScript(): string {
+export function videoCoverFramesScript(options: { youtubeVideoId?: string } = {}): string {
   return `(() => {
     if (window.__cookkitCoverSampling) return;
     window.__cookkitCoverSampling = true;
+    const expectedYouTubeId=${JSON.stringify(options.youtubeVideoId ?? "")};
+    let transcript="";
+    if(expectedYouTubeId) {
+      const isCaption=(value)=>{try {const u=new URL(String(value),location.href);return ['www.youtube.com','youtube.com','m.youtube.com'].includes(u.hostname) && u.pathname==='/api/timedtext' && u.searchParams.get('v')===expectedYouTubeId;}catch{return false;}};
+      const readCaption=(text)=>{
+        if(typeof text!=='string' || text.length>256000) return;
+        try {const data=JSON.parse(text);const lines=(data.events||[]).flatMap(event=>(event.segs||[]).map(segment=>segment.utf8||'')).filter(Boolean);if(lines.length)transcript=lines.join(' ').slice(0,32000);}catch{
+          try {const xml=new DOMParser().parseFromString(text,'text/xml');const lines=Array.from(xml.querySelectorAll('text,body > p')).map(line=>line.textContent||'').filter(Boolean);if(lines.length)transcript=lines.join(' ').slice(0,32000);}catch{}
+        }
+      };
+      if(window.fetch) {const original=window.fetch;window.fetch=function(...args){return original.apply(this,args).then(response=>{if(isCaption(response.url || args[0]?.url || args[0]))response.clone().text().then(readCaption).catch(()=>{});return response;});};}
+      if(window.XMLHttpRequest) {
+        const open=XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open=function(method,url,...rest){if(isCaption(url))this.addEventListener('load',()=>{try{readCaption(typeof this.response==='string'?this.response:JSON.stringify(this.response));}catch{}});return open.call(this,method,url,...rest);};
+      }
+    }
     const postId = location.hostname.endsWith('tiktok.com') && location.pathname.match(/\\/video\\/(\\d+)/)?.[1];
     if(postId) {location.replace('https://www.tiktok.com/player/v1/'+postId+'?autoplay=1&muted=1&controls=0');return;}
     const send = (frames, reason = "") => {
-      const json = JSON.stringify({frames:JSON.stringify(frames),reason});
+      const player=expectedYouTubeId && document.getElementById('movie_player');
+      const details=player?.getPlayerResponse?.()?.videoDetails || window.ytInitialPlayerResponse?.videoDetails;
+      const json = JSON.stringify({frames:JSON.stringify(frames),reason,
+        transcript:transcript.slice(0,32000),title:String(details?.videoId===expectedYouTubeId ? details.title || '' : '').slice(0,500),
+        caption:String(details?.videoId===expectedYouTubeId ? details.shortDescription || '' : '').slice(0,32000)});
       if(window.webkit?.messageHandlers?.cookkitVideo) window.webkit.messageHandlers.cookkitVideo.postMessage(json);
       else window.CookkitVideo?.postMessage(json);
     };
     const start = Date.now();
     const timer = setInterval(async () => {
       const video = document.querySelector('video');
+      if(expectedYouTubeId) {
+        const player=document.getElementById('movie_player');
+        const actualId=player?.getVideoData?.()?.video_id || window.ytInitialPlayerResponse?.videoDetails?.videoId;
+        if(actualId && actualId!==expectedYouTubeId) {clearInterval(timer);send([],"different-video");return;}
+        if(!actualId || document.querySelector('.ad-showing')) {if(Date.now()-start>13000){clearInterval(timer);send([],"player-unavailable");}return;}
+      }
       if(video) video.muted=true;
-      if(video && Number.isFinite(video.duration) && video.duration>180) {clearInterval(timer);video.pause();send([],"video-too-long");return;}
+      if(video && Number.isFinite(video.duration) && video.duration>${options.youtubeVideoId ? 1200 : 180}) {clearInterval(timer);video.pause();send([],"video-too-long");return;}
       if(video && !video.crossOrigin) {video.crossOrigin='anonymous';video.muted=true;video.load();video.play().catch(()=>{});return;}
       if(!video || !Number.isFinite(video.duration) || video.duration <= 0 || video.readyState < 2) {
         if(video) {video.muted=true; video.play().catch(()=>{});}
@@ -70,11 +96,11 @@ export function videoCoverFramesScript(): string {
       canvas.height=Math.max(1,Math.round(video.videoHeight*scale));
       const ctx=canvas.getContext('2d');
       if(!ctx) {send([]);return;}
-      for(const fraction of [0.01,0.06,0.16,0.4,0.7,0.9]) {
+      for(const fraction of ${options.youtubeVideoId ? "[0.01,0.04,0.15,0.35,0.55,0.75,0.92,0.995]" : "[0.01,0.06,0.16,0.4,0.7,0.9]"}) {
         const timestamp=Math.min(video.duration-0.05,video.duration*fraction);
         try {
           await new Promise((resolve,reject)=>{
-            const timeout=setTimeout(()=>{video.removeEventListener('seeked',ready);reject();},1400);
+            const timeout=setTimeout(()=>{video.removeEventListener('seeked',ready);reject();},${options.youtubeVideoId ? 1800 : 1400});
             const ready=()=>{clearTimeout(timeout);resolve();};
             video.addEventListener('seeked',ready,{once:true});video.currentTime=timestamp;
           });

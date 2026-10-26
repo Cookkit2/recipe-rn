@@ -49,31 +49,33 @@ beforeEach(() => {
   mockPending = source;
   mockPrepare.mockReset();
 });
-it.each([source.url, "https://www.tiktok.com/@cook/video/123456"])(
-  "shows loading waves until the saved recipe is ready: %s",
-  async (url) => {
-    const pending = { ...source, url };
-    mockPending = pending;
-    let finish!: (value: unknown) => void;
-    mockPrepare.mockImplementation(
-      () =>
-        new Promise((resolve) => {
-          finish = resolve;
-        })
-    );
-    const screen = await render(<SharedRecipeImport pending={pending} />);
-    expect(mockLoadingGlow).toHaveBeenLastCalledWith(true);
-    expect(screen.getByTestId("recipe-skeleton")).toBeTruthy();
-    expect(mockReplace).not.toHaveBeenCalled();
-    expect(mockClear).not.toHaveBeenCalled();
-    await act(async () =>
-      finish({ kind: "saved", result: { success: true, recipe: { id: "peach" } } })
-    );
-    expect(mockReplace).toHaveBeenCalledWith("/recipes/peach");
-    expect(mockClear).toHaveBeenCalledWith("share-1");
-    expect(mockLoadingGlow).toHaveBeenLastCalledWith(false);
-  }
-);
+it.each([
+  source.url,
+  "https://www.tiktok.com/@cook/video/123456",
+  "https://youtu.be/abcdef12345",
+  "https://www.youtube.com/shorts/abcdef12345",
+])("shows loading waves until the saved recipe is ready: %s", async (url) => {
+  const pending = { ...source, url };
+  mockPending = pending;
+  let finish!: (value: unknown) => void;
+  mockPrepare.mockImplementation(
+    () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      })
+  );
+  const screen = await render(<SharedRecipeImport pending={pending} />);
+  expect(mockLoadingGlow).toHaveBeenLastCalledWith(true);
+  expect(screen.getByTestId("recipe-skeleton")).toBeTruthy();
+  expect(mockReplace).not.toHaveBeenCalled();
+  expect(mockClear).not.toHaveBeenCalled();
+  await act(async () =>
+    finish({ kind: "saved", result: { success: true, recipe: { id: "peach" } } })
+  );
+  expect(mockReplace).toHaveBeenCalledWith("/recipes/peach");
+  expect(mockClear).toHaveBeenCalledWith("share-1");
+  expect(mockLoadingGlow).toHaveBeenLastCalledWith(false);
+});
 it("retains the original share and offers inline retry without a fill-in form", async () => {
   mockPrepare.mockRejectedValueOnce(new Error("Video temporarily unavailable"));
   const screen = await render(<SharedRecipeImport pending={source} />);
