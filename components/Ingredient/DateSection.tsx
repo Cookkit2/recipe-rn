@@ -171,6 +171,8 @@ export default function DateSection() {
 
 const styles = StyleSheet.create({
   datePicker: {
+    // Expo UI's SwiftUI Host needs a horizontal size inside the centered sheet.
+    width: "100%",
     height: 200,
   },
 });
