@@ -11,6 +11,9 @@ export const pantryQueryKeys = {
   // All pantry items
   items: () => [...pantryQueryKeys.all, "items"] as const,
 
+  // Separate data shape, still refreshed by existing pantry/item invalidations.
+  cards: () => [...pantryQueryKeys.items(), "cards"] as const,
+
   // Optional cloud categories, cached independently of local stock reads
   ingredientCategories: (names: string[]) =>
     [...pantryQueryKeys.all, "ingredientCategories", names] as const,
