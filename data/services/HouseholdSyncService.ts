@@ -1,3 +1,5 @@
+import type Stock from "~/data/db/models/Stock";
+import { catalogReferenceField, type SharedStockWrite } from "./householdStockPayload";
 import { Q } from "@nozbe/watermelondb";
 import { database } from "~/data/db/database";
 import { householdApi } from "~/data/supabase-api/HouseholdApi";
@@ -42,7 +44,7 @@ export class HouseholdSyncService {
       // non-blocking — a drain failure is re-queued by the queue itself.
       try {
         await this.writeQueue.drain(householdSupabaseId, (rows) =>
-          householdApi.upsertSharedStock(rows as any)
+          householdApi.upsertSharedStock(rows)
         );
       } catch (drainError) {
         log.error("Household sync write-queue drain failed:", drainError);
@@ -74,10 +76,10 @@ export class HouseholdSyncService {
 
     if (sharedItems.length === 0) return;
 
-    const rows = sharedItems.map((item: any) => ({
+    const rows: SharedStockWrite[] = (sharedItems as Stock[]).map((item) => ({
       id: item.supabaseId || item.id,
       name: item.name,
-      base_ingredient_id: null,
+      ...catalogReferenceField(item.baseIngredientId, item._raw?._changed ?? ""),
       quantity: item.quantity ?? null,
       unit: item.unit ?? null,
       expiry_date: item._expiryDate ? new Date(item._expiryDate).toISOString() : null,
@@ -157,6 +159,9 @@ export class HouseholdSyncService {
             existing.prepareUpdate((record: any) => {
               record.supabaseId = remoteItem.id;
               record.name = remoteItem.name;
+              if (remoteItem.base_ingredient_id !== undefined) {
+                record.baseIngredientId = remoteItem.base_ingredient_id;
+              }
               record.quantity = remoteItem.quantity ?? 0;
               record.unit = remoteItem.unit ?? "";
               record.expiryDate = remoteItem.expiry_date ? new Date(remoteItem.expiry_date) : null;
@@ -173,6 +178,9 @@ export class HouseholdSyncService {
             stockCollection.prepareCreate((record: any) => {
               record.supabaseId = remoteItem.id;
               record.name = remoteItem.name;
+              if (remoteItem.base_ingredient_id !== undefined) {
+                record.baseIngredientId = remoteItem.base_ingredient_id;
+              }
               record.quantity = remoteItem.quantity ?? 0;
               record.unit = remoteItem.unit ?? "";
               record.expiryDate = remoteItem.expiry_date ? new Date(remoteItem.expiry_date) : null;

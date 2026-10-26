@@ -7,6 +7,7 @@ type PantryApi = Pick<typeof pantryApi, "fetchAllPantryItemsResult" | "manageAss
 function toAgentItem(item: AppPantryItem): PantryItem {
   return {
     id: item.id,
+    ...(item.base_ingredient_id !== undefined ? { baseIngredientId: item.base_ingredient_id } : {}),
     name: item.name,
     quantity: item.quantity,
     unit: item.unit,

@@ -1,6 +1,9 @@
 import { supabase } from "~/lib/supabase/supabase-client";
 import type { Tables } from "~/lib/supabase/supabase-types";
-import { log } from "~/utils/logger";
+import {
+  catalogReferenceField,
+  type SharedStockWrite,
+} from "~/data/services/householdStockPayload";
 
 function guardSupabase() {
   return supabase !== null;
@@ -167,10 +170,22 @@ async function getSharedStock(householdId: string, since?: string): Promise<Tabl
   return data || [];
 }
 
-async function upsertSharedStock(items: Tables<"stock">[]): Promise<void> {
+async function upsertSharedStock(items: SharedStockWrite[]): Promise<void> {
   if (!guardSupabase() || items.length === 0) return;
-  const { error } = await supabase!.from("stock").upsert(items);
-  handleError(error);
+  const included: SharedStockWrite[] = [];
+  const omitted: SharedStockWrite[] = [];
+  for (const item of items) {
+    const { base_ingredient_id, ...fields } = item;
+    const row = { ...fields, ...catalogReferenceField(base_ingredient_id) };
+    (row.base_ingredient_id === undefined ? omitted : included).push(row);
+  }
+  // PostgREST unions keys across bulk rows. Keep omitted identity keys out of
+  // requests containing explicit links/clears so omission stays a preservation.
+  for (const rows of [omitted, included]) {
+    if (rows.length === 0) continue;
+    const { error } = await supabase!.from("stock").upsert(rows);
+    handleError(error);
+  }
 }
 
 async function clearHouseholdOnStock(householdId: string, userId: string): Promise<void> {

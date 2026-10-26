@@ -352,3 +352,95 @@ it("retains the canonical name when an existing alias-named row is updated onlin
   });
   expect(await stocks()).toHaveLength(1);
 });
+
+const EGG_ID = "750e8400-e29b-41d4-a716-446655440005";
+const MILK_ID = "282b0f01-dd86-4e46-899e-f92a0c08c5ea";
+it("persists and promotes the uniquely resolved catalog ID", async () => {
+  resolveIngredient.mockResolvedValue({ id: EGG_ID, name: "egg", aliases: ["eggs"] });
+  const row = await seed("eggs", 4, "pcs");
+  expect(await mutate({ action: "add", name: "egg", quantity: 2 })).toMatchObject({
+    ok: true,
+    item: { id: row.id, quantity: 6, baseIngredientId: EGG_ID },
+  });
+  expect((await stocks())[0]?.baseIngredientId).toBe(EGG_ID);
+});
+it("rejects conflicting known IDs even when names are identical", async () => {
+  const row = await seed("milk", 1, "l", { baseIngredientId: MILK_ID });
+  resolveIngredient.mockResolvedValue({ id: EGG_ID, name: "milk", aliases: [] });
+  expect(await mutate({ action: "add", name: "milk", quantity: 2, unit: "l" })).toMatchObject({
+    ok: false,
+    status: "needs_clarification",
+  });
+  expect(row.quantity).toBe(1);
+  expect(await stocks()).toHaveLength(1);
+});
+it("updates catalog identity after renaming and clears it for an unresolved food", async () => {
+  const row = await seed("egg", 2, "pcs", { baseIngredientId: EGG_ID });
+  resolveIngredient.mockResolvedValue({ id: MILK_ID, name: "milk", aliases: [] });
+  expect(await mutate({ action: "rename", stockId: row.id, name: "milk" })).toMatchObject({
+    ok: true,
+    item: { baseIngredientId: MILK_ID },
+  });
+  resolveIngredient.mockResolvedValue(null);
+  expect(
+    await mutate({ action: "rename", stockId: row.id, name: "Family special stew" })
+  ).toMatchObject({ ok: true, item: { baseIngredientId: null } });
+});
+it("never merges conflicting known catalog references", async () => {
+  const source = await seed("eggs", 2, "pcs", { baseIngredientId: EGG_ID });
+  const target = await seed("eggs", 3, "pcs", { baseIngredientId: MILK_ID });
+  expect(
+    await mutate({ action: "merge", stockId: source.id, targetStockId: target.id })
+  ).toMatchObject({ ok: false, status: "needs_clarification" });
+  expect(await stocks()).toHaveLength(2);
+});
+it("keeps coarse catalog forms such as whole eggs and egg whites separate", async () => {
+  const whole = await seed("egg", 2, "pcs", { baseIngredientId: EGG_ID });
+  resolveIngredient.mockResolvedValue({
+    id: EGG_ID,
+    name: "egg",
+    aliases: ["eggs", "egg whites", "egg yolks"],
+  });
+  const result = await mutate({ action: "add", name: "egg whites", quantity: 3, unit: "pcs" });
+  expect(result).toMatchObject({
+    ok: true,
+    status: "added",
+    item: { name: "egg whites", quantity: 3, baseIngredientId: EGG_ID },
+  });
+  expect(whole.quantity).toBe(2);
+  if (!result.ok || !("item" in result)) throw new Error("Missing new form");
+  expect(
+    await mutate({ action: "merge", stockId: result.item.id, targetStockId: whole.id })
+  ).toMatchObject({ ok: false, status: "needs_clarification" });
+});
+it("promotes a compatible explicit merge using its uniquely resolved identity", async () => {
+  const source = await seed("egg", 2, "pcs");
+  const target = await seed("eggs", 3, "pcs");
+  resolveIngredient.mockResolvedValue({ id: EGG_ID, name: "egg", aliases: ["eggs"] });
+  expect(
+    await mutate({ action: "merge", stockId: source.id, targetStockId: target.id, name: "egg" })
+  ).toMatchObject({ ok: true, item: { id: target.id, quantity: 5, baseIngredientId: EGG_ID } });
+});
+
+it("does not let a legacy coarse alias override the resolved food form", async () => {
+  const whole = await seed("Chickpea", 2, "pcs", { baseIngredientId: EGG_ID });
+  await database.write(() =>
+    database.get("ingredient_synonym").create((row: any) => {
+      row.stockId = whole.id;
+      row.synonym = "Canned garbanzo bean";
+    })
+  );
+  resolveIngredient.mockResolvedValue({
+    id: EGG_ID,
+    name: "Chickpea",
+    aliases: ["Garbanzo bean", "Canned garbanzo bean"],
+  });
+  expect(
+    await mutate({ action: "add", name: "Canned garbanzo beans", quantity: 3, unit: "pcs" })
+  ).toMatchObject({
+    ok: true,
+    status: "added",
+    item: { name: "Canned garbanzo beans", quantity: 3 },
+  });
+  expect(whole.quantity).toBe(2);
+});

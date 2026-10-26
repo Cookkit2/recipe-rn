@@ -1,4 +1,4 @@
-import { Q, type Model } from "@nozbe/watermelondb";
+import { Q } from "@nozbe/watermelondb";
 import { databaseFacade } from "~/data/db/DatabaseFacade";
 import { baseIngredientApi } from "~/data/supabase-api/BaseIngredientApi";
 import { database } from "~/data/db/database";
@@ -16,24 +16,21 @@ import {
 import type { AppResult } from "~/utils/result";
 import type { AppError } from "~/types/AppError";
 import { log } from "~/utils/logger";
-import { resolveBaseIngredientId, prepareStockData } from "./api-helpers";
+import {
+  resolveBaseIngredientId,
+  resolvePantryItemReference,
+  prepareStockData,
+} from "./api-helpers";
+import { persistPantryBatch } from "./pantry-batch";
+import { ingredientCatalog } from "~/data/services/ingredientCatalog";
 
 import type { AssistantPantryInput, AssistantPantryResult } from "~/types/AssistantPantryMutation";
 import { normalizeIngredientIdentity } from "~/utils/ingredient-identity";
 import { createAssistantPantryMutator } from "./assistant-pantry";
 
-const mutateAssistantPantry = createAssistantPantryMutator(database, async (name) => {
-  const ingredient =
-    (await baseIngredientApi.getBaseIngredientByName(name)) ??
-    (await baseIngredientApi.getBaseIngredientByName(normalizeIngredientIdentity(name)));
-  return ingredient
-    ? {
-        id: ingredient.id,
-        name: ingredient.name,
-        aliases: ingredient.synonyms.map((synonym) => synonym.synonym),
-      }
-    : null;
-});
+const mutateAssistantPantry = createAssistantPantryMutator(database, (name) =>
+  ingredientCatalog.resolve(name)
+);
 
 // ---------------------------------------------------------------------------
 // Core (shared) logic — called by both the throw-based and Result-based public
@@ -68,7 +65,7 @@ async function addPantryItemCore(
 ): Promise<PantryItem> {
   log.info("🔍 Adding pantry item:", item);
 
-  const baseIngredientId = await resolveBaseIngredientId(item.name);
+  const baseIngredientId = await resolvePantryItemReference(item);
   const stockData = prepareStockData(item, baseIngredientId);
 
   log.info("📦 Creating stock item with data:", stockData);
@@ -97,14 +94,46 @@ async function updatePantryItemCore(id: string, updates: Partial<PantryItem>): P
     throw new Error("Stock item not found");
   }
 
-  await stock.updateStock({
-    name: updates.name,
-    quantity: updates.quantity,
-    unit: updates.unit,
-    expiryDate: updates.expiry_date,
-    storageType: updates.type,
-    backgroundColor: updates.background_color,
-    imageUrl: typeof updates.image_url === "string" ? updates.image_url : undefined,
+  const originalName = stock.name;
+  const originalReference = stock.baseIngredientId;
+  const identityChanged =
+    updates.name !== undefined &&
+    normalizeIngredientIdentity(updates.name) !== normalizeIngredientIdentity(originalName);
+  const baseIngredientId =
+    identityChanged ||
+    updates.base_ingredient_id === null ||
+    (updates.base_ingredient_id !== undefined && updates.base_ingredient_id !== originalReference)
+      ? await resolveBaseIngredientId(updates.name ?? originalName, updates.base_ingredient_id)
+      : undefined;
+  await database.write(async () => {
+    if (
+      stock.name !== originalName ||
+      stock.baseIngredientId !== originalReference ||
+      stock._raw._status === "deleted"
+    ) {
+      throw new Error(
+        "This pantry entry changed while its ingredient was being checked. Try the edit again."
+      );
+    }
+    const oldAliases = identityChanged ? await stock.synonyms.fetch() : [];
+    await database.batch([
+      stock.prepareUpdate((record) => {
+        if (baseIngredientId === null) record.clearBaseIngredientReference();
+        else if (baseIngredientId !== undefined) record.baseIngredientId = baseIngredientId;
+        if (updates.name !== undefined) record.name = updates.name;
+        if (updates.quantity !== undefined) record.quantity = updates.quantity;
+        if (updates.unit !== undefined) record.unit = updates.unit;
+        if (updates.expiry_date !== undefined) record.expiryDate = updates.expiry_date;
+        if (updates.type !== undefined) record.storageType = updates.type;
+        if (updates.background_color !== undefined)
+          record.backgroundColor = updates.background_color;
+        if (typeof updates.image_url === "string") record.imageUrl = updates.image_url;
+        if (updates.x !== undefined) record.x = updates.x;
+        if (updates.y !== undefined) record.y = updates.y;
+        if (updates.scale !== undefined) record.scale = updates.scale;
+      }),
+      ...oldAliases.map((alias) => alias.prepareMarkAsDeleted()),
+    ]);
   });
 
   // Fetch the updated item
@@ -190,156 +219,7 @@ export const pantryApi = {
   async addPantryItemsWithMetadata(
     items: Omit<PantryItem, "id" | "created_at" | "updated_at">[]
   ): Promise<PantryItem[]> {
-    const existingStocks = await databaseFacade.getAllStock();
-    const stockMapByLowerName = new Map(existingStocks.map((s) => [s.name.toLowerCase(), s]));
-
-    const categoryCollection = database.collections.get("ingredient_category");
-    const existingCategories = await categoryCollection.query().fetch();
-    const categoryMapByName = new Map(
-      (existingCategories as IngredientCategory[]).map((c) => [c.name, c])
-    );
-
-    // Pre-aggregate input items to prevent calling prepareUpdate/prepareCreate multiple times
-    // for the same ingredient in the same batch, which causes WatermelonDB to throw an Invariant Violation.
-    const aggregatedItems = new Map<string, Omit<PantryItem, "id" | "created_at" | "updated_at">>();
-    for (const item of items) {
-      const lowerName = item.name.toLowerCase();
-      const existing = aggregatedItems.get(lowerName);
-      if (existing) {
-        existing.quantity += item.quantity;
-        if (item.image_url) existing.image_url = item.image_url;
-        if (item.unit) existing.unit = item.unit;
-        if (item.expiry_date) existing.expiry_date = item.expiry_date;
-        if (item.type) existing.type = item.type;
-        if (item.background_color) existing.background_color = item.background_color;
-
-        // Merge categories
-        if (item.categories) {
-          existing.categories = [...(existing.categories || []), ...item.categories];
-          // Deduplicate by name
-          const seen = new Set<string>();
-          existing.categories = existing.categories.filter((c) => {
-            if (seen.has(c.name)) return false;
-            seen.add(c.name);
-            return true;
-          });
-        }
-
-        // Merge synonyms
-        if (item.synonyms) {
-          existing.synonyms = [...(existing.synonyms || []), ...item.synonyms];
-          // Deduplicate by synonym string
-          const seen = new Set<string>();
-          existing.synonyms = existing.synonyms.filter((s) => {
-            const lowerSyn = s.synonym.toLowerCase();
-            if (seen.has(lowerSyn)) return false;
-            seen.add(lowerSyn);
-            return true;
-          });
-        }
-      } else {
-        aggregatedItems.set(lowerName, { ...item }); // clone to avoid mutating input directly if nested
-      }
-    }
-
-    const uniqueItems = Array.from(aggregatedItems.values());
-
-    const createdOrUpdatedStockRefs: Stock[] = [];
-    const batchOps: Model[] = [];
-
-    const stockCollection = database.collections.get("stock");
-    const synonymCollection = database.collections.get("ingredient_synonym");
-    const stockCategoryCollection = database.collections.get("stock_category");
-
-    for (const item of uniqueItems) {
-      try {
-        const existingStock = stockMapByLowerName.get(item.name.toLowerCase());
-
-        let stockItem: Stock;
-
-        if (existingStock) {
-          const op = existingStock.prepareUpdate((stock) => {
-            (stock as Stock).quantity = existingStock.quantity + item.quantity;
-            if (typeof item.image_url === "string") {
-              (stock as Stock).imageUrl = item.image_url;
-            }
-            if (item.unit) (stock as Stock).unit = item.unit;
-            if (item.expiry_date) (stock as Stock).expiryDate = item.expiry_date;
-            if (item.type) (stock as Stock).storageType = item.type;
-            if (item.background_color) (stock as Stock).backgroundColor = item.background_color;
-          });
-          batchOps.push(op);
-          stockItem = existingStock;
-        } else {
-          stockItem = stockCollection.prepareCreate((stock) => {
-            (stock as Stock).name = item.name;
-            (stock as Stock).quantity = item.quantity;
-            (stock as Stock).unit = item.unit;
-            if (item.expiry_date) (stock as Stock).expiryDate = item.expiry_date;
-            if (item.type) (stock as Stock).storageType = item.type;
-            if (item.background_color) (stock as Stock).backgroundColor = item.background_color;
-            if (typeof item.image_url === "string") (stock as Stock).imageUrl = item.image_url;
-          }) as Stock;
-          batchOps.push(stockItem);
-          stockMapByLowerName.set(item.name.toLowerCase(), stockItem);
-        }
-
-        if (!existingStock && item.categories && item.categories.length > 0) {
-          for (const category of item.categories) {
-            let categoryRecord = categoryMapByName.get(category.name);
-            if (!categoryRecord) {
-              categoryRecord = categoryCollection.prepareCreate((cat) => {
-                (cat as IngredientCategory).name = category.name;
-                (cat as IngredientCategory).syncedAt = Date.now();
-              }) as IngredientCategory;
-              batchOps.push(categoryRecord);
-              categoryMapByName.set(category.name, categoryRecord);
-            }
-            const scOp = stockCategoryCollection.prepareCreate((sc) => {
-              (sc as StockCategory).stockId = stockItem.id;
-              (sc as StockCategory).categoryId = categoryRecord!.id;
-            });
-            batchOps.push(scOp);
-          }
-        }
-
-        if (!existingStock && item.synonyms && item.synonyms.length > 0) {
-          for (const synonym of item.synonyms) {
-            const synOp = synonymCollection.prepareCreate((syn) => {
-              (syn as IngredientSynonym).stockId = stockItem.id;
-              (syn as IngredientSynonym).synonym = synonym.synonym.toLowerCase();
-            });
-            batchOps.push(synOp);
-          }
-        }
-
-        createdOrUpdatedStockRefs.push(stockItem);
-      } catch (error) {
-        log.error(`Failed to add/update pantry item ${item.name}:`, error);
-      }
-    }
-
-    await database.write(async () => {
-      if (batchOps.length > 0) {
-        await database.batch(batchOps);
-      }
-    });
-
-    const batchSize = 10;
-
-    // ⚡ Bolt Performance Optimization: Process DB conversion batches concurrently
-    // Impact: Eliminates O(N/B) sequential latency, improving bulk insert/update time
-    const batchPromises: Promise<PantryItem[]>[] = [];
-    for (let i = 0; i < createdOrUpdatedStockRefs.length; i += batchSize) {
-      const batch = createdOrUpdatedStockRefs.slice(i, i + batchSize);
-      batchPromises.push(convertStockToPantryItemBatch(batch));
-    }
-
-    const results = await Promise.all(batchPromises);
-    const createdItems: PantryItem[] = results.flat();
-
-    log.info("addPantryItemsWithMetadata: created/updated", createdItems.length, "items");
-    return createdItems;
+    return convertStockToPantryItemBatch(await persistPantryBatch(database, items, true));
   },
 
   /**
@@ -348,45 +228,7 @@ export const pantryApi = {
   async addPantryItems(
     items: Omit<PantryItem, "id" | "created_at" | "updated_at">[]
   ): Promise<PantryItem[]> {
-    const createdItems: PantryItem[] = [];
-    const stockCollection = database.collections.get("stock");
-    const stockRecordsToCreate: Stock[] = [];
-
-    // Prepare all stock items directly in memory
-    for (const item of items) {
-      try {
-        const preparedStock = stockCollection.prepareCreate((stock) => {
-          (stock as Stock).name = item.name;
-          (stock as Stock).quantity = item.quantity;
-          (stock as Stock).unit = item.unit;
-          if (item.expiry_date) (stock as Stock).expiryDate = item.expiry_date;
-          if (item.type) (stock as Stock).storageType = item.type;
-          if (item.background_color) (stock as Stock).backgroundColor = item.background_color;
-          if (typeof item.image_url === "string") (stock as Stock).imageUrl = item.image_url;
-        });
-        stockRecordsToCreate.push(preparedStock as Stock);
-      } catch (error) {
-        log.error(`Failed to prepare pantry item ${item.name}:`, error);
-        // Continue with other items instead of failing completely
-      }
-    }
-
-    // Process all items in a single transaction
-    if (stockRecordsToCreate.length > 0) {
-      try {
-        await database.write(async () => {
-          await database.batch(stockRecordsToCreate);
-        });
-
-        // After batch insert is successful, convert to PantryItem
-        const convertedBatch = await convertStockToPantryItemBatch(stockRecordsToCreate);
-        createdItems.push(...convertedBatch);
-      } catch (batchError) {
-        log.error("Failed to execute batch insert for pantry items:", batchError);
-      }
-    }
-
-    return createdItems;
+    return convertStockToPantryItemBatch(await persistPantryBatch(database, items, false));
   },
 
   /**
@@ -583,6 +425,7 @@ const convertStockToPantryItemBatch = async (stocks: Stock[]): Promise<PantryIte
     return {
       id: stock.id,
       name: stock.name,
+      base_ingredient_id: stock.baseIngredientId ?? null,
       quantity: stock.quantity,
       unit: stock.unit,
       expiry_date: stock.expiryDate || undefined,

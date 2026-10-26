@@ -1,3 +1,6 @@
+import BaseIngredientCache from "./BaseIngredientCache";
+import BaseIngredientAliasCache from "./BaseIngredientAliasCache";
+export { BaseIngredientCache, BaseIngredientAliasCache };
 // Export all models for easy importing
 export { default as Recipe } from "./Recipe";
 export { default as RecipeStep } from "./RecipeStep";
@@ -71,6 +74,8 @@ import Household from "./Household";
 import HouseholdMember from "./HouseholdMember";
 
 export const modelClasses = [
+  BaseIngredientCache,
+  BaseIngredientAliasCache,
   Leftover,
   Recipe,
   RecipeStep,

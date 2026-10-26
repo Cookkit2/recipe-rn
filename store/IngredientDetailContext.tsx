@@ -5,6 +5,8 @@ import { queryClient } from "./QueryProvider";
 import { recipeQueryKeys } from "~/hooks/queries/recipeQueryKeys";
 import { log } from "~/utils/logger";
 
+import { clearInheritedCatalogMetadata, pantryItemUpdates } from "~/utils/pantry-reference";
+
 interface IngredientDetailContextType {
   pantryItem: PantryItem;
   updatePantryItem: (pantryItem: PantryItem) => void;
@@ -26,8 +28,9 @@ export function IngredientDetailProvider({
   const pantryItemRef = useRef<PantryItem>(item);
 
   const updatePantryItem = useCallback((newPantryItem: PantryItem) => {
-    setPantryItem(newPantryItem);
-    pantryItemRef.current = newPantryItem;
+    const corrected = clearInheritedCatalogMetadata(pantryItemRef.current, newPantryItem);
+    setPantryItem(corrected);
+    pantryItemRef.current = corrected;
   }, []);
 
   // Save changes when component unmounts
@@ -37,7 +40,7 @@ export function IngredientDetailProvider({
       // Only save if there were changes to avoid unnecessary API calls
       updatePantryItemMutation.mutate({
         id: pantryItemRef.current.id,
-        updates: pantryItemRef.current,
+        updates: pantryItemUpdates(item, pantryItemRef.current),
       });
 
       queryClient.invalidateQueries({

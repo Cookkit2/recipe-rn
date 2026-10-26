@@ -50,6 +50,7 @@ import { log } from "~/utils/logger";
 // Public interfaces for database operations
 export interface CreateStockData {
   name: string;
+  baseIngredientId?: string | null;
   quantity: number;
   unit: string;
   expirationDate?: number;
@@ -65,6 +66,7 @@ export interface CreateStockData {
 
 export interface UpdateStockData {
   name?: string;
+  baseIngredientId?: string | null;
   quantity?: number;
   unit?: string;
   expirationDate?: number;
@@ -577,6 +579,7 @@ class DatabaseFacade {
     // Map CreateStockData to StockData interface
     const stockData: Record<string, unknown> = {
       name: data.name,
+      baseIngredientId: data.baseIngredientId,
       quantity: data.quantity,
       unit: data.unit,
       storageType: data.storageType,
@@ -602,6 +605,7 @@ class DatabaseFacade {
     // Map CreateStockData to StockData interface
     const stockData: Record<string, unknown> = {
       name: data.name,
+      baseIngredientId: data.baseIngredientId,
       quantity: data.quantity,
       unit: data.unit,
       storageType: data.storageType,

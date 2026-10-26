@@ -85,3 +85,15 @@ it.each([
     expect(stockIdsFromEvent(event)).toEqual(expected);
   }
 );
+
+it("also keeps catalog references from mutation data out of display text", () => {
+  const event: AgentEvent = {
+    type: "tool-result",
+    toolCallId: "write",
+    toolName: "manage_ingredients",
+    output: { item: { id: "stock-private", baseIngredientId: "catalog-private" } },
+  };
+  const ids = stockIdsFromEvent(event);
+  expect(ids).toEqual(["stock-private", "catalog-private"]);
+  expect(hideStockIds("Eggs (catalog-private), 2 pcs", ids)).toBe("Eggs, 2 pcs");
+});

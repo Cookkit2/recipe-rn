@@ -78,6 +78,7 @@ export class HouseholdRealtimeService {
   private async handleInsert(record: {
     id: string;
     name: string;
+    base_ingredient_id?: string | null;
     quantity: number | null;
     unit: string | null;
     expiry_date: string | null;
@@ -101,6 +102,9 @@ export class HouseholdRealtimeService {
         await (stockCollection as any).create((r: any) => {
           r.supabaseId = record.id;
           r.name = record.name;
+          if (record.base_ingredient_id !== undefined) {
+            r.baseIngredientId = record.base_ingredient_id;
+          }
           r.quantity = record.quantity ?? 0;
           r.unit = record.unit ?? "";
           r._expiryDate = record.expiry_date ? new Date(record.expiry_date).getTime() : undefined;
@@ -122,6 +126,7 @@ export class HouseholdRealtimeService {
   private async handleUpdate(record: {
     id: string;
     name: string;
+    base_ingredient_id?: string | null;
     quantity: number | null;
     unit: string | null;
     expiry_date: string | null;
@@ -160,6 +165,9 @@ export class HouseholdRealtimeService {
       await database.write(async () => {
         await (existing as any).update((r: any) => {
           r.name = record.name;
+          if (record.base_ingredient_id !== undefined) {
+            r.baseIngredientId = record.base_ingredient_id;
+          }
           r.quantity = record.quantity ?? 0;
           r.unit = record.unit ?? "";
           r._expiryDate = record.expiry_date ? new Date(record.expiry_date).getTime() : undefined;

@@ -1,3 +1,5 @@
+import { isSameIngredient } from "~/utils/ingredient-identity";
+import { setRawColumnChange } from "@nozbe/watermelondb/sync/helpers";
 import { Model, Query } from "@nozbe/watermelondb";
 import { field, date, writer, children } from "@nozbe/watermelondb/decorators";
 import type { Associations } from "@nozbe/watermelondb/Model";
@@ -9,6 +11,7 @@ import type ConsumptionLog from "./ConsumptionLog";
 
 export interface StockData {
   name: string;
+  baseIngredientId?: string | null;
   quantity: number;
   unit: string;
   expiryDate?: Date;
@@ -34,6 +37,7 @@ export default class Stock extends Model {
   };
 
   @field("name") name!: string;
+  @field("base_ingredient_id") baseIngredientId?: string | null;
   @field("quantity") quantity!: number;
   @field("unit") unit!: string;
   @field("expiry_date") _expiryDate?: number; // timestamp
@@ -79,9 +83,21 @@ export default class Stock extends Model {
     return this.expiryDate <= threeDaysFromNow && !this.isExpired;
   }
 
+  /** Call inside an update: even null-to-null must record an intentional clear. */
+  clearBaseIngredientReference(): void {
+    this.baseIngredientId = null;
+    setRawColumnChange(this._raw, "base_ingredient_id");
+  }
+
   // Update method
   @writer async updateStock(data: Partial<StockData>): Promise<Stock> {
     return this.update((stock) => {
+      if (data.baseIngredientId !== undefined) {
+        if (data.baseIngredientId === null) stock.clearBaseIngredientReference();
+        else stock.baseIngredientId = data.baseIngredientId;
+      } else if (data.name !== undefined && !isSameIngredient(stock.name, data.name)) {
+        stock.clearBaseIngredientReference();
+      }
       if (data.name !== undefined) stock.name = data.name;
       if (data.quantity !== undefined) stock.quantity = data.quantity;
       if (data.unit !== undefined) stock.unit = data.unit;

@@ -9,7 +9,11 @@ export function stockIdsFromEvent(event: AgentEvent): string[] {
     if (typeof value === "string" && value) ids.add(value);
   };
   const rows = (value: unknown) => {
-    if (Array.isArray(value)) value.forEach((row) => add(record(row).id));
+    if (Array.isArray(value))
+      value.forEach((row) => {
+        add(record(row).id);
+        add(record(row).baseIngredientId);
+      });
   };
   const input = (value: unknown) => {
     const data = record(value);
@@ -27,6 +31,7 @@ export function stockIdsFromEvent(event: AgentEvent): string[] {
         break;
       case "manage_ingredients":
         add(record(data.item).id);
+        add(record(data.item).baseIngredientId);
         rows(data.removed);
         rows(data.candidates);
         break;

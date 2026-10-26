@@ -90,7 +90,7 @@ filtering never changes the stored IDs, tool arguments or recipe navigation IDs.
 ## Existing ingredient identity and mutation policy
 
 Pantry changes from Assistant use `pantryApi.manageAssistantPantry`, backed by a
-WatermelonDB writer. Ordinary manual-entry APIs retain their existing behavior.
+WatermelonDB writer. Manual, camera, voice and import APIs carry the same persisted catalog reference.
 
 ## Names and matching
 
@@ -100,9 +100,9 @@ WatermelonDB writer. Ordinary manual-entry APIs retain their existing behavior.
 - Keep specific custom foods usable without requiring catalog membership.
 - Normalize English food nouns, spacing, case, and explicit regional aliases.
   Preserve meaningful words such as coconut, cherry, canned, dried, and raw.
-- Use catalog canonical names and complete approved aliases when available.
+- Use catalog canonical names and unambiguous approved aliases when available.
   Save resolved aliases locally on creates and quantity updates for offline use.
-  Native stock has no persisted catalog-ID field; this change does not add one.
+  Stock persists the existing catalog ID separately from stock/batch IDs. Explicit forms remain distinct even when the catalog ID is shared.
 - Recipe matching ignores cutting instructions and surrounding annotation
   punctuation. It compares complete names or explicit synonyms. Categories,
   substring overlap and shared keywords never imply compatibility.
@@ -141,7 +141,7 @@ rows. The chat displays useful row details and retains the IDs in conversation
 context. It does not show an update activity or a technical error for clarification.
 Once a pantry tool needs clarification, later mutation calls in that model turn
 return the same clarification, including parallel calls. A new user turn can
-supply the missing information. No existing pantry data is migrated automatically.
+supply the missing information. Schema migrations preserve existing pantry rows; bounded background linking adds only uniquely resolved missing catalog references.
 
 ## Verification
 
@@ -150,3 +150,35 @@ names and false matches. In-memory WatermelonDB tests cover atomic concurrent
 updates, unit and metadata preservation, offline aliases and explicit legacy
 correction. Shopping-list integration checks the same matching policy as recipe
 availability; hook and tool tests cover clarification and model retry behavior.
+
+## Catalog persistence and offline resolution
+
+`Stock.baseIngredientId` maps to optional indexed `base_ingredient_id` (schema 9).
+Schema 10 adds separate canonical and alias dictionary tables. Never substitute
+stock IDs or manufactured temporary values for catalog UUIDs. Unknown specific
+custom foods remain valid with null; vague categories still need clarification.
+
+Name corrections replace or clear the old ID and remove obsolete aliases.
+Omitted updates preserve references; explicit API null clears them. Full detail
+snapshots omit inherited nulls and unchanged references. Catalog validation runs
+outside the writer; delayed updates recheck the row's identity before writing.
+
+The dictionary resolves local exact normalized keys first, refreshes complete
+500-row pages atomically on misses, and keeps the last good snapshot offline.
+Different IDs for one normalized key remain ambiguous. Aliases that add food-form
+modifiers do not authorize generic/variant merges. Background linking runs in
+idle batches of 50 with a persisted cursor and rechecks the current row before
+attaching a missing reference; it never renames or consolidates stock.
+
+Household batch/realtime updates and persisted retries carry the reference.
+Omission and explicit null remain distinct, including mixed bulk payloads and
+legacy retry entries. Migrated local nulls omit the field unless identity was
+changed; intentional clears mark the field even for null→null transitions.
+Watermelon's changed set is historical, not local write provenance.
+
+All household clients must upgrade for durable reference preservation: older
+binaries send unconditional nulls. This client PR does not deploy version-aware
+server protection. Existing local freshness guards remain; stale queue replay
+can still overwrite newer server rows because that upsert path has no server
+LWW guard. See the [implementation handoff](superpowers/plans/2026-10-26-base-ingredient-id-handoff.md)
+for deployed-contract evidence, verification limits and manual E2E cases.
