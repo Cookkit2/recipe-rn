@@ -1,0 +1,27 @@
+diff --git a/build/global-state/getNavigationAction.js b/build/global-state/getNavigationAction.js
+index 65d1a26d219689e8c3ae789576e3de96885cd164..ba5b44097575ea7dacaa15c4382a42b2d042bc0d 100644
+--- a/build/global-state/getNavigationAction.js
++++ b/build/global-state/getNavigationAction.js
+@@ -11,6 +11,7 @@ Object.defineProperty(exports, "getNavigateAction", {
+ const _getRoutesRedirects = require("../getRoutesRedirects");
+ const _href = require("../link/href");
+ const _navigationParams = require("../navigationParams");
++const _routeNode = require("../routeNode");
+ const _getRouteInfoFromState = require("./getRouteInfoFromState");
+ const _resolveNavigationDestination = require("./resolveNavigationDestination");
+ function getNavigateAction(baseHref, options, config, type, withAnchor, singular, previewKey, navigationState) {
+@@ -26,7 +27,14 @@ function getNavigateAction(baseHref, options, config, type, withAnchor, singular
+             href
+         };
+     }
++    // SDK 58's URL parser places the zoom source on the leaf route. The
++    // native screen being pushed can be its parent layout, so forward the
++    // source through destination resolution as well (expo/expo#51521).
++    const zoomSource = (0, _routeNode.findRouteNodeAndParamsForState)(config.routeNode, state).params[_navigationParams.INTERNAL_EXPO_ROUTER_ZOOM_TRANSITION_SOURCE_ID_PARAM_NAME];
+     const internalParams = {
++        ...typeof zoomSource === 'string' && zoomSource ? {
++            [_navigationParams.INTERNAL_EXPO_ROUTER_ZOOM_TRANSITION_SOURCE_ID_PARAM_NAME]: zoomSource
++        } : {},
+         ...options.__internal__previewId !== undefined ? {
+             [_navigationParams.INTERNAL_EXPO_ROUTER_PREVIEW_ID_PARAM_NAME]: options.__internal__previewId
+         } : {}
