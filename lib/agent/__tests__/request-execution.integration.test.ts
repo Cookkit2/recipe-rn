@@ -7,6 +7,16 @@ import type { AgentEvent, CookingAgent } from "../types";
 import type { AssistantPendingRequest, AssistantRequestPlan } from "../request-routing";
 import type { CookingDataClient, PantryItem } from "../tools/planning";
 
+// The production agent loads these lazily. Transforming the SDKs on a cold CI
+// worker belongs to setup, not the first request's five-second test budget.
+beforeAll(async () => {
+  await Promise.all([
+    import("@ai-sdk/openai-compatible"),
+    import("ai"),
+    import("../tools/definitions"),
+  ]);
+}, 60_000);
+
 function ready(...steps: Array<[string, string, string]>): unknown {
   return {
     status: "ready",
