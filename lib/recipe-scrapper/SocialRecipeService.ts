@@ -46,6 +46,7 @@ export class SocialRecipeService {
   ): Promise<RecipeAnalysisResult> {
     try {
       log.info(`SocialRecipeService: Analyzing ${content.platform} content...`);
+      if (content.platform === "youtube") options.onPhase?.("reading-video");
       const youtubePlayer =
         content.platform === "youtube" && content.url && !content.videoUri
           ? readRecipePlayerEvidence(content.url, options).catch(() => undefined)
@@ -72,7 +73,7 @@ export class SocialRecipeService {
       // Supplied captions can be extracted without waiting on a social login wall.
       const suppliedText = content.text?.trim();
       const metadataTask =
-        content.url && !content.videoUri
+        content.url && !content.videoUri && content.platform !== "youtube"
           ? this.fetchPageMetadata(content.url, options.signal).catch(() => ({
               title: "",
               description: "",
@@ -113,8 +114,14 @@ export class SocialRecipeService {
           return await withVideoCover(suppliedResult);
         }
       }
-      const pageMetadata = (await metadataTask) ?? { title: "", description: "" };
       const playerEvidence = youtubePlayer ? await youtubePlayer : undefined;
+      const pageMetadata =
+        (await metadataTask) ??
+        (content.platform === "youtube" &&
+        !playerEvidence?.caption.trim() &&
+        !playerEvidence?.transcript.trim()
+          ? await this.fetchPageMetadata(content.url, options.signal)
+          : { title: "", description: "" });
       const metadata = playerEvidence
         ? {
             title: playerEvidence.title || pageMetadata.title,
@@ -218,7 +225,13 @@ export class SocialRecipeService {
       const normalized = normalizeVideoPostUrl(url);
       if (normalized && new URL(normalized).hostname === "www.youtube.com") {
         const videoId = new URL(normalized).searchParams.get("v")!;
-        const { videoInfo, transcript } = await getDefaultYouTubeService().getVideoData(videoId);
+        let timeout: ReturnType<typeof setTimeout> | undefined;
+        const { videoInfo, transcript } = await Promise.race([
+          getDefaultYouTubeService().getVideoData(videoId),
+          new Promise<never>((_, reject) => {
+            timeout = setTimeout(() => reject(new Error("YouTube metadata took too long.")), 12000);
+          }),
+        ]).finally(() => clearTimeout(timeout));
         signal?.throwIfAborted();
         return {
           title: videoInfo.title,

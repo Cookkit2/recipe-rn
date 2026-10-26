@@ -12,16 +12,15 @@ jest.mock("../recipe-video-cover", () => ({
   readRecipeVideoCoverFrames: jest.fn(),
 }));
 jest.mock("../recipe-video", () => ({ readRecipeVideo: jest.fn() }));
+const mockVideoData = jest.fn(async () => ({
+  videoInfo: {
+    title: "Chicken curry",
+    description: "Ingredients: 2 chicken thighs.",
+    thumbnailUrl: "https://example.com/portrait.jpg",
+  },
+}));
 jest.mock("../youtube/YouTubeServiceFactory", () => ({
-  getDefaultYouTubeService: () => ({
-    getVideoData: async () => ({
-      videoInfo: {
-        title: "Chicken curry",
-        description: "Ingredients: 2 chicken thighs.",
-        thumbnailUrl: "https://example.com/portrait.jpg",
-      },
-    }),
-  }),
+  getDefaultYouTubeService: () => ({ getVideoData: mockVideoData }),
 }));
 const url = "https://www.youtube.com/watch?v=-Ksv82YLW-A";
 const frames = [{ timestamp: 400, mimeType: "image/jpeg" as const, data: "YWJj" }];
@@ -46,7 +45,7 @@ beforeEach(() => jest.resetAllMocks());
 it("uses real public-player captions and a selected food frame, then returns a complete recipe", async () => {
   jest.mocked(readRecipePlayerEvidence).mockResolvedValue({
     title: "Chicken curry",
-    caption: "",
+    caption: "Ingredients: 2 chicken thighs.",
     transcript: "Air fry the chicken for 15 minutes.",
     frames,
     warnings: [],
@@ -65,11 +64,12 @@ it("uses real public-player captions and a selected food frame, then returns a c
   expect(readRecipePlayerEvidence).toHaveBeenCalledTimes(1);
   expect(readRecipeVideoCoverFrames).not.toHaveBeenCalled();
   expect(readRecipeVideo).not.toHaveBeenCalled();
+  expect(mockVideoData).not.toHaveBeenCalled();
 });
 it("reads cooking actions from actual frames when published captions are unavailable", async () => {
   jest.mocked(readRecipePlayerEvidence).mockResolvedValue({
     title: "Chicken curry",
-    caption: "",
+    caption: "Ingredients: 2 chicken thighs.",
     transcript: "",
     frames,
     warnings: [],
@@ -83,4 +83,23 @@ it("reads cooking actions from actual frames when published captions are unavail
   expect(jest.mocked(generateAIContent).mock.calls[0]?.[0].images).toHaveLength(1);
   expect(result.recipe?.steps[0]?.description).toContain("15 minutes");
   expect(readRecipeVideo).not.toHaveBeenCalled();
+});
+
+it("bounds a stalled metadata fallback and returns the inline import failure", async () => {
+  jest.useFakeTimers();
+  try {
+    jest
+      .mocked(readRecipePlayerEvidence)
+      .mockResolvedValue({ title: "", caption: "", transcript: "", frames: [], warnings: [] });
+    mockVideoData.mockImplementationOnce(() => new Promise(() => {}));
+    jest.mocked(readRecipeVideo).mockRejectedValue(new Error("Couldn't access this video."));
+    const result = new SocialRecipeService().analyzeForRecipe({ platform: "youtube", url });
+    await jest.advanceTimersByTimeAsync(12000);
+    await expect(result).resolves.toMatchObject({
+      isCookingVideo: false,
+      errorMessage: "Couldn't access this video.",
+    });
+  } finally {
+    jest.useRealTimers();
+  }
 });
