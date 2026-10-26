@@ -1,6 +1,6 @@
 import React from "react";
 import { Dimensions, Pressable, StyleSheet } from "react-native";
-import { fireEvent, render } from "@testing-library/react-native";
+import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
 import PantryWrapper from "../PantryWrapper";
 import { TEST_IDS } from "~/constants/test-ids";
 
@@ -19,6 +19,14 @@ jest.mock("~/hooks/usePantryPullSearch", () => ({ usePantryPullSearch: () => moc
 const mockSearchContent = jest.fn((_props: unknown) => null);
 jest.mock("~/components/Search/SearchContent", () => ({
   SearchContent: (props: unknown) => mockSearchContent(props),
+}));
+const mockWarmups: Array<() => void> = [];
+const mockCancelWarmup = jest.fn();
+jest.mock("~/lib/schedule-after-render", () => ({
+  scheduleAfterInitialRender: (task: () => void) => {
+    mockWarmups.push(task);
+    return mockCancelWarmup;
+  },
 }));
 jest.mock("~/components/Search/SearchPreview", () => ({ SearchPreview: () => null }));
 jest.mock("lucide-uniwind", () => ({ SparklesIcon: () => null }));
@@ -78,9 +86,11 @@ jest.mock("../RecipeLists", () => ({
   default: (props: unknown) => mockRecipeList(props),
 }));
 const mockIngredientMount = jest.fn();
+let mockOnPantryReady: (() => void) | undefined;
 jest.mock("../IngredientLists", () => ({
   __esModule: true,
-  default: () => {
+  default: ({ onReady }: { onReady?: () => void }) => {
+    mockOnPantryReady = onReady;
     require("react").useEffect(mockIngredientMount, []);
     return null;
   },
@@ -165,4 +175,23 @@ it("uses Search as the assistant entry instead of a floating pantry button", asy
   pantry.isRecipeOpen = false;
   const screen = await render(<PantryWrapper pullSearch={mockPullSearch as never} />);
   expect(screen.queryByLabelText("Assistant")).toBeNull();
+});
+
+it("warms feature modules after pantry cards are ready without mounting recipe queries", async () => {
+  mockWarmups.length = 0;
+  mockRecipeList.mockClear();
+  mockSearchContent.mockClear();
+  pantry.isRecipeOpen = false;
+  const screen = await render(<PantryWrapper pullSearch={mockPullSearch as never} />);
+  expect(mockWarmups).toHaveLength(0);
+  await act(async () => mockOnPantryReady?.());
+  expect(mockWarmups).toHaveLength(1);
+  for (let index = 0; index < 3; index++) {
+    await act(async () => mockWarmups[index]?.());
+    if (index < 2) await waitFor(() => expect(mockWarmups).toHaveLength(index + 2));
+  }
+  expect(mockRecipeList).not.toHaveBeenCalled();
+  expect(mockSearchContent).not.toHaveBeenCalled();
+  await screen.unmount();
+  expect(mockCancelWarmup).toHaveBeenCalled();
 });

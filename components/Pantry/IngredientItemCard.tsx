@@ -1,7 +1,7 @@
 import { Pressable, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { H4, P } from "~/components/ui/typography";
-import type { PantryItem } from "~/types/PantryItem";
+import type { PantryCardItem } from "~/types/PantryItem";
 import { Link } from "expo-router";
 import OutlinedImage from "~/components/ui/outlined-image";
 import * as Haptics from "expo-haptics";
@@ -11,7 +11,7 @@ import { usePantryStore } from "~/store/PantryContext";
 import ShapeContainer from "~/components/Shared/Shapes/ShapeContainer";
 import { memo } from "react";
 
-const IngredientItemCard = ({ item, index }: { item: PantryItem; index: number }) => {
+const IngredientItemCard = ({ item, index }: { item: PantryCardItem; index: number }) => {
   const colors = useColors();
 
   const { animatedStyle, roundedStyle, onPressIn, onPressOut } = useButtonAnimation(true, 24);

@@ -1,4 +1,6 @@
 import { Redirect } from "expo-router";
+import { lazy, Suspense } from "react";
+import { View } from "react-native";
 import { storage } from "~/data";
 import { ONBOARDING_COMPLETED_KEY } from "~/constants/storage-keys";
 import PantryHome from "~/components/Pantry/PantryHome";
@@ -6,7 +8,7 @@ import { PantryProvider } from "~/store/PantryContext";
 import { RecipeProvider } from "~/store/RecipeContext";
 import { IS_E2E } from "~/utils/e2e-flags";
 import { useFirstRunAha } from "~/hooks/useFirstRunAha";
-import AhaScreen from "~/components/Onboarding/AhaScreen";
+const AhaScreen = lazy(() => import("~/components/Onboarding/AhaScreen"));
 
 export default function PantryPage() {
   const onboardingCompleted = IS_E2E ? true : storage.get<boolean>(ONBOARDING_COMPLETED_KEY);
@@ -25,7 +27,9 @@ export default function PantryPage() {
   if (shouldShowAha && !IS_E2E) {
     return (
       <RecipeProvider>
-        <AhaScreen />
+        <Suspense fallback={<View className="flex-1 bg-background" />}>
+          <AhaScreen />
+        </Suspense>
       </RecipeProvider>
     );
   }
