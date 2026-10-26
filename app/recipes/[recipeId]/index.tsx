@@ -1,7 +1,16 @@
 import { useRecipeLoadingGlow } from "~/components/Recipe/Loading/RecipeLoadingGlowProvider";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import type { NativeStackNavigationOptions } from "expo-router/native-stack";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentRef,
+} from "react";
+import { BlurTargetView } from "expo-blur";
 import {
   View,
   StyleSheet,
@@ -64,6 +73,7 @@ import { cleanRecipeDescription } from "~/utils/recipe-description";
 
 const AnimatedH1 = Animated.createAnimatedComponent(H1);
 const AnimatedImage = Animated.createAnimatedComponent(Image);
+const RecipeContentView = Platform.OS === "android" ? BlurTargetView : View;
 
 export default function RecipeDetails() {
   const { recipeId } = useLocalSearchParams<{ recipeId: string }>();
@@ -130,6 +140,7 @@ function RecipeDetailsContent({
     : ["#4B5563", "#6B7280", "#9CA3AF", "#374151", "#525966", "#78818F"];
 
   const { width: windowWidth } = useWindowDimensions();
+  const ingredientBlurTarget = useRef<ComponentRef<typeof View> | null>(null);
   const navigation = useNavigation("/");
   const router = useRouter();
   const removeFromMealPlan = useRemoveFromMealPlan();
@@ -403,7 +414,7 @@ function RecipeDetailsContent({
   }, [navigation, handleShare, isInPlan, isCheckingPlan, removeFromMealPlan, recipeId, router]);
 
   return (
-    <View className="relative flex-1 bg-background">
+    <RecipeContentView ref={ingredientBlurTarget} className="relative flex-1 bg-background">
       {/* Background Parallax Header */}
       <Animated.View
         className="absolute top-0 left-0 right-0 bg-background"
@@ -477,6 +488,9 @@ function RecipeDetailsContent({
           <IngredientVisualPreview
             ingredientPreviewData={ingredientPreviewData}
             missingIngredientPalette={missingIngredientPalette}
+            ingredients={scaledIngredients}
+            findMatch={findMatch}
+            blurTarget={Platform.OS === "android" ? ingredientBlurTarget : undefined}
           />
 
           {/* Missing Ingredients */}
@@ -571,7 +585,7 @@ function RecipeDetailsContent({
         existingTip={editingTip}
         isSubmitting={isSubmittingTip}
       />
-    </View>
+    </RecipeContentView>
   );
 }
 const styles = StyleSheet.create({
