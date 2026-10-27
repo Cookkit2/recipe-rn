@@ -215,3 +215,34 @@ it("rejects malformed execution metadata before calling the provider", async () 
   expect(response.status).toBe(400);
   expect(fetcher).not.toHaveBeenCalled();
 });
+
+it.each([{ type: "function", function: { name: "manage_ingredients" } }, "required"])(
+  "uses automatic selection for Lightning forced-tool requests %j",
+  async (toolChoice) => {
+    const tools = [
+      {
+        type: "function",
+        function: { name: "manage_ingredients", parameters: { type: "object" } },
+      },
+    ];
+    expect((await handler(request({ ...body, tools, tool_choice: toolChoice }))).status).toBe(200);
+    const forwarded = JSON.parse(fetcher.mock.calls[0]![1].body);
+    expect(forwarded.tool_choice).toBe("auto");
+    expect(forwarded.tools).toEqual(tools);
+  }
+);
+
+it("keeps explicit no-tool selection and other models' tool selection unchanged", async () => {
+  await handler(request({ ...body, tool_choice: "none" }));
+  expect(JSON.parse(fetcher.mock.calls[0]![1].body).tool_choice).toBe("none");
+  const custom = createChatHandler({
+    apiKey: "private-provider-key",
+    model: "custom-model",
+    authenticate,
+    consumeQuota,
+    fetcher,
+  });
+  const choice = { type: "function", function: { name: "get_pantry" } };
+  await custom(request({ ...body, tool_choice: choice }));
+  expect(JSON.parse(fetcher.mock.calls[1]![1].body).tool_choice).toEqual(choice);
+});

@@ -213,10 +213,19 @@ export function createChatHandler({
       const body = await readBody(request, signal);
       if (!(await consumeQuota(userId, signal)))
         return json(429, "The assistant is busy. Please try again in a moment.");
+      // Lightning's forced-tool mode can repeat tool markup until the output
+      // limit, which prevents the client SDK from executing even a valid call.
+      // Keep the supplied tool schemas and on-device capability checks; only
+      // let this model select normally from the tools already offered to it.
+      const toolChoice =
+        model === DEFAULT_CHAT_MODEL &&
+        (body.tool_choice === "required" || typeof body.tool_choice === "object")
+          ? "auto"
+          : body.tool_choice;
       const response = await fetcher(ENDPOINT, {
         method: "POST",
         headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ ...body, model }),
+        body: JSON.stringify({ ...body, model, tool_choice: toolChoice }),
         signal,
       });
       if (!response.ok || !response.body) {
