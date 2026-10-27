@@ -15,6 +15,7 @@ import { isSharedRecipeIntent } from "~/utils/native-share-route";
 import { readPendingRecipeShare, savePendingRecipeShare } from "~/lib/recipe-share-inbox";
 import { log } from "~/utils/logger";
 import type { PendingRecipeShare } from "~/types/SharedRecipe";
+import ClipboardRecipePrompt from "./ClipboardRecipePrompt";
 
 export default function SocialRecipeShareHandler() {
   const router = useRouter();
@@ -23,6 +24,10 @@ export default function SocialRecipeShareHandler() {
   const navigation = useNavigationContainerRef();
   const segments = useSegments();
   const [ready, setReady] = useState(() => navigation.isReady());
+  const [revision, setRevision] = useState(0);
+  const receivingRef = useRef(true);
+  const lifecycleVersion = useRef(0);
+  const [receivingShare, setReceivingShare] = useState(true);
   // Saved retry data is not a new share request. Only this session's receiver may navigate.
   const [pending, setPending] = useState<PendingRecipeShare | null>(null);
   useEffect(() => {
@@ -36,11 +41,9 @@ export default function SocialRecipeShareHandler() {
       getSharedPayloads?: () => unknown;
       clearSharedPayloads?: () => void;
     }>("ExpoSharing");
-    if (
-      typeof nativeSharing?.getSharedPayloads !== "function" ||
-      typeof nativeSharing.clearSharedPayloads !== "function"
-    )
-      return;
+    const supportsIncomingShares =
+      typeof nativeSharing?.getSharedPayloads === "function" &&
+      typeof nativeSharing.clearSharedPayloads === "function";
     let disposed = false;
     let receiving = false;
     let shareRequested = false;
@@ -56,11 +59,15 @@ export default function SocialRecipeShareHandler() {
     const receive = async (explicitShare = false) => {
       shareRequested ||= explicitShare;
       needsNativeRetry ||= explicitShare;
-      if (receiving || !needsNativeRetry) return;
+      if (receiving) return;
       receiving = true;
+      lifecycleVersion.current += 1;
+      receivingRef.current = true;
+      setReceivingShare(true);
       let payloadKey: string | null = null;
       let stage = "read";
       try {
+        if (!supportsIncomingShares || !needsNativeRetry) return;
         const { getSharedPayloads, clearSharedPayloads } = await import("expo-sharing");
         if (disposed) return;
         const payloads = getSharedPayloads();
@@ -121,6 +128,11 @@ export default function SocialRecipeShareHandler() {
       } finally {
         receiving = false;
         shareRequested = false;
+        if (!disposed) {
+          receivingRef.current = false;
+          setReceivingShare(false);
+          setRevision((value) => value + 1);
+        }
       }
     };
     void Linking.getInitialURL()
@@ -128,6 +140,11 @@ export default function SocialRecipeShareHandler() {
       .catch(() => receive());
     const state = AppState.addEventListener("change", (next) => {
       if (next === "active") void receive();
+      else {
+        lifecycleVersion.current += 1;
+        receivingRef.current = true;
+        setReceivingShare(true);
+      }
     });
     const links = Linking.addEventListener("url", ({ url }) => {
       if (isSharedRecipeIntent(url)) void receive(true);
@@ -155,5 +172,26 @@ export default function SocialRecipeShareHandler() {
     if (segments.join("/") === "recipes/import") router.replace(target);
     else router.push(target);
   }, [pending, root?.key, ready, navigation, segments, router]);
-  return null;
+  return (
+    <ClipboardRecipePrompt
+      enabled={
+        !!root?.key &&
+        ready &&
+        navigation.isReady() &&
+        !receivingShare &&
+        !!storage.get<boolean>(ONBOARDING_COMPLETED_KEY) &&
+        segments[0] !== "onboarding" &&
+        segments.join("/") !== "recipes/import" &&
+        !segments.includes("import-youtube") &&
+        !(pending && readPendingRecipeShare()?.id === pending.id)
+      }
+      hasPendingShare={() => !!pending && readPendingRecipeShare()?.id === pending.id}
+      revision={revision}
+      receiving={() => receivingRef.current}
+      version={() => lifecycleVersion.current}
+      onImportStarted={(id) => {
+        routed.current = id;
+      }}
+    />
+  );
 }

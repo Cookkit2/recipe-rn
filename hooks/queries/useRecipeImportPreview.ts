@@ -5,6 +5,7 @@ import {
   getImportStatusMessage,
   type RecipeImportStatus,
 } from "~/data/api/recipeImportApi";
+import { useRecipeImportActivity } from "~/hooks/useRecipeImportActivity";
 import { recipeQueryKeys } from "./recipeQueryKeys";
 import type { SharedRecipeInput } from "~/types/SharedRecipe";
 import type { RecipeImportDraft } from "~/types/RecipeImportDraft";
@@ -15,6 +16,7 @@ export function useRecipeImportPreview() {
   const mounted = useRef(true);
   const saving = useRef(false);
   const [isPending, setPending] = useState(false);
+  useRecipeImportActivity(isPending);
   const [status, setStatus] = useState<RecipeImportStatus>("idle");
   const invalidate = useCallback(() => {
     for (const key of [

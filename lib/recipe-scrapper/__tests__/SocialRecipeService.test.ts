@@ -39,8 +39,18 @@ const NEBIUS_RECIPE_RESPONSE = JSON.stringify({
       { name: "pasta", quantity: 200, unit: "gram" },
     ],
     steps: [
-      { step: 1, title: "Bake", description: "Bake tomatoes and feta at 200C for 30 min." },
-      { step: 2, title: "Combine", description: "Stir through cooked pasta." },
+      {
+        step: 1,
+        title: "Bake",
+        description: "Bake tomatoes and feta at 200C for 30 min.",
+        sourceQuote: "Bake tomatoes and feta at 200C for 30 min.",
+      },
+      {
+        step: 2,
+        title: "Combine",
+        description: "Stir through cooked pasta.",
+        sourceQuote: "Stir through cooked pasta.",
+      },
     ],
   },
 });
@@ -51,6 +61,7 @@ function responseForInstructions(...descriptions: string[]) {
     step: index + 1,
     title: `Step ${index + 1}`,
     description,
+    sourceQuote: description,
   }));
   return JSON.stringify(result);
 }

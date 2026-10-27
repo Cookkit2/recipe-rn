@@ -67,3 +67,18 @@ export function getCaptionInstructions(source: string): string[] {
   }
   return instructions;
 }
+
+/** Source attribution is language-neutral; classification and translated actions are checked separately. */
+export function hasSourceQuotation(quote: string, source: string): boolean {
+  const instruction = normalize(quote);
+  return (
+    instruction.length >=
+      (/\p{Script=Han}|\p{Script=Hiragana}|\p{Script=Katakana}/u.test(instruction) ? 4 : 8) &&
+    normalize(source).includes(instruction)
+  );
+}
+
+/** Preparation descriptions can include introductory clauses before the cooking action. */
+export function hasCookingAction(description: string): boolean {
+  return COOKING_ACTION.test(normalize(description));
+}

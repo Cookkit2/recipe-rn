@@ -8,7 +8,7 @@ import { generateAIContent } from "~/lib/ai/client";
 import { buildSocialRecipeRequest } from "./shared/recipe-ai-utils";
 import { log } from "~/utils/logger";
 import type { RecipeAnalysisResult, GeneratedRecipe } from "~/types/ScrappedRecipe";
-import { isValidRecipe } from "./validation-utils";
+import { isAcceptedVideoRecipe } from "./shared/video-acceptance";
 import { fetchWithTimeout } from "~/utils/fetch-with-timeout";
 import { extractSocialMetadata } from "./shared/social-metadata";
 import { extractTikTokMetadata, extractWebVttText } from "./shared/tiktok-metadata";
@@ -146,13 +146,7 @@ export class SocialRecipeService {
       let suppliedResult: RecipeAnalysisResult | undefined;
       if (suppliedText && !content.videoUri) {
         suppliedResult = await analyze({ title: "Shared recipe", description: suppliedText });
-        if (
-          (suppliedResult.recipe &&
-            suppliedResult.isCookingVideo &&
-            suppliedResult.confidence >= 0.6) ||
-          !content.url ||
-          content.platform === "text"
-        ) {
+        if (isAcceptedVideoRecipe(suppliedResult) || !content.url || content.platform === "text") {
           return await withVideoCover(suppliedResult);
         }
       }
@@ -188,8 +182,7 @@ export class SocialRecipeService {
         (content.platform !== "youtube" || !playerEvidence?.frames.length)
       ) {
         textResult = await analyze(metadata);
-        if (textResult.recipe && textResult.isCookingVideo && textResult.confidence >= 0.6)
-          return await withVideoCover(textResult);
+        if (isAcceptedVideoRecipe(textResult)) return await withVideoCover(textResult);
       }
       if (!content.videoUri && (!content.url || content.platform === "text")) {
         return (
@@ -367,7 +360,7 @@ POST TITLE: ${metadata.title}
 POST DESCRIPTION: ${metadata.description}
 
 INSTRUCTIONS:
-1. Analyze the title and description to determine if this is a cooking/recipe post (isCookingVideo: true/false).
+1. Determine whether the supplied content includes ingredients and actual preparation instructions (isCookingVideo: true/false). Reject restaurant reviews, eating/mukbang clips, food advertisements and finished-dish showcases without a preparation method. Titles, hashtags and dish names alone are insufficient.
    - You cannot view the video. Require actual ingredients AND preparation instructions in the supplied text. Food names, hashtags, and titles alone are insufficient.
 
 2. Provide a confidence score (0-1).
@@ -395,7 +388,7 @@ INSTRUCTIONS:
 IMPORTANT GUIDELINES:
 - **CRITICAL**: If you cannot find any ingredients or steps in the text, return \`confidence: 0\`.
 - DO NOT generate a "placeholder" recipe if you can't find the real one.
-- If you return confidence < 0.5, the app will show an error to the user, which is BETTER than showing a fake recipe.
+- If you return confidence < 0.8, the app will show an error to the user, which is BETTER than showing a fake recipe.
 
 Return a valid JSON response matching the schema.
     `.trim();
@@ -430,10 +423,7 @@ Return a valid JSON response matching the schema.
           !steps.length ||
           steps.some(
             (step, index) =>
-              !hasInstructionEvidence(
-                parsed.recipe.steps[index]?.sourceQuote || step.description,
-                evidence
-              )
+              !hasInstructionEvidence(parsed.recipe.steps[index]?.sourceQuote || "", evidence)
           )
         ) {
           return {
@@ -448,10 +438,14 @@ Return a valid JSON response matching the schema.
           ...parsed.recipe,
           ingredients,
           steps,
+          title: parsed.recipe.title,
+          servings: parsed.recipe.servings ?? 2,
+          prepMinutes: parsed.recipe.prepMinutes ?? 0,
+          cookMinutes: parsed.recipe.cookMinutes ?? 0,
         };
 
         // Validate recipe content
-        if (!isValidRecipe(potentialRecipe)) {
+        if (!isAcceptedVideoRecipe({ ...result, recipe: potentialRecipe })) {
           log.warn("SocialRecipeService: Recipe rejected due to validation failure");
           return {
             isCookingVideo: true,
@@ -463,7 +457,7 @@ Return a valid JSON response matching the schema.
         const hasEstimates = parsed.recipe.ingredients.some(
           (ingredient: { amountSource?: string }) => ingredient.amountSource === "estimated"
         );
-        const servings = parsed.recipe.servings || 2;
+        const servings = parsed.recipe.servings ?? 2;
         const estimateNote = hasEstimates
           ? `Ingredient amounts include AI estimates for ${servings} servings.`
           : parsed.recipe.servingsSource === "estimated"

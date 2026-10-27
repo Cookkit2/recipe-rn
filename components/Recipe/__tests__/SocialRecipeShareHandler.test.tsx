@@ -62,6 +62,14 @@ jest.mock("~/lib/recipe-share-inbox", () => ({
   readPendingRecipeShare: () => mockPending,
   savePendingRecipeShare: (input: SharedRecipeInput) => mockSave(input),
 }));
+const mockClipboard = jest.fn();
+jest.mock("../ClipboardRecipePrompt", () => ({
+  __esModule: true,
+  default: (props: unknown) => {
+    mockClipboard(props);
+    return null;
+  },
+}));
 import SocialRecipeShareHandler from "../SocialRecipeShareHandler.native";
 let active: ((value: AppStateStatus) => void) | undefined;
 let link: ((event: { url: string }) => void) | undefined;
@@ -264,7 +272,7 @@ it("rejects unsupported attachments without opening a recipe", async () => {
 it("allows older binaries to start without the native share module", async () => {
   mockNative.mockReturnValue(null);
   await render(<SocialRecipeShareHandler />);
-  expect(AppState.addEventListener).not.toHaveBeenCalled();
+  expect(AppState.addEventListener).toHaveBeenCalled();
 });
 
 it("does not show share errors for failed background probes with no incoming share", async () => {
@@ -291,7 +299,7 @@ it("does not poll older native modules that only support outgoing sharing", asyn
   mockNative.mockReturnValue({ shareAsync: jest.fn() });
   await render(<SocialRecipeShareHandler />);
   expect(mockGetPayloads).not.toHaveBeenCalled();
-  expect(AppState.addEventListener).not.toHaveBeenCalled();
+  expect(AppState.addEventListener).toHaveBeenCalled();
   expect(mockToast).not.toHaveBeenCalled();
 });
 
@@ -357,4 +365,53 @@ it("accepts an intentional repeat share after import finishes even when native c
   await act(async () => link?.({ url: "cookkit://expo-sharing" }));
   await waitFor(() => expect(mockRouter.push).toHaveBeenCalledWith(target("share-2")));
   expect(mockToast).not.toHaveBeenCalled();
+});
+
+it("defers clipboard checks until startup and onboarding complete", async () => {
+  mockOnboarded = false;
+  const screen = await render(<SocialRecipeShareHandler />);
+  await waitFor(() => expect(mockClipboard.mock.lastCall?.[0].revision).toBeGreaterThan(0));
+  expect(mockClipboard.mock.lastCall?.[0].enabled).toBe(false);
+  mockOnboarded = true;
+  await screen.rerender(<SocialRecipeShareHandler />);
+  expect(mockClipboard.mock.lastCall?.[0].enabled).toBe(true);
+});
+it("invalidates clipboard reads synchronously across rapid background/resume", async () => {
+  await render(<SocialRecipeShareHandler />);
+  await waitFor(() => expect(mockClipboard.mock.lastCall?.[0].enabled).toBe(true));
+  const initial = mockClipboard.mock.lastCall?.[0];
+  const version = initial.version();
+  await act(async () => {
+    active?.("background");
+    active?.("active");
+  });
+  expect(initial.version()).toBeGreaterThan(version);
+});
+it("does not offer clipboard import over the manual YouTube screen", async () => {
+  mockSegments = ["(misc)", "import-youtube"];
+  await render(<SocialRecipeShareHandler />);
+  await waitFor(() => expect(mockClipboard.mock.lastCall?.[0].revision).toBeGreaterThan(0));
+  expect(mockClipboard.mock.lastCall?.[0].enabled).toBe(false);
+});
+it("does not restart a clipboard import when a permission dialog resumes the app", async () => {
+  const screen = await render(<SocialRecipeShareHandler />);
+  await waitFor(() => expect(mockClipboard.mock.lastCall?.[0].enabled).toBe(true));
+  mockPending = { id: "clipboard-1", url: "https://youtu.be/abcdefghijk" };
+  mockClipboard.mock.lastCall?.[0].onImportStarted?.("clipboard-1");
+  mockSegments = ["recipes", "import"];
+  await screen.rerender(<SocialRecipeShareHandler />);
+  await act(async () => {
+    active?.("inactive");
+    active?.("active");
+  });
+  expect(mockRouter.replace).not.toHaveBeenCalled();
+  expect(mockRouter.push).not.toHaveBeenCalled();
+});
+
+it("allows clipboard suggestions when a retained retry is not a new native share", async () => {
+  mockPending = { id: "old-retry", url: "https://youtu.be/abcdefghijk" };
+  await render(<SocialRecipeShareHandler />);
+  await waitFor(() => expect(mockClipboard.mock.lastCall?.[0].enabled).toBe(true));
+  expect(mockClipboard.mock.lastCall?.[0].hasPendingShare()).toBe(false);
+  expect(mockRouter.push).not.toHaveBeenCalled();
 });

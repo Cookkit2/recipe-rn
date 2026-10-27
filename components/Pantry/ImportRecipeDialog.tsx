@@ -14,6 +14,7 @@ import {
 } from "~/components/ui/dialog";
 import { useRecipeLoadingGlow } from "~/components/Recipe/Loading/RecipeLoadingGlowProvider";
 import RecipeImportReview from "~/components/Recipe/RecipeImportReview";
+import { useRecipeImportActivity } from "~/hooks/useRecipeImportActivity";
 import { useRecipeImportPreview } from "~/hooks/queries/useRecipeImportPreview";
 import { normalizeSharedRecipe } from "~/utils/shared-recipe";
 import type { SharedRecipeInput } from "~/types/SharedRecipe";
@@ -33,6 +34,7 @@ export default function ImportRecipeDialog({
   initialError,
 }: ImportRecipeDialogProps) {
   const router = useRouter();
+  useRecipeImportActivity(open);
   const [content, setContent] = useState("");
   const [videoUri, setVideoUri] = useState<string>();
   const [language, setLanguage] = useState("en-US");

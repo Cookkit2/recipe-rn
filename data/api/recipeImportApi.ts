@@ -8,6 +8,7 @@
 import type { SharedRecipeInput } from "~/types/SharedRecipe";
 import type { RecipeImportDraft, RecipeImportPreparation } from "~/types/RecipeImportDraft";
 import type { RecipeVideoOptions } from "~/types/RecipeVideo";
+import { isAcceptedVideoRecipe } from "~/lib/recipe-scrapper/shared/video-acceptance";
 import { validateRecipeImportDraft } from "~/lib/recipe-scrapper/shared/import-review";
 import { analyzeUrl, type RecipeUrlType } from "~/utils/url-utils";
 import { websiteRecipeService } from "~/lib/recipe-scrapper/WebsiteRecipeService";
@@ -114,11 +115,7 @@ export const recipeImportApi = {
       { ...options, onPhase: (phase) => onStatusChange?.(phase) }
     );
     options.signal?.throwIfAborted();
-    if (
-      !analysis.isCookingVideo ||
-      analysis.confidence < MIN_RECIPE_CONFIDENCE ||
-      !analysis.recipe
-    ) {
+    if (!isAcceptedVideoRecipe(analysis) || !analysis.recipe) {
       onStatusChange?.("error");
       throw new Error(
         analysis.errorMessage ||
@@ -195,11 +192,7 @@ export const recipeImportApi = {
           url: "",
           text: input.text,
         });
-        if (
-          !analysis.recipe ||
-          !analysis.isCookingVideo ||
-          analysis.confidence < MIN_RECIPE_CONFIDENCE
-        ) {
+        if (!analysis.recipe || !isAcceptedVideoRecipe(analysis)) {
           if (source?.isValid)
             return this.importRecipeFromUrl(source.normalizedUrl, onStatusChange);
           throw new Error(
@@ -297,7 +290,8 @@ export const recipeImportApi = {
    */
   async importRecipeFromYouTube(
     url: string,
-    onStatusChange?: (status: RecipeImportStatus) => void
+    onStatusChange?: (status: RecipeImportStatus) => void,
+    sharedText?: string
   ): Promise<YouTubeImportResult> {
     if (!isValidYouTubeUrl(url)) {
       onStatusChange?.("error");
@@ -308,7 +302,8 @@ export const recipeImportApi = {
       buildYouTubeWatchUrl(videoId),
       "youtube",
       videoId,
-      onStatusChange
+      onStatusChange,
+      sharedText
     );
   },
 
@@ -457,7 +452,7 @@ export const recipeImportApi = {
         // Step 2: Graceful fallback — platform blocked the fetch or the LLM
         // couldn't confidently detect a recipe. Prompt manual entry rather than
         // presenting a fabricated recipe.
-        if (!analysisResult.isCookingVideo || analysisResult.confidence < MIN_RECIPE_CONFIDENCE) {
+        if (!isAcceptedVideoRecipe(analysisResult)) {
           throw new Error(
             analysisResult.errorMessage ||
               `Couldn't read this ${platformName} recipe. Choose a saved video, paste its full caption, or enter the recipe manually.`
