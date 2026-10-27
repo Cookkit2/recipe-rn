@@ -107,13 +107,6 @@ export default function GroceryListHeaderRight({
             >
               Shop on GrabMart
             </Stack.Toolbar.MenuAction>
-            <Stack.Toolbar.MenuAction
-              icon="storefront"
-              disabled={openingStore !== null || guideOpen}
-              onPress={() => void openStore("foodpanda", "foodpanda")}
-            >
-              Shop on foodpanda
-            </Stack.Toolbar.MenuAction>
             {canSelectItems && (
               <Stack.Toolbar.MenuAction icon="pencil" onPress={onToggleSelection}>
                 Select items
