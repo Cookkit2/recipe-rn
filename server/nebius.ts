@@ -42,6 +42,15 @@ export function validateAIRequest(value: unknown): asserts value is AIRequest {
   ) {
     throw new AIError("AI request text is missing or too long.", 400);
   }
+  if (
+    input.youtubeVideoUrl !== undefined &&
+    (typeof input.youtubeVideoUrl !== "string" ||
+      !/^https:\/\/www\.youtube\.com\/watch\?v=[A-Za-z0-9_-]{11}$/.test(input.youtubeVideoUrl) ||
+      input.image !== undefined ||
+      input.images !== undefined)
+  ) {
+    throw new AIError("Provide a canonical YouTube video URL without image input.", 400);
+  }
   if (input.image !== undefined && input.images !== undefined)
     throw new AIError("Provide one image input.", 400);
   if (

@@ -53,7 +53,15 @@ The default quota is 200 requests per user per UTC database day, including attem
 
 These Nemotron endpoints do not advertise schema-constrained generation. Cookkit places the JSON schema in the prompt, validates output with AJV, and permits one repair attempt for malformed, truncated or schema-invalid answers. Reasoning is disabled for extraction. Usage estimates include tokens from repair attempts and are diagnostics, not invoices.
 
-YouTube extraction uses available captions/transcripts or recipe text in the description. A URL and title alone are not video input to Nebius. When recipe text is unavailable, the app asks the user to paste a caption or transcript instead of pretending to watch the video.
+YouTube extraction first uses available captions/transcripts or recipe text in the description through Nebius. When text is absent or does not yield a complete recipe with confidence at least 0.6, the app sends a canonical YouTube watch URL to the same proxy, which routes it to Gemini video understanding. Both manual imports and native shares use this fallback. Other requests continue using Nebius.
+
+To enable the fallback, add **server-only** `GEMINI_API_KEY` to the `nebius-ai` Edge Function secrets and redeploy that function before releasing the updated app. Optionally set `GEMINI_YOUTUBE_MODEL` (default `gemini-3.8-flash`). For simulator testing, put these in ignored `.env.local` and restart `bun run ai:dev`. Never use an `EXPO_PUBLIC_` prefix for the provider key.
+
+Gemini video requests use the existing verified user session, daily quota, 75-second handler deadline and 8192-token output limit. Each text/video request consumes its own quota unit. Only canonical HTTPS YouTube watch URLs are accepted; image/video mixtures and arbitrary media hosts are rejected. Gemini output is checked against the full recipe JSON schema locally, then recipe completeness/confidence are checked before saving. Missing configuration, blocked/private videos, provider errors, truncated answers and invalid JSON fail without saving. The app verifies that the proxy acknowledged the video URL, so an older deployment cannot silently ignore video input.
+
+Manual smoke test after deployment: import a public cooking YouTube link without pasted text from the Pantry Import dialog, then share the same link into Cookkit. Confirm both reach a saved recipe; repeat with a non-recipe video and confirm no recipe is saved. Test the YouTube short link reported in the regression as well. Jest uses mock provider responses and does not establish live video availability or extraction quality.
+
+API references: [YouTube video input](https://ai.google.dev/gemini-api/docs/generate-content/video-understanding) and [structured JSON output](https://ai.google.dev/gemini-api/docs/structured-output).
 
 For the hackathon, demonstrate actual Nemotron inference through Token Factory and document the changes made to the existing app during the submission period. Whole-app hosting on Nebius is not required for the Best Apps and Agents track.
 

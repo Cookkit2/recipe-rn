@@ -83,4 +83,22 @@ describe("AI app client", () => {
     controller.abort();
     await expect(pending).rejects.toThrow();
   });
+  it("rejects video answers from an older proxy that ignored the video URL", async () => {
+    fetcher.mockResolvedValue(new Response(JSON.stringify({ content: '{"title":"Guess"}' })));
+    await expect(
+      generateAIContent({
+        prompt: "Extract",
+        youtubeVideoUrl: "https://www.youtube.com/watch?v=abcdefghijk",
+      })
+    ).rejects.toThrow("YouTube video analysis isn't available");
+  });
+  it("accepts video answers when the proxy acknowledges the same URL", async () => {
+    const youtubeVideoUrl = "https://www.youtube.com/watch?v=abcdefghijk";
+    fetcher.mockResolvedValue(
+      new Response(JSON.stringify({ content: '{"title":"Rice"}', inputVideoUrl: youtubeVideoUrl }))
+    );
+    await expect(generateAIContent({ prompt: "Extract", youtubeVideoUrl })).resolves.toContain(
+      "Rice"
+    );
+  });
 });

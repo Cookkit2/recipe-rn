@@ -6,6 +6,8 @@ const apiKey = process.env.NEBIUS_API_KEY;
 if (!apiKey) throw new Error("Set server-only NEBIUS_API_KEY in .env.local before running ai:dev.");
 const handler = createAIHandler({
   apiKey,
+  geminiApiKey: process.env.GEMINI_API_KEY,
+  geminiModel: process.env.GEMINI_YOUTUBE_MODEL,
   authenticate: async () => "local-development",
   consumeQuota: async () => true,
 });
