@@ -114,14 +114,16 @@ export default function RateRecipeModal({
         <View className="flex-row gap-3 mt-4">
           <Button
             variant="outline"
-            className="flex-1 rounded-2xl"
+            containerClassName="flex-1"
+            className="rounded-2xl"
             onPress={handleSkip}
             disabled={isSaving}
           >
             <P className="font-urbanist-semibold text-foreground">Skip</P>
           </Button>
           <Button
-            className="flex-1 rounded-2xl bg-foreground flex-row justify-center items-center gap-2"
+            containerClassName="flex-1"
+            className="rounded-2xl bg-foreground flex-row justify-center items-center gap-2"
             onPress={handleSave}
             isLoading={isSaving}
           >

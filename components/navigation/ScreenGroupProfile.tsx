@@ -12,6 +12,11 @@ export function getProfileScreens({
       options={{ ...commonHeaderOptions, headerTitle: "Profile" }}
     />,
     <Stack.Screen
+      key="profile/my-recipes"
+      name="profile/my-recipes"
+      options={{ ...commonHeaderOptions, headerTitle: "My Recipes" }}
+    />,
+    <Stack.Screen
       key="profile/cooked-recipes"
       name="profile/cooked-recipes"
       options={{ ...commonHeaderOptions, headerTitle: "Cooked Recipes" }}

@@ -5,6 +5,7 @@ import { IngredientDetailProvider } from "~/store/IngredientDetailContext";
 import { usePantryItemsByType } from "~/hooks/queries/usePantryQueries";
 import { H1, P } from "~/components/ui/typography";
 import { Button } from "~/components/ui/button";
+import { APP_HEADER_APPEARANCE } from "~/components/navigation/native-header-appearance";
 
 export default function IngredientDetailLayout() {
   const { ingredientId } = useLocalSearchParams<{ ingredientId: string }>();
@@ -47,7 +48,7 @@ export default function IngredientDetailLayout() {
 
   return (
     <IngredientDetailProvider item={item}>
-      <Stack screenOptions={{ headerShown: false }}>
+      <Stack screenOptions={{ ...APP_HEADER_APPEARANCE, headerShown: false }}>
         <Stack.Screen
           name="index"
           options={{

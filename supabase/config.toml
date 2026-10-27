@@ -3,3 +3,6 @@ project_id = "cookkit"
 [functions.nebius-ai]
 # Require a user JWT at the gateway and verify it with Auth.getUser in the handler.
 verify_jwt = true
+
+[functions.nebius-chat]
+verify_jwt = true

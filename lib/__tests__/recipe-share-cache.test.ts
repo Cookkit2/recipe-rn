@@ -1,4 +1,10 @@
-import { cacheRecipeShareLink, getCachedRecipeShareLink } from "../recipe-share-cache";
+import {
+  cacheRecipeShareLink,
+  getCachedRecipeShareLink,
+  getResolvedRecipeShareId,
+  getResolvedRecipeShareIds,
+  rememberResolvedRecipeShareId,
+} from "../recipe-share-cache";
 import { storageFacade as storage } from "~/data/storage";
 import { buildRecipeShareLink } from "~/utils/recipe-share-link";
 
@@ -40,7 +46,9 @@ it("bounds persistence and evicts older recipes", () => {
   // Updating an existing recipe must not consume a second cache slot.
   cacheRecipeShareLink("recipe-0", "edited snapshot", token);
   cacheRecipeShareLink("recipe-50", "snapshot", token);
-  expect(values.size).toBe(51); // Fifty entries plus their small index.
+  expect([...values.keys()].filter((key) => key.startsWith("recipe_share_link_v1:"))).toHaveLength(
+    50
+  );
   expect(getCachedRecipeShareLink("recipe-1", "snapshot")).toBeUndefined();
   expect(getCachedRecipeShareLink("recipe-0", "edited snapshot")).toBe(buildRecipeShareLink(token));
   expect(getCachedRecipeShareLink("recipe-50", "snapshot")).toBe(buildRecipeShareLink(token));
@@ -55,4 +63,63 @@ it("treats storage failures as cache misses instead of blocking sharing", () => 
     throw new Error("Storage full");
   });
   expect(() => cacheRecipeShareLink("pasta", "snapshot", token)).not.toThrow();
+});
+
+it("remembers incoming links independently of recipe content", () => {
+  rememberResolvedRecipeShareId(token, "original-gin-fizz");
+  expect(getResolvedRecipeShareId(token)).toBe("original-gin-fizz");
+  expect(getResolvedRecipeShareId("invalid")).toBeUndefined();
+});
+
+it("recovers an older outgoing link even after the original recipe was edited", () => {
+  cacheRecipeShareLink("original-gin-fizz", "old content", token);
+  expect(getResolvedRecipeShareId(token)).toBe("original-gin-fizz");
+});
+
+it("bounds received link mappings and ignores broken storage", () => {
+  for (let index = 0; index < 101; index++) {
+    rememberResolvedRecipeShareId(
+      `${String(index).padStart(8, "0")}-2b17-42c8-a72b-b67e1c5ac927`,
+      `recipe-${index}`
+    );
+  }
+  expect(values.size).toBe(101);
+  expect(getResolvedRecipeShareId("00000000-2b17-42c8-a72b-b67e1c5ac927")).toBeUndefined();
+  jest.mocked(storage.get).mockImplementationOnce(() => {
+    throw new Error("Unavailable");
+  });
+  expect(getResolvedRecipeShareId(token)).toBeUndefined();
+  jest.mocked(storage.set).mockImplementationOnce(() => {
+    throw new Error("Full");
+  });
+  expect(() => rememberResolvedRecipeShareId(token, "original")).not.toThrow();
+});
+
+it("keeps an older outgoing link attached to its original after republishing edits", () => {
+  cacheRecipeShareLink("original-gin-fizz", "first snapshot", token);
+  cacheRecipeShareLink(
+    "original-gin-fizz",
+    "edited snapshot",
+    "530138cb-2b17-42c8-a72b-b67e1c5ac927"
+  );
+  expect(getResolvedRecipeShareId(token)).toBe("original-gin-fizz");
+});
+
+it("lists unique saved IDs for My Recipes and ignores corrupt legacy mappings", () => {
+  const second = "530138cb-2b17-42c8-a72b-b67e1c5ac927";
+  const third = "630138cb-2b17-42c8-a72b-b67e1c5ac927";
+  values.set("recipe_share_resolved_index_v1", [third, second, token]);
+  values.set("recipe_share_resolved_v1:" + token, "legacy-import");
+  values.set("recipe_share_resolved_v1:" + second, "legacy-import");
+  values.set("recipe_share_resolved_v1:" + third, "another-import");
+  expect(getResolvedRecipeShareIds()).toEqual(["another-import", "legacy-import"]);
+  values.set("recipe_share_resolved_index_v1", ["bad-token", token]);
+  values.set("recipe_share_resolved_v1:" + token, { invalid: true });
+  expect(getResolvedRecipeShareIds()).toEqual([]);
+  values.set("recipe_share_resolved_index_v1", "corrupt");
+  expect(getResolvedRecipeShareIds()).toEqual([]);
+  jest.mocked(storage.get).mockImplementationOnce(() => {
+    throw new Error("Unavailable");
+  });
+  expect(getResolvedRecipeShareIds()).toEqual([]);
 });

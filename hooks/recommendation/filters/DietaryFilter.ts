@@ -8,7 +8,7 @@ import {
 } from "~/constants/storage-keys";
 import type { Allergen } from "~/types/Allergen";
 import type { Diet } from "~/types/Diet";
-import { isIngredientMatch } from "~/utils/ingredient-matching";
+import { containsIngredientPhrase } from "~/utils/recipe-ingredient-match";
 
 /**
  * Allergen keyword mappings for robust detection.
@@ -48,7 +48,7 @@ export interface DietaryFilterOptions {
  *
  * Features:
  * - Robust allergen detection using keyword mappings (e.g., "milk" catches "cheese", "butter")
- * - Smart matching for custom allergens using isIngredientMatch
+ * - Smart matching for custom allergens using containsIngredientPhrase
  * - Checks both ingredients AND recipe tags for allergen mentions
  *
  * @example
@@ -141,7 +141,7 @@ export class DietaryFilter implements RecipeFilterStrategy {
 
           // Check against custom allergens using smart ingredient matching
           for (const allergen of this.cachedCustomAllergens) {
-            if (isIngredientMatch(ingredientName, allergen.toLowerCase())) {
+            if (containsIngredientPhrase(ingredientName, allergen.toLowerCase())) {
               return false;
             }
           }

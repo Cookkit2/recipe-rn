@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { View, FlatList, ActivityIndicator, Alert } from "react-native";
+import { View, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { Stack, useLocalSearchParams } from "expo-router";
-import { PlusIcon } from "lucide-uniwind";
 import { toast } from "sonner-native";
 import { Button } from "~/components/ui/button";
 import { Text } from "~/components/ui/text";
@@ -9,9 +8,11 @@ import { H4, P } from "~/components/ui/typography";
 import { useLeftovers, useLeftoverActions } from "~/hooks/queries/useLeftovers";
 import LeftoverForm from "~/components/Leftovers/LeftoverForm";
 import type { Leftover, LeftoverStatus } from "~/types/Leftover";
+import useColors from "~/hooks/useColor";
 
 export default function LeftoversPage() {
   const params = useLocalSearchParams<{ recipeId?: string; recipeName?: string; add?: string }>();
+  const colors = useColors();
   const [formOpen, setFormOpen] = useState(params.add === "1");
   const [editing, setEditing] = useState<Leftover | undefined>();
   const { data: items = [], isLoading, error, refetch } = useLeftovers();
@@ -24,55 +25,51 @@ export default function LeftoversPage() {
     }
   };
   return (
-    <View className="flex-1 bg-background">
-      <Stack.Screen
-        options={{
-          headerTitle: "Leftovers",
-          headerRight: () => (
-            <Button
-              variant="ghost"
-              size="icon"
-              accessibilityLabel="Add leftovers"
-              onPress={() => {
-                setEditing(undefined);
-                setFormOpen(true);
-              }}
-            >
-              <PlusIcon className="text-foreground" size={20} strokeWidth={2.618} />
+    <>
+      <Stack.Screen options={{ headerTitle: "Leftovers", headerTransparent: false }} />
+      <Stack.Toolbar placement="right">
+        <Stack.Toolbar.Button
+          icon="plus"
+          tintColor={colors.foreground}
+          accessibilityLabel="Add leftovers"
+          onPress={() => {
+            setEditing(undefined);
+            setFormOpen(true);
+          }}
+        />
+      </Stack.Toolbar>
+      {/* Keep the page's primary scroll view mounted across loading and empty states. */}
+      <ScrollView
+        testID="leftovers-scroll"
+        className="flex-1 bg-background"
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={{ flexGrow: 1, padding: 20, gap: 12 }}
+        alwaysBounceVertical
+      >
+        {isLoading ? (
+          <ActivityIndicator className="mt-8" />
+        ) : error ? (
+          <View className="p-6">
+            <P className="font-urbanist-regular">Couldn't load leftovers.</P>
+            <Button variant="outline" onPress={() => refetch()}>
+              <Text className="font-urbanist-semibold">Try again</Text>
             </Button>
-          ),
-        }}
-      />
-      {isLoading ? (
-        <ActivityIndicator className="mt-8" />
-      ) : error ? (
-        <View className="p-6">
-          <P className="font-urbanist-regular">Couldn't load leftovers.</P>
-          <Button variant="outline" onPress={() => refetch()}>
-            <Text className="font-urbanist-semibold">Try again</Text>
-          </Button>
-        </View>
-      ) : (
-        <FlatList
-          data={items}
-          keyExtractor={(item) => item.id}
-          contentInsetAdjustmentBehavior="automatic"
-          contentContainerStyle={{ padding: 20, gap: 12 }}
-          ListEmptyComponent={
-            <View className="items-center py-12 gap-3">
-              <H4 className="font-urbanist-semibold text-center text-muted-foreground">
-                No leftovers saved
-              </H4>
-              <P className="font-urbanist-regular text-center text-sm text-muted-foreground">
-                Save a dish and choose when to be reminded.
-              </P>
-              <Button variant="secondary" onPress={() => setFormOpen(true)}>
-                <Text className="font-urbanist-semibold">Add leftovers</Text>
-              </Button>
-            </View>
-          }
-          renderItem={({ item }) => (
-            <View className="rounded-xl bg-muted/50 p-4 gap-2">
+          </View>
+        ) : items.length === 0 ? (
+          <View className="items-center py-12 gap-3">
+            <H4 className="font-urbanist-semibold text-center text-muted-foreground">
+              No leftovers saved
+            </H4>
+            <P className="font-urbanist-regular text-center text-sm text-muted-foreground">
+              Save a dish and choose when to be reminded.
+            </P>
+            <Button variant="secondary" onPress={() => setFormOpen(true)}>
+              <Text className="font-urbanist-semibold">Add leftovers</Text>
+            </Button>
+          </View>
+        ) : (
+          items.map((item) => (
+            <View key={item.id} className="rounded-xl bg-muted/50 p-4 gap-2">
               <P className="font-urbanist-semibold">{item.name}</P>
               <P className="font-urbanist-regular text-xs text-muted-foreground">
                 {item.servings} servings · Prepared {item.cookedAt.toLocaleDateString()}
@@ -125,9 +122,9 @@ export default function LeftoversPage() {
                 </Button>
               </View>
             </View>
-          )}
-        />
-      )}
+          ))
+        )}
+      </ScrollView>
       {formOpen && (
         <LeftoverForm
           item={editing}
@@ -139,6 +136,6 @@ export default function LeftoversPage() {
           }}
         />
       )}
-    </View>
+    </>
   );
 }

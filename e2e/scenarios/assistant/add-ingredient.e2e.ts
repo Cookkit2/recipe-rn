@@ -7,55 +7,31 @@ describe("Assistant", () => {
       .toBeVisible()
       .withTimeout(30000);
 
-    await waitFor(element(by.id(TEST_IDS.home.assistantButton)))
+    await element(by.label("Search")).tap();
+    await waitFor(element(by.id(TEST_IDS.search.screen)))
       .toBeVisible()
       .withTimeout(20000);
-    await element(by.id(TEST_IDS.home.assistantButton)).tap();
+    const search = element(by.type("UISearchTextField"));
+    await waitFor(search).toBeVisible().withTimeout(15000);
+    await search.replaceText("Add 6 eggs to my pantry.");
+    await element(by.id(TEST_IDS.search.askAssistant)).tap();
 
-    await waitFor(element(by.id(TEST_IDS.assistant.screen)))
-      .toBeVisible()
-      .withTimeout(20000);
-
-    const composer = element(by.id(TEST_IDS.assistant.composer));
-    // Existence is not enough to type: a LogBox toast can cover the field
-    // while its frame is still fully on screen. Wait until the field is
-    // actually visible, then type.
-    await waitFor(composer).toBeVisible().withTimeout(15000);
-
-    await composer.replaceText("Add 6 eggs to my pantry.");
-    // replaceText focuses the field. The E2E composer stays pinned to the
-    // bottom, so the keyboard dock covers Send: the Dictate key sits on the
-    // button center (69x42 at y=824, Dictate at y=843). The list center is
-    // above the keyboard; tapping it blurs the field. Then Send is hittable.
-    await element(by.id(TEST_IDS.assistant.list)).tap();
-    await element(by.id(TEST_IDS.assistant.send)).tap();
-
-    await waitFor(element(by.text("Updated pantry")))
+    await waitFor(element(by.text("Added to pantry")))
       .toBeVisible()
       .withTimeout(20000);
     await waitFor(element(by.text("Added eggs to your pantry.")))
       .toBeVisible()
       .withTimeout(20000);
-    await waitFor(element(by.text("Send")))
-      .toBeVisible()
+    await waitFor(element(by.id(TEST_IDS.search.stopAssistant)))
+      .not.toExist()
       .withTimeout(10000);
 
     await expect(element(by.id(TEST_IDS.assistant.bubble))).toBeVisible();
     await expect(element(by.id(TEST_IDS.assistant.list))).toBeVisible();
 
-    // cookkit:/// does not pop this stack. After openURL the Assistant card
-    // was still the only visible screen (title, transcript, and composer).
-    // Back returns to the already-mounted home screen, which is what
-    // catches a missing pantry query invalidation. Home keeps the main queue
-    // awake, so don't wait for idle around these taps.
-    //
-    // label "Back" matches the bar button and its chevron. id "BackButton"
-    // still matches more than one view under the Assistant bar. The bar
-    // itself is unique (its id is the screen title) and the back platter is
-    // the 44pt control at (20, 0) inside it.
-    const pop = (screenTitle: string) => element(by.id(screenTitle)).tap({ x: 42, y: 22 });
+    // The iOS 27 search close button returns to the mounted pantry and checks query invalidation.
     await device.disableSynchronization();
-    await pop("Assistant");
+    await element(by.label("close")).tap();
     await waitFor(element(by.id(TEST_IDS.home.screen)))
       .toBeVisible()
       .withTimeout(20000);

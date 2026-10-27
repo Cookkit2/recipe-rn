@@ -1,38 +1,50 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
-import { runInNewContext } from "node:vm";
+import { readNebiusAgentConfig } from "../nebius-config";
+import { getAIProxyConnection } from "~/lib/ai/proxy-connection";
 
-const { transformSync } = require("@babel/core");
-const { expoInlineEnvVars } = require("babel-preset-expo/build/plugins/inline-env-vars");
+jest.mock("~/lib/ai/proxy-connection", () => ({ getAIProxyConnection: jest.fn() }));
+const env = { EXPO_PUBLIC_SUPABASE_URL: "https://cookkit-test.supabase.co" };
 
-it("reads Expo-inlined config without a runtime environment", () => {
-  const values = {
-    EXPO_PUBLIC_NEBIUS_API_KEY: "placeholder-key",
-    EXPO_PUBLIC_NEBIUS_MODEL: "test-model",
-    EXPO_PUBLIC_NEBIUS_BASE_URL: "https://example.test/v1/",
-  };
-  const previous = { ...process.env };
-  try {
-    Object.assign(process.env, values);
-    const result = transformSync(readFileSync(resolve(__dirname, "../nebius-config.ts"), "utf8"), {
-      configFile: false,
-      babelrc: false,
-      filename: "nebius-config.ts",
-      caller: { name: "metro", isDev: false },
-      plugins: [
-        "@babel/plugin-transform-typescript",
-        expoInlineEnvVars,
-        "@babel/plugin-transform-modules-commonjs",
-      ],
-    });
-    const output = { exports: {} as typeof import("../nebius-config") };
-    runInNewContext(result.code, { exports: output.exports, process: { env: {} } });
-    expect(output.exports.readNebiusAgentConfig()).toEqual({
-      apiKey: values.EXPO_PUBLIC_NEBIUS_API_KEY,
-      model: values.EXPO_PUBLIC_NEBIUS_MODEL,
-      baseURL: "https://example.test/v1",
-    });
-  } finally {
-    process.env = previous;
-  }
+beforeEach(() => {
+  jest.mocked(getAIProxyConnection).mockResolvedValue({
+    url: `${env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/nebius-ai`,
+    headers: { Authorization: "Bearer guest-session", apikey: "public-project-key" },
+  });
+});
+
+it("connects a release without any public Nebius key or model to the authenticated chat proxy", async () => {
+  expect(await readNebiusAgentConfig(env)).toEqual({
+    baseURL: `${env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/nebius-chat/v1`,
+    apiKey: "guest-session",
+    model: "cookkit-assistant",
+    headers: { apikey: "public-project-key" },
+  });
+});
+
+it("reads the current guest session for each new conversation turn", async () => {
+  await readNebiusAgentConfig(env);
+  jest.mocked(getAIProxyConnection).mockResolvedValueOnce({
+    url: `${env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/nebius-ai`,
+    headers: { Authorization: "Bearer refreshed-session", apikey: "public-project-key" },
+  });
+  expect((await readNebiusAgentConfig(env)).apiKey).toBe("refreshed-session");
+});
+
+it("fails closed when a user session or trusted project URL is unavailable", async () => {
+  jest
+    .mocked(getAIProxyConnection)
+    .mockResolvedValueOnce({ url: "http://localhost:8787/ai", headers: {} });
+  await expect(readNebiusAgentConfig(env)).rejects.toThrow();
+  await expect(
+    readNebiusAgentConfig({ EXPO_PUBLIC_SUPABASE_URL: "http://example.test" })
+  ).rejects.toThrow();
+});
+
+it("keeps the native E2E build on its dummy loopback fixture without guest authentication", async () => {
+  jest.mocked(getAIProxyConnection).mockClear();
+  expect(await readNebiusAgentConfig({ EXPO_PUBLIC_E2E: "true" })).toEqual({
+    apiKey: "test-nebius-key",
+    model: "mock-tool-model",
+    baseURL: "http://127.0.0.1:8787/v1",
+  });
+  expect(getAIProxyConnection).not.toHaveBeenCalled();
 });

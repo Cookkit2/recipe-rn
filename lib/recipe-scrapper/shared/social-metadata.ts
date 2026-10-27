@@ -33,7 +33,11 @@ function attributes(tag: string): Record<string, string> {
 }
 
 /** Extract only published page text; login walls still require a pasted caption. */
-export function extractSocialMetadata(html: string): { title: string; description: string } {
+export function extractSocialMetadata(html: string): {
+  title: string;
+  description: string;
+  image?: string;
+} {
   const metadata = new Map<string, string>();
   const descriptions: string[] = [];
   const source = html.slice(0, 2_000_000);
@@ -72,5 +76,9 @@ export function extractSocialMetadata(html: string): { title: string; descriptio
     (longest, text) => (text.length > longest.length ? text : longest),
     ""
   );
-  return { title, description: description.slice(0, 32000) };
+  const image =
+    metadata.get("og:image:secure_url") ??
+    metadata.get("og:image") ??
+    metadata.get("twitter:image");
+  return { title, description: description.slice(0, 32000), ...(image ? { image } : {}) };
 }

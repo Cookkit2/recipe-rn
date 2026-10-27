@@ -2,10 +2,7 @@ import type { pantryApi } from "~/data/api/pantryApi";
 import type { PantryItem as AppPantryItem } from "~/types/PantryItem";
 import type { CookingDataClient, PantryItem } from "./planning";
 
-type PantryApi = Pick<
-  typeof pantryApi,
-  "fetchAllPantryItems" | "addPantryItem" | "deletePantryItem"
->;
+type PantryApi = Pick<typeof pantryApi, "fetchAllPantryItems" | "manageAssistantPantry">;
 
 function toAgentItem(item: AppPantryItem): PantryItem {
   return {
@@ -25,55 +22,36 @@ export function withLocalPantry(
   pantry: PantryApi,
   onChanged: () => void
 ): CookingDataClient {
+  const manage: NonNullable<CookingDataClient["managePantry"]> = async (input) => {
+    try {
+      const result = await pantry.manageAssistantPantry(input);
+      if (!result.ok) return result;
+      onChanged();
+      return "item" in result
+        ? { ...result, item: toAgentItem(result.item) }
+        : { ...result, removed: result.removed.map(toAgentItem) };
+    } catch (error) {
+      return {
+        ok: false,
+        error: error instanceof Error ? error.message : "Couldn't update that ingredient.",
+      };
+    }
+  };
   return {
     ...data,
+    managePantry: manage,
     async listPantry() {
       return (await pantry.fetchAllPantryItems()).map(toAgentItem);
     },
     async addIngredient(input) {
-      try {
-        const item = await pantry.addPantryItem({
-          name: input.name,
-          quantity: input.quantity ?? 1,
-          unit: input.unit ?? "count",
-          type: "fridge",
-          category: "other",
-          image_url: undefined,
-          background_color: undefined,
-          steps_to_store: [],
-        });
-        onChanged();
-        return { ok: true, item: toAgentItem(item) };
-      } catch (error) {
-        return {
-          ok: false,
-          error: error instanceof Error ? error.message : "Couldn't add that ingredient.",
-        };
-      }
+      const result = await manage({ ...input, action: "add" });
+      if (!result.ok || "item" in result) return result;
+      return { ok: false, error: "The pantry add did not return an item." };
     },
     async removeIngredient(input) {
-      const removed: PantryItem[] = [];
-      try {
-        const name = input.name?.trim().toLowerCase();
-        if (!input.stockId && !name) return { ok: false, error: "Say which ingredient to remove." };
-        const items = await this.listPantry();
-        const matches = items.filter((item) =>
-          input.stockId ? item.id === input.stockId : item.name.trim().toLowerCase() === name
-        );
-        for (const item of matches) {
-          await pantry.deletePantryItem(item.id);
-          removed.push(item);
-        }
-        return { ok: true, removed };
-      } catch (error) {
-        return {
-          ok: false,
-          error: error instanceof Error ? error.message : "Couldn't remove that ingredient.",
-        };
-      } finally {
-        // Refresh even if a later deletion in a multi-row removal fails.
-        if (removed.length > 0) onChanged();
-      }
+      const result = await manage({ ...input, action: "remove" });
+      if (!result.ok || "removed" in result) return result;
+      return { ok: false, error: "The pantry removal did not return its entries." };
     },
   };
 }

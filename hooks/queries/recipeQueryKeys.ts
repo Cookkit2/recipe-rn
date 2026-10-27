@@ -12,6 +12,9 @@ export const recipeQueryKeys = {
   // All recipes list
   recipes: () => [...recipeQueryKeys.all, "list"] as const,
 
+  // Keep personal recipes under the list prefix so imports/edits invalidate both lists.
+  myRecipes: () => [...recipeQueryKeys.recipes(), "mine"] as const,
+
   // Individual recipe by ID
   recipe: (id: string) => [...recipeQueryKeys.all, "detail", id] as const,
 

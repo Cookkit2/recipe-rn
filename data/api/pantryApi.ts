@@ -18,6 +18,24 @@ import type { AppError } from "~/types/AppError";
 import { log } from "~/utils/logger";
 import { resolveBaseIngredientId, prepareStockData } from "./api-helpers";
 
+import type { AssistantPantryInput, AssistantPantryResult } from "~/types/AssistantPantryMutation";
+import { normalizeIngredientIdentity } from "~/utils/ingredient-identity";
+import { createAssistantPantryMutator } from "./assistant-pantry";
+import { mapStorageType } from "./pantry-storage-type";
+
+const mutateAssistantPantry = createAssistantPantryMutator(database, async (name) => {
+  const ingredient =
+    (await baseIngredientApi.getBaseIngredientByName(name)) ??
+    (await baseIngredientApi.getBaseIngredientByName(normalizeIngredientIdentity(name)));
+  return ingredient
+    ? {
+        id: ingredient.id,
+        name: ingredient.name,
+        aliases: ingredient.synonyms.map((synonym) => synonym.synonym),
+      }
+    : null;
+});
+
 // ---------------------------------------------------------------------------
 // Core (shared) logic — called by both the throw-based and Result-based public
 // methods so the business logic is written only once per operation.
@@ -109,6 +127,20 @@ async function updatePantryItemCore(id: string, updates: Partial<PantryItem>): P
  * These functions only handle database interactions and data transformation
  */
 export const pantryApi = {
+  /** Assistant mutations validate and resolve identity atomically before writing stock. */
+  async manageAssistantPantry(
+    input: AssistantPantryInput
+  ): Promise<AssistantPantryResult<PantryItem>> {
+    const result = await mutateAssistantPantry(input);
+    if (!result.ok) return result;
+    if ("removed" in result) {
+      return { ...result, removed: await convertStockToPantryItemBatch(result.removed) };
+    }
+    const [item] = await convertStockToPantryItemBatch([result.item]);
+    if (!item) throw new Error("The pantry write did not return an item.");
+    return { ...result, item };
+  },
+
   /**
    * Fetch all pantry items from database
    */
@@ -398,7 +430,7 @@ export const pantryApi = {
     // ⚡ Bolt Performance Optimization: Filter raw stocks first to avoid expensive Batch Entity fetching for excluded types
     const rawStocks = await databaseFacade.getAllStock();
     const dbTypeMatches = (dbType: string | undefined, expectedType: ItemType) => {
-      return mapDbTypeToType(dbType) === expectedType;
+      return mapStorageType(dbType) === expectedType;
     };
     const filteredStocks = rawStocks.filter((stock) => dbTypeMatches(stock.storageType, type));
     return await convertStockToPantryItemBatch(filteredStocks);
@@ -557,7 +589,7 @@ const convertStockToPantryItemBatch = async (stocks: Stock[]): Promise<PantryIte
       expiry_date: stock.expiryDate || undefined,
       category: categories.length > 0 ? categories[0]?.name || "" : "",
       categories,
-      type: mapDbTypeToType(stock.storageType),
+      type: mapStorageType(stock.storageType),
       image_url: stock.imageUrl,
       background_color: stock.backgroundColor,
       created_at: stock.createdAt,
@@ -566,13 +598,4 @@ const convertStockToPantryItemBatch = async (stocks: Stock[]): Promise<PantryIte
       synonyms,
     };
   });
-};
-
-// Map database dbType to ItemType
-const mapDbTypeToType = (type?: string): Exclude<ItemType, "all"> => {
-  if (!type) return "fridge";
-  const lowerDbType = type.toLowerCase();
-  if (lowerDbType.includes("cabinet") || lowerDbType.includes("pantry")) return "cabinet";
-  if (lowerDbType.includes("freezer")) return "freezer";
-  return "fridge"; // default
 };

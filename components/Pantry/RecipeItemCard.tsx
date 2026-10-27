@@ -11,13 +11,15 @@ import { RECIPE_MATCH_CATEGORY_LABELS } from "~/types/RecipeMatching";
 import useDebounce from "~/hooks/useDebounce";
 import Animated from "react-native-reanimated";
 import useButtonAnimation from "~/hooks/animation/useButtonAnimations";
-import { CheckCircleIcon, HeartIcon } from "lucide-uniwind";
+import { BookOpenIcon, CheckCircleIcon, HeartIcon } from "lucide-uniwind";
 import { useToggleFavorite } from "~/hooks/queries/useFavorites";
+import { cn } from "~/lib/utils";
 
 interface RecipeItemCardProps {
   recipe: Recipe;
   completionPercentage?: number;
   matchCategory?: RecipeMatchCategory;
+  titleClassName?: string;
   /** Optional engagement callback fired on card press (e.g. for nudge analytics). */
   onEngage?: (recipeId: string) => void;
 }
@@ -26,6 +28,7 @@ function RecipeItemCard({
   recipe,
   completionPercentage,
   matchCategory,
+  titleClassName,
   onEngage,
 }: RecipeItemCardProps) {
   const { animatedStyle, roundedStyle, onPressIn, onPressOut } = useButtonAnimation(true, 24);
@@ -55,6 +58,7 @@ function RecipeItemCard({
       <Link href={`/recipes/${recipe.id}`} asChild>
         <ScrollAwarePressable
           accessibilityRole="button"
+          accessibilityLabel={recipe.title}
           accessibilityHint={`View recipe for ${recipe.title}`}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -67,15 +71,22 @@ function RecipeItemCard({
             className="w-full relative flex items-center justify-center border-continuous aspect-square overflow-hidden"
             style={[roundedStyle]}
           >
-            <Link.AppleZoom>
-              <Image
-                source={{ uri: recipe.imageUrl }}
-                style={styles.image}
-                contentFit="cover"
-                collapsable={false}
-                accessibilityLabel={recipe.title ? `Image of ${recipe.title}` : "Recipe image"}
-              />
-            </Link.AppleZoom>
+            {recipe.imageUrl ? (
+              <Link.AppleZoom>
+                <Image
+                  source={{ uri: recipe.imageUrl }}
+                  style={styles.image}
+                  contentFit="cover"
+                  recyclingKey={recipe.id}
+                  collapsable={false}
+                  accessibilityLabel={recipe.title ? `Image of ${recipe.title}` : "Recipe image"}
+                />
+              </Link.AppleZoom>
+            ) : (
+              <View className="w-full h-full bg-muted items-center justify-center">
+                <BookOpenIcon size={32} className="text-muted-foreground" />
+              </View>
+            )}
             {/* Completion badge */}
             {canMake && (
               <View className="absolute top-2 right-2 bg-green-500/90 rounded-full p-1.5">
@@ -111,7 +122,12 @@ function RecipeItemCard({
             )} */}
           </Animated.View>
           <View className="mt-2">
-            <H4 className="text-white/90 opacity-80 mb-[0.5] font-urbanist-regular">
+            <H4
+              className={cn(
+                "text-white/90 opacity-80 mb-[0.5] font-urbanist-regular",
+                titleClassName
+              )}
+            >
               {recipe.title}
             </H4>
             {categoryLabel && (

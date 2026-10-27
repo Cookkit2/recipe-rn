@@ -42,11 +42,14 @@ jest.mock("~/lib/ai/client", () => ({
   generateAIContent: jest.fn(),
 }));
 
-const mockAnalyzeForRecipe = jest.fn(async (_content: unknown) => ({}) as RecipeAnalysisResult);
+const mockAnalyzeForRecipe = jest.fn(
+  async (_content: unknown, _options?: unknown) => ({}) as RecipeAnalysisResult
+);
 
 jest.mock("~/lib/recipe-scrapper/SocialRecipeService", () => ({
   socialRecipeService: {
-    analyzeForRecipe: (content: unknown) => mockAnalyzeForRecipe(content),
+    analyzeForRecipe: (content: unknown, options?: unknown) =>
+      options ? mockAnalyzeForRecipe(content, options) : mockAnalyzeForRecipe(content),
   },
 }));
 
@@ -129,6 +132,18 @@ describe("recipeImportApi.importRecipeFromSocialMedia", () => {
     expect(result.shoppingList?.missingIngredients).toHaveLength(1);
   });
 
+  it("persists the video's cover image with the recipe", async () => {
+    mockAnalyzeForRecipe.mockResolvedValue({
+      isCookingVideo: true,
+      confidence: 0.9,
+      recipe: { ...SAMPLE_RECIPE, imageUrl: "data:image/jpeg;base64,YWJj" },
+    });
+    await recipeImportApi.importRecipeFromSocialMedia(SAMPLE_RECIPE.sourceUrl, "tiktok", undefined);
+    expect(mockCreateRecipe).toHaveBeenCalledWith(
+      expect.objectContaining({ imageUrl: "data:image/jpeg;base64,YWJj" })
+    );
+  });
+
   it("surfaces a graceful fallback when no recipe is detected (e.g. not a recipe post)", async () => {
     mockAnalyzeForRecipe.mockResolvedValue({
       isCookingVideo: false,
@@ -207,7 +222,7 @@ describe("recipeImportApi.importRecipeFromSocialMedia", () => {
     expect(statuses).toContain("complete");
   });
 
-  it("extracts a supplied caption without needing the linked YouTube video", async () => {
+  it("keeps YouTube captions on the shared video path so cover selection is automatic", async () => {
     const url = "https://www.youtube.com/watch?v=abcdef12345";
     jest
       .mocked(analyzeUrl)
@@ -223,11 +238,38 @@ describe("recipeImportApi.importRecipeFromSocialMedia", () => {
     });
     expect(result.success).toBe(true);
     expect(mockAnalyzeForRecipe).toHaveBeenCalledWith({
-      platform: "text",
-      url: "",
+      platform: "youtube",
+      url,
+      postId: undefined,
       text: "Bake 1 block feta with pasta.",
     });
     expect(mockCreateRecipe).toHaveBeenCalledWith(expect.objectContaining({ sourceUrl: url }));
+  });
+
+  it("automatically extracts and saves a shared YouTube link without an import form", async () => {
+    const url = "https://www.youtube.com/watch?v=abcdef12345";
+    jest.mocked(analyzeUrl).mockReturnValue({
+      isValid: true,
+      type: "youtube",
+      url,
+      normalizedUrl: url,
+      videoId: "abcdef12345",
+    });
+    mockAnalyzeForRecipe.mockResolvedValue({
+      isCookingVideo: true,
+      confidence: 0.9,
+      recipe: { ...SAMPLE_RECIPE, sourceUrl: url, imageUrl: "data:image/jpeg;base64,YWJj" },
+    });
+    const prepared = await recipeImportApi.prepareSharedRecipe({ url });
+    expect(mockAnalyzeForRecipe).toHaveBeenCalledWith(
+      expect.objectContaining({ platform: "youtube", url }),
+      expect.any(Object)
+    );
+    expect(prepared.kind).toBe("saved");
+    expect(mockCreateRecipe).toHaveBeenCalledTimes(1);
+    expect(mockCreateRecipe).toHaveBeenCalledWith(
+      expect.objectContaining({ sourceUrl: url, imageUrl: "data:image/jpeg;base64,YWJj" })
+    );
   });
 
   it("falls back to the linked page when the shared text is only a generic message", async () => {

@@ -1,4 +1,5 @@
 import "~/global.css";
+import "~/lib/restore-app-theme";
 import React, { useEffect, useMemo } from "react";
 import { useNavigationContainerRef } from "expo-router";
 import { LogBox, Platform, View } from "react-native";
@@ -11,7 +12,6 @@ export { ErrorBoundary } from "expo-router";
 import { QueryProvider } from "~/store/QueryProvider";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { storage } from "~/data";
-import { PREF_COLOR_SCHEME_KEY } from "~/constants/storage-keys";
 import Purchases, {
   LOG_LEVEL,
   type CustomerInfo,
@@ -20,7 +20,6 @@ import Purchases, {
 import Constants from "expo-constants";
 import { StatusBar } from "expo-status-bar";
 import { isRunningInExpoGo } from "expo";
-import { Uniwind } from "uniwind";
 
 import * as Sentry from "@sentry/react-native";
 import { initImageCache, resolveImageCacheConfig } from "~/lib/image-cache";
@@ -44,6 +43,7 @@ import { reportBudgetBreach } from "~/utils/perf-budget-check";
 import RecipeLinkHandler from "~/components/Recipe/RecipeLinkHandler";
 import LeftoverReminderCoordinator from "~/lib/notifications/LeftoverReminderCoordinator";
 import SocialRecipeShareHandler from "~/components/Recipe/SocialRecipeShareHandler";
+import { RecipeLoadingGlowProvider } from "~/components/Recipe/Loading/RecipeLoadingGlowProvider";
 import { MealPlanCalendarProvider } from "~/store/MealPlanCalendarContext";
 
 // Detox builds have no debugger attached. Any console.warn then becomes the
@@ -138,15 +138,17 @@ export default Sentry.wrap(function RootLayout() {
             <AuthProvider strategy={authStrategy} autoInitialize={true}>
               <NotificationProvider>
                 <KeyboardProvider>
-                  <StatusBar style="auto" />
-                  <LeftoverReminderCoordinator />
-                  <MealPlanCalendarProvider>
-                    <RecipeLinkHandler />
-                    <SocialRecipeShareHandler />
-                    <AnimatedStack />
-                  </MealPlanCalendarProvider>
-                  <Toaster visibleToasts={2} position="bottom-center" offset={80} />
-                  <PortalHost />
+                  <RecipeLoadingGlowProvider>
+                    <StatusBar style="auto" />
+                    <LeftoverReminderCoordinator />
+                    <MealPlanCalendarProvider>
+                      <RecipeLinkHandler />
+                      <SocialRecipeShareHandler />
+                      <AnimatedStack />
+                    </MealPlanCalendarProvider>
+                    <Toaster visibleToasts={2} position="bottom-center" offset={80} />
+                    <PortalHost />
+                  </RecipeLoadingGlowProvider>
                 </KeyboardProvider>
               </NotificationProvider>
             </AuthProvider>
@@ -196,13 +198,6 @@ function useCoreStartupTasks(ref: any) {
       emitAppFirstOpen();
     }
     emitSessionStart();
-
-    // Restore persisted theme from MMKV on mount. Kept SYNCHRONOUS: it is a
-    // cheap MMKV read and running it after paint would cause a theme flash.
-    const storedTheme = storage.get<"light" | "dark" | "system">(PREF_COLOR_SCHEME_KEY);
-    if (storedTheme && ["light", "dark", "system"].includes(storedTheme)) {
-      Uniwind.setTheme(storedTheme);
-    }
 
     // --- Issue #733: defer non-critical startup work off the launch path ---
     // Ordering invariant: everything that first paint / true interactivity

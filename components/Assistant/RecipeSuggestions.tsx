@@ -1,9 +1,15 @@
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { toAssistantPlainText } from "~/lib/agent/plain-text";
 import type { RecipeSuggestionsResult } from "~/lib/agent/recipe-suggestions";
 
-export function RecipeSuggestions({ result }: { result: RecipeSuggestionsResult }) {
+export function RecipeSuggestions({
+  result,
+  onOpenRecipe,
+}: {
+  result: RecipeSuggestionsResult;
+  onOpenRecipe?: (id: string) => void;
+}) {
   const groups = [
     {
       title: "Ready to cook",
@@ -24,13 +30,22 @@ export function RecipeSuggestions({ result }: { result: RecipeSuggestionsResult 
           <View key={group.title} className="gap-2">
             <Text className="font-semibold">{group.title}</Text>
             {group.recipes.map((recipe) => (
-              <View key={recipe.id} className="gap-1">
+              <Pressable
+                key={recipe.id}
+                className="gap-1"
+                accessibilityRole={onOpenRecipe ? "button" : undefined}
+                accessibilityLabel={
+                  onOpenRecipe ? `Open recipe: ${toAssistantPlainText(recipe.title)}` : undefined
+                }
+                disabled={!onOpenRecipe}
+                onPress={() => onOpenRecipe?.(recipe.id)}
+              >
                 <Text className="font-semibold">{toAssistantPlainText(recipe.title)}</Text>
                 <Text>Have: {toAssistantPlainText(recipe.matched.join(", "))}</Text>
                 {recipe.missing.length > 0 ? (
                   <Text>Need: {toAssistantPlainText(recipe.missing.join(", "))}</Text>
                 ) : null}
-              </View>
+              </Pressable>
             ))}
           </View>
         ) : null

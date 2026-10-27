@@ -19,7 +19,6 @@ import {
   quickCookingCheck,
 } from "~/utils/youtube-utils";
 
-import { RecipeAnalyzer } from "~/lib/recipe-scrapper/youtube/RecipeAnalyzer";
 import { socialRecipeService } from "~/lib/recipe-scrapper/SocialRecipeService";
 import { databaseFacade } from "~/data/db/DatabaseFacade";
 import type { CreateRecipeData, ShoppingListResult } from "~/data/db/DatabaseFacade";
@@ -49,9 +48,6 @@ export type RecipeImportStatus =
 
 // Re-export for convenience
 export type { YouTubeImportResult as RecipeImportResult };
-
-// Singleton analyzer instance
-const recipeAnalyzer = new RecipeAnalyzer();
 
 /**
  * Helper wrapper for import operations that calls onStatusChange on error
@@ -89,7 +85,13 @@ export const recipeImportApi = {
     options.signal?.throwIfAborted();
     const source = input.url ? analyzeUrl(input.url) : null;
     if (input.url && !source?.isValid) throw new Error("Share a valid recipe link.");
-    if (!input.videoUri && source && source.type !== "tiktok" && source.type !== "instagram") {
+    if (
+      !input.videoUri &&
+      source &&
+      source.type !== "tiktok" &&
+      source.type !== "instagram" &&
+      source.type !== "youtube"
+    ) {
       const result = await this.importSharedRecipe(input, onStatusChange);
       options.signal?.throwIfAborted();
       return { kind: "saved", result };
@@ -99,7 +101,10 @@ export const recipeImportApi = {
     onStatusChange?.("fetching-social");
     const analysis = await socialRecipeService.analyzeForRecipe(
       {
-        platform: source?.type === "tiktok" || source?.type === "instagram" ? source.type : "text",
+        platform:
+          source?.type === "tiktok" || source?.type === "instagram" || source?.type === "youtube"
+            ? source.type
+            : "text",
         url: source?.normalizedUrl ?? "",
         postId: source?.postId,
         text: input.text,
@@ -177,7 +182,8 @@ export const recipeImportApi = {
       (!source?.isValid ||
         !input.text?.trim() ||
         source.type === "tiktok" ||
-        source.type === "instagram")
+        source.type === "instagram" ||
+        source.type === "youtube")
     )
       return this.importRecipeFromUrl(input.url, onStatusChange, input.text);
     if (!input.text?.trim()) return { success: false, error: "Share a recipe link or caption." };
@@ -240,7 +246,13 @@ export const recipeImportApi = {
       async () => {
         switch (urlAnalysis.type) {
           case "youtube":
-            return await this.importRecipeFromYouTube(urlAnalysis.normalizedUrl, onStatusChange);
+            return await this.importRecipeFromSocialMedia(
+              urlAnalysis.normalizedUrl,
+              "youtube",
+              urlAnalysis.videoId,
+              onStatusChange,
+              sharedText
+            );
 
           case "tiktok":
             return await this.importRecipeFromSocialMedia(
@@ -287,97 +299,17 @@ export const recipeImportApi = {
     url: string,
     onStatusChange?: (status: RecipeImportStatus) => void
   ): Promise<YouTubeImportResult> {
-    const result = await withImportErrorHandling(
-      async () => {
-        // Step 1: Validate URL
-        onStatusChange?.("validating-url");
-        log.info("YouTube Import: Validating URL...", url);
-
-        if (!isValidYouTubeUrl(url)) {
-          throw new Error("Invalid YouTube URL. Please enter a valid YouTube video link.");
-        }
-
-        const videoId = extractYouTubeVideoId(url);
-        if (!videoId) {
-          throw new Error("Could not extract video ID from URL");
-        }
-
-        const normalizedUrl = buildYouTubeWatchUrl(videoId);
-        log.info("YouTube Import: Video ID extracted:", videoId);
-
-        // Step 2: Get YouTube service and fetch video data
-        onStatusChange?.("fetching-metadata");
-        log.info("YouTube Import: Fetching video metadata...");
-
-        const youtubeService = getDefaultYouTubeService();
-        const { videoInfo, transcript, hasFullMetadata } =
-          await youtubeService.getVideoData(videoId);
-
-        if (!hasFullMetadata) {
-          log.info(
-            "YouTube Import: Using limited metadata (noembed) - transcript will be primary source for recipe extraction"
-          );
-        }
-
-        // Step 3: Update status for transcript fetching
-        if (transcript) {
-          onStatusChange?.("fetching-transcript");
-          log.info("YouTube Import: Transcript fetched:", transcript.text.length, "characters");
-          log.debug("YouTube Import: Transcript content:", transcript.text);
-        } else {
-          log.warn(
-            "YouTube Import: No transcript available - will analyze based on title/metadata only"
-          );
-        }
-
-        // Step 4: Analyze with Nebius AI
-        // Uses available transcripts/descriptions; URL-only video input is not supported.
-        onStatusChange?.("analyzing");
-        log.info("YouTube Import: Analyzing video with AI...");
-
-        const analysisResult = await recipeAnalyzer.analyzeForRecipe(
-          videoInfo,
-          transcript,
-          normalizedUrl
-        );
-
-        if (!analysisResult.isCookingVideo) {
-          if (analysisResult.errorMessage) throw new Error(analysisResult.errorMessage);
-          const confidencePercent = (analysisResult.confidence * 100).toFixed(0);
-          throw new Error(
-            `This video does not appear to be a cooking/recipe video. ` +
-              `Confidence: ${confidencePercent}%. ` +
-              `Try a different video that shows how to prepare a dish.`
-          );
-        }
-
-        if (!analysisResult.recipe) {
-          throw new Error(
-            "Could not extract recipe from video. The video may not contain clear recipe instructions."
-          );
-        }
-
-        log.info("YouTube Import: Recipe extracted:", analysisResult.recipe.title);
-
-        log.debug("YouTube Import: Recipe:", analysisResult.recipe);
-
-        return await this._finalizeImport(
-          analysisResult.recipe,
-          normalizedUrl,
-          "YouTube",
-          videoInfo.thumbnailUrl,
-          onStatusChange
-        );
-      },
-      "YouTube Import",
+    if (!isValidYouTubeUrl(url)) {
+      onStatusChange?.("error");
+      return { success: false, error: "Share a valid YouTube video link." };
+    }
+    const videoId = extractYouTubeVideoId(url)!;
+    return this.importRecipeFromSocialMedia(
+      buildYouTubeWatchUrl(videoId),
+      "youtube",
+      videoId,
       onStatusChange
     );
-
-    if (!result.success) {
-      return result;
-    }
-
-    return result.data;
   },
 
   /**
@@ -499,12 +431,13 @@ export const recipeImportApi = {
    */
   async importRecipeFromSocialMedia(
     url: string,
-    platform: "tiktok" | "instagram",
+    platform: "tiktok" | "instagram" | "youtube",
     postId: string | undefined,
     onStatusChange?: (status: RecipeImportStatus) => void,
     sharedText?: string
   ): Promise<YouTubeImportResult> {
-    const platformName = platform === "tiktok" ? "TikTok" : "Instagram";
+    const platformName =
+      platform === "tiktok" ? "TikTok" : platform === "youtube" ? "YouTube" : "Instagram";
 
     const result = await withImportErrorHandling(
       async () => {
@@ -643,7 +576,7 @@ export const recipeImportApi = {
       const recipeData: CreateRecipeData = {
         title: generatedRecipe.title,
         description: generatedRecipe.description,
-        imageUrl,
+        imageUrl: imageUrl ?? generatedRecipe.imageUrl,
         prepMinutes: generatedRecipe.prepMinutes,
         cookMinutes: generatedRecipe.cookMinutes,
         difficultyStars: generatedRecipe.difficultyStars,

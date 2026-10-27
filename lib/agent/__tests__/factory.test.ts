@@ -39,7 +39,7 @@ it("maps an injected model stream without calling Nebius", async () => {
   expect(events.map((event) => event.type)).toEqual(["text-delta", "finish"]);
 });
 
-it("reports a missing prototype key before opening a stream", async () => {
+it("reports an unavailable connection without exposing configuration details", async () => {
   const agent = createCookingAgent({
     data,
     config: { apiKey: "", model: "", baseURL: "https://api.tokenfactory.nebius.com/v1" },
@@ -52,6 +52,6 @@ it("reports a missing prototype key before opening a stream", async () => {
   }
   expect(events[0]).toMatchObject({ type: "error" });
   expect(events[0]?.type === "error" ? events[0].message : "").toBe(
-    "Something went wrong, please try again later"
+    "The assistant is temporarily unavailable. Please try again later."
   );
 });

@@ -32,6 +32,8 @@ export interface RecipeAnalysisResult {
 }
 
 export interface GeneratedRecipe {
+  /** Published cover or an actual sampled video frame, never an AI-generated URL. */
+  imageUrl?: string;
   title: string;
   description: string;
   prepMinutes: number;

@@ -6,6 +6,10 @@ const source = { id: "share-1", url: "https://www.instagram.com/reel/Db18zFIR5k-
 let mockPending: PendingRecipeShare | null = source;
 const mockPrepare = jest.fn();
 const mockSave = jest.fn();
+const mockLoadingGlow = jest.fn();
+jest.mock("../Loading/RecipeLoadingGlowProvider", () => ({
+  useRecipeLoadingGlow: (active: boolean) => mockLoadingGlow(active),
+}));
 const mockReplace = jest.fn();
 const mockClear = jest.fn((id: string) => {
   if (mockPending?.id === id) mockPending = null;
@@ -45,7 +49,14 @@ beforeEach(() => {
   mockPending = source;
   mockPrepare.mockReset();
 });
-it("shows the normal recipe skeleton immediately and replaces it with the saved recipe", async () => {
+it.each([
+  source.url,
+  "https://www.tiktok.com/@cook/video/123456",
+  "https://youtu.be/abcdef12345",
+  "https://www.youtube.com/shorts/abcdef12345",
+])("shows loading waves until the saved recipe is ready: %s", async (url) => {
+  const pending = { ...source, url };
+  mockPending = pending;
   let finish!: (value: unknown) => void;
   mockPrepare.mockImplementation(
     () =>
@@ -53,7 +64,8 @@ it("shows the normal recipe skeleton immediately and replaces it with the saved 
         finish = resolve;
       })
   );
-  const screen = await render(<SharedRecipeImport pending={source} />);
+  const screen = await render(<SharedRecipeImport pending={pending} />);
+  expect(mockLoadingGlow).toHaveBeenLastCalledWith(true);
   expect(screen.getByTestId("recipe-skeleton")).toBeTruthy();
   expect(mockReplace).not.toHaveBeenCalled();
   expect(mockClear).not.toHaveBeenCalled();
@@ -62,6 +74,7 @@ it("shows the normal recipe skeleton immediately and replaces it with the saved 
   );
   expect(mockReplace).toHaveBeenCalledWith("/recipes/peach");
   expect(mockClear).toHaveBeenCalledWith("share-1");
+  expect(mockLoadingGlow).toHaveBeenLastCalledWith(false);
 });
 it("retains the original share and offers inline retry without a fill-in form", async () => {
   mockPrepare.mockRejectedValueOnce(new Error("Video temporarily unavailable"));
@@ -70,6 +83,7 @@ it("retains the original share and offers inline retry without a fill-in form", 
   expect(mockClear).not.toHaveBeenCalled();
   expect(mockReplace).not.toHaveBeenCalled();
   expect(screen.queryAllByRole("textbox")).toHaveLength(0);
+  expect(mockLoadingGlow).toHaveBeenLastCalledWith(false);
   mockPrepare.mockResolvedValueOnce({
     kind: "saved",
     result: { success: true, recipe: { id: "peach" } },
@@ -77,6 +91,8 @@ it("retains the original share and offers inline retry without a fill-in form", 
   await fireEvent.press(screen.getByText("Try again"));
   await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/recipes/peach"));
   expect(mockPrepare).toHaveBeenCalledTimes(2);
+  expect(mockLoadingGlow.mock.calls.filter(([active]) => active)).toHaveLength(2);
+  expect(mockLoadingGlow).toHaveBeenLastCalledWith(false);
 });
 it("does not open an obsolete recipe after a newer share arrives", async () => {
   let finish!: (value: unknown) => void;

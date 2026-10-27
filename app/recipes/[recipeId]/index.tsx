@@ -1,6 +1,16 @@
-import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
+import { useRecipeLoadingGlow } from "~/components/Recipe/Loading/RecipeLoadingGlowProvider";
+import { Link, useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import type { NativeStackNavigationOptions } from "expo-router/native-stack";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentRef,
+} from "react";
+import { BlurTargetView } from "expo-blur";
 import {
   View,
   StyleSheet,
@@ -59,9 +69,11 @@ import TipsList from "~/components/Recipe/Details/TipsList";
 import WriteTipModal from "~/components/Recipe/Details/WriteTipModal";
 import { useRecipeReviewsAndTips } from "~/hooks/useRecipeReviewsAndTips";
 import RecipeDetailsSkeleton from "~/components/Recipe/Details/RecipeDetailsSkeleton";
+import { cleanRecipeDescription } from "~/utils/recipe-description";
 
 const AnimatedH1 = Animated.createAnimatedComponent(H1);
 const AnimatedImage = Animated.createAnimatedComponent(Image);
+const RecipeContentView = Platform.OS === "android" ? BlurTargetView : View;
 
 export default function RecipeDetails() {
   const { recipeId } = useLocalSearchParams<{ recipeId: string }>();
@@ -128,6 +140,7 @@ function RecipeDetailsContent({
     : ["#4B5563", "#6B7280", "#9CA3AF", "#374151", "#525966", "#78818F"];
 
   const { width: windowWidth } = useWindowDimensions();
+  const ingredientBlurTarget = useRef<ComponentRef<typeof View> | null>(null);
   const navigation = useNavigation("/");
   const router = useRouter();
   const removeFromMealPlan = useRemoveFromMealPlan();
@@ -136,6 +149,7 @@ function RecipeDetailsContent({
   const [tailoredRecipe, setTailoredRecipe] = useState<Recipe | null>(null);
   const [mode, setMode] = useState<"original" | "tailored">("original");
   const [isTailoring, setIsTailoring] = useState(false);
+  useRecipeLoadingGlow(isTailoring);
   const { data: isInPlan, isLoading: isCheckingPlan } = useIsRecipeInPlan(recipeId);
   const addToMealPlan = useAddToMealPlan();
 
@@ -348,6 +362,7 @@ function RecipeDetailsContent({
   }, [activeRecipe]);
 
   const displayedRecipe = activeRecipe ?? recipe;
+  const displayedDescription = cleanRecipeDescription(displayedRecipe.description);
 
   // Share the displayed version, including tailoring and serving adjustments.
   const recipeToShare = useMemo(
@@ -399,17 +414,20 @@ function RecipeDetailsContent({
   }, [navigation, handleShare, isInPlan, isCheckingPlan, removeFromMealPlan, recipeId, router]);
 
   return (
-    <View className="relative flex-1 bg-background">
+    <RecipeContentView ref={ingredientBlurTarget} className="relative flex-1 bg-background">
       {/* Background Parallax Header */}
       <Animated.View
         className="absolute top-0 left-0 right-0 bg-background"
         style={[parallaxHeaderStyle, { height: windowWidth, zIndex: 0 }]}
       >
-        <AnimatedImage
-          source={{ uri: displayedRecipe.imageUrl }}
-          style={[styles.image, { height: windowWidth }]}
-          transition={{ duration: 100, skipOnCacheHit: "all" }}
-        />
+        <Link.AppleZoomTarget>
+          <AnimatedImage
+            source={{ uri: displayedRecipe.imageUrl }}
+            style={[styles.image, { height: windowWidth }]}
+            transition={{ duration: 100, skipOnCacheHit: "all" }}
+            collapsable={false}
+          />
+        </Link.AppleZoomTarget>
         <Animated.View
           style={[opacityStyle, styles.gradient, { height: windowWidth }]}
           className="bg-background"
@@ -473,6 +491,9 @@ function RecipeDetailsContent({
           <IngredientVisualPreview
             ingredientPreviewData={ingredientPreviewData}
             missingIngredientPalette={missingIngredientPalette}
+            ingredients={scaledIngredients}
+            findMatch={findMatch}
+            blurTarget={Platform.OS === "android" ? ingredientBlurTarget : undefined}
           />
 
           {/* Missing Ingredients */}
@@ -485,10 +506,8 @@ function RecipeDetailsContent({
 
           <Separator className="my-8" />
           {/* Description */}
-          {displayedRecipe.description && (
-            <P className="font-urbanist-regular text-foreground/60">
-              {displayedRecipe.description}
-            </P>
+          {displayedDescription && (
+            <P className="font-urbanist-regular text-foreground/60">{displayedDescription}</P>
           )}
 
           {/* <Separator className="my-8" /> */}
@@ -569,7 +588,7 @@ function RecipeDetailsContent({
         existingTip={editingTip}
         isSubmitting={isSubmittingTip}
       />
-    </View>
+    </RecipeContentView>
   );
 }
 const styles = StyleSheet.create({

@@ -11,6 +11,8 @@ let mockReady = true;
 let nextId = 0;
 const mockRouter = { push: jest.fn(), replace: jest.fn() };
 const mockClear = jest.fn();
+const mockGetPayloads = jest.fn(() => mockPayloads);
+const mockInitialURL = jest.fn(async (): Promise<string | null> => null);
 const mockNative = jest.fn((): object | null => ({}));
 const mockToast = jest.fn();
 const mockLoading = jest.fn();
@@ -32,15 +34,15 @@ jest.mock("react-native/Libraries/AppState/AppState", () => ({
 }));
 jest.mock("react-native/Libraries/Linking/Linking", () => ({
   __esModule: true,
-  default: { addEventListener: jest.fn() },
+  default: { addEventListener: jest.fn(), getInitialURL: () => mockInitialURL() },
 }));
 jest.mock("expo", () => ({ requireOptionalNativeModule: () => mockNative() }));
-jest.mock("~/utils/logger", () => ({ log: { debug: jest.fn() } }));
+jest.mock("~/utils/logger", () => ({ log: { debug: jest.fn(), warn: jest.fn() } }));
 jest.mock("expo-sharing", () => ({
-  getSharedPayloads: () => mockPayloads,
+  getSharedPayloads: () => mockGetPayloads(),
   clearSharedPayloads: () => {
-    mockPayloads = [];
     mockClear();
+    mockPayloads = [];
   },
 }));
 jest.mock("expo-router", () => ({
@@ -64,6 +66,10 @@ import SocialRecipeShareHandler from "../SocialRecipeShareHandler.native";
 let active: ((value: AppStateStatus) => void) | undefined;
 let link: ((event: { url: string }) => void) | undefined;
 const caption = [{ shareType: "text", value: "Whisk 2 eggs and fry in 1 tsp oil." }];
+const shareOnLaunch = (payloads = caption) => {
+  mockInitialURL.mockResolvedValue("cookkit://expo-sharing");
+  mockPayloads = payloads;
+};
 beforeEach(() => {
   jest.clearAllMocks();
   nextId = 0;
@@ -72,7 +78,13 @@ beforeEach(() => {
   mockOnboarded = true;
   mockReady = true;
   mockSegments = [];
-  mockNative.mockReturnValue({});
+  mockNative.mockReturnValue({
+    getSharedPayloads: mockGetPayloads,
+    clearSharedPayloads: mockClear,
+  });
+  mockGetPayloads.mockReset().mockImplementation(() => mockPayloads);
+  mockClear.mockReset();
+  mockInitialURL.mockResolvedValue(null);
   jest.spyOn(AppState, "addEventListener").mockImplementation((_event, callback) => {
     active = callback as typeof active;
     return { remove: jest.fn() };
@@ -85,7 +97,7 @@ beforeEach(() => {
 afterEach(() => jest.restoreAllMocks());
 const target = (id: string) => ({ pathname: "/recipes/import", params: { shareId: id } });
 it("persists a cold-start share then immediately opens the recipe skeleton route without a loading toast", async () => {
-  mockPayloads = caption;
+  shareOnLaunch();
   await render(<SocialRecipeShareHandler />);
   await waitFor(() => expect(mockRouter.push).toHaveBeenCalledWith(target("share-1")));
   await act(async () => {
@@ -99,10 +111,10 @@ it("persists a cold-start share then immediately opens the recipe skeleton route
   expect(mockLoading).not.toHaveBeenCalled();
 });
 it("keeps both the Instagram URL and shared caption", async () => {
-  mockPayloads = [
+  shareOnLaunch([
     { shareType: "url", value: "https://www.instagram.com/reel/Db18zFIR5k-/" },
     ...caption,
-  ];
+  ]);
   await render(<SocialRecipeShareHandler />);
   await waitFor(() =>
     expect(mockSave).toHaveBeenCalledWith({
@@ -113,7 +125,7 @@ it("keeps both the Instagram URL and shared caption", async () => {
 });
 it("waits for navigator readiness", async () => {
   mockReady = false;
-  mockPayloads = caption;
+  shareOnLaunch();
   await render(<SocialRecipeShareHandler />);
   await waitFor(() => expect(mockClear).toHaveBeenCalled());
   expect(mockRouter.push).not.toHaveBeenCalled();
@@ -123,7 +135,7 @@ it("waits for navigator readiness", async () => {
 });
 it("preserves a share through onboarding", async () => {
   mockOnboarded = false;
-  mockPayloads = caption;
+  shareOnLaunch();
   const screen = await render(<SocialRecipeShareHandler />);
   await waitFor(() => expect(mockClear).toHaveBeenCalled());
   expect(mockRouter.push).not.toHaveBeenCalled();
@@ -133,17 +145,20 @@ it("preserves a share through onboarding", async () => {
   await waitFor(() => expect(mockRouter.push).toHaveBeenCalledTimes(1));
 });
 it("replaces an obsolete import when another share arrives on the loading screen", async () => {
-  mockPayloads = caption;
+  shareOnLaunch();
   const screen = await render(<SocialRecipeShareHandler />);
   await waitFor(() => expect(mockRouter.push).toHaveBeenCalledTimes(1));
   mockSegments = ["recipes", "import"];
   await screen.rerender(<SocialRecipeShareHandler />);
   mockPayloads = caption;
-  await act(async () => active?.("active"));
+  await act(async () => {
+    active?.("active");
+    link?.({ url: "cookkit://expo-sharing" });
+  });
   await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith(target("share-2")));
 });
-it("routes a restored share once across Strict Mode replay", async () => {
-  mockPending = { id: "restored", text: caption[0]?.value };
+it("routes a new native share once across Strict Mode replay", async () => {
+  shareOnLaunch();
   await render(
     <React.StrictMode>
       <SocialRecipeShareHandler />
@@ -151,11 +166,89 @@ it("routes a restored share once across Strict Mode replay", async () => {
   );
   await waitFor(() => expect(mockRouter.push).toHaveBeenCalledTimes(1));
 });
+it("keeps a retained failed share from reopening the importer on every ordinary launch", async () => {
+  mockPending = { id: "old-failed-share", text: caption[0]?.value };
+  const screen = await render(<SocialRecipeShareHandler />);
+  await waitFor(() => expect(mockInitialURL).toHaveBeenCalled());
+  await act(async () => active?.("active"));
+  await screen.unmount();
+  await render(<SocialRecipeShareHandler />);
+  await waitFor(() => expect(mockInitialURL).toHaveBeenCalledTimes(2));
+  expect(mockRouter.push).not.toHaveBeenCalled();
+  expect(mockRouter.replace).not.toHaveBeenCalled();
+  expect(mockPending?.id).toBe("old-failed-share");
+});
+it.each([null, "cookkit://preferences"])(
+  "ignores leftover native data when the launch URL is not a share: %s",
+  async (url) => {
+    mockInitialURL.mockResolvedValue(url);
+    mockPayloads = caption;
+    await render(<SocialRecipeShareHandler />);
+    await waitFor(() => expect(mockInitialURL).toHaveBeenCalled());
+    await act(async () => active?.("active"));
+    expect(mockSave).not.toHaveBeenCalled();
+    expect(mockRouter.push).not.toHaveBeenCalled();
+    expect(mockClear).not.toHaveBeenCalled();
+  }
+);
+it("waits for a real share event when foreground arrives before the share link", async () => {
+  await render(<SocialRecipeShareHandler />);
+  mockPayloads = caption;
+  await act(async () => active?.("active"));
+  expect(mockRouter.push).not.toHaveBeenCalled();
+  await act(async () => link?.({ url: "cookkit://expo-sharing" }));
+  await waitFor(() => expect(mockRouter.push).toHaveBeenCalledWith(target("share-1")));
+});
+it("opens a fresh share after a normal launch with an older failed import retained", async () => {
+  mockPending = { id: "old-failed-share", text: "Old failed recipe" };
+  await render(<SocialRecipeShareHandler />);
+  expect(mockRouter.push).not.toHaveBeenCalled();
+  mockPayloads = caption;
+  await act(async () => link?.({ url: "cookkit://expo-sharing" }));
+  await waitFor(() => expect(mockRouter.push).toHaveBeenCalledWith(target("share-1")));
+  expect(mockPending?.text).toBe(caption[0]?.value);
+});
+it("does not revive an old pending import from a share URL with an empty native inbox", async () => {
+  mockPending = { id: "old-failed-share", text: "Old failed recipe" };
+  mockInitialURL.mockResolvedValue("cookkit://expo-sharing");
+  await render(<SocialRecipeShareHandler />);
+  await waitFor(() => expect(mockGetPayloads).toHaveBeenCalled());
+  expect(mockRouter.push).not.toHaveBeenCalled();
+  expect(mockSave).not.toHaveBeenCalled();
+});
+it("does not resume a saved share after remounting when native cleanup failed", async () => {
+  shareOnLaunch();
+  mockClear.mockImplementation(() => {
+    throw new Error("Native clear failed");
+  });
+  const screen = await render(<SocialRecipeShareHandler />);
+  await waitFor(() => expect(mockRouter.push).toHaveBeenCalledTimes(1));
+  await screen.unmount();
+  mockRouter.push.mockClear();
+  mockInitialURL.mockResolvedValue(null);
+  await render(<SocialRecipeShareHandler />);
+  await act(async () => active?.("active"));
+  expect(mockRouter.push).not.toHaveBeenCalled();
+  expect(mockSave).toHaveBeenCalledTimes(1);
+});
+it("does not import a different native payload during cleanup until its share event arrives", async () => {
+  shareOnLaunch();
+  mockClear.mockImplementation(() => {
+    throw new Error("Native clear failed");
+  });
+  await render(<SocialRecipeShareHandler />);
+  await waitFor(() => expect(mockRouter.push).toHaveBeenCalledTimes(1));
+  mockPayloads = [{ shareType: "text", value: "Whisk 3 eggs and fry." }];
+  await act(async () => active?.("active"));
+  expect(mockSave).toHaveBeenCalledTimes(1);
+  await act(async () => link?.({ url: "cookkit://expo-sharing" }));
+  await waitFor(() => expect(mockRouter.push).toHaveBeenCalledWith(target("share-2")));
+});
 it("does not clear the OS payload when persistence fails", async () => {
   mockSave.mockImplementationOnce(() => {
     throw new Error("storage unavailable");
   });
-  mockPayloads = caption;
+  shareOnLaunch();
   await render(<SocialRecipeShareHandler />);
   await waitFor(() => expect(mockToast).toHaveBeenCalled());
   expect(mockClear).not.toHaveBeenCalled();
@@ -163,7 +256,7 @@ it("does not clear the OS payload when persistence fails", async () => {
   await waitFor(() => expect(mockRouter.push).toHaveBeenCalledTimes(1));
 });
 it("rejects unsupported attachments without opening a recipe", async () => {
-  mockPayloads = [{ shareType: "video", value: "file:///private/video.mp4" }];
+  shareOnLaunch([{ shareType: "video", value: "file:///private/video.mp4" }]);
   await render(<SocialRecipeShareHandler />);
   await waitFor(() => expect(mockClear).toHaveBeenCalled());
   expect(mockRouter.push).not.toHaveBeenCalled();
@@ -172,4 +265,96 @@ it("allows older binaries to start without the native share module", async () =>
   mockNative.mockReturnValue(null);
   await render(<SocialRecipeShareHandler />);
   expect(AppState.addEventListener).not.toHaveBeenCalled();
+});
+
+it("does not show share errors for failed background probes with no incoming share", async () => {
+  mockGetPayloads.mockImplementation(() => {
+    throw new Error("Native inbox unavailable");
+  });
+  await render(<SocialRecipeShareHandler />);
+  await act(async () => {
+    active?.("active");
+  });
+  await act(async () => {
+    active?.("active");
+  });
+  expect(mockToast).not.toHaveBeenCalled();
+  expect(mockSave).not.toHaveBeenCalled();
+
+  await act(async () => link?.({ url: "cookkit://expo-sharing" }));
+  expect(mockToast).toHaveBeenCalledTimes(1);
+  await act(async () => active?.("active"));
+  expect(mockToast).toHaveBeenCalledTimes(1);
+});
+
+it("does not poll older native modules that only support outgoing sharing", async () => {
+  mockNative.mockReturnValue({ shareAsync: jest.fn() });
+  await render(<SocialRecipeShareHandler />);
+  expect(mockGetPayloads).not.toHaveBeenCalled();
+  expect(AppState.addEventListener).not.toHaveBeenCalled();
+  expect(mockToast).not.toHaveBeenCalled();
+});
+
+it("reports a failed explicit cold-start share without repeating it on foreground", async () => {
+  mockInitialURL.mockResolvedValue("cookkit://expo-sharing");
+  mockGetPayloads.mockImplementation(() => {
+    throw new Error("Native inbox unavailable");
+  });
+  await render(<SocialRecipeShareHandler />);
+  await waitFor(() => expect(mockToast).toHaveBeenCalledTimes(1));
+  await act(async () => active?.("active"));
+  expect(mockToast).toHaveBeenCalledTimes(1);
+});
+
+it("keeps a saved share queued without a failure toast or duplicate import when native clearing fails", async () => {
+  shareOnLaunch();
+  mockClear.mockImplementation(() => {
+    throw new Error("Native clear failed");
+  });
+  await render(<SocialRecipeShareHandler />);
+  await waitFor(() => expect(mockRouter.push).toHaveBeenCalledWith(target("share-1")));
+  // Native records can return equivalent fields in a different property order.
+  mockPayloads = caption.map(({ shareType, value }) => ({ value, shareType }));
+  await act(async () => active?.("active"));
+  expect(mockSave).toHaveBeenCalledTimes(1);
+  expect(mockRouter.push).toHaveBeenCalledTimes(1);
+  expect(mockToast).not.toHaveBeenCalled();
+
+  mockClear.mockImplementation(() => {});
+  await act(async () => active?.("active"));
+  expect(mockPayloads).toEqual([]);
+  expect(mockSave).toHaveBeenCalledTimes(1);
+});
+
+it("reports a retained failed share once while allowing a later successful retry", async () => {
+  shareOnLaunch();
+  mockSave
+    .mockImplementationOnce(() => {
+      throw new Error("Storage unavailable");
+    })
+    .mockImplementationOnce(() => {
+      throw new Error("Storage still unavailable");
+    });
+  await render(<SocialRecipeShareHandler />);
+  await waitFor(() => expect(mockToast).toHaveBeenCalledTimes(1));
+  await act(async () => active?.("active"));
+  expect(mockToast).toHaveBeenCalledTimes(1);
+  expect(mockClear).not.toHaveBeenCalled();
+  await act(async () => active?.("active"));
+  await waitFor(() => expect(mockRouter.push).toHaveBeenCalledTimes(1));
+});
+
+it("accepts an intentional repeat share after import finishes even when native cleanup failed", async () => {
+  shareOnLaunch();
+  mockClear.mockImplementation(() => {
+    throw new Error("Native clear failed");
+  });
+  await render(<SocialRecipeShareHandler />);
+  await waitFor(() => expect(mockRouter.push).toHaveBeenCalledTimes(1));
+  mockPending = null;
+  await act(async () => active?.("active"));
+  expect(mockSave).toHaveBeenCalledTimes(1);
+  await act(async () => link?.({ url: "cookkit://expo-sharing" }));
+  await waitFor(() => expect(mockRouter.push).toHaveBeenCalledWith(target("share-2")));
+  expect(mockToast).not.toHaveBeenCalled();
 });

@@ -146,7 +146,11 @@ export function buildTextRecipeRequest(prompt: string): AIRequest {
 }
 
 /** Social imports translate instructions and distinguish estimated amounts from source amounts. */
-export function buildSocialRecipeRequest(prompt: string): AIRequest {
+export function buildSocialRecipeRequest(
+  prompt: string,
+  sourceQuotes: readonly string[] = [],
+  quoteMode: "text" | "index" = "text"
+): AIRequest {
   const responseSchema = getAnalysisResponseSchema();
   const recipe = responseSchema.properties.recipe;
   const ingredient = recipe.properties.ingredients.items;
@@ -159,19 +163,54 @@ export function buildSocialRecipeRequest(prompt: string): AIRequest {
     servingsSource: { type: "string", enum: ["stated", "estimated"] },
   });
   recipe.required.push("servingsSource");
+  if (sourceQuotes.length) recipe.properties.steps.minItems = sourceQuotes.length;
   const step = recipe.properties.steps.items;
   Object.assign(step.properties.description, {
     description:
       "A faithful English translation of the quoted cooking instruction. Preserve actions, times and temperatures; do not add a method from prior knowledge.",
   });
-  Object.assign(step.properties, {
-    sourceQuote: {
-      type: "string",
-      minLength: 1,
+  const indexed = quoteMode === "index" && sourceQuotes.length > 0;
+  if (indexed)
+    Object.assign(step.properties.description, {
       description:
-        "Verbatim preparation instruction from the supplied source, in its original language.",
-    },
-  });
-  step.required.push("sourceQuote");
-  return { ...buildTextRecipeRequest(prompt), responseSchema };
+        "A clear, complete English cooking instruction for this action. Include associated ingredient amounts, temperatures and durations explicitly stated in the surrounding captions. Use the source ID as action evidence; do not merely copy a short subtitle label or invent an unstated method.",
+    });
+  Object.assign(
+    step.properties,
+    indexed
+      ? {
+          sourceInstruction: {
+            type: "integer",
+            minimum: 1,
+            maximum: sourceQuotes.length,
+            description: "The numbered source instruction supporting this step.",
+          },
+        }
+      : {
+          sourceQuote: {
+            type: "string",
+            minLength: 1,
+            ...(sourceQuotes.length ? { enum: [...sourceQuotes] } : {}),
+            description:
+              "Verbatim preparation instruction from the supplied source, in its original language.",
+          },
+        }
+  );
+  step.required.push(indexed ? "sourceInstruction" : "sourceQuote");
+  if (indexed)
+    Object.assign(recipe.properties.steps, {
+      allOf: sourceQuotes.map((_, index) => ({
+        contains: {
+          type: "object",
+          properties: { sourceInstruction: { const: index + 1 } },
+          required: ["sourceInstruction"],
+        },
+      })),
+    });
+  const request = buildTextRecipeRequest(prompt);
+  return {
+    ...request,
+    systemPrompt: `${request.systemPrompt} Write all displayed recipe text in English. Translate every original-language cooking instruction faithfully and in order, preserving all stated times and temperatures; only sourceQuote stays in the source language. Fill missing ingredient amounts with realistic positive estimates for the stated or default servings, marking them estimated. Never add ingredients absent from the source.${indexed ? ` For this request, output sourceInstruction instead of sourceQuote. In recipe, servings must be an INTEGER and servingsSource a SEPARATE sibling STRING: {"servings":2,"servingsSource":"stated"}. Never nest those fields inside servings. Use these numeric evidence IDs; every ID must occur in the steps at least once. Arrange steps in video chronology, rather than ID order. ${JSON.stringify(sourceQuotes.map((quote, index) => ({ sourceInstruction: index + 1, quote })))}` : ""}`,
+    responseSchema,
+  };
 }

@@ -1,4 +1,5 @@
 import { INSTAGRAM_VIDEO_RESOLVER } from "./instagram-metadata";
+import { YOUTUBE_VIDEO_RESOLVER } from "../youtube/page-metadata";
 
 const postHosts = new Set([
   "tiktok.com",
@@ -7,6 +8,10 @@ const postHosts = new Set([
   "vt.tiktok.com",
   "instagram.com",
   "www.instagram.com",
+  "youtube.com",
+  "www.youtube.com",
+  "m.youtube.com",
+  "youtu.be",
 ]);
 
 export function normalizeVideoPostUrl(value: string): string | undefined {
@@ -20,6 +25,17 @@ export function normalizeVideoPostUrl(value: string): string | undefined {
       !postHosts.has(url.hostname)
     )
       return;
+    if (["youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"].includes(url.hostname)) {
+      const videoId =
+        url.hostname === "youtu.be"
+          ? url.pathname.match(/^\/([\w-]{11})\/?$/)?.[1]
+          : url.pathname === "/watch"
+            ? url.searchParams.get("v")
+            : url.pathname.match(/^\/(?:shorts|embed|live)\/([\w-]{11})\/?$/)?.[1];
+      return videoId && /^[\w-]{11}$/.test(videoId)
+        ? `https://www.youtube.com/watch?v=${videoId}`
+        : undefined;
+    }
     const pathValid = url.hostname.endsWith("instagram.com")
       ? /^\/(?:p|reel|reels)\/[\w-]+\/?$/.test(url.pathname)
       : ["vm.tiktok.com", "vt.tiktok.com"].includes(url.hostname)
@@ -49,6 +65,7 @@ export function isAllowedVideoMediaUrl(value: unknown): value is string {
       "ibytedtos.com",
       "cdninstagram.com",
       "fbcdn.net",
+      "googlevideo.com",
     ].some((domain) => url.hostname === domain || url.hostname.endsWith(`.${domain}`));
   } catch {
     return false;
@@ -68,7 +85,7 @@ export function videoResolverScript(): string {
       try {
         const url = new URL(value);
         return url.protocol === 'https:' && !url.username && !url.password && !url.port &&
-          ['tiktok.com','tiktokcdn.com','tiktokcdn-us.com','tiktokcdn-eu.com','byteoversea.com','ibytedtos.com','cdninstagram.com','fbcdn.net']
+          ['tiktok.com','tiktokcdn.com','tiktokcdn-us.com','tiktokcdn-eu.com','byteoversea.com','ibytedtos.com','cdninstagram.com','fbcdn.net','googlevideo.com']
             .some(domain => url.hostname === domain || url.hostname.endsWith('.' + domain));
       } catch { return false; }
     };
@@ -80,6 +97,20 @@ export function videoResolverScript(): string {
     const scan = () => {
       const caption = document.querySelector('meta[property="og:description"]')?.content || document.querySelector('meta[name="description"]')?.content || '';
       const canonical = document.querySelector('link[rel="canonical"]')?.href || location.href;
+      const youtubeId = new URL(location.href).hostname.endsWith('youtube.com') &&
+        (new URL(canonical).searchParams.get('v') || location.pathname.match(/\\/(?:embed|shorts)\\/([\\w-]{11})/)?.[1]);
+      if (youtubeId) {
+        const selectYouTube = ${YOUTUBE_VIDEO_RESOLVER};
+        try {
+          const player = document.getElementById('movie_player');
+          const response = player?.getPlayerResponse?.() || window.ytInitialPlayerResponse;
+          const selected = selectYouTube(response, youtubeId);
+          if (selected) finish(selected.mediaUrl, selected.caption);
+          const video = document.querySelector('video');
+          if (!finished && video) {video.muted=true;video.play().catch(()=>{});}
+        } catch {}
+        return;
+      }
       const id = canonical.match(/\\/video\\/(\\d+)/)?.[1];
       const instagramId = canonical.match(/\\/(?:p|reel|reels)\\/([\\w-]+)/)?.[1];
       if (instagramId) {

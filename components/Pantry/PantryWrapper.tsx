@@ -2,7 +2,6 @@ import { Pressable, View, useWindowDimensions } from "react-native";
 import { TEST_IDS } from "~/constants/test-ids";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import RecipeButton from "~/components/Pantry/RecipeButton";
-import AssistantButton from "~/components/Pantry/AssistantButton";
 import Animated, {
   useAnimatedStyle,
   useDerivedValue,
@@ -13,13 +12,25 @@ import { scheduleOnRN } from "react-native-worklets";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { CURVES } from "~/constants/curves";
 import useDeviceCornerRadius from "~/hooks/useDeviceCornerRadius";
-import RecipeCategoryButtonGroup from "~/components/Pantry/RecipeCategoryButtonGroup";
-import RecipeLists from "~/components/Pantry/RecipeLists";
 import { SNAP_THRESHOLD } from "~/constants/pantry";
 import { usePantryStore } from "~/store/PantryContext";
 import IngredientLists from "~/components/Pantry/IngredientLists";
-import { useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { setStatusBarStyle } from "expo-status-bar";
+import type { usePantryPullSearch } from "~/hooks/usePantryPullSearch";
+import { SearchEntrance } from "~/components/Search/SearchEntrance";
+import { SearchPreview } from "~/components/Search/SearchPreview";
+import { scheduleAfterInitialRender } from "~/lib/schedule-after-render";
+
+const loadRecipeCategories = () => import("./RecipeCategoryButtonGroup");
+const loadRecipeLists = () => import("./RecipeLists");
+const loadSearchContent = () =>
+  import("~/components/Search/SearchContent").then(({ SearchContent }) => ({
+    default: SearchContent,
+  }));
+const RecipeCategoryButtonGroup = lazy(loadRecipeCategories);
+const RecipeLists = lazy(loadRecipeLists);
+const SearchContent = lazy(loadSearchContent);
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -29,7 +40,11 @@ const SPRING_CONFIG = {
   stiffness: 500,
 };
 
-export default function PantryWrapper() {
+export default function PantryWrapper({
+  pullSearch,
+}: {
+  pullSearch: ReturnType<typeof usePantryPullSearch>;
+}) {
   const borderRadius = useDeviceCornerRadius();
   const { height: screenHeight } = useWindowDimensions();
   const { top } = useSafeAreaInsets();
@@ -45,6 +60,31 @@ export default function PantryWrapper() {
   } = usePantryStore();
 
   const [recipesMounted, setRecipesMounted] = useState(isRecipeOpen);
+  const [pantryReady, setPantryReady] = useState(false);
+  const markPantryReady = useCallback(() => setPantryReady(true), []);
+  useEffect(() => {
+    if (!pantryReady) return;
+    let cancelled = false;
+    let cancel = () => {};
+    const loaders = [loadSearchContent, loadRecipeCategories, loadRecipeLists];
+    const warm = (index: number) => {
+      cancel = scheduleAfterInitialRender(() => {
+        // Evaluate one feature per idle opportunity; never start its queries here.
+        void loaders[index]!()
+          .then(() => {
+            if (!cancelled && index + 1 < loaders.length) warm(index + 1);
+          })
+          .catch(() => {
+            // Opening the feature can retry a failed optional preload.
+          });
+      });
+    };
+    warm(0);
+    return () => {
+      cancelled = true;
+      cancel();
+    };
+  }, [pantryReady]);
   useEffect(() => {
     if (isRecipeOpen) setRecipesMounted(true);
   }, [isRecipeOpen]);
@@ -141,18 +181,21 @@ export default function PantryWrapper() {
   });
 
   return (
-    <View testID={TEST_IDS.home.screen} collapsable={false} style={{ flex: 1 }}>
-      <Animated.View className="relative flex-1 bg-black rounded-xl">
+    <View testID={TEST_IDS.home.screen} collapsable={false} className="flex-1 bg-background">
+      <Animated.View
+        testID="pantry-home-content"
+        className="relative flex-1 bg-black rounded-xl"
+        style={pullSearch.homeStyle}
+      >
         <AnimatedPressable
           className="relative flex-1 bg-background overflow-hidden"
           style={containerStyle}
           onPress={closeRecipe}
         >
-          <IngredientLists />
+          <IngredientLists pullSearch={pullSearch} onReady={markPantryReady} />
         </AnimatedPressable>
 
         <RecipeButton />
-        <AssistantButton />
 
         <Animated.View
           testID={TEST_IDS.home.recipeSheet}
@@ -163,12 +206,37 @@ export default function PantryWrapper() {
           <GestureDetector gesture={panGesture}>
             <View testID="recipe-sheet-drag-handle">
               <View className="bg-muted/80 h-1 w-16 rounded-full self-center mb-2" />
-              <RecipeCategoryButtonGroup />
+              {recipesMounted && (
+                <Suspense fallback={null}>
+                  <RecipeCategoryButtonGroup />
+                </Suspense>
+              )}
             </View>
           </GestureDetector>
-          {recipesMounted && <RecipeLists active={isRecipeOpen} />}
+          {recipesMounted && (
+            <Suspense fallback={<View className="flex-1" />}>
+              <RecipeLists active={isRecipeOpen} />
+            </Suspense>
+          )}
         </Animated.View>
       </Animated.View>
+      <SearchEntrance
+        offset={pullSearch.searchOffset}
+        progress={pullSearch.progress}
+        interactive={pullSearch.focusEnabled}
+      >
+        {pullSearch.phase === "open" || pullSearch.phase === "closing" ? (
+          <Suspense fallback={<SearchPreview />}>
+            <SearchContent
+              onDismiss={pullSearch.dismiss}
+              focusEnabled={pullSearch.focusEnabled}
+              transparent
+            />
+          </Suspense>
+        ) : (
+          <SearchPreview />
+        )}
+      </SearchEntrance>
     </View>
   );
 }

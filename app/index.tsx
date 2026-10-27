@@ -1,18 +1,16 @@
-import { Stack, useRouter, Redirect } from "expo-router";
+import { Redirect } from "expo-router";
+import { lazy, Suspense } from "react";
+import { View } from "react-native";
 import { storage } from "~/data";
 import { ONBOARDING_COMPLETED_KEY } from "~/constants/storage-keys";
-import PantryWrapper from "~/components/Pantry/PantryWrapper";
+import PantryHome from "~/components/Pantry/PantryHome";
 import { PantryProvider } from "~/store/PantryContext";
 import { RecipeProvider } from "~/store/RecipeContext";
-import * as Haptics from "expo-haptics";
 import { IS_E2E } from "~/utils/e2e-flags";
 import { useFirstRunAha } from "~/hooks/useFirstRunAha";
-import AhaScreen from "~/components/Onboarding/AhaScreen";
-import useColors from "~/hooks/useColor";
+const AhaScreen = lazy(() => import("~/components/Onboarding/AhaScreen"));
 
 export default function PantryPage() {
-  const router = useRouter();
-  const colors = useColors();
   const onboardingCompleted = IS_E2E ? true : storage.get<boolean>(ONBOARDING_COMPLETED_KEY);
 
   // Dark-launched first-session "aha" surface (issue #720). ADDITIVE: only
@@ -29,49 +27,18 @@ export default function PantryPage() {
   if (shouldShowAha && !IS_E2E) {
     return (
       <RecipeProvider>
-        <AhaScreen />
+        <Suspense fallback={<View className="flex-1 bg-background" />}>
+          <AhaScreen />
+        </Suspense>
       </RecipeProvider>
     );
   }
 
   return (
-    <>
-      <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button
-          tintColor={colors.foreground}
-          accessibilityLabel="Search"
-          icon="magnifyingglass"
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            router.push("/search");
-          }}
-        />
-        <Stack.Toolbar.Button
-          tintColor={colors.foreground}
-          accessibilityLabel="Add ingredient"
-          icon={"plus"}
-          separateBackground
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            router.push("/ingredient/create");
-          }}
-        />
-
-        <Stack.Toolbar.Button
-          tintColor={colors.foreground}
-          accessibilityLabel="Profile"
-          icon="person"
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            router.push("/profile");
-          }}
-        />
-      </Stack.Toolbar>
-      <PantryProvider>
-        <RecipeProvider>
-          <PantryWrapper />
-        </RecipeProvider>
-      </PantryProvider>
-    </>
+    <PantryProvider>
+      <RecipeProvider>
+        <PantryHome />
+      </RecipeProvider>
+    </PantryProvider>
   );
 }

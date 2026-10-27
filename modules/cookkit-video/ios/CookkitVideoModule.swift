@@ -9,6 +9,9 @@ public class CookkitVideoModule: Module {
     AsyncFunction("resolveVideo") { (url: String, script: String) async throws -> [String: String] in
       return try await VideoLinkResolver().resolve(url, script: script)
     }
+    AsyncFunction("sampleVideoCoverFrames") { (url: String, script: String) async throws -> [String: String] in
+      return try await VideoLinkResolver().resolve(url, script: script, maximumMessageBytes: 1_500_000)
+    }
     AsyncFunction("prepareVideo") { (uri: String, directory: String) async throws -> [String: Any] in
       guard let file = URL(string: uri), file.isFileURL,
         let output = URL(string: directory), output.isFileURL,
@@ -118,12 +121,14 @@ private final class VideoLinkResolver: NSObject, WKScriptMessageHandler, WKNavig
   private var continuation: CheckedContinuation<[String: String], Error>?
   private var timeout: Task<Void, Never>?
   private var expectedPlatform = ""
+  private var maximumMessageBytes = 65_000
 
-  func resolve(_ address: String, script: String) async throws -> [String: String] {
+  func resolve(_ address: String, script: String, maximumMessageBytes: Int = 65_000) async throws -> [String: String] {
+    self.maximumMessageBytes = maximumMessageBytes
     guard let url = URL(string: address), url.scheme == "https",
       let host = url.host, allowedHost(host), script.utf8.count < 20_000
     else { throw VideoError.inaccessible }
-    expectedPlatform = host.hasSuffix("tiktok.com") ? "tiktok.com" : "instagram.com"
+    expectedPlatform = host.hasSuffix("tiktok.com") ? "tiktok.com" : host.hasSuffix("instagram.com") ? "instagram.com" : "youtube.com"
     return try await withCheckedThrowingContinuation { continuation in
       self.continuation = continuation
       let config = WKWebViewConfiguration()
@@ -131,8 +136,11 @@ private final class VideoLinkResolver: NSObject, WKScriptMessageHandler, WKNavig
       config.allowsInlineMediaPlayback = true
       config.mediaTypesRequiringUserActionForPlayback = []
       config.userContentController.add(self, name: "cookkitVideo")
-      config.userContentController.addUserScript(WKUserScript(source: script, injectionTime: .atDocumentEnd, forMainFrameOnly: true))
-      let browser = WKWebView(frame: CGRect(x: 0, y: 0, width: 1, height: 1), configuration: config)
+      let coverOnly = maximumMessageBytes > 65_000
+      let earlyYouTubeReader = coverOnly && expectedPlatform == "youtube.com"
+      config.userContentController.addUserScript(WKUserScript(source: script, injectionTime: earlyYouTubeReader ? .atDocumentStart : .atDocumentEnd, forMainFrameOnly: true))
+      let browser = WKWebView(frame: CGRect(x: 0, y: 0, width: coverOnly ? 390 : 1, height: coverOnly ? 844 : 1), configuration: config)
+      browser.isUserInteractionEnabled = false
       browser.navigationDelegate = self
       self.browser = browser
       if let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first,
@@ -140,35 +148,41 @@ private final class VideoLinkResolver: NSObject, WKScriptMessageHandler, WKNavig
         browser.alpha = 0.01
         view.addSubview(browser)
       }
-      browser.load(URLRequest(url: url))
+      var request = URLRequest(url: url)
+      if expectedPlatform == "youtube.com" {
+        request.setValue("https://\((Bundle.main.bundleIdentifier ?? "app.cookkit.cookkit").lowercased())", forHTTPHeaderField: "Referer")
+      }
+      browser.load(request)
       timeout = Task { [weak self] in
-        try? await Task.sleep(nanoseconds: 18_000_000_000)
+        try? await Task.sleep(nanoseconds: earlyYouTubeReader ? 30_000_000_000 : 18_000_000_000)
         if !Task.isCancelled { self?.finish(.failure(VideoError.inaccessible)) }
       }
     }
   }
 
   private func allowedHost(_ host: String) -> Bool {
-    ["tiktok.com", "www.tiktok.com", "vm.tiktok.com", "vt.tiktok.com", "instagram.com", "www.instagram.com"].contains(host)
+    ["tiktok.com", "www.tiktok.com", "vm.tiktok.com", "vt.tiktok.com", "instagram.com", "www.instagram.com", "youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"].contains(host)
   }
   func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
     if action.targetFrame?.isMainFrame != false {
       guard let url = action.request.url, url.scheme == "https", let host = url.host,
-        allowedHost(host), host.hasSuffix(expectedPlatform) else {
+        allowedHost(host), (host.hasSuffix(expectedPlatform) || (expectedPlatform == "youtube.com" && host == "youtu.be")) else {
         decisionHandler(.cancel)
-        finish(.failure(VideoError.inaccessible))
+        if maximumMessageBytes <= 65_000 { finish(.failure(VideoError.inaccessible)) }
         return
       }
     }
     decisionHandler(.allow)
   }
   func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-    guard message.frameInfo.isMainFrame, let text = message.body as? String, text.utf8.count < 65_000,
+    guard message.frameInfo.isMainFrame, let text = message.body as? String, text.utf8.count < maximumMessageBytes,
       let data = text.data(using: .utf8), let value = try? JSONSerialization.jsonObject(with: data) as? [String: String]
     else { return }
     finish(.success(value))
   }
   func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+    let failure = error as NSError
+    if maximumMessageBytes > 65_000 && ((failure.domain == NSURLErrorDomain && failure.code == NSURLErrorCancelled) || (failure.domain == "WebKitErrorDomain" && failure.code == 102)) { return }
     finish(.failure(VideoError.inaccessible))
   }
   private func finish(_ result: Result<[String: String], Error>) {
