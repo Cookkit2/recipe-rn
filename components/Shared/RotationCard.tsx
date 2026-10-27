@@ -63,7 +63,7 @@ const RotationCard = ({
 
 export default RotationCard;
 
-const stableThumbRotation = (index: number, total: number): number => {
+export const stableThumbRotation = (index: number, total: number): number => {
   // Simple seeded pseudo-random based on index + total for stability
   const seed = (index + 1) * SEED_INDEX_MULTIPLIER + total * SEED_TOTAL_MULTIPLIER;
   const x = Math.sin(seed) * 10000;

@@ -1,14 +1,17 @@
-import { useState } from "react";
-import { ScrollView } from "react-native";
+import { useCallback, useState } from "react";
+import { View } from "react-native";
+import Animated, {
+  useAnimatedRef,
+  useSharedValue,
+  type SharedValue,
+} from "react-native-reanimated";
 import type { BlurViewProps } from "expo-blur";
-import RotationCard from "~/components/Shared/RotationCard";
-import { OutlinedImage } from "~/components/ui/outlined-image";
-import ShapeContainer from "~/components/Shared/Shapes/ShapeContainer";
 import type { IngredientPreviewData } from "~/utils/ingredient-preview";
 import type { RecipeIngredient } from "~/types/Recipe";
 import type { PantryItem } from "~/types/PantryItem";
 import ScrollAwarePressable from "~/components/Shared/ScrollAwarePressable";
 import RecipeIngredientsOverlay from "./RecipeIngredientsOverlay";
+import { INGREDIENT_STRIP_HEIGHT, type IngredientSourceFrame } from "./ingredient-preview-layout";
 
 interface IngredientVisualPreviewProps {
   ingredientPreviewData: IngredientPreviewData;
@@ -16,6 +19,8 @@ interface IngredientVisualPreviewProps {
   ingredients: RecipeIngredient[];
   findMatch: (ingredient: RecipeIngredient) => PantryItem | null;
   blurTarget?: BlurViewProps["blurTarget"];
+  scrollOffset?: SharedValue<number>;
+  portalHostName?: string;
 }
 
 export default function IngredientVisualPreview({
@@ -24,68 +29,57 @@ export default function IngredientVisualPreview({
   ingredients,
   findMatch,
   blurTarget,
+  scrollOffset,
+  portalHostName,
 }: IngredientVisualPreviewProps) {
   const [previewOpen, setPreviewOpen] = useState(false);
-  const totalItems = ingredientPreviewData.matched.length + ingredientPreviewData.missing.length;
+  const sourceRef = useAnimatedRef<View>();
+  const sourceFrame = useSharedValue<IngredientSourceFrame>({ x: 0, y: 0, width: 0, height: 0 });
+  const sourceScrollOffset = useSharedValue(0);
+  const measureSource = useCallback(() => {
+    sourceRef.current?.measureInWindow((x, y, width, height) => {
+      if (width > 0) {
+        sourceScrollOffset.value = scrollOffset?.value ?? 0;
+        sourceFrame.value = { x, y, width, height };
+      }
+    });
+  }, [sourceFrame, sourceRef, sourceScrollOffset, scrollOffset]);
+  const close = useCallback(() => setPreviewOpen(false), []);
 
-  if (totalItems === 0) {
-    return null;
-  }
+  if (!ingredients.length) return null;
 
   return (
     <>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        className="flex-row mt-2 -mx-6 px-12 overflow-visible"
+      <Animated.View
+        ref={sourceRef}
+        testID="recipe-ingredient-source"
+        collapsable={false}
+        onLayout={measureSource}
+        style={{ height: INGREDIENT_STRIP_HEIGHT, marginTop: 8 }}
       >
         <ScrollAwarePressable
-          className="flex-row py-2"
+          style={{ flex: 1 }}
           accessibilityRole="button"
           accessibilityLabel="View recipe ingredients"
           accessibilityHint="Opens all ingredient images, names and quantities"
-          onPress={() => setPreviewOpen(true)}
-        >
-          {/* Matched ingredients with images */}
-          {ingredientPreviewData.matched.map((item, index) => (
-            <RotationCard
-              key={`matched-${item.name}-${index}`}
-              index={index}
-              total={totalItems}
-              className="-ml-6"
-              style={{ zIndex: index }}
-              scaleEnabled={false}
-            >
-              <OutlinedImage source={item.imageUrl} size={48} />
-            </RotationCard>
-          ))}
-          {/* Missing ingredients with shape placeholders */}
-          {ingredientPreviewData.missing.map((item, index) => (
-            <RotationCard
-              key={`missing-${item.name}-${index}`}
-              index={ingredientPreviewData.matched.length + index}
-              total={totalItems}
-              className="-ml-6"
-              style={{ zIndex: ingredientPreviewData.matched.length + index }}
-              scaleEnabled={false}
-            >
-              <ShapeContainer
-                index={item.index % 21}
-                text="?"
-                width={48}
-                height={48}
-                color={missingIngredientPalette[index % 6]}
-              />
-            </RotationCard>
-          ))}
-        </ScrollAwarePressable>
-      </ScrollView>
+          onPress={() => {
+            measureSource();
+            setPreviewOpen(true);
+          }}
+        />
+      </Animated.View>
       <RecipeIngredientsOverlay
         visible={previewOpen}
-        onClose={() => setPreviewOpen(false)}
+        onClose={close}
         ingredients={ingredients}
+        ingredientPreviewData={ingredientPreviewData}
+        missingIngredientPalette={missingIngredientPalette}
         findMatch={findMatch}
         blurTarget={blurTarget}
+        sourceFrame={sourceFrame}
+        sourceScrollOffset={sourceScrollOffset}
+        parentScrollOffset={scrollOffset}
+        portalHostName={portalHostName}
       />
     </>
   );
