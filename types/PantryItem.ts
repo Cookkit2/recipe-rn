@@ -21,7 +21,7 @@ export type PantryItem = {
   y?: number;
   scale?: number;
   // Base ingredient data (fetched from Supabase)
-  base_ingredient_id?: string;
+  base_ingredient_id?: string | null;
   base_ingredient_name?: string;
   synonyms?: Array<{ id: string; synonym: string }>;
   categories?: Array<{ id: string; name: string }>;

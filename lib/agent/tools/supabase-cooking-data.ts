@@ -9,7 +9,8 @@ import type {
 } from "./planning";
 import { EMPTY_DIET_PROFILE } from "./planning";
 
-const STOCK_COLUMNS = "id, name, quantity, unit, expiry_date, household_id, added_by_user_id";
+const STOCK_COLUMNS =
+  "id, name, base_ingredient_id, quantity, unit, expiry_date, household_id, added_by_user_id";
 // Only request columns present in the deployed catalog. Ingredient names still
 // support diet matching; missing nutrition and allergen metadata remain unknown.
 const RECIPE_COLUMNS = "id, title, tags, calories, servings, cook_minutes";
@@ -73,6 +74,9 @@ function toPantryItem(row: Record<string, unknown>): PantryItem | null {
   if (!id || !name) return null;
   return {
     id,
+    ...(row.base_ingredient_id !== undefined
+      ? { baseIngredientId: asString(row.base_ingredient_id) }
+      : {}),
     name,
     quantity: asNumber(row.quantity),
     unit: asString(row.unit),

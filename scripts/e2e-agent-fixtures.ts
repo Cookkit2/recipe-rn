@@ -25,6 +25,20 @@ async function main(): Promise<void> {
   const model = await startOpenAICompatibleServer({
     port: E2E_NEBIUS_PORT,
     script: ({ body }) => {
+      if (
+        body.messages?.some((message) => String(message.content).includes("COOKKIT_REQUEST_ROUTER"))
+      ) {
+        return {
+          textDeltas: [
+            JSON.stringify({
+              status: "ready",
+              steps: [
+                { id: "add-eggs", intent: "add_ingredient", request: "Add 6 eggs to my pantry." },
+              ],
+            }),
+          ],
+        };
+      }
       const hasToolResult = body.messages?.some((message) => message.role === "tool");
       if (!hasToolResult) {
         return {

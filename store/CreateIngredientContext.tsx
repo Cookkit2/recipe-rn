@@ -13,6 +13,10 @@ import { CONFIDENCE_REVIEW_THRESHOLD } from "~/constants/recognition";
 
 import { type BaseIngredientWithRelations } from "~/data/supabase-api/BaseIngredientApi";
 
+import { clearInheritedCatalogMetadata } from "~/utils/pantry-reference";
+import { normalizeIngredientIdentity } from "~/utils/ingredient-identity";
+import { catalogIdentityForName } from "~/data/services/catalogIdentity";
+
 // Cache for base ingredients to avoid redundant API calls
 const baseIngredientCache = new Map<string, BaseIngredientWithRelations | null>();
 
@@ -247,15 +251,26 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
 
             setProcessPantryItems((prev) =>
               prev.map((i) => {
-                if (i.id === itemId) {
+                if (
+                  i.id === itemId &&
+                  normalizeIngredientIdentity(i.name) === normalizeIngredientIdentity(formattedName)
+                ) {
+                  const identity = catalogIdentityForName(
+                    baseIngredient,
+                    baseIngredient.synonyms.map((alias) => alias.synonym),
+                    formattedName
+                  );
+                  if (!identity) return i;
                   return {
                     ...i,
-                    name: baseIngredient.name,
+                    name: identity.name,
                     expiry_date: newExpiryDate,
                     type: baseIngredient.storage_type as Exclude<ItemType, "all">,
                     base_ingredient_id: baseIngredient.id,
-                    base_ingredient_name: baseIngredient.name,
-                    synonyms: baseIngredient.synonyms,
+                    base_ingredient_name: identity.name,
+                    synonyms: baseIngredient.synonyms.filter((alias) =>
+                      identity.aliases.includes(alias.synonym)
+                    ),
                     categories: baseIngredient.categories,
                   };
                 }
@@ -376,13 +391,19 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
   // save (status undefined). Follows the existing immutability pattern.
   const confirmCorrectedItem = useCallback((id: string, patch: Partial<CreatePantryItem>) => {
     setProcessPantryItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, ...patch, status: undefined } : item))
+      prev.map((item) =>
+        item.id === id
+          ? clearInheritedCatalogMetadata(item, { ...item, ...patch, status: undefined })
+          : item
+      )
     );
   }, []);
 
   const updateProcessPantryItems = useCallback((currentItem: PantryItem) => {
     setProcessPantryItems((prev) =>
-      prev.map((item) => (item.id === currentItem.id ? currentItem : item))
+      prev.map((item) =>
+        item.id === currentItem.id ? clearInheritedCatalogMetadata(item, currentItem) : item
+      )
     );
 
     // Clear existing timeout if user triggers another update
@@ -408,15 +429,27 @@ export function CreateIngredientProvider({ children }: { children: React.ReactNo
           // Update the item with new details
           setProcessPantryItems((prev) =>
             prev.map((item) => {
-              if (item.id === currentItem.id) {
+              if (
+                item.id === currentItem.id &&
+                normalizeIngredientIdentity(item.name) ===
+                  normalizeIngredientIdentity(currentItem.name)
+              ) {
+                const identity = catalogIdentityForName(
+                  baseIngredient,
+                  baseIngredient.synonyms.map((alias) => alias.synonym),
+                  currentItem.name
+                );
+                if (!identity) return item;
                 return {
                   ...item,
-                  name: baseIngredient.name, // Use the standardized name
+                  name: identity.name, // Preserve explicit forms in a coarse catalog.
                   expiry_date: expiryDate,
                   type: baseIngredient.storage_type as Exclude<ItemType, "all">,
                   base_ingredient_id: baseIngredient.id,
-                  base_ingredient_name: baseIngredient.name,
-                  synonyms: baseIngredient.synonyms,
+                  base_ingredient_name: identity.name,
+                  synonyms: baseIngredient.synonyms.filter((alias) =>
+                    identity.aliases.includes(alias.synonym)
+                  ),
                   categories: baseIngredient.categories,
                 };
               }

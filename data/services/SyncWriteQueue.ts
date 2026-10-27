@@ -1,3 +1,4 @@
+import { isRecord, isSharedStockWrite, type SharedStockWrite } from "./householdStockPayload";
 import * as Crypto from "expo-crypto";
 import { StorageFactory } from "~/data/storage/storage-factory";
 import { log } from "~/utils/logger";
@@ -21,10 +22,9 @@ import { withRetryBackoff } from "~/utils/withRetryBackoff";
  * the issue's Risks section and is left for a follow-up; the queue still drains
  * the next time any sync runs.
  *
- * Conflict resolution policy: the queue replays *pushes* (local -> remote), so
- * it never silently overwrites remote data — the pull path's last-writer-wins
- * guard (`shouldApplyRemoteUpdate`) handles the remote->local direction. If a
- * queued push loses a race (remote is newer), the next pull reconciles it.
+ * Queue replay uses the existing upsert path, which has no server LWW guard.
+ * The pull path's timestamp guard protects local writes only; it cannot prevent
+ * an older queued push from overwriting a newer server row.
  */
 
 const QUEUE_STORAGE_KEY = "household_sync_write_queue_v1";
@@ -36,7 +36,7 @@ export interface QueuedPush {
   /** Surrogate id (timestamp-based) for dedupe/counting within the queue. */
   id: string;
   householdId: string;
-  rows: unknown[];
+  rows: SharedStockWrite[];
   /** Cumulative failure count across drains; drives dead-lettering. */
   failures: number;
   /** Epoch ms when first enqueued, for diagnostics. */
@@ -69,8 +69,8 @@ export class SyncWriteQueue {
   }
 
   /** Add a failed push payload to the queue, persisted immediately. */
-  enqueue(householdId: string, rows: unknown[]): void {
-    if (rows.length === 0) return;
+  enqueue(householdId: string, rows: SharedStockWrite[]): void {
+    if (rows.length === 0 || !rows.every((row) => isSharedStockWrite(row, householdId))) return;
     const queue = this.readQueue();
     queue.push({
       id: `${Date.now()}-${Crypto.randomUUID()}`,
@@ -109,7 +109,7 @@ export class SyncWriteQueue {
    */
   async drain(
     householdId: string,
-    push: (rows: unknown[]) => Promise<void>,
+    push: (rows: SharedStockWrite[]) => Promise<void>,
     options: { sleep?: (ms: number) => Promise<void> } = {}
   ): Promise<number> {
     const queue = this.readQueue();
@@ -158,8 +158,53 @@ export class SyncWriteQueue {
     try {
       const raw = this.storage.getString(QUEUE_STORAGE_KEY);
       if (!raw) return [];
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? (parsed as QueuedPush[]) : [];
+      const parsed: unknown = JSON.parse(raw);
+      const legacy = Array.isArray(parsed);
+      const payloads: unknown = legacy
+        ? parsed
+        : isRecord(parsed) && parsed.version === 2
+          ? parsed.payloads
+          : undefined;
+      if (!Array.isArray(payloads)) return [];
+      const queue: QueuedPush[] = [];
+      for (const payload of payloads) {
+        if (
+          !isRecord(payload) ||
+          typeof payload.id !== "string" ||
+          !payload.id ||
+          typeof payload.householdId !== "string" ||
+          !payload.householdId ||
+          !Number.isSafeInteger(payload.failures) ||
+          typeof payload.failures !== "number" ||
+          payload.failures < 0 ||
+          typeof payload.enqueuedAt !== "number" ||
+          !Number.isFinite(payload.enqueuedAt) ||
+          !Array.isArray(payload.rows) ||
+          payload.rows.length === 0
+        )
+          continue;
+        const rows: SharedStockWrite[] = [];
+        for (const value of payload.rows) {
+          let row: unknown = value;
+          if (legacy && isRecord(value) && value.base_ingredient_id === null) {
+            // v1 writers always sent null, never an intentional catalog clear.
+            const { base_ingredient_id: _legacyNull, ...fields } = value;
+            row = fields;
+          }
+          if (!isSharedStockWrite(row, payload.householdId)) break;
+          rows.push(row);
+        }
+        if (rows.length !== payload.rows.length) continue;
+        queue.push({
+          id: payload.id,
+          householdId: payload.householdId,
+          rows,
+          failures: payload.failures,
+          enqueuedAt: payload.enqueuedAt,
+        });
+      }
+      if (legacy) this.writeQueue(queue);
+      return queue;
     } catch {
       return [];
     }
@@ -167,7 +212,7 @@ export class SyncWriteQueue {
 
   private writeQueue(queue: QueuedPush[]): void {
     try {
-      this.storage.setString(QUEUE_STORAGE_KEY, JSON.stringify(queue));
+      this.storage.setString(QUEUE_STORAGE_KEY, JSON.stringify({ version: 2, payloads: queue }));
     } catch (error) {
       if (__DEV__) {
         log.error("[sync-write-queue] failed to persist queue:", error);

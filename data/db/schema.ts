@@ -1,8 +1,24 @@
 import { appSchema, tableSchema } from "@nozbe/watermelondb";
 
 export default appSchema({
-  version: 8,
+  version: 10,
   tables: [
+    tableSchema({
+      name: "base_ingredient_cache",
+      columns: [
+        { name: "catalog_id", type: "string", isIndexed: true },
+        { name: "name", type: "string" },
+        { name: "lookup_key", type: "string", isIndexed: true },
+      ],
+    }),
+    tableSchema({
+      name: "base_ingredient_alias_cache",
+      columns: [
+        { name: "base_ingredient_id", type: "string", isIndexed: true },
+        { name: "alias", type: "string" },
+        { name: "lookup_key", type: "string", isIndexed: true },
+      ],
+    }),
     tableSchema({
       name: "leftover",
       columns: [
@@ -127,6 +143,7 @@ export default appSchema({
       name: "stock",
       columns: [
         { name: "name", type: "string" },
+        { name: "base_ingredient_id", type: "string", isOptional: true, isIndexed: true },
         { name: "quantity", type: "number" },
         { name: "unit", type: "string" },
         { name: "expiry_date", type: "number", isOptional: true }, // timestamp

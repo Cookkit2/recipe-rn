@@ -1,5 +1,8 @@
 import { tool } from "ai";
 import { z } from "zod";
+import type { AssistantPantryInput } from "~/types/AssistantPantryMutation";
+import { intentMutationAction, intentToolName, type AssistantIntent } from "../request-routing";
+import { pantryReadInputSchema, runGetPantry } from "../pantry-read";
 import type { CookingDataClient } from "./planning";
 import {
   runAnalyzeDiet,
@@ -10,11 +13,46 @@ import {
 
 const slots = z.enum(["breakfast", "lunch", "dinner", "snack"]);
 
-export function createCookingTools(data: CookingDataClient) {
-  // Tools are created per conversation turn. Once clarification is needed, only a
-  // new user turn may supply the missing name/unit/selection, never a model retry.
+export interface CookingToolPolicy {
+  intent: AssistantIntent;
+  suppliedInput?: AssistantPantryInput;
+  completePantryRead?: boolean;
+  onResult?: (toolName: string, input: unknown, output: unknown) => void;
+  onError?: (toolName: string, input: unknown, error: unknown) => void;
+}
+
+export function createCookingTools(data: CookingDataClient, policy?: CookingToolPolicy) {
+  let pantryReadQueue: Promise<unknown> = Promise.resolve();
   let mutationQueue: Promise<unknown> = Promise.resolve();
-  let pendingClarification: Awaited<ReturnType<typeof runManageIngredients>> | undefined;
+  let settledMutation:
+    | Awaited<ReturnType<typeof runManageIngredients>>
+    | { ok: false; status: "not_authorized"; error: string }
+    | undefined;
+  let authorizationDenied = false;
+  let nextPantryOffset: number | undefined = policy?.completePantryRead ? 0 : undefined;
+  const authorized = (toolName: string) =>
+    !authorizationDenied && policy !== undefined && intentToolName(policy.intent) === toolName;
+  const denied = (toolName: string, input: unknown) => {
+    authorizationDenied = true;
+    const output = {
+      ok: false as const,
+      status: "not_authorized" as const,
+      error: "That action is not allowed for this request.",
+    };
+    policy?.onResult?.(toolName, input, output);
+    return output;
+  };
+  async function execute<T>(toolName: string, input: unknown, run: () => Promise<T>) {
+    if (!authorized(toolName)) return denied(toolName, input);
+    try {
+      const output = await run();
+      policy?.onResult?.(toolName, input, output);
+      return output;
+    } catch (error) {
+      policy?.onError?.(toolName, input, error);
+      throw error;
+    }
+  }
   return {
     manage_ingredients: tool({
       description:
@@ -50,15 +88,52 @@ export function createCookingTools(data: CookingDataClient) {
           .describe("Destination row ID for an explicitly requested merge"),
       }),
       execute: (input) => {
-        // Serialize parallel tool calls as well as retries in later model steps.
         const pending = mutationQueue.then(async () => {
-          if (pendingClarification) return pendingClarification;
-          const result = await runManageIngredients(data, input);
-          if (!result.ok && "status" in result && result.status === "needs_clarification")
-            pendingClarification = result;
-          return result;
+          if (
+            !authorized("manage_ingredients") ||
+            !policy ||
+            intentMutationAction(policy.intent) !== input.action
+          )
+            return denied("manage_ingredients", input);
+          // A planned mutation can run once; a new user turn supplies clarification.
+          if (settledMutation) return settledMutation;
+          const supplied = policy.suppliedInput;
+          const actualInput =
+            supplied?.action === input.action
+              ? {
+                  ...supplied,
+                  ...input,
+                  ...(supplied.quantity !== undefined ? { quantity: supplied.quantity } : {}),
+                  ...(supplied.unit !== undefined ? { unit: supplied.unit } : {}),
+                }
+              : input;
+          const output = await execute("manage_ingredients", actualInput, () =>
+            runManageIngredients(data, actualInput)
+          );
+          settledMutation = output;
+          return output;
         });
         mutationQueue = pending;
+        return pending;
+      },
+    }),
+    get_pantry: tool({
+      description:
+        "Read a page of actual on-device pantry stock without changing anything. Keep separate batches and actual quantities/units. If truncated is true, fetch subsequent pages before claiming an ingredient is absent. Never invent storage location or missing values.",
+      inputSchema: pantryReadInputSchema,
+      execute: (input) => {
+        const pending = pantryReadQueue.then(() => {
+          const actual =
+            policy?.completePantryRead && nextPantryOffset !== undefined
+              ? { ...input, offset: nextPantryOffset }
+              : input;
+          return execute("get_pantry", actual, async () => {
+            const result = await runGetPantry(data, actual);
+            nextPantryOffset = result.offset + result.items.length;
+            return result;
+          });
+        });
+        pantryReadQueue = pending;
         return pending;
       },
     }),
@@ -66,7 +141,7 @@ export function createCookingTools(data: CookingDataClient) {
       description:
         "Compare the user's saved diet, allergens, and macro target with the ingredients currently in their pantry.",
       inputSchema: z.object({}),
-      execute: async () => runAnalyzeDiet(data),
+      execute: () => execute("analyze_diet", {}, () => runAnalyzeDiet(data)),
     }),
     suggest_meal_plan: tool({
       description:
@@ -75,7 +150,8 @@ export function createCookingTools(data: CookingDataClient) {
         days: z.number().int().min(1).max(7).optional(),
         slots: z.array(slots).max(4).optional(),
       }),
-      execute: async (input) => runSuggestMealPlan(data, input),
+      execute: (input) =>
+        execute("suggest_meal_plan", input, () => runSuggestMealPlan(data, input)),
     }),
     suggest_recipes: tool({
       description:
@@ -83,7 +159,7 @@ export function createCookingTools(data: CookingDataClient) {
       inputSchema: z.object({
         limit: z.number().int().min(1).max(8).optional(),
       }),
-      execute: async (input) => runSuggestRecipes(data, input),
+      execute: (input) => execute("suggest_recipes", input, () => runSuggestRecipes(data, input)),
     }),
   };
 }
