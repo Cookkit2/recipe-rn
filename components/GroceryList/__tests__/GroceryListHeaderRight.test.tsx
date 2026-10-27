@@ -11,31 +11,32 @@ jest.mock("~/hooks/useLocalStorageState", () => ({
   __esModule: true,
   default: jest.fn(() => [mockGuideComplete, mockSetGuideComplete, { isLoading: false }]),
 }));
-jest.mock("react-native-safe-area-context", () => ({ useSafeAreaInsets: () => ({ bottom: 20 }) }));
-jest.mock("react-native/Libraries/Modal/Modal", () => {
-  const { View } = require("react-native");
-  return {
-    __esModule: true,
-    default: ({ visible, children, ...props }: any) =>
-      visible ? <View {...props}>{children}</View> : null,
-  };
-});
-jest.mock("~/components/ui/button", () => {
-  const { Pressable } = require("react-native");
-  return {
-    Button: ({ children, isLoading, ...props }: any) => (
-      <Pressable {...props} accessibilityRole="button">
-        {children}
-      </Pressable>
-    ),
-  };
+jest.mock("../GrabMartShoppingGuide", () => {
+  const { View, Text, Pressable } = require("react-native");
+  return ({ list, busy, onContinue, onClose }: any) => (
+    <View testID="grabmart-guide" onAccessibilityEscape={busy ? undefined : onClose}>
+      <Text>Shop on GrabMart</Text>
+      <Text>{list}</Text>
+      {list.length > 1000 && (
+        <Text>Grab’s field holds 1,000 characters. Paste this list in smaller batches.</Text>
+      )}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Continue"
+        disabled={busy}
+        onPress={onContinue}
+      />
+    </View>
+  );
 });
 
 jest.mock("~/lib/ingredient-shopping", () => ({
   openIngredientStore: jest.fn(),
   shopForIngredients: jest.fn(),
 }));
-jest.mock("sonner-native", () => ({ toast: { error: jest.fn(), success: jest.fn() } }));
+jest.mock("sonner-native", () => ({
+  toast: { error: jest.fn(), success: jest.fn(), dismiss: jest.fn() },
+}));
 jest.mock("~/hooks/useColor", () => () => ({ foreground: "white", destructive: "red" }));
 jest.mock("expo-router", () => {
   const { View, Text, Pressable } = require("react-native");
@@ -89,15 +90,15 @@ it("shows the first-use guide without copying or leaving, and lets the user canc
   mockGuideComplete = false;
   const screen = await render(<GroceryListHeaderRight {...toolbarProps} items={items} />);
   await fireEvent.press(screen.getByRole("button", { name: "Shop on GrabMart" }));
-  expect(screen.getByText("Paste your list in GrabMart")).toBeTruthy();
+  expect(screen.getByTestId("grabmart-guide")).toBeTruthy();
   expect(screen.getByText("Eggs — 3 piece")).toBeTruthy();
   expect(shopForIngredients).not.toHaveBeenCalled();
   expect(openIngredientStore).not.toHaveBeenCalled();
-  await fireEvent.press(screen.getByRole("button", { name: "Not now" }));
-  expect(screen.queryByText("Paste your list in GrabMart")).toBeNull();
+  await fireEvent(screen.getByTestId("grabmart-guide"), "accessibilityEscape");
+  expect(screen.queryByTestId("grabmart-guide")).toBeNull();
   expect(mockSetGuideComplete).not.toHaveBeenCalled();
   await fireEvent.press(screen.getByRole("button", { name: "Shop on GrabMart" }));
-  expect(screen.getByText("Paste your list in GrabMart")).toBeTruthy();
+  expect(screen.getByTestId("grabmart-guide")).toBeTruthy();
 });
 
 it("continues with the current quantities and remembers a successful first handoff", async () => {
@@ -107,17 +108,20 @@ it("continues with the current quantities and remembers a successful first hando
   const updatedItems = [{ ...items[0]!, neededQuantity: 2 }];
   await screen.rerender(<GroceryListHeaderRight {...toolbarProps} items={updatedItems} />);
   await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-  await waitFor(() => expect(shopForIngredients).toHaveBeenCalledWith("grabmart", updatedItems));
+  await waitFor(() =>
+    expect(shopForIngredients).toHaveBeenCalledWith("grabmart", updatedItems, expect.any(Function))
+  );
   expect(mockSetGuideComplete).toHaveBeenCalledWith(true);
   expect(useLocalStorageState).toHaveBeenCalledWith(GRABMART_SHOPPING_GUIDE_COMPLETED_KEY, {
     defaultValue: false,
   });
-  expect(screen.queryByText("Paste your list in GrabMart")).toBeNull();
+  expect(screen.queryByTestId("grabmart-guide")).toBeNull();
   await screen.unmount();
   const reopened = await render(<GroceryListHeaderRight {...toolbarProps} items={updatedItems} />);
   await fireEvent.press(reopened.getByRole("button", { name: "Shop on GrabMart" }));
   await waitFor(() => expect(shopForIngredients).toHaveBeenCalledTimes(2));
-  expect(reopened.queryByText("Paste your list in GrabMart")).toBeNull();
+  expect(shopForIngredients).toHaveBeenLastCalledWith("grabmart", updatedItems, undefined);
+  expect(reopened.queryByTestId("grabmart-guide")).toBeNull();
 });
 
 it.each(["clipboard", "redirect"])(
@@ -132,7 +136,7 @@ it.each(["clipboard", "redirect"])(
     await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
     await waitFor(() => expect(toast.error).toHaveBeenCalled());
     expect(mockSetGuideComplete).not.toHaveBeenCalled();
-    expect(screen.getByText("Paste your list in GrabMart")).toBeTruthy();
+    expect(screen.getByTestId("grabmart-guide")).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
     await waitFor(() => expect(mockSetGuideComplete).toHaveBeenCalledWith(true));
   }
@@ -146,7 +150,7 @@ it("does not consume the first-use guide when there is nothing left to buy", asy
   );
   await fireEvent.press(screen.getByRole("button", { name: "Shop on GrabMart" }));
   await waitFor(() => expect(openIngredientStore).toHaveBeenCalledWith("grabmart"));
-  expect(screen.queryByText("Paste your list in GrabMart")).toBeNull();
+  expect(screen.queryByTestId("grabmart-guide")).toBeNull();
   expect(mockSetGuideComplete).not.toHaveBeenCalled();
 });
 
@@ -181,15 +185,19 @@ it("explains Grab's paste limit while handing off the full long list", async () 
     screen.getByText("Grab’s field holds 1,000 characters. Paste this list in smaller batches.")
   ).toBeTruthy();
   await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
-  await waitFor(() => expect(shopForIngredients).toHaveBeenCalledWith("grabmart", longList));
+  await waitFor(() =>
+    expect(shopForIngredients).toHaveBeenCalledWith("grabmart", longList, expect.any(Function))
+  );
 });
 
 it("offers GrabMart with the current grocery list and hides foodpanda", async () => {
   const screen = await render(<GroceryListHeaderRight {...toolbarProps} items={items} />);
   expect(screen.queryByRole("button", { name: "Shop on foodpanda" })).toBeNull();
   await fireEvent.press(screen.getByRole("button", { name: "Shop on GrabMart" }));
-  await waitFor(() => expect(shopForIngredients).toHaveBeenCalledWith("grabmart", items));
-  expect(toast.success).toHaveBeenCalledWith("List copied");
+  await waitFor(() =>
+    expect(shopForIngredients).toHaveBeenCalledWith("grabmart", items, undefined)
+  );
+  expect(toast.success).not.toHaveBeenCalled();
 });
 
 it("still redirects from an empty list without claiming to copy items", async () => {
@@ -240,4 +248,101 @@ it("retains selection actions in the overflow menu and cancel/delete while selec
   expect(screen.queryByRole("button", { name: "Shop on GrabMart" })).toBeNull();
   await fireEvent.press(screen.getByRole("button", { name: "Delete selected items" }));
   expect(toolbarProps.onDeleteSelected).toHaveBeenCalledTimes(1);
+});
+
+it("confirms copying, counts down 2 then 1, and only then opens GrabMart", async () => {
+  jest.useFakeTimers();
+  mockGuideComplete = false;
+  let redirected = false;
+  jest.mocked(shopForIngredients).mockImplementation(async (_provider, _items, beforeOpen) => {
+    await beforeOpen?.();
+    redirected = true;
+    return "opened";
+  });
+  const screen = await render(<GroceryListHeaderRight {...toolbarProps} items={items} />);
+  await fireEvent.press(screen.getByRole("button", { name: "Shop on GrabMart" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  const toastId = jest.mocked(toast.success).mock.calls[0]![1]!.id;
+  expect(toast.success).toHaveBeenLastCalledWith(
+    "List copied",
+    expect.objectContaining({
+      id: toastId,
+      description: "Opening GrabMart in 2…",
+    })
+  );
+  expect(screen.queryByRole("button", { name: "Continue" })).toBeNull();
+  expect(redirected).toBe(false);
+  await act(async () => {
+    await jest.advanceTimersByTimeAsync(1000);
+  });
+  expect(toast.success).toHaveBeenLastCalledWith(
+    "List copied",
+    expect.objectContaining({
+      id: toastId,
+      description: "Opening GrabMart in 1…",
+    })
+  );
+  expect(redirected).toBe(false);
+  expect(mockSetGuideComplete).not.toHaveBeenCalled();
+  await act(async () => {
+    await jest.advanceTimersByTimeAsync(999);
+  });
+  expect(redirected).toBe(false);
+  await act(async () => {
+    await jest.advanceTimersByTimeAsync(1);
+  });
+  expect(redirected).toBe(true);
+  expect(toast.dismiss).toHaveBeenCalledWith(toastId);
+  expect(mockSetGuideComplete).toHaveBeenCalledWith(true);
+  await screen.unmount();
+  jest.useRealTimers();
+});
+
+it("cancels the countdown when the grocery screen unmounts", async () => {
+  jest.useFakeTimers();
+  mockGuideComplete = false;
+  let redirected = false;
+  jest.mocked(shopForIngredients).mockImplementation(async (_provider, _items, beforeOpen) => {
+    await beforeOpen?.();
+    redirected = true;
+    return "opened";
+  });
+  const screen = await render(<GroceryListHeaderRight {...toolbarProps} items={items} />);
+  await fireEvent.press(screen.getByRole("button", { name: "Shop on GrabMart" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Continue" }));
+  expect(toast.success).toHaveBeenCalledWith(
+    "List copied",
+    expect.objectContaining({
+      description: "Opening GrabMart in 2…",
+    })
+  );
+  await screen.unmount();
+  await act(async () => {
+    await jest.advanceTimersByTimeAsync(3000);
+  });
+  expect(redirected).toBe(false);
+  expect(toast.error).not.toHaveBeenCalled();
+  expect(mockSetGuideComplete).not.toHaveBeenCalled();
+  jest.useRealTimers();
+});
+
+it("copies and redirects immediately without a toast after the tutorial is complete", async () => {
+  jest.useFakeTimers();
+  let redirected = false;
+  jest.mocked(shopForIngredients).mockImplementation(async (_provider, _items, beforeOpen) => {
+    await beforeOpen?.();
+    redirected = true;
+    return "opened";
+  });
+  const screen = await render(<GroceryListHeaderRight {...toolbarProps} items={items} />);
+  try {
+    await fireEvent.press(screen.getByRole("button", { name: "Shop on GrabMart" }));
+    expect(redirected).toBe(true);
+    expect(screen.queryByTestId("grabmart-guide")).toBeNull();
+    expect(toast.success).not.toHaveBeenCalled();
+    expect(toast.error).not.toHaveBeenCalled();
+  } finally {
+    await screen.unmount();
+    jest.useRealTimers();
+  }
 });

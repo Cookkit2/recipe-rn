@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Stack } from "expo-router";
 import useColors from "~/hooks/useColor";
 import { toast } from "sonner-native";
@@ -36,13 +36,51 @@ export default function GroceryListHeaderRight({
   );
   const [guideOpen, setGuideOpen] = useState(false);
   const list = formatGrabMartShoppingList(items);
+  const mounted = useRef(true);
+  const cancelCountdown = useRef<(() => void) | null>(null);
+  const countdownToastId = useId();
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      cancelCountdown.current?.();
+      toast.dismiss(countdownToastId);
+    };
+  }, [countdownToastId]);
+
+  const confirmCopy = async () => {
+    if (!mounted.current) throw new Error("Shopping handoff cancelled");
+    setGuideOpen(false);
+    for (const seconds of [2, 1]) {
+      toast.success("List copied", {
+        id: countdownToastId,
+        description: `Opening GrabMart in ${seconds}…`,
+        duration: Infinity,
+        dismissible: false,
+      });
+      await new Promise<void>((resolve, reject) => {
+        const timer = setTimeout(() => {
+          cancelCountdown.current = null;
+          resolve();
+        }, 1000);
+        cancelCountdown.current = () => {
+          clearTimeout(timer);
+          reject(new Error("Shopping handoff cancelled"));
+        };
+      });
+      if (!mounted.current) throw new Error("Shopping handoff cancelled");
+    }
+    toast.dismiss(countdownToastId);
+  };
 
   const openStore = async (provider: IngredientShoppingProvider, label: string) => {
     if (opening.current) return;
     opening.current = true;
     setOpeningStore(provider);
     try {
-      const result = await shopForIngredients(provider, items);
+      const result = await shopForIngredients(provider, items, guideOpen ? confirmCopy : undefined);
+      if (!mounted.current) return;
       switch (result) {
         case "empty":
           if (!(await openIngredientStore(provider))) {
@@ -55,17 +93,17 @@ export default function GroceryListHeaderRight({
             if (!guideComplete) setGuideComplete(true);
             setGuideOpen(false);
           }
-          toast.success("List copied");
           break;
         case "copied":
+          if (!guideComplete) setGuideOpen(true);
           toast.error(`List copied. Open ${label} to shop.`);
           break;
       }
     } catch {
-      toast.error("Couldn't copy your list. Please try again.");
+      if (mounted.current) toast.error("Couldn't copy your list. Please try again.");
     } finally {
       opening.current = false;
-      setOpeningStore(null);
+      if (mounted.current) setOpeningStore(null);
     }
   };
 
