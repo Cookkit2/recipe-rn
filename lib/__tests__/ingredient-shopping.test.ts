@@ -38,3 +38,42 @@ it("reports a failed store redirect without requiring a grocery list", async () 
   expect(await openIngredientStore("foodpanda")).toBe(false);
   expect(Clipboard.setString).not.toHaveBeenCalled();
 });
+
+it("waits for the copy confirmation before redirecting", async () => {
+  let continueRedirect!: () => void;
+  const beforeOpen = jest.fn(
+    () =>
+      new Promise<void>((resolve) => {
+        continueRedirect = resolve;
+      })
+  );
+  const handoff = shopForIngredients("grabmart", [item], beforeOpen);
+  expect(Clipboard.setString).toHaveBeenCalledWith("Eggs — 3 piece");
+  expect(beforeOpen).toHaveBeenCalledTimes(1);
+  expect(Linking.openURL).not.toHaveBeenCalled();
+  continueRedirect();
+  await expect(handoff).resolves.toBe("opened");
+  expect(Linking.openURL).toHaveBeenCalledTimes(1);
+});
+
+it("skips the countdown when copying fails or the list is empty", async () => {
+  const beforeOpen = jest.fn();
+  await expect(shopForIngredients("grabmart", [], beforeOpen)).resolves.toBe("empty");
+  jest.mocked(Clipboard.setString).mockImplementationOnce(() => {
+    throw new Error("Clipboard unavailable");
+  });
+  await expect(shopForIngredients("grabmart", [item], beforeOpen)).rejects.toThrow(
+    "Clipboard unavailable"
+  );
+  expect(beforeOpen).not.toHaveBeenCalled();
+  expect(Linking.openURL).not.toHaveBeenCalled();
+});
+
+it("does not redirect when the countdown is cancelled", async () => {
+  await expect(
+    shopForIngredients("grabmart", [item], async () => {
+      throw new Error("Handoff cancelled");
+    })
+  ).rejects.toThrow("Handoff cancelled");
+  expect(Linking.openURL).not.toHaveBeenCalled();
+});

@@ -8,11 +8,13 @@ export type IngredientShoppingProvider = "grabmart" | "foodpanda";
 export const FOODPANDA_GROCERY_URL = "https://www.foodpanda.my/groceries";
 export async function shopForIngredients(
   provider: IngredientShoppingProvider,
-  items: readonly GrabMartShoppingItem[]
+  items: readonly GrabMartShoppingItem[],
+  beforeOpen?: () => Promise<void>
 ): Promise<GrabMartShoppingResult> {
   const list = formatGrabMartShoppingList(items);
   if (!list) return "empty";
   await navigator.clipboard.writeText(list);
+  await beforeOpen?.();
   return (await openIngredientStore(provider)) ? "opened" : "copied";
 }
 

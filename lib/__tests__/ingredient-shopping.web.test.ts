@@ -52,3 +52,24 @@ it("reports web navigation failures", async () => {
   });
   expect(await openIngredientStore("foodpanda")).toBe(false);
 });
+
+it("waits for clipboard success and the countdown before navigating", async () => {
+  let finishCopy!: () => void;
+  writeText.mockImplementationOnce(() => new Promise<void>((resolve) => (finishCopy = resolve)));
+  let finishCountdown!: () => void;
+  const beforeOpen = jest.fn(() => new Promise<void>((resolve) => (finishCountdown = resolve)));
+  const handoff = shopForIngredients(
+    "grabmart",
+    [{ name: "Eggs", neededQuantity: 3, unit: "piece", isChecked: false, isCovered: false }],
+    beforeOpen
+  );
+  expect(beforeOpen).not.toHaveBeenCalled();
+  expect(assign).not.toHaveBeenCalled();
+  finishCopy();
+  await Promise.resolve();
+  expect(beforeOpen).toHaveBeenCalledTimes(1);
+  expect(assign).not.toHaveBeenCalled();
+  finishCountdown();
+  await expect(handoff).resolves.toBe("opened");
+  expect(assign).toHaveBeenCalledWith(GRABMART_FALLBACK_URL);
+});
