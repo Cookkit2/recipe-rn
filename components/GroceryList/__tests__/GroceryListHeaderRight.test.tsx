@@ -184,25 +184,23 @@ it("explains Grab's paste limit while handing off the full long list", async () 
   await waitFor(() => expect(shopForIngredients).toHaveBeenCalledWith("grabmart", longList));
 });
 
-it.each([
-  ["GrabMart", "grabmart"],
-  ["foodpanda", "foodpanda"],
-] as const)("opens %s with the current grocery list", async (label, provider) => {
+it("offers GrabMart with the current grocery list and hides foodpanda", async () => {
   const screen = await render(<GroceryListHeaderRight {...toolbarProps} items={items} />);
-  await fireEvent.press(screen.getByRole("button", { name: `Shop on ${label}` }));
-  await waitFor(() => expect(shopForIngredients).toHaveBeenCalledWith(provider, items));
+  expect(screen.queryByRole("button", { name: "Shop on foodpanda" })).toBeNull();
+  await fireEvent.press(screen.getByRole("button", { name: "Shop on GrabMart" }));
+  await waitFor(() => expect(shopForIngredients).toHaveBeenCalledWith("grabmart", items));
   expect(toast.success).toHaveBeenCalledWith("List copied");
 });
 
 it("still redirects from an empty list without claiming to copy items", async () => {
   jest.mocked(shopForIngredients).mockResolvedValue("empty");
   const screen = await render(<GroceryListHeaderRight {...toolbarProps} items={[]} />);
-  await fireEvent.press(screen.getByRole("button", { name: "Shop on foodpanda" }));
-  await waitFor(() => expect(openIngredientStore).toHaveBeenCalledWith("foodpanda"));
+  await fireEvent.press(screen.getByRole("button", { name: "Shop on GrabMart" }));
+  await waitFor(() => expect(openIngredientStore).toHaveBeenCalledWith("grabmart"));
   expect(toast.success).not.toHaveBeenCalled();
 });
 
-it("prevents concurrent taps across both stores and re-enables them after failure", async () => {
+it("prevents concurrent store taps and re-enables the action after failure", async () => {
   let finish!: (value: "copied") => void;
   jest.mocked(shopForIngredients).mockImplementationOnce(
     () =>
@@ -212,11 +210,11 @@ it("prevents concurrent taps across both stores and re-enables them after failur
   );
   const screen = await render(<GroceryListHeaderRight {...toolbarProps} items={items} />);
   await fireEvent.press(screen.getByRole("button", { name: "Shop on GrabMart" }));
-  await fireEvent.press(screen.getByRole("button", { name: "Shop on foodpanda" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Shop on GrabMart" }));
   expect(shopForIngredients).toHaveBeenCalledTimes(1);
   await act(() => finish("copied"));
   expect(toast.error).toHaveBeenCalledWith("List copied. Open GrabMart to shop.");
-  await fireEvent.press(screen.getByRole("button", { name: "Shop on foodpanda" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Shop on GrabMart" }));
   await waitFor(() => expect(shopForIngredients).toHaveBeenCalledTimes(2));
 });
 
@@ -224,9 +222,9 @@ it("reports an empty-list redirect failure using the selected store", async () =
   jest.mocked(shopForIngredients).mockResolvedValue("empty");
   jest.mocked(openIngredientStore).mockResolvedValue(false);
   const screen = await render(<GroceryListHeaderRight {...toolbarProps} items={[]} />);
-  await fireEvent.press(screen.getByRole("button", { name: "Shop on foodpanda" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Shop on GrabMart" }));
   await waitFor(() =>
-    expect(toast.error).toHaveBeenCalledWith("Couldn't open foodpanda. Please try again.")
+    expect(toast.error).toHaveBeenCalledWith("Couldn't open GrabMart. Please try again.")
   );
 });
 
