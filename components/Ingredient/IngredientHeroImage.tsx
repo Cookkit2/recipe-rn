@@ -30,18 +30,19 @@ const HeroImage = ({ scrollOffset }: { scrollOffset: SharedValue<number> }) => {
   });
 
   return (
-    <Animated.View
-      key={`hero-image-${pantryItem.image_url}`}
-      className="relative overflow-hidden flex items-center justify-center"
-      style={[
-        {
-          height: windowWidth,
-          backgroundColor: pantryItem.background_color || colors.muted,
-        },
-        headerAnimatedStyle,
-      ]}
-    >
-      <Link.AppleZoomTarget>
+    <Link.AppleZoomTarget>
+      <Animated.View
+        key={`hero-image-${pantryItem.image_url}`}
+        collapsable={false}
+        className="relative overflow-hidden flex items-center justify-center"
+        style={[
+          {
+            height: windowWidth,
+            backgroundColor: pantryItem.background_color || colors.muted,
+          },
+          headerAnimatedStyle,
+        ]}
+      >
         {pantryItem.image_url ? (
           <OutlinedImage source={pantryItem.image_url} size={120} strokeWidth={4} />
         ) : (
@@ -54,12 +55,12 @@ const HeroImage = ({ scrollOffset }: { scrollOffset: SharedValue<number> }) => {
             color={colors.border}
           />
         )}
-      </Link.AppleZoomTarget>
-      <Animated.View
-        style={[opacityStyle, { height: windowWidth }]}
-        className="absolute inset-0 bg-background w-full"
-      />
-    </Animated.View>
+        <Animated.View
+          style={[opacityStyle, { height: windowWidth }]}
+          className="absolute inset-0 bg-background w-full"
+        />
+      </Animated.View>
+    </Link.AppleZoomTarget>
   );
 };
 

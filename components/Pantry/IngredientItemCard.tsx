@@ -1,4 +1,4 @@
-import { Pressable, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { H4, P } from "~/components/ui/typography";
 import type { PantryCardItem } from "~/types/PantryItem";
@@ -44,28 +44,35 @@ const IngredientItemCard = ({ item, index }: { item: PantryCardItem; index: numb
             }
           }}
         >
-          <Animated.View
-            className="w-full relative rounded-3xl flex items-center justify-center border-continuous aspect-square"
-            style={[{ backgroundColor: item.background_color || colors.muted }, roundedStyle]}
-          >
-            <Link.AppleZoom>
-              <View collapsable={false}>
-                {item.image_url ? (
-                  <OutlinedImage source={item.image_url} size={64} />
-                ) : (
-                  <ShapeContainer
-                    index={index}
-                    width={64}
-                    height={64}
-                    text="?"
-                    textClassname="text-3xl text-foreground/70 leading-[2]"
-                    color={colors.border}
-                    collapsable={false}
-                  />
-                )}
-              </View>
-            </Link.AppleZoom>
-          </Animated.View>
+          <Link.AppleZoom>
+            <Animated.View
+              collapsable={false}
+              className="w-full relative rounded-3xl flex items-center justify-center border-continuous aspect-square overflow-hidden"
+              style={roundedStyle}
+            >
+              {/* Keep the colored surface inside the snapshot of the transparent cutout. */}
+              <View
+                pointerEvents="none"
+                style={[
+                  StyleSheet.absoluteFill,
+                  { backgroundColor: item.background_color || colors.muted },
+                ]}
+              />
+              {item.image_url ? (
+                <OutlinedImage source={item.image_url} size={64} />
+              ) : (
+                <ShapeContainer
+                  index={index}
+                  width={64}
+                  height={64}
+                  text="?"
+                  textClassname="text-3xl text-foreground/70 leading-[2]"
+                  color={colors.border}
+                  collapsable={false}
+                />
+              )}
+            </Animated.View>
+          </Link.AppleZoom>
           <View className="mt-2">
             <H4 className="opacity-80 mb-[0.5] font-urbanist-regular">{item.name}</H4>
             <P className="text-muted-foreground font-urbanist-medium">
