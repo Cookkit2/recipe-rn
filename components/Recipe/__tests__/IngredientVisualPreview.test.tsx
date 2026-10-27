@@ -126,14 +126,15 @@ const props = {
 
 it("opens every ingredient in recipe order, including items beyond the strip limit", async () => {
   const screen = await render(<IngredientVisualPreview {...props} />);
-  expect(screen.queryByText("Ingredients")).toBeNull();
+  expect(screen.queryByRole("button", { name: "Close ingredients" })).toBeNull();
   expect(
     screen.getByTestId("recipe-ingredients-layer", { includeHiddenElements: true }).props
       .pointerEvents
   ).toBe("none");
   expect(props.ingredientPreviewData.missing).toHaveLength(6);
   await fireEvent.press(screen.getByRole("button", { name: "View recipe ingredients" }));
-  expect(screen.getByText("Ingredients")).toBeTruthy();
+  expect(screen.queryByText("Ingredients")).toBeNull();
+  expect(screen.getByRole("button", { name: "Close ingredients" })).toBeTruthy();
   expect(screen.getByTestId("recipe-ingredients-layer").props.pointerEvents).toBe("box-none");
   expect(screen.getByText("Ingredient 9")).toBeTruthy();
   expect(screen.getByText("2.5 piece")).toBeTruthy();
@@ -159,7 +160,7 @@ it.each(["close", "outside", "system back"])("dismisses via %s and can reopen", 
         name: action === "close" ? "Close ingredients" : "Dismiss ingredients",
       })
     );
-  expect(screen.queryByText("Ingredients")).toBeNull();
+  expect(screen.queryByRole("button", { name: "Close ingredients" })).toBeNull();
   await fireEvent.press(screen.getByRole("button", { name: "View recipe ingredients" }));
   expect(screen.getByText("Ingredient 9")).toBeTruthy();
 });
@@ -175,7 +176,7 @@ it("does not open the overlay when the ingredient strip is dragged", async () =>
   await fireEvent(trigger, "touchMove", touch(40));
   await fireEvent(trigger, "touchEnd", touch(40));
   await fireEvent.press(trigger, touch(40));
-  expect(screen.queryByText("Ingredients")).toBeNull();
+  expect(screen.queryByRole("button", { name: "Close ingredients" })).toBeNull();
 });
 
 it("forwards the Android blur target without changing quantities after an update", async () => {

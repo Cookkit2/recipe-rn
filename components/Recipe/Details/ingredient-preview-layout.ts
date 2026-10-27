@@ -15,7 +15,7 @@ interface SafeInsets {
   bottom: number;
 }
 
-/** Full-screen scrolling with safe padding before the title and after the final label. */
+/** Full-screen scrolling with safe padding below the close control and after the final label. */
 export function ingredientOverlayLayout(
   width: number,
   height: number,
@@ -26,7 +26,7 @@ export function ingredientOverlayLayout(
 ) {
   const panelWidth = Math.max(1, Math.min(width - 48, 480));
   const panelTop = insets.top + 16;
-  const headerHeight = Math.max(64, 48 * fontScale + 16);
+  const headerHeight = 44;
   const columnWidth = (panelWidth - GRID_PADDING * 2) / 3;
   const topPadding = panelTop + headerHeight + 8;
   const bottomPadding = insets.bottom + 24;

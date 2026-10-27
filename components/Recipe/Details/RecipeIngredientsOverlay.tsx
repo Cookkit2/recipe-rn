@@ -28,7 +28,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BlurView, type BlurViewProps } from "expo-blur";
 import { XIcon } from "lucide-uniwind";
 import { Button } from "~/components/ui/button";
-import { H2, P } from "~/components/ui/typography";
+import { P } from "~/components/ui/typography";
 import OutlinedImage from "~/components/ui/outlined-image";
 import ShapeContainer from "~/components/Shared/Shapes/ShapeContainer";
 import { stableThumbRotation } from "~/components/Shared/RotationCard";
@@ -184,9 +184,6 @@ export default function RecipeIngredientsOverlay({
       },
     ],
   }));
-  const titleScroll = useAnimatedStyle(() => ({
-    transform: [{ translateY: -scrollOffset.value * progress.value }],
-  }));
   const content = (
     <View
       key={id}
@@ -267,23 +264,6 @@ export default function RecipeIngredientsOverlay({
             />
           ))}
         </Animated.View>
-      </Animated.View>
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          {
-            position: "absolute",
-            left: layout.left + 8,
-            top: layout.top,
-            width: layout.width - 56,
-            height: layout.headerHeight,
-            justifyContent: "center",
-          },
-          fade,
-          titleScroll,
-        ]}
-      >
-        <H2 className="text-white font-bowlby-one tracking-wide pb-0">Ingredients</H2>
       </Animated.View>
       <Animated.View
         pointerEvents={expanded ? "auto" : "none"}
