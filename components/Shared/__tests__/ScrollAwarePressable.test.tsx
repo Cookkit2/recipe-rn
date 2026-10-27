@@ -66,3 +66,58 @@ it("allows accessibility activation without touch coordinates after a drag", asy
   await fireEvent.press(card, { nativeEvent: { identifier: undefined } });
   expect(onPress).toHaveBeenCalledTimes(1);
 });
+
+it("allows a fresh press-in after native navigation cancels the previous touch", async () => {
+  const onPress = jest.fn();
+  const screen = await render(<ScrollAwarePressable testID="card" onPress={onPress} />);
+  const card = screen.getByTestId("card");
+  await fireEvent(card, "touchStart", touch(50, 100));
+  await fireEvent(card, "touchCancel", touch(50, 100));
+
+  // A returning native-hosted row can resume at responder activation.
+  await fireEvent(card, "pressIn", touch(50, 200));
+  const release = touch(50, 200);
+  await fireEvent.press(card, release);
+  expect(release.preventDefault).not.toHaveBeenCalled();
+  expect(onPress).toHaveBeenCalledTimes(1);
+});
+
+it("ignores late native cancellation after a handled press before the next activation", async () => {
+  const onPress = jest.fn();
+  const screen = await render(<ScrollAwarePressable testID="card" onPress={onPress} />);
+  const card = screen.getByTestId("card");
+  await fireEvent(card, "touchStart", touch(50, 100));
+  await fireEvent.press(card, touch(50, 100));
+  await fireEvent(card, "touchCancel", touch(50, 100));
+
+  await fireEvent(card, "pressIn", touch(50, 100));
+  await fireEvent.press(card, touch(50, 100));
+  expect(onPress).toHaveBeenCalledTimes(2);
+});
+
+it("keeps an active drag cancelled when the finger re-enters the card", async () => {
+  const onPress = jest.fn();
+  const screen = await render(<ScrollAwarePressable testID="card" onPress={onPress} />);
+  const card = screen.getByTestId("card");
+  await fireEvent(card, "touchStart", touch(50, 100));
+  await fireEvent(card, "touchMove", touch(50, 180));
+  await fireEvent(card, "pressIn", touch(50, 100));
+  await fireEvent.press(card, touch(50, 100));
+  expect(onPress).not.toHaveBeenCalled();
+});
+
+it("does not revive a drag when delayed press-in arrives on release", async () => {
+  const onPress = jest.fn();
+  const screen = await render(<ScrollAwarePressable testID="card" onPress={onPress} />);
+  const card = screen.getByTestId("card");
+  await fireEvent(card, "touchStart", touch(50, 100));
+  await fireEvent(card, "touchMove", touch(50, 180));
+  const release = {
+    ...touch(50, 180),
+    nativeEvent: { ...touch(50, 180).nativeEvent, touches: [] },
+  };
+  await fireEvent(card, "touchEnd", release);
+  await fireEvent(card, "pressIn", release);
+  await fireEvent.press(card, release);
+  expect(onPress).not.toHaveBeenCalled();
+});
