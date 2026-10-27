@@ -7,6 +7,7 @@ import BottomSheet, {
 import { Portal } from "@rn-primitives/portal";
 import { cn } from "~/lib/utils";
 import { Stack, useFocusEffect, useRouter } from "expo-router";
+import { useHeaderHeight } from "expo-router/react-navigation";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "react-native";
 import { useRecipes, type RecipeFilters } from "~/hooks/queries/useRecipeQueries";
@@ -48,6 +49,9 @@ export function SearchContent({
   transparent?: boolean;
 }) {
   const { top, bottom } = useSafeAreaInsets();
+  const headerHeight = useHeaderHeight();
+  // The native search bar overlays this screen, including the inline Pantry entry.
+  const contentTop = Math.max(top, headerHeight);
   const colors = useColors();
   const router = useRouter();
   const { searchBarRef, onFocus, onBlur } = useSearchBarFocus(focusEnabled);
@@ -345,7 +349,11 @@ export function SearchContent({
       )}
       {showConversation ? (
         <View className="flex-1">
-          <View className="px-5" style={{ paddingTop: top + 10 }}>
+          <View
+            testID="search-conversation-header"
+            className="px-5"
+            style={{ paddingTop: contentTop + 10 }}
+          >
             {assistantHeader}
           </View>
           <AssistantMessages
@@ -363,7 +371,7 @@ export function SearchContent({
           colors={colors}
           hasQuery={hasQuery}
           loading={showSearchLoading}
-          top={top}
+          top={contentTop}
           bottom={bottom}
           transparent={transparent}
           header={assistantHeader}

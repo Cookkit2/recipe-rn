@@ -1,10 +1,15 @@
 import React from "react";
 import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
-import { Text } from "react-native";
+import { StyleSheet, Text } from "react-native";
 import SearchScreen from "~/app/(misc)/search";
 import { SearchContent } from "../SearchContent";
 import type { CookingAgent, AgentTurnInput } from "~/lib/agent/types";
 import { TEST_IDS } from "~/constants/test-ids";
+
+let mockHeaderHeight = 118;
+jest.mock("expo-router/react-navigation", () => ({
+  useHeaderHeight: () => mockHeaderHeight,
+}));
 
 const mockPush = jest.fn();
 const mockBack = jest.fn();
@@ -117,6 +122,7 @@ jest.mock("../IngredientResults", () => ({
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockHeaderHeight = 118;
   mockTurns.length = 0;
   mockCreateAgent.mockImplementation((): CookingAgent => ({
     kind: "nebius",
@@ -305,3 +311,31 @@ it("stops an inline assistant response as pull-to-search closes", async () => {
   expect(screen.queryByTestId("native-search-input")).toBeNull();
   expect(screen.queryByText("Late answer")).toBeNull();
 });
+
+it.each(["route", "pantry"])(
+  "keeps %s assistant controls below the native search header as its height changes",
+  async (entry) => {
+    const content =
+      entry === "route" ? <SearchScreen /> : <SearchContent onDismiss={mockBack} transparent />;
+    const screen = await render(content);
+    await fireEvent.changeText(screen.getByTestId("native-search-input"), "Help with dinner");
+    expect(
+      StyleSheet.flatten(screen.getByTestId("search-results").props.contentContainerStyle)
+        .paddingTop
+    ).toBe(128);
+
+    await fireEvent.press(screen.getByLabelText("Ask Cookkit"));
+    await waitFor(() => expect(screen.getByText("Try a rice bowl.")).toBeTruthy());
+    const conversationHeader = () => screen.getByTestId("search-conversation-header");
+    expect(StyleSheet.flatten(conversationHeader().props.style).paddingTop).toBe(128);
+
+    mockHeaderHeight = 144;
+    await screen.rerender(React.cloneElement(content));
+    expect(StyleSheet.flatten(conversationHeader().props.style).paddingTop).toBe(154);
+    await fireEvent.press(screen.getByText("Search results"));
+    expect(
+      StyleSheet.flatten(screen.getByTestId("search-results").props.contentContainerStyle)
+        .paddingTop
+    ).toBe(154);
+  }
+);

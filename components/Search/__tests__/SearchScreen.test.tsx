@@ -5,6 +5,8 @@ import { SearchContent } from "../SearchContent";
 import { SearchEntrance } from "../SearchEntrance";
 import { StyleSheet } from "react-native";
 
+jest.mock("expo-router/react-navigation", () => ({ useHeaderHeight: () => 118 }));
+
 jest.mock("../SearchAssistantHeader", () => ({ SearchAssistantHeader: () => null }));
 jest.mock("~/components/Assistant/AssistantMessages", () => ({ AssistantMessages: () => null }));
 const mockStopAssistant = jest.fn();
