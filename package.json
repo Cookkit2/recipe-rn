@@ -29,7 +29,7 @@
     "audit:dependencies": "node scripts/audit-dependencies.cjs"
   },
   "dependencies": {
-    "@ai-sdk/openai-compatible": "^3.0.71",
+    "@ai-sdk/openai-compatible": "^3.0.77",
     "@babel/plugin-proposal-decorators": "^7.29.7",
     "@expo/ui": "~58.0.20",
     "@lucide/lab": "^0.7.0",
