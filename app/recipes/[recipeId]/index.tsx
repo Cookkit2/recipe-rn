@@ -10,6 +10,7 @@ import {
   useState,
   type ComponentRef,
 } from "react";
+import { PortalHost } from "@rn-primitives/portal";
 import { BlurTargetView } from "expo-blur";
 import {
   View,
@@ -140,6 +141,7 @@ function RecipeDetailsContent({
     : ["#4B5563", "#6B7280", "#9CA3AF", "#374151", "#525966", "#78818F"];
 
   const { width: windowWidth } = useWindowDimensions();
+  const ingredientPortalHost = `recipe-ingredients-${recipeId}`;
   const ingredientBlurTarget = useRef<ComponentRef<typeof View> | null>(null);
   const navigation = useNavigation("/");
   const router = useRouter();
@@ -494,6 +496,8 @@ function RecipeDetailsContent({
             ingredients={scaledIngredients}
             findMatch={findMatch}
             blurTarget={Platform.OS === "android" ? ingredientBlurTarget : undefined}
+            scrollOffset={scrollOffset}
+            portalHostName={ingredientPortalHost}
           />
 
           {/* Missing Ingredients */}
@@ -570,6 +574,8 @@ function RecipeDetailsContent({
         onTailor={handleTailorRecipe}
         onToggleMode={handleToggleMode}
       />
+
+      <PortalHost name={ingredientPortalHost} />
 
       {/* Review Modal */}
       <WriteReviewModal
