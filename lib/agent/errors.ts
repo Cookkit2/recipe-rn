@@ -34,7 +34,12 @@ export function assistantErrorMessage(error: unknown, depth = 0): string {
     details.name === "NetworkError"
   )
     return MESSAGES.network;
-  if (status === 401 || status === 403 || (typeof status === "number" && status >= 500)) {
+  if (
+    details.name === "AgentUnavailableError" ||
+    status === 401 ||
+    status === 403 ||
+    (typeof status === "number" && status >= 500)
+  ) {
     return MESSAGES.unavailable;
   }
   // SDK retry wrappers keep the useful status on their cause/lastError.

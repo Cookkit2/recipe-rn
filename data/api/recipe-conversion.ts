@@ -1,5 +1,6 @@
 import { log } from "~/utils/logger";
 import type { Recipe } from "~/types/Recipe";
+import { cleanRecipeDescription } from "~/utils/recipe-description";
 
 type RecipeWithDetails = {
   recipe: {
@@ -70,7 +71,7 @@ export const convertDbRecipesToUIRecipesBatch = (
     result.push({
       id: recipe.id,
       title: recipe.title,
-      description: recipe.description || "",
+      description: cleanRecipeDescription(recipe.description),
       imageUrl: recipe.imageUrl || "",
       prepMinutes: recipe.prepMinutes ?? undefined,
       cookMinutes: recipe.cookMinutes ?? undefined,
@@ -110,7 +111,7 @@ export const convertDbRecipesToUISearchSummaries = (
   return dbRecipes.map((r) => ({
     id: r.id,
     title: r.title,
-    description: r.description ?? "",
+    description: cleanRecipeDescription(r.description),
     imageUrl: r.imageUrl ?? "",
     prepMinutes: r.prepMinutes ?? undefined,
     cookMinutes: r.cookMinutes ?? undefined,

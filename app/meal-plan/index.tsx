@@ -125,6 +125,7 @@ export default function MealPlanPage() {
           contentStyle: { backgroundColor: colors.background },
           headerTintColor: colors.foreground,
           headerTitle: "Meal Plan",
+          headerTitleStyle: { fontFamily: "BowlbyOne-Regular" },
           headerLeft: () => (
             <Button
               variant="ghost"

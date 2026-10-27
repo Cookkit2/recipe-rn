@@ -38,6 +38,13 @@ function resolvePage(scope: string, itemId = "7538296153562008840") {
 }
 
 describe("on-device social video sources", () => {
+  it.each([
+    "https://youtu.be/abcdef12345?si=tracking",
+    "https://m.youtube.com/watch?v=abcdef12345&t=12",
+    "https://www.youtube.com/shorts/abcdef12345?feature=share",
+  ])("normalizes shared YouTube videos without losing the selected video: %s", (url) => {
+    expect(normalizeVideoPostUrl(url)).toBe("https://www.youtube.com/watch?v=abcdef12345");
+  });
   it("accepts the reported TikTok and strips tracking from Instagram posts", () => {
     expect(normalizeVideoPostUrl("https://vt.tiktok.com/ZSgH2hh7B/")).toBe(
       "https://vt.tiktok.com/ZSgH2hh7B/"
@@ -52,6 +59,9 @@ describe("on-device social video sources", () => {
     "http://vt.tiktok.com/abcd/",
     "https://www.instagram.com/accounts/login/",
     "https://www.tiktok.com:8443/@a/video/123",
+    "https://www.youtube.com.attacker.test/watch?v=abcdef12345",
+    "https://www.youtube.com/redirect?q=https://attacker.test",
+    "https://youtu.be/not-a-video-id",
   ])("rejects unsupported post URL %s", (value) => {
     expect(normalizeVideoPostUrl(value)).toBeUndefined();
   });
@@ -71,6 +81,10 @@ describe("on-device social video sources", () => {
       )
     ).toBe(true);
     expect(isAllowedVideoMediaUrl("https://scontent.cdninstagram.com/a.mp4")).toBe(true);
+    expect(
+      isAllowedVideoMediaUrl("https://rr1---sn-example.googlevideo.com/videoplayback?sig=abc")
+    ).toBe(true);
+    expect(isAllowedVideoMediaUrl("https://googlevideo.com.attacker.test/video.mp4")).toBe(false);
   });
   it("emits valid JavaScript without embedding credentials", () => {
     expect(() => new Function(videoResolverScript())).not.toThrow();

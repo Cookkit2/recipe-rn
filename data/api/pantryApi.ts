@@ -27,6 +27,7 @@ import { ingredientCatalog } from "~/data/services/ingredientCatalog";
 import type { AssistantPantryInput, AssistantPantryResult } from "~/types/AssistantPantryMutation";
 import { normalizeIngredientIdentity } from "~/utils/ingredient-identity";
 import { createAssistantPantryMutator } from "./assistant-pantry";
+import { mapStorageType } from "./pantry-storage-type";
 
 const mutateAssistantPantry = createAssistantPantryMutator(database, (name) =>
   ingredientCatalog.resolve(name)
@@ -271,7 +272,7 @@ export const pantryApi = {
     // ⚡ Bolt Performance Optimization: Filter raw stocks first to avoid expensive Batch Entity fetching for excluded types
     const rawStocks = await databaseFacade.getAllStock();
     const dbTypeMatches = (dbType: string | undefined, expectedType: ItemType) => {
-      return mapDbTypeToType(dbType) === expectedType;
+      return mapStorageType(dbType) === expectedType;
     };
     const filteredStocks = rawStocks.filter((stock) => dbTypeMatches(stock.storageType, type));
     return await convertStockToPantryItemBatch(filteredStocks);
@@ -431,7 +432,7 @@ const convertStockToPantryItemBatch = async (stocks: Stock[]): Promise<PantryIte
       expiry_date: stock.expiryDate || undefined,
       category: categories.length > 0 ? categories[0]?.name || "" : "",
       categories,
-      type: mapDbTypeToType(stock.storageType),
+      type: mapStorageType(stock.storageType),
       image_url: stock.imageUrl,
       background_color: stock.backgroundColor,
       created_at: stock.createdAt,
@@ -440,13 +441,4 @@ const convertStockToPantryItemBatch = async (stocks: Stock[]): Promise<PantryIte
       synonyms,
     };
   });
-};
-
-// Map database dbType to ItemType
-const mapDbTypeToType = (type?: string): Exclude<ItemType, "all"> => {
-  if (!type) return "fridge";
-  const lowerDbType = type.toLowerCase();
-  if (lowerDbType.includes("cabinet") || lowerDbType.includes("pantry")) return "cabinet";
-  if (lowerDbType.includes("freezer")) return "freezer";
-  return "fridge"; // default
 };

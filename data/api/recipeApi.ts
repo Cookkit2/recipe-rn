@@ -52,6 +52,7 @@ import {
 } from "~/utils/api-error-handler";
 import type { AppResult } from "~/utils/result";
 import type { AppError } from "~/types/AppError";
+import { cleanRecipeDescription } from "~/utils/recipe-description";
 
 // =============================================================================
 // Core functions — shared by throwing + Result variant pairs
@@ -889,7 +890,7 @@ const convertDbRecipeToUIRecipe = async (dbRecipe: DbRecipe): Promise<Recipe> =>
   return {
     id: recipe.id,
     title: recipe.title,
-    description: recipe.description,
+    description: cleanRecipeDescription(recipe.description),
     imageUrl: recipe.imageUrl || "",
     prepMinutes: recipe.prepMinutes,
     cookMinutes: recipe.cookMinutes,

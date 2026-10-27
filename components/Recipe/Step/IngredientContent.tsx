@@ -18,6 +18,7 @@ import Animated from "react-native-reanimated";
 import { useRecipeDetailStore } from "~/store/RecipeDetailContext";
 import { usePantryItemsByType } from "~/hooks/queries/usePantryQueries";
 import { useRecipeSteps } from "~/store/RecipeStepsContext";
+import * as Haptics from "expo-haptics";
 
 export const IngredientsContent: React.FC<{
   ingredients: RecipeIngredient[];
@@ -107,7 +108,10 @@ const IngredientItem: React.FC<{
       // Tap toggles the ingredient's "used" state (cook-session tick-off);
       // long-press still reaches the pantry-detail deep-link so that flow is
       // not lost.
-      onPress={onToggle}
+      onPress={() => {
+        onToggle();
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+      }}
       onLongPress={pantryItemId ? () => router.push(`/ingredient/${pantryItemId}`) : undefined}
       delayLongPress={400}
       className="flex-1 mb-3 px-1"
@@ -122,32 +126,30 @@ const IngredientItem: React.FC<{
         isUsed ? "Marked as used" : "Tap to mark as used"
       }${pantryItemId ? ". Long-press for pantry details." : ""}`}
     >
-      {previewImage ? (
-        <View className="relative items-center justify-center">
+      <View className="relative w-16 h-16 items-center justify-center self-center">
+        {previewImage ? (
           <OutlinedImage source={previewImage} size={56} strokeWidth={2.618} />
-          {isUsed && (
-            <View pointerEvents="none" className="absolute inset-0 items-center justify-center">
-              <CheckCircle2Icon
-                size={56}
-                strokeWidth={2.5}
-                className="text-foreground"
-                fill={colors.background}
-              />
-            </View>
-          )}
-        </View>
-      ) : (
-        <View className="w-16 h-16 items-center justify-center self-center">
+        ) : (
           <ShapeContainer
             index={index}
             width={64}
             height={64}
-            text={isUsed ? "✓" : "?"}
+            text="?"
             textClassname="text-3xl text-foreground/70 leading-[2]"
             color={colors.border}
           />
-        </View>
-      )}
+        )}
+        {isUsed && (
+          <View pointerEvents="none" className="absolute inset-0 items-center justify-center">
+            <CheckCircle2Icon
+              size={56}
+              strokeWidth={2.5}
+              className="text-foreground"
+              fill={colors.background}
+            />
+          </View>
+        )}
+      </View>
       <P
         className={`text-foreground/80 text-sm font-urbanist-semibold text-center leading-tight mt-2 ${
           isUsed ? "line-through opacity-50" : ""

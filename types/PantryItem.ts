@@ -32,6 +32,12 @@ export type PantryItemConfirmation = Pick<
   "name" | "quantity" | "unit" | "background_color" | "image_url"
 >;
 
+/** Home cards do not need ingredient relationships or storage instructions. */
+export type PantryCardItem = Pick<
+  PantryItem,
+  "id" | "name" | "quantity" | "unit" | "type" | "image_url" | "background_color"
+>;
+
 export type BaseIngredient = {
   days_to_expire: number;
   id: string;

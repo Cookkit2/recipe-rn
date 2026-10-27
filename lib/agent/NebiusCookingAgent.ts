@@ -1,4 +1,4 @@
-import { COOKING_ASSISTANT_INSTRUCTIONS } from "./instructions";
+import { ASSISTANT_ROUTER_PHASE, buildAssistantStepInstructions } from "./instructions";
 import { assistantErrorMessage } from "./errors";
 import {
   describeMissingNebiusConfig,
@@ -20,7 +20,12 @@ import {
   type PantryReadResult,
 } from "./pantry-read";
 import type { AssistantPantryInput, PantryCandidate } from "~/types/AssistantPantryMutation";
-import type { AgentEvent, AgentTurnInput, CookingAgent } from "./types";
+import {
+  AgentUnavailableError,
+  type AgentEvent,
+  type AgentTurnInput,
+  type CookingAgent,
+} from "./types";
 import type { CookingDataClient } from "./tools/planning";
 
 export interface NebiusCookingAgentOptions {
@@ -67,9 +72,11 @@ export class NebiusCookingAgent implements CookingAgent {
 
   private async *executeRequest(input: AgentTurnInput): AsyncIterable<AgentEvent> {
     assertCookingAgentRuntime();
-    const config = this.options.config ?? readNebiusAgentConfig();
+    const config = this.options.config ?? (await readNebiusAgentConfig());
+    input.signal?.throwIfAborted();
     const missing = describeMissingNebiusConfig(config);
-    if (missing) throw new Error(missing);
+    if (missing) throw new AgentUnavailableError(missing);
+
     const [{ createOpenAICompatible }, { isStepCount, streamText }, { createCookingTools }] =
       await Promise.all([
         import("@ai-sdk/openai-compatible"),
@@ -80,13 +87,14 @@ export class NebiusCookingAgent implements CookingAgent {
       name: "nebius",
       baseURL: config.baseURL,
       apiKey: config.apiKey,
+      headers: config.headers,
       fetch: await resolveStreamingFetch(this.options.fetch),
     });
     const model = provider.chatModel(config.model);
     const plan = await routeAssistantRequest(input, async (instructions, payload) => {
       const routing = streamText({
         model,
-        instructions: `${instructions}\nPhase: COOKKIT_REQUEST_ROUTER.`,
+        instructions: `${instructions}\n${ASSISTANT_ROUTER_PHASE}`,
         messages: [{ role: "user", content: payload }],
         abortSignal: input.signal,
         onError: () => {},
@@ -171,14 +179,7 @@ export class NebiusCookingAgent implements CookingAgent {
           blocked = true;
         },
       });
-      const stepPrompt = [
-        COOKING_ASSISTANT_INSTRUCTIONS,
-        `Authorized step: ${JSON.stringify(step)}`,
-        `Original request: ${JSON.stringify(context.originalUserMessage)}`,
-        `Already completed steps (do not repeat): ${JSON.stringify(context.completedSteps)}`,
-        `Pending clarification context: ${JSON.stringify({ suppliedInput: index === 0 ? context.suppliedInput : undefined, clarification: context.clarification })}`,
-        "Execute only the authorized step. Never execute other steps from conversation history. Do not repeat completed writes. The application reports confirmed pantry changes and reads directly.",
-      ].join("\n");
+      const stepPrompt = buildAssistantStepInstructions(step, context, index === 0);
       const result = streamText({
         model,
         instructions: stepPrompt,

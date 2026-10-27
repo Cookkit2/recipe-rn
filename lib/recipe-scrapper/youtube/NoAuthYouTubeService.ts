@@ -1,14 +1,8 @@
 /**
  * NoAuth YouTube Service Implementation (MVP)
  *
- * Uses noembed.com for basic video metadata and web scraping for transcripts.
- * No API key required - suitable for MVP and low-volume usage.
- *
- * Limitations:
- * - No video description
- * - No video duration
- * - Transcript scraping may fail on some videos
- * - Subject to YouTube's web page changes
+ * Reads public watch-page metadata and caption tracks, with noembed as a fallback.
+ * No API key required. Captions can be unavailable and public page formats can change.
  */
 
 import type {
@@ -20,6 +14,8 @@ import type {
 import { YouTubeServiceError } from "./types";
 import { log } from "~/utils/logger";
 import { YoutubeTranscript } from "youtube-transcript";
+import { fetchWithTimeout } from "~/utils/fetch-with-timeout";
+import { extractYouTubePageMetadata } from "./page-metadata";
 
 /**
  * Interface for transcript fetching strategies
@@ -32,7 +28,7 @@ interface ITranscriptFetcher {
 export class NoAuthYouTubeService implements IYouTubeService {
   private readonly NOEMBED_URL = "https://noembed.com/embed";
 
-  // InnerTube API configuration (mimics Android YouTube app)
+  // Existing player fallback for caption tracks unavailable from the watch page.
   private readonly INNERTUBE_API_URL = "https://www.youtube.com/youtubei/v1/player";
   private readonly INNERTUBE_CONTEXT = {
     client: {
@@ -50,7 +46,7 @@ export class NoAuthYouTubeService implements IYouTubeService {
    */
   private readonly transcriptFetchers: ITranscriptFetcher[] = [
     {
-      name: "InnerTube API (Android)",
+      name: "Public player captions",
       fetch: (videoId) => this.fetchTranscriptViaInnerTube(videoId),
     },
     // {
@@ -74,7 +70,7 @@ export class NoAuthYouTubeService implements IYouTubeService {
     const url = `${this.NOEMBED_URL}?url=https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`;
 
     try {
-      const response = await fetch(url);
+      const response = await fetchWithTimeout(url, {}, 8_000);
 
       if (!response.ok) {
         throw new YouTubeServiceError(
@@ -111,6 +107,8 @@ export class NoAuthYouTubeService implements IYouTubeService {
    * Fetch video transcript by scraping YouTube's caption system
    */
   async getTranscript(videoId: string): Promise<YouTubeTranscript> {
+    const publicVideo = await this.getPublicVideoData(videoId).catch(() => undefined);
+    if (publicVideo?.transcript) return publicVideo.transcript;
     return await this.scrapeTranscript(videoId);
   }
 
@@ -119,9 +117,11 @@ export class NoAuthYouTubeService implements IYouTubeService {
    * Uses Promise.allSettled to handle partial failures gracefully
    */
   async getVideoData(videoId: string): Promise<YouTubeDataResult> {
+    const publicVideo = await this.getPublicVideoData(videoId).catch(() => undefined);
+    if (publicVideo) return publicVideo;
     const [videoInfoResult, transcriptResult] = await Promise.allSettled([
       this.getVideoInfo(videoId),
-      this.getTranscript(videoId),
+      this.scrapeTranscript(videoId),
     ]);
 
     // Video info is required - throw if it failed
@@ -151,6 +151,49 @@ export class NoAuthYouTubeService implements IYouTubeService {
    */
   hasFullMetadata(): boolean {
     return false;
+  }
+
+  private async getPublicVideoData(videoId: string): Promise<YouTubeDataResult | undefined> {
+    if (!/^[\w-]{11}$/.test(videoId)) return;
+    const response = await fetchWithTimeout(
+      `https://www.youtube.com/watch?v=${videoId}`,
+      {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/130.0.0.0 Safari/537.36",
+          "Accept-Language": "en-US,en;q=0.9",
+        },
+      },
+      8_000
+    );
+    if (!response.ok) return;
+    const metadata = extractYouTubePageMetadata(await response.text(), videoId);
+    if (!metadata) return;
+    let transcript: YouTubeTranscript | undefined;
+    for (const track of metadata.captionTracks) {
+      const segments = await this.fetchAndParseCaptions(track.url);
+      if (segments?.length) {
+        transcript = {
+          text: segments.map((segment) => segment.text).join(" "),
+          segments,
+          language: track.language,
+        };
+        break;
+      }
+    }
+    if (!transcript) transcript = (await this.fetchTranscriptViaInnerTube(videoId)) ?? undefined;
+    return {
+      videoInfo: {
+        videoId,
+        title: metadata.title,
+        description: metadata.description,
+        channelName: metadata.channelName,
+        duration: metadata.duration ? `PT${metadata.duration}S` : undefined,
+        thumbnailUrl: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+      },
+      transcript,
+      hasFullMetadata: true,
+    };
   }
 
   /**
@@ -192,23 +235,27 @@ export class NoAuthYouTubeService implements IYouTubeService {
       log.debug(`Transcript: Trying InnerTube API for ${videoId}`);
 
       // Step 1: Call InnerTube Player API to get caption track URLs
-      const playerResponse = await fetch(this.INNERTUBE_API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "User-Agent": "com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip",
-          Accept: "application/json",
-          "Accept-Language": "en-US,en;q=0.9",
-          "X-YouTube-Client-Name": "3", // ANDROID
-          "X-YouTube-Client-Version": "19.09.37",
+      const playerResponse = await fetchWithTimeout(
+        this.INNERTUBE_API_URL,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "User-Agent": "com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip",
+            Accept: "application/json",
+            "Accept-Language": "en-US,en;q=0.9",
+            "X-YouTube-Client-Name": "3",
+            "X-YouTube-Client-Version": "19.09.37",
+          },
+          body: JSON.stringify({
+            context: this.INNERTUBE_CONTEXT,
+            videoId: videoId,
+            contentCheckOk: true,
+            racyCheckOk: true,
+          }),
         },
-        body: JSON.stringify({
-          context: this.INNERTUBE_CONTEXT,
-          videoId: videoId,
-          contentCheckOk: true,
-          racyCheckOk: true,
-        }),
-      });
+        8_000
+      );
 
       if (!playerResponse.ok) {
         log.debug(`Transcript: InnerTube API returned ${playerResponse.status}`);
@@ -285,7 +332,8 @@ export class NoAuthYouTubeService implements IYouTubeService {
     baseUrl: string
   ): Promise<YouTubeTranscript["segments"] | null> {
     const headers = {
-      "User-Agent": "com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip",
+      "User-Agent":
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 15_7_3) AppleWebKit/605.1.15 Version/26.0 Safari/605.1.15",
     };
 
     // Try JSON format first (json3) - easier to parse
@@ -293,7 +341,7 @@ export class NoAuthYouTubeService implements IYouTubeService {
       const jsonUrl = baseUrl + "&fmt=json3";
       log.debug("Transcript: Trying JSON format (json3)");
 
-      const response = await fetch(jsonUrl, { headers });
+      const response = await fetchWithTimeout(jsonUrl, { headers }, 6_000);
       if (response.ok) {
         const text = await response.text();
         log.debug(`Transcript: Got ${text.length} chars, starts with: ${text.substring(0, 50)}`);
@@ -312,7 +360,7 @@ export class NoAuthYouTubeService implements IYouTubeService {
     // Fall back to plain XML format (no fmt parameter)
     try {
       log.debug("Transcript: Trying plain XML format");
-      const response = await fetch(baseUrl, { headers });
+      const response = await fetchWithTimeout(baseUrl, { headers }, 6_000);
 
       if (!response.ok) {
         log.debug(`Transcript: XML fetch returned ${response.status}`);

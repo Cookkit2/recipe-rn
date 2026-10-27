@@ -1,10 +1,10 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePantryStore } from "~/store/PantryContext";
 import IngredientItemCard from "./IngredientItemCard";
 import { View, ActivityIndicator } from "react-native";
 import { H4, P } from "~/components/ui/typography";
-import { usePantryItemsByType } from "~/hooks/queries/usePantryQueries";
+import { usePantryCardsByType } from "~/hooks/queries/usePantryCardQueries";
 import Animated, { LinearTransition, useAnimatedStyle, withTiming } from "react-native-reanimated";
 import { CURVES } from "~/constants/curves";
 import IngredientCategoryButtonGroup from "./IngredientCategoryButtonGroup";
@@ -14,13 +14,18 @@ import type { usePantryPullSearch } from "~/hooks/usePantryPullSearch";
 
 export default function IngredientLists({
   pullSearch,
+  onReady,
 }: {
   pullSearch: ReturnType<typeof usePantryPullSearch>;
+  onReady?: () => void;
 }) {
   const { bottom } = useSafeAreaInsets();
   const { selectedItemType, ingredientScrollRef, isRecipeOpen } = usePantryStore();
   const { gesture, onScroll } = pullSearch;
-  const { data, isLoading, error } = usePantryItemsByType(selectedItemType);
+  const { data, isLoading, isFetched, error } = usePantryCardsByType(selectedItemType);
+  useEffect(() => {
+    if (isFetched) onReady?.();
+  }, [isFetched, onReady]);
   const items = data ?? [];
   const ingredientListStyle = useAnimatedStyle(() => ({
     paddingHorizontal: withTiming(isRecipeOpen ? 4 : 12, CURVES["expressive.default.spatial"]),

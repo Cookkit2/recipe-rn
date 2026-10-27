@@ -1,43 +1,59 @@
-/** Public prototype config. These EXPO_PUBLIC values are embedded in the app binary. */
+import { getAIProxyConnection } from "~/lib/ai/proxy-connection";
+import { AgentUnavailableError } from "./types";
+import { E2E_NEBIUS_API_KEY, E2E_NEBIUS_MODEL, e2eNebiusBaseURL } from "./testing/e2e-contract";
 
-export const NEBIUS_DEFAULT_BASE_URL = "https://api.tokenfactory.nebius.com/v1";
-
-/**
- * Model used in Nebius Token Factory's function-calling guide.
- * Stronger agent models such as nvidia/nemotron-3-super-120b-a12b can be set
- * with EXPO_PUBLIC_NEBIUS_MODEL after the owner confirms the id.
- */
-export const RECOMMENDED_NEBIUS_TOOL_MODEL = "meta-llama/Meta-Llama-3.1-8B-Instruct-fast";
-
+/** OpenAI-compatible gateway config. apiKey is a user JWT, never a provider key. */
 export interface NebiusAgentConfig {
   apiKey: string;
   model: string;
   baseURL: string;
+  headers?: Record<string, string>;
 }
 
-export function readNebiusAgentConfig(
+/** Resolve a current guest/account session using the same auth as recipe imports. */
+export async function readNebiusAgentConfig(
   env: Record<string, string | undefined> = {
-    EXPO_PUBLIC_NEBIUS_API_KEY: process.env.EXPO_PUBLIC_NEBIUS_API_KEY,
-    EXPO_PUBLIC_NEBIUS_MODEL: process.env.EXPO_PUBLIC_NEBIUS_MODEL,
-    EXPO_PUBLIC_NEBIUS_BASE_URL: process.env.EXPO_PUBLIC_NEBIUS_BASE_URL,
+    EXPO_PUBLIC_SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL,
+    EXPO_PUBLIC_E2E: process.env.EXPO_PUBLIC_E2E,
   }
-): NebiusAgentConfig {
-  const apiKey = env.EXPO_PUBLIC_NEBIUS_API_KEY?.trim() ?? "";
-  const model = env.EXPO_PUBLIC_NEBIUS_MODEL?.trim() ?? "";
-  const configuredBase = env.EXPO_PUBLIC_NEBIUS_BASE_URL?.trim() || NEBIUS_DEFAULT_BASE_URL;
-  return {
-    apiKey,
-    model,
-    baseURL: configuredBase.replace(/\/+$/, ""),
-  };
+): Promise<NebiusAgentConfig> {
+  // The native Detox build talks only to the existing loopback fixture.
+  if (env.EXPO_PUBLIC_E2E === "true") {
+    return {
+      apiKey: E2E_NEBIUS_API_KEY,
+      model: E2E_NEBIUS_MODEL,
+      baseURL: e2eNebiusBaseURL(),
+    };
+  }
+  try {
+    const project = new URL(env.EXPO_PUBLIC_SUPABASE_URL?.trim() ?? "");
+    if (
+      project.protocol !== "https:" ||
+      project.username ||
+      project.password ||
+      project.search ||
+      project.hash ||
+      !["", "/"].includes(project.pathname)
+    )
+      throw new Error("Invalid project URL");
+    const { headers } = await getAIProxyConnection();
+    const token = headers.Authorization?.match(/^Bearer (\S+)$/i)?.[1];
+    if (!token || !headers.apikey) throw new Error("Missing user session");
+    return {
+      apiKey: token,
+      model: "cookkit-assistant",
+      baseURL: `${project.origin}/functions/v1/nebius-chat/v1`,
+      headers: { apikey: headers.apikey },
+    };
+  } catch {
+    throw new AgentUnavailableError(
+      "The assistant is temporarily unavailable. Please try again later."
+    );
+  }
 }
 
 export function describeMissingNebiusConfig(config: NebiusAgentConfig): string | null {
-  if (!config.apiKey) {
-    return "Set EXPO_PUBLIC_NEBIUS_API_KEY to use the cooking assistant. This prototype key ships in the app bundle and must move to a backend before release.";
-  }
-  if (!config.model) {
-    return `Set EXPO_PUBLIC_NEBIUS_MODEL. Recommended tool-calling model: ${RECOMMENDED_NEBIUS_TOOL_MODEL}.`;
-  }
-  return null;
+  return !config.apiKey || !config.model || !config.baseURL
+    ? "The assistant connection is unavailable."
+    : null;
 }

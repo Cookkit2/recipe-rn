@@ -3,9 +3,7 @@
 # so the embedded JS bundle inlines these URLs.
 export EXPO_PUBLIC_E2E=true
 export FORCE_BUNDLING=1
-export EXPO_PUBLIC_NEBIUS_API_KEY=test-nebius-key
-export EXPO_PUBLIC_NEBIUS_MODEL=mock-tool-model
-export EXPO_PUBLIC_NEBIUS_BASE_URL=http://127.0.0.1:8787/v1
+# The E2E flag selects the fixed dummy chat fixture in lib/agent/testing/e2e-contract.ts.
 export EXPO_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
 export EXPO_PUBLIC_SUPABASE_ANON_KEY=test-anon-key
 

@@ -1,6 +1,6 @@
 import React from "react";
 import { Modal, Platform, Pressable } from "react-native";
-import { BlurView } from "expo-blur";
+import { BlurView, type BlurViewProps } from "expo-blur";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useUniwind } from "uniwind";
 
@@ -8,10 +8,14 @@ export default function BaseModal({
   modalVisible,
   onCancel,
   children,
+  blurTarget,
+  blurTint,
 }: {
   modalVisible: boolean;
   onCancel: () => void;
   children: React.ReactNode;
+  blurTarget?: BlurViewProps["blurTarget"];
+  blurTint?: BlurViewProps["tint"];
 }) {
   const { theme } = useUniwind();
 
@@ -20,7 +24,9 @@ export default function BaseModal({
       <BlurView
         intensity={20}
         className="absolute inset-0 z-[1]"
-        tint={theme === "dark" ? "dark" : "light"}
+        tint={blurTint ?? (theme === "dark" ? "dark" : "light")}
+        blurTarget={blurTarget}
+        blurMethod={blurTarget ? "dimezisBlurView" : undefined}
       />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}

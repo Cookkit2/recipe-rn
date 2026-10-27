@@ -13,17 +13,17 @@ The app calls the `nebius-ai` Supabase Edge Function with a user session. The fu
 
 The Nebius key for recipe extraction is server-only `NEBIUS_API_KEY`. The extraction client must not read `EXPO_PUBLIC_NEBIUS_API_KEY`. The existing Supabase URL and public anon key remain app configuration.
 
-## Prototype in-app cooking assistant
+## Search cooking assistant
 
-`lib/agent` is a separate prototype. It runs the Vercel AI SDK `streamText` loop inside the app and calls Nebius with `@ai-sdk/openai-compatible`. That path reads:
+`lib/agent` runs the Vercel AI SDK `streamText` loop inside the app. Its OpenAI-compatible connection uses the authenticated `nebius-chat` Supabase Edge Function, which keeps the Nebius key on the server, verifies the current user or guest session, and applies the same persistent request quota as recipe extraction. Tool execution stays on-device so pantry changes reach the local pantry displayed by the app.
 
 | Variable | Purpose |
 | --- | --- |
-| `EXPO_PUBLIC_NEBIUS_API_KEY` | Prototype bearer token. Empty in git. It is embedded in the binary. |
-| `EXPO_PUBLIC_NEBIUS_BASE_URL` | Defaults to `https://api.tokenfactory.nebius.com/v1`. |
-| `EXPO_PUBLIC_NEBIUS_MODEL` | Chat model. The Nebius function-calling guide uses `meta-llama/Meta-Llama-3.1-8B-Instruct-fast`. |
+| `NEBIUS_API_KEY` | Server-only credential, shared with recipe extraction. |
+| `NEBIUS_AGENT_MODEL` | Optional server-only chat model override. Defaults to `nvidia/Nemotron-3_5-Lightning`. |
+| `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Existing public project configuration. The app obtains a user JWT at runtime. |
 
-Do not ship a store build with a real `EXPO_PUBLIC_NEBIUS_API_KEY`. Move the agent loop and the key to a backend before any real release. `bun run agent:smoke` exercises `streamText` and tools against a local mock of the OpenAI-compatible stream. It does not call Nebius.
+The client sends the `cookkit-assistant` model alias; the proxy owns the actual model and provider endpoint. No `EXPO_PUBLIC_NEBIUS_*` variables are required or read. `bun run agent:smoke` exercises `streamText` and tools against a local mock of the OpenAI-compatible stream. It does not call Nebius. Native Detox builds use `EXPO_PUBLIC_E2E=true` and fixed dummy loopback values.
 
 The app's assistant reads and changes pantry items through the same local `pantryApi` as the pantry screen, including when Supabase is unavailable. Mutations invalidate pantry and recipe queries. Diet preferences merge device values with cloud values when available; recipe suggestions read a bounded cloud catalog with complete, paginated ingredient lists.
 
@@ -42,7 +42,7 @@ The development proxy binds only to loopback and bypasses Supabase authenticatio
 2. Apply `supabase/migrations/202610170001_ai_request_quota.sql` to that project. Review pending migrations before using `db push`; do not apply unrelated historical migrations blindly. The quota table has RLS enabled and is accessible only through the service-role function.
 3. In the Supabase dashboard, add `NEBIUS_API_KEY` under Edge Function secrets. Do not paste it into a command, PR, source file or chat. `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` are supplied by the Edge Functions runtime.
 4. Enable **Authentication → Sign In / Providers → Anonymous Sign-Ins** to preserve guest AI access. Signed-in users reuse their existing session. The app creates a persisted guest session only when its first AI request needs one; offline pantry use does not depend on authentication.
-5. Run `bunx supabase functions deploy nebius-ai --project-ref <cookkit-project-ref>`. The function's `deno.json` maps AJV to its pinned npm version.
+5. Run `bunx supabase functions deploy nebius-ai nebius-chat --project-ref <cookkit-project-ref>`. The recipe function's `deno.json` maps AJV to its pinned npm version. The chat function streams text and tool calls through its `/v1/chat/completions` route.
 6. Remove the local `EXPO_PUBLIC_AI_PROXY_URL` override and restart/rebuild the app. It defaults to `${EXPO_PUBLIC_SUPABASE_URL}/functions/v1/nebius-ai`.
 
 Gateway JWT verification stays enabled in `supabase/config.toml`, and the handler also verifies the user through Auth. Requests without a valid user session are rejected before any provider call. A public project key alone does not grant AI access.

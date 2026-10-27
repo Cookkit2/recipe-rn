@@ -15,6 +15,8 @@ import android.webkit.JavascriptInterface
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.webkit.WebViewCompat
+import androidx.webkit.WebViewFeature
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
@@ -91,7 +93,7 @@ class CookkitVideoModule : Module() {
 
   private fun resolvePublicVideo(address: String, script: String, promise: Promise, coverOnly: Boolean) {
       val uri = Uri.parse(address)
-      val allowed = setOf("tiktok.com", "www.tiktok.com", "vm.tiktok.com", "vt.tiktok.com", "instagram.com", "www.instagram.com")
+      val allowed = setOf("tiktok.com", "www.tiktok.com", "vm.tiktok.com", "vt.tiktok.com", "instagram.com", "www.instagram.com", "youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be")
       if (uri.scheme != "https" || uri.host !in allowed || script.length > 20000) {
         promise.reject("VIDEO_ACCESS", "Choose a saved video or paste the full caption.", null)
       } else {
@@ -127,18 +129,25 @@ class CookkitVideoModule : Module() {
               handler.post {
                 try {
                   val json = JSONObject(text)
-                  val value = if (coverOnly) mapOf("frames" to json.getString("frames"), "reason" to json.optString("reason")) else mapOf("mediaUrl" to json.getString("mediaUrl"), "title" to json.optString("title"), "caption" to json.optString("caption"), "userAgent" to json.optString("userAgent"))
+                  val value = if (coverOnly) mapOf("frames" to json.getString("frames"), "reason" to json.optString("reason"), "transcript" to json.optString("transcript"), "title" to json.optString("title"), "caption" to json.optString("caption")) else mapOf("mediaUrl" to json.getString("mediaUrl"), "title" to json.optString("title"), "caption" to json.optString("caption"), "userAgent" to json.optString("userAgent"))
                   finish(value)
                 } catch (_: Exception) { finish(null) }
               }
             }
           }, "CookkitVideo")
+          if (coverOnly && (uri.host == "youtu.be" || uri.host!!.endsWith("youtube.com")) &&
+              WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
+            WebViewCompat.addDocumentStartJavaScript(browser,
+              "if(window.top===window){$script}",
+              setOf("https://www.youtube.com", "https://youtube.com", "https://m.youtube.com"))
+          }
           browser.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
               if (!request.isForMainFrame) return false
               val next = request.url
-              val platform = if (uri.host!!.endsWith("tiktok.com")) "tiktok.com" else "instagram.com"
-              val blocked = next.scheme != "https" || next.host !in allowed || !next.host!!.endsWith(platform)
+              val platform = if (uri.host!!.endsWith("tiktok.com")) "tiktok.com" else if (uri.host!!.endsWith("instagram.com")) "instagram.com" else "youtube.com"
+              val samePlatform = next.host?.endsWith(platform) == true || (platform == "youtube.com" && next.host == "youtu.be")
+              val blocked = next.scheme != "https" || next.host !in allowed || !samePlatform
               if (blocked && !coverOnly) finish(null)
               return blocked
             }
@@ -150,8 +159,13 @@ class CookkitVideoModule : Module() {
           browser.isEnabled = false
           browser.isFocusable = false
           activity.addContentView(browser, ViewGroup.LayoutParams(if (coverOnly) activity.resources.displayMetrics.widthPixels else 1, if (coverOnly) activity.resources.displayMetrics.heightPixels else 1))
-          handler.postDelayed({ finish(null) }, 18000)
-          browser.loadUrl(address)
+          val youtubeReader = coverOnly && (uri.host == "youtu.be" || uri.host!!.endsWith("youtube.com"))
+          handler.postDelayed({ finish(null) }, if (youtubeReader) 30000 else 18000)
+          if (uri.host == "youtu.be" || uri.host!!.endsWith("youtube.com")) {
+            browser.loadUrl(address, mapOf("Referer" to "https://${activity.packageName.lowercase()}"))
+          } else {
+            browser.loadUrl(address)
+          }
         }
       }
   }
