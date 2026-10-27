@@ -23,7 +23,14 @@ const result = JSON.stringify({
       { name: "egg", quantity: 5, unit: "piece" },
       { name: "minced chicken", quantity: 150, unit: "gram", amountSource: "estimated" },
     ],
-    steps: [{ step: 1, title: "Steam", description: "Steam for 15 minutes." }],
+    steps: [
+      {
+        step: 1,
+        title: "Steam",
+        description: "Steam for 15 minutes.",
+        sourceQuote: "Steam for 15 minutes.",
+      },
+    ],
   },
 });
 const notRecipe = JSON.stringify({

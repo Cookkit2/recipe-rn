@@ -382,3 +382,22 @@ describe("recipeImportApi.importRecipeFromSocialMedia", () => {
     expect(mockCreateRecipe).toHaveBeenCalledTimes(1);
   });
 });
+
+it.each([0.6, 0.79, NaN, Infinity, 1.1])(
+  "never saves a social recipe with confidence %s",
+  async (confidence) => {
+    mockCreateRecipe.mockClear();
+    mockAnalyzeForRecipe.mockResolvedValue({
+      isCookingVideo: true,
+      confidence,
+      recipe: SAMPLE_RECIPE,
+    });
+    const result = await recipeImportApi.importRecipeFromSocialMedia(
+      SAMPLE_RECIPE.sourceUrl,
+      "tiktok",
+      undefined
+    );
+    expect(result.success).toBe(false);
+    expect(mockCreateRecipe).not.toHaveBeenCalled();
+  }
+);

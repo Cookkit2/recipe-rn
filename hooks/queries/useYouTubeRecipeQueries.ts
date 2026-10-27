@@ -7,6 +7,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useCallback } from "react";
+import { useRecipeImportActivity } from "~/hooks/useRecipeImportActivity";
 import { recipeImportApi, type RecipeImportStatus } from "~/data/api/recipeImportApi";
 import { recipeQueryKeys } from "./recipeQueryKeys";
 import type {
@@ -206,6 +207,8 @@ export function useImportYouTubeRecipe() {
       }, 2000);
     },
   });
+
+  useRecipeImportActivity(mutation.isPending);
 
   const reset = useCallback(() => {
     setImportStatus("idle");
