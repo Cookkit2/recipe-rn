@@ -46,7 +46,7 @@
     "@shopify/react-native-skia": "2.14.0",
     "@supabase/supabase-js": "^2.118.0",
     "@tanstack/react-query": "^5.104.4",
-    "ai": "^7.0.143",
+    "ai": "^7.0.152",
     "ajv": "8.20.0",
     "babel-plugin-module-resolver": "^5.0.3",
     "babel-preset-expo": "~58.0.17",
