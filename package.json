@@ -42,7 +42,7 @@
     "@rn-primitives/progress": "^1.5.2",
     "@rn-primitives/separator": "^1.5.2",
     "@rn-primitives/slot": "^1.5.2",
-    "@sentry/react-native": "~8.31.0",
+    "@sentry/react-native": "~8.32.0",
     "@shopify/react-native-skia": "2.14.0",
     "@supabase/supabase-js": "^2.118.0",
     "@tanstack/react-query": "^5.104.5",
