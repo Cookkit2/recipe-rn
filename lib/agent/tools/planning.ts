@@ -8,6 +8,7 @@ import { matchesRecipeIngredient } from "~/utils/recipe-ingredient-match";
 
 export interface PantryItem {
   id: string;
+  baseIngredientId?: string | null;
   name: string;
   quantity: number | null;
   unit: string | null;

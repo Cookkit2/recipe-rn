@@ -257,5 +257,37 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 9,
+      steps: [
+        addColumns({
+          table: "stock",
+          columns: [
+            { name: "base_ingredient_id", type: "string", isOptional: true, isIndexed: true },
+          ],
+        }),
+      ],
+    },
+    {
+      toVersion: 10,
+      steps: [
+        createTable({
+          name: "base_ingredient_cache",
+          columns: [
+            { name: "catalog_id", type: "string", isIndexed: true },
+            { name: "name", type: "string" },
+            { name: "lookup_key", type: "string", isIndexed: true },
+          ],
+        }),
+        createTable({
+          name: "base_ingredient_alias_cache",
+          columns: [
+            { name: "base_ingredient_id", type: "string", isIndexed: true },
+            { name: "alias", type: "string" },
+            { name: "lookup_key", type: "string", isIndexed: true },
+          ],
+        }),
+      ],
+    },
   ],
 });

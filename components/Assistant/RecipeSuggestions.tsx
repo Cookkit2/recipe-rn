@@ -6,8 +6,10 @@ import type { RecipeSuggestionsResult } from "~/lib/agent/recipe-suggestions";
 export function RecipeSuggestions({
   result,
   onOpenRecipe,
+  stockIds = [],
 }: {
   result: RecipeSuggestionsResult;
+  stockIds?: readonly string[];
   onOpenRecipe?: (id: string) => void;
 }) {
   const groups = [
@@ -35,15 +37,19 @@ export function RecipeSuggestions({
                 className="gap-1"
                 accessibilityRole={onOpenRecipe ? "button" : undefined}
                 accessibilityLabel={
-                  onOpenRecipe ? `Open recipe: ${toAssistantPlainText(recipe.title)}` : undefined
+                  onOpenRecipe
+                    ? `Open recipe: ${toAssistantPlainText(recipe.title, stockIds)}`
+                    : undefined
                 }
                 disabled={!onOpenRecipe}
                 onPress={() => onOpenRecipe?.(recipe.id)}
               >
-                <Text className="font-semibold">{toAssistantPlainText(recipe.title)}</Text>
-                <Text>Have: {toAssistantPlainText(recipe.matched.join(", "))}</Text>
+                <Text className="font-semibold">
+                  {toAssistantPlainText(recipe.title, stockIds)}
+                </Text>
+                <Text>Have: {toAssistantPlainText(recipe.matched.join(", "), stockIds)}</Text>
                 {recipe.missing.length > 0 ? (
-                  <Text>Need: {toAssistantPlainText(recipe.missing.join(", "))}</Text>
+                  <Text>Need: {toAssistantPlainText(recipe.missing.join(", "), stockIds)}</Text>
                 ) : null}
               </Pressable>
             ))}

@@ -12,6 +12,10 @@ import type { PantryItem } from "~/types/PantryItem";
 import { pantryQueryKeys } from "../pantryQueryKeys";
 import { usePantryItems, usePantryItemsByType } from "../usePantryQueries";
 
+jest.mock("~/data/services/ingredientCatalog", () => ({
+  ingredientCatalog: { resolve: jest.fn().mockResolvedValue(null) },
+}));
+
 // Exercise the real pantry API and query hooks with local DB/network boundaries mocked.
 jest.mock("@nozbe/watermelondb", () => ({
   Q: { where: jest.fn(), oneOf: jest.fn() },

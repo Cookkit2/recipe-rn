@@ -1,3 +1,4 @@
+import { isSameIngredient } from "~/utils/ingredient-identity";
 import { matchesRecipeIngredient } from "~/utils/recipe-ingredient-match";
 import { Q } from "@nozbe/watermelondb";
 import Stock, { type StockData } from "../models/Stock";
@@ -15,6 +16,25 @@ export interface StockSearchOptions extends SearchOptions {
 export class StockRepository extends BaseRepository<Stock> {
   constructor() {
     super("stock");
+  }
+
+  async updateRaw(id: string, data: Partial<Stock> & Record<string, unknown>): Promise<Stock> {
+    let updates = data;
+    if (data.name !== undefined && data.baseIngredientId === undefined) {
+      const stock = await this.collection.find(id);
+      if (!isSameIngredient(stock.name, data.name)) {
+        updates = { ...data, baseIngredientId: null };
+      }
+    }
+    const stock = await this.collection.find(id);
+    return stock.update((record) => {
+      for (const key in updates) {
+        if (Object.prototype.hasOwnProperty.call(updates, key) && updates[key] !== undefined) {
+          (record as unknown as Record<string, unknown>)[key] = updates[key];
+        }
+      }
+      if (updates.baseIngredientId === null) record.clearBaseIngredientReference();
+    });
   }
 
   // Search stock items with filters
@@ -301,9 +321,16 @@ export class StockRepository extends BaseRepository<Stock> {
   }
 
   /** Two batched reads; raw SQL name filters would discard grammatical/alias matches. */
-  async getStocksByNamesOrSynonyms(
-    names: string[]
-  ): Promise<{ id: string; name: string; quantity: number; unit: string; synonyms: string[] }[]> {
+  async getStocksByNamesOrSynonyms(names: string[]): Promise<
+    {
+      id: string;
+      name: string;
+      quantity: number;
+      unit: string;
+      synonyms: string[];
+      baseIngredientId?: string | null;
+    }[]
+  > {
     if (names.length === 0) return [];
     const stocks = await this.getAllWithSynonyms();
     return stocks.filter((stock) =>
@@ -312,7 +339,14 @@ export class StockRepository extends BaseRepository<Stock> {
   }
 
   async getAllWithSynonyms(): Promise<
-    { id: string; name: string; quantity: number; unit: string; synonyms: string[] }[]
+    {
+      id: string;
+      name: string;
+      quantity: number;
+      unit: string;
+      synonyms: string[];
+      baseIngredientId?: string | null;
+    }[]
   > {
     // 1. Fetch all stocks
     const stocks = await this.collection.query().fetch();
@@ -341,6 +375,7 @@ export class StockRepository extends BaseRepository<Stock> {
     // 4. Map results
     return stocks.map((stock) => ({
       id: stock.id,
+      baseIngredientId: stock.baseIngredientId,
       name: stock.name,
       quantity: stock.quantity,
       unit: stock.unit,

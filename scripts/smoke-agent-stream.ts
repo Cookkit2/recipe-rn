@@ -83,7 +83,7 @@ async function main(): Promise<void> {
       model: provider.chatModel("mock-tool-model"),
       instructions: "Use tools.",
       prompt: "Add 6 eggs to my pantry.",
-      tools: createCookingTools(data),
+      tools: createCookingTools(data, { intent: "add_ingredient" }),
       stopWhen: isStepCount(4),
     });
 

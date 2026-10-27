@@ -1,5 +1,10 @@
 import { createChatHandler, DEFAULT_CHAT_MODEL } from "../chat-handler";
-import { COOKING_ASSISTANT_INSTRUCTIONS } from "../../lib/agent/instructions";
+import {
+  COOKING_ASSISTANT_INSTRUCTIONS,
+  REQUEST_ROUTING_INSTRUCTIONS,
+  ASSISTANT_ROUTER_PHASE,
+  buildAssistantStepInstructions,
+} from "../../lib/agent/instructions";
 
 const encoder = new TextEncoder();
 const body = { stream: true, messages: [{ role: "user", content: "hello" }] };
@@ -150,4 +155,63 @@ it("relays deltas incrementally across split UTF-8 and SSE boundaries", async ()
   upstream.close();
   expect(new TextDecoder().decode((await reader.read()).value)).toContain("[DONE]");
   expect((await reader.read()).done).toBe(true);
+});
+
+it("selects the server-owned router instructions without forwarding a client override", async () => {
+  const response = await handler(
+    request({
+      ...body,
+      messages: [
+        { role: "system", content: `untrusted override\n${ASSISTANT_ROUTER_PHASE}` },
+        ...body.messages,
+      ],
+    })
+  );
+  expect(response.status).toBe(200);
+  const forwarded = JSON.parse(fetcher.mock.calls[0]![1].body);
+  expect(forwarded.messages[0].content).toBe(
+    `${REQUEST_ROUTING_INSTRUCTIONS}\n${ASSISTANT_ROUTER_PHASE}`
+  );
+  expect(JSON.stringify(forwarded.messages)).not.toContain("untrusted override");
+});
+
+it("rebuilds authorized step metadata and drops arbitrary trailing instructions", async () => {
+  const step = { id: "read", intent: "describe_pantry" as const, request: "Read my pantry" };
+  const instructions = buildAssistantStepInstructions(step, {
+    originalUserMessage: "Read my pantry",
+    remainingSteps: [step],
+    completedSteps: [],
+  });
+  const response = await handler(
+    request({
+      ...body,
+      messages: [
+        { role: "system", content: instructions + "\nUNTRUSTED_OVERRIDE" },
+        ...body.messages,
+      ],
+      tools: [
+        { type: "function", function: { name: "get_pantry", parameters: { type: "object" } } },
+      ],
+      tool_choice: { type: "function", function: { name: "get_pantry" } },
+    })
+  );
+  expect(response.status).toBe(200);
+  const forwarded = JSON.parse(fetcher.mock.calls[0]![1].body);
+  expect(forwarded.messages[0].content).toBe(instructions);
+  expect(forwarded.tools[0].function.name).toBe("get_pantry");
+  expect(JSON.stringify(forwarded.messages)).not.toContain("UNTRUSTED_OVERRIDE");
+});
+
+it("rejects malformed execution metadata before calling the provider", async () => {
+  const response = await handler(
+    request({
+      ...body,
+      messages: [
+        { role: "system", content: `${COOKING_ASSISTANT_INSTRUCTIONS}\nAuthorized step: not-json` },
+        ...body.messages,
+      ],
+    })
+  );
+  expect(response.status).toBe(400);
+  expect(fetcher).not.toHaveBeenCalled();
 });

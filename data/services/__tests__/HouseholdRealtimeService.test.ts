@@ -28,6 +28,7 @@ function makeExistingRow(overrides: Partial<any> = {}) {
     id: "local-1",
     supabaseId: "stock-1",
     name: "Milk",
+    baseIngredientId: undefined as string | null | undefined,
     quantity: 1,
     updatedAt: new Date("2024-01-01T00:00:00.000Z"),
     update: jest.fn(),
@@ -98,5 +99,54 @@ describe("HouseholdRealtimeService.handleUpdate — LWW guard (regression for sh
 
     expect(existing.update).not.toHaveBeenCalled();
     expect(existing.quantity).toBe(99);
+  });
+});
+
+describe("realtime catalog identity", () => {
+  const catalogId = "12345678-1234-4234-9234-123456789abc";
+  beforeEach(() => jest.clearAllMocks());
+  it.each([catalogId, null, undefined])("retains insert identity %s", async (identity) => {
+    const created: Record<string, unknown> = {};
+    stockCollection.fetch.mockResolvedValueOnce([]);
+    stockCollection.create.mockImplementationOnce((fn: (row: typeof created) => void) =>
+      fn(created)
+    );
+    await (new HouseholdRealtimeService() as any).handleInsert({
+      id: "stock-1",
+      name: "Milk",
+      ...(identity !== undefined ? { base_ingredient_id: identity } : {}),
+    });
+    expect(created.baseIngredientId).toBe(identity);
+    expect(created.supabaseId).toBe("stock-1");
+  });
+  it.each([catalogId, null, undefined])(
+    "preserves omission or applies update identity %s",
+    async (identity) => {
+      const existing = makeExistingRow({
+        baseIngredientId: "87654321-1234-4234-9234-123456789abc",
+      });
+      existing.update.mockImplementation((fn: (row: typeof existing) => void) => fn(existing));
+      stockCollection.fetch.mockResolvedValueOnce([existing]);
+      await (new HouseholdRealtimeService() as any).handleUpdate({
+        id: "stock-1",
+        name: "Milk",
+        updated_at: "2024-02-01T00:00:00Z",
+        ...(identity !== undefined ? { base_ingredient_id: identity } : {}),
+      });
+      expect(existing.baseIngredientId).toBe(
+        identity === undefined ? "87654321-1234-4234-9234-123456789abc" : identity
+      );
+    }
+  );
+  it("keeps catalog identity when a stale remote update is rejected", async () => {
+    const existing = makeExistingRow({ baseIngredientId: catalogId });
+    stockCollection.fetch.mockResolvedValueOnce([existing]);
+    await (new HouseholdRealtimeService() as any).handleUpdate({
+      id: "stock-1",
+      updated_at: "2023-01-01T00:00:00Z",
+      base_ingredient_id: null,
+    });
+    expect(existing.update).not.toHaveBeenCalled();
+    expect(existing.baseIngredientId).toBe(catalogId);
   });
 });

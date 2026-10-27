@@ -1,49 +1,64 @@
-/**
- * Shared API helpers for pantry and related operations.
- *
- * Eliminates duplication between throw-based and Result-based API variants
- * by extracting common data-preparation and resolution logic.
- */
-
-import { baseIngredientApi } from "~/data/supabase-api/BaseIngredientApi";
+/** Explicit pantry presentation ↔ persistence boundaries. */
 import type { PantryItem } from "~/types/PantryItem";
-import { log } from "~/utils/logger";
+import { ingredientCatalog } from "~/data/services/ingredientCatalog";
+import { catalogIdentityForName } from "~/data/services/catalogIdentity";
+import { ingredientClarification, isSameIngredient } from "~/utils/ingredient-identity";
 
-/**
- * Resolve a base-ingredient ID from the cloud API.
- * Falls back to a deterministic temp ID when the cloud lookup fails.
- */
-export async function resolveBaseIngredientId(name: string): Promise<string> {
-  let baseIngredientId = `temp_${name.toLowerCase().replace(/\s+/g, "_")}`;
-  try {
-    const cloudIngredient = await baseIngredientApi.getBaseIngredientByName(name);
-    if (cloudIngredient && cloudIngredient.id) {
-      baseIngredientId = cloudIngredient.id;
-    }
-  } catch (err) {
-    log.warn("Failed to fetch base_ingredient_id from cloud API, falling back to temp ID", err);
+export type PantryCreateInput = Omit<PantryItem, "id" | "created_at" | "updated_at">;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** An unresolved food has no catalog reference. Never manufacture a catalog ID. */
+export async function resolveBaseIngredientId(
+  name: string,
+  suppliedId?: string | null
+): Promise<string | null> {
+  if (ingredientClarification(name))
+    throw new Error("Choose a specific ingredient before saving it.");
+  if (suppliedId === null) return null;
+  if (suppliedId !== undefined && !UUID.test(suppliedId))
+    throw new Error("Invalid base ingredient reference.");
+  const resolved = await ingredientCatalog.resolve(name);
+  if (suppliedId !== undefined) {
+    const supplied = await ingredientCatalog.byId(suppliedId);
+    if (supplied && !catalogIdentityForName(supplied, supplied.aliases, name))
+      throw new Error("The ingredient name conflicts with its catalog reference.");
+    if (!supplied && (await ingredientCatalog.hasSnapshot()))
+      throw new Error("The ingredient reference is not in the catalog.");
+    if (resolved && resolved.id !== suppliedId)
+      throw new Error("The ingredient name conflicts with its catalog reference.");
+    // Camera/manual metadata may already contain an authoritative reference while
+    // offline before the first dictionary snapshot is available.
+    return suppliedId;
   }
-  return baseIngredientId;
+  return resolved && UUID.test(resolved.id) ? resolved.id : null;
 }
 
-/**
- * Build the stock-data object expected by `databaseFacade.createStock`.
- * Centralises the PantryItem → Stock field mapping so it isn't duplicated
- * across the throw-based and Result-based add-pantry-item variants.
- */
-export function prepareStockData(
-  item: Omit<PantryItem, "id" | "created_at" | "updated_at">,
-  baseIngredientId: string
-) {
+export async function resolvePantryItemReference(item: PantryCreateInput): Promise<string | null> {
+  if (
+    item.base_ingredient_name &&
+    !isSameIngredient(
+      item.base_ingredient_name,
+      item.name,
+      item.synonyms?.map((alias) => alias.synonym)
+    )
+  ) {
+    throw new Error("Conflicting ingredient name metadata.");
+  }
+  return resolveBaseIngredientId(item.name, item.base_ingredient_id);
+}
+
+export function prepareStockData(item: PantryCreateInput, baseIngredientId: string | null) {
   return {
     baseIngredientId,
     name: item.name,
     quantity: item.quantity,
     unit: item.unit,
-    expiryDate: item.expiry_date,
-    type: item.type,
+    expirationDate: item.expiry_date?.getTime(),
+    storageType: item.type,
     backgroundColor: item.background_color,
-    category: item.category,
     imageUrl: typeof item.image_url === "string" ? item.image_url : undefined,
+    x: item.x,
+    y: item.y,
+    scale: item.scale,
   };
 }

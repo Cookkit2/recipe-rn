@@ -1,10 +1,11 @@
-import { COOKING_ASSISTANT_INSTRUCTIONS } from "../lib/agent/instructions.ts";
+import { resolveAssistantProxyInstructions } from "../lib/agent/instructions.ts";
 
 export const DEFAULT_CHAT_MODEL = "nvidia/Nemotron-3_5-Lightning";
 const ENDPOINT = "https://api.tokenfactory.nebius.com/v1/chat/completions";
 const MAX_BODY_BYTES = 256_000;
 const TOOLS = new Set([
   "manage_ingredients",
+  "get_pantry",
   "analyze_diet",
   "suggest_meal_plan",
   "suggest_recipes",
@@ -79,7 +80,7 @@ async function readBody(request: Request, signal: AbortSignal) {
     if (
       body.tools !== undefined &&
       (!Array.isArray(body.tools) ||
-        body.tools.length > 4 ||
+        body.tools.length > TOOLS.size ||
         body.tools.some(
           (tool: { type?: string; function?: { name?: string } }) =>
             tool?.type !== "function" || !TOOLS.has(tool.function?.name ?? "")
@@ -95,7 +96,10 @@ async function readBody(request: Request, signal: AbortSignal) {
       throw new RequestError(400);
     return {
       model: "",
-      messages: [{ role: "system", content: COOKING_ASSISTANT_INSTRUCTIONS }, ...messages],
+      messages: [
+        { role: "system", content: resolveAssistantProxyInstructions(body.messages) },
+        ...messages,
+      ],
       ...(body.tools ? { tools: body.tools } : {}),
       ...(choice !== undefined ? { tool_choice: choice } : {}),
       ...(typeof body.parallel_tool_calls === "boolean"

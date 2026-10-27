@@ -1,6 +1,7 @@
 import type { Database, Model } from "@nozbe/watermelondb";
 import type Stock from "~/data/db/models/Stock";
 import type IngredientSynonym from "~/data/db/models/IngredientSynonym";
+import { catalogIdentityForName } from "~/data/services/catalogIdentity";
 import type {
   AssistantPantryInput,
   AssistantPantryResult,
@@ -78,6 +79,7 @@ export function createAssistantPantryMutator(
           !isSameIngredient(resolved.name, name, resolved.aliases))
       )
         resolved = null;
+      if (resolved) resolved = catalogIdentityForName(resolved, resolved.aliases, name);
     }
     const canonicalName = resolved?.name ?? name;
     const aliases = resolved?.aliases.filter((alias) => !ingredientClarification(alias)) ?? [];
@@ -86,12 +88,30 @@ export function createAssistantPantryMutator(
       const collection = database.get<Stock>("stock");
       const rows = await collection.query().fetch();
       const synonyms = await database.get<IngredientSynonym>("ingredient_synonym").query().fetch();
-      const aliasesFor = (row: Stock) =>
-        synonyms.filter((syn) => syn.stockId === row.id).map((syn) => syn.synonym);
+      const aliasesFor = (row: Stock) => {
+        const stored = synonyms.filter((syn) => syn.stockId === row.id).map((syn) => syn.synonym);
+        return (
+          catalogIdentityForName(
+            { id: row.baseIngredientId ?? row.id, name: row.name },
+            stored,
+            row.name
+          )?.aliases ?? []
+        );
+      };
+      // A legacy alias or a coarse catalog ID must not erase an explicit food form.
+      const sameForm = (left: string, right: string) => {
+        const a = normalizeIngredientIdentity(left);
+        const b = normalizeIngredientIdentity(right);
+        return a === b || (!` ${a} `.includes(` ${b} `) && !` ${b} `.includes(` ${a} `));
+      };
+      const conflictsWithResolved = (row: Stock) =>
+        Boolean(row.baseIngredientId && resolved && row.baseIngredientId !== resolved.id);
       const matchesName = (row: Stock) =>
         (input.action === "remove" || !ingredientClarification(row.name)) &&
-        [canonicalName, name, ...aliases].some((query) =>
-          isSameIngredient(row.name, query, aliasesFor(row))
+        [canonicalName, name, ...aliases].some(
+          (query) =>
+            sameForm(row.name, query) &&
+            isSameIngredient(row.name, query, resolved ? [] : aliasesFor(row))
         );
       const selected = input.stockId ? rows.find((row) => row.id === input.stockId) : undefined;
       if (input.stockId && !selected)
@@ -100,6 +120,11 @@ export function createAssistantPantryMutator(
       switch (input.action) {
         case "add": {
           const matches = rows.filter(matchesName);
+          if (matches.some(conflictsWithResolved) || (selected && conflictsWithResolved(selected)))
+            return clarify(
+              "These entries have conflicting ingredient references. Which ingredient should this be?",
+              matches
+            );
           if (selected && !matchesName(selected))
             return clarify(
               "That entry is a different ingredient. Which entry should I update?",
@@ -128,6 +153,7 @@ export function createAssistantPantryMutator(
             await database.batch([
               existing.prepareUpdate((row) => {
                 row.quantity += quantity;
+                if (resolved) row.baseIngredientId = resolved.id;
               }),
               ...newAliases.map((alias) =>
                 database.get<IngredientSynonym>("ingredient_synonym").prepareCreate((row) => {
@@ -142,6 +168,7 @@ export function createAssistantPantryMutator(
             return clarify("Those units cannot be combined. Which unit should I use?", [selected]);
           const created = collection.prepareCreate((row) => {
             row.name = canonicalName;
+            row.baseIngredientId = resolved?.id ?? null;
             row.quantity = quantity;
             row.unit = unit ?? "count";
             row.storageType = "fridge";
@@ -181,10 +208,17 @@ export function createAssistantPantryMutator(
               "That ingredient already has a pantry entry. Keep these batches separate, or merge compatible entries?",
               [selected, ...duplicates]
             );
+          const renamedReference =
+            resolved?.id ??
+            (isSameIngredient(selected.name, canonicalName, aliasesFor(selected))
+              ? selected.baseIngredientId
+              : null);
           // Old synonyms refer to the previous identity and must not follow a correction.
           await database.batch([
             selected.prepareUpdate((row) => {
               row.name = canonicalName;
+              if (renamedReference === null) row.clearBaseIngredientReference();
+              else row.baseIngredientId = renamedReference;
             }),
             ...synonyms
               .filter((syn) => syn.stockId === selected.id)
@@ -205,9 +239,17 @@ export function createAssistantPantryMutator(
           const identifiedVagueSource =
             Boolean(ingredientClarification(selected.name)) && Boolean(name) && matchesName(target);
           const compatible =
+            !(
+              selected.baseIngredientId &&
+              target.baseIngredientId &&
+              selected.baseIngredientId !== target.baseIngredientId
+            ) &&
+            !conflictsWithResolved(selected) &&
+            !conflictsWithResolved(target) &&
             !ingredientClarification(target.name) &&
             (identifiedVagueSource ||
               (!ingredientClarification(selected.name) &&
+                sameForm(selected.name, target.name) &&
                 (isSameIngredient(selected.name, target.name, aliasesFor(selected)) ||
                   isSameIngredient(target.name, selected.name, aliasesFor(target))))) &&
             normalizeStockUnit(selected.unit) === normalizeStockUnit(target.unit) &&
@@ -264,6 +306,8 @@ export function createAssistantPantryMutator(
           await database.batch([
             target.prepareUpdate((row) => {
               row.quantity += selected.quantity;
+              row.baseIngredientId =
+                resolved?.id ?? target.baseIngredientId ?? selected.baseIngredientId ?? null;
             }),
             ...related,
             selected.prepareMarkAsDeleted(),

@@ -59,6 +59,7 @@ function makeStockRow(overrides: Partial<any> = {}) {
   return {
     supabaseId: "stock-1",
     name: "Milk",
+    baseIngredientId: undefined as string | null | undefined,
     quantity: 1,
     unit: "carton",
     updatedAt: new Date("2024-01-01T00:00:00.000Z"),
@@ -277,5 +278,105 @@ describe("HouseholdSyncService syncHousehold — queue drain on reconnect (issue
 
     // Must not reject — drain errors are caught and logged.
     await expect(service.syncHousehold("household-1")).resolves.toBeUndefined();
+  });
+});
+
+describe("household stock catalog identity", () => {
+  const catalogId = "12345678-1234-4234-9234-123456789abc";
+  beforeEach(() => jest.clearAllMocks());
+
+  it.each([catalogId, null, undefined, "temp-ingredient", "not-a-uuid"])(
+    "pushes only a valid catalog reference or an explicit clear (%s)",
+    async (baseIngredientId) => {
+      const queue = makeMockQueue();
+      const service = new HouseholdSyncService(queue as any);
+      stockCollection.fetch.mockResolvedValueOnce([
+        makeStockRow({ baseIngredientId, _raw: { _changed: "base_ingredient_id" } }),
+      ]);
+      await (service as any).pushLocalChanges("household-1");
+      const row = (householdApi.upsertSharedStock as jest.Mock).mock.calls[0][0][0];
+      if (baseIngredientId === catalogId || baseIngredientId === null) {
+        expect(row.base_ingredient_id).toBe(baseIngredientId);
+      } else {
+        expect(row).not.toHaveProperty("base_ingredient_id");
+      }
+      expect(row.id).toBe("stock-1");
+      expect(row.household_id).toBe("household-1");
+    }
+  );
+
+  it.each([catalogId, null, undefined])(
+    "pull updates preserve omission and apply %s",
+    async (identity) => {
+      const local = makeStockRow({ baseIngredientId: "87654321-1234-4234-9234-123456789abc" });
+      stockCollection.fetch.mockResolvedValueOnce([local]);
+      (householdApi.getSharedStock as jest.Mock).mockResolvedValueOnce([
+        {
+          id: "stock-1",
+          name: "Milk",
+          updated_at: "2024-02-01T00:00:00Z",
+          ...(identity !== undefined ? { base_ingredient_id: identity } : {}),
+        },
+      ]);
+      await (new HouseholdSyncService() as any).pullRemoteChanges("household-1");
+      expect(local.baseIngredientId).toBe(
+        identity === undefined ? "87654321-1234-4234-9234-123456789abc" : identity
+      );
+    }
+  );
+
+  it("pull creates retain the catalog identity without using it as the stock id", async () => {
+    const created: Record<string, unknown> = {};
+    stockCollection.fetch.mockResolvedValueOnce([]);
+    stockCollection.prepareCreate.mockImplementationOnce((fn: (row: typeof created) => void) => {
+      fn(created);
+      return created;
+    });
+    (householdApi.getSharedStock as jest.Mock).mockResolvedValueOnce([
+      {
+        id: "remote-stock",
+        name: "Milk",
+        base_ingredient_id: catalogId,
+      },
+    ]);
+    await (new HouseholdSyncService() as any).pullRemoteChanges("household-1");
+    expect(created.baseIngredientId).toBe(catalogId);
+    expect(created.supabaseId).toBe("remote-stock");
+    expect(created).not.toHaveProperty("id");
+  });
+});
+
+describe("legacy null catalog reference upload", () => {
+  it.each(["", "quantity", "quantity,base_ingredient_id_suffix", "prefix_base_ingredient_id"])(
+    "omits an unmarked migrated null for changed fields %s",
+    async (changed) => {
+      jest.clearAllMocks();
+      stockCollection.fetch.mockResolvedValueOnce([
+        makeStockRow({
+          baseIngredientId: null,
+          quantity: 3,
+          _raw: { _changed: changed },
+        }),
+      ]);
+      await (new HouseholdSyncService(makeMockQueue() as any) as any).pushLocalChanges(
+        "household-1"
+      );
+      const row = (householdApi.upsertSharedStock as jest.Mock).mock.calls[0][0][0];
+      expect(row).not.toHaveProperty("base_ingredient_id");
+      expect(row.quantity).toBe(3);
+    }
+  );
+  it("uploads a clear with an exact identity change marker", async () => {
+    jest.clearAllMocks();
+    stockCollection.fetch.mockResolvedValueOnce([
+      makeStockRow({
+        baseIngredientId: null,
+        _raw: { _changed: "quantity,base_ingredient_id,updated_at" },
+      }),
+    ]);
+    await (new HouseholdSyncService(makeMockQueue() as any) as any).pushLocalChanges("household-1");
+    expect(
+      (householdApi.upsertSharedStock as jest.Mock).mock.calls[0][0][0].base_ingredient_id
+    ).toBeNull();
   });
 });

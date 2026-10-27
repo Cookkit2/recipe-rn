@@ -3,6 +3,7 @@ import { NebiusCookingAgent } from "../NebiusCookingAgent";
 import { createChatHandler } from "../../../server/chat-handler";
 import { EMPTY_DIET_PROFILE, type CookingDataClient, type PantryItem } from "../tools/planning";
 import type { AgentEvent } from "../types";
+import { ASSISTANT_ROUTER_PHASE } from "../instructions";
 
 function providerResponse(delta: Record<string, unknown>, finishReason = "stop") {
   const chunk = (change: Record<string, unknown>, finish: string | null) => ({
@@ -55,8 +56,43 @@ async function run(prompt: string) {
     fetcher: async (_url, init) => {
       const body = JSON.parse(String(init?.body));
       forwarded.push(body);
-      if (prompt === "hello")
-        return providerResponse({ content: "Hi! What would you like to cook?" });
+      if (
+        body.messages.some(
+          (message: { content?: unknown }) =>
+            typeof message.content === "string" && message.content.endsWith(ASSISTANT_ROUTER_PHASE)
+        )
+      )
+        return providerResponse({
+          content: JSON.stringify(
+            prompt === "hello"
+              ? { status: "needs_clarification", question: "Hi! What would you like to cook?" }
+              : {
+                  status: "ready",
+                  resumePending: false,
+                  steps: [
+                    {
+                      id: "step-1",
+                      intent: prompt === "what do I have?" ? "describe_pantry" : "add_ingredient",
+                      request: prompt,
+                    },
+                  ],
+                }
+          ),
+        });
+      if (prompt === "what do I have?")
+        return providerResponse(
+          {
+            tool_calls: [
+              {
+                index: 0,
+                id: "call-read",
+                type: "function",
+                function: { name: "get_pantry", arguments: "{}" },
+              },
+            ],
+          },
+          "tool_calls"
+        );
       if (body.messages.some((message: { role: string }) => message.role === "tool"))
         return providerResponse({ content: "Added 2 broccoli to your pantry." });
       return providerResponse(
@@ -107,10 +143,13 @@ async function run(prompt: string) {
   return { events, pantry, forwarded };
 }
 
-it("streams a normal greeting through the authenticated proxy", async () => {
+it("routes a normal greeting through the authenticated proxy", async () => {
   const result = await run("hello");
   expect(result.events).toContainEqual(
-    expect.objectContaining({ type: "text-delta", text: "Hi! What would you like to cook?" })
+    expect.objectContaining({
+      type: "request-message",
+      message: "Hi! What would you like to cook?",
+    })
   );
   expect(result.pantry).toEqual([]);
 });
@@ -126,8 +165,24 @@ it("round-trips a pantry tool through the proxy and changes only the local pantr
   );
   expect(result.pantry).toEqual([expect.objectContaining({ name: "broccoli", quantity: 2 })]);
   expect(result.forwarded).toHaveLength(2);
-  expect(result.forwarded[1]?.messages).toContainEqual(
-    expect.objectContaining({ role: "tool", tool_call_id: "call-broccoli" })
-  );
+  expect(result.forwarded[0]?.messages[0]?.content).toContain(ASSISTANT_ROUTER_PHASE);
+  expect(result.forwarded[1]?.messages[0]?.content).toContain("Authorized step:");
+  expect(result.forwarded[1]?.tool_choice).toEqual({
+    type: "function",
+    function: { name: "manage_ingredients" },
+  });
   expect(JSON.stringify(result.forwarded)).not.toContain("server-only-provider-key");
+});
+
+it("round-trips a read-only pantry tool through the authenticated proxy", async () => {
+  const result = await run("what do I have?");
+  expect(result.events).toContainEqual(
+    expect.objectContaining({ type: "tool-result", toolName: "get_pantry" })
+  );
+  expect(result.pantry).toEqual([]);
+  expect(result.forwarded).toHaveLength(2);
+  expect(result.forwarded[1]?.tool_choice).toEqual({
+    type: "function",
+    function: { name: "get_pantry" },
+  });
 });

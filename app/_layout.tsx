@@ -213,6 +213,8 @@ function useCoreStartupTasks(ref: any) {
     //     idle AFTER first paint keeps their construction cost off the launch
     //     critical path WITHOUT shifting it onto the first pantry query (the
     //     home screen renders from WatermelonDB), per issue #733 Risks.
+    let startupCancelled = false;
+    let cancelCatalogMaintenance: (() => void) | undefined;
     const deferredHandle = requestIdleCallback(() => {
       // Device-tier-derived cache config (#734): low-end devices get a smaller,
       // safer cache; high tier keeps the historical 500/100/200 MB defaults.
@@ -235,6 +237,12 @@ function useCoreStartupTasks(ref: any) {
         /* warm-up is best-effort; the first query will lazily construct */
       }
 
+      void import("~/data/services/ingredientCatalogMaintenance")
+        .then(({ startIngredientCatalogMaintenance }) => {
+          if (!startupCancelled) cancelCatalogMaintenance = startIngredientCatalogMaintenance();
+        })
+        .catch(() => console.warn("Ingredient catalog maintenance unavailable"));
+
       // --- Regression signal (issue #733 AC#6) ---
       // Warn-level budget check: compare the elapsed time since LAUNCH_TS to
       // the cold-start TTI budget and emit a Sentry breadcrumb on breach.
@@ -246,6 +254,8 @@ function useCoreStartupTasks(ref: any) {
     });
 
     return () => {
+      startupCancelled = true;
+      cancelCatalogMaintenance?.();
       cancelIdleCallback(deferredHandle);
     };
   }, [ref]);
