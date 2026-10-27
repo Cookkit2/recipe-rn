@@ -79,6 +79,32 @@ async function run(prompt: string) {
                 }
           ),
         });
+      // Captured Lightning failure: forced selection emits an unavailable tool,
+      // repeats closing tags, and ends with `length`, so the SDK executes nothing.
+      if (prompt === "add 2 brocolli" && body.tool_choice?.type === "function")
+        return providerResponse(
+          {
+            tool_calls: [
+              {
+                index: 0,
+                id: "call-add",
+                type: "function",
+                function: {
+                  name: "manage_ingredients",
+                  arguments: JSON.stringify({ action: "add", name: "broccoli", quantity: 2 }),
+                },
+              },
+              {
+                index: 1,
+                id: "call-unavailable-read",
+                type: "function",
+                function: { name: "get_pantry", arguments: "{}" },
+              },
+            ],
+            content: "\n</function>\n</tool_call>",
+          },
+          "length"
+        );
       if (prompt === "what do I have?")
         return providerResponse(
           {
@@ -167,10 +193,7 @@ it("round-trips a pantry tool through the proxy and changes only the local pantr
   expect(result.forwarded).toHaveLength(2);
   expect(result.forwarded[0]?.messages[0]?.content).toContain(ASSISTANT_ROUTER_PHASE);
   expect(result.forwarded[1]?.messages[0]?.content).toContain("Authorized step:");
-  expect(result.forwarded[1]?.tool_choice).toEqual({
-    type: "function",
-    function: { name: "manage_ingredients" },
-  });
+  expect(result.forwarded[1]?.tool_choice).toBe("auto");
   expect(JSON.stringify(result.forwarded)).not.toContain("server-only-provider-key");
 });
 
@@ -181,8 +204,19 @@ it("round-trips a read-only pantry tool through the authenticated proxy", async 
   );
   expect(result.pantry).toEqual([]);
   expect(result.forwarded).toHaveLength(2);
-  expect(result.forwarded[1]?.tool_choice).toEqual({
-    type: "function",
-    function: { name: "get_pantry" },
-  });
+  expect(result.forwarded[1]?.tool_choice).toBe("auto");
+});
+
+it("adds two broccoli through the real gateway despite Lightning's forced-tool incompatibility", async () => {
+  const result = await run("add 2 brocolli");
+  expect(result.pantry).toEqual([
+    expect.objectContaining({ name: "broccoli", quantity: 2, unit: "count" }),
+  ]);
+  expect(result.events).not.toContainEqual(
+    expect.objectContaining({ type: "tool-call", toolName: "get_pantry" })
+  );
+  expect(result.events).toContainEqual(
+    expect.objectContaining({ type: "text-delta", text: expect.stringContaining("broccoli") })
+  );
+  expect(result.forwarded).toHaveLength(2);
 });
