@@ -1,5 +1,5 @@
 import React from "react";
-import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, render, waitFor, within } from "@testing-library/react-native";
 import { StyleSheet, Text } from "react-native";
 import SearchScreen from "~/app/(misc)/search";
 import { SearchContent } from "../SearchContent";
@@ -7,8 +7,14 @@ import type { CookingAgent, AgentTurnInput } from "~/lib/agent/types";
 import { TEST_IDS } from "~/constants/test-ids";
 
 let mockHeaderHeight = 118;
+jest.mock("expo-glass-effect", () => ({
+  GlassView: require("react-native").View,
+  isLiquidGlassAvailable: () => true,
+}));
+jest.mock("expo-symbols", () => ({ SymbolView: require("react-native").View }));
+jest.mock("uniwind", () => ({ useUniwind: () => ({ theme: "light" }) }));
 jest.mock("react-native-keyboard-controller", () => ({
-  useReanimatedKeyboardAnimation: () => ({ height: { value: 0 } }),
+  useReanimatedKeyboardAnimation: () => ({ height: { value: 0 }, progress: { value: 0 } }),
 }));
 jest.mock("~/components/ui/skeleton", () => ({
   __esModule: true,
@@ -53,6 +59,12 @@ jest.mock("expo-image", () => ({ Image: require("react-native").View }));
 jest.mock("react-native", () =>
   Object.defineProperties(Object.create(jest.requireActual("react-native")), {
     BackHandler: { value: { addEventListener: jest.fn(() => ({ remove: jest.fn() })) } },
+    TextInput: {
+      value: require("react").forwardRef((props: any, ref: any) => {
+        require("react").useImperativeHandle(ref, () => ({ focus: jest.fn(), blur: jest.fn() }));
+        return require("react").createElement(require("react-native").View, props);
+      }),
+    },
     Platform: {
       value: { ...jest.requireActual("react-native").Platform, OS: "ios", Version: "27.0" },
     },
@@ -60,7 +72,6 @@ jest.mock("react-native", () =>
 );
 jest.mock("expo-router", () => {
   const React = require("react");
-  const { View } = require("react-native");
   return {
     useLocalSearchParams: () => ({}),
     useRouter: () => ({
@@ -70,31 +81,7 @@ jest.mock("expo-router", () => {
       replace: mockReplace,
     }),
     useFocusEffect: (callback: () => void) => React.useEffect(callback, [callback]),
-    Stack: {
-      Header: () => null,
-      Screen: () => null,
-      SearchBar: React.forwardRef(
-        ({ onChangeText, onSearchButtonPress, ...props }: any, ref: any) => {
-          const [value, setValue] = React.useState("");
-          React.useImperativeHandle(ref, () => ({
-            focus: jest.fn(),
-            clearText: () => setValue(""),
-          }));
-          return (
-            <View
-              {...props}
-              testID="native-search-input"
-              value={value}
-              onChangeText={(text: string) => {
-                setValue(text);
-                onChangeText({ nativeEvent: { text } });
-              }}
-              onSubmitEditing={() => onSearchButtonPress({ nativeEvent: { text: value } })}
-            />
-          );
-        }
-      ),
-    },
+    Stack: { Screen: () => null },
   };
 });
 jest.mock("~/hooks/useSearchBarFocus", () => ({
@@ -178,6 +165,11 @@ beforeEach(() => {
   }));
 });
 
+async function submitAIFromSearch(screen: Awaited<ReturnType<typeof render>>) {
+  await fireEvent.press(screen.getByLabelText("Switch to Cookkit AI"));
+  await fireEvent(screen.getByTestId("native-search-input"), "submitEditing");
+}
+
 it("keeps the empty Pantry search in place without starting queries during the pull or release", async () => {
   const dismiss = jest.fn();
   const screen = await render(
@@ -204,15 +196,133 @@ it("keeps the empty Pantry search in place without starting queries during the p
   expect(mockUsePantryItems).toHaveBeenCalled();
 });
 
+it("switches modes from the separate left circle while retaining the same native input and text", async () => {
+  const screen = await render(<SearchContent onDismiss={mockBack} transparent />);
+  const input = screen.getByTestId("native-search-input");
+  await fireEvent.changeText(input, "rice");
+  const aiButton = screen.getByLabelText("Switch to Cookkit AI");
+  expect(screen.getByTestId("search-mode-symbol").props.name).toBe("sparkles");
+  await fireEvent.press(aiButton);
+  expect(screen.getByTestId("native-search-input")).toBe(input);
+  expect(input.props.value).toBe("rice");
+  expect(input.props.placeholder).toBe("Ask Cookkit…");
+  expect(screen.queryByTestId(TEST_IDS.assistant.composer)).toBeNull();
+  expect(mockCreateAgent).not.toHaveBeenCalled();
+  const searchButton = screen.getByLabelText("Switch to search");
+  expect(screen.getByTestId("search-mode-symbol").props.name).toBe("magnifyingglass");
+  await fireEvent.press(searchButton);
+  expect(screen.getByTestId("native-search-input")).toBe(input);
+  expect(input.props.value).toBe("rice");
+  expect(input.props.placeholder).toBe("Search ingredients and recipes…");
+  expect(mockPush).not.toHaveBeenCalled();
+  expect(mockBack).not.toHaveBeenCalled();
+});
+
+it("centers the search helper and leaves preset prompts in AI mode only", async () => {
+  const screen = await render(<SearchContent onDismiss={mockBack} transparent />);
+  const searchHelperStyle = screen.getByText("Search your pantry and recipes.").props.className;
+  expect(searchHelperStyle).toContain("text-center");
+  expect(searchHelperStyle).toContain("text-lg");
+  expect(screen.queryByText("Need a hand?")).toBeNull();
+  expect(screen.queryByLabelText("What can I cook?")).toBeNull();
+  await fireEvent.press(screen.getByLabelText("Switch to Cookkit AI"));
+  expect(screen.getByText("Ask Cookkit AI").props.className).toBe(searchHelperStyle);
+  expect(screen.getByLabelText("What can I cook?")).toBeTruthy();
+});
+
+it("hides AI presets while drafting and keeps them hidden after a message is sent", async () => {
+  const screen = await render(<SearchContent onDismiss={mockBack} initialConversation />);
+  const input = screen.getByTestId("native-search-input");
+  expect(screen.getByText("Ask Cookkit AI")).toBeTruthy();
+  expect(screen.getByTestId("search-assistant-presets")).toBeTruthy();
+  await fireEvent.changeText(input, "egg");
+  expect(screen.getByText("Ask Cookkit AI")).toBeTruthy();
+  expect(screen.queryByTestId("search-assistant-presets")).toBeNull();
+  expect(screen.getByTestId("search-assistant-dock")).toBeTruthy();
+  await fireEvent.changeText(input, "");
+  expect(screen.getByText("Ask Cookkit AI")).toBeTruthy();
+  expect(screen.getByTestId("search-assistant-presets")).toBeTruthy();
+  await fireEvent.changeText(input, "What can I cook?");
+  await fireEvent(input, "submitEditing");
+  await waitFor(() => expect(screen.getByText("Try a rice bowl.")).toBeTruthy());
+  expect(input.props.value).toBe("");
+  expect(screen.queryByText("Ask Cookkit AI")).toBeNull();
+  expect(screen.queryByTestId("search-assistant-presets")).toBeNull();
+  expect(screen.getByTestId("search-assistant-dock")).toBeTruthy();
+  expect(screen.getByTestId("native-search-input")).toBe(input);
+});
+
+it("keeps the mode and close buttons outside the input pill", async () => {
+  const screen = await render(<SearchContent onDismiss={mockBack} transparent />);
+  const input = screen.getByTestId("native-search-input");
+  const pill = screen.getByTestId("search-input-pill");
+  const mode = screen.getByTestId("search-mode-button");
+  const close = screen.getByTestId("search-close-button");
+  expect(within(pill).queryByTestId("search-mode-button")).toBeNull();
+  expect(within(pill).queryByTestId("search-close-button")).toBeNull();
+  expect(StyleSheet.flatten(mode.parent?.props.style).width).toBe(48);
+  expect(StyleSheet.flatten(close.parent?.props.style).width).toBe(48);
+  expect(screen.queryByTestId("native-search-toolbar")).toBeNull();
+  await fireEvent.changeText(input, "egg");
+  await fireEvent.press(mode);
+  expect(screen.getByTestId("native-search-input")).toBe(input);
+  expect(input.props.placeholder).toBe("Ask Cookkit…");
+  expect(input.props.value).toBe("egg");
+  await fireEvent.press(mode);
+  expect(input.props.placeholder).toBe("Search ingredients and recipes…");
+  expect(input.props.value).toBe("egg");
+  expect(mockCreateAgent).not.toHaveBeenCalled();
+  expect(mockPush).not.toHaveBeenCalled();
+});
+
+it("submits to AI or Tavily according to the mode of the same native bar", async () => {
+  const screen = await render(<SearchContent onDismiss={mockBack} transparent />);
+  const input = screen.getByTestId("native-search-input");
+  await fireEvent.press(screen.getByLabelText("Switch to Cookkit AI"));
+  await fireEvent.changeText(input, "What can I cook?");
+  await fireEvent(input, "submitEditing");
+  await waitFor(() => expect(screen.getByText("Try a rice bowl.")).toBeTruthy());
+  expect(mockTurns[0]?.messages[0]?.content).toBe("What can I cook?");
+  expect(input.props.value).toBe("");
+  expect(mockUseWebRecipeSearch).toHaveBeenLastCalledWith("", false);
+  await fireEvent.press(screen.getByLabelText("Switch to search"));
+  await fireEvent.changeText(input, "rice");
+  await fireEvent(input, "submitEditing");
+  expect(mockUseWebRecipeSearch).toHaveBeenLastCalledWith("rice", true);
+  expect(mockTurns).toHaveLength(1);
+  expect(screen.getByTestId("native-search-input")).toBe(input);
+});
+
+it("uses a small AI label and keeps wrapping presets above the shared input, outside message scrolling", async () => {
+  const screen = await render(<SearchContent onDismiss={mockBack} transparent />);
+  await fireEvent.press(screen.getByLabelText("Switch to Cookkit AI"));
+  expect(screen.queryByText("Cookkit")).toBeNull();
+  expect(screen.getByText("Ask Cookkit AI")).toBeTruthy();
+  expect(screen.queryByTestId(TEST_IDS.assistant.list)).toBeNull();
+  const presets = screen.getByTestId("search-assistant-presets");
+  expect(within(presets).getByLabelText("What can I cook?")).toBeTruthy();
+  expect(screen.getByTestId("assistant-starter-options").props.className).toContain("flex-wrap");
+  await fireEvent.press(within(presets).getByLabelText("What can I cook?"));
+  await waitFor(() => expect(screen.getByText("Try a rice bowl.")).toBeTruthy());
+  expect(screen.queryByTestId("search-assistant-presets")).toBeNull();
+  expect(
+    within(screen.getByTestId(TEST_IDS.assistant.list)).queryByLabelText("What can I cook?")
+  ).toBeNull();
+  expect(mockTurns[0]?.messages[0]?.content).toBe(
+    "What can I cook with the ingredients in my pantry?"
+  );
+});
+
 it.each(["route", "pantry"])(
-  "keeps %s typeahead local and starts web discovery on submission, while Ask Cookkit remains explicit",
+  "keeps %s typeahead local and starts web discovery on submission, while AI uses the mode switch",
   async (entry) => {
     const screen = await render(
       entry === "route" ? <SearchScreen /> : <SearchContent onDismiss={mockBack} transparent />
     );
     const input = screen.getByTestId("native-search-input");
-    expect(input.props.placeholder).toBe("Search or ask Cookkit…");
+    expect(input.props.placeholder).toBe("Search ingredients and recipes…");
     await fireEvent.changeText(input, "egg");
+    expect(screen.queryByLabelText("Ask Cookkit")).toBeNull();
     expect(screen.getByText("eggs")).toBeTruthy();
     expect(screen.getByText("Egg fried rice")).toBeTruthy();
     expect(mockCreateAgent).not.toHaveBeenCalled();
@@ -220,11 +330,11 @@ it.each(["route", "pantry"])(
     await fireEvent(input, "submitEditing");
     expect(mockUseWebRecipeSearch).toHaveBeenLastCalledWith("egg", true);
     expect(mockCreateAgent).not.toHaveBeenCalled();
-    await fireEvent.press(screen.getByTestId(TEST_IDS.search.askAssistant));
+    await submitAIFromSearch(screen);
     await waitFor(() => expect(screen.getByText("Try a rice bowl.")).toBeTruthy());
     expect(mockCreateAgent).toHaveBeenCalledTimes(1);
     expect(mockTurns[0]?.messages[0]?.content).toBe("egg");
-    expect(screen.queryByTestId("native-search-input")).toBeNull();
+    expect(screen.getByTestId("native-search-input")).toBe(input);
     expect(mockPush).not.toHaveBeenCalled();
   }
 );
@@ -266,20 +376,18 @@ it("preserves conversation context while switching to search and asking a follow
   const screen = await render(<SearchScreen />);
   const input = screen.getByTestId("native-search-input");
   await fireEvent.changeText(input, "Help with dinner");
-  await fireEvent.press(screen.getByLabelText("Ask Cookkit"));
+  await submitAIFromSearch(screen);
   await waitFor(() => expect(screen.getByText("Try a rice bowl.")).toBeTruthy());
-  await fireEvent.press(screen.getByLabelText("Back to search"));
+  await fireEvent.press(screen.getByLabelText("Switch to search"));
   expect(screen.queryByText("Try a rice bowl.")).toBeNull();
   await fireEvent.changeText(screen.getByTestId("native-search-input"), "egg");
   expect(screen.getByText("Egg fried rice")).toBeTruthy();
   expect(mockTurns).toHaveLength(1);
-  await fireEvent.press(screen.getByLabelText("Continue conversation"));
+  expect(screen.queryByLabelText("Continue conversation")).toBeNull();
+  await fireEvent.press(screen.getByLabelText("Switch to Cookkit AI"));
   expect(screen.getByText("Try a rice bowl.")).toBeTruthy();
-  await fireEvent.changeText(
-    screen.getByTestId(TEST_IDS.assistant.composer),
-    "Something quicker please"
-  );
-  await fireEvent.press(screen.getByLabelText("Send message"));
+  await fireEvent.changeText(screen.getByTestId("native-search-input"), "Something quicker please");
+  await fireEvent(screen.getByTestId("native-search-input"), "submitEditing");
   await waitFor(() => expect(mockTurns).toHaveLength(2));
   expect(mockCreateAgent).toHaveBeenCalledTimes(1);
   expect(mockTurns[1]?.messages.map((message) => message.content)).toEqual([
@@ -305,12 +413,13 @@ it("stops a response without disabling local search", async () => {
   const screen = await render(<SearchScreen />);
   const input = screen.getByTestId("native-search-input");
   await fireEvent.changeText(input, "Help");
-  await fireEvent.press(screen.getByLabelText("Ask Cookkit"));
+  await submitAIFromSearch(screen);
   await waitFor(() => expect(mockTurns).toHaveLength(1));
-  await fireEvent.press(screen.getByLabelText("Back to search"));
+  await fireEvent.press(screen.getByLabelText("Switch to search"));
   await fireEvent.changeText(screen.getByTestId("native-search-input"), "egg");
   expect(screen.getByText("Egg fried rice")).toBeTruthy();
-  await fireEvent.press(screen.getByLabelText("Continue conversation"));
+  expect(screen.queryByLabelText("Continue conversation")).toBeNull();
+  await fireEvent.press(screen.getByLabelText("Switch to Cookkit AI"));
   await fireEvent.press(screen.getByLabelText("Stop Cookkit"));
   await waitFor(() => expect(mockTurns[0]?.signal?.aborted).toBe(true));
   await act(async () => release());
@@ -345,7 +454,7 @@ it("opens verified suggested recipes from the unified conversation", async () =>
   }));
   const screen = await render(<SearchScreen />);
   await fireEvent.changeText(screen.getByTestId("native-search-input"), "What can I cook?");
-  await fireEvent.press(screen.getByLabelText("Ask Cookkit"));
+  await submitAIFromSearch(screen);
   await waitFor(() => expect(screen.getByLabelText("Open recipe: Rice bowl")).toBeTruthy());
   await fireEvent.press(screen.getByLabelText("Open recipe: Rice bowl"));
   expect(mockPush).toHaveBeenCalledWith("/recipes/verified");
@@ -360,19 +469,19 @@ it("shows assistant failures inline and lets the user make another request", asy
   }));
   const screen = await render(<SearchScreen />);
   await fireEvent.changeText(screen.getByTestId("native-search-input"), "Help");
-  await fireEvent.press(screen.getByLabelText("Ask Cookkit"));
+  await submitAIFromSearch(screen);
   await waitFor(() =>
     expect(screen.getByText("Something went wrong, please try again later")).toBeTruthy()
   );
-  await fireEvent.changeText(screen.getByTestId(TEST_IDS.assistant.composer), "Check my pantry");
-  expect(screen.getByLabelText("Send message")).toBeTruthy();
+  await fireEvent.changeText(screen.getByTestId("native-search-input"), "Check my pantry");
+  expect(screen.getByTestId("native-search-input").props.value).toBe("Check my pantry");
   expect(mockBack).not.toHaveBeenCalled();
 });
 
 it("returns direct assistant links safely to Pantry when there is no navigation history", async () => {
   mockCanGoBack.mockReturnValueOnce(false);
   const screen = await render(<SearchScreen />);
-  await fireEvent(screen.getByTestId("native-search-input"), "cancelButtonPress");
+  await fireEvent.press(screen.getByLabelText("Close search"));
   expect(mockReplace).toHaveBeenCalledWith("/");
 });
 
@@ -391,7 +500,7 @@ it("cancels an active response when the unified search screen unmounts", async (
   }));
   const screen = await render(<SearchScreen />);
   await fireEvent.changeText(screen.getByTestId("native-search-input"), "Help");
-  await fireEvent.press(screen.getByLabelText("Ask Cookkit"));
+  await submitAIFromSearch(screen);
   await waitFor(() => expect(mockTurns).toHaveLength(1));
   await screen.unmount();
   expect(mockTurns[0]?.signal?.aborted).toBe(true);
@@ -413,7 +522,7 @@ it("stops an inline assistant response as pull-to-search closes", async () => {
   }));
   const screen = await render(<SearchContent onDismiss={mockBack} focusEnabled transparent />);
   await fireEvent.changeText(screen.getByTestId("native-search-input"), "Help");
-  await fireEvent.press(screen.getByLabelText("Ask Cookkit"));
+  await submitAIFromSearch(screen);
   await waitFor(() => expect(mockTurns).toHaveLength(1));
   await screen.rerender(<SearchContent onDismiss={mockBack} focusEnabled={false} transparent />);
   await waitFor(() => expect(mockTurns[0]?.signal?.aborted).toBe(true));
@@ -434,7 +543,7 @@ it.each(["route", "pantry"])(
         .paddingTop
     ).toBe(entry === "pantry" ? 72 : 128);
 
-    await fireEvent.press(screen.getByLabelText("Ask Cookkit"));
+    await submitAIFromSearch(screen);
     await waitFor(() => expect(screen.getByText("Try a rice bowl.")).toBeTruthy());
     const conversationHeader = () => screen.getByTestId("search-conversation-header");
     expect(StyleSheet.flatten(conversationHeader().props.style).paddingTop).toBe(72);
@@ -442,7 +551,7 @@ it.each(["route", "pantry"])(
     mockHeaderHeight = 144;
     await screen.rerender(React.cloneElement(content));
     expect(StyleSheet.flatten(conversationHeader().props.style).paddingTop).toBe(72);
-    await fireEvent.press(screen.getByLabelText("Back to search"));
+    await fireEvent.press(screen.getByLabelText("Switch to search"));
     expect(
       StyleSheet.flatten(screen.getByTestId("search-results").props.contentContainerStyle)
         .paddingTop
@@ -450,15 +559,15 @@ it.each(["route", "pantry"])(
   }
 );
 
-it("keeps follow-up typing inside the conversation and sends from its composer", async () => {
+it("keeps follow-up typing and submission in the same native search bar", async () => {
   const screen = await render(<SearchScreen />);
   await fireEvent.changeText(screen.getByTestId("native-search-input"), "Help with dinner");
-  await fireEvent.press(screen.getByLabelText("Ask Cookkit"));
+  await submitAIFromSearch(screen);
   await waitFor(() => expect(screen.getByText("Try a rice bowl.")).toBeTruthy());
-  const composer = screen.getByTestId(TEST_IDS.assistant.composer);
+  const composer = screen.getByTestId("native-search-input");
   await fireEvent.changeText(composer, "Something quicker please");
   expect(screen.getByText("Try a rice bowl.")).toBeTruthy();
-  expect(screen.queryByTestId("native-search-input")).toBeNull();
+  expect(screen.getByTestId("native-search-input")).toBe(composer);
   expect(mockTurns).toHaveLength(1);
   await fireEvent(composer, "submitEditing");
   await waitFor(() => expect(mockTurns).toHaveLength(2));
@@ -468,37 +577,38 @@ it("keeps follow-up typing inside the conversation and sends from its composer",
 it("opens a read-only cooking suggestion directly without an extra Ask tap", async () => {
   const screen = await render(<SearchScreen />);
   expect(mockCreateAgent).not.toHaveBeenCalled();
+  await fireEvent.press(screen.getByLabelText("Switch to Cookkit AI"));
   await fireEvent.press(screen.getByLabelText("What can I cook?"));
   await waitFor(() => expect(mockTurns).toHaveLength(1));
   expect(mockTurns[0]?.messages[0]?.content).toBe(
     "What can I cook with the ingredients in my pantry?"
   );
-  expect(screen.getByTestId(TEST_IDS.assistant.composer)).toBeTruthy();
+  expect(screen.getByTestId("native-search-input")).toBeTruthy();
 });
 
-it("does not dismiss the conversation when UIKit closes the removed search field", async () => {
+it("closes the shared search surface from the native X while in AI mode", async () => {
   const screen = await render(<SearchScreen />);
   const input = screen.getByTestId("native-search-input");
-  const onClose = input.props.onClose;
   await fireEvent.changeText(input, "Help with dinner");
-  await fireEvent.press(screen.getByLabelText("Ask Cookkit"));
-  await act(async () => onClose());
-  expect(mockBack).not.toHaveBeenCalled();
-  expect(screen.getByTestId(TEST_IDS.assistant.composer)).toBeTruthy();
+  await submitAIFromSearch(screen);
+  await fireEvent.press(screen.getByLabelText("Close search"));
+  expect(mockBack).toHaveBeenCalledTimes(1);
+  expect(screen.getByTestId("native-search-input")).toBe(input);
 });
 
-it("opens directly into chat without focusing Search or sending a request", async () => {
+it("supports an AI-mode entry using the same native bar without sending a request", async () => {
   const screen = await render(<SearchContent onDismiss={mockBack} initialConversation />);
-  expect(screen.queryByTestId("native-search-input")).toBeNull();
-  expect(screen.getByTestId(TEST_IDS.assistant.composer)).toBeTruthy();
+  expect(screen.getByTestId("native-search-input").props.placeholder).toBe("Ask Cookkit…");
+  expect(screen.getByTestId("native-search-input")).toBeTruthy();
   expect(mockCreateAgent).not.toHaveBeenCalled();
   await fireEvent.press(screen.getByLabelText("What can I cook?"));
   await waitFor(() => expect(screen.getByText("Try a rice bowl.")).toBeTruthy());
   expect(mockTurns[0]?.messages[0]?.content).toBe(
     "What can I cook with the ingredients in my pantry?"
   );
-  await fireEvent.press(screen.getByLabelText("Back to search"));
+  await fireEvent.press(screen.getByLabelText("Switch to search"));
   expect(screen.getByTestId("native-search-input")).toBeTruthy();
-  await fireEvent.press(screen.getByLabelText("Continue conversation"));
+  expect(screen.queryByLabelText("Continue conversation")).toBeNull();
+  await fireEvent.press(screen.getByLabelText("Switch to Cookkit AI"));
   expect(screen.getByText("Try a rice bowl.")).toBeTruthy();
 });

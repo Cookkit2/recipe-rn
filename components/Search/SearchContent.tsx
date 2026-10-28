@@ -1,20 +1,12 @@
-import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
-import {
-  View,
-  Keyboard,
-  TouchableOpacity,
-  StyleSheet,
-  BackHandler,
-  Platform,
-  KeyboardAvoidingView,
-} from "react-native";
+import React, { useCallback, useMemo, useRef, useState, useEffect, useLayoutEffect } from "react";
+import { View, Keyboard, TouchableOpacity, StyleSheet, BackHandler, Platform } from "react-native";
 import BottomSheet, {
   BottomSheetScrollView,
   type BottomSheetMethods,
 } from "@expo/ui/community/bottom-sheet";
 import { Portal } from "@rn-primitives/portal";
 import { cn } from "~/lib/utils";
-import { Stack, useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useHeaderHeight } from "expo-router/react-navigation";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "react-native";
@@ -28,15 +20,17 @@ import { recipeQueryKeys } from "~/hooks/queries/recipeQueryKeys";
 import type { PantryAdditionReceipt } from "~/lib/agent/pantry-action";
 import { TEST_IDS } from "~/constants/test-ids";
 import { useSearchAssistant } from "~/hooks/useSearchAssistant";
-import { AssistantComposer } from "~/components/Assistant/AssistantComposer";
 import { AssistantMessages } from "~/components/Assistant/AssistantMessages";
 import { SearchAssistantHeader } from "~/components/Search/SearchAssistantHeader";
+import { SearchAssistantPresets } from "~/components/Search/SearchAssistantPresets";
 import { SearchResultsList } from "~/components/Search/SearchResultsList";
 import { SearchPreview } from "~/components/Search/SearchPreview";
+import { SearchKeyboardViewport } from "~/components/Search/SearchKeyboardViewport";
 import useColors from "~/hooks/useColor";
 import * as Haptics from "expo-haptics";
 import { useFeatureFlag } from "~/hooks/queries/useFeatureFlags";
 import { useSearchBarFocus } from "~/hooks/useSearchBarFocus";
+import { SearchInputBar } from "~/components/Search/SearchInputBar";
 import { useWebRecipeSearch } from "~/hooks/queries/useWebRecipeSearch";
 import { normalizeWebRecipeQuery } from "~/utils/web-recipe-search";
 import type { WebRecipeSearchResult } from "~/types/WebRecipeSearch";
@@ -69,8 +63,7 @@ export function SearchContent({
 }) {
   const { top, bottom } = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
-  // Pantry uses the bottom native search toolbar on iOS 26+. Its full-screen
-  // content must not jump when UIKit hides the navigation bar during focus.
+  // Keep the inline Pantry surface anchored while the keyboard opens.
   const contentTop =
     transparent && Platform.OS === "ios" && Number.parseInt(String(Platform.Version), 10) >= 26
       ? top
@@ -84,23 +77,15 @@ export function SearchContent({
     setConversation(visible);
   }, []);
   const [sessionStarted, setSessionStarted] = useState(initialConversation);
-  const [starter, setStarter] = useState<string | null>(null);
-  const { searchBarRef, onFocus, onBlur } = useSearchBarFocus(focusEnabled && !showConversation);
-  const openStarter = useCallback(
-    (question: string) => {
-      if (!focusEnabled) return;
-      Keyboard.dismiss();
-      setStarter(question);
-      setSessionStarted(true);
-      setShowConversation(true);
-    },
-    [focusEnabled]
-  );
+  const submitAI = useRef<((text: string) => void) | null>(null);
+  const { searchBarRef, onFocus, onBlur } = useSearchBarFocus(focusEnabled);
+  const switchMode = useCallback(() => {
+    setSessionStarted(true);
+    setShowConversation(!conversationRef.current);
+  }, [setShowConversation]);
+  const placeholder = showConversation ? "Ask Cookkit…" : "Search ingredients and recipes…";
 
-  const handleChangeText = useCallback<
-    NonNullable<React.ComponentProps<typeof Stack.SearchBar>["onChangeText"]>
-  >((event) => {
-    const value = event.nativeEvent.text;
+  const handleChangeText = useCallback((value: string) => {
     setInput(value);
     setWebQuery("");
     if (value.trim()) {
@@ -108,8 +93,11 @@ export function SearchContent({
     }
   }, []);
   const handleSearch = useCallback(() => {
+    if (conversationRef.current) {
+      submitAI.current?.(input);
+      return;
+    }
     Keyboard.dismiss();
-    setShowConversation(false);
     setWebQuery(input.trim());
   }, [input]);
   const clearInput = useCallback(() => {
@@ -121,10 +109,6 @@ export function SearchContent({
     Keyboard.dismiss();
     onDismiss();
   }, [onDismiss]);
-
-  const handleNativeClose = useCallback(() => {
-    if (!conversationRef.current) handleDismiss();
-  }, [handleDismiss]);
 
   useFocusEffect(
     useCallback(() => {
@@ -143,28 +127,12 @@ export function SearchContent({
       testID={TEST_IDS.search.screen}
       className={transparent ? "flex-1" : "flex-1 bg-background"}
     >
-      {focusEnabled && !showConversation && (
-        <Stack.SearchBar
-          ref={searchBarRef}
-          onFocus={onFocus}
-          onBlur={onBlur}
-          hideNavigationBar
-          onCancelButtonPress={handleNativeClose}
-          onClose={handleNativeClose}
-          onChangeText={handleChangeText}
-          onSearchButtonPress={handleSearch}
-          placeholder="Search or ask Cookkit…"
-        />
-      )}
-      {focusEnabled && showConversation ? <Stack.Header hidden /> : null}
       {sessionStarted ? (
         <SearchSession
           input={input}
-          starter={starter}
-          consumeStarter={() => setStarter(null)}
+          submitAI={submitAI}
           clearInput={clearInput}
           showConversation={showConversation}
-          setShowConversation={setShowConversation}
           focusEnabled={focusEnabled}
           contentTop={contentTop}
           safeTop={top}
@@ -174,7 +142,22 @@ export function SearchContent({
           onWebSearch={handleSearch}
         />
       ) : (
-        <SearchPreview top={contentTop} onAsk={openStarter} disabled={!focusEnabled} />
+        <SearchPreview top={contentTop} />
+      )}
+      {focusEnabled && (
+        <SearchInputBar
+          ref={searchBarRef}
+          value={input}
+          conversation={showConversation}
+          placeholder={placeholder}
+          bottom={bottom}
+          onChangeText={handleChangeText}
+          onFocus={onFocus}
+          onBlur={onBlur}
+          onSubmit={handleSearch}
+          onSwitchMode={switchMode}
+          onDismiss={handleDismiss}
+        />
       )}
     </View>
   );
@@ -183,11 +166,9 @@ export function SearchContent({
 /** Start catalog queries, assistant state and filter views only when someone types. */
 function SearchSession({
   input,
-  starter,
-  consumeStarter,
+  submitAI,
   clearInput,
   showConversation,
-  setShowConversation,
   focusEnabled,
   contentTop,
   safeTop,
@@ -197,11 +178,9 @@ function SearchSession({
   onWebSearch,
 }: {
   input: string;
-  starter: string | null;
-  consumeStarter: () => void;
+  submitAI: React.RefObject<((text: string) => void) | null>;
   clearInput: () => void;
   showConversation: boolean;
-  setShowConversation: (visible: boolean) => void;
   focusEnabled: boolean;
   contentTop: number;
   safeTop: number;
@@ -233,18 +212,16 @@ function SearchSession({
   const filterSnapPoints = useMemo(() => ["55%"], []);
   const { messages, status, send, stop, markPantryAdditionUndone } = useSearchAssistant();
   const streaming = status === "streaming";
-  const [draft, setDraft] = useState("");
-  const startedPrompt = useRef<string | null>(null);
-  useEffect(() => {
-    if (!starter) {
-      startedPrompt.current = null;
-      return;
-    }
-    if (!focusEnabled || startedPrompt.current === starter) return;
-    startedPrompt.current = starter;
-    consumeStarter();
-    void send(starter);
-  }, [starter, focusEnabled, consumeStarter, send]);
+  useLayoutEffect(() => {
+    submitAI.current = (text) => {
+      if (!focusEnabled || streaming || !text.trim()) return;
+      clearInput();
+      void send(text.trim());
+    };
+    return () => {
+      submitAI.current = null;
+    };
+  }, [clearInput, focusEnabled, send, streaming, submitAI]);
   const undoAddition = async (receipt: PantryAdditionReceipt) => {
     const { pantryApi } = await import("~/data/api/pantryApi");
     await pantryApi.undoAssistantAddition(receipt);
@@ -253,12 +230,6 @@ function SearchSession({
       queryClient.invalidateQueries({ queryKey: pantryQueryKeys.all }),
       queryClient.invalidateQueries({ queryKey: recipeQueryKeys.all }),
     ]);
-  };
-  const sendDraft = () => {
-    if (!focusEnabled || streaming || !draft.trim()) return;
-    const question = draft.trim();
-    setDraft("");
-    void send(question);
   };
   const hasConversation = messages.length > 0;
   useEffect(() => {
@@ -316,24 +287,13 @@ function SearchSession({
   const showSearchLoading =
     (hasQuery && isRecipesCatalogPending) || (trimmedInput.length > 0 && isPantryPending);
 
-  const askCookkit = () => {
-    if (!focusEnabled || !trimmedInput || streaming) return;
-    const question = trimmedInput;
-    clearInput();
-    setShowConversation(true);
-    Keyboard.dismiss();
-    void send(question);
-  };
   const assistantHeader = (
     <>
       <SearchAssistantHeader
-        query={trimmedInput}
-        hasConversation={hasConversation}
+        showHint={!hasConversation}
         showConversation={showConversation}
         streaming={streaming}
-        onAsk={askCookkit}
         onStop={stop}
-        onViewChange={setShowConversation}
       />
     </>
   );
@@ -507,39 +467,38 @@ function SearchSession({
   return (
     <>
       {showConversation ? (
-        <KeyboardAvoidingView
-          className="flex-1 bg-background"
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-        >
-          <View
-            testID="search-conversation-header"
-            className="px-5"
-            style={{ paddingTop: safeTop + 10 }}
-          >
+        <SearchKeyboardViewport testID="search-conversation-viewport">
+          <View testID="search-conversation-header" style={{ paddingTop: safeTop + 10 }}>
             {assistantHeader}
           </View>
-          <AssistantMessages
-            messages={messages}
-            top={0}
-            bottom={20}
-            streaming={streaming}
-            recipes={allRecipes}
-            onUndo={undoAddition}
-            onViewPantry={() => router.replace("/")}
-            onReply={(question) => {
-              if (!streaming) void send(question);
-            }}
-            onOpenRecipe={(id) => router.push(`/recipes/${id}`)}
-          />
-          <AssistantComposer
-            value={draft}
-            onChange={setDraft}
-            onSend={sendDraft}
-            onStop={stop}
-            streaming={streaming}
+          {hasConversation ? (
+            <AssistantMessages
+              messages={messages}
+              top={0}
+              bottom={12}
+              streaming={streaming}
+              recipes={allRecipes}
+              onUndo={undoAddition}
+              onViewPantry={() => router.replace("/")}
+              onReply={(question) => {
+                if (!streaming) void send(question);
+              }}
+              onOpenRecipe={(id) => router.push(`/recipes/${id}`)}
+            />
+          ) : (
+            <View className="flex-1" />
+          )}
+          <SearchAssistantPresets
+            visible={!hasConversation && !trimmedInput}
             bottom={bottom}
+            disabled={!focusEnabled || streaming}
+            onAsk={(question) => {
+              if (!focusEnabled || streaming) return;
+              clearInput();
+              void send(question);
+            }}
           />
-        </KeyboardAvoidingView>
+        </SearchKeyboardViewport>
       ) : (
         <SearchResultsList
           recipes={recipeResults}

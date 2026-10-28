@@ -353,8 +353,11 @@ export async function undoAssistantPantryAddition(
       );
       if ((table === "consumption_log" || table === "waste_log") && rows.length)
         throw new Error("This item has been used. Review it in Pantry.");
-      related.push(...rows.map((item) => item.prepareMarkAsDeleted()));
+      related.push(...rows);
     }
-    await database.batch([...related, row.prepareMarkAsDeleted()]);
+    await database.batch([
+      ...related.map((item) => item.prepareMarkAsDeleted()),
+      row.prepareMarkAsDeleted(),
+    ]);
   });
 }

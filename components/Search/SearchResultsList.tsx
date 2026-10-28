@@ -1,6 +1,6 @@
-import { SectionList, View, ActivityIndicator, Pressable, Platform } from "react-native";
-import Animated, { useAnimatedStyle } from "react-native-reanimated";
-import { useReanimatedKeyboardAnimation } from "react-native-keyboard-controller";
+import { SectionList, View, ActivityIndicator, Pressable } from "react-native";
+import { SearchKeyboardViewport } from "./SearchKeyboardViewport";
+import { SearchHelperText } from "./SearchHelperText";
 import { P, Small } from "~/components/ui/typography";
 import { Separator } from "~/components/ui/separator";
 import { RecipeResultItem } from "./RecipeResults";
@@ -56,14 +56,6 @@ export function SearchResultsList({
 }) {
   const [recipesExpanded, setRecipesExpanded] = useState(false);
   useEffect(() => setRecipesExpanded(false), [query]);
-  const { height: keyboardHeight } = useReanimatedKeyboardAnimation();
-  const avoidKeyboard = Platform.OS === "ios";
-  // This list mounts after typing, when UIKit's keyboard notification has already
-  // fired. Read the root provider's current height instead of waiting for another
-  // notification on the newly mounted ScrollView. Android already resizes its window.
-  const viewportStyle = useAnimatedStyle(() => ({
-    paddingBottom: avoidKeyboard ? Math.max(0, -keyboardHeight.value) : 0,
-  }));
   const sections = useMemo<Section[]>(
     () =>
       !hasQuery
@@ -105,7 +97,7 @@ export function SearchResultsList({
     [hasQuery, ingredients, recipes, recipesExpanded, web?.submitted, web?.loading, web?.results]
   );
   return (
-    <Animated.View testID="search-results-viewport" style={[{ flex: 1 }, viewportStyle]}>
+    <SearchKeyboardViewport testID="search-results-viewport">
       <SectionList<Row, Section>
         testID="search-results"
         className={transparent ? "flex-1" : "flex-1 bg-background"}
@@ -189,11 +181,11 @@ export function SearchResultsList({
         ListEmptyComponent={
           !loading && !web?.loading && !web?.submitted ? (
             <View className="items-center px-6 py-8">
-              <P className="text-sm text-muted-foreground text-center">
-                {hasQuery
-                  ? "No results found"
-                  : "Search ingredients and recipes, or ask about your pantry."}
-              </P>
+              {hasQuery ? (
+                <P className="text-sm text-muted-foreground text-center">No results found</P>
+              ) : (
+                <SearchHelperText>Search your pantry and recipes.</SearchHelperText>
+              )}
             </View>
           ) : undefined
         }
@@ -238,6 +230,6 @@ export function SearchResultsList({
           ) : undefined
         }
       />
-    </Animated.View>
+    </SearchKeyboardViewport>
   );
 }

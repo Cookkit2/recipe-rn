@@ -15,26 +15,46 @@ export function AssistantStarters({
   onAsk,
   disabled = false,
   title = "What would you like to cook?",
+  compact = false,
 }: {
   onAsk: (question: string) => void;
   disabled?: boolean;
-  title?: string;
+  title?: string | null;
+  compact?: boolean;
 }) {
   return (
     <View className="gap-3 pt-2">
-      <Text className="text-base font-urbanist-semibold">{title}</Text>
-      {COOKKIT_STARTERS.map(({ label, question }) => (
-        <Button
-          key={label}
-          variant="secondary"
-          className="items-start rounded-2xl"
-          accessibilityLabel={label}
-          disabled={disabled}
-          onPress={() => onAsk(question)}
-        >
-          <Text className="font-urbanist-medium">{label}</Text>
-        </Button>
-      ))}
+      {title ? <Text className="text-base font-urbanist-semibold">{title}</Text> : null}
+      <View
+        testID="assistant-starter-options"
+        className={compact ? "flex-row flex-wrap gap-2" : "gap-3"}
+      >
+        {COOKKIT_STARTERS.map(({ label, question }) => (
+          <Button
+            key={label}
+            variant="secondary"
+            size={compact ? "sm" : "default"}
+            className={
+              compact
+                ? "h-auto native:h-auto min-h-10 max-w-full items-start rounded-2xl px-3 py-2"
+                : "items-start rounded-2xl"
+            }
+            accessibilityLabel={label}
+            disabled={disabled}
+            onPress={() => onAsk(question)}
+          >
+            <Text
+              className={
+                compact
+                  ? "text-sm native:text-sm font-urbanist-medium shrink"
+                  : "font-urbanist-medium"
+              }
+            >
+              {label}
+            </Text>
+          </Button>
+        ))}
+      </View>
     </View>
   );
 }

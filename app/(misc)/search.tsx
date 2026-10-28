@@ -6,7 +6,7 @@ export default function SearchScreen() {
   const { mode } = useLocalSearchParams<{ mode?: string }>();
   return (
     <>
-      <Stack.Screen options={{ animation: "fade" }} />
+      <Stack.Screen options={{ animation: "fade", headerShown: false }} />
       <SearchContent
         initialConversation={mode === "chat"}
         onDismiss={() => {

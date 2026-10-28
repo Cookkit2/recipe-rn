@@ -23,20 +23,17 @@ jest.mock("../PantryHeaderActions", () => ({
   __esModule: true,
   default: ({
     onSearch,
-    onAskCookkit,
     onAdd,
     onProfile,
     disabled,
   }: {
     onSearch: () => void;
-    onAskCookkit: () => void;
     onAdd: () => void;
     onProfile: () => void;
     disabled: boolean;
   }) => (
     <View>
       <Pressable accessibilityLabel="Search" disabled={disabled} onPress={onSearch} />
-      <Pressable accessibilityLabel="Ask Cookkit" disabled={disabled} onPress={onAskCookkit} />
       <Pressable accessibilityLabel="Add ingredient" disabled={disabled} onPress={onAdd} />
       <Pressable accessibilityLabel="Profile" disabled={disabled} onPress={onProfile} />
     </View>
@@ -75,11 +72,11 @@ it("opens search through the shared fade and preserves Add and Profile navigatio
   expect(mockPush).toHaveBeenLastCalledWith("/profile");
 });
 
-it("opens Cookkit directly from the AI toolbar button without starting search", async () => {
+it("keeps the AI mode switch out of Pantry's top toolbar", async () => {
   mockPush.mockClear();
   const pullSearch = { progress: { value: 0 }, phase: "closed", open: jest.fn() };
   const screen = await render(<PantryHeader pullSearch={pullSearch as never} />);
-  await fireEvent.press(screen.getByLabelText("Ask Cookkit"));
-  expect(mockPush).toHaveBeenCalledWith({ pathname: "/search", params: { mode: "chat" } });
+  expect(screen.queryByLabelText("Ask Cookkit")).toBeNull();
+  expect(mockPush).not.toHaveBeenCalled();
   expect(pullSearch.open).not.toHaveBeenCalled();
 });

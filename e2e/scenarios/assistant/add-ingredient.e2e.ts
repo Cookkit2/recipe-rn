@@ -11,10 +11,11 @@ describe("Assistant", () => {
     await waitFor(element(by.id(TEST_IDS.search.screen)))
       .toBeVisible()
       .withTimeout(20000);
-    const search = element(by.type("UISearchTextField"));
+    const search = element(by.id("native-search-input"));
     await waitFor(search).toBeVisible().withTimeout(15000);
     await search.replaceText("Add 6 eggs to my pantry.");
-    await element(by.id(TEST_IDS.search.askAssistant)).tap();
+    await element(by.id("search-mode-button")).tap();
+    await search.tapReturnKey();
 
     await waitFor(element(by.text("Added to pantry")))
       .toBeVisible()
@@ -29,9 +30,9 @@ describe("Assistant", () => {
     await expect(element(by.id(TEST_IDS.assistant.bubble))).toBeVisible();
     await expect(element(by.id(TEST_IDS.assistant.list))).toBeVisible();
 
-    // The iOS 27 search close button returns to the mounted pantry and checks query invalidation.
+    // Closing Search returns to the mounted pantry and checks query invalidation.
     await device.disableSynchronization();
-    await element(by.label("close")).tap();
+    await element(by.id("search-close-button")).tap();
     await waitFor(element(by.id(TEST_IDS.home.screen)))
       .toBeVisible()
       .withTimeout(20000);

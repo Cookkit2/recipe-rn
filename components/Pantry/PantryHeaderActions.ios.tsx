@@ -18,7 +18,6 @@ export default function PantryHeaderActions(props: PantryHeaderActionsProps) {
   const { theme } = useUniwind();
   const actions = [
     { label: "Search", symbol: "magnifyingglass", onPress: props.onSearch },
-    { label: "Ask Cookkit", symbol: "sparkles", onPress: props.onAskCookkit },
     { label: "Add ingredient", symbol: "plus", onPress: props.onAdd },
     { label: "Profile", symbol: "person", onPress: props.onProfile },
   ] as const;

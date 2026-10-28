@@ -8,6 +8,9 @@ import { StyleSheet } from "react-native";
 jest.mock("~/hooks/queries/useWebRecipeSearch", () => ({
   useWebRecipeSearch: () => ({ data: [], isFetching: false, isError: false, refetch: jest.fn() }),
 }));
+jest.mock("react-native-keyboard-controller", () => ({
+  useReanimatedKeyboardAnimation: () => ({ height: { value: 0 }, progress: { value: 0 } }),
+}));
 
 jest.mock("~/components/ui/button", () => ({
   Button: (props: any) => require("react").createElement(require("react-native").Pressable, props),
@@ -48,6 +51,22 @@ const mockNavigation = {
   },
 };
 
+jest.mock("../SearchInputBar", () => ({
+  SearchInputBar: ({ ref, onFocus, onBlur }: any) => {
+    mockOnFocus = onFocus;
+    mockOnBlur = onBlur;
+    require("react").useLayoutEffect(() => {
+      if (!mockNativeReady) return;
+      const attach = (value: { focus: () => void } | null) => {
+        if (typeof ref === "function") ref(value);
+        else if (ref) ref.current = value;
+      };
+      attach({ focus: mockFocus });
+      return () => attach(null);
+    });
+    return null;
+  },
+}));
 jest.mock("expo-router", () => ({
   useLocalSearchParams: () => ({}),
   useRouter: () => ({ back: jest.fn() }),
@@ -58,31 +77,8 @@ jest.mock("expo-router", () => ({
     }, [callback, mockScreenFocused]);
   },
   Stack: {
-    Header: () => null,
     Screen: ({ options }: { options: unknown }) => {
       mockScreenOptions(options);
-      return null;
-    },
-    SearchBar: ({
-      ref,
-      onFocus,
-      onBlur,
-    }: {
-      ref: React.Ref<{ focus: () => void }>;
-      onFocus: () => void;
-      onBlur?: () => void;
-    }) => {
-      mockOnFocus = onFocus;
-      mockOnBlur = onBlur;
-      require("react").useLayoutEffect(() => {
-        if (!mockNativeReady) return;
-        const attach = (value: { focus: () => void } | null) => {
-          if (typeof ref === "function") ref(value);
-          else if (ref) ref.current = value;
-        };
-        attach({ focus: mockFocus });
-        return () => attach(null);
-      });
       return null;
     },
   },
