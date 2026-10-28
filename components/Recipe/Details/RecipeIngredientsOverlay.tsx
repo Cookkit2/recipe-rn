@@ -184,10 +184,16 @@ export default function RecipeIngredientsOverlay({
       },
     ],
   }));
+
+  // FullWindowOverlay lives in the iOS window outside the recipe screen. Remove
+  // its native container on blur; hiding a child leaves that window layer alive
+  // when the recipe's native view is detached during a back/zoom transition.
+  if (!focused) return null;
+
   const content = (
     <View
       key={id}
-      style={[StyleSheet.absoluteFill, !focused && { display: "none" }]}
+      style={StyleSheet.absoluteFill}
       pointerEvents={expanded ? "box-none" : "none"}
       testID="recipe-ingredients-layer"
       accessibilityViewIsModal={expanded}

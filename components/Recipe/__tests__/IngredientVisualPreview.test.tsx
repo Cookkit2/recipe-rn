@@ -1,5 +1,6 @@
 import React from "react";
 import { fireEvent, render } from "@testing-library/react-native";
+import { PortalHost } from "@rn-primitives/portal";
 import IngredientVisualPreview from "../Details/IngredientVisualPreview";
 import { buildIngredientPreviewData } from "~/utils/ingredient-preview";
 import type { RecipeIngredient } from "~/types/Recipe";
@@ -51,9 +52,16 @@ jest.mock("react-native/Libraries/Utilities/BackHandler", () => ({
     exitApp: jest.fn(),
   },
 }));
-jest.mock("expo-router", () => ({ useIsFocused: () => true }));
-jest.mock("@rn-primitives/portal", () => ({ Portal: ({ children }: any) => children }));
-jest.mock("react-native-screens", () => ({ FullWindowOverlay: ({ children }: any) => children }));
+let mockFocused = true;
+jest.mock("expo-router", () => ({ useIsFocused: () => mockFocused }));
+jest.mock("react-native-screens", () => ({
+  FullWindowOverlay: ({ children }: any) =>
+    React.createElement(
+      require("react-native").View,
+      { testID: "ingredient-window-overlay" },
+      children
+    ),
+}));
 jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 59, bottom: 34, left: 0, right: 0 }),
 }));
@@ -98,6 +106,7 @@ jest.mock("~/hooks/useColor", () => ({
 jest.mock("lucide-uniwind", () => ({ XIcon: () => null }));
 
 beforeEach(() => {
+  mockFocused = true;
   jest
     .spyOn(require("react-native").BackHandler, "addEventListener")
     .mockImplementation(() => ({ remove: jest.fn() }));
@@ -124,8 +133,51 @@ const props = {
   findMatch,
 };
 
+function renderPreview(element: React.ReactElement) {
+  return render(element, {
+    wrapper: ({ children }) => (
+      <>
+        {children}
+        <PortalHost />
+      </>
+    ),
+  });
+}
+
+it.each([false, true])(
+  "removes the window-level ingredient layer when leaving the recipe (grid open: %s)",
+  async (open) => {
+    const screen = await renderPreview(<IngredientVisualPreview {...props} />);
+    if (open)
+      await fireEvent.press(screen.getByRole("button", { name: "View recipe ingredients" }));
+    expect(screen.getByTestId("ingredient-window-overlay")).toBeTruthy();
+
+    mockFocused = false;
+    await screen.rerender(<IngredientVisualPreview {...props} />);
+    expect(screen.queryByTestId("ingredient-window-overlay")).toBeNull();
+    expect(
+      screen.queryByTestId("recipe-ingredient-tile-0", { includeHiddenElements: true })
+    ).toBeNull();
+
+    mockFocused = true;
+    await screen.rerender(<IngredientVisualPreview {...props} />);
+    expect(screen.getByTestId("ingredient-window-overlay")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Close ingredients" })).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "View recipe ingredients" }));
+    expect(screen.getByText("Ingredient 9")).toBeTruthy();
+  }
+);
+
+it("removes the real portal content when the recipe is unmounted", async () => {
+  const screen = await renderPreview(<IngredientVisualPreview {...props} />);
+  await fireEvent.press(screen.getByRole("button", { name: "View recipe ingredients" }));
+  await screen.rerender(<></>);
+  expect(screen.queryByTestId("ingredient-window-overlay")).toBeNull();
+  expect(screen.queryByText("Ingredient 9", { includeHiddenElements: true })).toBeNull();
+});
+
 it("opens every ingredient in recipe order, including items beyond the strip limit", async () => {
-  const screen = await render(<IngredientVisualPreview {...props} />);
+  const screen = await renderPreview(<IngredientVisualPreview {...props} />);
   expect(screen.queryByRole("button", { name: "Close ingredients" })).toBeNull();
   expect(
     screen.getByTestId("recipe-ingredients-layer", { includeHiddenElements: true }).props
@@ -146,7 +198,7 @@ it("opens every ingredient in recipe order, including items beyond the strip lim
 });
 
 it.each(["close", "outside", "system back"])("dismisses via %s and can reopen", async (action) => {
-  const screen = await render(<IngredientVisualPreview {...props} />);
+  const screen = await renderPreview(<IngredientVisualPreview {...props} />);
   await fireEvent.press(screen.getByRole("button", { name: "View recipe ingredients" }));
   if (action === "system back")
     await require("@testing-library/react-native").act(async () => {
@@ -166,7 +218,7 @@ it.each(["close", "outside", "system back"])("dismisses via %s and can reopen", 
 });
 
 it("does not open the overlay when the ingredient strip is dragged", async () => {
-  const screen = await render(<IngredientVisualPreview {...props} />);
+  const screen = await renderPreview(<IngredientVisualPreview {...props} />);
   const trigger = screen.getByRole("button", { name: "View recipe ingredients" });
   const touch = (pageX: number) => ({
     nativeEvent: { identifier: 0, pageX, pageY: 100 },
@@ -181,7 +233,9 @@ it("does not open the overlay when the ingredient strip is dragged", async () =>
 
 it("forwards the Android blur target without changing quantities after an update", async () => {
   const blurTarget = { current: null };
-  const screen = await render(<IngredientVisualPreview {...props} blurTarget={blurTarget} />);
+  const screen = await renderPreview(
+    <IngredientVisualPreview {...props} blurTarget={blurTarget} />
+  );
   await fireEvent.press(screen.getByRole("button", { name: "View recipe ingredients" }));
   expect(screen.getByTestId("preview-blur").props.blurTarget).toBe(blurTarget);
   expect(screen.getByTestId("preview-blur").props.blurMethod).toBe("dimezisBlurView");
@@ -197,7 +251,7 @@ it("forwards the Android blur target without changing quantities after an update
 });
 
 it("moves the mounted preview photo into the expanded layout without a second image", async () => {
-  const screen = await render(<IngredientVisualPreview {...props} />);
+  const screen = await renderPreview(<IngredientVisualPreview {...props} />);
   const original = screen.getByTestId("ingredient-photo", { includeHiddenElements: true });
   await fireEvent.press(screen.getByRole("button", { name: "View recipe ingredients" }));
   expect(screen.getAllByTestId("ingredient-photo", { includeHiddenElements: true })).toHaveLength(
@@ -218,7 +272,7 @@ it("uses a full-screen scroll viewport outside the backdrop pressable without re
     ingredients: many,
     ingredientPreviewData: buildIngredientPreviewData(many, findMatch),
   };
-  const screen = await render(<IngredientVisualPreview {...longProps} />);
+  const screen = await renderPreview(<IngredientVisualPreview {...longProps} />);
   const photo = screen.getByTestId("ingredient-photo", { includeHiddenElements: true });
   await fireEvent.press(screen.getByRole("button", { name: "View recipe ingredients" }));
   const scroll = screen.getByTestId("recipe-ingredients-scroll");
@@ -249,7 +303,7 @@ it("uses a full-screen scroll viewport outside the backdrop pressable without re
 it("resets the gallery only after closing, without issuing scroll commands while the recipe is browsed", async () => {
   const { scrollTo } = require("react-native-reanimated");
   scrollTo.mockClear();
-  const screen = await render(<IngredientVisualPreview {...props} />);
+  const screen = await renderPreview(<IngredientVisualPreview {...props} />);
   expect(scrollTo).not.toHaveBeenCalled();
   await screen.rerender(<IngredientVisualPreview {...props} ingredients={[...ingredients]} />);
   expect(scrollTo).not.toHaveBeenCalled();
@@ -263,7 +317,7 @@ it("resets the gallery only after closing, without issuing scroll commands while
 it("follows recipe scrolling with transforms while retaining the measured layout", async () => {
   const Native = require("react-native");
   const offset = { value: 0 } as any;
-  const screen = await render(<IngredientVisualPreview {...props} scrollOffset={offset} />);
+  const screen = await renderPreview(<IngredientVisualPreview {...props} scrollOffset={offset} />);
   await fireEvent(screen.getByTestId("recipe-ingredient-source"), "layout", {
     nativeEvent: { layout: { width: 345, height: 72 } },
   });
