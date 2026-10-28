@@ -1,13 +1,5 @@
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
-import {
-  BackHandler,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-  useWindowDimensions,
-} from "react-native";
+import { BackHandler, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
 import Animated, {
   interpolate,
   ReduceMotion,
@@ -22,7 +14,6 @@ import Animated, {
   type SharedValue,
 } from "react-native-reanimated";
 import { Portal } from "@rn-primitives/portal";
-import { FullWindowOverlay } from "react-native-screens";
 import { useIsFocused } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BlurView, type BlurViewProps } from "expo-blur";
@@ -31,6 +22,7 @@ import { Button } from "~/components/ui/button";
 import { P } from "~/components/ui/typography";
 import OutlinedImage from "~/components/ui/outlined-image";
 import ShapeContainer from "~/components/Shared/Shapes/ShapeContainer";
+import ScrollAwarePressable from "~/components/Shared/ScrollAwarePressable";
 import { stableThumbRotation } from "~/components/Shared/RotationCard";
 import useColors from "~/hooks/useColor";
 import { titleCase } from "~/utils/text-formatter";
@@ -39,6 +31,7 @@ import type { RecipeIngredient } from "~/types/Recipe";
 import type { PantryItem } from "~/types/PantryItem";
 import {
   ingredientOverlayLayout,
+  isIngredientGalleryItemAtPoint,
   INGREDIENT_IMAGE_SIZE,
   type IngredientSourceFrame,
 } from "./ingredient-preview-layout";
@@ -184,10 +177,14 @@ export default function RecipeIngredientsOverlay({
       },
     ],
   }));
+
+  // Offscreen recipes do not own an active ingredient canvas.
+  if (!focused) return null;
+
   const content = (
     <View
       key={id}
-      style={[StyleSheet.absoluteFill, !focused && { display: "none" }]}
+      style={StyleSheet.absoluteFill}
       pointerEvents={expanded ? "box-none" : "none"}
       testID="recipe-ingredients-layer"
       accessibilityViewIsModal={expanded}
@@ -206,11 +203,9 @@ export default function RecipeIngredientsOverlay({
           blurMethod={blurTarget ? "dimezisBlurView" : undefined}
           style={StyleSheet.absoluteFill}
         />
-        <Pressable
+        <View
           style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(0,0,0,0.5)" }]}
-          onPress={onClose}
-          accessibilityRole="button"
-          accessibilityLabel="Dismiss ingredients"
+          pointerEvents="none"
         />
       </Animated.View>
       {/* The native scroll view owns the pan gesture. Read-only images share one stable canvas above it. */}
@@ -237,10 +232,23 @@ export default function RecipeIngredientsOverlay({
           fade,
         ]}
       >
-        <View
+        <ScrollAwarePressable
           testID="recipe-ingredients-content"
-          style={{ height: layout.contentHeight }}
-          pointerEvents="none"
+          style={{ height: Math.max(height, layout.contentHeight) }}
+          accessibilityRole="button"
+          accessibilityLabel="Dismiss ingredients"
+          disabled={!expanded}
+          onPress={({ nativeEvent }) => {
+            if (
+              !isIngredientGalleryItemAtPoint(
+                { x: nativeEvent.locationX, y: nativeEvent.locationY },
+                layout,
+                labelHeights,
+                fontScale
+              )
+            )
+              onClose();
+          }}
         />
       </Animated.ScrollView>
       <Animated.View
@@ -291,13 +299,8 @@ export default function RecipeIngredientsOverlay({
   );
   return (
     <Portal name={`recipe-ingredients-${id}`} hostName={portalHostName}>
-      {Platform.OS === "ios" ? (
-        <FullWindowOverlay key={id} unstable_accessibilityContainerViewIsModal={expanded}>
-          {content}
-        </FullWindowOverlay>
-      ) : (
-        content
-      )}
+      {/* Stay inside the recipe's native screen throughout interactive back/zoom gestures. */}
+      {content}
     </Portal>
   );
 }

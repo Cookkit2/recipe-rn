@@ -58,3 +58,28 @@ export function ingredientOverlayLayout(
     bottomPadding,
   };
 }
+
+/** Content coordinates include scroll offset, matching taps in the scrollable backdrop. */
+export function isIngredientGalleryItemAtPoint(
+  { x, y }: { x: number; y: number },
+  layout: ReturnType<typeof ingredientOverlayLayout>,
+  labelHeights: Readonly<Record<number, number>> = {},
+  fontScale = 1
+) {
+  return layout.rowTops.some((top, index) => {
+    const left = layout.left + layout.gridPadding + (index % 3) * layout.columnWidth;
+    const imageLeft = left + (layout.columnWidth - INGREDIENT_IMAGE_SIZE) / 2;
+    const onImage =
+      x >= imageLeft &&
+      x <= imageLeft + INGREDIENT_IMAGE_SIZE &&
+      y >= top &&
+      y <= top + INGREDIENT_IMAGE_SIZE;
+    const labelTop = top + INGREDIENT_IMAGE_SIZE + 8;
+    const onLabel =
+      x >= left + 4 &&
+      x <= left + layout.columnWidth - 4 &&
+      y >= labelTop &&
+      y <= labelTop + (labelHeights[index] ?? 54 * fontScale);
+    return onImage || onLabel;
+  });
+}
