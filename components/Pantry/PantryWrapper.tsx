@@ -225,7 +225,7 @@ export default function PantryWrapper({
         progress={pullSearch.progress}
         interactive={pullSearch.focusEnabled}
       >
-        {pullSearch.phase === "open" || pullSearch.phase === "closing" ? (
+        {pullSearch.phase !== "closed" ? (
           <Suspense fallback={<SearchPreview />}>
             <SearchContent
               onDismiss={pullSearch.dismiss}
