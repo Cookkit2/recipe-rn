@@ -263,6 +263,43 @@ it("opens every ingredient in recipe order, including items beyond the strip lim
   expect(screen.queryByRole("button", { name: "Start cooking" })).toBeNull();
 });
 
+it("closes when blank space inside the scroll viewport is tapped", async () => {
+  const screen = await renderPreview(<IngredientVisualPreview {...props} />);
+  await fireEvent.press(screen.getByRole("button", { name: "View recipe ingredients" }));
+  await fireEvent.press(screen.getByTestId("recipe-ingredients-content"), {
+    nativeEvent: { locationX: 195, locationY: 800, pageX: 195, pageY: 800 },
+  });
+  expect(screen.queryByRole("button", { name: "Close ingredients" })).toBeNull();
+});
+
+it.each([159, 210])(
+  "keeps the gallery open when an ingredient image or label is tapped at y=%i",
+  async (y) => {
+    const screen = await renderPreview(<IngredientVisualPreview {...props} />);
+    await fireEvent.press(screen.getByRole("button", { name: "View recipe ingredients" }));
+    await fireEvent.press(screen.getByTestId("recipe-ingredients-content"), {
+      nativeEvent: { locationX: 86, locationY: y, pageX: 86, pageY: y },
+    });
+    expect(screen.getByRole("button", { name: "Close ingredients" })).toBeTruthy();
+  }
+);
+
+it("does not turn a scroll gesture into a backdrop tap", async () => {
+  const screen = await renderPreview(<IngredientVisualPreview {...props} />);
+  await fireEvent.press(screen.getByRole("button", { name: "View recipe ingredients" }));
+  const content = screen.getByTestId("recipe-ingredients-content");
+  expect(content.props.style.height).toBeGreaterThanOrEqual(852);
+  const touch = (y: number) => ({
+    nativeEvent: { identifier: 0, pageX: 195, pageY: y, locationX: 195, locationY: y },
+    preventDefault: jest.fn(),
+  });
+  await fireEvent(content, "touchStart", touch(700));
+  await fireEvent(content, "touchMove", touch(400));
+  await fireEvent(content, "touchEnd", touch(400));
+  await fireEvent.press(content, touch(400));
+  expect(screen.getByRole("button", { name: "Close ingredients" })).toBeTruthy();
+});
+
 it.each(["close", "outside", "system back"])("dismisses via %s and can reopen", async (action) => {
   const screen = await renderPreview(<IngredientVisualPreview {...props} />);
   await fireEvent.press(screen.getByRole("button", { name: "View recipe ingredients" }));
