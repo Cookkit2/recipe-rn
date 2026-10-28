@@ -158,6 +158,7 @@ async function main() {
       "--watchman=false",
       "scripts/__tests__/dependency-security.test.js",
       "scripts/__tests__/dependency-collection-limits.test.js",
+      "scripts/__tests__/deepmerge-security.test.js",
     ],
     {
       cwd: root,
