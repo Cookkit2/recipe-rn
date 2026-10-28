@@ -7,6 +7,13 @@ import type { CookingAgent, AgentTurnInput } from "~/lib/agent/types";
 import { TEST_IDS } from "~/constants/test-ids";
 
 let mockHeaderHeight = 118;
+jest.mock("react-native-keyboard-controller", () => ({
+  useReanimatedKeyboardAnimation: () => ({ height: { value: 0 } }),
+}));
+jest.mock("~/components/ui/skeleton", () => ({
+  __esModule: true,
+  default: require("react-native").View,
+}));
 jest.mock("expo-router/react-navigation", () => ({
   useHeaderHeight: () => mockHeaderHeight,
 }));
@@ -227,7 +234,7 @@ it.each(["route", "pantry"])(
     );
     await fireEvent.changeText(screen.getByTestId("native-search-input"), "rice");
     expect(screen.queryByText("Web rice recipe")).toBeNull();
-    await fireEvent.press(screen.getByLabelText("Search web for rice"));
+    await fireEvent.press(screen.getByLabelText("Search the web"));
     const result = screen.getByLabelText("Open recipe Web rice recipe from recipes.test");
     await fireEvent.press(result);
     await fireEvent.press(result);

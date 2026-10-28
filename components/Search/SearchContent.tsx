@@ -262,16 +262,6 @@ function SearchSession({
         onStop={stop}
         onViewChange={setShowConversation}
       />
-      {trimmedInput.length >= 2 && trimmedInput.length <= 200 && !webQuery && !showConversation ? (
-        <TouchableOpacity
-          accessibilityRole="button"
-          accessibilityLabel={`Search web for ${trimmedInput}`}
-          onPress={onWebSearch}
-          className="self-start rounded-full bg-muted px-4 py-2 mb-4"
-        >
-          <Text className="text-foreground font-urbanist-semibold">Search the web</Text>
-        </TouchableOpacity>
-      ) : null}
     </>
   );
 
@@ -471,12 +461,15 @@ function SearchSession({
           bottom={bottom}
           transparent={transparent}
           header={assistantHeader}
+          query={normalizeWebRecipeQuery(trimmedInput)}
           web={{
             results: webSearch.data ?? [],
             loading: webSearch.isFetching,
             error: webSearch.isError,
             errorMessage: webSearch.error?.message,
             submitted: normalizeWebRecipeQuery(webQuery).length >= 2,
+            canSearch: trimmedInput.length >= 2 && trimmedInput.length <= 200,
+            onSearch: onWebSearch,
             onRetry: () => {
               void webSearch.refetch();
             },

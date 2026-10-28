@@ -2,6 +2,8 @@
 
 The existing native Search bar still filters saved recipes and pantry items as you type. Submitting Search (or tapping **Search the web**) calls the authenticated `recipe-search` Supabase Edge Function. Tavily searches for recipe pages and returns up to eight results with the source hostname and source-specific image, when available. Search snippets are previews only and are never saved as recipes.
 
+Saved recipe matches initially show two rows under **Recipes**. **See all** expands them in place; changing the search resets the preview. A small centered **Search the web** action sits below local results. Submitting it shows two recipe skeleton rows under **From the web**, then replaces them with the returned previews. On iOS, the result viewport follows the root keyboard provider's current height, including when the list first mounts after the keyboard is already open.
+
 Tapping a result opens `/recipes/web-import` in the existing recipe skeleton. Cookkit first checks saved recipes by normalized source URL, ignoring common tracking parameters and fragments. Existing recipes open directly. New URLs use the same complete-page extraction and recipe-save flow as incoming shares. The transient web route never writes or clears the native share inbox. Failed extraction retains the existing retry/original-page actions.
 
 ## Deployment

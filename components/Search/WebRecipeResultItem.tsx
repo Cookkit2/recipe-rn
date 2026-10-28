@@ -3,6 +3,21 @@ import { Pressable, View } from "react-native";
 import { Image } from "expo-image";
 import { H4, Small } from "~/components/ui/typography";
 import type { WebRecipeSearchResult } from "~/types/WebRecipeSearch";
+import Skeleton from "~/components/ui/skeleton";
+
+export function WebRecipeResultSkeleton() {
+  return (
+    <View testID="web-recipe-skeleton" className="px-5 flex-row items-center gap-3">
+      <Skeleton className="w-24 h-24 rounded-xl" />
+      <View className="flex-1 min-h-32 justify-center gap-2 border-b border-border">
+        <Skeleton className="h-5 w-4/5 rounded" />
+        <Skeleton className="h-3 w-1/3 rounded" />
+        <Skeleton className="h-3 w-full rounded" />
+        <Skeleton className="h-3 w-3/4 rounded" />
+      </View>
+    </View>
+  );
+}
 
 export function WebRecipeResultItem({
   result,
