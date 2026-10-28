@@ -51,6 +51,10 @@ export default function PantryHeader({ pullSearch }: { pullSearch: PullSearch })
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 pullSearch.open();
               }}
+              onAskCookkit={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                router.push({ pathname: "/search", params: { mode: "chat" } });
+              }}
               onAdd={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 router.push("/ingredient/create");

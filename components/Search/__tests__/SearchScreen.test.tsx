@@ -9,6 +9,13 @@ jest.mock("~/hooks/queries/useWebRecipeSearch", () => ({
   useWebRecipeSearch: () => ({ data: [], isFetching: false, isError: false, refetch: jest.fn() }),
 }));
 
+jest.mock("~/components/ui/button", () => ({
+  Button: (props: any) => require("react").createElement(require("react-native").Pressable, props),
+}));
+jest.mock("~/components/ui/input", () => ({
+  Input: (props: any) => require("react").createElement(require("react-native").TextInput, props),
+}));
+jest.mock("lucide-uniwind", () => ({ ArrowUpIcon: () => null, SquareIcon: () => null }));
 jest.mock("expo-router/react-navigation", () => ({ useHeaderHeight: () => 118 }));
 
 jest.mock("../SearchAssistantHeader", () => ({ SearchAssistantHeader: () => null }));
@@ -42,6 +49,7 @@ const mockNavigation = {
 };
 
 jest.mock("expo-router", () => ({
+  useLocalSearchParams: () => ({}),
   useRouter: () => ({ back: jest.fn() }),
   useNavigation: () => mockNavigation,
   useFocusEffect: (callback: () => void) => {
@@ -50,6 +58,7 @@ jest.mock("expo-router", () => ({
     }, [callback, mockScreenFocused]);
   },
   Stack: {
+    Header: () => null,
     Screen: ({ options }: { options: unknown }) => {
       mockScreenOptions(options);
       return null;

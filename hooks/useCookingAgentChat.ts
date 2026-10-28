@@ -1,3 +1,4 @@
+import { pantryActionFromResult, type PantryAction } from "~/lib/agent/pantry-action";
 import { stockIdsFromEvent } from "~/lib/agent/stock-id-display";
 import type { PantryCandidate } from "~/types/AssistantPantryMutation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -19,6 +20,7 @@ import {
 
 export interface CookingChatMessage extends AgentTextMessage {
   activities: string[];
+  pantryActions?: PantryAction[];
   internalStockIds?: string[];
   error?: string;
   pantryError?: string;
@@ -264,6 +266,10 @@ function applyEvent(message: CookingChatMessage, event: AgentEvent): CookingChat
         "status" in output
           ? output.status
           : undefined;
+      const action =
+        event.toolName === "manage_ingredients"
+          ? pantryActionFromResult(event.toolCallId, output)
+          : null;
       const label =
         pantryStatus === "added"
           ? "Added to pantry"
@@ -273,6 +279,14 @@ function applyEvent(message: CookingChatMessage, event: AgentEvent): CookingChat
       return {
         ...message,
         activities: [...activities, label],
+        ...(action
+          ? {
+              pantryActions: [
+                ...(message.pantryActions ?? []).filter((item) => item.id !== action.id),
+                action,
+              ],
+            }
+          : {}),
       };
     }
     case "tool-error":
@@ -366,6 +380,22 @@ export function useCookingAgentChat(agent: CookingAgent) {
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
+  const markPantryAdditionUndone = useCallback(
+    (stockId: string) => {
+      updateMessages((current) =>
+        current.map((message) => ({
+          ...message,
+          pantryActions: message.pantryActions?.map((action) =>
+            action.status === "added" && action.items.some((item) => item.id === stockId)
+              ? { ...action, undone: true }
+              : action
+          ),
+        }))
+      );
+    },
+    [updateMessages]
+  );
+
   const stop = useCallback(() => {
     abortRef.current?.abort();
   }, []);
@@ -420,13 +450,30 @@ export function useCookingAgentChat(agent: CookingAgent) {
               recipeSuggestions,
               pantryClarification,
               pantryReadPages,
+              pantryActions,
             }) => ({
               id,
               role,
               // Keep failures beside confirmed results; an interrupted write may
               // still commit and must not look like an ordinary retryable request.
-              content:
-                pantryError || error
+              content: pantryActions?.some((action) => action.undone)
+                ? JSON.stringify({
+                    content,
+                    error: pantryError ?? error,
+                    pantryClarification,
+                    pantry: pantryReadPages,
+                    recipeSuggestions,
+                    pantryChanges: pantryActions.map((action) => ({
+                      status: action.status,
+                      undone: action.undone ?? false,
+                      items: action.items.map(({ name, quantity, unit }) => ({
+                        name,
+                        quantity,
+                        unit,
+                      })),
+                    })),
+                  })
+                : pantryError || error
                   ? JSON.stringify({
                       content,
                       error: pantryError ?? error,
@@ -534,5 +581,5 @@ export function useCookingAgentChat(agent: CookingAgent) {
     [agent, updateMessages]
   );
 
-  return { messages, status, send, stop };
+  return { messages, status, send, stop, markPantryAdditionUndone };
 }

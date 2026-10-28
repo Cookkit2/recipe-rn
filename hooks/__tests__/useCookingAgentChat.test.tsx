@@ -1310,3 +1310,45 @@ it("keeps stock identifiers as internal display metadata while preserving clarif
   });
   expect(requests[1]?.pendingRequest?.clarification?.candidates?.[0]?.id).toBe("opaque-milk-456");
 });
+
+it("keeps an undone pantry addition in the next turn's context", async () => {
+  const turns: AgentTurnInput[] = [];
+  const agent: CookingAgent = {
+    kind: "nebius",
+    async *stream(input) {
+      turns.push(input);
+      yield {
+        type: "tool-result",
+        toolCallId: "added-carrot",
+        toolName: "manage_ingredients",
+        output: {
+          ok: true,
+          status: "added",
+          item: {
+            id: "stock-carrot",
+            name: "Carrot",
+            quantity: 2,
+            unit: "pcs",
+            storageType: "fridge",
+            updatedAt: "2026-10-28T10:00:00.000Z",
+          },
+        },
+      };
+      yield { type: "finish", text: "Added carrots.", finishReason: "stop" };
+    },
+  };
+  const { result } = await renderHook(() => useCookingAgentChat(agent));
+  await act(async () => {
+    await result.current.send("Add two carrots");
+  });
+  await act(async () => {
+    result.current.markPantryAdditionUndone("stock-carrot");
+  });
+  expect(result.current.messages[1]?.pantryActions?.[0]?.undone).toBe(true);
+  await act(async () => {
+    await result.current.send("What do I have now?");
+  });
+  expect(JSON.parse(turns[1]!.messages[1]!.content)).toMatchObject({
+    pantryChanges: [{ undone: true, items: [{ name: "Carrot", quantity: 2 }] }],
+  });
+});

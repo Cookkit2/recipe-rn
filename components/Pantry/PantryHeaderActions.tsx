@@ -1,10 +1,11 @@
 import { Pressable, View } from "react-native";
-import { PlusIcon, SearchIcon, UserIcon } from "lucide-uniwind";
+import { PlusIcon, SearchIcon, SparklesIcon, UserIcon } from "lucide-uniwind";
 import type { PantryHeaderActionsProps } from "./PantryHeaderActions.types";
 
 export default function PantryHeaderActions(props: PantryHeaderActionsProps) {
   const actions = [
     { label: "Search", Icon: SearchIcon, onPress: props.onSearch },
+    { label: "Ask Cookkit", Icon: SparklesIcon, onPress: props.onAskCookkit },
     { label: "Add ingredient", Icon: PlusIcon, onPress: props.onAdd },
     { label: "Profile", Icon: UserIcon, onPress: props.onProfile },
   ];

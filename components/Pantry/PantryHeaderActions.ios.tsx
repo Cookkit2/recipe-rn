@@ -18,12 +18,13 @@ export default function PantryHeaderActions(props: PantryHeaderActionsProps) {
   const { theme } = useUniwind();
   const actions = [
     { label: "Search", symbol: "magnifyingglass", onPress: props.onSearch },
+    { label: "Ask Cookkit", symbol: "sparkles", onPress: props.onAskCookkit },
     { label: "Add ingredient", symbol: "plus", onPress: props.onAdd },
     { label: "Profile", symbol: "person", onPress: props.onProfile },
   ] as const;
   return (
     <Host
-      style={{ width: 148, height: 44 }}
+      style={{ width: actions.length * 44 + (actions.length - 1) * 8, height: 44 }}
       pointerEvents={props.disabled ? "none" : "auto"}
       colorScheme={theme === "dark" ? "dark" : "light"}
     >

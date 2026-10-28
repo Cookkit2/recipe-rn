@@ -1,9 +1,18 @@
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { P } from "~/components/ui/typography";
+import { AssistantStarters } from "~/components/Assistant/AssistantStarters";
 
-/** Pre-render the empty visual state without starting recipe queries or mounting an input. */
-export function SearchPreview({ top: contentTop }: { top?: number }) {
+/** Keep the entrance light: no catalog requests or AI calls until an explicit action. */
+export function SearchPreview({
+  top: contentTop,
+  onAsk,
+  disabled = false,
+}: {
+  top?: number;
+  onAsk?: (question: string) => void;
+  disabled?: boolean;
+}) {
   const { top, bottom } = useSafeAreaInsets();
   return (
     <View
@@ -11,10 +20,13 @@ export function SearchPreview({ top: contentTop }: { top?: number }) {
       className="flex-1"
       style={{ paddingTop: (contentTop ?? top) + 10, paddingBottom: bottom + 64 }}
     >
-      <View className="items-center px-6 py-8">
-        <P className="text-sm text-muted-foreground text-center">
-          Search ingredients and recipes, or ask about your pantry.
+      <View className="px-6 pt-8 gap-5">
+        <P className="text-sm font-urbanist-medium text-muted-foreground">
+          Search your pantry and recipes.
         </P>
+        {onAsk ? (
+          <AssistantStarters onAsk={onAsk} disabled={disabled} title="Need a hand?" />
+        ) : null}
       </View>
     </View>
   );
