@@ -5,6 +5,10 @@ import { SearchContent } from "../SearchContent";
 import { SearchEntrance } from "../SearchEntrance";
 import { StyleSheet } from "react-native";
 
+jest.mock("~/hooks/queries/useWebRecipeSearch", () => ({
+  useWebRecipeSearch: () => ({ data: [], isFetching: false, isError: false, refetch: jest.fn() }),
+}));
+
 jest.mock("expo-router/react-navigation", () => ({ useHeaderHeight: () => 118 }));
 
 jest.mock("../SearchAssistantHeader", () => ({ SearchAssistantHeader: () => null }));

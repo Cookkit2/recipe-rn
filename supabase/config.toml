@@ -6,3 +6,6 @@ verify_jwt = true
 
 [functions.nebius-chat]
 verify_jwt = true
+
+[functions.recipe-search]
+verify_jwt = true

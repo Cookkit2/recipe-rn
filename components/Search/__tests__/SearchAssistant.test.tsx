@@ -23,6 +23,21 @@ const mockPantry = [{ id: "p1", name: "eggs" }];
 const mockUseRecipes = jest.fn(() => ({ data: mockRecipes, isPending: false }));
 const mockUsePantryItems = jest.fn(() => ({ data: mockPantry, isPending: false }));
 const mockUseFeatureFlag = jest.fn(() => ({ enabled: false }));
+const emptyWebSearch = {
+  data: [],
+  isFetching: false,
+  isError: false,
+  error: null,
+  refetch: jest.fn(),
+};
+let mockWebSearch: Record<string, unknown> = emptyWebSearch;
+const mockUseWebRecipeSearch = jest.fn((query: string, _enabled: boolean) =>
+  query ? mockWebSearch : emptyWebSearch
+);
+jest.mock("~/hooks/queries/useWebRecipeSearch", () => ({
+  useWebRecipeSearch: (query: string, enabled: boolean) => mockUseWebRecipeSearch(query, enabled),
+}));
+jest.mock("expo-image", () => ({ Image: require("react-native").View }));
 jest.mock("react-native", () =>
   Object.defineProperties(Object.create(jest.requireActual("react-native")), {
     BackHandler: { value: { addEventListener: jest.fn(() => ({ remove: jest.fn() })) } },
@@ -117,6 +132,7 @@ jest.mock("~/components/ui/text", () => ({ Text: (props: any) => <Text {...props
 jest.mock("~/components/ui/typography", () => ({
   P: (props: any) => <Text {...props} />,
   Small: (props: any) => <Text {...props} />,
+  H4: (props: any) => <Text {...props} />,
 }));
 jest.mock("~/components/ui/separator", () => ({ Separator: () => null }));
 jest.mock("../RecipeResults", () => ({
@@ -129,6 +145,7 @@ jest.mock("../IngredientResults", () => ({
 beforeEach(() => {
   jest.clearAllMocks();
   mockHeaderHeight = 118;
+  mockWebSearch = emptyWebSearch;
   mockTurns.length = 0;
   mockCreateAgent.mockImplementation((): CookingAgent => ({
     kind: "nebius",
@@ -167,7 +184,7 @@ it("keeps the empty Pantry search in place without starting queries during the p
 });
 
 it.each(["route", "pantry"])(
-  "keeps %s typeahead and keyboard search local until Ask Cookkit is pressed",
+  "keeps %s typeahead local and starts web discovery on submission, while Ask Cookkit remains explicit",
   async (entry) => {
     const screen = await render(
       entry === "route" ? <SearchScreen /> : <SearchContent onDismiss={mockBack} transparent />
@@ -178,7 +195,9 @@ it.each(["route", "pantry"])(
     expect(screen.getByText("eggs")).toBeTruthy();
     expect(screen.getByText("Egg fried rice")).toBeTruthy();
     expect(mockCreateAgent).not.toHaveBeenCalled();
+    expect(mockUseWebRecipeSearch).toHaveBeenLastCalledWith("", true);
     await fireEvent(input, "submitEditing");
+    expect(mockUseWebRecipeSearch).toHaveBeenLastCalledWith("egg", true);
     expect(mockCreateAgent).not.toHaveBeenCalled();
     await fireEvent.press(screen.getByTestId(TEST_IDS.search.askAssistant));
     await waitFor(() => expect(screen.getByText("Try a rice bowl.")).toBeTruthy());
@@ -186,6 +205,39 @@ it.each(["route", "pantry"])(
     expect(mockTurns[0]?.messages[0]?.content).toBe("egg");
     expect(screen.getByTestId("native-search-input").props.value).toBe("");
     expect(mockPush).not.toHaveBeenCalled();
+  }
+);
+
+it.each(["route", "pantry"])(
+  "opens a %s web result directly in the recipe skeleton route and guards repeated taps",
+  async (entry) => {
+    mockWebSearch = {
+      ...emptyWebSearch,
+      data: [
+        {
+          url: "https://recipes.test/rice",
+          title: "Web rice recipe",
+          description: "Fry rice and eggs.",
+          source: "recipes.test",
+        },
+      ],
+    };
+    const screen = await render(
+      entry === "route" ? <SearchScreen /> : <SearchContent onDismiss={mockBack} transparent />
+    );
+    await fireEvent.changeText(screen.getByTestId("native-search-input"), "rice");
+    expect(screen.queryByText("Web rice recipe")).toBeNull();
+    await fireEvent.press(screen.getByLabelText("Search web for rice"));
+    const result = screen.getByLabelText("Open recipe Web rice recipe from recipes.test");
+    await fireEvent.press(result);
+    await fireEvent.press(result);
+    expect(mockPush).toHaveBeenCalledTimes(1);
+    expect(mockPush).toHaveBeenCalledWith({
+      pathname: "/recipes/web-import",
+      params: { url: "https://recipes.test/rice" },
+    });
+    await fireEvent.changeText(screen.getByTestId("native-search-input"), "soup");
+    expect(screen.queryByText("Web rice recipe")).toBeNull();
   }
 );
 

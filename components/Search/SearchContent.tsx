@@ -24,6 +24,9 @@ import useColors from "~/hooks/useColor";
 import * as Haptics from "expo-haptics";
 import { useFeatureFlag } from "~/hooks/queries/useFeatureFlags";
 import { useSearchBarFocus } from "~/hooks/useSearchBarFocus";
+import { useWebRecipeSearch } from "~/hooks/queries/useWebRecipeSearch";
+import { normalizeWebRecipeQuery } from "~/utils/web-recipe-search";
+import type { WebRecipeSearchResult } from "~/types/WebRecipeSearch";
 
 const TIME_OPTIONS = [
   { label: "15m", maxTotalTime: 15 },
@@ -61,12 +64,14 @@ export function SearchContent({
   const [input, setInput] = useState("");
   const [showConversation, setShowConversation] = useState(false);
   const [sessionStarted, setSessionStarted] = useState(false);
+  const [webQuery, setWebQuery] = useState("");
 
   const handleChangeText = useCallback<
     NonNullable<React.ComponentProps<typeof Stack.SearchBar>["onChangeText"]>
   >((event) => {
     const value = event.nativeEvent.text;
     setInput(value);
+    setWebQuery("");
     if (value.trim()) {
       setSessionStarted(true);
       setShowConversation(false);
@@ -75,9 +80,11 @@ export function SearchContent({
   const handleSearch = useCallback(() => {
     Keyboard.dismiss();
     setShowConversation(false);
-  }, []);
+    setWebQuery(input.trim());
+  }, [input]);
   const clearInput = useCallback(() => {
     setInput("");
+    setWebQuery("");
     searchBarRef.current?.clearText();
   }, [searchBarRef]);
   const handleDismiss = useCallback(() => {
@@ -124,6 +131,8 @@ export function SearchContent({
           contentTop={contentTop}
           bottom={bottom}
           transparent={transparent}
+          webQuery={webQuery}
+          onWebSearch={handleSearch}
         />
       ) : (
         <SearchPreview top={contentTop} />
@@ -142,6 +151,8 @@ function SearchSession({
   contentTop,
   bottom,
   transparent,
+  webQuery,
+  onWebSearch,
 }: {
   input: string;
   clearInput: () => void;
@@ -151,9 +162,27 @@ function SearchSession({
   contentTop: number;
   bottom: number;
   transparent: boolean;
+  webQuery: string;
+  onWebSearch: () => void;
 }) {
   const colors = useColors();
   const router = useRouter();
+  const openingWebRecipe = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      openingWebRecipe.current = false;
+    }, [])
+  );
+  const webSearch = useWebRecipeSearch(webQuery, focusEnabled && !showConversation);
+  const openWebRecipe = useCallback(
+    (result: WebRecipeSearchResult) => {
+      if (openingWebRecipe.current) return;
+      openingWebRecipe.current = true;
+      Keyboard.dismiss();
+      router.push({ pathname: "/recipes/web-import", params: { url: result.url } });
+    },
+    [router]
+  );
   const filterSheetRef = useRef<BottomSheetMethods>(null);
   const filterSnapPoints = useMemo(() => ["55%"], []);
   const { messages, status, send, stop } = useSearchAssistant();
@@ -223,15 +252,27 @@ function SearchSession({
     void send(question);
   };
   const assistantHeader = (
-    <SearchAssistantHeader
-      query={trimmedInput}
-      hasConversation={hasConversation}
-      showConversation={showConversation}
-      streaming={streaming}
-      onAsk={askCookkit}
-      onStop={stop}
-      onViewChange={setShowConversation}
-    />
+    <>
+      <SearchAssistantHeader
+        query={trimmedInput}
+        hasConversation={hasConversation}
+        showConversation={showConversation}
+        streaming={streaming}
+        onAsk={askCookkit}
+        onStop={stop}
+        onViewChange={setShowConversation}
+      />
+      {trimmedInput.length >= 2 && trimmedInput.length <= 200 && !webQuery && !showConversation ? (
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={`Search web for ${trimmedInput}`}
+          onPress={onWebSearch}
+          className="self-start rounded-full bg-muted px-4 py-2 mb-4"
+        >
+          <Text className="text-foreground font-urbanist-semibold">Search the web</Text>
+        </TouchableOpacity>
+      ) : null}
+    </>
   );
 
   const openFilterSheet = () => {
@@ -430,6 +471,17 @@ function SearchSession({
           bottom={bottom}
           transparent={transparent}
           header={assistantHeader}
+          web={{
+            results: webSearch.data ?? [],
+            loading: webSearch.isFetching,
+            error: webSearch.isError,
+            errorMessage: webSearch.error?.message,
+            submitted: normalizeWebRecipeQuery(webQuery).length >= 2,
+            onRetry: () => {
+              void webSearch.refetch();
+            },
+            onOpen: openWebRecipe,
+          }}
         />
       )}
       {/* <Pressable
