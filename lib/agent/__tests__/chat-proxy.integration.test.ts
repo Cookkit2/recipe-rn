@@ -19,7 +19,7 @@ function providerResponse(delta: Record<string, unknown>, finishReason = "stop")
   );
 }
 
-async function run(prompt: string) {
+async function run(prompt: string, proxyModel?: string) {
   const pantry: PantryItem[] = [];
   const data: CookingDataClient = {
     async listPantry() {
@@ -51,6 +51,7 @@ async function run(prompt: string) {
   const forwarded: Record<string, any>[] = [];
   const handler = createChatHandler({
     apiKey: "server-only-provider-key",
+    model: proxyModel,
     authenticate: async (token) => (token === "guest-jwt" ? "guest-user" : null),
     consumeQuota: async () => true,
     fetcher: async (_url, init) => {
@@ -219,4 +220,17 @@ it("adds two broccoli through the real gateway despite Lightning's forced-tool i
     expect.objectContaining({ type: "text-delta", text: expect.stringContaining("broccoli") })
   );
   expect(result.forwarded).toHaveLength(2);
+});
+
+it("adds broccoli when the proxy preserves the client's tool selection", async () => {
+  // A proxy without the Lightning workaround passes the client's choice through.
+  // The captured forced-mode response then rejects the whole batch before saving.
+  const result = await run("add 2 brocolli", "passthrough-test-model");
+  expect(result.forwarded[1]?.tool_choice).toBe("auto");
+  expect(result.pantry).toEqual([
+    expect.objectContaining({ name: "broccoli", quantity: 2, unit: "count" }),
+  ]);
+  expect(result.events).not.toContainEqual(
+    expect.objectContaining({ type: "tool-call", toolName: "get_pantry" })
+  );
 });
