@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, type ComponentRef, type RefObject } from "react";
 import { View } from "react-native";
 import Animated, {
   useAnimatedRef,
@@ -21,6 +21,8 @@ interface IngredientVisualPreviewProps {
   blurTarget?: BlurViewProps["blurTarget"];
   scrollOffset?: SharedValue<number>;
   portalHostName?: string;
+  coordinateSpaceRef?: RefObject<ComponentRef<typeof View> | null>;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export default function IngredientVisualPreview({
@@ -31,20 +33,34 @@ export default function IngredientVisualPreview({
   blurTarget,
   scrollOffset,
   portalHostName,
+  coordinateSpaceRef,
+  onOpenChange,
 }: IngredientVisualPreviewProps) {
   const [previewOpen, setPreviewOpen] = useState(false);
   const sourceRef = useAnimatedRef<View>();
   const sourceFrame = useSharedValue<IngredientSourceFrame>({ x: 0, y: 0, width: 0, height: 0 });
   const sourceScrollOffset = useSharedValue(0);
   const measureSource = useCallback(() => {
-    sourceRef.current?.measureInWindow((x, y, width, height) => {
+    const source = sourceRef.current;
+    if (!source) return;
+    const saveFrame = (x: number, y: number, width: number, height: number) => {
       if (width > 0) {
         sourceScrollOffset.value = scrollOffset?.value ?? 0;
         sourceFrame.value = { x, y, width, height };
       }
-    });
-  }, [sourceFrame, sourceRef, sourceScrollOffset, scrollOffset]);
-  const close = useCallback(() => setPreviewOpen(false), []);
+    };
+    // The canvas is hosted by the recipe, so measure in that same coordinate
+    // space. Window coordinates include UIKit's in-progress zoom transforms.
+    if (coordinateSpaceRef?.current)
+      source.measureLayout(coordinateSpaceRef.current, (x, y, width, height) =>
+        saveFrame(x, y - (scrollOffset?.value ?? 0), width, height)
+      );
+    else source.measureInWindow(saveFrame);
+  }, [coordinateSpaceRef, sourceFrame, sourceRef, sourceScrollOffset, scrollOffset]);
+  const close = useCallback(() => {
+    setPreviewOpen(false);
+    onOpenChange?.(false);
+  }, [onOpenChange]);
 
   if (!ingredients.length) return null;
 
@@ -65,6 +81,7 @@ export default function IngredientVisualPreview({
           onPress={() => {
             measureSource();
             setPreviewOpen(true);
+            onOpenChange?.(true);
           }}
         />
       </Animated.View>
