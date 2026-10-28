@@ -188,16 +188,15 @@ export class NebiusCookingAgent implements CookingAgent {
           .map(({ role, content }) => ({ role, content })),
         tools,
         activeTools: [toolName],
+        // Lightning can emit invalid extra calls under forced tool selection.
+        // Each step still exposes only its authorized tool and requires a confirmed result.
+        toolChoice: "auto",
         stopWhen: [
           isStepCount(5),
           () =>
             blocked ||
             (confirmed && (mutation || (toolName === "get_pantry" && !lastReadTruncated))),
         ],
-        prepareStep: ({ stepNumber }) =>
-          stepNumber === 0 || (toolName === "get_pantry" && lastReadTruncated)
-            ? { toolChoice: { type: "tool", toolName } }
-            : undefined,
         abortSignal: input.signal,
         onError: () => {},
       });

@@ -278,7 +278,7 @@ it("adds an ingredient to the app local pantry", async () => {
     expect(textDeltas(result.events).join("")).toBe("Added eggs. Pantry total: 6 count.");
     expect(result.model.requests).toHaveLength(2);
     expect(result.model.requests[1]?.body).toMatchObject({
-      tool_choice: { type: "function", function: { name: "manage_ingredients" } },
+      tool_choice: "auto",
     });
     expect(paths(result, "/stock")).toEqual([]);
     expect(result.pantry.changes).toBe(1);
@@ -507,7 +507,7 @@ it("suggests recipes that overlap the fridge", async () => {
     expect(output.recipes[0]?.coverage).toBe(1);
     expect(textDeltas(result.events).join("")).toBe("You can cook Spinach omelette.");
     expect(result.model.requests[1]?.body).toMatchObject({
-      tool_choice: { type: "function", function: { name: "suggest_recipes" } },
+      tool_choice: "auto",
     });
   } finally {
     await finish(result);
