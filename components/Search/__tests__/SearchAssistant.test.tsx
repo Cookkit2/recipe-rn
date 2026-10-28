@@ -20,9 +20,15 @@ const mockCreateAgent = jest.fn();
 const mockTurns: AgentTurnInput[] = [];
 const mockRecipes = [{ id: "r1", title: "Egg fried rice", description: "Quick dinner" }];
 const mockPantry = [{ id: "p1", name: "eggs" }];
+const mockUseRecipes = jest.fn(() => ({ data: mockRecipes, isPending: false }));
+const mockUsePantryItems = jest.fn(() => ({ data: mockPantry, isPending: false }));
+const mockUseFeatureFlag = jest.fn(() => ({ enabled: false }));
 jest.mock("react-native", () =>
   Object.defineProperties(Object.create(jest.requireActual("react-native")), {
     BackHandler: { value: { addEventListener: jest.fn(() => ({ remove: jest.fn() })) } },
+    Platform: {
+      value: { ...jest.requireActual("react-native").Platform, OS: "ios", Version: "27.0" },
+    },
   })
 );
 jest.mock("expo-router", () => {
@@ -74,13 +80,13 @@ jest.mock("~/lib/agent/create-app-agent", () => ({
   createAppCookingAgent: (...args: unknown[]) => mockCreateAgent(...args),
 }));
 jest.mock("~/hooks/queries/useRecipeQueries", () => ({
-  useRecipes: () => ({ data: mockRecipes, isPending: false }),
+  useRecipes: () => mockUseRecipes(),
 }));
 jest.mock("~/hooks/queries/usePantryQueries", () => ({
-  usePantryItems: () => ({ data: mockPantry, isPending: false }),
+  usePantryItems: () => mockUsePantryItems(),
 }));
 jest.mock("~/hooks/queries/useFeatureFlags", () => ({
-  useFeatureFlag: () => ({ enabled: false }),
+  useFeatureFlag: () => mockUseFeatureFlag(),
 }));
 jest.mock("~/hooks/useColor", () => ({
   __esModule: true,
@@ -132,6 +138,32 @@ beforeEach(() => {
       yield { type: "finish", text: "Try a rice bowl." };
     },
   }));
+});
+
+it("keeps the empty Pantry search in place without starting queries during the pull or release", async () => {
+  const dismiss = jest.fn();
+  const screen = await render(
+    <SearchContent onDismiss={dismiss} focusEnabled={false} transparent />
+  );
+  const preview = screen.getByTestId("search-preview");
+  expect(StyleSheet.flatten(preview.props.style).paddingTop).toBe(72);
+  expect(screen.queryByTestId("native-search-input")).toBeNull();
+
+  mockHeaderHeight = 62;
+  await screen.rerender(<SearchContent onDismiss={dismiss} focusEnabled transparent />);
+  expect(screen.getByTestId("search-preview")).toBe(preview);
+  expect(StyleSheet.flatten(preview.props.style).paddingTop).toBe(72);
+  expect(screen.getByTestId("native-search-input")).toBeTruthy();
+  expect(mockUseRecipes).not.toHaveBeenCalled();
+  expect(mockUsePantryItems).not.toHaveBeenCalled();
+  expect(mockUseFeatureFlag).not.toHaveBeenCalled();
+  expect(mockCreateAgent).not.toHaveBeenCalled();
+
+  await fireEvent.changeText(screen.getByTestId("native-search-input"), "egg");
+  expect(screen.getByText("eggs")).toBeTruthy();
+  expect(screen.getByText("Egg fried rice")).toBeTruthy();
+  expect(mockUseRecipes).toHaveBeenCalled();
+  expect(mockUsePantryItems).toHaveBeenCalled();
 });
 
 it.each(["route", "pantry"])(
@@ -313,7 +345,7 @@ it("stops an inline assistant response as pull-to-search closes", async () => {
 });
 
 it.each(["route", "pantry"])(
-  "keeps %s assistant controls below the native search header as its height changes",
+  "keeps %s assistant controls aligned with that entry's search surface",
   async (entry) => {
     const content =
       entry === "route" ? <SearchScreen /> : <SearchContent onDismiss={mockBack} transparent />;
@@ -322,20 +354,24 @@ it.each(["route", "pantry"])(
     expect(
       StyleSheet.flatten(screen.getByTestId("search-results").props.contentContainerStyle)
         .paddingTop
-    ).toBe(128);
+    ).toBe(entry === "pantry" ? 72 : 128);
 
     await fireEvent.press(screen.getByLabelText("Ask Cookkit"));
     await waitFor(() => expect(screen.getByText("Try a rice bowl.")).toBeTruthy());
     const conversationHeader = () => screen.getByTestId("search-conversation-header");
-    expect(StyleSheet.flatten(conversationHeader().props.style).paddingTop).toBe(128);
+    expect(StyleSheet.flatten(conversationHeader().props.style).paddingTop).toBe(
+      entry === "pantry" ? 72 : 128
+    );
 
     mockHeaderHeight = 144;
     await screen.rerender(React.cloneElement(content));
-    expect(StyleSheet.flatten(conversationHeader().props.style).paddingTop).toBe(154);
+    expect(StyleSheet.flatten(conversationHeader().props.style).paddingTop).toBe(
+      entry === "pantry" ? 72 : 154
+    );
     await fireEvent.press(screen.getByText("Search results"));
     expect(
       StyleSheet.flatten(screen.getByTestId("search-results").props.contentContainerStyle)
         .paddingTop
-    ).toBe(154);
+    ).toBe(entry === "pantry" ? 72 : 154);
   }
 );

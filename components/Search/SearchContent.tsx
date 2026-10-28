@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
-import { View, Keyboard, TouchableOpacity, StyleSheet, BackHandler } from "react-native";
+import { View, Keyboard, TouchableOpacity, StyleSheet, BackHandler, Platform } from "react-native";
 import BottomSheet, {
   BottomSheetScrollView,
   type BottomSheetMethods,
@@ -19,6 +19,7 @@ import { useSearchAssistant } from "~/hooks/useSearchAssistant";
 import { AssistantMessages } from "~/components/Assistant/AssistantMessages";
 import { SearchAssistantHeader } from "~/components/Search/SearchAssistantHeader";
 import { SearchResultsList } from "~/components/Search/SearchResultsList";
+import { SearchPreview } from "~/components/Search/SearchPreview";
 import useColors from "~/hooks/useColor";
 import * as Haptics from "expo-haptics";
 import { useFeatureFlag } from "~/hooks/queries/useFeatureFlags";
@@ -50,16 +51,111 @@ export function SearchContent({
 }) {
   const { top, bottom } = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
-  // The native search bar overlays this screen, including the inline Pantry entry.
-  const contentTop = Math.max(top, headerHeight);
-  const colors = useColors();
-  const router = useRouter();
+  // Pantry uses the bottom native search toolbar on iOS 26+. Its full-screen
+  // content must not jump when UIKit hides the navigation bar during focus.
+  const contentTop =
+    transparent && Platform.OS === "ios" && Number.parseInt(String(Platform.Version), 10) >= 26
+      ? top
+      : Math.max(top, headerHeight);
   const { searchBarRef, onFocus, onBlur } = useSearchBarFocus(focusEnabled);
-  const filterSheetRef = useRef<BottomSheetMethods>(null);
-  const filterSnapPoints = useMemo(() => ["55%"], []);
-
   const [input, setInput] = useState("");
   const [showConversation, setShowConversation] = useState(false);
+  const [sessionStarted, setSessionStarted] = useState(false);
+
+  const handleChangeText = useCallback<
+    NonNullable<React.ComponentProps<typeof Stack.SearchBar>["onChangeText"]>
+  >((event) => {
+    const value = event.nativeEvent.text;
+    setInput(value);
+    if (value.trim()) {
+      setSessionStarted(true);
+      setShowConversation(false);
+    }
+  }, []);
+  const handleSearch = useCallback(() => {
+    Keyboard.dismiss();
+    setShowConversation(false);
+  }, []);
+  const clearInput = useCallback(() => {
+    setInput("");
+    searchBarRef.current?.clearText();
+  }, [searchBarRef]);
+  const handleDismiss = useCallback(() => {
+    Keyboard.dismiss();
+    onDismiss();
+  }, [onDismiss]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!focusEnabled) return;
+      const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+        handleDismiss();
+        return true;
+      });
+      return () => subscription.remove();
+    }, [focusEnabled, handleDismiss])
+  );
+
+  return (
+    <View
+      testID={TEST_IDS.search.screen}
+      className={transparent ? "flex-1" : "flex-1 bg-background"}
+    >
+      {focusEnabled && (
+        <Stack.SearchBar
+          ref={searchBarRef}
+          onFocus={onFocus}
+          onBlur={onBlur}
+          hideNavigationBar
+          onCancelButtonPress={handleDismiss}
+          onClose={handleDismiss}
+          onChangeText={handleChangeText}
+          onSearchButtonPress={handleSearch}
+          placeholder="Search or ask Cookkit…"
+        />
+      )}
+      {sessionStarted ? (
+        <SearchSession
+          input={input}
+          clearInput={clearInput}
+          showConversation={showConversation}
+          setShowConversation={setShowConversation}
+          focusEnabled={focusEnabled}
+          contentTop={contentTop}
+          bottom={bottom}
+          transparent={transparent}
+        />
+      ) : (
+        <SearchPreview top={contentTop} />
+      )}
+    </View>
+  );
+}
+
+/** Start catalog queries, assistant state and filter views only when someone types. */
+function SearchSession({
+  input,
+  clearInput,
+  showConversation,
+  setShowConversation,
+  focusEnabled,
+  contentTop,
+  bottom,
+  transparent,
+}: {
+  input: string;
+  clearInput: () => void;
+  showConversation: boolean;
+  setShowConversation: (visible: boolean) => void;
+  focusEnabled: boolean;
+  contentTop: number;
+  bottom: number;
+  transparent: boolean;
+}) {
+  const colors = useColors();
+  const router = useRouter();
+  const filterSheetRef = useRef<BottomSheetMethods>(null);
+  const filterSnapPoints = useMemo(() => ["55%"], []);
   const { messages, status, send, stop } = useSearchAssistant();
   const streaming = status === "streaming";
   const hasConversation = messages.length > 0;
@@ -106,8 +202,8 @@ export function SearchContent({
   const { enabled: reviewsEnabled } = useFeatureFlag("ratings_and_reviews");
 
   const recipeResults = useMemo(
-    () => filterRecipesForSearch(allRecipes, trimmedInput, activeFilters),
-    [allRecipes, trimmedInput, activeFilters]
+    () => (hasQuery ? filterRecipesForSearch(allRecipes, trimmedInput, activeFilters) : []),
+    [allRecipes, trimmedInput, activeFilters, hasQuery]
   );
 
   const ingredientResults = useMemo(
@@ -121,8 +217,7 @@ export function SearchContent({
   const askCookkit = () => {
     if (!focusEnabled || !trimmedInput || streaming) return;
     const question = trimmedInput;
-    setInput("");
-    searchBarRef.current?.clearText();
+    clearInput();
     setShowConversation(true);
     Keyboard.dismiss();
     void send(question);
@@ -137,23 +232,6 @@ export function SearchContent({
       onStop={stop}
       onViewChange={setShowConversation}
     />
-  );
-
-  const handleDismiss = useCallback(() => {
-    stop();
-    Keyboard.dismiss();
-    onDismiss();
-  }, [onDismiss, stop]);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (!focusEnabled) return;
-      const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
-        handleDismiss();
-        return true;
-      });
-      return () => subscription.remove();
-    }, [focusEnabled, handleDismiss])
   );
 
   const openFilterSheet = () => {
@@ -323,30 +401,7 @@ export function SearchContent({
   );
 
   return (
-    <View
-      testID={TEST_IDS.search.screen}
-      className={transparent ? "flex-1" : "flex-1 bg-background"}
-    >
-      {focusEnabled && (
-        <Stack.SearchBar
-          ref={searchBarRef}
-          onFocus={onFocus}
-          onBlur={onBlur}
-          hideNavigationBar
-          onCancelButtonPress={handleDismiss}
-          onClose={handleDismiss}
-          onChangeText={(e) => {
-            const value = e.nativeEvent.text;
-            setInput(value);
-            if (value.trim()) setShowConversation(false);
-          }}
-          onSearchButtonPress={() => {
-            Keyboard.dismiss();
-            setShowConversation(false);
-          }}
-          placeholder="Search or ask Cookkit…"
-        />
-      )}
+    <>
       {showConversation ? (
         <View className="flex-1">
           <View
@@ -400,7 +455,7 @@ export function SearchContent({
         ) : null}
       </Pressable> */}
       {renderFilterSheet()}
-    </View>
+    </>
   );
 }
 

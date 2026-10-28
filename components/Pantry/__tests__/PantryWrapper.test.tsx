@@ -17,8 +17,16 @@ const mockPullSearch = {
 };
 jest.mock("~/hooks/usePantryPullSearch", () => ({ usePantryPullSearch: () => mockPullSearch }));
 const mockSearchContent = jest.fn((_props: unknown) => null);
+const mockSearchMount = jest.fn();
+const mockSearchUnmount = jest.fn();
 jest.mock("~/components/Search/SearchContent", () => ({
-  SearchContent: (props: unknown) => mockSearchContent(props),
+  SearchContent: (props: unknown) => {
+    require("react").useEffect(() => {
+      mockSearchMount();
+      return mockSearchUnmount;
+    }, []);
+    return mockSearchContent(props);
+  },
 }));
 const mockWarmups: Array<() => void> = [];
 const mockCancelWarmup = jest.fn();
@@ -96,15 +104,19 @@ jest.mock("../IngredientLists", () => ({
   },
 }));
 
-it("keeps the scroll owner mounted through preview and only enables native search after release", async () => {
+it("keeps the same search surface through the pull, release and closing fade", async () => {
   mockIngredientMount.mockClear();
   mockSearchContent.mockClear();
+  mockSearchMount.mockClear();
+  mockSearchUnmount.mockClear();
   pantry.isRecipeOpen = false;
   mockPullSearch.phase = "closed";
   const screen = await render(<PantryWrapper pullSearch={mockPullSearch as never} />);
   mockPullSearch.phase = "pulling";
   await screen.rerender(<PantryWrapper pullSearch={mockPullSearch as never} />);
-  expect(mockSearchContent).not.toHaveBeenCalled();
+  expect(mockSearchContent).toHaveBeenLastCalledWith(
+    expect.objectContaining({ focusEnabled: false })
+  );
   mockPullSearch.phase = "open";
   mockPullSearch.focusEnabled = true;
   await screen.rerender(<PantryWrapper pullSearch={mockPullSearch as never} />);
@@ -118,8 +130,26 @@ it("keeps the scroll owner mounted through preview and only enables native searc
     expect.objectContaining({ focusEnabled: false })
   );
   expect(mockIngredientMount).toHaveBeenCalledTimes(1);
+  expect(mockSearchMount).toHaveBeenCalledTimes(1);
+  expect(mockSearchUnmount).not.toHaveBeenCalled();
   mockPullSearch.phase = "closed";
   mockPullSearch.focusEnabled = false;
+  await screen.rerender(<PantryWrapper pullSearch={mockPullSearch as never} />);
+  expect(mockSearchUnmount).toHaveBeenCalledTimes(1);
+});
+
+it("keeps the prepared search surface until a canceled pull has faded out", async () => {
+  mockSearchMount.mockClear();
+  mockSearchUnmount.mockClear();
+  mockPullSearch.phase = "pulling";
+  const screen = await render(<PantryWrapper pullSearch={mockPullSearch as never} />);
+  mockPullSearch.phase = "canceling";
+  await screen.rerender(<PantryWrapper pullSearch={mockPullSearch as never} />);
+  expect(mockSearchMount).toHaveBeenCalledTimes(1);
+  expect(mockSearchUnmount).not.toHaveBeenCalled();
+  mockPullSearch.phase = "closed";
+  await screen.rerender(<PantryWrapper pullSearch={mockPullSearch as never} />);
+  expect(mockSearchUnmount).toHaveBeenCalledTimes(1);
 });
 
 describe("recipe drawer viewport", () => {
