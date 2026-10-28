@@ -1,3 +1,4 @@
+import type { PantryAdditionReceipt } from "~/lib/agent/pantry-action";
 import type { Database, Model } from "@nozbe/watermelondb";
 import type Stock from "~/data/db/models/Stock";
 import type IngredientSynonym from "~/data/db/models/IngredientSynonym";
@@ -317,4 +318,46 @@ export function createAssistantPantryMutator(
       }
     });
   };
+}
+
+/** Undo only a newly created, unchanged row. A later edit/consumption must win. */
+export async function undoAssistantPantryAddition(
+  database: Database,
+  receipt: PantryAdditionReceipt
+) {
+  return database.write(async () => {
+    const row = await database
+      .get<Stock>("stock")
+      .find(receipt.id)
+      .catch(() => null);
+    if (!row) return;
+    if (
+      row.updatedAt.getTime() !== Date.parse(receipt.updatedAt) ||
+      row.name !== receipt.name ||
+      row.quantity !== receipt.quantity ||
+      row.unit !== receipt.unit ||
+      row.storageType !== receipt.storageType
+    ) {
+      throw new Error("This item has changed. Review it in Pantry before making another change.");
+    }
+    const related: Model[] = [];
+    for (const table of [
+      "ingredient_synonym",
+      "stock_category",
+      "steps_to_store",
+      "consumption_log",
+      "waste_log",
+    ]) {
+      const rows = (await database.get<Model & { stockId: string }>(table).query().fetch()).filter(
+        (item) => item.stockId === row.id
+      );
+      if ((table === "consumption_log" || table === "waste_log") && rows.length)
+        throw new Error("This item has been used. Review it in Pantry.");
+      related.push(...rows);
+    }
+    await database.batch([
+      ...related.map((item) => item.prepareMarkAsDeleted()),
+      row.prepareMarkAsDeleted(),
+    ]);
+  });
 }

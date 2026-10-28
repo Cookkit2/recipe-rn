@@ -11,7 +11,13 @@ import { Button } from "~/components/ui/button";
 import { H2, P } from "~/components/ui/typography";
 
 /** Incoming shares open directly in the recipe layout, without a required edit form. */
-export default function SharedRecipeImport({ pending }: { pending: PendingRecipeShare }) {
+export default function SharedRecipeImport({
+  pending,
+  persisted = true,
+}: {
+  pending: PendingRecipeShare;
+  persisted?: boolean;
+}) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { prepare, save, statusMessage } = useRecipeImportPreview();
@@ -31,6 +37,7 @@ export default function SharedRecipeImport({ pending }: { pending: PendingRecipe
     if (started.current === attempt) return;
     started.current = attempt;
     const isCurrent = () => {
+      if (!persisted) return mounted.current;
       const latest = readPendingRecipeShare();
       return mounted.current && (!latest || latest.id === pending.id);
     };
@@ -43,14 +50,18 @@ export default function SharedRecipeImport({ pending }: { pending: PendingRecipe
             videoUri: pending.videoUri,
             language: pending.language,
           },
-          { onSaved: () => clearPendingRecipeShare(pending.id) }
+          {
+            onSaved: () => {
+              if (persisted) clearPendingRecipeShare(pending.id);
+            },
+          }
         );
         if (!isCurrent()) return;
         // Keep compatibility with drafts produced by older/manual extraction paths.
         const result = prepared.kind === "saved" ? prepared.result : await save(prepared.draft);
         if (!result.success || !result.recipe?.id)
           throw new Error(result.error || "Couldn't read this recipe. Please try again.");
-        clearPendingRecipeShare(pending.id);
+        if (persisted) clearPendingRecipeShare(pending.id);
         if (isCurrent()) {
           setFinished(true);
           router.replace(`/recipes/${result.recipe.id}`);
@@ -60,7 +71,7 @@ export default function SharedRecipeImport({ pending }: { pending: PendingRecipe
           setError(cause instanceof Error ? cause.message : "Couldn't import this recipe.");
       }
     })();
-  }, [pending, attempt, prepare, save, router]);
+  }, [pending, persisted, attempt, prepare, save, router]);
 
   if (!error)
     return (

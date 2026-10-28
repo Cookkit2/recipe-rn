@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
+import React, { useCallback, useMemo, useRef, useState, useEffect, useLayoutEffect } from "react";
 import { View, Keyboard, TouchableOpacity, StyleSheet, BackHandler, Platform } from "react-native";
 import BottomSheet, {
   BottomSheetScrollView,
@@ -6,7 +6,7 @@ import BottomSheet, {
 } from "@expo/ui/community/bottom-sheet";
 import { Portal } from "@rn-primitives/portal";
 import { cn } from "~/lib/utils";
-import { Stack, useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useHeaderHeight } from "expo-router/react-navigation";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "react-native";
@@ -14,16 +14,26 @@ import { useRecipes, type RecipeFilters } from "~/hooks/queries/useRecipeQueries
 import { usePantryItems } from "~/hooks/queries/usePantryQueries";
 import { filterPantryItemsByName } from "~/utils/filterPantryItemsByName";
 import { filterRecipesForSearch } from "~/utils/filterRecipesForSearch";
+import { useQueryClient } from "@tanstack/react-query";
+import { pantryQueryKeys } from "~/hooks/queries/pantryQueryKeys";
+import { recipeQueryKeys } from "~/hooks/queries/recipeQueryKeys";
+import type { PantryAdditionReceipt } from "~/lib/agent/pantry-action";
 import { TEST_IDS } from "~/constants/test-ids";
 import { useSearchAssistant } from "~/hooks/useSearchAssistant";
 import { AssistantMessages } from "~/components/Assistant/AssistantMessages";
 import { SearchAssistantHeader } from "~/components/Search/SearchAssistantHeader";
+import { SearchAssistantPresets } from "~/components/Search/SearchAssistantPresets";
 import { SearchResultsList } from "~/components/Search/SearchResultsList";
 import { SearchPreview } from "~/components/Search/SearchPreview";
+import { SearchKeyboardViewport } from "~/components/Search/SearchKeyboardViewport";
 import useColors from "~/hooks/useColor";
 import * as Haptics from "expo-haptics";
 import { useFeatureFlag } from "~/hooks/queries/useFeatureFlags";
 import { useSearchBarFocus } from "~/hooks/useSearchBarFocus";
+import { SearchInputBar } from "~/components/Search/SearchInputBar";
+import { useWebRecipeSearch } from "~/hooks/queries/useWebRecipeSearch";
+import { normalizeWebRecipeQuery } from "~/utils/web-recipe-search";
+import type { WebRecipeSearchResult } from "~/types/WebRecipeSearch";
 
 const TIME_OPTIONS = [
   { label: "15m", maxTotalTime: 15 },
@@ -44,40 +54,55 @@ export function SearchContent({
   onDismiss,
   focusEnabled = true,
   transparent = false,
+  initialConversation = false,
 }: {
   onDismiss: () => void;
   focusEnabled?: boolean;
   transparent?: boolean;
+  initialConversation?: boolean;
 }) {
   const { top, bottom } = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
-  // Pantry uses the bottom native search toolbar on iOS 26+. Its full-screen
-  // content must not jump when UIKit hides the navigation bar during focus.
+  // Keep the inline Pantry surface anchored while the keyboard opens.
   const contentTop =
     transparent && Platform.OS === "ios" && Number.parseInt(String(Platform.Version), 10) >= 26
       ? top
       : Math.max(top, headerHeight);
-  const { searchBarRef, onFocus, onBlur } = useSearchBarFocus(focusEnabled);
   const [input, setInput] = useState("");
-  const [showConversation, setShowConversation] = useState(false);
-  const [sessionStarted, setSessionStarted] = useState(false);
+  const [webQuery, setWebQuery] = useState("");
+  const [showConversation, setConversation] = useState(initialConversation);
+  const conversationRef = useRef(initialConversation);
+  const setShowConversation = useCallback((visible: boolean) => {
+    conversationRef.current = visible;
+    setConversation(visible);
+  }, []);
+  const [sessionStarted, setSessionStarted] = useState(initialConversation);
+  const submitAI = useRef<((text: string) => void) | null>(null);
+  const { searchBarRef, onFocus, onBlur } = useSearchBarFocus(focusEnabled);
+  const switchMode = useCallback(() => {
+    setSessionStarted(true);
+    setShowConversation(!conversationRef.current);
+  }, [setShowConversation]);
+  const placeholder = showConversation ? "Ask Cookkit…" : "Search ingredients and recipes…";
 
-  const handleChangeText = useCallback<
-    NonNullable<React.ComponentProps<typeof Stack.SearchBar>["onChangeText"]>
-  >((event) => {
-    const value = event.nativeEvent.text;
+  const handleChangeText = useCallback((value: string) => {
     setInput(value);
+    setWebQuery("");
     if (value.trim()) {
       setSessionStarted(true);
-      setShowConversation(false);
     }
   }, []);
   const handleSearch = useCallback(() => {
+    if (conversationRef.current) {
+      submitAI.current?.(input);
+      return;
+    }
     Keyboard.dismiss();
-    setShowConversation(false);
-  }, []);
+    setWebQuery(input.trim());
+  }, [input]);
   const clearInput = useCallback(() => {
     setInput("");
+    setWebQuery("");
     searchBarRef.current?.clearText();
   }, [searchBarRef]);
   const handleDismiss = useCallback(() => {
@@ -89,11 +114,12 @@ export function SearchContent({
     useCallback(() => {
       if (!focusEnabled) return;
       const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
-        handleDismiss();
+        if (showConversation) setShowConversation(false);
+        else handleDismiss();
         return true;
       });
       return () => subscription.remove();
-    }, [focusEnabled, handleDismiss])
+    }, [focusEnabled, handleDismiss, showConversation])
   );
 
   return (
@@ -101,32 +127,37 @@ export function SearchContent({
       testID={TEST_IDS.search.screen}
       className={transparent ? "flex-1" : "flex-1 bg-background"}
     >
-      {focusEnabled && (
-        <Stack.SearchBar
-          ref={searchBarRef}
-          onFocus={onFocus}
-          onBlur={onBlur}
-          hideNavigationBar
-          onCancelButtonPress={handleDismiss}
-          onClose={handleDismiss}
-          onChangeText={handleChangeText}
-          onSearchButtonPress={handleSearch}
-          placeholder="Search or ask Cookkit…"
-        />
-      )}
       {sessionStarted ? (
         <SearchSession
           input={input}
+          submitAI={submitAI}
           clearInput={clearInput}
           showConversation={showConversation}
-          setShowConversation={setShowConversation}
           focusEnabled={focusEnabled}
           contentTop={contentTop}
+          safeTop={top}
           bottom={bottom}
           transparent={transparent}
+          webQuery={webQuery}
+          onWebSearch={handleSearch}
         />
       ) : (
         <SearchPreview top={contentTop} />
+      )}
+      {focusEnabled && (
+        <SearchInputBar
+          ref={searchBarRef}
+          value={input}
+          conversation={showConversation}
+          placeholder={placeholder}
+          bottom={bottom}
+          onChangeText={handleChangeText}
+          onFocus={onFocus}
+          onBlur={onBlur}
+          onSubmit={handleSearch}
+          onSwitchMode={switchMode}
+          onDismiss={handleDismiss}
+        />
       )}
     </View>
   );
@@ -135,29 +166,71 @@ export function SearchContent({
 /** Start catalog queries, assistant state and filter views only when someone types. */
 function SearchSession({
   input,
+  submitAI,
   clearInput,
   showConversation,
-  setShowConversation,
   focusEnabled,
   contentTop,
+  safeTop,
   bottom,
   transparent,
+  webQuery,
+  onWebSearch,
 }: {
   input: string;
+  submitAI: React.RefObject<((text: string) => void) | null>;
   clearInput: () => void;
   showConversation: boolean;
-  setShowConversation: (visible: boolean) => void;
   focusEnabled: boolean;
   contentTop: number;
+  safeTop: number;
   bottom: number;
   transparent: boolean;
+  webQuery: string;
+  onWebSearch: () => void;
 }) {
   const colors = useColors();
+  const queryClient = useQueryClient();
   const router = useRouter();
+  const openingWebRecipe = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      openingWebRecipe.current = false;
+    }, [])
+  );
+  const webSearch = useWebRecipeSearch(webQuery, focusEnabled && !showConversation);
+  const openWebRecipe = useCallback(
+    (result: WebRecipeSearchResult) => {
+      if (openingWebRecipe.current) return;
+      openingWebRecipe.current = true;
+      Keyboard.dismiss();
+      router.push({ pathname: "/recipes/web-import", params: { url: result.url } });
+    },
+    [router]
+  );
   const filterSheetRef = useRef<BottomSheetMethods>(null);
   const filterSnapPoints = useMemo(() => ["55%"], []);
-  const { messages, status, send, stop } = useSearchAssistant();
+  const { messages, status, send, stop, markPantryAdditionUndone } = useSearchAssistant();
   const streaming = status === "streaming";
+  useLayoutEffect(() => {
+    submitAI.current = (text) => {
+      if (!focusEnabled || streaming || !text.trim()) return;
+      clearInput();
+      void send(text.trim());
+    };
+    return () => {
+      submitAI.current = null;
+    };
+  }, [clearInput, focusEnabled, send, streaming, submitAI]);
+  const undoAddition = async (receipt: PantryAdditionReceipt) => {
+    const { pantryApi } = await import("~/data/api/pantryApi");
+    await pantryApi.undoAssistantAddition(receipt);
+    markPantryAdditionUndone(receipt.id);
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: pantryQueryKeys.all }),
+      queryClient.invalidateQueries({ queryKey: recipeQueryKeys.all }),
+    ]);
+  };
   const hasConversation = messages.length > 0;
   useEffect(() => {
     if (!focusEnabled) stop();
@@ -214,24 +287,15 @@ function SearchSession({
   const showSearchLoading =
     (hasQuery && isRecipesCatalogPending) || (trimmedInput.length > 0 && isPantryPending);
 
-  const askCookkit = () => {
-    if (!focusEnabled || !trimmedInput || streaming) return;
-    const question = trimmedInput;
-    clearInput();
-    setShowConversation(true);
-    Keyboard.dismiss();
-    void send(question);
-  };
   const assistantHeader = (
-    <SearchAssistantHeader
-      query={trimmedInput}
-      hasConversation={hasConversation}
-      showConversation={showConversation}
-      streaming={streaming}
-      onAsk={askCookkit}
-      onStop={stop}
-      onViewChange={setShowConversation}
-    />
+    <>
+      <SearchAssistantHeader
+        showHint={!hasConversation}
+        showConversation={showConversation}
+        streaming={streaming}
+        onStop={stop}
+      />
+    </>
   );
 
   const openFilterSheet = () => {
@@ -403,22 +467,38 @@ function SearchSession({
   return (
     <>
       {showConversation ? (
-        <View className="flex-1">
-          <View
-            testID="search-conversation-header"
-            className="px-5"
-            style={{ paddingTop: contentTop + 10 }}
-          >
+        <SearchKeyboardViewport testID="search-conversation-viewport">
+          <View testID="search-conversation-header" style={{ paddingTop: safeTop + 10 }}>
             {assistantHeader}
           </View>
-          <AssistantMessages
-            messages={messages}
-            top={0}
-            bottom={bottom + 64}
-            adjustKeyboardInsets
-            onOpenRecipe={(id) => router.push(`/recipes/${id}`)}
+          {hasConversation ? (
+            <AssistantMessages
+              messages={messages}
+              top={0}
+              bottom={12}
+              streaming={streaming}
+              recipes={allRecipes}
+              onUndo={undoAddition}
+              onViewPantry={() => router.replace("/")}
+              onReply={(question) => {
+                if (!streaming) void send(question);
+              }}
+              onOpenRecipe={(id) => router.push(`/recipes/${id}`)}
+            />
+          ) : (
+            <View className="flex-1" />
+          )}
+          <SearchAssistantPresets
+            visible={!hasConversation && !trimmedInput}
+            bottom={bottom}
+            disabled={!focusEnabled || streaming}
+            onAsk={(question) => {
+              if (!focusEnabled || streaming) return;
+              clearInput();
+              void send(question);
+            }}
           />
-        </View>
+        </SearchKeyboardViewport>
       ) : (
         <SearchResultsList
           recipes={recipeResults}
@@ -430,6 +510,20 @@ function SearchSession({
           bottom={bottom}
           transparent={transparent}
           header={assistantHeader}
+          query={normalizeWebRecipeQuery(trimmedInput)}
+          web={{
+            results: webSearch.data ?? [],
+            loading: webSearch.isFetching,
+            error: webSearch.isError,
+            errorMessage: webSearch.error?.message,
+            submitted: normalizeWebRecipeQuery(webQuery).length >= 2,
+            canSearch: trimmedInput.length >= 2 && trimmedInput.length <= 200,
+            onSearch: onWebSearch,
+            onRetry: () => {
+              void webSearch.refetch();
+            },
+            onOpen: openWebRecipe,
+          }}
         />
       )}
       {/* <Pressable

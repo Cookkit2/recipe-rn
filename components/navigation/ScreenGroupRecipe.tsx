@@ -38,6 +38,18 @@ export function getRecipeScreens({ colors }: { colors: { foreground: string } })
       }}
     />,
     <Stack.Screen
+      key="recipes/web-import"
+      name="recipes/web-import"
+      options={{
+        presentation: "card",
+        headerShown: true,
+        headerTransparent: true,
+        headerTitle: "",
+        headerBackButtonDisplayMode: "minimal",
+        headerTintColor: colors.foreground,
+      }}
+    />,
+    <Stack.Screen
       key="recipes/[recipeId]"
       name="recipes/[recipeId]"
       options={{

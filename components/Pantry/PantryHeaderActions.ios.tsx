@@ -23,7 +23,7 @@ export default function PantryHeaderActions(props: PantryHeaderActionsProps) {
   ] as const;
   return (
     <Host
-      style={{ width: 148, height: 44 }}
+      style={{ width: actions.length * 44 + (actions.length - 1) * 8, height: 44 }}
       pointerEvents={props.disabled ? "none" : "auto"}
       colorScheme={theme === "dark" ? "dark" : "light"}
     >

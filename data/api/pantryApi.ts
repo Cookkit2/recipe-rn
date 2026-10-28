@@ -26,7 +26,8 @@ import { ingredientCatalog } from "~/data/services/ingredientCatalog";
 
 import type { AssistantPantryInput, AssistantPantryResult } from "~/types/AssistantPantryMutation";
 import { normalizeIngredientIdentity } from "~/utils/ingredient-identity";
-import { createAssistantPantryMutator } from "./assistant-pantry";
+import type { PantryAdditionReceipt } from "~/lib/agent/pantry-action";
+import { undoAssistantPantryAddition, createAssistantPantryMutator } from "./assistant-pantry";
 import { mapStorageType } from "./pantry-storage-type";
 
 const mutateAssistantPantry = createAssistantPantryMutator(database, (name) =>
@@ -156,6 +157,8 @@ async function updatePantryItemCore(id: string, updates: Partial<PantryItem>): P
  * These functions only handle database interactions and data transformation
  */
 export const pantryApi = {
+  undoAssistantAddition: (receipt: PantryAdditionReceipt) =>
+    undoAssistantPantryAddition(database, receipt),
   /** Assistant mutations validate and resolve identity atomically before writing stock. */
   async manageAssistantPantry(
     input: AssistantPantryInput

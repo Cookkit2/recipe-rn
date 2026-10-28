@@ -1,8 +1,8 @@
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { P } from "~/components/ui/typography";
+import { SearchHelperText } from "./SearchHelperText";
 
-/** Pre-render the empty visual state without starting recipe queries or mounting an input. */
+/** Keep the entrance light: no catalog requests or AI calls until an explicit action. */
 export function SearchPreview({ top: contentTop }: { top?: number }) {
   const { top, bottom } = useSafeAreaInsets();
   return (
@@ -12,9 +12,7 @@ export function SearchPreview({ top: contentTop }: { top?: number }) {
       style={{ paddingTop: (contentTop ?? top) + 10, paddingBottom: bottom + 64 }}
     >
       <View className="items-center px-6 py-8">
-        <P className="text-sm text-muted-foreground text-center">
-          Search ingredients and recipes, or ask about your pantry.
-        </P>
+        <SearchHelperText>Search your pantry and recipes.</SearchHelperText>
       </View>
     </View>
   );

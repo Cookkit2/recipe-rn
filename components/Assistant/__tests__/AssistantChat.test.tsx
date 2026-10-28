@@ -1,13 +1,19 @@
 import React from "react";
 import { Platform, StyleSheet } from "react-native";
-import { fireEvent, render } from "@testing-library/react-native";
+import { fireEvent, render, waitFor, userEvent } from "@testing-library/react-native";
 import type { CookingChatMessage } from "~/hooks/useCookingAgentChat";
+import { PantryActionCard } from "../PantryActionCard";
 import { AssistantChat } from "../AssistantChat";
 import { AssistantMessages } from "../AssistantMessages";
 import { TEST_IDS } from "~/constants/test-ids";
 import type { CookingAgent } from "~/lib/agent/types";
 import * as e2eFlags from "~/utils/e2e-flags";
 
+jest.mock("~/components/Pantry/RecipeItemCard", () => ({
+  __esModule: true,
+  default: ({ recipe }: any) =>
+    require("react").createElement(require("react-native").Text, null, recipe.title),
+}));
 jest.mock("expo-haptics", () => ({
   impactAsync: jest.fn(),
   ImpactFeedbackStyle: { Light: "light" },
@@ -118,7 +124,7 @@ it("groups verified recipes and shows all missing ingredients and quantity cavea
   };
   chatMessages.push(message);
   const screen = await render(<AssistantChat agent={agent} />);
-  expect(screen.getByText("Ready to cook")).toBeTruthy();
+  expect(screen.getByText("Matches your pantry")).toBeTruthy();
   expect(screen.getByText("Needs extra ingredients")).toBeTruthy();
   expect(screen.getByText("Boiled eggs")).toBeTruthy();
   expect(screen.getAllByText("Have: eggs")[0]).toBeTruthy();
@@ -140,7 +146,7 @@ it("shows an empty catalog result without substituting a recipe", async () => {
   chatMessages.push(message);
   const screen = await render(<AssistantChat agent={agent} />);
   expect(screen.getByText("No matching recipes found in the available catalog.")).toBeTruthy();
-  expect(screen.queryByText("Ready to cook")).toBeNull();
+  expect(screen.queryByText("Matches your pantry")).toBeNull();
 });
 
 it("shows a pantry error beside verified recipe results", async () => {
@@ -239,4 +245,111 @@ it("never renders stock identifiers from assistant prose, errors, or recipe card
   fireEvent.press(screen.getByLabelText("Open recipe: Egg dish"));
   expect(openRecipe).toHaveBeenCalledWith("recipe-123");
   expect(chatMessages[0]?.recipeSuggestions?.recipes[0]?.id).toBe("recipe-123");
+});
+
+it("renders ingredient choices as buttons without exposing their row identifiers", async () => {
+  const reply = jest.fn();
+  const screen = await render(
+    <AssistantMessages
+      messages={[
+        {
+          id: "choose",
+          role: "assistant",
+          content: "Which eggs?\nEntry 1: Eggs, 6 pcs, fridge",
+          activities: [],
+          pantryClarification: {
+            question: "Which eggs?",
+            candidates: [
+              {
+                id: "private-row-id",
+                name: "Eggs",
+                quantity: 6,
+                unit: "pcs",
+                storageType: "fridge",
+                expiryDate: null,
+              },
+            ],
+          },
+        },
+      ]}
+      onReply={reply}
+    />
+  );
+  await fireEvent.press(screen.getByLabelText("Choose Eggs, 6 pcs, fridge"));
+  expect(reply).toHaveBeenCalledWith("Entry 1");
+  expect(screen.queryByText(/private-row-id|Entry 1:/)).toBeNull();
+});
+
+it("keeps older messages in place while new reply content arrives", async () => {
+  const messages: CookingChatMessage[] = [
+    { id: "reply", role: "assistant", content: "Dinner ideas", activities: [] },
+  ];
+  const screen = await render(<AssistantMessages messages={messages} streaming />);
+  const list = screen.getByTestId(TEST_IDS.assistant.list);
+  const user = userEvent.setup();
+  await user.scrollTo(list, {
+    y: 100,
+    contentSize: { width: 400, height: 2000 },
+    layoutMeasurement: { width: 400, height: 600 },
+  });
+  const content = list.children[0];
+  if (!content || typeof content === "string") throw new Error("Missing native scroll content");
+  await fireEvent(content, "layout", {
+    nativeEvent: { layout: { x: 0, y: 0, width: 400, height: 2100 } },
+  });
+  expect(screen.getByLabelText("Jump to latest message")).toBeTruthy();
+  await fireEvent.press(screen.getByLabelText("Jump to latest message"));
+  expect(screen.queryByLabelText("Jump to latest message")).toBeNull();
+});
+
+it("offers Retry for a read failure but Review pantry for an uncertain write", async () => {
+  const reply = jest.fn();
+  const messages: CookingChatMessage[] = [
+    { id: "question", role: "user", content: "What can I cook?", activities: [] },
+    { id: "failed", role: "assistant", content: "", error: "Unable to connect.", activities: [] },
+  ];
+  const screen = await render(
+    <AssistantMessages messages={messages} onReply={reply} onViewPantry={jest.fn()} />
+  );
+  await fireEvent.press(screen.getByLabelText("Retry message"));
+  expect(reply).toHaveBeenCalledWith("What can I cook?");
+  await screen.rerender(
+    <AssistantMessages
+      messages={[
+        messages[0]!,
+        { ...messages[1]!, pantryError: "A pantry update may still finish." },
+      ]}
+      onReply={reply}
+      onViewPantry={jest.fn()}
+    />
+  );
+  expect(screen.queryByLabelText("Retry message")).toBeNull();
+  expect(screen.getByText("Review pantry")).toBeTruthy();
+});
+
+it("only marks an addition undone after the Undo operation succeeds", async () => {
+  const undo = jest.fn().mockResolvedValue(undefined);
+  const action = {
+    id: "change",
+    status: "added" as const,
+    items: [
+      {
+        id: "carrot",
+        name: "Carrot",
+        quantity: 2,
+        unit: "pcs",
+        storageType: "fridge",
+        updatedAt: "2026-10-28T10:00:00.000Z",
+      },
+    ],
+  };
+  const screen = await render(<PantryActionCard action={action} onUndo={undo} />);
+  await fireEvent.press(screen.getByLabelText("Undo pantry addition"));
+  await waitFor(() => expect(screen.getByText("Addition undone")).toBeTruthy());
+  expect(undo).toHaveBeenCalledWith(action.items[0]);
+  await screen.rerender(
+    <PantryActionCard key="remounted" action={{ ...action, undone: true }} onUndo={undo} />
+  );
+  expect(screen.queryByLabelText("Undo pantry addition")).toBeNull();
+  expect(screen.getByText("Addition undone")).toBeTruthy();
 });

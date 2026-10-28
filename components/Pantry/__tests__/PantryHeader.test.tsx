@@ -71,3 +71,12 @@ it("opens search through the shared fade and preserves Add and Profile navigatio
   await fireEvent.press(screen.getByLabelText("Profile"));
   expect(mockPush).toHaveBeenLastCalledWith("/profile");
 });
+
+it("keeps the AI mode switch out of Pantry's top toolbar", async () => {
+  mockPush.mockClear();
+  const pullSearch = { progress: { value: 0 }, phase: "closed", open: jest.fn() };
+  const screen = await render(<PantryHeader pullSearch={pullSearch as never} />);
+  expect(screen.queryByLabelText("Ask Cookkit")).toBeNull();
+  expect(mockPush).not.toHaveBeenCalled();
+  expect(pullSearch.open).not.toHaveBeenCalled();
+});

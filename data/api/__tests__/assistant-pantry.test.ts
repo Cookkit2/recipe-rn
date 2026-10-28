@@ -3,7 +3,9 @@ import LokiJSAdapter from "@nozbe/watermelondb/adapters/lokijs";
 import schema from "~/data/db/schema";
 import { modelClasses } from "~/data/db/models";
 import type Stock from "~/data/db/models/Stock";
-import { createAssistantPantryMutator } from "../assistant-pantry";
+import type IngredientSynonym from "~/data/db/models/IngredientSynonym";
+import type ConsumptionLog from "~/data/db/models/ConsumptionLog";
+import { undoAssistantPantryAddition, createAssistantPantryMutator } from "../assistant-pantry";
 
 const LokiMemoryAdapter = require("lokijs").LokiMemoryAdapter;
 
@@ -443,4 +445,78 @@ it("does not let a legacy coarse alias override the resolved food form", async (
     item: { name: "Canned garbanzo beans", quantity: 3 },
   });
   expect(whole.quantity).toBe(2);
+});
+
+it("undoes an unchanged new assistant addition atomically", async () => {
+  const result = await mutate({ action: "add", name: "carrot", quantity: 2, unit: "pcs" });
+  if (!result.ok || !("item" in result)) throw new Error("fixture did not create an item");
+  const row = result.item;
+  await undoAssistantPantryAddition(database, {
+    id: row.id,
+    name: row.name,
+    quantity: row.quantity,
+    unit: row.unit,
+    storageType: row.storageType,
+    updatedAt: row.updatedAt.toISOString(),
+  });
+  expect(await stocks()).toHaveLength(0);
+});
+
+it("refuses Undo when a later pantry edit changed that item", async () => {
+  const row = await seed("carrot", 2);
+  const receipt = {
+    id: row.id,
+    name: row.name,
+    quantity: row.quantity,
+    unit: row.unit,
+    storageType: row.storageType,
+    updatedAt: row.updatedAt.toISOString(),
+  };
+  await database.write(() =>
+    row.update((item) => {
+      item.quantity = 4;
+    })
+  );
+  await expect(undoAssistantPantryAddition(database, receipt)).rejects.toThrow(
+    "This item has changed"
+  );
+  expect((await stocks())[0]?.quantity).toBe(4);
+});
+
+it("keeps related records editable when Undo is refused because the item has been used", async () => {
+  const row = await seed("carrot", 2);
+  const receipt = {
+    id: row.id,
+    name: row.name,
+    quantity: row.quantity,
+    unit: row.unit,
+    storageType: row.storageType,
+    updatedAt: row.updatedAt.toISOString(),
+  };
+  const synonym = await database.write(async () => {
+    const alias = await database.get<IngredientSynonym>("ingredient_synonym").create((item) => {
+      item.stockId = row.id;
+      item.synonym = "carrots";
+    });
+    await database.get<ConsumptionLog>("consumption_log").create((item) => {
+      item.stockId = row.id;
+      item.quantityConsumed = 1;
+      item.consumedDate = Date.now();
+      item.isBeforeExpiry = true;
+    });
+    return alias;
+  });
+  const prepareDeletion = jest.spyOn(synonym, "prepareMarkAsDeleted");
+  await expect(undoAssistantPantryAddition(database, receipt)).rejects.toThrow(
+    "This item has been used"
+  );
+  expect(prepareDeletion).not.toHaveBeenCalled();
+  await database.write(() =>
+    synonym.update((item) => {
+      item.synonym = "fresh carrots";
+    })
+  );
+  expect(synonym.synonym).toBe("fresh carrots");
+  expect(await stocks()).toHaveLength(1);
+  expect(await database.get("consumption_log").query().fetchCount()).toBe(1);
 });

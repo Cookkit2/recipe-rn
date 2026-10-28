@@ -4,11 +4,14 @@ import type { CookingDataClient, PantryItem } from "./planning";
 
 type PantryApi = Pick<typeof pantryApi, "fetchAllPantryItemsResult" | "manageAssistantPantry">;
 
-function toAgentItem(item: AppPantryItem): PantryItem {
+function toAgentItem(item: AppPantryItem, includeChangeMetadata = false): PantryItem {
   return {
     id: item.id,
     ...(item.base_ingredient_id !== undefined ? { baseIngredientId: item.base_ingredient_id } : {}),
     name: item.name,
+    ...(includeChangeMetadata
+      ? { storageType: item.type, updatedAt: item.updated_at?.toISOString() }
+      : {}),
     quantity: item.quantity,
     unit: item.unit,
     expiryDate: item.expiry_date?.toISOString() ?? null,
@@ -29,8 +32,8 @@ export function withLocalPantry(
       if (!result.ok) return result;
       onChanged();
       return "item" in result
-        ? { ...result, item: toAgentItem(result.item) }
-        : { ...result, removed: result.removed.map(toAgentItem) };
+        ? { ...result, item: toAgentItem(result.item, true) }
+        : { ...result, removed: result.removed.map((item) => toAgentItem(item, true)) };
     } catch (error) {
       return {
         ok: false,
@@ -44,7 +47,7 @@ export function withLocalPantry(
     async listPantry() {
       const result = await pantry.fetchAllPantryItemsResult();
       if (result.isErr()) throw new Error(result.error.message);
-      return result.value.map(toAgentItem);
+      return result.value.map((item) => toAgentItem(item));
     },
     async addIngredient(input) {
       const result = await manage({ ...input, action: "add" });

@@ -13,6 +13,8 @@ export interface PantryItem {
   quantity: number | null;
   unit: string | null;
   expiryDate: string | null;
+  storageType?: string;
+  updatedAt?: string;
   householdId: string | null;
   addedByUserId: string | null;
 }
