@@ -1,5 +1,6 @@
 import React from "react";
-import { fireEvent, render } from "@testing-library/react-native";
+import { View } from "react-native";
+import { fireEvent, render, within } from "@testing-library/react-native";
 import { PortalHost } from "@rn-primitives/portal";
 import IngredientVisualPreview from "../Details/IngredientVisualPreview";
 import { buildIngredientPreviewData } from "~/utils/ingredient-preview";
@@ -15,6 +16,7 @@ jest.mock("react-native-reanimated", () => {
       View: React.forwardRef((props: object, ref: unknown) => {
         React.useImperativeHandle(ref, () => ({
           measureInWindow: (callback: Function) => callback(24, 500, 345, 72),
+          measureLayout: (_parent: unknown, callback: Function) => callback(24, 420, 345, 72),
         }));
         return React.createElement(Native.View, props);
       }),
@@ -57,9 +59,13 @@ jest.mock("expo-router", () => ({ useIsFocused: () => mockFocused }));
 jest.mock("react-native-screens", () => ({
   FullWindowOverlay: ({ children }: any) =>
     React.createElement(
-      require("react-native").View,
-      { testID: "ingredient-window-overlay" },
-      children
+      require("@rn-primitives/portal").Portal,
+      { hostName: "native-window", name: "native-ingredients" },
+      React.createElement(
+        require("react-native").View,
+        { testID: "ingredient-window-overlay" },
+        children
+      )
     ),
 }));
 jest.mock("react-native-safe-area-context", () => ({
@@ -137,12 +143,68 @@ function renderPreview(element: React.ReactElement) {
   return render(element, {
     wrapper: ({ children }) => (
       <>
-        {children}
-        <PortalHost />
+        <View testID="recipe-route">
+          {children}
+          <PortalHost />
+        </View>
+        <PortalHost name="native-window" />
       </>
     ),
   });
 }
+
+it("keeps ingredient images inside the moving recipe route while it remains focused", async () => {
+  const screen = await renderPreview(<IngredientVisualPreview {...props} />);
+  const route = screen.getByTestId("recipe-route", { includeHiddenElements: true });
+  // An interactive native back/zoom gesture moves the route before focus changes.
+  expect(mockFocused).toBe(true);
+  expect(
+    within(route).queryAllByTestId("ingredient-photo", { includeHiddenElements: true })
+  ).toHaveLength(1);
+  expect(
+    screen.queryByTestId("ingredient-window-overlay", { includeHiddenElements: true })
+  ).toBeNull();
+});
+
+it("measures the strip relative to its recipe instead of the application window", async () => {
+  const coordinateSpaceRef = { current: {} } as any;
+  const scrollOffset = { value: 200 } as any;
+  const element = (
+    <IngredientVisualPreview
+      {...props}
+      coordinateSpaceRef={coordinateSpaceRef}
+      scrollOffset={scrollOffset}
+    />
+  );
+  const screen = await renderPreview(element);
+  await fireEvent(screen.getByTestId("recipe-ingredient-source"), "layout", {
+    nativeEvent: { layout: { width: 345, height: 72 } },
+  });
+  await screen.rerender(
+    <IngredientVisualPreview
+      {...props}
+      coordinateSpaceRef={coordinateSpaceRef}
+      scrollOffset={scrollOffset}
+    />
+  );
+  const canvas = screen.getByTestId("recipe-ingredients-canvas", { includeHiddenElements: true });
+  expect(require("react-native").StyleSheet.flatten(canvas.props.style).top).toBe(420 - 200 - 107);
+});
+
+it("reports gallery visibility for the recipe's native toolbar and resets it on blur", async () => {
+  const onOpenChange = jest.fn();
+  const screen = await renderPreview(
+    <IngredientVisualPreview {...props} onOpenChange={onOpenChange} />
+  );
+  await fireEvent.press(screen.getByRole("button", { name: "View recipe ingredients" }));
+  expect(onOpenChange).toHaveBeenLastCalledWith(true);
+  await fireEvent.press(screen.getByRole("button", { name: "Close ingredients" }));
+  expect(onOpenChange).toHaveBeenLastCalledWith(false);
+  await fireEvent.press(screen.getByRole("button", { name: "View recipe ingredients" }));
+  mockFocused = false;
+  await screen.rerender(<IngredientVisualPreview {...props} onOpenChange={onOpenChange} />);
+  expect(onOpenChange).toHaveBeenLastCalledWith(false);
+});
 
 it.each([false, true])(
   "removes the window-level ingredient layer when leaving the recipe (grid open: %s)",
@@ -150,7 +212,9 @@ it.each([false, true])(
     const screen = await renderPreview(<IngredientVisualPreview {...props} />);
     if (open)
       await fireEvent.press(screen.getByRole("button", { name: "View recipe ingredients" }));
-    expect(screen.getByTestId("ingredient-window-overlay")).toBeTruthy();
+    expect(
+      screen.getByTestId("recipe-ingredients-layer", { includeHiddenElements: true })
+    ).toBeTruthy();
 
     mockFocused = false;
     await screen.rerender(<IngredientVisualPreview {...props} />);
@@ -161,7 +225,9 @@ it.each([false, true])(
 
     mockFocused = true;
     await screen.rerender(<IngredientVisualPreview {...props} />);
-    expect(screen.getByTestId("ingredient-window-overlay")).toBeTruthy();
+    expect(
+      screen.getByTestId("recipe-ingredients-layer", { includeHiddenElements: true })
+    ).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Close ingredients" })).toBeNull();
     await fireEvent.press(screen.getByRole("button", { name: "View recipe ingredients" }));
     expect(screen.getByText("Ingredient 9")).toBeTruthy();

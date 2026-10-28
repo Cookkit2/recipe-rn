@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import {
   BackHandler,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -22,7 +21,6 @@ import Animated, {
   type SharedValue,
 } from "react-native-reanimated";
 import { Portal } from "@rn-primitives/portal";
-import { FullWindowOverlay } from "react-native-screens";
 import { useIsFocused } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BlurView, type BlurViewProps } from "expo-blur";
@@ -185,9 +183,7 @@ export default function RecipeIngredientsOverlay({
     ],
   }));
 
-  // FullWindowOverlay lives in the iOS window outside the recipe screen. Remove
-  // its native container on blur; hiding a child leaves that window layer alive
-  // when the recipe's native view is detached during a back/zoom transition.
+  // Offscreen recipes do not own an active ingredient canvas.
   if (!focused) return null;
 
   const content = (
@@ -297,13 +293,8 @@ export default function RecipeIngredientsOverlay({
   );
   return (
     <Portal name={`recipe-ingredients-${id}`} hostName={portalHostName}>
-      {Platform.OS === "ios" ? (
-        <FullWindowOverlay key={id} unstable_accessibilityContainerViewIsModal={expanded}>
-          {content}
-        </FullWindowOverlay>
-      ) : (
-        content
-      )}
+      {/* Stay inside the recipe's native screen throughout interactive back/zoom gestures. */}
+      {content}
     </Portal>
   );
 }

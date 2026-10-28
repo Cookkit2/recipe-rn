@@ -143,6 +143,7 @@ function RecipeDetailsContent({
   const { width: windowWidth } = useWindowDimensions();
   const ingredientPortalHost = `recipe-ingredients-${recipeId}`;
   const ingredientBlurTarget = useRef<ComponentRef<typeof View> | null>(null);
+  const [ingredientGalleryOpen, setIngredientGalleryOpen] = useState(false);
   const navigation = useNavigation("/");
   const router = useRouter();
   const removeFromMealPlan = useRemoveFromMealPlan();
@@ -376,6 +377,9 @@ function RecipeDetailsContent({
   // This route's nested stack hides its header. Install both actions in the
   // visible parent header so native navigation owns their layout and touch areas.
   useLayoutEffect(() => {
+    // The gallery belongs to this screen; hide the native bar while it covers
+    // the recipe rather than moving its images into a separate UIWindow.
+    navigation.setOptions({ headerShown: !ingredientGalleryOpen });
     if (Platform.OS === "ios") {
       // Native bar items use the same automatic SF Symbol weight as Home's toolbar.
       navigation.setOptions({
@@ -409,11 +413,21 @@ function RecipeDetailsContent({
     }
     return () => {
       navigation.setOptions({
+        headerShown: true,
         unstable_headerRightItems: undefined,
         headerRight: () => <RecipeHeaderActions />,
       });
     };
-  }, [navigation, handleShare, isInPlan, isCheckingPlan, removeFromMealPlan, recipeId, router]);
+  }, [
+    navigation,
+    ingredientGalleryOpen,
+    handleShare,
+    isInPlan,
+    isCheckingPlan,
+    removeFromMealPlan,
+    recipeId,
+    router,
+  ]);
 
   return (
     <RecipeContentView ref={ingredientBlurTarget} className="relative flex-1 bg-background">
@@ -498,6 +512,8 @@ function RecipeDetailsContent({
             blurTarget={Platform.OS === "android" ? ingredientBlurTarget : undefined}
             scrollOffset={scrollOffset}
             portalHostName={ingredientPortalHost}
+            coordinateSpaceRef={ingredientBlurTarget}
+            onOpenChange={setIngredientGalleryOpen}
           />
 
           {/* Missing Ingredients */}

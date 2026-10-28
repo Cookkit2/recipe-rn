@@ -182,7 +182,7 @@ export default function SocialRecipeShareHandler() {
         !!storage.get<boolean>(ONBOARDING_COMPLETED_KEY) &&
         segments[0] !== "onboarding" &&
         segments.join("/") !== "recipes/import" &&
-        !segments.includes("import-youtube") &&
+        !segments.some((segment) => segment === "import-youtube") &&
         !(pending && readPendingRecipeShare()?.id === pending.id)
       }
       hasPendingShare={() => !!pending && readPendingRecipeShare()?.id === pending.id}
