@@ -89,5 +89,19 @@
       "v4/core/schemas.js": "0123dfb2514b2d32ef81684ba97c84be6ca0699f43fb4972a9656ef6dd250a22",
       "src/v4/core/schemas.ts": "6632c8f06f50b6080f098883fa5d75794f7726d3b3ad6ca414b17b6aac6c520e"
     }
+  },
+  {
+    "package": "deepmerge",
+    "version": "4.3.1",
+    "advisories": ["GHSA-gcqx-w48m-w2h4"],
+    "reason": "Define own data properties in every merge write to preserve the returned object prototype for null, primitive, null-prototype and own-__proto__ targets, including nested merges.",
+    "patch": "patches/deepmerge@4.3.1.patch",
+    "patchSha256": "9d699de04f7b966f15fce5783eb391b708dbe26d89cd0c3da8704e22a7b034ea",
+    "files": {
+      "package.json": "f56978e7a6da1a3c6edee41abb54f98584a2fa2680458c48db820ae772fef0c9",
+      "index.js": "2213b45fd1f99a0a232ae7b167f1fdfb023b0a228958033e015850f3aadc1abc",
+      "dist/cjs.js": "3b54110e458e277d61ef877bb90ea76a2cb1892a0761350c59d39842d92f77d1",
+      "dist/umd.js": "93755c3510af00fc3553a055690694ab4383c8766baab5160a8e70eac4ca1e9a"
+    }
   }
 ]
