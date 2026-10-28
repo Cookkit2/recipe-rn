@@ -94,10 +94,18 @@ Sentry.init({
   // Enable Logs
   enableLogs: true,
 
+  // Sample production traces to limit overhead while retaining navigation,
+  // slow-frame, and JS-stall measurements.
+  tracesSampleRate: __DEV__ ? 1 : 0.1,
+
   // Configure Session Replay
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1,
-  integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
+  integrations: [
+    navigationIntegration,
+    Sentry.mobileReplayIntegration(),
+    Sentry.feedbackIntegration(),
+  ],
 
   // uncomment the line below to enable Spotlight (https://spotlightjs.com)
   // spotlight: __DEV__,

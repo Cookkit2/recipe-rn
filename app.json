@@ -172,6 +172,7 @@
           "organization": "cookkit-w4"
         }
       ],
+      "./plugins/withIosSentryDebugSymbols.js",
       "expo-web-browser",
       "expo-video",
       "expo-notifications",

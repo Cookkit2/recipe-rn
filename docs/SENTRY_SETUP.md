@@ -2,7 +2,7 @@
 
 ## Overview
 
-Sentry is now fully configured and integrated with your DoneDish app for error tracking, performance monitoring, and logging.
+Cookkit uses Sentry for error tracking, sampled navigation performance traces, and logging. Configure the public DSN before building a production app.
 
 ## What Was Fixed
 
@@ -78,7 +78,7 @@ Sentry is configured via environment variables (or `app.json` / `app.config.js` 
 
 | Variable                      | Description                                                                                              |
 | ----------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `EXPO_PUBLIC_SENTRY_DSN`      | Sentry project DSN. If unset in production, error reporting is disabled and a console warning is logged. |
+| `EXPO_PUBLIC_SENTRY_DSN`      | Sentry project DSN. Required in the EAS production environment; production builds reject missing or invalid values. |
 | `EXPO_PUBLIC_SENTRY_SEND_PII` | Set to `"true"` to enable `sendDefaultPii` (IP, cookies, user context). Default is `false` for privacy.  |
 
 Example `.env`:
@@ -94,10 +94,10 @@ EXPO_PUBLIC_SENTRY_DSN=https://your-dsn@ingest.sentry.io/project-id
 - **DSN**: From `EXPO_PUBLIC_SENTRY_DSN` or `Constants.expoConfig?.extra?.EXPO_PUBLIC_SENTRY_DSN`
 - **sendDefaultPii**: `false` by default; set to `true` only when `EXPO_PUBLIC_SENTRY_SEND_PII=true` (e.g. for debugging)
 - **Traces Sample Rate**: 100% in dev, 10% in production (reduces overhead)
-- **Profiles Sample Rate**: 100% in dev, 10% in production
+- **CPU Profiling**: Not enabled
 - **Session Tracking**: Enabled
 - **Performance Tracing**: Enabled
-- **User Interaction Tracking**: Enabled
+- **Slow/frozen frames and JS stalls**: Included in sampled transactions
 - **Logs**: Enabled
 
 ### Features Enabled
@@ -105,7 +105,7 @@ EXPO_PUBLIC_SENTRY_DSN=https://your-dsn@ingest.sentry.io/project-id
 - ✅ Error tracking
 - ✅ Performance monitoring
 - ✅ Navigation tracking
-- ✅ User interaction tracking
+- ✅ Slow/frozen frames and JS-stall measurements
 - ✅ Breadcrumbs
 - ✅ Native crash reporting
 - ✅ Logs integration
@@ -164,7 +164,15 @@ EXPO_PUBLIC_SENTRY_DSN=https://your-dsn@ingest.sentry.io/project-id
 
 ### Performance
 
-- Production sampling is 10% for traces and profiles to limit overhead on devices. To temporarily increase sampling during an incident, set env (e.g. in EAS secrets) and rebuild or use a runtime config if your setup supports it.
+Production trace sampling is 10% to limit overhead on devices; development samples all traces. CPU profiling is not enabled.
+
+### Build configuration
+
+Set `EXPO_PUBLIC_SENTRY_DSN` in the EAS **production** environment. The app config includes this public value in Expo Constants, while `SENTRY_AUTH_TOKEN` remains a build-only credential. An upload token does not enable runtime reporting by itself. Keep `EXPO_PUBLIC_SENTRY_SEND_PII=false` unless you explicitly need and have consent for PII collection.
+
+The iOS Sentry upload phase declares the app's generated DWARF file as an input, so Xcode finishes dSYM generation before uploading. Both application configurations generate dSYMs to keep this dependency valid in Debug builds, where uploads remain skipped. `plugins/withIosSentryDebugSymbols.js` preserves the setup after prebuild; keep it after the Sentry Expo plugin.
+
+Existing TestFlight builds cannot pick up a missing DSN retroactively. Install a new build after updating the production environment and app configuration.
 
 ## Alerting and On-Call
 
