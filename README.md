@@ -1,8 +1,8 @@
 # Cookkit
 
-> Track your ingredients. Discover tailored recipes.
+> **Know what you have. Cook what you love.**
 
-Cookkit is a smart cooking companion app that helps you manage your pantry, discover recipes based on what you have, and cook hands-free with voice guidance.
+Cookkit is an AI kitchen companion app that helps you manage your pantry, discover recipes based on what you have, and cook hands-free with voice guidance.
 
 Cloud AI uses NVIDIA Nemotron on Nebius Token Factory: Lightning for recipe text and Super VL for ingredient photos, through an authenticated Supabase Edge Function. See [AI setup and deployment](docs/NEBIUS.md).
 
