@@ -12,7 +12,7 @@ it("serves the metadata lookup used by the real local pantry API", async () => {
     const { data, error } = await client
       .from("base_ingredient")
       .select("*")
-      .regexIMatch("name", "^eggs$")
+      .filter("name", "imatch", "^eggs$")
       .single();
     expect(error).toBeNull();
     expect(data).toMatchObject({ id: "base-eggs", name: "eggs" });
