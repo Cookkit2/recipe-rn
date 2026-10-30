@@ -30,10 +30,10 @@ describe("Nebius provider boundary", () => {
   const run = (input: AIRequest = request, signal?: AbortSignal) =>
     generateNebiusContent(input, { apiKey: "server-secret", fetcher, signal, retryDelayMs: 0 });
 
-  it("uses Nano and OpenAI chat messages for every text task", async () => {
+  it("uses Lightning and OpenAI chat messages for every text task", async () => {
     fetcher.mockResolvedValue(completion('{"name":"rice","quantity":1}'));
     const result = await run({ ...request, systemPrompt: "Use pantry ingredients only." });
-    expect(TEXT_MODEL).toBe("nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B");
+    expect(TEXT_MODEL).toBe("nvidia/Nemotron-3_5-Lightning");
     const [url, options] = fetcher.mock.calls[0]!;
     expect(url).toBe("https://api.tokenfactory.nebius.com/v1/chat/completions");
     expect(options?.headers).toEqual({

@@ -24,7 +24,7 @@ if (
   !analysis.recipe?.ingredients?.length ||
   !analysis.recipe?.steps?.length
 ) {
-  throw new Error("Nano did not extract the sample recipe.");
+  throw new Error("Lightning did not extract the sample recipe.");
 }
 console.log(
   JSON.stringify(

@@ -1,12 +1,12 @@
 # Cookkit AI on Nebius
 
-All cloud AI now runs through Nebius Token Factory. There is no Gemini fallback.
+Text and photo AI run through Nebius Token Factory. YouTube video understanding uses a server-side Gemini fallback only when usable recipe text is unavailable.
 
-The legacy `utils/gemini-api.ts` implementation is retained for future reference. Its `GEMINI_ENABLED` flag is fixed to `false`; generation and model-list calls fail before reading credentials or making network requests. Current app features use `lib/ai/client.ts`. Re-enabling Gemini later requires a server proxy for its credentials.
+The legacy `utils/gemini-api.ts` implementation is retained for future reference. Its `GEMINI_ENABLED` flag is fixed to `false`; generation and model-list calls fail before reading credentials or making network requests. Current app features use `lib/ai/client.ts`. The YouTube fallback uses the server proxy and never calls this legacy client.
 
 | Task | Model |
 | --- | --- |
-| Recipe captions, transcripts, website extraction/cleanup and pantry recipe tailoring | `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B` |
+| Recipe captions, transcripts, website extraction/cleanup and pantry recipe tailoring | `nvidia/Nemotron-3_5-Lightning` |
 | Ingredient photos | `nvidia/Nemotron-3.5-Super-VL` |
 
 The app calls the `nebius-ai` Supabase Edge Function with a user session. The function verifies the session with Supabase Auth, applies a persistent daily request quota, and chooses the model based on whether an image is present. The app cannot override the model or provider endpoint.

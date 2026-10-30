@@ -1,7 +1,7 @@
 import { Ajv } from "ajv";
 import type { AIRequest, AIResponse } from "../lib/ai/types.ts";
 
-export const TEXT_MODEL = "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B";
+export const TEXT_MODEL = "nvidia/Nemotron-3_5-Lightning";
 export const VISION_MODEL = "nvidia/Nemotron-3.5-Super-VL";
 const ENDPOINT = "https://api.tokenfactory.nebius.com/v1/chat/completions";
 const RETRYABLE_STATUS = new Set([408, 425, 429, 500, 502, 503, 504]);

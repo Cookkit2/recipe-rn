@@ -814,7 +814,7 @@ export const websiteRecipeService = {
   },
 
   /**
-   * Clean and normalize recipe data using Nebius Nemotron Nano
+   * Clean and normalize recipe data using Nebius Nemotron Lightning
    * This improves the quality of structured data from websites by:
    * - Normalizing ingredient names to singular, standardized forms
    * - Improving step titles and descriptions
