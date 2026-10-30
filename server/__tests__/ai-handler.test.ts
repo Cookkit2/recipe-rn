@@ -60,7 +60,7 @@ describe("authenticated AI proxy", () => {
     expect(response.status).toBe(200);
     const result = await response.text();
     expect(result).not.toContain("provider-secret");
-    expect(result).toContain("NVIDIA-Nemotron-3-Nano");
+    expect(result).toContain("Nemotron-3_5-Lightning");
     expect(fetcher.mock.calls[0]?.[0]).toBe(
       "https://api.tokenfactory.nebius.com/v1/chat/completions"
     );

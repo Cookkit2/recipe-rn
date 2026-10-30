@@ -15,6 +15,7 @@ import { View, Platform, Linking, ScrollView } from "react-native";
 import * as StoreReview from "expo-store-review";
 import Constants from "expo-constants";
 import Purchases from "react-native-purchases";
+import { arePaywallsEnabled } from "~/utils/paywall-flags";
 import { CardContent } from "~/components/ui/card";
 import { P } from "~/components/ui/typography";
 import ListButton from "~/components/Shared/ListButton";
@@ -33,11 +34,11 @@ const subject = `${appName} Feedback`;
 const email =
   process.env.EXPO_PUBLIC_SUPPORT_EMAIL ||
   Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPPORT_EMAIL ||
-  "support@cookkit.app";
+  "cookkit01@gmail.com";
 
 const handleContactUs = async () => {
   try {
-    const rcId = await Purchases.getAppUserID();
+    const rcId = arePaywallsEnabled() ? await Purchases.getAppUserID() : undefined;
 
     const lines = [
       `Hi ${appName} Team,`,
@@ -198,12 +199,20 @@ export default function ProfileScreen() {
           <CardContent className="flex p-0 py-2">
             <ListButton
               title="Terms of Service"
-              onPress={() => handleOpenLink("https://cookkit.app/terms-and-conditions")}
+              onPress={() =>
+                handleOpenLink(
+                  "https://recipe-web-mings-projects-6bb85e23.vercel.app/terms-and-conditions"
+                )
+              }
               external
             />
             <ListButton
               title="Privacy Policy"
-              onPress={() => handleOpenLink("https://cookkit.app/privacy-policy")}
+              onPress={() =>
+                handleOpenLink(
+                  "https://recipe-web-mings-projects-6bb85e23.vercel.app/privacy-policy"
+                )
+              }
               external
             />
           </CardContent>

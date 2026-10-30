@@ -5,7 +5,7 @@ import { readEntitlement } from "~/utils/subscription-utils";
 import { arePaywallsEnabled } from "~/utils/paywall-flags";
 
 export interface UseEntitlementResult {
-  /** True for an active Pro entitlement or the local development bypass. */
+  /** True for an active Pro entitlement or when billing is paused. */
   isPro: boolean;
   /** The active Pro entitlement, or null when none/loading. */
   entitlement: PurchasesEntitlementInfo | null;

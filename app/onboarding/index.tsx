@@ -106,7 +106,11 @@ export default function OnboardingScreen() {
               accessibilityRole="link"
               accessibilityLabel="Terms of Service"
               accessibilityHint="Opens the Terms of Service page"
-              onPress={() => handleOpenLink("https://cookkit.app/terms-and-conditions")}
+              onPress={() =>
+                handleOpenLink(
+                  "https://recipe-web-mings-projects-6bb85e23.vercel.app/terms-and-conditions"
+                )
+              }
             >
               Terms of Service
             </Text>{" "}
@@ -116,7 +120,11 @@ export default function OnboardingScreen() {
               accessibilityRole="link"
               accessibilityLabel="Privacy Policy"
               accessibilityHint="Opens the Privacy Policy page"
-              onPress={() => handleOpenLink("https://cookkit.app/privacy-policy")}
+              onPress={() =>
+                handleOpenLink(
+                  "https://recipe-web-mings-projects-6bb85e23.vercel.app/privacy-policy"
+                )
+              }
             >
               Privacy Policy
             </Text>
