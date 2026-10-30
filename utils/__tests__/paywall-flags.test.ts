@@ -1,18 +1,18 @@
 import { arePaywallsEnabled } from "../paywall-flags";
 
-describe("paywall environment flag", () => {
+describe("paywalls paused for all builds", () => {
   afterEach(() => {
     jest.restoreAllMocks();
   });
 
   it.each([
-    [true, undefined, true],
-    [true, "true", true],
+    [true, undefined, false],
+    [true, "true", false],
     [true, "false", false],
-    [true, "invalid", true],
-    [false, undefined, true],
-    [false, "true", true],
-    [false, "false", true],
+    [true, "invalid", false],
+    [false, undefined, false],
+    [false, "true", false],
+    [false, "false", false],
   ])("dev=%s, flag=%s enables paywalls=%s", (isDev, flag, expected) => {
     jest.replaceProperty(globalThis as typeof globalThis & { __DEV__: boolean }, "__DEV__", isDev);
     const env = { ...process.env };
