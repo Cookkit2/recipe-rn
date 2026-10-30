@@ -1,5 +1,7 @@
 # YouTube Transcript Extraction Tools Analysis
 
+> Historical research from January 2026. See [the current AI integration](../NEBIUS.md) for Cookkit's active import and model routing.
+
 > **Date:** January 18, 2026
 >
 > **Purpose:** Technical analysis of how YouTube transcript scraping tools are implemented
