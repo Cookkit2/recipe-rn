@@ -162,8 +162,6 @@ export class TailoredRecipeMappingRepository extends BaseRepository<TailoredReci
       });
       batchOps.push(recipe);
 
-      batchOps.push(recipe);
-
       // Create steps
       if (data.steps && data.steps.length > 0) {
         const stepsCollection = database.collections.get<RecipeStep>("recipe_step");
