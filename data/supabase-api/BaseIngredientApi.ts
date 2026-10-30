@@ -24,7 +24,7 @@ export const baseIngredientApi = {
     const { data: baseIngredient, error: baseError } = await supabase!
       .from("base_ingredient")
       .select("*")
-      .regexIMatch("name", exactPostgrestPattern(name))
+      .filter("name", "imatch", exactPostgrestPattern(name))
       .single();
 
     if (baseError && baseError.code !== "PGRST116") {
@@ -167,7 +167,7 @@ async function findIngredientBySynonym(name: string): Promise<BaseIngredientWith
   const { data: synonymData, error: synonymError } = await supabase!
     .from("ingredient_synonym")
     .select("base_ingredient_id")
-    .regexIMatch("synonym", exactPostgrestPattern(name))
+    .filter("synonym", "imatch", exactPostgrestPattern(name))
     .single();
 
   if (synonymError && synonymError.code !== "PGRST116") {
@@ -208,7 +208,7 @@ async function fetchIngredientsBySynonyms(missingNames: string[]) {
 
   // Execute parameterized queries concurrently
   const synonymPromises = sanitizedNames.map((n) =>
-    supabase!.from("ingredient_synonym").select("base_ingredient_id, synonym").ilike("synonym", n)
+    supabase!.from("ingredient_synonym").select("base_ingredient_id, synonym").filter("synonym", "imatch", exactPostgrestPattern(n))
   );
 
   const synonymResults = await Promise.all(synonymPromises);

@@ -63,6 +63,14 @@ function createMemorySupabase(
         working = working.filter((row) => row[column] === value);
         return api;
       },
+      filter(column: string, operator: string, value: string) {
+        if (operator === "imatch") {
+          const regex = new RegExp(value.replace(/\\A/, "^").replace(/\\Z/, "$"), "i");
+          working = working.filter((row) => regex.test(String(row[column] ?? "")));
+          return api;
+        }
+        return api;
+      },
       ilike(column: string, value: string) {
         working = working.filter(
           (row) => String(row[column] ?? "").toLowerCase() === value.toLowerCase()

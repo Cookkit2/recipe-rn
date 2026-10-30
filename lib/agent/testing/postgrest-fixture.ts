@@ -158,7 +158,7 @@ function matchesFilter(row: Record<string, unknown>, column: string, filter: str
   const value = row[column];
   if (filter.startsWith("eq.")) return String(value ?? "") === filter.slice(3);
   if (filter.startsWith("imatch."))
-    return new RegExp(filter.slice(7), "i").test(String(value ?? ""));
+    return new RegExp(filter.slice(7).replace(/\\A/, "^").replace(/\\Z/, "$"), "i").test(String(value ?? ""));
   if (filter.startsWith("ilike.")) {
     // The cooking tools send a bare name (no SQL wildcards), which PostgREST
     // treats as a case-insensitive exact match.
