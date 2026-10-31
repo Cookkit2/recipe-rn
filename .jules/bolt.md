@@ -111,3 +111,7 @@
 **Learning:** Initializing objects like `Map<string, number[]>` then using `Array.prototype.reduce()` on them causes O(M) intermediate allocations and closures when calculating average ratings, negatively impacting the JS bridge garbage collector.
 **Action:** Always maintain primitive structural properties in single-pass scalar mapping (`Map<string, { sum: number, count: number }>`) without pushing into array lengths, reducing allocations to O(1) structures per entry.
 ## 2024-07-14 - Promise.all Optimization\n**Learning:** Replacing sequential await calls inside loops with Promise.all reduces N+1 async bottlenecks effectively.\n**Action:** Use Promise.all when independent async tasks are run inside a loop.
+
+## 2026-07-28 - Optimize WatermelonDB Array Aggregations
+**Learning:** Instantiating WatermelonDB models using `.fetch()` is very memory intensive and slows down operations because of serialization across the JS/Native bridge. Combining `.fetch()` with JS array functions like `.reduce()` causes significant overhead when calculating aggregate values like sums.
+**Action:** When aggregating records where full `Model` instantiation is unnecessary (like getting sums of numeric columns), use `.unsafeFetchRaw()` instead of `.fetch()` and replace `Array.prototype.reduce()` with a single `for` loop to avoid closure and intermediate array allocations.

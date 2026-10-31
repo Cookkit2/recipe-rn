@@ -117,17 +117,25 @@ export class AchievementRepository extends BaseRepository<Achievement> {
 
   // Get total XP available for all achievements
   async getTotalXPAvailable(): Promise<number> {
-    const achievements = await this.collection.query().fetch();
-    return achievements.reduce((total, achievement) => {
-      return total + (achievement.xp ?? 0);
-    }, 0);
+    // ⚡ Bolt Performance Optimization: Bypass model instantiation via unsafeFetchRaw and replace reduce with for-loop for large aggregations
+    const achievements = await this.collection.query().unsafeFetchRaw();
+    let total = 0;
+    for (let i = 0; i < achievements.length; i++) {
+      total += (achievements[i].xp as number) || 0;
+    }
+    return total;
   }
 
   // Get XP available for a specific category
   async getCategoryXPAvailable(category: string): Promise<number> {
-    const achievements = await this.collection.query(Q.where("category", category)).fetch();
-    return achievements.reduce((total, achievement) => {
-      return total + (achievement.xp ?? 0);
-    }, 0);
+    // ⚡ Bolt Performance Optimization: Bypass model instantiation via unsafeFetchRaw and replace reduce with for-loop for large aggregations
+    const achievements = await this.collection
+      .query(Q.where("category", category))
+      .unsafeFetchRaw();
+    let total = 0;
+    for (let i = 0; i < achievements.length; i++) {
+      total += (achievements[i].xp as number) || 0;
+    }
+    return total;
   }
 }
