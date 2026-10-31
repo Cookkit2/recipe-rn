@@ -129,7 +129,9 @@ export class AchievementRepository extends BaseRepository<Achievement> {
   // Get XP available for a specific category
   async getCategoryXPAvailable(category: string): Promise<number> {
     // ⚡ Bolt Performance Optimization: Bypass model instantiation via unsafeFetchRaw and replace reduce with for-loop for large aggregations
-    const achievements = await this.collection.query(Q.where("category", category)).unsafeFetchRaw();
+    const achievements = await this.collection
+      .query(Q.where("category", category))
+      .unsafeFetchRaw();
     let total = 0;
     for (let i = 0; i < achievements.length; i++) {
       total += (achievements[i].xp as number) || 0;
