@@ -1,5 +1,7 @@
 # Security and Monitoring Implementation Summary
 
+> Historical setup notes. Check `.github/workflows/` for the current CI configuration. The [archived monitoring templates](archive/monitoring/README.md) are reference material and are not deployed by this app.
+
 ## Overview
 
 This document provides a comprehensive summary of all CI/CD improvements, security scanning, and monitoring features implemented for the Recipe RN project.
@@ -301,7 +303,7 @@ This document provides a comprehensive summary of all CI/CD improvements, securi
 
 ### Monitoring and Observability
 
-#### 22. `monitoring/grafana-dashboard.json` (Created)
+#### 22. `docs/archive/monitoring/grafana-dashboard.json` (Created)
 
 **Grafana Dashboard:**
 
@@ -313,7 +315,7 @@ This document provides a comprehensive summary of all CI/CD improvements, securi
 - Authentication success rate
 - API response time distribution
 
-#### 23. `monitoring/prometheus.yml` (Created)
+#### 23. `docs/archive/monitoring/prometheus.yml` (Created)
 
 **Prometheus Configuration:**
 
@@ -322,7 +324,7 @@ This document provides a comprehensive summary of all CI/CD improvements, securi
 - Job configurations
 - Metrics collection
 
-#### 24. `monitoring/alerts.yml` (Created)
+#### 24. `docs/archive/monitoring/alerts.yml` (Created)
 
 **Alert Rules:**
 

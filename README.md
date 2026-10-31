@@ -269,6 +269,8 @@ recipe-rn/
 └── docs/                    # Documentation
 ```
 
+Keep generated analysis reports out of the root; local reports under `recipe-rn/` and CodeGraph databases are ignored. Historical infrastructure templates live in [docs/archive/](docs/archive/), and research notes live in [docs/research/](docs/research/).
+
 ## 🔧 Development
 
 ### Code Style
