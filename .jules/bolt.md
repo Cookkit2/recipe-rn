@@ -111,3 +111,6 @@
 **Learning:** Initializing objects like `Map<string, number[]>` then using `Array.prototype.reduce()` on them causes O(M) intermediate allocations and closures when calculating average ratings, negatively impacting the JS bridge garbage collector.
 **Action:** Always maintain primitive structural properties in single-pass scalar mapping (`Map<string, { sum: number, count: number }>`) without pushing into array lengths, reducing allocations to O(1) structures per entry.
 ## 2024-07-14 - Promise.all Optimization\n**Learning:** Replacing sequential await calls inside loops with Promise.all reduces N+1 async bottlenecks effectively.\n**Action:** Use Promise.all when independent async tasks are run inside a loop.
+## 2025-02-28 - Optimize FlatList Rendering for Long Lists
+**Learning:** Default FlatList configurations retain all clipped subviews in memory and render large window sizes (default `windowSize={21}`). This causes severe memory bloat and frame drops when rendering long lists containing images or complex components (e.g., Grocery Lists, Pantry Inventory).
+**Action:** When implementing FlatLists for large datasets, apply `removeClippedSubviews={true}` and reduce `windowSize` (e.g., to 5) to drop invisible subviews from memory and preserve UI thread performance.

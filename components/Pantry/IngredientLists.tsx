@@ -90,6 +90,9 @@ export default function IngredientLists({
         )}
         ListEmptyComponent={emptyState}
         scrollEventThrottle={16}
+        // Performance optimizations to reduce memory bloat when panning over large pantry lists
+        removeClippedSubviews={true}
+        windowSize={5}
         itemLayoutAnimation={LinearTransition.springify()
           .damping(20)
           .mass(1)
