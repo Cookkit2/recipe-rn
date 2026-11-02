@@ -185,7 +185,11 @@ export function createSupabaseCookingDataClient(
         const userId = await requireUserId(supabase);
         const householdId = await householdIdFor(supabase, userId);
         const match = await rowsOf(
-          supabase.from("base_ingredient").select("id, name").filter("name", "imatch", exactPostgrestPattern(input.name)).limit(1)
+          supabase
+            .from("base_ingredient")
+            .select("id, name")
+            .filter("name", "imatch", exactPostgrestPattern(input.name))
+            .limit(1)
         );
         const baseIngredientId = asString(match.rows[0]?.id);
         const payload: Record<string, unknown> = {
