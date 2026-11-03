@@ -168,20 +168,11 @@ export function generateMultiAchievementShareContent(
 ): AchievementShareContent {
   const { userName, includeUrl = true } = options ?? {};
 
-  let unlockedCount = 0;
-  let totalXP = 0;
-  let icons = "";
-
-  for (let i = 0; i < achievements.length; i++) {
-    const a = achievements[i];
-    if (a) {
-      if (a.isUnlocked) unlockedCount++;
-      totalXP += a.achievement.xp || 0;
-      icons += (icons ? " " : "") + a.achievement.icon;
-    }
-  }
+  const unlockedCount = achievements.filter((a) => a.isUnlocked).length;
+  const totalXP = achievements.reduce((sum, a) => sum + (a.achievement.xp || 0), 0);
 
   const userPrefix = userName ? `${userName} ` : "I ";
+  const icons = achievements.map((a) => a.achievement.icon).join(" ");
 
   const lines = [
     "🏆 Multiple Achievements Unlocked!",
