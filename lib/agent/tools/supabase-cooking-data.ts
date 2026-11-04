@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "~/lib/supabase/supabase-types";
+import { exactPostgrestPattern } from "~/utils/input-sanitization";
 import type {
   CatalogIngredient,
   CatalogRecipe,
@@ -31,6 +32,7 @@ interface FilterBuilder<T> extends PromiseLike<QueryResult<T[]>> {
   select(columns: string): FilterBuilder<T>;
   eq(column: string, value: string): FilterBuilder<T>;
   ilike(column: string, value: string): FilterBuilder<T>;
+  filter(column: string, operator: string, value: string): FilterBuilder<T>;
   in(column: string, values: readonly string[]): FilterBuilder<T>;
   limit(count: number): FilterBuilder<T>;
   order(column: string): FilterBuilder<T>;
@@ -183,7 +185,11 @@ export function createSupabaseCookingDataClient(
         const userId = await requireUserId(supabase);
         const householdId = await householdIdFor(supabase, userId);
         const match = await rowsOf(
-          supabase.from("base_ingredient").select("id, name").ilike("name", input.name).limit(1)
+          supabase
+            .from("base_ingredient")
+            .select("id, name")
+            .filter("name", "imatch", exactPostgrestPattern(input.name))
+            .limit(1)
         );
         const baseIngredientId = asString(match.rows[0]?.id);
         const payload: Record<string, unknown> = {

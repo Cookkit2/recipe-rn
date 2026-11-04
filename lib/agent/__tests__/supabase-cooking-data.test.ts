@@ -69,6 +69,14 @@ function createMemorySupabase(
         );
         return api;
       },
+      filter(column: string, operator: string, value: string) {
+        if (operator === "imatch") {
+          const regexStr = value.replace(/\\A/g, "^").replace(/\\Z/g, "$");
+          const regex = new RegExp(regexStr, "i");
+          working = working.filter((row) => regex.test(String(row[column] ?? "")));
+        }
+        return api;
+      },
       in(column: string, values: readonly string[]) {
         const allowed = new Set(values);
         working = working.filter((row) => allowed.has(String(row[column])));
