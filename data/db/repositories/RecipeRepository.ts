@@ -449,10 +449,17 @@ export class RecipeRepository extends BaseRepository<Recipe> {
 
   // Get quick recipes (under 30 minutes total time)
   async getQuickRecipes(maxTotalMinutes: number = 30): Promise<Recipe[]> {
-    // Note: WatermelonDB doesn't support computed columns in queries directly
-    // So we'll fetch and filter in JavaScript
+    // ⚡ Bolt Performance Optimization: Replace multiple array allocations caused by .filter
+    // on a full table fetch with a single for-loop that allocates only the necessary recipes.
     const recipes = await this.collection.query().fetch();
-    return recipes.filter((recipe) => recipe.prepMinutes + recipe.cookMinutes <= maxTotalMinutes);
+    const quickRecipes: Recipe[] = [];
+    for (let i = 0; i < recipes.length; i++) {
+      const recipe = recipes[i];
+      if (recipe && recipe.prepMinutes + recipe.cookMinutes <= maxTotalMinutes) {
+        quickRecipes.push(recipe);
+      }
+    }
+    return quickRecipes;
   }
 
   // Sync recipes from Supabase

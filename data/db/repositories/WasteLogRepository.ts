@@ -220,12 +220,11 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
 
     // Group waste events by date (day granularity)
     const wasteDates = new Set<number>();
-    const oneDay = 24 * 60 * 60 * 1000;
     for (const record of records) {
       // Raw records use snake_case (waste_date), while WasteLog objects use camelCase (wasteDate)
-      // ⚡ Bolt Performance Optimization: Replace new Date() allocations with fast Math.floor arithmetic
       const wasteDateValue = record.waste_date ?? record.wasteDate;
-      const dayStart = Math.floor(wasteDateValue / oneDay) * oneDay;
+      const date = new Date(wasteDateValue);
+      const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
       wasteDates.add(dayStart);
     }
 
@@ -233,8 +232,9 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
 
     // Calculate current streak (days without waste, counting backward from today)
     let currentStreak = 0;
-    // ⚡ Bolt Performance Optimization: Replace new Date() allocations with fast Math.floor arithmetic
-    const todayStart = Math.floor(Date.now() / oneDay) * oneDay;
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+    const oneDay = 24 * 60 * 60 * 1000;
 
     // Check each day going backward from today
     for (let i = 0; i < 36500; i++) {
@@ -302,22 +302,19 @@ export class WasteLogRepository extends BaseRepository<WasteLog> {
       if (!record) continue;
 
       let key: number;
+      const d = new Date(record.wasteDate);
 
       if (groupBy === "day") {
-        // Group by day (start of day) - fast epoch math without Date instantiation
-        // ⚡ Bolt Performance Optimization: Replace new Date() allocations with fast Math.floor arithmetic
-        key = Math.floor(record.wasteDate / (24 * 60 * 60 * 1000)) * (24 * 60 * 60 * 1000);
+        // Group by day (start of day)
+        key = d.setHours(0, 0, 0, 0);
+      } else if (groupBy === "week") {
+        // Group by week (start of week - Sunday)
+        d.setHours(0, 0, 0, 0);
+        const dayOfWeek = d.getDay();
+        key = new Date(d.getFullYear(), d.getMonth(), d.getDate() - dayOfWeek).getTime();
       } else {
-        const d = new Date(record.wasteDate);
-        if (groupBy === "week") {
-          // Group by week (start of week - Sunday)
-          d.setHours(0, 0, 0, 0);
-          const dayOfWeek = d.getDay();
-          key = new Date(d.getFullYear(), d.getMonth(), d.getDate() - dayOfWeek).getTime();
-        } else {
-          // Group by month (start of month)
-          key = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
-        }
+        // Group by month (start of month)
+        key = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
       }
 
       const existing = timeMap.get(key);
