@@ -140,6 +140,9 @@ export default function GroceryListPage() {
         contentContainerStyle={{ paddingBottom: 32 }}
         className="flex-1 bg-background"
         showsVerticalScrollIndicator={false}
+        // Drop invisible subviews to preserve memory and keep scrolling smooth
+        removeClippedSubviews={true}
+        windowSize={5}
         renderItem={({ item }) => (
           <GroceryListItem
             item={item}
