@@ -173,6 +173,7 @@ export default function AchievementsScreen() {
   }, [fetchData]);
 
   // Group achievements by category
+  // ⚡ Bolt Performance Optimization: Replaced .reduce() with a standard for loop to avoid closure allocations and intermediate garbage collection overhead.
   const groupedAchievements: Record<string, AchievementProgress[]> = {};
   for (let i = 0; i < achievements.length; i++) {
     const achievement = achievements[i];

@@ -172,6 +172,7 @@ export function generateMultiAchievementShareContent(
   let totalXP = 0;
   let icons = "";
 
+  // ⚡ Bolt Performance Optimization: Combined three O(N) array passes (filter, reduce, map) into a single pass to eliminate intermediate closures and garbage collection overhead.
   for (let i = 0; i < achievements.length; i++) {
     const a = achievements[i];
     if (a) {
