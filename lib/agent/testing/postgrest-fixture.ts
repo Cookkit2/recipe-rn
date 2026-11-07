@@ -158,7 +158,9 @@ function matchesFilter(row: Record<string, unknown>, column: string, filter: str
   const value = row[column];
   if (filter.startsWith("eq.")) return String(value ?? "") === filter.slice(3);
   if (filter.startsWith("imatch.")) {
-    const jsPattern = filter.slice(7).replace(/^\\A|\\Z$/g, (match) => match === '\\A' ? '^' : '$');
+    const jsPattern = filter
+      .slice(7)
+      .replace(/^\\A|\\Z$/g, (match) => (match === "\\A" ? "^" : "$"));
     return new RegExp(jsPattern, "i").test(String(value ?? ""));
   }
   if (filter.startsWith("ilike.")) {

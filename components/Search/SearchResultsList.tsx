@@ -75,10 +75,12 @@ export function SearchResultsList({
                   {
                     kind: "recipes" as const,
                     title: "Recipes",
-                    data: (recipesExpanded ? recipes : recipes.slice(0, 2)).map((recipe): Row => ({
-                      kind: "recipe",
-                      recipe,
-                    })),
+                    data: (recipesExpanded ? recipes : recipes.slice(0, 2)).map(
+                      (recipe): Row => ({
+                        kind: "recipe",
+                        recipe,
+                      })
+                    ),
                   },
                 ]
               : []),
