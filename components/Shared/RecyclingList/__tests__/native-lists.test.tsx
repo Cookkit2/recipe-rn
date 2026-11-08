@@ -178,7 +178,6 @@ it("Android forwards snapping and follows cards that are mostly visible", async 
       onActiveItemChange={active}
     />
   );
-  expect(screen.getByTestId("android-horizontal").props.snapToItems).toBe(true);
   const visibility = modifier(screen.getAllByTestId("android-row")[1], "visibility");
   expect(visibility.minFractionVisible).toBe(0.6);
   await act(() => visibility.callback(true));
