@@ -175,26 +175,52 @@ export class ChallengeRepository extends BaseRepository<Challenge> {
 
   // Get total XP available for all active challenges
   async getTotalXPAvailable(): Promise<number> {
-    const activeChallenges = await this.getActiveChallenges();
-    return activeChallenges.reduce((total, challenge) => {
-      return total + challenge.xpValue;
-    }, 0);
+    const now = Date.now();
+    // ⚡ Bolt Performance Optimization: Bypass model instantiation via unsafeFetchRaw and replace reduce with for-loop for large aggregations
+    const activeChallenges = await this.collection
+      .query(Q.where("start_date", Q.lte(now)), Q.where("end_date", Q.gte(now)))
+      .unsafeFetchRaw();
+    let total = 0;
+    for (let i = 0; i < activeChallenges.length; i++) {
+      total += (activeChallenges[i].xp as number) || 0;
+    }
+    return total;
   }
 
   // Get XP available for daily challenges
   async getDailyXPAvailable(): Promise<number> {
-    const dailyChallenges = await this.getActiveDailyChallenges();
-    return dailyChallenges.reduce((total, challenge) => {
-      return total + challenge.xpValue;
-    }, 0);
+    const now = Date.now();
+    // ⚡ Bolt Performance Optimization: Bypass model instantiation via unsafeFetchRaw and replace reduce with for-loop for large aggregations
+    const dailyChallenges = await this.collection
+      .query(
+        Q.where("type", "daily"),
+        Q.where("start_date", Q.lte(now)),
+        Q.where("end_date", Q.gte(now))
+      )
+      .unsafeFetchRaw();
+    let total = 0;
+    for (let i = 0; i < dailyChallenges.length; i++) {
+      total += (dailyChallenges[i].xp as number) || 0;
+    }
+    return total;
   }
 
   // Get XP available for weekly challenges
   async getWeeklyXPAvailable(): Promise<number> {
-    const weeklyChallenges = await this.getActiveWeeklyChallenges();
-    return weeklyChallenges.reduce((total, challenge) => {
-      return total + challenge.xpValue;
-    }, 0);
+    const now = Date.now();
+    // ⚡ Bolt Performance Optimization: Bypass model instantiation via unsafeFetchRaw and replace reduce with for-loop for large aggregations
+    const weeklyChallenges = await this.collection
+      .query(
+        Q.where("type", "weekly"),
+        Q.where("start_date", Q.lte(now)),
+        Q.where("end_date", Q.gte(now))
+      )
+      .unsafeFetchRaw();
+    let total = 0;
+    for (let i = 0; i < weeklyChallenges.length; i++) {
+      total += (weeklyChallenges[i].xp as number) || 0;
+    }
+    return total;
   }
 
   // Get challenges expiring soon (within 24 hours)
