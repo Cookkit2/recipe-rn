@@ -9,7 +9,3 @@
 **Vulnerability:** The use of `.ilike("column", userInput)` in Supabase queries allows users to pass SQL wildcards (`%` and `_`), enabling uncontrolled wildcard injection and potential ReDoS vulnerabilities.
 **Learning:** PostgREST translates `.ilike()` directly into PostgreSQL `ILIKE`. This means any unescaped wildcards in the input are interpreted as SQL syntax by the database, not as literal text.
 **Prevention:** Always use `.filter("column", "imatch", exactPostgrestPattern(userInput))` instead of `.ilike()` for exact text matching in Supabase. The `exactPostgrestPattern` function escapes regex and SQL wildcards securely.
-## 2025-02-28 - Fix SQL Wildcard Injection in Supabase Queries
-**Vulnerability:** The use of `.ilike("column", userInput)` in Supabase queries allows users to pass SQL wildcards (`%` and `_`), enabling uncontrolled wildcard injection and potential ReDoS vulnerabilities.
-**Learning:** PostgREST translates `.ilike()` directly into PostgreSQL `ILIKE`. This means any unescaped wildcards in the input are interpreted as SQL syntax by the database, not as literal text.
-**Prevention:** Always use `.filter("column", "imatch", exactPostgrestPattern(userInput))` instead of `.ilike()` for exact text matching in Supabase. The `exactPostgrestPattern` function escapes regex and SQL wildcards securely.

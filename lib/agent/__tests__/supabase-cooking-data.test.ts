@@ -63,10 +63,12 @@ function createMemorySupabase(
         working = working.filter((row) => row[column] === value);
         return api;
       },
-      ilike(column: string, value: string) {
-        working = working.filter(
-          (row) => String(row[column] ?? "").toLowerCase() === value.toLowerCase()
-        );
+      filter(column: string, operator: string, value: string) {
+        if (operator === "imatch") {
+          // In testing we mock the exact postgres match by removing anchors and matching
+          const cleaned = value.replace(/\\A|\\Z/g, "");
+          working = working.filter((row) => String(row[column] ?? "").toLowerCase() === cleaned.toLowerCase());
+        }
         return api;
       },
       in(column: string, values: readonly string[]) {
