@@ -26,6 +26,7 @@ export type PantryWriteResult<T> =
   | PantryMutationProblem;
 
 export type PantryRemovalResult<T> =
-  { ok: true; status?: "removed"; removed: T[] } | PantryMutationProblem;
+  | { ok: true; status?: "removed"; removed: T[] }
+  | PantryMutationProblem;
 
 export type AssistantPantryResult<T> = PantryWriteResult<T> | PantryRemovalResult<T>;

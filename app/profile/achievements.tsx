@@ -173,17 +173,19 @@ export default function AchievementsScreen() {
   }, [fetchData]);
 
   // Group achievements by category
-  const groupedAchievements = achievements.reduce(
-    (acc, achievement) => {
-      const category = achievement.achievement.category;
-      if (!acc[category]) {
-        acc[category] = [];
-      }
-      acc[category].push(achievement);
-      return acc;
-    },
-    {} as Record<string, AchievementProgress[]>
-  );
+  const groupedAchievements = React.useMemo(() => {
+    return achievements.reduce(
+      (acc, achievement) => {
+        const category = achievement.achievement.category;
+        if (!acc[category]) {
+          acc[category] = [];
+        }
+        acc[category].push(achievement);
+        return acc;
+      },
+      {} as Record<string, AchievementProgress[]>
+    );
+  }, [achievements]);
 
   if (isLoading) {
     return (
