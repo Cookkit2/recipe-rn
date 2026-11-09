@@ -6,4 +6,5 @@ export interface RecipeImportDraft {
 }
 
 export type RecipeImportPreparation =
-  { kind: "review"; draft: RecipeImportDraft } | { kind: "saved"; result: YouTubeImportResult };
+  | { kind: "review"; draft: RecipeImportDraft }
+  | { kind: "saved"; result: YouTubeImportResult };

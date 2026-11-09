@@ -67,7 +67,9 @@ function createMemorySupabase(
         if (operator === "imatch") {
           // In testing we mock the exact postgres match by removing anchors and matching
           const cleaned = value.replace(/\\A|\\Z/g, "");
-          working = working.filter((row) => String(row[column] ?? "").toLowerCase() === cleaned.toLowerCase());
+          working = working.filter(
+            (row) => String(row[column] ?? "").toLowerCase() === cleaned.toLowerCase()
+          );
         }
         return api;
       },
