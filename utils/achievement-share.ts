@@ -168,11 +168,21 @@ export function generateMultiAchievementShareContent(
 ): AchievementShareContent {
   const { userName, includeUrl = true } = options ?? {};
 
-  const unlockedCount = achievements.filter((a) => a.isUnlocked).length;
-  const totalXP = achievements.reduce((sum, a) => sum + (a.achievement.xp || 0), 0);
+  let unlockedCount = 0;
+  let totalXP = 0;
+  let icons = "";
+
+  // ⚡ Bolt Performance Optimization: Combined three O(N) array passes (filter, reduce, map) into a single pass to eliminate intermediate closures and garbage collection overhead.
+  for (let i = 0; i < achievements.length; i++) {
+    const a = achievements[i];
+    if (a) {
+      if (a.isUnlocked) unlockedCount++;
+      totalXP += a.achievement.xp || 0;
+      icons += (icons ? " " : "") + a.achievement.icon;
+    }
+  }
 
   const userPrefix = userName ? `${userName} ` : "I ";
-  const icons = achievements.map((a) => a.achievement.icon).join(" ");
 
   const lines = [
     "🏆 Multiple Achievements Unlocked!",
