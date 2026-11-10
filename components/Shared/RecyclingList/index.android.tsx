@@ -140,6 +140,7 @@ export default function RecyclingList<T>(props: RecyclingListProps<T>) {
           <LazyRow
             contentPadding={contentPadding}
             horizontalArrangement={{ spacedBy: props.itemSpacing ?? 0 }}
+            // @ts-ignore: snapToItems not typed properly yet in LazyRow
             snapToItems={props.snapToItems}
             modifiers={[fillMaxSize()]}
           >

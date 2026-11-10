@@ -155,16 +155,14 @@ beforeEach(() => {
   mockHeaderHeight = 118;
   mockWebSearch = emptyWebSearch;
   mockTurns.length = 0;
-  mockCreateAgent.mockImplementation(
-    (): CookingAgent => ({
-      kind: "nebius",
-      async *stream(input) {
-        mockTurns.push(input);
-        yield { type: "text-delta", text: "Try a rice bowl." };
-        yield { type: "finish", text: "Try a rice bowl." };
-      },
-    })
-  );
+  mockCreateAgent.mockImplementation((): CookingAgent => ({
+    kind: "nebius",
+    async *stream(input) {
+      mockTurns.push(input);
+      yield { type: "text-delta", text: "Try a rice bowl." };
+      yield { type: "finish", text: "Try a rice bowl." };
+    },
+  }));
 });
 
 async function submitAIFromSearch(screen: Awaited<ReturnType<typeof render>>) {
@@ -404,16 +402,14 @@ it("stops a response without disabling local search", async () => {
   const blocked = new Promise<void>((resolve) => {
     release = resolve;
   });
-  mockCreateAgent.mockImplementation(
-    (): CookingAgent => ({
-      kind: "nebius",
-      async *stream(input) {
-        mockTurns.push(input);
-        await blocked;
-        yield { type: "text-delta", text: "Late answer" };
-      },
-    })
-  );
+  mockCreateAgent.mockImplementation((): CookingAgent => ({
+    kind: "nebius",
+    async *stream(input) {
+      mockTurns.push(input);
+      await blocked;
+      yield { type: "text-delta", text: "Late answer" };
+    },
+  }));
   const screen = await render(<SearchScreen />);
   const input = screen.getByTestId("native-search-input");
   await fireEvent.changeText(input, "Help");
@@ -431,33 +427,31 @@ it("stops a response without disabling local search", async () => {
 });
 
 it("opens verified suggested recipes from the unified conversation", async () => {
-  mockCreateAgent.mockImplementation(
-    (): CookingAgent => ({
-      kind: "nebius",
-      async *stream() {
-        yield {
-          type: "tool-result",
-          toolCallId: "recipes",
-          toolName: "suggest_recipes",
-          output: {
-            recipes: [
-              {
-                id: "verified",
-                title: "Rice bowl",
-                matched: ["rice"],
-                missing: [],
-                coverage: 1,
-                calories: null,
-                tags: [],
-              },
-            ],
-            pantryCount: 1,
-            truncated: false,
-          },
-        };
-      },
-    })
-  );
+  mockCreateAgent.mockImplementation((): CookingAgent => ({
+    kind: "nebius",
+    async *stream() {
+      yield {
+        type: "tool-result",
+        toolCallId: "recipes",
+        toolName: "suggest_recipes",
+        output: {
+          recipes: [
+            {
+              id: "verified",
+              title: "Rice bowl",
+              matched: ["rice"],
+              missing: [],
+              coverage: 1,
+              calories: null,
+              tags: [],
+            },
+          ],
+          pantryCount: 1,
+          truncated: false,
+        },
+      };
+    },
+  }));
   const screen = await render(<SearchScreen />);
   await fireEvent.changeText(screen.getByTestId("native-search-input"), "What can I cook?");
   await submitAIFromSearch(screen);
@@ -467,14 +461,12 @@ it("opens verified suggested recipes from the unified conversation", async () =>
 });
 
 it("shows assistant failures inline and lets the user make another request", async () => {
-  mockCreateAgent.mockImplementation(
-    (): CookingAgent => ({
-      kind: "nebius",
-      async *stream() {
-        yield { type: "error", message: "Internal backend failure" };
-      },
-    })
-  );
+  mockCreateAgent.mockImplementation((): CookingAgent => ({
+    kind: "nebius",
+    async *stream() {
+      yield { type: "error", message: "Internal backend failure" };
+    },
+  }));
   const screen = await render(<SearchScreen />);
   await fireEvent.changeText(screen.getByTestId("native-search-input"), "Help");
   await submitAIFromSearch(screen);
@@ -498,16 +490,14 @@ it("cancels an active response when the unified search screen unmounts", async (
   const blocked = new Promise<void>((resolve) => {
     release = resolve;
   });
-  mockCreateAgent.mockImplementation(
-    (): CookingAgent => ({
-      kind: "nebius",
-      async *stream(input) {
-        mockTurns.push(input);
-        await blocked;
-        yield { type: "text-delta", text: "Late answer" };
-      },
-    })
-  );
+  mockCreateAgent.mockImplementation((): CookingAgent => ({
+    kind: "nebius",
+    async *stream(input) {
+      mockTurns.push(input);
+      await blocked;
+      yield { type: "text-delta", text: "Late answer" };
+    },
+  }));
   const screen = await render(<SearchScreen />);
   await fireEvent.changeText(screen.getByTestId("native-search-input"), "Help");
   await submitAIFromSearch(screen);
@@ -522,16 +512,14 @@ it("stops an inline assistant response as pull-to-search closes", async () => {
   const blocked = new Promise<void>((resolve) => {
     release = resolve;
   });
-  mockCreateAgent.mockImplementation(
-    (): CookingAgent => ({
-      kind: "nebius",
-      async *stream(input) {
-        mockTurns.push(input);
-        await blocked;
-        yield { type: "text-delta", text: "Late answer" };
-      },
-    })
-  );
+  mockCreateAgent.mockImplementation((): CookingAgent => ({
+    kind: "nebius",
+    async *stream(input) {
+      mockTurns.push(input);
+      await blocked;
+      yield { type: "text-delta", text: "Late answer" };
+    },
+  }));
   const screen = await render(<SearchContent onDismiss={mockBack} focusEnabled transparent />);
   await fireEvent.changeText(screen.getByTestId("native-search-input"), "Help");
   await submitAIFromSearch(screen);

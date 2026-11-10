@@ -21,15 +21,7 @@ import { recipeQueryKeys } from "~/hooks/queries/recipeQueryKeys";
 import useLocalStorageState from "~/hooks/useLocalStorageState";
 
 export type Allergen =
-  | "milk"
-  | "eggs"
-  | "nuts"
-  | "fish"
-  | "shellfish"
-  | "wheat"
-  | "soy"
-  | "peanuts"
-  | "sesame";
+  "milk" | "eggs" | "nuts" | "fish" | "shellfish" | "wheat" | "soy" | "peanuts" | "sesame";
 
 const ALLERGEN_OPTIONS: GroupButton<Allergen>[] = [
   { label: "Milk (dairy)", icon: <MilkIcon />, value: "milk" },
