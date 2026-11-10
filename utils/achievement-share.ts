@@ -170,7 +170,7 @@ export function generateMultiAchievementShareContent(
 
   let unlockedCount = 0;
   let totalXP = 0;
-  let icons = "";
+  const iconsArray: string[] = [];
 
   // ⚡ Bolt Performance Optimization: Combined three O(N) array passes (filter, reduce, map) into a single pass to eliminate intermediate closures and garbage collection overhead.
   for (let i = 0; i < achievements.length; i++) {
@@ -178,11 +178,12 @@ export function generateMultiAchievementShareContent(
     if (a) {
       if (a.isUnlocked) unlockedCount++;
       totalXP += a.achievement.xp || 0;
-      icons += (icons ? " " : "") + a.achievement.icon;
+      iconsArray.push(a.achievement.icon);
     }
   }
 
   const userPrefix = userName ? `${userName} ` : "I ";
+  const icons = iconsArray.join(" ");
 
   const lines = [
     "🏆 Multiple Achievements Unlocked!",
