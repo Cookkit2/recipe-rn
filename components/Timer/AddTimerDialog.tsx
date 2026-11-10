@@ -212,6 +212,7 @@ export default function AddTimerDialog({
                   key={label}
                   variant="outline"
                   size="sm"
+                  accessibilityLabel={`Set duration to ${label}`}
                   onPress={() => {
                     const h = Math.floor(quickSeconds / 3600);
                     const m = Math.floor((quickSeconds % 3600) / 60);
