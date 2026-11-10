@@ -63,10 +63,12 @@ function createMemorySupabase(
         working = working.filter((row) => row[column] === value);
         return api;
       },
-      ilike(column: string, value: string) {
-        working = working.filter(
-          (row) => String(row[column] ?? "").toLowerCase() === value.toLowerCase()
-        );
+      filter(column: string, operator: string, value: string) {
+        if (operator === "imatch") {
+          const pattern = value.replace(/^\\A|\\Z$/g, "").replace(/\\\\/g, "\\");
+          const regex = new RegExp(`^${pattern}$`, "i");
+          working = working.filter((row) => regex.test(String(row[column] ?? "")));
+        }
         return api;
       },
       in(column: string, values: readonly string[]) {
