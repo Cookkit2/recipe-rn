@@ -111,3 +111,6 @@
 **Learning:** Initializing objects like `Map<string, number[]>` then using `Array.prototype.reduce()` on them causes O(M) intermediate allocations and closures when calculating average ratings, negatively impacting the JS bridge garbage collector.
 **Action:** Always maintain primitive structural properties in single-pass scalar mapping (`Map<string, { sum: number, count: number }>`) without pushing into array lengths, reducing allocations to O(1) structures per entry.
 ## 2024-07-14 - Promise.all Optimization\n**Learning:** Replacing sequential await calls inside loops with Promise.all reduces N+1 async bottlenecks effectively.\n**Action:** Use Promise.all when independent async tasks are run inside a loop.
+## 2025-02-18 - Optimize filter functions on frequent execution paths
+**Learning:** In JavaScript/TypeScript, when filtering arrays on highly frequent execution paths (like text search on keystrokes), using Array.prototype.filter() creates closure allocation overhead on every iteration, increasing garbage collector pressure. Replacing it with a standard for loop improves performance.
+**Action:** Use standard for loops instead of Array methods for performance-critical path array filtering.

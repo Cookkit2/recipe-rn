@@ -94,6 +94,10 @@ credentials.json
 .cache/
 .parcel-cache/
 
+# Local code analysis databases and generated audit reports
+/.codegraph/
+/recipe-rn/
+
 # IDE
 .vscode/
 .idea/
