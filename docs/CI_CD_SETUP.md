@@ -1,5 +1,7 @@
 # CI/CD and Security Setup Guide
 
+> Historical setup notes. Check `.github/workflows/` for the current CI configuration. The [archived monitoring templates](archive/monitoring/README.md) are reference material and are not deployed by this app.
+
 ## Overview
 
 This document describes the comprehensive CI/CD pipeline and security scanning setup for the Recipe RN project.
@@ -489,7 +491,7 @@ This document describes the comprehensive CI/CD pipeline and security scanning s
    - Change password on first login
 
 3. **Import Dashboards**
-   - Import `monitoring/grafana-dashboard.json`
+   - Import `docs/archive/monitoring/grafana-dashboard.json`
    - Configure Prometheus datasource
 
 4. **Configure Alerts**

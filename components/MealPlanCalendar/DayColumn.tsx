@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { View, Text } from "react-native";
 import { P } from "~/components/ui/typography";
 import type { DayMealPlan, MealSlot } from "~/types/MealPlan";
@@ -46,6 +46,22 @@ export default function DayColumn({
 }: DayColumnProps) {
   const isToday = new Date().toDateString() === dayMealPlan.date.toDateString();
 
+  // ⚡ Bolt Performance Optimization: Memoize nutrition extraction to prevent O(N) intermediate array allocations on every render
+  const nutritionRecipes = useMemo(
+    () =>
+      Object.values(dayMealPlan.meals)
+        .flat()
+        .filter((m): m is NonNullable<typeof m> => m != null && m.recipe != null)
+        .map((m) => ({
+          calories: m.recipe!.calories,
+          protein: m.recipe!.protein,
+          carbs: m.recipe!.carbs,
+          fat: m.recipe!.fat,
+          fiber: m.recipe!.fiber,
+        })),
+    [dayMealPlan.meals]
+  );
+
   return (
     <View
       className={`border-r border-border ${width ? "shrink-0" : "w-full"} ${isFirstDay ? "border-l" : ""}`}
@@ -82,18 +98,7 @@ export default function DayColumn({
       </View>
 
       {/* Daily Nutrition Summary */}
-      <DailyNutritionBar
-        recipes={Object.values(dayMealPlan.meals)
-          .flat()
-          .filter((m): m is NonNullable<typeof m> => m != null && m.recipe != null)
-          .map((m) => ({
-            calories: m.recipe!.calories,
-            protein: m.recipe!.protein,
-            carbs: m.recipe!.carbs,
-            fat: m.recipe!.fat,
-            fiber: m.recipe!.fiber,
-          }))}
-      />
+      <DailyNutritionBar recipes={nutritionRecipes} />
     </View>
   );
 }
